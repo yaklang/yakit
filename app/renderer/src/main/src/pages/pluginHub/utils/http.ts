@@ -1,7 +1,10 @@
 import {APIFunc} from "@/apiUtils/type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {HTTPRequestParameters} from "@/types/http-api"
 import {yakitNotify} from "@/utils/notification"
+
+const {ipcRenderer} = window.require("electron")
 
 /**
  * @name 插件同步/提交至云端
@@ -82,6 +85,47 @@ export const httpAuditPluginOperate: APIFunc<API.PluginAuditRequest, API.ActionS
     })
 }
 
+interface FetchPluginLogsRequest {
+    data: API.LogsRequest
+    params?: HTTPRequestParameters
+}
+/**
+ * @name 插件日志页-获取日志列表
+ */
+export const httpFetchPluginLogs: APIFunc<FetchPluginLogsRequest, API.PluginsLogsResponse> = (request, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        const {data, params: page = {}} = request
+
+        let token: string = ""
+        try {
+            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
+            if (userInfo.isLogin) {
+                token = userInfo.token
+            }
+        } catch (error) {}
+
+        const params: HTTPRequestParameters = {
+            page: page.page || 1,
+            limit: page.limit || 20,
+            order_by: page.order_by || "created_at",
+            order: page.order || "asc"
+        }
+
+        console.log("method:get|api:plugins/logs\n", JSON.stringify(params), "\n", JSON.stringify(data))
+        NetWorkApi<API.LogsRequest, API.PluginsLogsResponse>({
+            method: "get",
+            url: "plugins/logs",
+            params: {...params} as any,
+            data: {...data, token: token || undefined}
+        })
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "获取日志列表失败:" + err)
+                reject(err)
+            })
+    })
+}
+
 interface FetchMergePluginDetailRequest {
     uuid: string
     up_log_id: number
@@ -94,7 +138,7 @@ export const httpFetchMergePluginDetail: APIFunc<FetchMergePluginDetailRequest, 
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        // console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<FetchMergePluginDetailRequest, API.PluginsAuditDetailResponse>({
             method: "get",
             url: "plugins/merge/update/detail",
@@ -116,7 +160,7 @@ export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.Plugins
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        // console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<API.PluginMergeRequest, API.PluginsLogsDetail>({
             method: "post",
             url: "plugins/merge/update/detail",

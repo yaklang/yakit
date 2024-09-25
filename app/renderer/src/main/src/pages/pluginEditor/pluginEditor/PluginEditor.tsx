@@ -60,6 +60,7 @@ import {APIFunc} from "@/apiUtils/type"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./PluginEditor.module.scss"
+import {PluginUploadModal} from "@/pages/pluginHub/pluginUploadModal/PluginUploadModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -163,7 +164,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         // 是否为线上本人的插件
         const [isAuthors, setIsAuthors] = useState<boolean>(false)
 
-        // 每次本地保存后的记录插件信息
+        /** 每次本地保存后的记录插件信息 */
         const savedPluginInfo = useRef<YakScript>()
 
         // 获取插件线上信息
@@ -600,9 +601,11 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     handleTimeLoadingToFalse(setLocalLoading)
                 })
         })
+
         // 同步至云端
         const onBtnOnlineSave = useMemoizedFn(async () => {
             if (onlineLoading) return
+            if (showUploadPlugin) return
             if (!isLogin) {
                 yakitNotify("error", "登录后才可同步至云端")
                 return
@@ -616,7 +619,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
 
             const localRequest = pluginConvertUIToLocal(plugin, savedPluginInfo.current)
-            const onlineRequest = pluginConvertUIToOnline(plugin, savedPluginInfo.current)
 
             // 先本地保存
             handleLocalSave(localRequest)
@@ -639,9 +641,9 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         handleTimeLoadingToFalse(setOnlineLoading)
                         return
                     }
-                    onlineOPPlugin.current = onlineRequest
-                    syncOrCopy.current = true
-                    setSyncCopyHint(true)
+                    uploadType.current = "upload"
+                    uploadPlugin.current = cloneDeep(res)
+                    setShowUploadPlugin(true)
                 })
                 .catch((err) => {
                     handleTimeLoadingToFalse(setOnlineLoading)
@@ -737,6 +739,22 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 })
         })
         /** ---------- 按钮组逻辑 End ---------- */
+
+        /** ---------- 上传插件弹框 Start ---------- */
+        const uploadType = useRef<"upload" | "submit">("upload")
+        // 同步和提交按钮的弹框依赖信息
+        const uploadPlugin = useRef<YakScript>()
+        const [showUploadPlugin, setShowUploadPlugin] = useState<boolean>(false)
+        const handleShowUploadPluginCallback = useMemoizedFn((result: boolean, plugin?: YakScript) => {
+            if (uploadType.current === "upload") {
+            }
+
+            if (uploadType.current === "submit") {
+            }
+
+            setShowUploadPlugin(false)
+        })
+        /** ---------- 上传插件弹框 End ---------- */
 
         /** ---------- 同步复制弹窗 & 插件评分弹框 & 修改意见弹框 Start ---------- */
         // 同步|复制|提交的插件信息
@@ -1145,7 +1163,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         </div>
 
                         <PluginSyncAndCopyModal
-                            isCopy={!syncOrCopy.current}
+                            isCopy={true}
                             visible={syncCopyHint}
                             setVisible={onSyncCopyHintCallback}
                         />
@@ -1168,6 +1186,14 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             okButtonProps={{loading: copyLoading}}
                             onOk={onOldDataOk}
                             onCancel={onOldDataCancel}
+                        />
+
+                        {/* 单个插件上传 */}
+                        <PluginUploadModal
+                            isLogin={isLogin}
+                            info={uploadPlugin.current}
+                            visible={showUploadPlugin}
+                            callback={handleShowUploadPluginCallback}
                         />
                     </div>
                 </YakitSpin>

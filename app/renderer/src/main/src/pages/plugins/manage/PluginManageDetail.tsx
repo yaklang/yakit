@@ -242,9 +242,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         // 日志里的合并影响审核插件的状态，所以需要获取最新数据展示
         useEffect(() => {
-            emiter.on("logMergeModifyToManageDetail", updateDetail)
+            emiter.on("logMergeModifyToPluginDetail", updateDetail)
             return () => {
-                emiter.off("logMergeModifyToManageDetail", updateDetail)
+                emiter.off("logMergeModifyToPluginDetail", updateDetail)
             }
         }, [])
 

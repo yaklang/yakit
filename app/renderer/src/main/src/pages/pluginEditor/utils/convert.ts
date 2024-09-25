@@ -306,3 +306,78 @@ export const delInvalidPluginExecuteParams = (kvs: KVPair[], params: YakParamPro
     const keys = params.map((item) => item.Field)
     return kvs.filter((item) => keys.includes(item.Key))
 }
+
+/**
+ * @name 合并插件日志(API.PluginsAuditDetailResponse)转换前端插件结构对{old: YakitPluginBaseInfo, new: YakitPluginBaseInfo}
+ */
+export const pluginConvertMergeToUIs = async (value: API.PluginsAuditDetailResponse) => {
+    // 旧插件基础信息
+    let oldBaseInfo: YakitPluginBaseInfo | null = {
+        Type: "",
+        ScriptName: "",
+        Help: "",
+        Tags: [],
+        EnablePluginSelector: false,
+        PluginSelectorTypes: []
+    }
+    // 新插件基础信息
+    let newBaseInfo: YakitPluginBaseInfo = {
+        Type: "",
+        ScriptName: "",
+        Help: "",
+        Tags: [],
+        EnablePluginSelector: false,
+        PluginSelectorTypes: []
+    }
+
+    newBaseInfo.Type = value.type || ""
+    newBaseInfo.ScriptName = value.script_name || ""
+    newBaseInfo.Help = value.help || ""
+    let newTags: string[] = []
+    if (value.tags === "null" || !value.tags) {
+        newTags = []
+    } else {
+        newTags = (value.tags || "").split(",")
+    }
+    const codeInfo =
+        GetPluginLanguage(value.type) === "yak"
+            ? await onCodeToInfo({type: value.type || "yak", code: value.content})
+            : null
+    if (codeInfo && codeInfo.Tags.length > 0) {
+        newTags = newTags.concat(codeInfo.Tags).filter((item, index, self) => {
+            return self.indexOf(item) === index
+        })
+    }
+    newBaseInfo.Tags = newTags || []
+    newBaseInfo.EnablePluginSelector = value.enable_plugin_selector || false
+    newBaseInfo.PluginSelectorTypes = (value.plugin_selector_types || "").split(",") || []
+
+    if (value.merge_before_plugins) {
+        const data = cloneDeep(value.merge_before_plugins)
+        oldBaseInfo.Type = data.type || ""
+        oldBaseInfo.ScriptName = data.script_name || ""
+        oldBaseInfo.Help = data.help || ""
+        let oldTags: string[] = []
+        if (data.tags === "null" || !data.tags) {
+            oldTags = []
+        } else {
+            oldTags = (data.tags || "").split(",")
+        }
+        const codeInfo =
+            GetPluginLanguage(oldBaseInfo.Type) === "yak"
+                ? await onCodeToInfo({type: data.type || "yak", code: data.content || ""})
+                : null
+        if (codeInfo && codeInfo.Tags.length > 0) {
+            oldTags = oldTags.concat(codeInfo.Tags).filter((item, index, self) => {
+                return self.indexOf(item) === index
+            })
+        }
+        oldBaseInfo.Tags = oldTags || []
+        oldBaseInfo.EnablePluginSelector = data.enable_plugin_selector || false
+        oldBaseInfo.PluginSelectorTypes = (data.plugin_selector_types || "").split(",") || []
+    } else {
+        oldBaseInfo = null
+    }
+
+    return {oldInfo: oldBaseInfo, newInfo: newBaseInfo}
+}

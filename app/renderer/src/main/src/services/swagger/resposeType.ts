@@ -484,7 +484,7 @@ export declare namespace API {
          */
         listType?: string
         /**
-         * 审核状态,0待审核，1通过审核，2审核不通过
+         * 审核状态,0待审核，1通过审核，2审核不通过，3审核中
          */
         status?: number[]
         /**
@@ -564,10 +564,17 @@ export declare namespace API {
          */
         dumpType: string
     }
+    export interface PluginsLogsTabResponse {
+        data: PluginsLogsTab[]
+    }
+    export interface PluginsLogsTab {
+        tabName: string
+        count: number
+    }
     export interface PluginsLogsResponse extends Paging {
         data: PluginsLogsDetail[]
     }
-    export interface PluginsLogsDetail extends GormBaseModel, HandleUser, PluginComment {
+    export interface PluginsLogsDetail extends GormBaseModel {
         /**
          * 操作人名称
          */
@@ -601,9 +608,13 @@ export declare namespace API {
          */
         loginIsPluginUser: boolean
         /**
-         * 描述/评论 图片
+         * 上级评论内容
          */
-        descriptionImg?: string
+        parentComment?: ParentComment
+        /**
+         * 合并处理人信息
+         */
+        handleUser?: HandleUser
     }
     export interface PluginsListResponse extends Paging {
         data: PluginsDetail[]
@@ -689,6 +700,7 @@ export declare namespace API {
          */
         collaborator?: CollaboratorInfo[]
         isAuthor?: boolean
+        pluginSupplement?: string
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
     export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail, PluginsAuditButton {}
@@ -811,7 +823,22 @@ export declare namespace API {
         week_incre_num: number
         lastWeek_incre_num: number
     }
-    export interface PluginComment {
+    export interface PluginAuditRequest extends PluginsRequest, PluginAudit {}
+    export interface PluginAudit {
+        /**
+         * 审核 'true' 通过 'false' 不通过
+         */
+        status: string
+        /**
+         * 必传
+         */
+        uuid: string
+        /**
+         * 不通过时必传
+         */
+        logDescription?: string
+    }
+    export interface ParentComment {
         /**
          * 操作人名称
          */
@@ -832,25 +859,6 @@ export declare namespace API {
          * 描述/评论
          */
         description: string
-        /**
-         * 描述/评论 图片
-         */
-        descriptionImg?: string
-    }
-    export interface PluginAuditRequest extends PluginsRequest, PluginAudit {}
-    export interface PluginAudit {
-        /**
-         * 审核 'true' 通过 'false' 不通过
-         */
-        status: string
-        /**
-         * 必传
-         */
-        uuid: string
-        /**
-         * 不通过时必传
-         */
-        logDescription?: string
     }
     export interface Paging {
         pagemeta: PageMeta
@@ -930,6 +938,9 @@ export declare namespace API {
     export interface LogsRequest {
         uuid: string
         token?: string
+        afterId?: number
+        beforeId?: number
+        logType?: string
     }
     export interface IsExtractCodeResponse {
         is_extract_code: boolean
@@ -1151,6 +1162,9 @@ export declare namespace API {
         keywords?: string
         is_recycle?: boolean
     }
+    export interface DeleteOssResource {
+        file_name: string[]
+    }
     export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
     export interface CopyPlugins {
         /**
@@ -1172,8 +1186,7 @@ export declare namespace API {
     }
     export interface CommentLogRequest {
         uuid: string
-        description_img?: string[]
-        parent_id?: number
+        logId?: number
         description?: string
     }
     export interface CommentListResponse extends Paging {

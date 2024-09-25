@@ -6,7 +6,7 @@
     flex-direction: column;
     gap: 12px;
 
-    .spin-loading{
+    .spin-loading {
         align-items: center;
         gap: 12px;
     }
@@ -84,4 +84,37 @@
     padding: 24px;
     display: flex;
     justify-content: center;
+}
+
+// -------------------- PluginUploadSupplement ↓↓↓ --------------------
+.upload-modal-supplement-tip-order {
+    align-items: baseline !important;
+}
+.upload-modal-supplement-tip-content {
+    flex: 1;
+}
+.upload-modal-supplement-item {
+    padding-top: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    .item-name {
+        width: 62px;
+        text-align: right;
+        color: #31343f;
+        font-size: 12px;
+        line-height: 22px;
+    }
+    .item-upload-file {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #31343f;
+        font-size: 14px;
+        line-height: 22px;
+        .upload-coantent {
+            color: #f28b44;
+            cursor: pointer;
+        }
+    }
 }

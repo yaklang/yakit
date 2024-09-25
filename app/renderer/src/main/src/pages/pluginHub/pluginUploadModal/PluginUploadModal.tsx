@@ -2,7 +2,7 @@ import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "reac
 import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {CodeScoreModule} from "@/pages/plugins/funcTemplate"
-import {Radio} from "antd"
+import {Radio, Upload} from "antd"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {apiFetchOnlinePluginInfo} from "@/pages/plugins/utils"
 import {YakScript} from "@/pages/invoker/schema"
@@ -18,8 +18,10 @@ import {yakitNotify} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {pluginConvertLocalToOnline} from "@/pages/pluginEditor/utils/convert"
 
+import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./PluginUploadModal.module.scss"
+import {FileItem} from "fs"
 
 interface PluginUploadModalProps {
     visible: boolean
@@ -145,6 +147,8 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
         const info = pluginConvertLocalToOnline(localPlugin.current)
         handleUpload({...info, is_private: true})
     })
+    const publicUpload = useRef<API.PluginsRequest>()
+
     // 公开上传
     const handlePublicUpload = useMemoizedFn((result: boolean) => {
         if (result) {
@@ -153,10 +157,24 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
                 return
             }
             const info = pluginConvertLocalToOnline(localPlugin.current)
-            handleUpload({...info, is_private: false})
+            publicUpload.current = {...info, is_private: false}
+            setCurrent((val) => val + 1)
+            // handleUpload({...info, is_private: false})
         } else {
             handleCancel()
         }
+    })
+
+    const [supplementLoading, setSupplementLoading] = useState<boolean>(false)
+    // 补充资料提交
+    const handleUploadSupplement = useMemoizedFn((data: any[]) => {
+        if (supplementLoading) return
+        if (!publicUpload.current) {
+            yakitNotify("error", "未获取到插件信息，请关闭重试")
+            return
+        }
+        setSupplementLoading(true)
+        handleUpload({...publicUpload.current, is_private: false})
     })
 
     // 私密提交
@@ -219,13 +237,13 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
                 ) : localPlugin.current ? (
                     <PluginUploadScore plugin={localPlugin.current} callback={handlePublicUpload} />
                 ) : null
+            },
+            {
+                title: "补充资料",
+                content: <PluginUploadSupplement loading={supplementLoading} callback={handleUploadSupplement} />
             }
-            // {
-            //     title: "补充资料",
-            //     content: <div></div>
-            // }
         ]
-    }, [current, isPrivate])
+    }, [current, isPrivate, supplementLoading])
     // 提交过程
     const submitSteps = useMemo(() => {
         return [
@@ -486,31 +504,37 @@ const PluginUploadModifyReason: React.FC<PluginUploadModifyReasonProps> = memo((
 })
 
 interface PluginUploadSupplementProps {
-    callback: () => void
+    loading?: boolean
+    callback: (value: any[]) => void
 }
 /** @name 上传弹框-补充资料(未完成) */
 const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = memo((props) => {
-    const {callback} = props
+    const {loading, callback} = props
 
     const [content, setContent] = useState<string>("")
     const handleSubmit = useMemoizedFn(() => {})
+
+    const uploadFile = useMemoizedFn((file: FileItem) => {})
 
     return (
         <>
             <div className={styles["plugin-upload-tips-header"]}>
                 <div className={styles["header-title"]}>提示：</div>
                 <div className={styles["header-body"]}>
-                    <div className={styles["list-opt"]}>
+                    <div className={classNames(styles["list-opt"], styles["upload-modal-supplement-tip-order"])}>
                         <div className={styles["opt-order"]}>1</div>
-                        如插件为<span className={styles["strong-text"]}>漏洞检测插件</span>，请
-                        <span className={styles["strong-text"]}>补充测试站</span>
-                        地址，或者复现流程，并粘贴<span className={styles["strong-text"]}>复现截图</span>
-                        ，该内容只有审核可见。如<span className={styles["strong-text"]}>不是检测插件</span>，直接
-                        <span className={styles["strong-text"]}>点击下一步</span>上传即可
+                        <div className={styles["upload-modal-supplement-tip-content"]}>
+                            如插件为<span className={styles["strong-text"]}>漏洞检测插件</span>，请
+                            <span className={styles["strong-text"]}>补充测试站</span>
+                            地址，或者复现流程，并粘贴<span className={styles["strong-text"]}>复现截图</span>
+                            ，该内容只有审核可见。如<span className={styles["strong-text"]}>不是检测插件</span>，直接
+                            <span className={styles["strong-text"]}>点击下一步</span>上传即可
+                        </div>
                     </div>
                 </div>
             </div>
-            <div className={styles["upload-modal-select-private"]}>
+            <div className={styles["upload-modal-supplement-item"]}>
+                <div className={styles["item-name"]}>说明/截图</div>
                 <YakitInput.TextArea
                     placeholder='请简单描述一下修改内容，方便作者审核...'
                     autoSize={{minRows: 3, maxRows: 3}}
@@ -520,8 +544,27 @@ const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = memo((prop
                     onChange={(e) => setContent(e.target.value)}
                 />
             </div>
-            <div className={styles["local-upload-modal-next-btn"]}>
-                <YakitButton onClick={handleSubmit}>提交</YakitButton>
+            <div className={styles["upload-modal-supplement-item"]}>
+                <div className={styles["item-name"]}>附件</div>
+                <div className={styles["item-upload-file"]}>
+                    <Upload
+                        accept='application/zip,.rar'
+                        multiple={false}
+                        showUploadList={false}
+                        beforeUpload={(file: any) => {
+                            console.log("file", file)
+                            return true
+                        }}
+                    >
+                        <span className={styles["upload-coantent"]}>点击上传压缩包附件</span>
+                    </Upload>
+                    <span>注: 上传压缩包，提供复现流程或截图</span>
+                </div>
+            </div>
+            <div style={{paddingTop: 24}} className={styles["upload-modal-next-btn"]}>
+                <YakitButton loading={!!loading} onClick={handleSubmit}>
+                    提交
+                </YakitButton>
             </div>
         </>
     )

@@ -1,36 +1,40 @@
-import React, {forwardRef, memo, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {
-    CreateNewElementType,
-    SetImageElementFunc,
-    TextareaForImage,
-    YakitImageTextareaInfoProps,
-    YakitImageTextareaProps
-} from "./YakitImageTextareaType"
+import {TextareaForImage, YakitImageTextareaProps} from "./YakitImageTextareaType"
 import {failed, yakitNotify} from "@/utils/notification"
 import {FileItem} from "fs"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePhotographIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {Upload} from "antd"
+import {Image as AntdImage, Input, Upload} from "antd"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
-import {randomString} from "@/utils/randomUtil"
-import {fetchCursorLineContent, generateImgBody, generateLineBreakBody, generateTextBody} from "./utils"
 import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
-import "./YakitImageTextarea.scss"
+import styles from "./YakitImageTextarea.module.scss"
+import {TextAreaRef} from "antd/lib/input/TextArea"
+import {deleteOSSImage, uploadBase64ImgToUrl} from "./utils"
 
 export const YakitImageTextarea: React.FC<YakitImageTextareaProps> = memo(
     forwardRef((props, ref) => {
-        const {} = props
+        const {type = "comment", onSubmit} = props
 
         useImperativeHandle(
             ref,
             () => ({
-                setQuotationInfo: setQuotationInfo
+                setQuotationInfo: setQuotationInfo,
+                getData: getData
             }),
             []
         )
+
+        const getData = useMemoizedFn(() => {
+            return {
+                value: value,
+                imgs: cloneDeep(imgs)
+            }
+        })
+
+        const onReply = useMemoizedFn(() => {})
 
         /** ----------  引用相关功能 Start ---------- */
         const quotationInfo = useRef<{name: string; content: string}>()
@@ -43,22 +47,39 @@ export const YakitImageTextarea: React.FC<YakitImageTextareaProps> = memo(
         /** ---------- 引用相关功能 End ---------- */
 
         /** ----------  编辑内容相关 Start ---------- */
-        const textAreaRef = useRef<HTMLDivElement>(null)
-        const list = useRef<YakitImageTextareaInfoProps[]>([{type: "text", content: "", order: randomString(10)}])
+        // 文本内容相关
+        const textAreaRef = useRef<TextAreaRef>(null)
+        const [value, setValue] = useState<string>("")
+        const contentLength = useMemo(() => {
+            return value.length
+        }, [value])
 
-        // 图片加载 loading
+        /** ---------- 编辑内容相关 End ---------- */
+
+        /** ----------  编辑图片相关 Start ---------- */
         const [imgLoading, setImgLoading] = useState<boolean>(false)
-        const imgDom = useRef<HTMLDivElement | null>(null)
-        const imgWrapperDom = useRef<HTMLDivElement | null>(null)
-        const setImgActiveDom: SetImageElementFunc = useMemoizedFn((dom, wrapper) => {
-            imgDom.current = dom
-            imgWrapperDom.current = wrapper
-        })
+        const [imgs, setImgs] = useState<TextareaForImage[]>([
+            {
+                url: "https://yakit-online.oss-cn-hongkong.aliyuncs.com/img/20240923155226-.png",
+                width: 1,
+                height: 1
+            },
+            {url: "https://yakit-online.oss-cn-hongkong.aliyuncs.com/img/20240923162441-.png", width: 1, height: 1},
+            {
+                url: "https://yakit-online.oss-cn-hongkong.aliyuncs.com/img/20240923163003-.png",
+                width: 1,
+                height: 1
+            }
+        ])
+        const imgsLength = useMemo(() => {
+            return imgs.length
+        }, [imgs])
+
         // 生成图片信息
         const generateImageInfo: (image: FileItem) => Promise<TextareaForImage> = useMemoizedFn((image) => {
             return new Promise((resolve, reject) => {
                 if (imgLoading) {
-                    reject("")
+                    reject("图片正在上传中, 请稍候在操作...")
                     return
                 }
                 if (!image) {
@@ -82,7 +103,15 @@ export const YakitImageTextarea: React.FC<YakitImageTextareaProps> = memo(
                     const img = new Image()
                     img.onload = () => {
                         const {width, height} = img
-                        resolve({base64: base64 as string, width, height})
+                        uploadBase64ImgToUrl({base64: base64 as string, type: "img"})
+                            .then((res) => {
+                                setImgs((arr) => arr.concat([{url: res as string, width, height}]))
+                                resolve({url: res as string, width, height})
+                            })
+                            .catch(() => {
+                                reject("")
+                            })
+
                         setTimeout(() => {
                             setImgLoading(false)
                         }, 100)
@@ -93,147 +122,135 @@ export const YakitImageTextarea: React.FC<YakitImageTextareaProps> = memo(
             })
         })
 
-        /**
-         * 文本域右键粘贴时间
-         * 用于识别文字内容和图片，从而进行不同处理
-         */
-        const handlePaste = useMemoizedFn(async (e: ClipboardEvent) => {
-            e.preventDefault()
-            e.stopPropagation()
-
+        const handlePaste = useMemoizedFn(async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
             const pasteItems = e.clipboardData?.items || []
             for (let i = 0; i < pasteItems.length; i++) {
                 const item = pasteItems[i]
-
-                if (item.kind === "string" && item.type === "text/plain") {
-                    // 粘贴文字内容
-                    item.getAsString((str) => {
-                        createElement("text", str.split("\n"))
-                    })
-                } else if (item.kind === "file" && item.type.indexOf("image") !== -1) {
+                if (item.kind === "file" && item.type.indexOf("image") !== -1) {
+                    e.preventDefault()
+                    e.stopPropagation()
                     // 粘贴图片
                     if (imgLoading) return
                     const image = item.getAsFile() as FileItem
                     try {
-                        const imageInfo = await generateImageInfo(image)
-                        createElement("image", imageInfo)
+                        await generateImageInfo(image)
                     } catch (error) {}
                 }
             }
         })
 
-        useEffect(() => {
-            const textarea = textAreaRef.current
-            if (textarea) {
-                textarea.addEventListener("paste", handlePaste)
-                return () => {
-                    textarea.removeEventListener("paste", handlePaste)
-                }
-            }
-        }, [])
-
-        /**
-         * 监听键盘事件
-         * 接管换行 Enter 按键功能
-         */
-        const handleKeydown = useMemoizedFn((e: React.KeyboardEvent<HTMLDivElement>) => {
-            if (e.code === "Backspace") {
-                const selection = window.getSelection()
-                const nodes = selection?.anchorNode
-                let coantgent = ""
-                if (nodes && nodes.nodeType === 3) {
-                    coantgent = (nodes as Text).data
-                    let start = selection?.anchorOffset || 0
-                    let end = selection?.focusOffset || 0
-                    if (start === 0 && end === 0) return
-                    let isflag = start > end
-                }
-                console.log("selection", selection)
-            }
-            if (e.code === "Enter") {
-                e.preventDefault()
-                e.stopPropagation()
-                createElement("div", [])
-            }
+        // 预览
+        const [preview, setPreview] = useState<boolean>(false)
+        const current = useRef<number>(0)
+        const handlePreview = useMemoizedFn((index: number) => {
+            if (preview) return
+            current.current = index
+            setPreview(true)
         })
 
-        /**
-         * 创建一个新元素
-         * @param type 创建元素类型
-         * @param info 创建元素信息
-         * @param isLoop 是否递归调用
-         */
-        const createElement = useMemoizedFn((type: CreateNewElementType, info: TextareaForImage | string[]) => {
-            // 换行处理
-            if (type === "div") {
-                if (!textAreaRef.current) return
-                generateLineBreakBody({
-                    root: textAreaRef.current,
-                    imageRoot: imgWrapperDom.current || undefined,
-                    setImgDom: setImgActiveDom
-                })
-            }
-
-            // 文字内容新生成处理
-            if (type === "text") {
-                if (!textAreaRef.current) return
-                generateTextBody({
-                    strs: info as string[],
-                    root: textAreaRef.current,
-                    previous: imgWrapperDom.current,
-                    setImgDom: setImgActiveDom
-                })
-            }
-
-            if (type === "image") {
-                if (!textAreaRef.current) return
-                generateImgBody({
-                    info: info as TextareaForImage,
-                    root: textAreaRef.current,
-                    imageFocus: imgWrapperDom.current,
-                    setImgDom: setImgActiveDom
-                })
-            }
+        // 删除图片
+        const handleDelImg = useMemoizedFn((index: number) => {
+            setImgs((arr) => {
+                const name = arr[index].url.split("/").reverse()[0]
+                arr.splice(index, 1)
+                // 删除oss图片
+                // deleteOSSImage({file_name: []})
+                return [...arr]
+            })
         })
-        /** ---------- 编辑内容相关 End ---------- */
+        /** ----------  编辑图片相关 End ---------- */
 
         /** ----------  操作相关 Start ---------- */
+        const [textareaFocus, setTextareaFocus] = useState<boolean>(false)
+
+        // 文本区域聚焦状态
+        const handleFocus = useMemoizedFn(() => {
+            setTextareaFocus(true)
+            textAreaRef.current!.focus({cursor: "end"})
+        })
+        // 文本区域失焦状态
+        const handleBlur = useMemoizedFn(() => {
+            setTextareaFocus(false)
+        })
+
+        // 文本区域聚焦后光标设置到文本内容最后
+        const handleTextareaFocus = useMemoizedFn(() => {
+            textAreaRef.current!.focus({cursor: "end"})
+        })
         /** ---------- 操作相关 End ---------- */
 
         return (
-            <div className={"yakit-image-textarea"}>
+            <div
+                className={classNames(styles["yakit-image-textarea"], {
+                    [styles["yakit-image-textarea-focus"]]: textareaFocus
+                })}
+                onClick={handleTextareaFocus}
+            >
                 {(true || !!quotaionContent) && (
-                    <div className={"yakit-image-textarea-quotation"}>
-                        <div className={"del-btn"} onClick={handleDelQuotation}>
+                    <div className={styles["yakit-image-textarea-quotation"]}>
+                        <div className={styles["del-btn"]} onClick={handleDelQuotation}>
                             <OutlineXIcon />
                         </div>
-                        <div className={"divider-style"}></div>
-                        <div className={classNames("content-style", "yakit-content-single-ellipsis")}>
+                        <div className={styles["divider-style"]}></div>
+                        <div className={classNames(styles["content-style"], "yakit-content-single-ellipsis")}>
                             {"回复 桔子 : 这里是审核不通过的雨爱你说这那个 v 石膏板" || quotaionContent}
                         </div>
                     </div>
                 )}
 
-                <div
+                <Input.TextArea
                     ref={textAreaRef}
-                    className={classNames("yakit-image-textarea-body", {"yakit-image-textarea-no-empty": true})}
-                    suppressContentEditableWarning={true}
-                    contentEditable={true}
-                    spellCheck={false}
-                    placeholder='如为漏洞检测插件，请填写检测站或复现流程，并粘贴复现截图，便于进行审核。该内容只有审核可见...'
-                    onKeyDown={handleKeydown}
-                >
-                    <div
-                        data-record-id={list.current[0]?.order || randomString(10)}
-                        className={classNames("yakit-image-textarea-line", "yakit-image-textarea-text")}
-                    >
-                        <div contentEditable={true} suppressContentEditableWarning={true}>
-                            <br></br>
-                        </div>
-                    </div>
-                </div>
+                    className={styles["yakit-image-textarea-body"]}
+                    bordered={false}
+                    autoSize={{minRows: 1, maxRows: 3}}
+                    placeholder='说点什么...(tip: 可以粘贴图片了)'
+                    maxLength={150}
+                    onPaste={handlePaste}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onChange={(e) => setValue(e.target.value)}
+                />
 
-                <div className={"yakit-image-textarea-footer-operate"}>
+                {imgsLength > 0 && (
+                    <div className={styles["yakit-image-textarea-imgs"]}>
+                        {imgs.map((item, index) => {
+                            return (
+                                <div
+                                    className={styles["img-opt"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    <AntdImage
+                                        key={item.url}
+                                        src={item.url}
+                                        className={styles["img-style"]}
+                                        preview={false}
+                                    />
+                                    <div
+                                        className={styles["mask-box"]}
+                                        onClick={() => {
+                                            handlePreview(index)
+                                        }}
+                                    >
+                                        预览
+                                    </div>
+                                    <div
+                                        className={styles["img-close"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleDelImg(index)
+                                        }}
+                                    >
+                                        <OutlineXIcon />
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
+
+                <div className={styles["yakit-image-textarea-footer-operate"]}>
                     <Upload
                         accept='image/jpeg,image/png,image/jpg,image/gif'
                         multiple={false}
@@ -251,23 +268,41 @@ export const YakitImageTextarea: React.FC<YakitImageTextareaProps> = memo(
                             }
                             if (file) {
                                 try {
-                                    const imageInfo = await generateImageInfo(file)
-                                    createElement("image", imageInfo)
+                                    await generateImageInfo(file)
                                 } catch (error) {}
                             }
                             return true
                         }}
                     >
-                        <YakitButton disabled={false} icon={<OutlinePhotographIcon />} type='text2' />
+                        <YakitButton loading={imgLoading} icon={<OutlinePhotographIcon />} type='text2' />
                     </Upload>
 
-                    <div className={"right-footer"}>
-                        <div className={"content-length"}>{1}/150</div>
-                        <YakitButton>
-                            <SolidPaperairplaneIcon />
-                            回复
-                        </YakitButton>
+                    <div className={styles["right-footer"]}>
+                        <div className={styles["content-length"]}>{contentLength}/150</div>
+                        {type === "comment" && (
+                            <YakitButton onClick={onReply}>
+                                <SolidPaperairplaneIcon />
+                                回复
+                            </YakitButton>
+                        )}
                     </div>
+                </div>
+
+                {/* 图片预览 */}
+                <div style={{display: "none"}}>
+                    <AntdImage.PreviewGroup
+                        preview={{
+                            visible: preview,
+                            onVisibleChange: (show) => {
+                                setPreview(show)
+                            },
+                            current: current.current
+                        }}
+                    >
+                        {imgs.map((item) => {
+                            return <AntdImage src={item.url} />
+                        })}
+                    </AntdImage.PreviewGroup>
                 </div>
             </div>
         )

@@ -226,6 +226,7 @@ module.exports = (win, getClient) => {
         formData.append("file_name", binaryData)
         formData.append("type", type)
         if (uuid) formData.append("uuid", uuid)
+        console.log("formData", formData)
         const res = await httpApi(
             "post",
             "upload/img",
@@ -235,5 +236,25 @@ module.exports = (win, getClient) => {
         )
 
         return res
+    })
+
+    // 上传插件附件
+    ipcMain.handle("upload-plugin-file", async (event, params) => {
+        const {path, name, uuid} = params
+        // 创建数据流
+        try {
+            const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
+            const formData = new FormData()
+            formData.append("file", readerStream)
+            formData.append("fileName", name)
+            if (uuid) formData.append("uuid", uuid || "")
+            const headers = {
+                "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
+            }
+            const res = httpApi("post", "upload/file", formData, headers, false)
+            return res
+        } catch (error) {
+            throw error
+        }
     })
 }

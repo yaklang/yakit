@@ -134,6 +134,10 @@ import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/YakRunner/YakRunner"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
+import {YakitImageTextarea} from "@/pages/pluginEditor/yakitImageTextarea/YakitImageTextarea"
+import {PluginLog} from "@/pages/pluginHub/pluginLog/PluginLog"
+import {PluginLogOpt} from "@/pages/pluginHub/pluginLog/PluginLogOpt"
+import {PluginLogList} from "@/pages/pluginHub/pluginLog/PluginLogList"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -408,7 +412,15 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <Home />
+            return (
+                <div style={{width: "100%", height: "100%", padding: 12}}>
+                    {/* <PluginLog /> */}
+                    <YakitImageTextarea onSubmit={() => {}} />
+                    {/* <PluginLogList type='all' plugin={{uuid: "ebabee0e-aa94-485e-9227-4343c73b7fd4"} as any} /> */}
+                </div>
+            )
+
+        // return <Home />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

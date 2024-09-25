@@ -41,6 +41,9 @@
 // 不通过|删除原因弹窗
 .reason-modal-body {
     padding: 16px 24px 24px 24px;
+    .no-pass-kind {
+        padding-bottom: 20px;
+    }
     .hint-wrapper {
         color: #b4bbca;
         font-size: 14px;
