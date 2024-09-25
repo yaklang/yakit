@@ -87,6 +87,8 @@ export interface HTTPFuzzerPageTableQuery {
     keyWord?: string
     afterBodyLength?: number
     beforeBodyLength?: number
+    afterDurationMs?: number
+    beforeDurationMs?: number
     StatusCode?: string[]
     Color?: string[]
     // bodyLengthUnit: "B" | "k" | "M"
@@ -161,6 +163,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
         const bodyLengthRef = useRef<any>()
+        const durationMsRef = useRef<any>()
         const tableRef = useRef<any>(null)
 
         const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -315,9 +318,36 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                       {
                           title: "延迟(ms)",
                           dataKey: "DurationMs",
-                          width: 100,
+                          width: 120,
                           sorterProps: {
                               sorter: true
+                          },
+                          filterProps: {
+                              filterKey: "durationMs",
+                              filterIcon: (
+                                  <FilterIcon
+                                      className={classNames(styles["filter-icon"], {
+                                          [styles["active-icon"]]: query?.afterDurationMs || query?.beforeDurationMs
+                                      })}
+                                  />
+                              ),
+                              filterRender: () => (
+                                  <DurationMsInputNumber
+                                      ref={durationMsRef}
+                                      query={query}
+                                      setQuery={(q) => {
+                                          setQuery({
+                                              ...q
+                                          })
+                                      }}
+                                      onSure={() => {
+                                          setTimeout(() => {
+                                              update()
+                                          }, 100)
+                                      }}
+                                      showFooter={true}
+                                  />
+                              )
                           },
                           render: (v, rowData) =>
                               v ? (
@@ -516,7 +546,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           }
                       }
                   ]
-        }, [success, query?.afterBodyLength, query?.beforeBodyLength, extractedMap, isHaveData, isShowDebug])
+        }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.afterDurationMs, query?.beforeDurationMs, extractedMap, isHaveData, isShowDebug])
 
         // 背景颜色是否标注为红色
         const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -560,10 +590,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const onTableChange = useMemoizedFn(
             (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
                 const l = bodyLengthRef?.current?.getValue() || {}
+                const d = durationMsRef?.current?.getValue() || {}
                 setQuery({
                     ...query,
                     ...filters,
-                    ...l
+                    ...l,
+                    ...d
                 })
                 setSorterTable(sorter)
             }
@@ -607,6 +639,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     (query?.Color && query?.Color?.length > 0) ||
                     query?.afterBodyLength ||
                     query?.beforeBodyLength ||
+                    query?.afterDurationMs ||
+                    query?.beforeDurationMs ||
                     isHaveData
                 ) {
                     const newDataTable = sorterFunction(data, sorterTable) || []
@@ -619,6 +653,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let statusCodeIsPush = true
                         let bodyLengthMinIsPush = true
                         let bodyLengthMaxIsPush = true
+                        let durationMsMinIsPush = true
+                        let durationMsMaxIsPush = true
                         let isHaveDataIsPush = true
                         let colorIsPush = true
                         // 搜索满足条件 交集
@@ -666,6 +702,15 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             // 最大
                             bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
                         }
+                        // 延迟搜索
+                        if (query?.afterDurationMs) {
+                            // 最小
+                            durationMsMinIsPush = Number(record.DurationMs) >= query.afterDurationMs
+                        }
+                        if (query?.beforeDurationMs) {
+                            // 最大
+                            durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
+                        }
                         // 是否有提取数据
                         if (isHaveData) {
                             if (extractedMap.size > 0) {
@@ -681,6 +726,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             statusCodeIsPush &&
                             bodyLengthMinIsPush &&
                             bodyLengthMaxIsPush &&
+                            durationMsMinIsPush &&
+                            durationMsMaxIsPush &&
                             isHaveDataIsPush
                         ) {
                             searchList.push(record)
@@ -1106,6 +1153,66 @@ export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React
                             ...query,
                             afterBodyLength,
                             beforeBodyLength
+                        })
+                    }}
+                />
+            </div>
+        )
+    })
+)
+
+interface DurationMsInputNumberProps {
+    query?: HTTPFuzzerPageTableQuery
+    setQuery: (h: HTTPFuzzerPageTableQuery) => void
+    onSure?: () => void
+    showFooter?: boolean
+    ref?: any
+}
+export const DurationMsInputNumber: React.FC<DurationMsInputNumberProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {query, setQuery, showFooter} = props
+        // 响应大小
+        const [afterDurationMs, setAfterDurationMs] = useState<number>()
+        const [beforeDurationMs, setBeforeDurationMs] = useState<number>()
+        useEffect(() => {
+            setAfterDurationMs(query?.afterDurationMs)
+            setBeforeDurationMs(query?.beforeDurationMs)
+        }, [query])
+        useImperativeHandle(
+            ref,
+            () => ({
+                getValue: () => {
+                    const objLength = {
+                        afterDurationMs,
+                        beforeDurationMs
+                    }
+                    return objLength
+                }
+            }),
+            [afterDurationMs, beforeDurationMs]
+        )
+        return (
+            <div className={styles["range-input-number"]}>
+                <RangeInputNumberTable
+                    showFooter={showFooter}
+                    minNumber={afterDurationMs}
+                    setMinNumber={setAfterDurationMs}
+                    maxNumber={beforeDurationMs}
+                    setMaxNumber={setBeforeDurationMs}
+                    onReset={() => {
+                        setQuery({
+                            ...query,
+                            afterDurationMs,
+                            beforeDurationMs
+                        })
+                        setBeforeDurationMs(undefined)
+                        setAfterDurationMs(undefined)
+                    }}
+                    onSure={() => {
+                        setQuery({
+                            ...query,
+                            afterDurationMs,
+                            beforeDurationMs
                         })
                     }}
                 />
