@@ -1,0 +1,195 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.icon {
+    width: 16px;
+    height: 16px;
+    color: var(--yakit-body-text-color);
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.modify-notepad {
+    @extend %display-column-center;
+    position: relative;
+    height: 100%;
+    padding-bottom: 24px;
+    .modify-notepad-heard {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--yakit-border-color);
+        // position: sticky;
+        // top: 0;
+        background: #fff;
+        // z-index: 2;
+        overflow: hidden;
+        &-title {
+            color: var(--yakit-header-color);
+
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 24px; /* 150% */
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        &-extra {
+            @extend %display-flex-center;
+            justify-content: flex-end;
+            gap: 8px;
+            &-online-user {
+                @extend %display-flex-center;
+                gap: 4px;
+                .online-user-icon {
+                    padding: 0;
+                    width: 10px;
+                    height: 10px;
+                    transform: translateX(18px) translateY(-10px);
+                }
+                .online-user-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                }
+            }
+        }
+    }
+}
+.notepad-catalogue-wrapper {
+    position: sticky;
+    top: 0;
+    height: 0;
+    width: 0;
+    z-index: 2;
+    .notepad-catalogue {
+        width: fit-content;
+        position: sticky;
+        left: 16px;
+        top: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transition: max-width 0.2s ease;
+        :global {
+            .ant-tree-switcher {
+                width: 0;
+            }
+            .ant-tree-treenode {
+                padding: 3px 4px;
+                border-radius: 4px;
+                height: 26px;
+                width: 100%;
+                &:hover {
+                    background-color: #f8f8f8;
+                }
+            }
+            .ant-tree {
+                .ant-tree-node-content-wrapper {
+                    overflow: hidden;
+                    padding: 0;
+                    &:hover {
+                        background-color: initial;
+                    }
+                }
+                .ant-tree-node-content-wrapper.ant-tree-node-selected {
+                    background-color: initial;
+                }
+            }
+        }
+        .notepad-button {
+            display: flex;
+        }
+        .notepad-catalogue-tree {
+            border-radius: 8px;
+
+            overflow: hidden;
+            .catalogue-tree-node {
+                @extend %display-flex-center;
+                gap: 4px;
+            }
+            .tree-node-title {
+                color: var(--yakit-body-text-color);
+                font-size: 14px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 20px;
+
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+            .tree-node-title-level-one {
+                font-weight: 600;
+            }
+        }
+        .notepad-catalogue-tree-hidden {
+            display: none;
+        }
+    }
+    .notepad-catalogue-retract {
+        position: fixed;
+        z-index: 2;
+        background-color: rgba($color: #fff, $alpha: 0.8);
+        box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+
+        &:hover {
+            .notepad-catalogue-tree-hidden {
+                display: flex;
+            }
+        }
+        .notepad-button {
+            display: block;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #fff;
+        }
+    }
+    .notepad-catalogue-hidden {
+        overflow-y: hidden;
+    }
+}
+.notepad {
+    @extend %display-flex-center;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 16px 0 12px;
+    position: relative;
+    overflow: auto;
+    flex: 1;
+
+    .notepad-content {
+        width: 820px;
+        flex-shrink: 0;
+        overflow-y: hidden;
+        margin: 0 auto;
+        padding: 0 48px 24px 96px;
+        .notepad-heard {
+            @extend %display-column-center;
+            // height: 80px;
+            margin-bottom: 24px;
+            .notepad-heard-subTitle {
+                @extend %display-flex-center;
+                gap: 4px;
+                margin-top: 12px;
+            }
+        }
+        .notepad-editor {
+            flex: 1;
+        }
+    }
+}
