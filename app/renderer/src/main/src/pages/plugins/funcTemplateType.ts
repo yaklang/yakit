@@ -256,6 +256,8 @@ export interface AuthorImgProps {
     icon?: ReactNode
     /** wrapper 样式类 */
     wrapperClassName?: string
+    /** 右下角icon ClassName */
+    iconClassName?:string
 }
 
 export interface TagShowOpt {
