@@ -1,5 +1,5 @@
 import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
-import React from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {blockquoteSchema, codeBlockSchema, commonmark} from "@milkdown/kit/preset/commonmark"
@@ -25,9 +25,17 @@ import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock"
 import {Blockquote} from "./Blockquote"
-import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
+import {CustomMilkdownProps, MilkdownEditorProps, EditorMilkdownProps} from "./MilkdownEditorType"
+const markdown = `
+# 1-1  Milkdown React Commonmark
 
-const markdown = `# Milkdown React Commonmark
+## 1-2  Milkdown React Commonmark
+### 1-3  Milkdown React Commonmark
+
+# 2-1  Milkdown React Commonmark
+## 2-2  Milkdown React Commonmark
+### 2-3  Milkdown React Commonmark
+
 
 Maybe more? ![]()
 
@@ -70,9 +78,10 @@ Editor
 `
 
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
+    const {setEditor} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
-    useEditor((root) => {
+    const {get} = useEditor((root) => {
         return (
             Editor.make()
                 .config((ctx) => {
@@ -164,7 +173,12 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(placeholderConfig)
         )
     }, [])
-
+    useEffect(() => {
+        const editor = get()
+        if (editor && setEditor) {
+            setEditor(editor)
+        }
+    }, [get])
     return <Milkdown />
 })
 
@@ -172,7 +186,7 @@ export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) 
     return (
         <MilkdownProvider>
             <ProsemirrorAdapterProvider>
-                <CustomMilkdown />
+                <CustomMilkdown {...props} />
             </ProsemirrorAdapterProvider>
         </MilkdownProvider>
     )

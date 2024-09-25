@@ -1175,7 +1175,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 
 /** @name 用户头像(头像右下角带小icon) */
 export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
-    const {size = "middle", src, builtInIcon, icon} = props
+    const {size = "middle", src, builtInIcon, icon,iconClassName=''} = props
     const [isError, setIsError] = useState<boolean>(false)
     const srcUrl = useMemo(() => {
         if (isError) return UnLogin
@@ -1232,7 +1232,7 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     return (
         <div className={imgBodyClass}>
             <img className={imgClass} src={srcUrl} alt='' onError={onErrorImg} />
-            {iconNode && <div className={styles["author-img-mask"]}>{iconNode}</div>}
+            {iconNode && <div className={classNames(styles["author-img-mask"],iconClassName)}>{iconNode}</div>}
         </div>
     )
 })
