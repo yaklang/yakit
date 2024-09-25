@@ -480,7 +480,6 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             params.PortScanRequest.Targets = ""
         }
         /**继续任务后，再次点击开始执行，开启新任务 */
-        console.log("执行", params)
         apiSimpleDetect(params, tokenRef.current).then(() => {
             setExecuteStatus("process")
             setIsExpand(false)
