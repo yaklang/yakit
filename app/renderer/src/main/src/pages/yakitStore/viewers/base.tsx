@@ -1,12 +1,8 @@
 import React, {useEffect, useRef, useState, useMemo, CSSProperties} from "react"
 import {YakScript} from "../../invoker/schema"
-import {Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag} from "antd"
-import {
-    HTTPFlow,
-    HTTPFlowTable,
-    LogLevelToCode,
-} from "../../../components/HTTPFlowTable/HTTPFlowTable"
-import {YakitLogFormatter} from "../../invoker/YakitLogFormatter"
+import {Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag, Divider} from "antd"
+import {HTTPFlow, HTTPFlowTable, LogLevelToCode} from "../../../components/HTTPFlowTable/HTTPFlowTable"
+import {YakitLogFormatter, YakitLogViewers} from "../../invoker/YakitLogFormatter"
 import {ExecResultLog, ExecResultProgress} from "../../invoker/batch/ExecMessageViewer"
 import {randomString} from "../../../utils/randomUtil"
 import {WebsiteTreeViewer} from "./WebsiteTree"
@@ -25,12 +21,16 @@ import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {sorterFunction} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import {isEnpriTrace} from "@/utils/envfile"
-import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {Uint8ArrayToString} from "@/utils/str"
 import {v4 as uuidv4} from "uuid"
 import {HTTPHistorySourcePageType} from "@/components/HTTPHistory"
+import {MITMPluginLogViewer} from "@/pages/mitm/MITMPluginLogViewer"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import moment from "moment"
+import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
+const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export interface StatusCardProps {
@@ -301,12 +301,9 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             {progressBars.length > 0 && (
                 <div style={{marginTop: 4, marginBottom: 8}}>{progressBars.map((i) => i.node)}</div>
             )}
-            <YakitTabs
+            <PluginTabs
                 type='card'
-                style={{flex: 1, overflow: "hidden", minHeight: "55%"}}
-                tabBarStyle={{display: "flex", overflow: "hidden"}}
                 className={"main-content-tabs no-theme-tabs"}
-                boxStyle={{flex: 1, overflow: "hidden"}}
                 activeKey={active}
                 onChange={(activeKey) => {
                     setActive(activeKey)
@@ -317,69 +314,70 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             >
                 {(finalFeatures || []).map((i, index) => {
                     return (
-                        <YakitTabs.YakitTabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
+                        <TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
                             <YakitFeatureRender
                                 params={i.params}
                                 feature={i.feature}
                                 execResultsLog={feature || []}
                                 excelName={YakitFeatureTabName(i.feature, i.params)}
                             />
-                        </YakitTabs.YakitTabPane>
+                        </TabPane>
                     )
                 })}
                 {!!props.runtimeId && (
-                    <YakitTabs.YakitTabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
+                    <TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
                         <CurrentHttpFlow
                             runtimeId={props.runtimeId}
                             isOnlyTable={onlyShowFirstNode}
                             onIsOnlyTable={setOnlyShowFirstNode}
                         ></CurrentHttpFlow>
-                    </YakitTabs.YakitTabPane>
+                    </TabPane>
                 )}
-                <YakitTabs.YakitTabPane
-                    tab={"基础插件信息 / 日志"}
-                    key={finalFeatures.length > 0 ? "log" : "feature-0"}
-                >
+                <TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                     {
                         <>
-                            {/*<Divider orientation={"left"}>Yakit Module Output</Divider>*/}
                             <AutoCard
-                                size={"small"}
-                                hoverable={false}
-                                bordered={true}
                                 title={
                                     <Space>
                                         <div>任务额外日志与结果</div>
-                                        {(timelineItemProps || []).length > 0
-                                            ? formatDate(timelineItemProps[0].timestamp)
-                                            : ""}
+                                        <YakitTag color='info'>
+                                            {(timelineItemProps || []).length > 0
+                                                ? formatDate(timelineItemProps[0].timestamp)
+                                                : formatDate(moment().unix())}
+                                        </YakitTag>
                                     </Space>
                                 }
-                                style={{marginBottom: 20, marginRight: 2, marginTop: -1}}
+                                size={"small"}
                                 bodyStyle={{overflowY: "auto"}}
+                                style={{borderTop: "none"}}
                             >
-                                <Timeline pending={loading} style={{marginTop: 10, marginBottom: 10}}>
-                                    {(timelineItemProps || [])
-                                        .reverse()
-                                        .filter((item) => item.level !== "json-risk")
-                                        .map((e, index) => {
-                                            return (
-                                                <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
-                                                    <YakitLogFormatter
-                                                        data={e.data}
-                                                        level={e.level}
-                                                        timestamp={e.timestamp}
-                                                    />
-                                                </Timeline.Item>
-                                            )
-                                        })}
-                                </Timeline>
+                                <div className='passive-log-container'>
+                                    <Divider style={{marginTop: 8}} />
+                                    <div className='log-timeline'>
+                                        <Timeline pending={loading}>
+                                            {(timelineItemProps || [])
+                                                .reverse()
+                                                .filter((item) => item.level !== "json-risk")
+                                                .map((e, index) => {
+                                                    return (
+                                                        <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
+                                                            <YakitLogFormatter
+                                                                data={e.data}
+                                                                level={e.level}
+                                                                timestamp={e.timestamp}
+                                                            />
+                                                        </Timeline.Item>
+                                                    )
+                                                })}
+                                        </Timeline>
+                                    </div>
+                                </div>
                             </AutoCard>
                         </>
                     }
-                </YakitTabs.YakitTabPane>
+                </TabPane>
                 {!!props?.risks && props.risks.length > 0 && (
-                    <YakitTabs.YakitTabPane
+                    <TabPane
                         tab={
                             <div>
                                 {`漏洞与风险`}
@@ -403,33 +401,33 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                             </div>} */}
                             </Space>
                         </AutoCard>
-                    </YakitTabs.YakitTabPane>
+                    </TabPane>
                 )}
-                <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>
+                <TabPane tab={"Console"} key={"console"}>
                     <div style={{width: "100%", height: consoleHeight ? consoleHeight : "100%"}}>
                         <EngineConsole isMini={true} />
                     </div>
-                </YakitTabs.YakitTabPane>
-                {/*{props.fromPlugin && <YakitTabs.YakitTabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
+                </TabPane>
+                {/*{props.fromPlugin && <TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <HTTPFlowTable*/}
                 {/*            noHeader={true}*/}
                 {/*            params={{FromPlugin: props.fromPlugin}}*/}
                 {/*        />*/}
                 {/*    </div>*/}
-                {/*</YakitTabs.YakitTabPane>}*/}
+                {/*</TabPane>}*/}
                 {/*{!props.debugMode && props.onXtermRef ? (*/}
-                {/*    <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
+                {/*    <TabPane tab={"Console"} key={"console"}>*/}
                 {/*        <div style={{width: "100%", height: "100%"}}>*/}
                 {/*            <CVXterm ref={xtermRef} options={{convertEol: true}}/>*/}
                 {/*        </div>*/}
-                {/*    </YakitTabs.YakitTabPane>*/}
-                {/*) : <YakitTabs.YakitTabPane tab={"Console"} key={"console"}>*/}
+                {/*    </TabPane>*/}
+                {/*) : <TabPane tab={"Console"} key={"console"}>*/}
                 {/*    <div style={{width: "100%", height: "100%"}}>*/}
                 {/*        <EngineConsole isMini={true}/>*/}
                 {/*    </div>*/}
-                {/*</YakitTabs.YakitTabPane>}*/}
-            </YakitTabs>
+                {/*</TabPane>}*/}
+            </PluginTabs>
             {/* </div> */}
         </div>
     )

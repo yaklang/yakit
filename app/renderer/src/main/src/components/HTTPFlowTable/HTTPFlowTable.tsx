@@ -1931,7 +1931,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 e.stopPropagation()
                                 let m = showDrawer({
                                     width: "80%",
-                                    content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr)
+                                    content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr),
+                                    bodyStyle: {paddingTop: 5}
                                 })
                             }}
                         />

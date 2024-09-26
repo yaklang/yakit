@@ -1,20 +1,5 @@
 import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useImperativeHandle} from "react"
-import {
-    Button,
-    Card,
-    Col,
-    Collapse,
-    Descriptions,
-    Empty,
-    PageHeader,
-    Row,
-    Space,
-    Spin,
-    Tabs,
-    Tag,
-    Tooltip,
-    Typography
-} from "antd"
+import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Spin, Tag, Tooltip, Typography} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
@@ -40,7 +25,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
-import {YakitTag} from "./yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
@@ -50,7 +35,11 @@ import {RemoteGV} from "@/yakitGV"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {YakitPopover} from "./yakitUI/YakitPopover/YakitPopover"
 import {SolidCheckIcon} from "@/assets/icon/solid"
-
+import {YakitCopyText} from "./yakitUI/YakitCopyText/YakitCopyText"
+import YakitCollapse from "./yakitUI/YakitCollapse/YakitCollapse"
+import PluginTabs from "./businessUI/PluginTabs/PluginTabs"
+import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
+const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 export type SendToFuzzerFunc = (req: Uint8Array, isHttps: boolean) => any
@@ -75,6 +64,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     historyId?: string
     downstreamProxyStr?: string
+    loading?: boolean
 }
 
 const {Text} = Typography
@@ -113,7 +103,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             .catch((e) => {
                 failed(`分析参数失败: ${e}`)
             })
-            .finally(() => setTimeout(() => setLoading(false), 300))
     }, [response])
 
     const fetchInfo = (kind: number) => {
@@ -129,10 +118,6 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
         }
     }
 
-    if (loading) {
-        return <Spin tip={"正在分析详细参数"} />
-    }
-
     return (
         <HTTPFlowDetail
             onClose={rsp.onClosed}
@@ -141,6 +126,7 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
             isFront={index === undefined ? undefined : index === 0}
             isBehind={index === undefined ? undefined : index === (rsp?.data || []).length - 1}
             fetchRequest={fetchInfo}
+            loading={loading}
         />
     )
 }
@@ -148,6 +134,10 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        setLoading(props.loading || false)
+    }, [props.loading])
 
     useEffect(() => {
         if (props.id <= 0) {
@@ -242,7 +232,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }
 
     return (
-        <Spin spinning={loading} style={{width: "100%", marginBottom: 24}}>
+        <YakitSpin spinning={loading} style={{width: "100%", marginBottom: 24}} tip="正在分析详细参数">
             {flow ? (
                 <>
                     {props.noHeader ? undefined : (
@@ -251,28 +241,29 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                             subTitle={`${props.id}${
                                 (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(",")}` : ""
                             }`}
+                            style={{padding: 0, paddingBottom: 5}}
                             extra={
                                 props.fetchRequest ? (
                                     <Space>
                                         <Tooltip title={"上一个请求"}>
-                                            <Button
-                                                type='link'
+                                            <YakitButton
+                                                type='text'
                                                 disabled={!!props.isFront}
                                                 icon={<LeftOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(1)
                                                 }}
-                                            ></Button>
+                                            ></YakitButton>
                                         </Tooltip>
                                         <Tooltip title={"下一个请求"}>
-                                            <Button
-                                                type='link'
+                                            <YakitButton
+                                                type='text'
                                                 disabled={!!props.isBehind}
                                                 icon={<RightOutlined />}
                                                 onClick={() => {
                                                     props?.fetchRequest!(2)
                                                 }}
-                                            ></Button>
+                                            ></YakitButton>
                                         </Tooltip>
                                     </Space>
                                 ) : (
@@ -282,77 +273,87 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         />
                     )}
                     <Space direction={"vertical"} style={{width: "100%"}}>
-                        <Descriptions column={4} bordered={true} size={"small"}>
+                        <Descriptions
+                            column={4}
+                            bordered={true}
+                            size={"small"}
+                            className={classNames(styles["detail-header-info"], "yakit-descriptions")}
+                        >
                             <Descriptions.Item key={"method"} span={1} label={"HTTP 方法"}>
-                                <Tag color={"geekblue"}>
-                                    <Text style={{maxWidth: 500}}>{flow.Method}</Text>
-                                </Tag>
+                                <YakitTag color='blue'>{flow.Method}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"url"} span={3} label={"请求 URL"}>
-                                <Text style={{maxWidth: 500}} copyable={true}>
-                                    {flow.Url}
-                                </Text>
+                                <div style={{display: "flex"}}>
+                                    <Tooltip title={flow.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
+                                        <span className='content-ellipsis'>{flow.Url}</span>
+                                    </Tooltip>
+                                    <CopyComponents copyText={flow.Url} />
+                                </div>
                             </Descriptions.Item>
                             {(props?.payloads || []).length > 0 && (
                                 <Descriptions.Item key={"payloads"} span={4} label={"Payloads"}>
-                                    <Text style={{maxWidth: 500}} copyable={true}>
-                                        {props.payloads?.join(",")}
-                                    </Text>
+                                    <YakitCopyText showText={props.payloads?.join(",") || ""}></YakitCopyText>
                                 </Descriptions.Item>
                             )}
                             <Descriptions.Item key={"https"} span={1} label={"HTTPS"}>
-                                <Tag color={"geekblue"}>
-                                    <div style={{maxWidth: 500}}>{flow.IsHTTPS ? "True" : "False"}</div>
-                                </Tag>
+                                <YakitTag color='blue'>{flow.IsHTTPS ? "True" : "False"}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"status"} span={1} label={"StatusCode"}>
-                                <Tag color={"geekblue"}>{flow.StatusCode}</Tag>
+                                <YakitTag color='blue'>{flow.StatusCode}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"size"} span={1} label={"Body大小"}>
-                                <Tag color={"geekblue"}>
-                                    <div style={{maxWidth: 500}}>{flow.BodySizeVerbose}</div>
-                                </Tag>
+                                <YakitTag color='blue'>{flow.BodySizeVerbose}</YakitTag>
                             </Descriptions.Item>
                             <Descriptions.Item key={"type"} span={1} label={"Content-Type"}>
-                                <Tag color={"geekblue"}>
-                                    <div style={{maxWidth: 500}}>{flow.ContentType}</div>
-                                </Tag>
+                                <Tooltip title={flow.ContentType}>
+                                    <YakitTag
+                                        color='blue'
+                                        className='content-ellipsis'
+                                        style={{
+                                            maxWidth: "100%",
+                                            display: "inline-block",
+                                            lineHeight: "12px"
+                                        }}
+                                    >
+                                        {flow.ContentType}
+                                    </YakitTag>
+                                </Tooltip>
                             </Descriptions.Item>
                         </Descriptions>
                         <div style={{width: "100%", overflow: "auto"}}>
                             {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
-                                <Tabs>
+                                <PluginTabs>
                                     {flow.GetParams.length > 0 && (
-                                        <Tabs.TabPane key={"get"} tab={"GET 参数"}>
+                                        <TabPane key={"get"} tab={"GET 参数"}>
                                             <FuzzableParamList
                                                 data={flow.GetParams}
                                                 sendToWebFuzzer={() => {
                                                     if (props.onClose) props.onClose()
                                                 }}
                                             />
-                                        </Tabs.TabPane>
+                                        </TabPane>
                                     )}
                                     {flow.PostParams.length > 0 && (
-                                        <Tabs.TabPane key={"post"} tab={"POST 参数"}>
+                                        <TabPane key={"post"} tab={"POST 参数"}>
                                             <FuzzableParamList
                                                 data={flow.PostParams}
                                                 sendToWebFuzzer={() => {
                                                     if (props.onClose) props.onClose()
                                                 }}
                                             />
-                                        </Tabs.TabPane>
+                                        </TabPane>
                                     )}
                                     {flow.CookieParams.length > 0 && (
-                                        <Tabs.TabPane key={"cookie"} tab={"Cookie 参数"}>
+                                        <TabPane key={"cookie"} tab={"Cookie 参数"}>
                                             <FuzzableParamList
                                                 data={flow.CookieParams}
                                                 sendToWebFuzzer={() => {
                                                     if (props.onClose) props.onClose()
                                                 }}
                                             />
-                                        </Tabs.TabPane>
+                                        </TabPane>
                                     )}
-                                </Tabs>
+                                </PluginTabs>
                             ) : (
                                 ""
                             )}
@@ -430,10 +431,13 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                         {/*</Collapse>*/}
                         <Row gutter={8}>
                             <Col span={12}>
-                                <Collapse defaultActiveKey={"request"}>
-                                    <Collapse.Panel key={"request"} header={"Request Headers"}>
+                                <YakitCollapse defaultActiveKey={"request"}>
+                                    <YakitCollapse.YakitPanel key={"request"} header={"Request Headers"}>
                                         <Descriptions
-                                            className={styles["http-flow-detail-descriptions"]}
+                                            className={classNames(
+                                                styles["http-flow-detail-descriptions"],
+                                                "yakit-descriptions"
+                                            )}
                                             bordered={true}
                                             column={2}
                                             size={"small"}
@@ -448,37 +452,47 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             key={i.Header}
                                                             span={2}
                                                             label={
-                                                                <Text style={{width: 240}}>
-                                                                    <Tooltip title={i.Header}>
-                                                                        <Tag
-                                                                            className='content-ellipsis'
-                                                                            style={{maxWidth: "100%"}}
-                                                                        >
-                                                                            {i.Header}
-                                                                        </Tag>
-                                                                    </Tooltip>
-                                                                </Text>
+                                                                <Tooltip title={i.Header}>
+                                                                    <YakitTag
+                                                                        className='content-ellipsis'
+                                                                        style={{
+                                                                            maxWidth: "100%",
+                                                                            display: "inline-block",
+                                                                            lineHeight: "12px"
+                                                                        }}
+                                                                    >
+                                                                        {i.Header}
+                                                                    </YakitTag>
+                                                                </Tooltip>
                                                             }
                                                         >
-                                                            <Text
-                                                                copyable={true}
-                                                                style={{width: "100%", maxWidth: "100%"}}
-                                                                ellipsis={{tooltip: true}}
-                                                            >
-                                                                {i.Value}
-                                                            </Text>
+                                                            <div style={{display: "flex"}}>
+                                                                <Tooltip
+                                                                    title={i.Value}
+                                                                    overlayInnerStyle={{
+                                                                        maxHeight: 300,
+                                                                        overflowY: "auto"
+                                                                    }}
+                                                                >
+                                                                    <span className='content-ellipsis'>{i.Value}</span>
+                                                                </Tooltip>
+                                                                <CopyComponents copyText={i.Value} />
+                                                            </div>
                                                         </Descriptions.Item>
                                                     )
                                                 })}
                                         </Descriptions>
-                                    </Collapse.Panel>
-                                </Collapse>
+                                    </YakitCollapse.YakitPanel>
+                                </YakitCollapse>
                             </Col>
                             <Col span={12}>
-                                <Collapse defaultActiveKey={"response"}>
-                                    <Collapse.Panel key={"response"} header={"Response Headers"}>
+                                <YakitCollapse defaultActiveKey={"response"}>
+                                    <YakitCollapse.YakitPanel key={"response"} header={"Response Headers"}>
                                         <Descriptions
-                                            className={styles["http-flow-detail-descriptions"]}
+                                            className={classNames(
+                                                styles["http-flow-detail-descriptions"],
+                                                "yakit-descriptions"
+                                            )}
                                             bordered={true}
                                             column={2}
                                             size={"small"}
@@ -493,31 +507,38 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             key={i.Header}
                                                             span={2}
                                                             label={
-                                                                <Text style={{width: 240}}>
-                                                                    <Tooltip title={i.Header}>
-                                                                        <Tag
-                                                                            className='content-ellipsis'
-                                                                            style={{maxWidth: "100%"}}
-                                                                        >
-                                                                            {i.Header}
-                                                                        </Tag>
-                                                                    </Tooltip>
-                                                                </Text>
+                                                                <Tooltip title={i.Header}>
+                                                                    <YakitTag
+                                                                        className='content-ellipsis'
+                                                                        style={{
+                                                                            maxWidth: "100%",
+                                                                            display: "inline-block",
+                                                                            lineHeight: "12px"
+                                                                        }}
+                                                                    >
+                                                                        {i.Header}
+                                                                    </YakitTag>
+                                                                </Tooltip>
                                                             }
                                                         >
-                                                            <Text
-                                                                copyable={true}
-                                                                style={{width: "100%", maxWidth: "100%"}}
-                                                                ellipsis={{tooltip: true}}
-                                                            >
-                                                                {i.Value}
-                                                            </Text>
+                                                            <div style={{display: "flex"}}>
+                                                                <Tooltip
+                                                                    title={i.Value}
+                                                                    overlayInnerStyle={{
+                                                                        maxHeight: 300,
+                                                                        overflowY: "auto"
+                                                                    }}
+                                                                >
+                                                                    <span className='content-ellipsis'>{i.Value}</span>
+                                                                </Tooltip>
+                                                                <CopyComponents copyText={i.Value} />
+                                                            </div>
                                                         </Descriptions.Item>
                                                     )
                                                 })}
                                         </Descriptions>
-                                    </Collapse.Panel>
-                                </Collapse>
+                                    </YakitCollapse.YakitPanel>
+                                </YakitCollapse>
                             </Col>
                         </Row>
                     </Space>
@@ -525,7 +546,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             ) : (
                 ""
             )}
-        </Spin>
+        </YakitSpin>
     )
 }
 

@@ -186,7 +186,8 @@ export const analyzeFuzzerResponse = (
                     data={data}
                 />
             </>
-        )
+        ),
+        bodyStyle: {paddingTop: 5}
     })
 }
 

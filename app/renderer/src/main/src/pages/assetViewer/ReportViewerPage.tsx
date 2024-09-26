@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {Empty, List, PageHeader, Space, Spin, Tag, Tooltip, Popconfirm, message} from "antd"
+import {Empty, List, PageHeader, Space, Spin, Tag, Tooltip, message} from "antd"
 import {ResizeBox} from "../../components/ResizeBox"
 import {AutoCard} from "../../components/AutoCard"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "../invoker/schema"
@@ -13,6 +13,7 @@ import {SelectIcon} from "../../assets/icons"
 import {report} from "process"
 import {onRemoveToolFC} from "../../utils/deleteTool"
 import "./ReportViewerPage.scss"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 export interface ReportViewerPageProp {
 }
 
@@ -163,7 +164,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                     >
                         <ReloadOutlined/>
                     </a>
-                    <Popconfirm
+                    <YakitPopconfirm
                         title={
                             selectedRowKeys.length > 0
                                 ? "确定删除选择的报告吗？不可恢复"
@@ -173,7 +174,7 @@ export const ReportList: React.FC<ReportListProp> = (props) => {
                     >
                         {/* @ts-ignore */}
                         <DeleteOutlined className='icon-color'/>
-                    </Popconfirm>
+                    </YakitPopconfirm>
                 </Space>
             }
         >

@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, InputNumber, DatePicker, Tooltip} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Tag, InputNumber, DatePicker, Tooltip} from "antd"
 import type {ColumnsType} from "antd/es/table"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -13,6 +13,7 @@ import {callCopyToClipboard} from "@/utils/basic"
 import {QuestionCircleOutlined} from "@ant-design/icons"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 export interface ShowUserInfoProps {
     text: string
     onClose: () => void
@@ -524,7 +525,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                     >
                         编辑
                     </Button>
-                    <Popconfirm
+                    <YakitPopconfirm
                         title={"确定删除该企业吗？"}
                         onConfirm={() => {
                             onRemove(i.id)
@@ -534,7 +535,7 @@ const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
                         <Button size={"small"} danger={true} type='link'>
                             删除
                         </Button>
-                    </Popconfirm>
+                    </YakitPopconfirm>
                 </Space>
             ),
             width: 140

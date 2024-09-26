@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Popconfirm, Tag, Switch, Row, Col, TreeSelect, Checkbox} from "antd"
+import {Table, Space, Button, Input, Modal, Form, Tag, Switch, Row, Col, TreeSelect, Checkbox} from "antd"
 import {} from "@ant-design/icons"
 import "./RoleAdminPage.scss"
 import {NetWorkApi} from "@/services/fetch"
@@ -11,6 +11,7 @@ import {PaginationSchema} from "../invoker/schema"
 import type {ColumnsType} from "antd/es/table"
 import type {TreeSelectProps} from "antd"
 import type {DefaultOptionType} from "antd/es/select"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 export interface CreateUserFormProps {
     editInfo: API.RoleList | undefined
@@ -389,7 +390,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                     >
                         编辑
                     </Button>
-                    <Popconfirm
+                    <YakitPopconfirm
                         title={"确定删除该角色吗？"}
                         onConfirm={() => {
                             onRemove([i.id])
@@ -399,7 +400,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                         <Button size={"small"} danger={true} type="link">
                             删除
                         </Button>
-                    </Popconfirm>
+                    </YakitPopconfirm>
                 </Space>
             )
         }
@@ -427,7 +428,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                             <div className='operation'>
                                 <Space>
                                     {!!selectedRowKeys.length ? (
-                                        <Popconfirm
+                                        <YakitPopconfirm
                                             title={"确定删除选择的角色吗？不可恢复"}
                                             onConfirm={() => {
                                                 onRemove(selectedRowKeys)
@@ -436,7 +437,7 @@ const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
                                             <Button type='primary' htmlType='submit' size='small'>
                                                 批量删除
                                             </Button>
-                                        </Popconfirm>
+                                        </YakitPopconfirm>
                                     ) : (
                                         <Button type='primary' size='small' disabled={true}>
                                             批量删除

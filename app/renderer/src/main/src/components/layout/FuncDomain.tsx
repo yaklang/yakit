@@ -985,14 +985,16 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 })
                 return m
             case "reverse":
-                showModal({
+                showYakitModal({
+                    type: "white",
                     title: "配置全局反连",
                     width: 800,
                     content: (
                         <div style={{width: 800}}>
                             <ConfigGlobalReverse />
                         </div>
-                    )
+                    ),
+                    footer: null
                 })
                 return
             case "agent":

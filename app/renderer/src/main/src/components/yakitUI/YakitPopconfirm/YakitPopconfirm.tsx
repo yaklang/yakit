@@ -51,10 +51,10 @@ export const YakitPopconfirm: React.FC<YakitPopconfirmProp> = React.memo((props)
                     {title}
                     <div className={styles["yakit-popconfirm-buttons"]}>
                         <YakitButton type='outline2' onClick={onCancelClick}>
-                            {cancelText || "Cancel"}
+                            {cancelText || "取消"}
                         </YakitButton>
                         <YakitButton type='primary' onClick={onOk}>
-                            {okText || "OK"}
+                            {okText || "确认"}
                         </YakitButton>
                     </div>
                 </div>

@@ -7,7 +7,6 @@ import {LogLevelToCode} from "../components/HTTPFlowTable/HTTPFlowTable";
 import {YakitLogFormatter} from "../pages/invoker/YakitLogFormatter";
 import {InputItem, SwitchItem} from "./inputUtil";
 import {useGetState, useMemoizedFn} from "ahooks";
-import {ReloadOutlined} from "@ant-design/icons";
 import {getRemoteValue, setRemoteValue} from "./kv";
 import {
     BRIDGE_ADDR,
@@ -25,7 +24,10 @@ import {PluginResultUI} from "../pages/yakitStore/viewers/base";
 import {AutoCard} from "../components/AutoCard";
 import { getReleaseEditionName, isCommunityEdition } from "./envfile";
 import {NetInterface} from "@/models/Traffic";
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal";
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal";
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
+import {RefreshIcon} from "@/assets/newIcon";
 
 export interface YakVersionProp {
 
@@ -379,30 +381,36 @@ export const ConfigGlobalReverse = React.memo(() => {
 
                 login()
                 setRemoteValue(DNSLOG_INHERIT_BRIDGE, `${inheritBridge}`)
-            }} labelCol={{span: 5}} wrapperCol={{span: 14}}>
+            }} labelCol={{span: 5}} wrapperCol={{span: 16}}>
             <InputItem
                 label={"本地反连 IP"}
                 value={localIP} disable={ok}
                 setValue={setLocalIP}
                 autoComplete={ifaces.filter((item) => !!item.IP).map((item) => item.IP)}
                 help={<div>
-                    <Button type={"link"} size={"small"} onClick={() => {
+                    <YakitButton type={"text"} size={"small"} onClick={() => {
                         updateIface()
-                    }} icon={<ReloadOutlined/>}>
+                    }} icon={<RefreshIcon />}>
                         更新 yak 引擎本地 IP
-                    </Button>
+                    </YakitButton>
                 </div>}
             />
             <Divider orientation={"left"}>公网反连配置</Divider>
             <Form.Item label={" "} colon={false}>
                 <Alert message={<Space direction={"vertical"}>
                     <div>在公网服务器上运行</div>
-                    <Text code={true} copyable={true}>yak bridge --secret [your-password]</Text>
+                    <YakitTag
+                        enableCopy={true}
+                        color='blue'
+                        copyText={`yak bridge --secret [your-password]`}
+                    ></YakitTag>
                     <div>或</div>
-                    <Text code={true} copyable={true}>
-                        docker run -it --rm --net=host v1ll4n/yak-bridge yak bridge --secret
-                        [your-password]
-                    </Text>
+                    <YakitTag
+                        enableCopy={true}
+                        color='blue'
+                        copyText={`docker run -it --rm --net=host v1ll4n/yak-bridge yak bridge --secret
+                        [your-password]`}
+                    ></YakitTag>
                     <div>已配置</div>
                 </Space>}/>
             </Form.Item>
@@ -420,7 +428,7 @@ export const ConfigGlobalReverse = React.memo(() => {
             <Divider orientation={"left"}>{isCommunityEdition()&&'Yakit'} 全局 DNSLog 配置</Divider>
             <SwitchItem
                 label={"复用 Yak Bridge 配置"} disabled={ok}
-                value={inheritBridge} setValue={setInheritBridge}/>
+                value={inheritBridge} setValue={setInheritBridge} oldTheme={false}/>
             {!inheritBridge && <InputItem
                 label={"DNSLog 配置"} disable={ok}
                 value={dnslogAddr}
@@ -433,10 +441,10 @@ export const ConfigGlobalReverse = React.memo(() => {
                 setValue={setDNSLogPassword}
             />}
             <Form.Item colon={false} label={" "}>
-                <Button type="primary" htmlType="submit" disabled={ok}> 配置反连 </Button>
-                {ok && <Button type="primary" danger={true} onClick={() => {
+                <YakitButton type="primary" htmlType="submit" disabled={ok}> 配置反连 </YakitButton>
+                {ok && <YakitButton type="primary" danger={true} onClick={() => {
                     cancel()
-                }}> 停止 </Button>}
+                }} style={{marginLeft: 8}}> 停止 </YakitButton>}
             </Form.Item>
         </Form>
     </div>

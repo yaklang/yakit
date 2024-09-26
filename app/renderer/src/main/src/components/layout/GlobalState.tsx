@@ -715,14 +715,16 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             className={styles["btn-style"]}
                                             onClick={() => {
                                                 setShow(false)
-                                                showModal({
+                                                showYakitModal({
+                                                    type: "white",
                                                     title: "配置全局反连",
                                                     width: 800,
                                                     content: (
                                                         <div style={{width: 800}}>
                                                             <ConfigGlobalReverse />
                                                         </div>
-                                                    )
+                                                    ),
+                                                    footer: null
                                                 })
                                             }}
                                         >

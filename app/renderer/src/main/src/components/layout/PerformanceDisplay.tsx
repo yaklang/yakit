@@ -3,7 +3,6 @@ import {failed, info, success} from "@/utils/notification"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
 import {useInViewport, useMemoizedFn} from "ahooks"
-import {Popconfirm} from "antd"
 import {Sparklines, SparklinesCurve} from "react-sparklines"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -15,7 +14,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-
+import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import classNames from "classnames"
 import styles from "./performanceDisplay.module.scss"
 
@@ -199,7 +198,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                     <div className={styles["ui-engine-list-body"]}>
                         <div className={styles["engine-list-header"]}>
                             本地 Yak 进程管理
-                            <Popconfirm
+                            <YakitPopconfirm
                                 title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
                                 onConfirm={async () => {
                                     await delTemporaryProject()
@@ -218,7 +217,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                 }}
                             >
                                 <YakitButton style={{marginLeft: 8}}>重置引擎版本</YakitButton>
-                            </Popconfirm>
+                            </YakitPopconfirm>
                             {psLoading && <LoadingOutlined className={styles["loading-icon"]} />}
                         </div>
                         <div className={styles["engine-list-container"]}>
@@ -255,7 +254,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 Details
                                             </YakitButton>
 
-                                            <Popconfirm
+                                            <YakitPopconfirm
                                                 title={<>确定是否切换连接的引擎,</>}
                                                 onConfirm={async () => {
                                                     if (+i.port !== port) {
@@ -290,9 +289,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 >
                                                     切换引擎
                                                 </YakitButton>
-                                            </Popconfirm>
-
-                                            <Popconfirm
+                                            </YakitPopconfirm>
+                                            <YakitPopconfirm
                                                 title={
                                                     <>
                                                         确定关闭将会强制关闭进程,
@@ -322,7 +320,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                 <YakitButton type='outline1' colors='danger'>
                                                     关闭引擎
                                                 </YakitButton>
-                                            </Popconfirm>
+                                            </YakitPopconfirm>
                                         </div>
                                     </div>
                                 )
@@ -330,7 +328,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         </div>
                         <div className={styles["engine-list-footer"]}>
                             <div></div>
-                            <Popconfirm
+                            <YakitPopconfirm
                                 title={
                                     <div style={{width: 330}}>
                                         确定关闭将会强制关闭进程,
@@ -343,7 +341,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                 onConfirm={() => allClose()}
                             >
                                 <div className={styles["engine-list-footer-btn"]}>全部关闭</div>
-                            </Popconfirm>
+                            </YakitPopconfirm>
                         </div>
                     </div>
                 </div>

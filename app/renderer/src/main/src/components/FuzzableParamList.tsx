@@ -1,7 +1,10 @@
 import React from "react"
-import {Button, Typography, Space, Table, Tag, Popconfirm} from "antd"
+import {Typography, Space, Table} from "antd"
 import {FuzzableParams} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPPacketFuzzable} from "./HTTPHistory"
+import {YakitPopconfirm} from "./yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
+import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 
 const {ipcRenderer} = window.require("electron")
 const {Text} = Typography
@@ -21,41 +24,63 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                 {
                     title: "参数名",
                     render: (i: FuzzableParams) => (
-                        <Tag>
+                        <YakitTag closeIcon={<CopyComponents copyText={i.ParamName} />} closable>
                             <Text
-                                style={{maxWidth: 500}}
+                                style={{maxWidth: 150}}
                                 ellipsis={{
                                     tooltip: true
                                 }}
                             >
                                 {i.ParamName}
                             </Text>
-                        </Tag>
+                        </YakitTag>
                     )
                 },
-                {title: "参数位置", render: (i: FuzzableParams) => <Tag>{i.Position}</Tag>},
                 {
-                    title: "参数原值",
+                    title: "参数位置",
                     render: (i: FuzzableParams) => (
-                        <Tag>
+                        <YakitTag>
                             <Text
-                                style={{maxWidth: 500}}
+                                style={{maxWidth: 250}}
                                 ellipsis={{
                                     tooltip: true
                                 }}
-                                copyable={true}
+                            >
+                                {i.Position}
+                            </Text>
+                        </YakitTag>
+                    )
+                },
+                {
+                    title: "参数原值",
+                    render: (i: FuzzableParams) => (
+                        <YakitTag
+                            closeIcon={
+                                <CopyComponents copyText={i.OriginValue ? new Buffer(i.OriginValue).toString() : ""} />
+                            }
+                            closable
+                        >
+                            <Text
+                                style={{maxWidth: 450}}
+                                ellipsis={{
+                                    tooltip: (
+                                        <div style={{maxHeight: 300, overflowY: "auto"}}>
+                                            {i.OriginValue ? new Buffer(i.OriginValue).toString() : ""}
+                                        </div>
+                                    )
+                                }}
                             >
                                 {i.OriginValue ? new Buffer(i.OriginValue).toString() : ""}
                             </Text>
-                        </Tag>
+                        </YakitTag>
                     )
                 },
-                {title: "IsHTTPS", render: (i: FuzzableParams) => <Tag>{i.IsHTTPS}</Tag>},
+                {title: "IsHTTPS", render: (i: FuzzableParams) => <YakitTag>{i.IsHTTPS + ""}</YakitTag>},
                 {
                     title: "操作",
                     render: (i: FuzzableParams) => (
                         <Space>
-                            <Popconfirm
+                            <YakitPopconfirm
                                 title={"测试该参数将会暂时进入 Web Fuzzer"}
                                 onConfirm={(e) => {
                                     ipcRenderer.invoke("send-to-tab", {
@@ -68,10 +93,10 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
                                     if (props.sendToWebFuzzer) props.sendToWebFuzzer()
                                 }}
                             >
-                                <Button type={"primary"} size={"small"}>
+                                <YakitButton type={"primary"} size={"small"}>
                                     模糊测试该参数
-                                </Button>
-                            </Popconfirm>
+                                </YakitButton>
+                            </YakitPopconfirm>
                         </Space>
                     )
                 }

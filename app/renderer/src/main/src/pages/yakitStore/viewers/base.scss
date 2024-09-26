@@ -108,11 +108,18 @@
     overflow: hidden;
 }
 
-.baseTopTabs {
-    :global {
-        .ant-tabs-nav {
-            position: relative;
-            top: 0;
+.passive-log-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+    .log-timeline {
+        padding-top: 1px;
+        flex: 1;
+        overflow-y: auto;
+        .ant-timeline-item-head-blue {
+            color: var(--yakit-primary-5);
+            border-color: var(--yakit-primary-5);
         }
     }
 }
