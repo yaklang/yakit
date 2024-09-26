@@ -1,0 +1,72 @@
+@use "./codeBlock.scss";
+@use "./imageBlock.scss";
+@use "./imageInline.scss";
+@use "./listItemBlock.scss";
+@use "./placeholder.scss";
+@use "./blockquote.scss";
+
+.milkdown {
+    overscroll-behavior: none;
+    position: relative;
+    word-wrap: break-word;
+    white-space: break-spaces;
+
+    color: var(--yakit-header-color);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    h7,
+    h8 {
+        color: var(--yakit-header-color);
+        font-weight: 500;
+    }
+    h1 {
+        font-size: 32px;
+        line-height: 40px;
+    }
+    h2 {
+        font-size: 24px;
+        line-height: 32px;
+    }
+    h3 {
+        font-size: 20px;
+        line-height: 28px;
+    }
+    h4 {
+        font-size: 18px;
+        line-height: 26px;
+    }
+    h5 {
+        font-size: 16px;
+        line-height: 24px;
+    }
+    h6 {
+        font-size: 14px;
+        line-height: 20px;
+    }
+    h7 {
+        font-size: 12px;
+        line-height: 16px;
+    }
+    h8 {
+        font-size: 11px;
+        line-height: 14px;
+    }
+    .ProseMirror-selectednode {
+        outline: 2px solid fuchsia;
+    }
+
+    .ProseMirror-focused {
+        outline: 0;
+    }
+}
+
+.editor {
+}
