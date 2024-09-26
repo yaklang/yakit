@@ -264,7 +264,8 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     Targets: "",
     Active: true,
     FingerprintMode: "all",
-    UserFingerprintFiles: "",
+    UserFingerprintFiles: [],
+    UserFingerprintFilesStr: "",
     Proto: ["tcp"],
     SaveClosedPorts: false,
     SaveToDB: true,
@@ -391,7 +392,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             onCreateReportModal(params)
         })
 
-        const [inputType,setInputType] = useState<"content"|"path">("content")
+        const [inputType, setInputType] = useState<"content" | "path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn((value) => {
             const filters = {...pluginListSearchInfo.filters}
@@ -403,16 +404,13 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 ...extraParamsValue,
                 ...value,
                 Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
-                LinkPluginConfig: linkPluginConfig,
-                UserFingerprintFiles: extraParamsValue.UserFingerprintFiles
-                    ? extraParamsValue.UserFingerprintFiles.split(",")
-                    : []
+                LinkPluginConfig: linkPluginConfig
             }
-            if(inputType === "path"){
+            if (inputType === "path") {
                 executeParams["TargetsFile"] = executeParams["Targets"]
                 executeParams["Targets"] = ""
             }
-            
+            delete executeParams.UserFingerprintFilesStr
             portScanStreamEvent.reset()
             setRuntimeId("")
             if (isEnpriTrace()) {
@@ -459,7 +457,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         })
         /**保存额外参数 */
         const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
-            setExtraParamsValue({...v} as PortScanExecuteExtraFormValue)
+            setExtraParamsValue({
+                ...v,
+                UserFingerprintFiles: v.UserFingerprintFilesStr ? v.UserFingerprintFilesStr.split(",") : []
+            } as PortScanExecuteExtraFormValue)
             setExtraParamsVisible(false)
             form.setFieldsValue({
                 SkippedHostAliveScan: v.SkippedHostAliveScan
@@ -551,7 +552,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
 )
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
-    const {inViewport, disabled, form, extraParamsValue,inputType,setInputType} = props
+    const {inViewport, disabled, form, extraParamsValue, inputType, setInputType} = props
     const [templatePort, setTemplatePort] = useState<string>()
 
     useEffect(() => {
