@@ -81,6 +81,10 @@
         overflow-y: auto;
         overflow-x: hidden;
         transition: max-width 0.2s ease;
+        z-index: 2;
+        background-color: rgba($color: #fff, $alpha: 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 8px;
         :global {
             .ant-tree-switcher {
                 width: 0;
@@ -95,6 +99,7 @@
                 }
             }
             .ant-tree {
+                background-color: transparent;
                 .ant-tree-node-content-wrapper {
                     overflow: hidden;
                     padding: 0;
@@ -108,12 +113,16 @@
             }
         }
         .notepad-button {
-            display: flex;
+            display: block;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #fff;
         }
         .notepad-catalogue-tree {
-            border-radius: 8px;
-
             overflow: hidden;
+            padding-right: 8px;
+            padding-bottom: 8px;
             .catalogue-tree-node {
                 @extend %display-flex-center;
                 gap: 4px;
@@ -138,25 +147,11 @@
             display: none;
         }
     }
-    .notepad-catalogue-retract {
-        position: fixed;
-        z-index: 2;
-        background-color: rgba($color: #fff, $alpha: 0.8);
-        box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
-        border-radius: 8px;
-        backdrop-filter: blur(10px);
-
+    .notepad-catalogue-hover {
         &:hover {
             .notepad-catalogue-tree-hidden {
                 display: flex;
             }
-        }
-        .notepad-button {
-            display: block;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background-color: #fff;
         }
     }
     .notepad-catalogue-hidden {
@@ -180,7 +175,6 @@
         padding: 0 48px 24px 96px;
         .notepad-heard {
             @extend %display-column-center;
-            // height: 80px;
             margin-bottom: 24px;
             .notepad-heard-subTitle {
                 @extend %display-flex-center;
