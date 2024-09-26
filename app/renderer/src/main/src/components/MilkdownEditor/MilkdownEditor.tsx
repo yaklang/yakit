@@ -18,8 +18,7 @@ import {listItemBlockComponent} from "@milkdown/kit/component/list-item-block"
 
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
 
-import "@milkdown/theme-nord/style.css"
-import "./css/index.css"
+import "./css/index.scss"
 import {yakitInfo} from "@/utils/notification"
 import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
@@ -155,7 +154,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         }
                     }))
                 })
-                .config(nord)
                 .use(commonmark)
                 .use(gfm)
                 .use(cursor)
