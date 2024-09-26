@@ -419,7 +419,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     const {eeSystemConfig} = useEeSystemConfig()
 
     const getEnpriTraceWaterMark = (defaltWater: string) => {
-        let openWatermark = true
+        let openWatermark = false
         let eeWatermarkStr = defaltWater
         eeSystemConfig.forEach((item) => {
             if (item.configName === "openWatermark") {
