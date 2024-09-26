@@ -8,7 +8,7 @@ import {MilkdownProvider} from "@milkdown/react"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps, OnlineUsersProps} from "./ModifyNotepadType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {Avatar, Badge, Divider, Tree} from "antd"
+import {Avatar, Badge, Divider, Tooltip, Tree} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineChevrondownIcon,
@@ -229,11 +229,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                             onMouseLeave={onCatalogueMouseLeave}
                         >
                             <div className={styles["notepad-button"]}>
-                                <YakitButton
-                                    type='text2'
-                                    icon={expand ? <OutlineCloseIcon /> : <OutlineOpenIcon />}
-                                    onClick={onExpandIcon}
-                                />
+                                <Tooltip title={expand ? "收起" : "展开"}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={expand ? <OutlineCloseIcon /> : <OutlineOpenIcon />}
+                                        onClick={onExpandIcon}
+                                    />
+                                </Tooltip>
                             </div>
                             <Tree
                                 treeData={catalogue}
