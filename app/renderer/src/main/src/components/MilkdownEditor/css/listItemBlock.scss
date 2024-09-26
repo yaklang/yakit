@@ -20,11 +20,11 @@
 }
 
 .prose li p {
-  @apply !m-0 !leading-6;
+  // @apply !m-0 !leading-6;
 }
 
 .prose li p + p {
-  @apply !mt-2;
+  // @apply !mt-2;
 }
 
 .prose li.ProseMirror-selectednode {
