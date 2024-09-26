@@ -28,7 +28,7 @@ import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
-import {AuthorImg} from "@/pages/plugins/funcTemplate"
+import {AuthorIcon, AuthorImg} from "@/pages/plugins/funcTemplate"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 const onlineUserList: OnlineUsersProps[] = [
@@ -177,6 +177,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         <div className={styles["modify-notepad-heard-extra-online-user"]}>
                             {onlineUsers.map((item) => (
                                 <AuthorImg
+                                    key={item.id}
                                     src={item.img}
                                     icon={
                                         <div
@@ -242,6 +243,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 className={classNames(styles["notepad-catalogue-tree"], {
                                     [styles["notepad-catalogue-tree-hidden"]]: !expand || notepadWidth < notepadMixWidth
                                 })}
+                                style={{
+                                    maxHeight: expand ? treeMaxHeight - 24 : 0
+                                }}
                                 titleRender={(nodeData) => {
                                     return (
                                         <React.Fragment key={nodeData.key}>
@@ -258,11 +262,18 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     </div>
                     <div className={styles["notepad-content"]}>
                         <div className={styles["notepad-heard"]}>
-                            <YakitInput placeholder='请输入标题' />
+                            <YakitInput
+                                placeholder='请输入标题'
+                                size='large'
+                                bordered={false}
+                                className={styles["notepad-input"]}
+                                value={tabName}
+                                onChange={(e) => setTabName(e.target.value)}
+                            />
                             <div className={styles["notepad-heard-subTitle"]}>
                                 <AuthorImg />
                                 <span>白日爱做梦</span>
-                                <span>作者</span>
+                                <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
                                 <span>创建时间:2024-05-27 15:32</span>
                             </div>

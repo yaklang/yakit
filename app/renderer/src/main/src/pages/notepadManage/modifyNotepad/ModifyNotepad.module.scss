@@ -78,7 +78,7 @@
         position: sticky;
         left: 16px;
         top: 0;
-        overflow-y: auto;
+        overflow-y: hidden;
         overflow-x: hidden;
         transition: max-width 0.2s ease;
         z-index: 2;
@@ -117,10 +117,9 @@
             position: sticky;
             top: 0;
             z-index: 2;
-            background-color: #fff;
         }
         .notepad-catalogue-tree {
-            overflow: hidden;
+            overflow-y: auto;
             padding-right: 8px;
             padding-bottom: 8px;
             .catalogue-tree-node {
@@ -164,7 +163,7 @@
     align-items: flex-start;
     padding: 24px 16px 0 12px;
     position: relative;
-    overflow: auto;
+    overflow: hidden auto;
     flex: 1;
 
     .notepad-content {
@@ -175,11 +174,26 @@
         padding: 0 48px 24px 96px;
         .notepad-heard {
             @extend %display-column-center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            gap: 12px;
+            .notepad-input {
+                height: 40px;
+                font-size: 32px;
+                font-weight: 600;
+                padding: 0;
+                &::placeholder {
+                    color: var(--yakit-disable-text-color);
+                }
+            }
             .notepad-heard-subTitle {
                 @extend %display-flex-center;
                 gap: 4px;
-                margin-top: 12px;
+                color: var(--yakit-header-color);
+
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
             }
         }
         .notepad-editor {
