@@ -96,10 +96,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     useEffect(() => {
         if (!editor) return
-        editor
-            ?.use(cataloguePlugin(getCatalogue))
-
-            .create()
+        editor?.use(cataloguePlugin(getCatalogue)).create()
     }, [editor])
     const getCatalogue = useDebounceFn(
         (view) => {
@@ -140,27 +137,37 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             setExcludeExpandedKeys((k) => [...k, key])
         }
     })
+    const onCatalogueMouseEnter = useMemoizedFn(() => {
+        if (notepadWidth < notepadMixWidth) {
+            setExpand(true)
+        }
+    })
+    const onCatalogueMouseLeave = useMemoizedFn(() => {
+        if (notepadWidth < notepadMixWidth) {
+            setExpand(false)
+        }
+    })
+    const onExpandIcon = useMemoizedFn(() => {
+        setExpand(!expand)
+    })
+
     const expandedKeys = useCreation(() => {
         return treeKeysRef.current.filter((ele) => !excludeExpandedKeys.includes(ele))
     }, [excludeExpandedKeys, treeKeysRef.current])
     const treeMaxHeight = useCreation(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 24 - 32 - 53 - 24 - 24 // 一级菜单+二级菜单+头部+编辑底部padding+padding-top
     }, [menuBodyHeight.firstTabMenuBodyHeight])
-    const top = useCreation(() => {
+    const catalogueTop = useCreation(() => {
         const currentHeight = clientHeightRef.current
         const t = currentHeight - menuBodyHeight.firstTabMenuBodyHeight + 24 + 32 + 53 + 24 // 一级菜单+二级菜单+头部+padding-top
         if (notepadWidth < notepadMixWidth) return t
         return 0
     }, [expand, notepadWidth, menuBodyHeight.firstTabMenuBodyHeight, clientHeightRef.current])
-
-    const onExpandIcon = useMemoizedFn(() => {
-        if (notepadWidth < notepadMixWidth) return
-        setExpand(!expand)
-    })
     const treeMaxWidth = useCreation(() => {
         if ((notepadWidth || clientWidthRef.current) < notepadMixWidth) return 300
-        return (clientWidthRef.current - 820 - 32) / 2
+        return (notepadWidth - 820 - 32) / 2
     }, [notepadWidth, clientWidthRef.current])
+
     return (
         <>
             <div className={styles["modify-notepad"]}>
@@ -209,10 +216,16 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     <div className={styles["notepad-catalogue-wrapper"]}>
                         <div
                             className={classNames(styles["notepad-catalogue"], {
-                                [styles["notepad-catalogue-retract"]]: !expand && notepadWidth < notepadMixWidth,
+                                [styles["notepad-catalogue-hover"]]: notepadWidth < notepadMixWidth,
                                 [styles["notepad-catalogue-hidden"]]: !expand
                             })}
-                            style={{top, maxWidth: expand ? treeMaxWidth : 24, maxHeight: expand ? treeMaxHeight : 24}}
+                            style={{
+                                top: catalogueTop,
+                                maxWidth: expand ? treeMaxWidth : 26,
+                                maxHeight: expand ? treeMaxHeight : 24
+                            }}
+                            onMouseEnter={onCatalogueMouseEnter}
+                            onMouseLeave={onCatalogueMouseLeave}
                         >
                             <div className={styles["notepad-button"]}>
                                 <YakitButton
@@ -227,7 +240,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 switcherIcon={<></>}
                                 showIcon={false}
                                 className={classNames(styles["notepad-catalogue-tree"], {
-                                    // [styles["notepad-catalogue-tree-hidden"]]: !expand
+                                    [styles["notepad-catalogue-tree-hidden"]]: !expand || notepadWidth < notepadMixWidth
                                 })}
                                 titleRender={(nodeData) => {
                                     return (
