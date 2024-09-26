@@ -14,6 +14,8 @@ Var /Global INSTALL_PATH
 Var /Global INSTALL_PATH_REG_KEY_NAME 
 Var /Global EXE_NAME
 Var /Global KEEP_FOLDER
+Var /Global DeleteOldEngine
+Var /Global DeleteOldEngineLabel
 
 
 
@@ -38,6 +40,7 @@ FunctionEnd
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW FinishPageShow
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE FinishLeave
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_SHOWREADME
@@ -45,6 +48,16 @@ FunctionEnd
 !define MUI_FINISHPAGE_LINK "Yakit官网"
 !define MUI_FINISHPAGE_LINK_LOCATION "https://yaklang.com"
 !insertmacro MUI_PAGE_FINISH
+
+
+Function FinishPageShow
+    ${NSD_CreateCheckbox} 120u 130u 9u 9u ""
+    Pop $DeleteOldEngine
+    ${NSD_CreateLabel} 131u 130u 60% 16u "删除旧引擎"
+    Pop $DeleteOldEngineLabel
+     SetCtlColors $DeleteOldEngineLabel "0x000000" "TRANSPARENT"   
+    ${NSD_Check} $DeleteOldEngine
+FunctionEnd
 
 Function FinishLeave 
     ${NSD_GetState} $mui.FinishPage.Run $0
@@ -54,6 +67,11 @@ Function FinishLeave
     ${NSD_GetState} $mui.FinishPage.ShowReadme $0
     ${If} $0 <> 0 
     CreateShortCut "$DESKTOP\$EXE_NAME.lnk" "$INSTDIR\$EXE_NAME.exe"
+    ${EndIf}
+    ${NSD_GetState} $DeleteOldEngine $0
+    ${If} $0 <> 0
+        ; 删除旧引擎代码
+        Delete /REBOOTOK $INSTDIR\yakit-projects\yak-engine\*yak-*
     ${EndIf}
     Quit
 FunctionEnd
