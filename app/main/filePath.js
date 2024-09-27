@@ -51,6 +51,7 @@ try {
 const YakitProjectPath = project_path || osHomeProjectPath
 
 console.log(`---------- Global-Path Start ----------`)
+console.log(`system: ${os.type()}; platform-arch: ${process.platform}-${process.arch}`)
 console.log(`software-path: ${appPath}`)
 console.log(`os-home-path: ${osHome}`)
 console.log(`yakit-projects-path: ${YakitProjectPath}`)

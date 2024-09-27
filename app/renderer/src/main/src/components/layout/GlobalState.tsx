@@ -356,7 +356,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       updatePcap(),
                       updateChromePath(),
                       updateMITMCert(),
-                      getCurrentYak()
+                    //   getCurrentYak()
                   ]
                 : [
                       updateSystemProxy(),
@@ -365,7 +365,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       updatePluginTotal(),
                       updateChromePath(),
                       updateMITMCert(),
-                      getCurrentYak()
+                    //   getCurrentYak()
                   ]
         )
             .then((values) => {
@@ -553,7 +553,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
                 <div className={styles["body-wrapper"]}>
                     {/* 引擎是否是官方发布版本 */}
-                    {showCheckEngine && (
+                    {false && (
                         <div className={styles["body-info"]}>
                             <div className={styles["info-left"]}>
                                 <ErrorIcon />

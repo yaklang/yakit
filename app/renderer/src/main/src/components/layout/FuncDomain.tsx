@@ -462,13 +462,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {!isEnpriTraceAgent() && (
+                    {/* {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onYakEngineVersionList={onYakEngineVersionList}
                         />
-                    )}
+                    )} */}
                     {!showProjectManage && (
                         <UIOpSetting
                             engineMode={engineMode}
@@ -869,10 +869,10 @@ const GetUIOpSettingMenu = () => {
                     key: "debug-monaco-editor",
                     label: "(DEV)调试Playground"
                 },
-                {
-                    key: "vulinbox-manager",
-                    label: "(靶场)Vulinbox"
-                },
+                // {
+                //     key: "vulinbox-manager",
+                //     label: "(靶场)Vulinbox"
+                // },
                 {
                     key: "debug-traffic-analize",
                     label: "流量分析"
@@ -1036,9 +1036,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             case "debug-monaco-editor":
                 addToTab("**debug-monaco-editor")
                 return
-            case "vulinbox-manager":
-                addToTab("**vulinbox-manager")
-                return
+            // case "vulinbox-manager":
+            //     addToTab("**vulinbox-manager")
+            //     return
             case "diagnose-network":
                 addToTab("**diagnose-network")
                 return

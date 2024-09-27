@@ -104,10 +104,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const onFetchLocalAndLatsVersion = useMemoizedFn(() => {
             setTimeout(() => {
                 // 开发环境不做版本检测和 hash 检测
-                handleFetchYakitAndYaklangLocalVersion(
-                    isDevRef.current ? undefined : handleFetchYakitAndYaklangLatestVersion,
-                    !isDevRef.current
-                )
+                handleFetchYakitAndYaklangLocalVersion(undefined, false)
             }, 500)
         })
 
@@ -311,7 +308,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         // 初始化后的本地连接-前置项检查
         const initLink = useMemoizedFn(() => {
             isShowedUpdateHint.current = false
-            preventUpdateHint.current = !isEnpriTraceAgent() ? false : true
+            preventUpdateHint.current = true // !isEnpriTraceAgent() ? false : true
             checkEngineSourcePreventLinkLocalEnging.current = false
             handleCheckDataBase()
         })

@@ -199,15 +199,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             NetWorkApi<any, API.SystemConfigResponse>({
                 method: "get",
                 url: "system/config"
-            }).then((config) => {
-                const data = config.data || []
-                setEeSystemConfig([...data])
-            }).catch(() => {
-                setEeSystemConfig([])
             })
+                .then((config) => {
+                    const data = config.data || []
+                    setEeSystemConfig([...data])
+                })
+                .catch(() => {
+                    setEeSystemConfig([])
+                })
         }
     }, [engineLink])
-
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
@@ -884,7 +885,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [currentVersion, setCurrentVersion] = useState<string>("")
 
     const showCheckVersion = useMemo(() => {
-        if (isDev.current) return false
+        if (true || isDev.current) return false
         if (!builtInVersion) return false
         if (!currentVersion) return false
         if (!yakEngineVersionList.length) return false

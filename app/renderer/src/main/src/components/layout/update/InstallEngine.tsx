@@ -377,7 +377,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                         <div className={styles["hint-right-content"]}>
                                             {haveBuildInEngine
                                                 ? `授权使用内置引擎: ${buildInEngineVersion}，或远程连接启动`
-                                                : "你可选择安装 Yak 引擎启动软件，或远程连接"}
+                                                : "请联系管理员反馈该软件无引擎工具"}
                                         </div>
 
                                         {platformArch === "darwin-arm64" && (
@@ -436,7 +436,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 <YakitButton size='max' type='outline2' onClick={remoteLink}>
                                                     远程连接
                                                 </YakitButton>
-                                                {haveBuildInEngine && (
+                                                {false && (
                                                     <YakitPopconfirm
                                                         placement='top'
                                                         title={
@@ -464,7 +464,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                     取消
                                                 </YakitButton>
 
-                                                {!haveBuildInEngine && (
+                                                {false && (
                                                     // 无内置引擎
                                                     <YakitButton size='max' onClick={installEngine}>
                                                         一键安装
