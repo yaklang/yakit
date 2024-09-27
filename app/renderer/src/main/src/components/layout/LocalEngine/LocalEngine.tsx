@@ -3,7 +3,7 @@ import {LocalEngineProps} from "./LocalEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {failed, info} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakHint, UpdateYakitHint} from "../update/UpdateYakitAndYaklang"
@@ -138,7 +138,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 先进行 yakit 检查，在进行引擎检查
          */
         const handlePreCheckForLinkEngine = useMemoizedFn(() => {
-            if (!isEnpriTraceAgent()) setLog(["检查软件是否有更新..."])
+            if (!(isEnpriTraceAgent() || isEnpriTrace())) setLog(["检查软件是否有更新..."])
             else setLog([])
 
             if (SystemInfo.isDev) {
@@ -153,11 +153,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
 
         /**
          * @name 检查yakit是否有版本更新
-         * - SE 版本不进行 yakit 更新检查，直接检查引擎和内置的版本
+         * - SE、EE版本不进行 yakit 更新检查，直接检查引擎和内置的版本
          * - 未开启 yakit 更新检查，不进行 yakit 更新检查，直接检查引擎和内置的版本
          */
         const handleCheckYakitLatestVersion = useMemoizedFn(() => {
-            if (isEnpriTraceAgent()) {
+            if (isEnpriTraceAgent() || isEnpriTrace()) {
                 handleCheckEngineVersion()
                 return
             }
@@ -533,7 +533,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 )}
 
                 {/* Yakit 更新弹窗 */}
-                {!isEnpriTraceAgent() && (
+                {!(isEnpriTraceAgent() || isEnpriTrace()) && (
                     <UpdateYakitHint
                         current={currentYakit.current}
                         latest={latestYakit.current}

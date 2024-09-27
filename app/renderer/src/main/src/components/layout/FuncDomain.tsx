@@ -1977,7 +1977,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         if (isCommunityEdition()) visitorsStatisticsFun()
         grpcFetchLatestYakitVersion(undefined, true)
             .then((data: string) => {
-                setYakitLastVersion(data)
+                // setYakitLastVersion(data)
             })
             .catch(() => {
                 setYakitLastVersion("")
@@ -2318,7 +2318,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
                                 {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                                {yakitLastIntranetVersion.length > 0 && !isYakitIntranetDownloading && (
+                                {yakitLastIntranetVersion.length > 0 && !isYakitIntranetDownloading && false && (
                                     <UIOpUpdateYakit
                                         version={yakitVersion}
                                         lastVersion={yakitLastIntranetVersion}
@@ -2330,7 +2330,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     />
                                 )}
 
-                                <UIOpUpdateYakit
+                                {/* <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -2339,7 +2339,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     updateContent={communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
                                     isUpdate={isUpdateYakit}
-                                />
+                                /> */}
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}
