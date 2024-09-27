@@ -414,6 +414,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     )
 }
 
+const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
 export interface ExtraMITMServerProps {
     /**@name 国密劫持*/
     enableGMTLS?: boolean
@@ -509,7 +510,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     useEffect(
         () => {
             if (status === "idle") {
-                const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
                 getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
                     getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
                         if (!!data && !!is) {
@@ -550,7 +550,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
-            if (props.onStartMITMServer)
+            if (props.onStartMITMServer){
+                setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(enableInitialPlugin ? noParamsCheckList : []))
                 props.onStartMITMServer(
                     host,
                     port,
@@ -562,6 +563,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     certs,
                     extra
                 )
+            }
         }
     )
     /**
