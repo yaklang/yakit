@@ -7,7 +7,7 @@ import {OutlineClockIcon} from "@/assets/icon/outline"
 
 const {RangePicker} = DatePicker
 const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
-    const {size, wrapperClassName, className, wrapperStyle, ...restProps} = props
+    const {size, wrapperClassName, className, dropdownClassName, wrapperStyle, ...restProps} = props
     return (
         <div
             className={classNames(
@@ -20,7 +20,20 @@ const InternalDatePicker: React.FC<YakitDatePickerProps> = (props) => {
             )}
             style={{...(wrapperStyle || {})}}
         >
-            <DatePicker {...restProps} />
+            <DatePicker
+                {...restProps}
+                suffixIcon={
+                    <div className={styles["picker-icon"]}>
+                        <OutlineClockIcon />
+                    </div>
+                }
+                dropdownClassName={classNames(styles["yakit-data-picker-dropdaown"], {dropdownClassName})}
+                className={classNames(styles["yakit-picker"], {
+                    [styles["yakit-picker-large"]]: size === "large",
+                    [styles["yakit-picker-small"]]: size === "small",
+                    className
+                })}
+            />
         </div>
     )
 }

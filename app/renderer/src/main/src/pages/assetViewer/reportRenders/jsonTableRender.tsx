@@ -2,9 +2,9 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {ReportItemRenderProp} from "./render"
 import {Table} from "antd"
 import {MinusSquareOutlined, PlusSquareOutlined} from "@ant-design/icons"
-import {useUpdateEffect} from "ahooks"
-import styles from "./jsonTableRender.module.scss"
 import classNames from "classnames"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import styles from "./jsonTableRender.module.scss"
 
 export interface JSONTableRenderProp extends ReportItemRenderProp {}
 
@@ -41,16 +41,23 @@ export const JSONTableRender: React.FC<JSONTableRenderProp> = (props) => {
     }, [props.item])
 
     return (
-        <Table
-            style={{marginTop: 12}}
-            size={"small"}
-            pagination={false}
+        <TableVirtualResize
+            loading={false}
+            titleHeight={42}
+            isShowTitle={false}
+            renderKey='_index'
+            data={data}
+            pagination={{
+                total: data.length,
+                limit: 20,
+                page: 1,
+                onChange: () => {}
+            }}
             columns={header.map((i) => {
-                return {title: i, dataIndex: i}
+                return {title: i, dataKey: i, ellipsis: true}
             })}
-            rowKey={"_index"}
-            dataSource={data}
-        ></Table>
+            useUpAndDown={false}
+        />
     )
 }
 

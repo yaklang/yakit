@@ -1,5 +1,5 @@
 import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, yakitNotify} from "@/utils/notification"
 import {Button, Col, Divider, Form, Modal, notification, Row, Spin} from "antd"
 import {InputItem} from "@/utils/inputUtil"
 import CopyToClipboard from "react-copy-to-clipboard"
@@ -93,7 +93,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
                                     text={licenseRequest}
                                     onCopy={(t, ok) => {
                                         if (ok) {
-                                            notification["success"]({message: "复制成功"})
+                                            yakitNotify("success", "复制成功")
                                         }
                                     }}
                                 >

@@ -1,85 +1,575 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Tag, InputNumber, DatePicker, Tooltip} from "antd"
-import type {ColumnsType} from "antd/es/table"
-import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn, useDebounceFn, usePrevious} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import moment from "moment"
-import "./LicenseAdminPage.scss"
-import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "../invoker/schema"
-import {showModal} from "@/utils/showModal"
-import {callCopyToClipboard} from "@/utils/basic"
-import {QuestionCircleOutlined} from "@ant-design/icons"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {NetWorkApi} from "@/services/fetch"
+import {yakitNotify} from "@/utils/notification"
+import {
+    OutlineInformationcircleIcon,
+    OutlinePencilaltIcon,
+    OutlinePluscircleIcon,
+    OutlineSearchIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
+import {Form, Space, Tooltip, Typography} from "antd"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import locale from "antd/es/date-picker/locale/zh_CN"
+import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
+import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-export interface ShowUserInfoProps {
-    text: string
-    onClose: () => void
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import styles from "./LicenseAdminPage.module.scss"
+const {Paragraph} = Typography
+interface LicenseAdminRequest {
+    keywords: string
+    status: number
+    page: number
+    limit: number
+    orderBy: string
+    order: string
 }
-const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
-    const {text, onClose} = props
-    const copyUserInfo = () => {
-        callCopyToClipboard(`${text}`)
+export interface LicenseAdminPageProp {}
+export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const isInitRequestRef = useRef<boolean>(true)
+    const [query, setQuery] = useState<LicenseAdminRequest>({
+        keywords: "",
+        status: 0,
+        page: 1,
+        limit: 20,
+        orderBy: "updated_at",
+        order: "desc"
+    })
+    const [loading, setLoading] = useState(false)
+    const [response, setResponse] = useState<API.CompanyLicenseConfigResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+    const [enterprisesPopShow, setEnterprisesPopShow] = useState<boolean>(false)
+    const editInfoRef = useRef<API.CompanyLicenseConfigList>()
+    const [createLicensePopShow, setCreateLicensePopShow] = useState<boolean>(false)
+    const companyRef = useRef<API.CompanyLicenseConfigList>()
+
+    useEffect(() => {
+        update(1)
+    }, [])
+
+    const countDay = (now, later) => {
+        // 将时间戳相减获得差值（秒数）
+        const differ = later - now
+        const day = differ / 60 / 60 / 24
+        if (day > 30) {
+            return <YakitTag color='green'>正常使用</YakitTag>
+        } else if (0 < day && day <= 30) {
+            return <YakitTag color='yellow'>即将过期</YakitTag>
+        } else {
+            return <YakitTag color='danger'>已过期</YakitTag>
+        }
     }
+
+    const columns: ColumnsTypeProps[] = [
+        {
+            title: "企业名称",
+            dataKey: "company",
+            filterProps: {
+                filterKey: "keywords",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+            },
+            fixed: "left"
+        },
+        {
+            title: "状态",
+            dataKey: "status",
+            render: (text, record) => countDay(record.currentTime, record.durationDate),
+            filterProps: {
+                filterKey: "status",
+                filtersType: "select",
+                filtersSelectAll: {
+                    isAll: true,
+                    textAll: "全部"
+                },
+                filters: [
+                    {
+                        label: "已过期",
+                        value: "1"
+                    },
+                    {
+                        label: "即将过期",
+                        value: "2"
+                    },
+                    {
+                        label: "正常使用",
+                        value: "3"
+                    }
+                ]
+            }
+        },
+        {
+            title: "有效期至",
+            dataKey: "durationDate",
+            render: (text) => moment.unix(text).format("YYYY-MM-DD")
+        },
+        {
+            title: "License(已使用/总数)",
+            dataKey: "useActivationNum",
+            render: (text, record) => {
+                return `${text} / ${record.maxActivationNum}`
+            }
+        },
+        {
+            title: "用户总数",
+            dataKey: "maxUser"
+        },
+        {
+            title: "操作",
+            dataKey: "action",
+            width: 130,
+            fixed: "right",
+            render: (_, record: API.CompanyLicenseConfigList) => (
+                <div className={styles["table-action-icon"]}>
+                    <Tooltip title='生成License' align={{offset: [-5, 10]}}>
+                        <OutlinePluscircleIcon
+                            className={styles["action-icon"]}
+                            onClick={() => {
+                                companyRef.current = record
+                                setCreateLicensePopShow(true)
+                            }}
+                        />
+                    </Tooltip>
+                    <OutlinePencilaltIcon
+                        className={styles["action-icon"]}
+                        onClick={() => {
+                            editInfoRef.current = record
+                            setEnterprisesPopShow(true)
+                        }}
+                    />
+                    <YakitPopconfirm
+                        title={"确定删除该企业吗？"}
+                        onConfirm={() => onRemoveSingle(record.id)}
+                        placement='right'
+                    >
+                        <OutlineTrashIcon className={styles["del-icon"]} />
+                    </YakitPopconfirm>
+                </div>
+            )
+        }
+    ]
+
+    const queyChangeUpdateData = useDebounceFn(
+        () => {
+            // 初次不通过此处请求数据
+            if (!isInitRequestRef.current) {
+                update(1)
+            }
+        },
+        {wait: 300}
+    ).run
+
+    useUpdateEffect(() => {
+        queyChangeUpdateData()
+    }, [query])
+
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        setQuery((prevQuery) => ({...prevQuery, ...filter}))
+    })
+
+    const update = useMemoizedFn((page: number) => {
+        const params: LicenseAdminRequest = {
+            ...query,
+            page
+        }
+        const isInit = page === 1
+        isInitRequestRef.current = false
+        if (isInit) {
+            setLoading(true)
+        }
+        NetWorkApi<LicenseAdminRequest, API.CompanyLicenseConfigResponse>({
+            method: "get",
+            url: "company/license/config",
+            params: params
+        })
+            .then((res) => {
+                const data = res.data || []
+                const d = isInit ? data : response.data.concat(data)
+                setResponse({
+                    ...res,
+                    data: d
+                })
+                if (isInit) {
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", "查看license失败：" + e)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    const onRemoveSingle = (id: number) => {
+        NetWorkApi<any, API.NewUrmResponse>({
+            method: "delete",
+            url: "company/license/config",
+            data: {
+                id
+            }
+        })
+            .then((res) => {
+                yakitNotify("success", "删除企业成功")
+                setResponse((prevResponse) => {
+                    return {
+                        ...prevResponse,
+                        data: prevResponse.data.filter((item) => item.id !== id),
+                        pagemeta: {
+                            ...prevResponse.pagemeta,
+                            total: prevResponse.pagemeta.total - 1 > 0 ? prevResponse.pagemeta.total - 1 : 0
+                        }
+                    }
+                })
+            })
+            .catch((err) => {
+                yakitNotify("error", "删除企业失败：" + err)
+            })
+    }
+
     return (
-        <div style={{padding: "0 10px"}}>
-            <div>
-                <span>{text}</span>
-            </div>
-            <div style={{textAlign: "center", paddingTop: 10}}>
-                <Button style={{width: 200}} type='primary' onClick={() => copyUserInfo()}>
-                    复制
-                </Button>
-            </div>
+        <div className={styles["licenseAdminPage"]}>
+            <TableVirtualResize<API.CompanyLicenseConfigList>
+                loading={loading}
+                query={query}
+                isRefresh={isRefresh}
+                titleHeight={42}
+                title={
+                    <div className={styles["virtual-table-header-wrap"]}>
+                        <div className={styles["virtual-table-heard-left"]}>
+                            <div className={styles["virtual-table-heard-left-item"]}>
+                                <span className={styles["virtual-table-heard-left-text"]}>Total</span>
+                                <span className={styles["virtual-table-heard-left-number"]}>
+                                    {response.pagemeta.total}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+                extra={
+                    <div className={styles["licenseAdminPage-table-extra"]}>
+                        <YakitButton size='small' onClick={() => setEnterprisesPopShow(true)}>
+                            添加企业
+                        </YakitButton>
+                        <YakitButton size='small' onClick={() => setCreateLicensePopShow(true)}>
+                            生成License
+                        </YakitButton>
+                    </div>
+                }
+                data={response.data}
+                enableDrag={false}
+                renderKey='id'
+                columns={columns}
+                useUpAndDown
+                pagination={{
+                    total: response.pagemeta.total,
+                    limit: response.pagemeta.limit,
+                    page: response.pagemeta.page,
+                    onChange: (page) => {
+                        update(page)
+                    }
+                }}
+                onChange={onTableChange}
+            ></TableVirtualResize>
+            <YakitModal
+                visible={enterprisesPopShow}
+                title={editInfoRef.current ? "编辑企业" : "创建企业"}
+                destroyOnClose={true}
+                maskClosable={false}
+                width={600}
+                onCancel={() => {
+                    setEnterprisesPopShow(false)
+                    editInfoRef.current = undefined
+                }}
+                footer={null}
+            >
+                <LicenseForm
+                    editInfo={editInfoRef.current}
+                    onCancel={() => {
+                        setEnterprisesPopShow(false)
+                        editInfoRef.current = undefined
+                    }}
+                    refresh={() => {
+                        update(1)
+                    }}
+                />
+            </YakitModal>
+            <YakitModal
+                visible={createLicensePopShow}
+                title='生成License'
+                destroyOnClose={true}
+                maskClosable={false}
+                width={600}
+                onCancel={() => {
+                    setCreateLicensePopShow(false)
+                    companyRef.current = undefined
+                }}
+                footer={null}
+            >
+                <CreateLicense
+                    company={companyRef.current}
+                    onCancel={() => {
+                        setCreateLicensePopShow(false)
+                        companyRef.current = undefined
+                    }}
+                    refresh={() => update(1)}
+                />
+            </YakitModal>
         </div>
     )
 }
 
-interface CreateLicenseProps {
+interface NewUrmRequest {
+    id?: number
+    company: string
+    maxActivationNum: number
+    maxUser: number
+    durationDate: number
+}
+interface LicenseFormProps {
     onCancel: () => void
     refresh: () => void
+    editInfo?: API.CompanyLicenseConfigList
+}
+const LicenseForm: React.FC<LicenseFormProps> = (props) => {
+    const {onCancel, refresh, editInfo} = props
+    const [form] = Form.useForm()
+    const [loading, setLoading] = useState<boolean>(false)
+    const [disabledSubmit, setDisabledSubmit] = useState<boolean>(!!editInfo)
+
+    useEffect(() => {
+        if (editInfo) {
+            form.setFieldsValue({
+                company: editInfo.company,
+                maxActivationNum: editInfo.maxActivationNum,
+                maxUser: editInfo.maxUser,
+                durationDate: moment.unix(editInfo.durationDate)
+            })
+        }
+    }, [])
+
+    const requestFun = (params: NewUrmRequest) => {
+        setLoading(true)
+        NetWorkApi<NewUrmRequest, API.ActionSucceeded>({
+            method: "post",
+            url: "company/license/config",
+            data: params
+        })
+            .then((res) => {
+                onCancel()
+                refresh()
+            })
+            .catch((err) => {
+                yakitNotify("error", "企业操作失败：" + err)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    }
+
+    const onFinish = useMemoizedFn((values) => {
+        let params: NewUrmRequest = {
+            ...values,
+            durationDate: values.durationDate.unix()
+        }
+        if (editInfo?.id) params.id = editInfo.id
+        if (editInfo && values.maxUser > editInfo.maxUser) {
+            params.maxActivationNum = values.maxActivationNum + 1
+            let m = YakitModalConfirm({
+                width: 420,
+                type: "white",
+                onCancelText: "取消",
+                onOkText: "确认",
+                icon: <ExclamationCircleOutlined />,
+                onOk: () => {
+                    requestFun(params)
+                    m.destroy()
+                },
+                content:
+                    "由于修改用户总数需要修改私有部署服务器的License，会占用一次License生成次数，所以默认会把License总数加1"
+            })
+        } else {
+            requestFun(params)
+        }
+    })
+
+    return (
+        <div style={{marginTop: 24}}>
+            <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
+                <Form.Item name='company' label='企业名称' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitInput placeholder='请输入企业名称' allowClear disabled={!!editInfo} />
+                </Form.Item>
+                <Form.Item
+                    name='maxActivationNum'
+                    label='License总数'
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value && value < editInfo.maxActivationNum) {
+                                    return Promise.reject("License总数仅能增加")
+                                } else {
+                                    setDisabledSubmit(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }
+                    ]}
+                >
+                    <YakitInputNumber placeholder='请输入License总数' min={0} />
+                </Form.Item>
+                <Form.Item
+                    name='maxUser'
+                    label={"用户总数"}
+                    tooltip={
+                        editInfo
+                            ? {
+                                  icon: <OutlineInformationcircleIcon />,
+                                  title: "如修改用户总数则需要修改私有部署服务器的License"
+                              }
+                            : null
+                    }
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value && value < editInfo.maxUser) {
+                                    return Promise.reject("用户总数不可减少")
+                                } else {
+                                    setDisabledSubmit(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }
+                    ]}
+                >
+                    <YakitInputNumber placeholder='请输入用户总数' min={0} />
+                </Form.Item>
+                <Form.Item
+                    name='durationDate'
+                    label='有效期'
+                    tooltip={
+                        editInfo
+                            ? {
+                                  icon: <OutlineInformationcircleIcon />,
+                                  title: "如修改有效期，则所有License都需替换，已使用License数清零"
+                              }
+                            : null
+                    }
+                    rules={[
+                        {required: true, message: "该项为必填"},
+                        {
+                            validator: (rule, value) => {
+                                if (editInfo && value && value.unix() < editInfo.durationDate) {
+                                    return Promise.reject("有效期不可缩短")
+                                } else {
+                                    setDisabledSubmit(false)
+                                    return Promise.resolve()
+                                }
+                            }
+                        }
+                    ]}
+                >
+                    <YakitDatePicker
+                        locale={locale}
+                        format='YYYY-MM-DD'
+                        placeholder='点击这里设置有效期'
+                        style={{width: "100%"}}
+                    />
+                </Form.Item>
+                <div style={{textAlign: "center"}}>
+                    <YakitButton
+                        disabled={disabledSubmit}
+                        style={{width: 200}}
+                        type='primary'
+                        htmlType='submit'
+                        loading={loading}
+                    >
+                        确认
+                    </YakitButton>
+                </div>
+            </Form>
+        </div>
+    )
 }
 
 interface SelectDataProps {
     value: number
     label: string
 }
-
-interface LicenseProps {
+interface LicenseCreatRequest {
     company: string
     license: string
     maxUser: number
+    company_version: string
 }
-
+interface CreateLicenseProps {
+    company?: API.CompanyLicenseConfigList
+    onCancel: () => void
+    refresh: () => void
+}
 const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
-    const {onCancel, refresh} = props
+    const {company, onCancel, refresh} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
     const [selectLoading, setSelectLoading] = useState<boolean>(true)
-    const [data, setData, getData] = useGetState<API.CompanyLicenseConfigList[]>([])
-    const [selectData, setSelectData, getSelectData] = useGetState<SelectDataProps[]>([])
-    const keywordsRef = useRef<string>("")
-    // 企业名称分页
-    const [_, setPagination, getPagination] = useGetState<PaginationSchema>({
-        Limit: 20,
-        Order: "desc",
-        OrderBy: "updated_at",
-        Page: 1
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 20,
+        order: "desc",
+        orderBy: "updated_at"
     })
+    const [response, setResponse] = useState<API.CompanyLicenseConfigResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+    const [selectData, setSelectData] = useState<SelectDataProps[]>([])
+    const keywordsRef = useRef<string>(company?.company || "")
 
     useEffect(() => {
-        update(1, undefined, true)
+        if (company) {
+            form.setFieldsValue({
+                id: company.id
+            })
+        }
+        update(1)
     }, [])
 
-    const update = (page?: number, limit?: number, reload: boolean = false) => {
+    const update = (page: number) => {
         setSelectLoading(true)
         const paginationProps = {
-            page: page || 1,
-            limit: limit || getPagination().Limit
+            ...pagination,
+            page: page,
+            limit: pagination.limit
         }
-        NetWorkApi<QueryProps, API.CompanyLicenseConfigResponse>({
+        const isInit = page === 1
+        NetWorkApi<LicenseAdminRequest, API.CompanyLicenseConfigResponse>({
             method: "get",
             url: "company/license/config",
             params: {
@@ -90,63 +580,66 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         })
             .then((res) => {
                 let data = res.data || []
+                if (data.length > 0) {
+                    setPagination((v) => ({...v, page: paginationProps.page}))
+                }
                 const newData = data.map((item) => ({
                     value: item.id,
                     label: item.company
                 }))
-                if (data.length > 0) {
-                    setPagination((v) => ({...v, Page: paginationProps.page}))
-                }
-                if (reload) {
-                    setData([...data])
-                    setSelectData([...newData])
-                } else {
-                    setData([...getData(), ...data])
-                    setSelectData([...getSelectData(), ...newData])
-                }
+                const d = isInit ? data : response.data.concat(data)
+                const opsd = isInit ? newData : selectData.concat(newData)
+                setResponse({
+                    ...res,
+                    data: d
+                })
+                setSelectData(opsd)
             })
             .catch((err) => {
-                failed("查看license失败：" + err)
+                yakitNotify("error", "查看license失败：" + err)
             })
             .finally(() => {
-                setTimeout(() => {
-                    setSelectLoading(false)
-                }, 200)
+                setSelectLoading(false)
             })
     }
 
     const onFinish = useMemoizedFn((values) => {
         setLoading(true)
         const {id, license, company_version} = values
-        const selectDate = data.filter((item) => item.id === id)[0]
+        const selectDate = response.data.filter((item) => item.id === id)[0]
         const {company, maxUser} = selectDate
-        let params = {
+        let params: LicenseCreatRequest = {
             license,
             company,
             maxUser,
             company_version
         }
-        NetWorkApi<LicenseProps, string>({
+        NetWorkApi<LicenseCreatRequest, string>({
             method: "post",
             url: "license/activation",
             data: params
         })
-            .then((text: string) => {
+            .then((text) => {
                 onCancel()
                 refresh()
-                const m = showModal({
+                const m = showYakitModal({
                     title: "生成成功",
-                    content: <ShowUserInfo text={text} onClose={() => m.destroy()} />
+                    content: (
+                        <div style={{padding: 15}}>
+                            <Paragraph>
+                                {text}
+                                <CopyComponents copyText={text} />
+                            </Paragraph>
+                        </div>
+                    ),
+                    footer: null
                 })
-                return m
             })
             .catch((err) => {
-                failed("企业操作失败：" + err)
+                yakitNotify("error", "企业操作失败：" + err)
             })
             .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
+                setLoading(false)
             })
     })
 
@@ -160,9 +653,10 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
 
     return (
         <div style={{marginTop: 24}}>
-            <Form {...layout} form={form} onFinish={onFinish}>
+            <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
                 <Form.Item name='id' label='企业名称' rules={[{required: true, message: "该项为必选"}]}>
                     <YakitSelect
+                        disabled={!!company}
                         showSearch
                         optionFilterProp='children'
                         placeholder='请选择企业名称'
@@ -173,16 +667,17 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                         options={selectData}
                         onSearch={(value) => {
                             keywordsRef.current = value
-                            update(1, undefined, true)
+                            update(1)
                         }}
                         onPopupScroll={(e) => {
                             const {target} = e
                             const ref: HTMLDivElement = target as unknown as HTMLDivElement
                             if (ref.scrollTop + ref.offsetHeight + 20 >= ref.scrollHeight && !selectLoading) {
-                                update(getPagination().Page + 1)
+                                update(pagination.page + 1)
                             }
                         }}
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                        notFoundContent={<YakitEmpty />}
                     />
                 </Form.Item>
                 <Form.Item name='company_version' label='版本' rules={[{required: true, message: "该项为必选"}]}>
@@ -192,460 +687,14 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                     </YakitSelect>
                 </Form.Item>
                 <Form.Item name='license' label='申请码' rules={[{required: true, message: "该项为必选"}]}>
-                    <Input.TextArea placeholder='请输入申请码' allowClear rows={13} />
+                    <YakitInput.TextArea placeholder='请输入申请码' allowClear rows={13} />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
-                    <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
+                    <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
-                    </Button>
+                    </YakitButton>
                 </div>
             </Form>
         </div>
     )
 }
-
-export interface LicenseFormProps {
-    onCancel: () => void
-    refresh: () => void
-    editInfo: any
-}
-
-const layout = {
-    labelCol: {span: 5},
-    wrapperCol: {span: 16}
-}
-
-export interface CreateProps {
-    user_name: string
-}
-
-const LicenseForm: React.FC<LicenseFormProps> = (props) => {
-    const {onCancel, refresh, editInfo} = props
-    const [form] = Form.useForm()
-    const [loading, setLoading] = useState<boolean>(false)
-    const [submitBtn, setSubmitBtn] = useState<boolean>(!!editInfo)
-
-    useEffect(() => {
-        if (editInfo) {
-            form.setFieldsValue({
-                company: editInfo.company,
-                maxActivationNum: editInfo.maxActivationNum,
-                maxUser: editInfo.maxUser,
-                durationDate: moment.unix(editInfo.durationDate)
-            })
-        }
-    }, [])
-
-    const requestFun = (params) => {
-        NetWorkApi<CreateProps, API.NewUrmResponse>({
-            method: "post",
-            url: "company/license/config",
-            data: params
-        })
-            .then((res: API.NewUrmResponse) => {
-                onCancel()
-                refresh()
-            })
-            .catch((err) => {
-                failed("企业操作失败：" + err)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
-    }
-
-    const onFinish = useMemoizedFn((values) => {
-        let params = {
-            ...values,
-            durationDate: values.durationDate.unix()
-        }
-        if (editInfo?.id) params.id = editInfo?.id
-        if (editInfo && values.maxUser > editInfo.maxUser) {
-            params.maxActivationNum = values.maxActivationNum + 1
-            Modal.info({
-                title: "由于修改用户总数需要修改私有部署服务器的License，会占用一次License生成次数，所以默认会把License总数加1",
-                onOk() {
-                    requestFun(params)
-                }
-            })
-        } else {
-            requestFun(params)
-        }
-    })
-    return (
-        <div style={{marginTop: 24}}>
-            <Form {...layout} form={form} onFinish={onFinish}>
-                <Form.Item name='company' label='企业名称' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入企业名称' allowClear disabled={!!editInfo} />
-                </Form.Item>
-                <Form.Item
-                    name='maxActivationNum'
-                    label='License总数'
-                    rules={[
-                        {required: true, message: "该项为必填"},
-                        {
-                            validator: (rule, value) => {
-                                if (editInfo && value && value < editInfo.maxActivationNum) {
-                                    return Promise.reject("License总数仅能增加")
-                                } else {
-                                    setSubmitBtn(false)
-                                    return Promise.resolve()
-                                }
-                            }
-                        }
-                    ]}
-                >
-                    <InputNumber placeholder='请输入License总数' style={{width: "100%"}} />
-                </Form.Item>
-                <Form.Item
-                    name='maxUser'
-                    label={
-                        <>
-                            用户总数
-                            {editInfo && (
-                                <Tooltip title='如修改用户总数则需要修改私有部署服务器的License'>
-                                    <QuestionCircleOutlined style={{paddingLeft: 2, position: "relative", top: 1}} />
-                                </Tooltip>
-                            )}
-                        </>
-                    }
-                    rules={[
-                        {required: true, message: "该项为必填"},
-                        {
-                            validator: (rule, value) => {
-                                if (editInfo && value && value < editInfo.maxUser) {
-                                    return Promise.reject("用户总数不可减少")
-                                } else {
-                                    setSubmitBtn(false)
-                                    return Promise.resolve()
-                                }
-                            }
-                        }
-                    ]}
-                >
-                    <InputNumber placeholder='请输入用户总数' style={{width: "100%"}} />
-                </Form.Item>
-                <Form.Item
-                    name='durationDate'
-                    label={
-                        <>
-                            有效期
-                            {editInfo && (
-                                <Tooltip title='如修改有效期，则所有License都需替换，已使用License数清零'>
-                                    <QuestionCircleOutlined style={{paddingLeft: 2, position: "relative", top: 1}} />
-                                </Tooltip>
-                            )}
-                        </>
-                    }
-                    rules={[
-                        {required: true, message: "该项为必填"},
-                        {
-                            validator: (rule, value) => {
-                                if (editInfo && value && value.unix() < editInfo.durationDate) {
-                                    return Promise.reject("有效期不可缩短")
-                                } else {
-                                    setSubmitBtn(false)
-                                    return Promise.resolve()
-                                }
-                            }
-                        }
-                    ]}
-                >
-                    <DatePicker
-                        // showTime
-                        format='YYYY-MM-DD'
-                        placeholder='点击这里设置有效期'
-                        style={{width: "100%"}}
-                    />
-                </Form.Item>
-                <div style={{textAlign: "center"}}>
-                    <Button
-                        disabled={submitBtn}
-                        style={{width: 200}}
-                        type='primary'
-                        htmlType='submit'
-                        loading={loading}
-                    >
-                        确认
-                    </Button>
-                </div>
-            </Form>
-        </div>
-    )
-}
-
-export interface LicenseAdminPageProps {}
-
-export interface QueryLicenseAdminParams {
-    keywords: string
-    status: number
-}
-
-interface QueryProps {}
-interface RemoveProps {
-    id: number
-}
-const LicenseAdminPage: React.FC<LicenseAdminPageProps> = (props) => {
-    const [loading, setLoading] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryLicenseAdminParams>({
-        keywords: "",
-        status: 0
-    })
-    const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 20,
-        Order: "desc",
-        OrderBy: "updated_at",
-        Page: 1
-    })
-    const [data, setData] = useState<API.CompanyLicenseConfigList[]>([])
-    const [total, setTotal] = useState<number>(0)
-    // 编辑项信息
-    const [licenseFormShow, setLicenseFormShow] = useState<boolean>(false)
-    const [editInfo, setEditInfo] = useState<API.CompanyLicenseConfigList>()
-    // 生成License Modal
-    const [createLicenseModal, setCreateLicenseModal] = useState<boolean>(false)
-
-    const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
-        setLoading(true)
-        const paginationProps = {
-            page: page || 1,
-            limit: limit || pagination.Limit
-        }
-
-        NetWorkApi<QueryProps, API.CompanyLicenseConfigResponse>({
-            method: "get",
-            url: "company/license/config",
-            params: {
-                ...params,
-                ...paginationProps
-            }
-        })
-            .then((res) => {
-                // const newData = res.data.map((item) => ({...item}))
-                setData(res.data || [])
-                setPagination({...pagination, Limit: res.pagemeta.limit})
-                setTotal(res.pagemeta.total)
-            })
-            .catch((err) => {
-                failed("查看license失败：" + err)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
-    }
-
-    useEffect(() => {
-        update()
-    }, [params.status])
-
-    const onRemove = (id: number) => {
-        NetWorkApi<RemoveProps, API.NewUrmResponse>({
-            method: "delete",
-            url: "company/license/config",
-            data: {
-                id
-            }
-        })
-            .then((res) => {
-                success("删除企业成功")
-                update()
-            })
-            .catch((err) => {
-                failed("删除企业失败：" + err)
-            })
-            .finally(() => {})
-    }
-
-    // 计算相差天数
-    const countDay = (now, later) => {
-        // 将时间戳相减获得差值（秒数）
-        const differ = later - now
-        const day = differ / 60 / 60 / 24
-        if (day > 30) {
-            return <Tag color='green'>正常使用</Tag>
-        } else if (0 < day && day <= 30) {
-            return <Tag color='orange'>即将过期</Tag>
-        } else {
-            return <Tag color='red'>已过期</Tag>
-        }
-    }
-
-    const columns: ColumnsType<API.CompanyLicenseConfigList> = [
-        {
-            title: "企业名称",
-            dataIndex: "company"
-        },
-        {
-            title: "状态",
-            dataIndex: "status",
-            filters: [
-                {
-                    text: "已过期",
-                    value: 1
-                },
-                {
-                    text: "即将过期",
-                    value: 2
-                }
-            ],
-            filterMultiple: false,
-            render: (text, record) => countDay(record.currentTime, record.durationDate)
-        },
-        {
-            title: "有效期至",
-            dataIndex: "durationDate",
-            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD")}</span>
-        },
-        {
-            title: "License(已使用/总数)",
-            dataIndex: "useActivationNum",
-            render: (text, record) => {
-                return `${text} / ${record.maxActivationNum}`
-            }
-        },
-        {
-            title: "用户总数",
-            dataIndex: "maxUser"
-        },
-        {
-            title: "操作",
-            render: (i) => (
-                <Space>
-                    <Button
-                        size='small'
-                        type='link'
-                        onClick={() => {
-                            setEditInfo(i)
-                            setLicenseFormShow(true)
-                        }}
-                    >
-                        编辑
-                    </Button>
-                    <YakitPopconfirm
-                        title={"确定删除该企业吗？"}
-                        onConfirm={() => {
-                            onRemove(i.id)
-                        }}
-                        placement='right'
-                    >
-                        <Button size={"small"} danger={true} type='link'>
-                            删除
-                        </Button>
-                    </YakitPopconfirm>
-                </Space>
-            ),
-            width: 140
-        }
-    ]
-
-    const onTableChange = useDebounceFn((pagination, filters) => {
-        const {status} = filters
-        if (Array.isArray(status)) setParams({...getParams(), status: status[0]})
-        else {
-            setParams({...getParams(), status: 0})
-        }
-    }).run
-    return (
-        <div className='license-admin-page'>
-            <Table
-                loading={loading}
-                pagination={{
-                    size: "small",
-                    defaultCurrent: 1,
-                    pageSize: pagination?.Limit || 10,
-                    showSizeChanger: true,
-                    total,
-                    showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
-                    onChange: (page: number, limit?: number) => {
-                        setLoading(true)
-                        if (page !== pagination.Page || limit !== pagination.Limit) {
-                            update(page, limit)
-                        }
-                    }
-                }}
-                rowKey={(row) => row.id}
-                title={(e) => {
-                    return (
-                        <div className='table-title'>
-                            <div className='filter'>
-                                <Input.Search
-                                    placeholder={"请输入企业名称进行搜索"}
-                                    enterButton={true}
-                                    size={"small"}
-                                    style={{width: 200}}
-                                    value={params.keywords}
-                                    onChange={(e) => {
-                                        setParams({...getParams(), keywords: e.target.value})
-                                    }}
-                                    onSearch={() => {
-                                        update()
-                                    }}
-                                />
-                            </div>
-                            <div className='operation'>
-                                <Space>
-                                    <Button
-                                        type='primary'
-                                        htmlType='submit'
-                                        size='small'
-                                        onClick={() => {
-                                            setLicenseFormShow(true)
-                                            setEditInfo(undefined)
-                                        }}
-                                    >
-                                        添加企业
-                                    </Button>
-                                    <Button
-                                        type='primary'
-                                        htmlType='submit'
-                                        size='small'
-                                        onClick={() => {
-                                            setCreateLicenseModal(true)
-                                        }}
-                                    >
-                                        生成License
-                                    </Button>
-                                </Space>
-                            </div>
-                        </div>
-                    )
-                }}
-                columns={columns}
-                size={"small"}
-                bordered={true}
-                dataSource={data}
-                onChange={onTableChange}
-            />
-            <Modal
-                visible={licenseFormShow}
-                title={editInfo ? "编辑企业" : "创建企业"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={600}
-                onCancel={() => setLicenseFormShow(false)}
-                footer={null}
-            >
-                <LicenseForm editInfo={editInfo} onCancel={() => setLicenseFormShow(false)} refresh={() => update()} />
-            </Modal>
-            <Modal
-                visible={createLicenseModal}
-                title={"生成License"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={600}
-                onCancel={() => setCreateLicenseModal(false)}
-                footer={null}
-            >
-                <CreateLicense onCancel={() => setCreateLicenseModal(false)} refresh={() => update()} />
-            </Modal>
-        </div>
-    )
-}
-
-export default LicenseAdminPage

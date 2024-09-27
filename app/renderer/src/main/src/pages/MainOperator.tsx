@@ -595,7 +595,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </AutoSpin>
 
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-                    <Modal
+                    <YakitModal
                         visible={passwordShow}
                         title={"修改密码"}
                         destroyOnClose={true}
@@ -606,7 +606,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         footer={null}
                     >
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-                    </Modal>
+                    </YakitModal>
                     {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                     {isCommunityEdition() && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
