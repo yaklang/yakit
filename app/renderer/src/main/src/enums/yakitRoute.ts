@@ -83,5 +83,7 @@ export enum YakitRoute {
     /**空间引擎 */
     Space_Engine = "space-engine",
     // YakRunner代码扫描
-    YakRunner_Code_Scan = "yakrunner-code-scan"
+    YakRunner_Code_Scan = "yakrunner-code-scan",
+    // YakRunner代码审计
+    YakRunner_Audit_Code = "yakrunner-audit-code"
 }
