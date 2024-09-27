@@ -268,28 +268,32 @@ function NewApp() {
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
             if (token && token.length > 0) {
-                if (isEnpriTrace()) {
-                    let syncData = false
-                    eeSystemConfig.forEach((item) => {
-                        if (item.configName === "syncData") {
-                            syncData = item.isOpen
-                        }
-                    })
-                    if (syncData) {
-                        aboutLoginUpload(token)
-                        loginHTTPFlowsToOnline(token)
-                    }
-                } else {
-                    aboutLoginUpload(token)
-                    loginHTTPFlowsToOnline(token)
-                }
+                isSyncData(token)
             }
         })
         return () => {
             ipcRenderer.removeAllListeners("close-windows-renderer")
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
-    }, [dynamicStatus.isDynamicStatus, userInfo, eeSystemConfig])
+    }, [dynamicStatus.isDynamicStatus, userInfo])
+
+    const isSyncData = useMemoizedFn((token) => {
+        if (isEnpriTrace()) {
+            let syncData = false
+            eeSystemConfig.forEach((item) => {
+                if (item.configName === "syncData") {
+                    syncData = item.isOpen
+                }
+            })
+            if (syncData) {
+                aboutLoginUpload(token)
+                loginHTTPFlowsToOnline(token)
+            }
+        } else {
+            aboutLoginUpload(token)
+            loginHTTPFlowsToOnline(token)
+        }
+    })
 
     if (!agreed) {
         return (

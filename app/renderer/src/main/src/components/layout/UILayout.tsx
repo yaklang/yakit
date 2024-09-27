@@ -195,7 +195,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     }, [eeSystemConfig])
     useEffect(() => {
-        if (engineLink) {
+        if (engineLink && isEnpriTrace()) {
             NetWorkApi<any, API.SystemConfigResponse>({
                 method: "get",
                 url: "system/config"
