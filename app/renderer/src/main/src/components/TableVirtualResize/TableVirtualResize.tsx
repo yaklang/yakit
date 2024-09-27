@@ -25,7 +25,7 @@ import {
 } from "./TableVirtualResizeType"
 import ReactResizeDetector from "react-resize-detector"
 import styles from "./TableVirtualResize.module.scss"
-import {DatePicker, Divider, Popover, RadioChangeEvent, Spin, Tag, Tooltip} from "antd"
+import {Divider, Popover, RadioChangeEvent, Tooltip} from "antd"
 import {LoadingOutlined} from "@ant-design/icons"
 import {
     FilterIcon,
@@ -48,7 +48,10 @@ import {YakitProtoCheckbox, YakitProtoCheckboxProps} from "./YakitProtoCheckbox/
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
 import {randomString} from "@/utils/randomUtil"
 import cloneDeep from "lodash/cloneDeep"
-const {RangePicker} = DatePicker
+import locale from "antd/es/date-picker/locale/zh_CN"
+import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+const {RangePicker} = YakitDatePicker
 
 /**
  * @description: 更新说明
@@ -861,6 +864,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             <>
                 <div className={styles["date-time-search"]}>
                     <RangePicker
+                        locale={locale}
                         size='small'
                         ranges={{
                             "1分钟": [moment().subtract(1, "minute"), moment()],
@@ -972,7 +976,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                     <div className={classNames(styles["virtual-table-heard-title"])}>{title}</div>
                                 )}
                                 {title && React.isValidElement(title) && title}
-                                {props.isShowTotal && pagination?.total>=0 && (
+                                {props.isShowTotal && pagination?.total >= 0 && (
                                     <div className={styles["virtual-table-heard-right"]}>
                                         <div className={styles["virtual-table-heard-right-item"]}>
                                             <span className={styles["virtual-table-heard-right-text"]}>Total</span>
@@ -999,8 +1003,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     )}
                 </>
             )}
-            {(width === 0 && <Spin spinning={true} tip='加载中...'></Spin>) || (
-                <Spin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
+            {(width === 0 && <YakitSpin spinning={true} tip='加载中...'></YakitSpin>) || (
+                <YakitSpin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{
@@ -1116,7 +1120,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             )}
                         </div>
                     </div>
-                </Spin>
+                </YakitSpin>
             )}
         </div>
     )
@@ -2072,7 +2076,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                             size='small'
                             mode='tags'
                             wrapperStyle={{width: 124}}
-                            onChange={(v,o)=>onChangeSelect(v as string[],o as FiltersItemProps[])}
+                            onChange={(v, o) => onChangeSelect(v as string[], o as FiltersItemProps[])}
                             allowClear
                             value={Array.isArray(value) ? [...value] : []}
                             {...filterMultipleProps}

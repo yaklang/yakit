@@ -7,6 +7,8 @@ import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {loginOut, refreshToken} from "@/utils/login"
 import {UserInfoProps, yakitDynamicStatus} from "@/store"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 const {ipcRenderer} = window.require("electron")
 
 export interface SetPasswordProps {
@@ -80,26 +82,26 @@ const SetPassword: React.FC<SetPasswordProps> = (props) => {
         <div>
             <Form {...layout} form={form} onFinish={onFinish}>
                 <Form.Item name='old_pwd' label='旧密码' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input.Password placeholder='请输入你的旧密码' allowClear />
+                    <YakitInput.Password placeholder='请输入你的旧密码' allowClear />
                 </Form.Item>
                 <Form.Item
                     name='pwd'
                     label='新密码'
                     rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                 >
-                    <Input.Password placeholder='请输入你的新密码' allowClear />
+                    <YakitInput.Password placeholder='请输入你的新密码' allowClear />
                 </Form.Item>
                 <Form.Item
                     name='confirm_pwd'
                     label='确认密码'
                     rules={[{required: true, message: "该项为必填"}, ...judgePass()]}
                 >
-                    <Input.Password placeholder='请确认你的密码' allowClear />
+                    <YakitInput.Password placeholder='请确认你的密码' allowClear />
                 </Form.Item>
                 <div style={{textAlign: "center"}}>
-                    <Button type='primary' htmlType='submit' loading={loading}>
+                    <YakitButton type='primary' htmlType='submit' loading={loading}>
                         修改密码
-                    </Button>
+                    </YakitButton>
                 </div>
             </Form>
         </div>

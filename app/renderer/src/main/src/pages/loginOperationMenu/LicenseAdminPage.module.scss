@@ -1,5 +1,5 @@
 .licenseAdminPage {
-    height: calc(100% - 45px);
+    height: calc(100% - 30px);
     .virtual-table-header-wrap {
         display: flex;
         align-items: center;
@@ -29,5 +29,22 @@
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+    // .edit-icon {
+    //     cursor: pointer;
+    //     svg {
+    //         color: var(--yakit-body-text-color);
+    //     }
+    // }
+    // .del-icon {
+    //     svg {
+    //         color: var(--yakit-danger-5);
+    //     }
+    // }
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 }

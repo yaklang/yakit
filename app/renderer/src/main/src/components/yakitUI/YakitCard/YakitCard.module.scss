@@ -17,12 +17,12 @@
             font-weight: 500;
             font-size: 12px;
             color: var(--yakit-header-color);
+            overflow: hidden;
         }
         .yakit-card-heard-extra {
             display: flex;
             align-items: center;
             flex: 1;
-            overflow: hidden;
             justify-content: flex-end;
         }
     }
