@@ -35,7 +35,7 @@ const layout = {
 interface ConfigPrivateDomainProps {
     onClose?: () => void
     onSuccee?: () => void
-    // 是否为企业登录
+    // 是否为系统登录
     enterpriseLogin?: boolean | undefined
     // 是否展示跳过
     skipShow?: boolean
@@ -140,7 +140,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .catch((err) => {
                 setTimeout(() => setLoading(false), 300)
-                failed("企业登录失败：" + err)
+                failed("系统登录失败：" + err)
             })
             .finally(() => {})
     })
@@ -292,7 +292,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <div className='icon-box'>
                         <img src={yakitEEImg} className='type-icon-img' />
                     </div>
-                    <div className='title-box'>企业登录</div>
+                    <div className='title-box'>系统登录</div>
                 </div>
             )}
             <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
