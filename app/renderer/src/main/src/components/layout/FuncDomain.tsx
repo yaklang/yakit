@@ -1672,7 +1672,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         if (isCommunityEdition()) visitorsStatisticsFun()
         grpcFetchLatestYakitVersion(undefined, true)
             .then((data: string) => {
-                setYakitLastVersion(data)
+                // setYakitLastVersion(data)
             })
             .catch(() => {
                 setYakitLastVersion("")
@@ -1994,7 +1994,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     {noticeType === "update" ? (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
-                                <UIOpUpdateYakit
+                                {/* <UIOpUpdateYakit
                                     version={yakitVersion}
                                     lastVersion={yakitLastVersion}
                                     isUpdateWait={isYakitUpdateWait}
@@ -2003,7 +2003,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     updateContent={communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
                                     isUpdate={isUpdateYakit}
-                                />
+                                /> */}
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}
