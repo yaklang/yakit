@@ -333,7 +333,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         ></CurrentHttpFlow>
                     </TabPane>
                 )}
-                <TabPane tab={"基础插件信息 / 日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
+                <TabPane tab={"日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                     {
                         <>
                             <AutoCard
