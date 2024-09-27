@@ -23,7 +23,7 @@ export enum PRODUCT_RELEASE_EDITION {
 export const getReleaseEditionName = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
-            return "EnpriTrace"
+            return "逻辑漏洞自动化检测与利用系统"
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return "EnpriTraceAgent"
         case PRODUCT_RELEASE_EDITION.BreachTrace:
