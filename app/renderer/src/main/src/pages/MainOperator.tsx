@@ -47,7 +47,11 @@ import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 import "./main.scss"
 import "./GlobalClass.scss"
+<<<<<<< HEAD
 import { setUpSyntaxFlowMonaco } from "@/utils/monacoSpec/syntaxflowEditor"
+=======
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+>>>>>>> 3e5eafa74 (feat: 旧组件替换)
 
 const {ipcRenderer} = window.require("electron")
 
@@ -582,7 +586,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     </AutoSpin>
 
                     {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
-                    <Modal
+                    <YakitModal
                         visible={passwordShow}
                         title={"修改密码"}
                         destroyOnClose={true}
@@ -593,7 +597,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         footer={null}
                     >
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-                    </Modal>
+                    </YakitModal>
                     {(isCommunityEdition()||isEnpriTrace()) && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
                     {(isCommunityEdition()||isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>

@@ -20,10 +20,12 @@ import {DynamicStatusProps, UserInfoProps, useStore, yakitDynamicStatus} from "@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import { getReleaseEditionName } from "@/utils/envfile"
+import {getReleaseEditionName} from "@/utils/envfile"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
+import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
-const {RangePicker} = DatePicker
 export interface ControlOperationProps {
     controlName: string
 }
@@ -358,7 +360,7 @@ export interface DynamicControlProps {
 export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
     const {isShow, onCancle, children, mainTitle, secondTitle, width} = props
     return (
-        <Modal
+        <YakitModal
             visible={isShow}
             destroyOnClose={true}
             maskClosable={false}
@@ -367,15 +369,13 @@ export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
             onCancel={() => onCancle()}
             footer={null}
             centered
+            title={mainTitle}
+            subTitle={secondTitle}
         >
             <div className={styles["dynamic-control"]}>
-                <div className={styles["title-box"]}>
-                    <div className={styles["main-title"]}>{mainTitle}</div>
-                    <div className={styles["second-title"]}>{secondTitle}</div>
-                </div>
                 {children}
             </div>
-        </Modal>
+        </YakitModal>
     )
 }
 
@@ -588,7 +588,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
     ]
     return (
         <div className={styles["control-admin-page"]}>
-            <Spin spinning={resetLoading}>
+            <YakitSpin spinning={resetLoading}>
                 <div className={styles["operation"]}>
                     <div className={styles["left-select"]}>
                         <div className={styles["title-box"]}>远程管理</div>
@@ -601,7 +601,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
 
                     <div className={styles["right-filter"]}>
                         <div className={styles["date-time-search"]}>
-                            <RangePicker
+                            <YakitDatePicker.RangePicker
                                 style={{width: 200}}
                                 size='small'
                                 locale={locale}
@@ -643,7 +643,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
                         loadMoreData={() => updateLoadMore.run(pagination.Page + 1)}
                     />
                 </div>
-            </Spin>
+            </YakitSpin>
         </div>
     )
 }

@@ -1,0 +1,123 @@
+.accountAdminPage {
+    height: 100%;
+    .card {
+        border: none;
+        &-title {
+            display: flex;
+            align-items: center;
+
+            gap: 5px;
+            &-text {
+                font-size: 14px;
+            }
+        }
+        &-extra {
+            display: flex;
+            align-items: center;
+
+            gap: 5px;
+        }
+        &-body {
+            height: 100%;
+        }
+    }
+    .department-tree {
+        .department-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            &-info {
+                flex: 1;
+            }
+            &-extra {
+                display: none;
+            }
+        }
+
+        .department-item:hover {
+            .department-item-extra {
+                display: block;
+            }
+        }
+
+        .department-item-select {
+            .department-item-extra {
+                display: block;
+                .edit-icon,
+                .del-icon,
+                .plus-icon {
+                    svg {
+                        color: #fff;
+                    }
+                }
+            }
+        }
+    }
+    .accountList {
+        .block-title {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            .first-title{
+                color: rgba(0, 0, 0, 0.5);
+            }
+            .second-title{
+                color: rgba(0, 0, 0, 0.5);
+            }
+            .right-outlined {
+                svg {
+                    width: 12px;
+                    height: 12px;
+                }
+                padding: 0 8px;
+                color: rgba(0, 0, 0, 0.5);
+            }
+        }
+    }
+    .accountList-table-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .table-action-icon {
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+
+        .action-icon {
+            svg {
+                width: 16px;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+
+        span {
+            padding: 0 12px;
+            border-right: 1px solid var(--yakit-border-color);
+            color: var(--yakit-body-text-color);
+
+            &:first-child {
+                padding-left: 0;
+            }
+
+            &:last-child {
+                border-right: none;
+            }
+        }
+
+        .del-icon {
+            svg {
+                width: 16px;
+                color: var(--yakit-danger-5);
+            }
+        }
+    }
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}

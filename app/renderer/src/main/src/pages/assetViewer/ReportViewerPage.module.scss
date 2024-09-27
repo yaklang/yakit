@@ -1,0 +1,78 @@
+.reportViewerPage {
+    height: 100%;
+    .list-item {
+        position: relative;
+        margin-bottom: 8px;
+        cursor: pointer;
+        &-header {
+            border: 1px solid var(--yakit-border-color);
+        }
+        &-body {
+            border: 1px solid var(--yakit-border-color);
+            border-top: none;
+        }
+    }
+    .list-item-hoverable {
+        &:hover {
+            background-color: var(--yakit-card-background-color);
+        }
+    }
+    .icon-select {
+        color: #bfbfbf;
+        position: absolute;
+        right: 0;
+        top: 0;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .icon-select-active {
+        color: var(--yakit-primary-5);
+    }
+    .card {
+        border: none;
+        &-title {
+            display: flex;
+            align-items: center;
+
+            gap: 5px;
+            &-text {
+                font-size: 14px;
+            }
+        }
+        &-extra {
+            display: flex;
+            align-items: center;
+
+            gap: 5px;
+            .UISettingSvgIcon {
+                cursor: pointer;
+                svg {
+                    width: 18px;
+                    height: 18px;
+                    color: var(--yakit-body-text-color);
+                }
+            }
+        }
+        &-body {
+            height: 100%;
+        }
+    }
+    .report-viewer {
+        position: relative;
+        height: 100%;
+        .report-empty {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .loading-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+        }
+    }
+}

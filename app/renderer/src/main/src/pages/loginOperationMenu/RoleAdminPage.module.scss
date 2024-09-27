@@ -1,0 +1,13 @@
+.roleAdminPage {
+    height: calc(100% - 30px);
+    .edit-icon {
+        svg {
+            color: var(--yakit-body-text-color);
+        }
+    }
+    .del-icon {
+        svg {
+            color: var(--yakit-danger-5);
+        }
+    }
+}

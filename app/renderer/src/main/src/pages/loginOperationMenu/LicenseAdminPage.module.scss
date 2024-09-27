@@ -1,0 +1,75 @@
+.licenseAdminPage {
+    height: calc(100% - 30px);
+    .virtual-table-header-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .virtual-table-heard-left {
+            display: flex;
+            align-items: center;
+
+            .virtual-table-heard-left-item {
+                display: flex;
+                align-items: center;
+
+                .virtual-table-heard-left-text {
+                    color: var(--yakit-helper-text-color);
+                    font-size: 12px;
+                    margin-right: 4px;
+                }
+
+                .virtual-table-heard-left-number {
+                    color: var(--yakit-primary-5);
+                    font-size: 12px;
+                }
+            }
+        }
+    }
+    .licenseAdminPage-table-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .table-action-icon {
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+
+        .action-icon {
+            svg {
+                width: 16px;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+
+        span {
+            padding: 0 12px;
+            border-right: 1px solid var(--yakit-border-color);
+            color: var(--yakit-body-text-color);
+
+            &:first-child {
+                padding-left: 0;
+            }
+
+            &:last-child {
+                border-right: none;
+            }
+        }
+
+        .del-icon {
+            svg {
+                width: 16px;
+                color: var(--yakit-danger-5);
+            }
+        }
+    }
+    
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}

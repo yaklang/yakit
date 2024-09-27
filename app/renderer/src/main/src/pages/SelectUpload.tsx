@@ -13,6 +13,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -246,7 +247,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 </Form.Item>
             )}
             <Form.Item name='name' label='项目' rules={[{required: true, message: "该项为必填"}]}>
-                <Cascader
+                <YakitCascader
                     disabled={loading}
                     options={data}
                     placeholder='请选择项目'
