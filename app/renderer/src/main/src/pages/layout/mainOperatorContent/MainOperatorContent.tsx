@@ -1550,11 +1550,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
-    const IsEnpriTrace = isEnterpriseOrSimpleEdition()
     useEffect(() => {
         ipcRenderer.on("login-out", (e) => {
             setStoreUserInfo(defaultUserInfo)
-            if (IsEnpriTrace) {
+            if (isEnterpriseOrSimpleEdition()) {
                 ipcRenderer.invoke("update-judge-license", true)
                 // 只要路由不是Plugin_OP,可以把menuName设置为空字符
                 removeMenuPage({route: YakitRoute.AccountAdminPage, menuName: ""})
@@ -1566,7 +1565,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 removeMenuPage({route: YakitRoute.LicenseAdminPage, menuName: ""})
                 removeMenuPage({route: YakitRoute.TrustListPage, menuName: ""})
             }
-            IsEnpriTrace ? setRemoteValue("token-online-enterprise", "") : setRemoteValue("token-online", "")
+            isEnterpriseOrSimpleEdition()
+                ? setRemoteValue("token-online-enterprise", "")
+                : setRemoteValue("token-online", "")
         })
         return () => {
             ipcRenderer.removeAllListeners("login-out")
@@ -2060,7 +2061,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     const onRestoreHTTPFuzzer: (query: QueryFuzzerConfigRequest) => Promise<null> = useMemoizedFn(async (query) => {
         return new Promise(async (resolve) => {
-            apiQueryFuzzerConfig(query).then(async ({Data=[]}) => {
+            apiQueryFuzzerConfig(query).then(async ({Data = []}) => {
                 try {
                     const pageList =
                         Data.map((ele) => ({

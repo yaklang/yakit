@@ -281,6 +281,15 @@ export declare namespace API {
          */
         searchTime: string
     }
+    export interface SystemConfigResponse extends Paging {
+        data: SystemConfigList[]
+    }
+    export interface SystemConfigList extends GormBaseModel, SystemConfigDetail {}
+    export interface SystemConfigDetail {
+        configName: string
+        isOpen: boolean
+        content: string
+    }
     export interface ShareResponse {
         share_id: string
         extract_code?: string

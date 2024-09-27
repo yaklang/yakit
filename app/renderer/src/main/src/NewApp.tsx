@@ -5,10 +5,10 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./ut
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
-import {useStore, yakitDynamicStatus} from "./store"
+import {useEeSystemConfig, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
@@ -247,6 +247,7 @@ function NewApp() {
 
     // 退出时 确保渲染进程各类事项已经处理完毕
     const {dynamicStatus} = yakitDynamicStatus()
+    const {eeSystemConfig} = useEeSystemConfig()
     useEffect(() => {
         ipcRenderer.on("close-windows-renderer", async (e, res: any) => {
             // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
@@ -267,8 +268,7 @@ function NewApp() {
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
             const {token} = userInfo
             if (token && token.length > 0) {
-                aboutLoginUpload(token)
-                loginHTTPFlowsToOnline(token)
+                isSyncData(token)
             }
         })
         return () => {
@@ -276,6 +276,24 @@ function NewApp() {
             ipcRenderer.removeAllListeners("minimize-windows-renderer")
         }
     }, [dynamicStatus.isDynamicStatus, userInfo])
+
+    const isSyncData = useMemoizedFn((token) => {
+        if (isEnpriTrace()) {
+            let syncData = false
+            eeSystemConfig.forEach((item) => {
+                if (item.configName === "syncData") {
+                    syncData = item.isOpen
+                }
+            })
+            if (syncData) {
+                aboutLoginUpload(token)
+                loginHTTPFlowsToOnline(token)
+            }
+        } else {
+            aboutLoginUpload(token)
+            loginHTTPFlowsToOnline(token)
+        }
+    })
 
     if (!agreed) {
         return (
