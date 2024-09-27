@@ -1,0 +1,54 @@
+.no-audit{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .footer{
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+    }
+}
+
+.audit-code-page{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .audit-code-body {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .audit-code-code{
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        .code-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            .runner-tabs-top{
+                border-top: 1px solid #ffffff;
+            }
+        }
+    }
+
+    &-code {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        .code-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            .runner-tabs-top{
+                border-top: 1px solid #ffffff;
+            }
+        }
+    }
+}

@@ -7,7 +7,7 @@ import {
     CodeScanGroupByKeyWordItemProps,
     CodeScanGroupByKeyWordProps,
     YakRunnerCodeScanProps
-} from "./yakRunnerCodeScanType"
+} from "./YakRunnerCodeScanType"
 import {Divider, Form, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {useControllableValue, useCreation, useGetState, useInViewport, useMemoizedFn} from "ahooks"
