@@ -277,7 +277,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     grpcFetchLatestYakitVersion(true)
                         .then((data) => {
                             if (preventUpdateHint.current) return
-                            setLatestYakit(data || "")
+                            // setLatestYakit(data || "")
                         })
                         .catch((err) => {})
                     grpcFetchLatestYakVersion(true)
