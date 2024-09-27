@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -270,7 +270,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         () => (yakitStatus === "control-remote" ? "远程控制中 ..." : `欢迎使用 ${getReleaseEditionName()}`),
         [yakitStatus]
     )
-
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
