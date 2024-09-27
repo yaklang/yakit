@@ -132,7 +132,8 @@ import {
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/YakRunner/YakRunner"
-import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/yakRunnerCodeScan";
+import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan";
+import { YakRunnerAuditCode } from "@/pages/YakRunnerAuditCode/YakRunnerAuditCode";
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
@@ -222,7 +223,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "beta-webshell-opt": {label: "WebShell 实例"},
     data_statistics: {label: "数据统计"},
     "space-engine": {label: "空间引擎"},
-    "yakrunner-code-scan": {label: "代码扫描"}
+    "yakrunner-code-scan": {label: "代码扫描"},
+    "yakrunner-audit-code": {label: "代码审计"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -259,7 +261,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_DebugTrafficAnalize,
     YakitRoute.Plugin_Audit,
     YakitRoute.Beta_WebShellManager,
-    YakitRoute.Data_Statistics
+    YakitRoute.Data_Statistics,
+    YakitRoute.YakRunner_Audit_Code
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -295,7 +298,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.SimpleDetect,
     YakitRoute.DB_Risk,
     YakitRoute.ShellReceiver,
-    YakitRoute.YakRunner_Code_Scan
+    YakitRoute.YakRunner_Code_Scan,
+    YakitRoute.YakRunner_Audit_Code
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -546,6 +550,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <SpaceEnginePage pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Code_Scan:
             return <YakRunnerCodeScan />
+        case YakitRoute.YakRunner_Audit_Code:
+            return <YakRunnerAuditCode />
         default:
             return <div />
     }
@@ -796,6 +802,20 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
     },
     {
         page: undefined,
+        label:"代码审计",
+        children:[
+            {
+                page: YakitRoute.YakRunner_Audit_Code,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
+            },
+            {
+                page: YakitRoute.YakRunner_Code_Scan,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
+            }
+        ]
+    },
+    {
+        page: undefined,
         label: "数据库",
         children: [
             {
@@ -1010,6 +1030,18 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineDataCompareIcon />,
         hoverIcon: <PrivateSolidDataCompareIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DataCompare]
+    },
+    [YakitRoute.YakRunner_Audit_Code]:{
+        page: YakitRoute.YakRunner_Audit_Code,
+        icon: <PrivateOutlineDataCompareIcon />,
+        hoverIcon: <PrivateSolidDataCompareIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
+    },
+    [YakitRoute.YakRunner_Code_Scan]:{
+        page: YakitRoute.YakRunner_Code_Scan,
+        icon: <PrivateOutlineDataCompareIcon />,
+        hoverIcon: <PrivateSolidDataCompareIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
     },
     [YakitRoute.DB_Report]: {
         page: YakitRoute.DB_Report,
