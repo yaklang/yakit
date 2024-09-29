@@ -1431,7 +1431,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             )) || (
                                 <CellRender
                                     colIndex={colIndex}
-                                    key={`${item.data[renderKey]}-${colIndex}` || number}
+                                    key={`${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` || number}
                                     item={item}
                                     columnsItem={columnsItem}
                                     number={item.index}

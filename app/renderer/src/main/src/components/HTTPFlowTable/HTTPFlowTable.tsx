@@ -9,7 +9,14 @@ import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useMemoizedFn,
+    useUpdateEffect,
+    useVirtualList
+} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -562,6 +569,11 @@ export const SourceType = [
         value: "basic-crawler"
     }
 ]
+
+interface UpdateCacheData {
+    id: number
+    tags: string
+}
 
 export const getClassNameData = (resData: HTTPFlow[]) => {
     let newData: HTTPFlow[] = []
@@ -1267,6 +1279,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setScrollToIndex(0)
             setCurrentIndex(undefined)
             setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+            setUpdateCacheData([])
             getDataByGrpc(query, "update")
         } else {
             setIsLoop(true)
@@ -1383,8 +1396,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 是否循环接口
     const [isLoop, setIsLoop] = useState<boolean>(!serverPushStatus)
+    const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
 
-    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(() => {
+    const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
+        try {
+            const updateData = JSON.parse(data)
+            if (typeof updateData !== "string") {
+                if (updateData.action === "update") {
+                    console.log(pageType, updateData)
+                    setUpdateCacheData((prev) => prev.concat(updateData))
+                }
+            }
+        } catch (error) {}
         setIsLoop(true)
     })
     useEffect(() => {
@@ -3481,6 +3504,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [pageType])
 
+    const realData = () => {
+        if (updateCacheData.length) {
+            let findFlag = false
+            const dataMap = new Map(data.map((item) => [+item.Id, item]))
+            updateCacheData.forEach((target, index) => {
+                if (dataMap.has(target.id)) {
+                    const targetObject = dataMap.get(target.id)
+                    if (targetObject) {
+                        targetObject.Tags = target.tags
+                        updateCacheData.splice(index, 1)
+                        setUpdateCacheData(updateCacheData)
+                        findFlag = true
+                    }
+                }
+            })
+            if (findFlag) {
+                const newData = getClassNameData(data)
+                setData(newData)
+                return newData
+            }
+            return data
+        } else {
+            return data
+        }
+    }
+
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
@@ -3766,7 +3815,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'
-                    data={data}
+                    data={realData()}
                     rowSelection={{
                         isAll: isAllSelect,
                         type: "checkbox",
