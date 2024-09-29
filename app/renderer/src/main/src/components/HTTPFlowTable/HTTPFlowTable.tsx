@@ -1403,7 +1403,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const updateData = JSON.parse(data)
             if (typeof updateData !== "string") {
                 if (updateData.action === "update") {
-                    console.log(pageType, updateData)
                     setUpdateCacheData((prev) => prev.concat(updateData))
                 }
             }
