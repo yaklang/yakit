@@ -56,7 +56,8 @@ const createWindow = () => {
             sandbox: true
         },
         frame: false,
-        titleBarStyle: "hidden"
+        titleBarStyle: "hidden",
+        icon: path.join(__dirname, "../assets/yakiteelogo.png")
     })
     win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)

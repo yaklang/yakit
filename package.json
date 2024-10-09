@@ -44,8 +44,8 @@
     "electron-publish-se-legacy": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-se-legacy.yaml",
     "release-enpritrace": "electron-builder --publish always -mwl --config ./multibuilder/enpritrace.yml",
     "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml",
-    "package-linux": "node packager-config.js",
-    "deb-linux": "node pack-deb.js"
+    "package-linux": "node electron-packager-config.js",
+    "deb-linux": "node build-deb.js"
   },
   "keywords": [],
   "author": "",

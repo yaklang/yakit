@@ -6,7 +6,7 @@ const process = require("process")
 const fs = require("fs")
 
 /** 软件根目录 */
-const appPath = app.isPackaged ? path.dirname(app.getPath("exe")) : app.getAppPath()
+const appPath = app.isPackaged ? path.dirname(app.getPath("exe")) : path.join(app.getAppPath(), "resources", "app")
 /** 系统用户根路径 */
 const osHome = os.homedir()
 /** 软件关联数据文件夹名 */
@@ -84,7 +84,7 @@ const loadExtraFilePath = (s) => {
         case "darwin":
             return path.join(app.getAppPath(), "../..", s)
         case "linux":
-            return path.join(app.getAppPath(), "../..", s)
+            return path.join(path.join(app.getAppPath(), "resources", "app"), "../..", s)
         case "win32":
             return path.join(app.getAppPath(), "../..", s)
         default:

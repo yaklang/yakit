@@ -1,4 +1,5 @@
 bins/database/*.gzip
+bins/resources/*.txt
 bins/yak.zip
 bins/engine-version.txt
 bins/yak_linux_amd64.zip
