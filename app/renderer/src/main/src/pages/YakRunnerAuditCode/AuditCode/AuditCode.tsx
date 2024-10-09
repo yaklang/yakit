@@ -198,7 +198,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 
     const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (detail?.url) {
-            emiter.emit("onScrollToFileTree", detail?.url)
+            emiter.emit("onCodeAuditScrollToFileTree", detail?.url)
         }
         setFoucsedKey(node.id)
         onJump(node)
@@ -237,7 +237,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                         highLightRange
                     }
                 }
-                emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 // 纯跳转行号
                 setTimeout(() => {
                     const obj: JumpToEditorProps = {
@@ -245,7 +245,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                         id: url,
                         isSelect: false
                     }
-                    emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
                 }, 100)
             }
         } catch (error) {}
@@ -358,7 +358,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 return
             }
             if (childArr.length > 0) {
-                emiter.emit("onRefreshFileTree")
+                emiter.emit("onCodeAuditRefreshFileTree")
                 resolve("")
             } else {
                 if (lastValue.current.length > 0) {
@@ -510,7 +510,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Path: v.id,
                 Body: value
             }
-            emiter.emit("onOpenAuditRightDetail", JSON.stringify(rightParams))
+            emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
         }
     })
     return (
@@ -561,7 +561,7 @@ interface AuditModalFormProps {
 
 export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const {onCancle, isInitDefault, isExecuting, onStartAudit} = props
-    const {} = useStore()
+    const {fileTree} = useStore()
     const [loading, setLoading] = useState<boolean>(true)
 
     const [plugin, setPlugin] = useState<YakScript>()
@@ -603,10 +603,10 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
     const initRequiredFormValue = useMemoizedFn(async () => {
         let ProjectPath = ""
         let ProjectName = ""
-        // if (fileTree.length > 0) {
-        //     ProjectPath = fileTree[0].path
-        //     ProjectName = await getNameByPath(ProjectPath)
-        // }
+        if (fileTree.length > 0) {
+            ProjectPath = fileTree[0].path
+            ProjectName = await getNameByPath(ProjectPath)
+        }
 
         // 必填参数
         let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
