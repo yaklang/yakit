@@ -9,14 +9,7 @@ import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useGetState,
-    useMemoizedFn,
-    useUpdateEffect,
-    useVirtualList
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {callCopyToClipboard} from "../../utils/basic"
 import {
@@ -1404,6 +1397,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             if (typeof updateData !== "string") {
                 if (updateData.action === "update") {
                     setUpdateCacheData((prev) => prev.concat(updateData))
+                    console.log(pageType, updateData)
                 }
             }
         } catch (error) {}
@@ -3503,7 +3497,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [pageType])
 
-    const realData = () => {
+    const realData = useMemo(() => {
         if (updateCacheData.length) {
             let findFlag = false
             const dataMap = new Map(data.map((item) => [+item.Id, item]))
@@ -3527,7 +3521,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         } else {
             return data
         }
-    }
+    }, [updateCacheData, data])
 
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
@@ -3814,7 +3808,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'
-                    data={realData()}
+                    data={realData}
                     rowSelection={{
                         isAll: isAllSelect,
                         type: "checkbox",
