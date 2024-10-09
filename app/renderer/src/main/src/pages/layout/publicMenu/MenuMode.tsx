@@ -1,9 +1,11 @@
 import React from "react"
 import {
+    PublicAuditCodeIcon,
     PublicBasicCrawlerIcon,
     PublicBatchPluginIcon,
     PublicBruteIcon,
     PublicCVEIcon,
+    PublicCodeScanIcon,
     PublicCodecIcon,
     PublicDNSLogIcon,
     PublicDataCompareIcon,
@@ -372,7 +374,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                 <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.YakRunner_Audit_Code)}>
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
-                                <PublicPluginStoreIcon />
+                                <PublicAuditCodeIcon />
                             </div>
                         </div>
                         <div className={styles["title-style"]}>代码审计</div>
@@ -384,7 +386,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     >
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
-                                <PublicBatchPluginIcon />
+                                <PublicCodeScanIcon />
                             </div>
                         </div>
                         <div className={styles["title-style"]}>代码扫描</div>

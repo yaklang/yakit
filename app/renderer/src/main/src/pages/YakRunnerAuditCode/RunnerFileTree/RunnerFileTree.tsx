@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineScanIcon, OutlineXIcon} from "@/assets/icon/outline"
 
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
@@ -38,11 +38,13 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AuditHistoryTable} from "../AuditCode/AuditCode"
 import {FileDetailInfo} from "@/pages/YakRunner/RunnerTabs/RunnerTabsType"
 import {getDefaultActiveFile, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "@/pages/YakRunner/utils"
-import {FileTree} from "@/pages/YakRunner/FileTree/FileTree"
+
 import {KeyToIcon} from "@/pages/YakRunner/FileTree/icon"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/YakRunner/CollapseList/CollapseList"
 import {FileNodeProps, FileTreeListProps} from "@/pages/YakRunner/FileTree/FileTreeType"
+import { FileTree } from "../FileTree/FileTree"
+import { addToTab } from "@/pages/MainTabs"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -85,23 +87,21 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     })
 
     useEffect(() => {
-        emiter.on("onDefaultExpanded", onDefaultExpanded)
+        emiter.on("onCodeAuditDefaultExpanded", onDefaultExpanded)
         return () => {
-            emiter.off("onDefaultExpanded", onDefaultExpanded)
+            emiter.off("onCodeAuditDefaultExpanded", onDefaultExpanded)
         }
     }, [])
 
     useEffect(() => {
         // 刷新文件树
-        emiter.on("onRefreshFileTree", onRefreshFileTreeFun)
+        emiter.on("onCodeAuditRefreshFileTree", onRefreshFileTreeFun)
         return () => {
-            emiter.off("onRefreshFileTree", onRefreshFileTreeFun)
+            emiter.off("onCodeAuditRefreshFileTree", onRefreshFileTreeFun)
         }
     }, [])
-    console.log("fileTree77---",fileTree);
+    
     const fileDetailTree = useMemo(() => {
-        console.log("fileTree---",fileTree);
-        
         const initTree = initFileTree(fileTree, 1)
         if (initTree.length > 0) {
             initTree.push({
@@ -132,9 +132,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     useEffect(() => {
         getAduitList()
         // 通知最近编译发生改变
-        emiter.on("onRefreshAduitHistory", getAduitList)
+        emiter.on("onCodeAuditRefreshAduitHistory", getAduitList)
         return () => {
-            emiter.off("onRefreshAduitHistory", getAduitList)
+            emiter.off("onCodeAuditRefreshAduitHistory", getAduitList)
         }
     }, [])
 
@@ -148,7 +148,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         let newMenu: YakitMenuItemType[] = [
             {
-                key: "auditFolder",
+                key: "auditCode",
                 label: "编译项目"
             }
         ]
@@ -177,8 +177,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     }, [aduitList, fileTree])
 
     // 编译项目
-    const auditFolder = useMemoizedFn(() => {
-        emiter.emit("onOpenAuditModal")
+    const auditCode = useMemoizedFn(() => {
+        emiter.emit("onExecuteAuditModal")
     })
 
     const openAuditHistory = useMemoizedFn((path: string) => {
@@ -190,8 +190,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
     const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
         switch (key) {
-            case "auditFolder":
-                auditFolder()
+            case "auditCode":
+                auditCode()
                 break
             default:
                 if (keyPath.includes("auditHistory")) {
@@ -215,7 +215,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                             parent
                         }
                     }
-                    emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                    emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 }
             }
         }
@@ -231,12 +231,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                         <div className={styles["file-tree-header"]}>
                             <div className={styles["title-style"]}>文件列表</div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={"编译当前项目"}>
+                                <Tooltip title={"代码扫描"}>
                                     <YakitButton
                                         disabled={fileTree.length === 0}
                                         type='text2'
-                                        icon={<OutlinCompileIcon />}
-                                        onClick={() => emiter.emit("onOpenAuditModal", "init")}
+                                        icon={<OutlineScanIcon />}
+                                        onClick={() => {
+                                            addToTab("**yak-runner-code-scan")
+                                        }}
                                     />
                                 </Tooltip>
                                 <Tooltip title={"刷新资源管理器"}>
@@ -245,7 +247,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                                         disabled={fileTree.length === 0}
                                         icon={<OutlineRefreshIcon />}
                                         onClick={() => {
-                                            emiter.emit("onRefreshTree")
+                                            emiter.emit("onCodeAuditRefreshTree")
                                         }}
                                     />
                                 </Tooltip>
