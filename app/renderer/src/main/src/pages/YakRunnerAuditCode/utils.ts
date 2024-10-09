@@ -49,7 +49,7 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
         }
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("审计树获取---", params, res)
+            // console.log("审计树获取---", params, res)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve({res, data})
         } catch (error) {
@@ -71,11 +71,9 @@ export const grpcFetchDeleteAudit: (path: string) => Promise<FileNodeMapProps[]>
                 Query: [{Key: "trash", Value: "true"}]
             }
         }
-        console.log("params---",params);
-        
         try {
             const list: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("删除已编译项目", params, list)
+            // console.log("删除已编译项目", params, list)
             const data: FileNodeMapProps[] = initFileTreeData(list, path)
             resolve(data)
         } catch (error) {

@@ -1,4 +1,5 @@
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
+import {FileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 export interface YakRunnerAuditCodeProps {
 }
 
@@ -25,4 +26,28 @@ export interface OpenFileByPathProps {
 
 export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {
     Body: string
+}
+
+
+export interface TabFileProps {
+    // 窗口唯一标识符
+    id: string
+    // 窗口中打开的文件列表
+    files: FileDetailInfo[]
+}
+
+// 编辑器分块信息
+export interface AreaInfoProps {
+    elements: TabFileProps[]
+}
+
+export interface YakRunnerHistoryProps {
+    // 是否为文件
+    isFile: boolean
+    // 展示名称
+    name: string
+    // 路径
+    path: string
+    // 加载的树类型
+    loadTreeType?: "file" | "audit"
 }

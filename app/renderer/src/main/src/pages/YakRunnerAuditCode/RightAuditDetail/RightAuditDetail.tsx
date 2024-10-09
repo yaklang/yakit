@@ -19,9 +19,9 @@ import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} from "./GraphInfoMap"
-import { JumpToEditorProps } from "@/pages/YakRunner/BottomEditorDetails/BottomEditorDetailsType"
-import { CollapseList } from "@/pages/YakRunner/CollapseList/CollapseList"
-import { AuditEmiterYakUrlProps, OpenFileByPathProps } from "../YakRunnerAuditCodeType"
+import {JumpToEditorProps} from "@/pages/YakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {CollapseList} from "@/pages/YakRunner/CollapseList/CollapseList"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void
@@ -49,7 +49,7 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
                         })}
                         onClick={(e) => {
                             e.stopPropagation()
-                            emiter.emit("onScrollToFileTree", code_range.url)
+                            emiter.emit("onCodeAuditScrollToFileTree", code_range.url)
                             onDetail(code_range)
                         }}
                     >
@@ -207,24 +207,27 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     // 初始默认样式
     const onInitSvgStyle = useMemoizedFn((id?: string) => {
         if (id) {
-            const titles = document.getElementsByTagName("title")
-            // 遍历所有 <title> 元素
-            for (let i = 0; i < titles.length; i++) {
-                if (titles[i].textContent === "n1") {
-                    // 获取匹配的 <title> 元素的父元素
-                    const parentElement = titles[i].parentElement
-                    if (parentElement) {
-                        // 新增class用于屏蔽通用hover样式
-                        parentElement.classList.add("node-main")
-                        // 查找该元素下的所有 ellipse 标签
-                        const ellipses = parentElement.getElementsByTagName("ellipse")
-                        // 遍历所有找到的 ellipse 标签，并添加样式
-                        for (let i = 0; i < ellipses.length; i++) {
-                            ellipses[i].style.stroke = "#8863F7"
-                            ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+            const element = document.getElementById("auditCodeFlowChart")
+            if (element) {
+                const titles = element.getElementsByTagName("title")
+                // 遍历所有 <title> 元素
+                for (let i = 0; i < titles.length; i++) {
+                    if (titles[i].textContent === "n1") {
+                        // 获取匹配的 <title> 元素的父元素
+                        const parentElement = titles[i].parentElement
+                        if (parentElement) {
+                            // 新增class用于屏蔽通用hover样式
+                            parentElement.classList.add("node-main")
+                            // 查找该元素下的所有 ellipse 标签
+                            const ellipses = parentElement.getElementsByTagName("ellipse")
+                            // 遍历所有找到的 ellipse 标签，并添加样式
+                            for (let i = 0; i < ellipses.length; i++) {
+                                ellipses[i].style.stroke = "#8863F7"
+                                ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+                            }
                         }
+                        break // 找到匹配的元素后停止遍历
                     }
-                    break // 找到匹配的元素后停止遍历
                 }
             }
         }
@@ -269,9 +272,9 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
 
     useEffect(() => {
         // 打开编译右侧详情
-        emiter.on("onRefreshAuditDetail", onRefreshAuditDetailFun)
+        emiter.on("onCodeAuditRefreshAuditDetail", onRefreshAuditDetailFun)
         return () => {
-            emiter.off("onRefreshAuditDetail", onRefreshAuditDetailFun)
+            emiter.off("onCodeAuditRefreshAuditDetail", onRefreshAuditDetailFun)
         }
     }, [])
 
@@ -362,7 +365,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     ).run
 
     return (
-        <div className={styles["flow-chart-box"]}>
+        <div className={styles["flow-chart-box"]} id='auditCodeFlowChart'>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>
@@ -495,10 +498,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         let graph_info: string[][] = JSON.parse(item.Value)
                         // 当数量小于等于10条时默认第一级展开
                         if (graph_info.length > 0 && graph_info.length <= 10) {
-                            const expendKey:string[] = graph_info.map((item,index)=>`路径${index + 1}`)
+                            const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
                             setActiveKey(expendKey)
-                        }
-                        else{
+                        } else {
                             setActiveKey(undefined)
                         }
                         setGraphLine(graph_info)
@@ -530,9 +532,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             }
         }
         // 定位文件树
-        emiter.emit("onScrollToFileTree", url)
+        emiter.emit("onCodeAuditScrollToFileTree", url)
         // 打开文件
-        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
         // 纯跳转行号
         setTimeout(() => {
             const obj: JumpToEditorProps = {
@@ -540,7 +542,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 id: url,
                 isSelect: false
             }
-            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
         }, 100)
     })
 
