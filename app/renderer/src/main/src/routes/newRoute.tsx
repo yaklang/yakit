@@ -110,6 +110,7 @@ import {
     AddYakitScriptPageInfoProps,
     BrutePageInfoProps,
     HTTPHackerPageInfoProps,
+    ModifyNotepadPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
     RiskPageInfoProps,
@@ -386,6 +387,8 @@ export interface ComponentParams {
     riskPageInfoProps?: RiskPageInfoProps
     /**MITM劫持页面 */
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
+    /**记事本编辑页面 */
+    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
