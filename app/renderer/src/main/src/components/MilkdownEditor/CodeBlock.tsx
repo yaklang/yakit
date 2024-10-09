@@ -14,7 +14,7 @@ export const CustomCodeComponent: React.FC<any> = React.memo(() => {
         if (!editor) return
     }, [editor])
     return (
-        <div style={{height: 200}}>
+        <div style={{height: 200,marginBottom:20}}>
             <YakitEditor type='yak' value={node.textContent} editorDidMount={setEditor} />
         </div>
     )
