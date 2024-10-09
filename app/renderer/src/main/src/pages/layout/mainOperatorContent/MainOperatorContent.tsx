@@ -1221,6 +1221,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, order)
+                            break
                         case YakitRoute.Modify_Notepad:
                             onSetModifyNotepadData(node, order)
                             break
@@ -1259,6 +1260,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, 1)
+                            break
                         case YakitRoute.Modify_Notepad:
                             onSetModifyNotepadData(node, 1)
                             break
