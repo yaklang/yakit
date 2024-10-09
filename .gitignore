@@ -54,3 +54,4 @@ package-lock.json
 .bashrc
 yarn.lock
 .vscode/
+.history/

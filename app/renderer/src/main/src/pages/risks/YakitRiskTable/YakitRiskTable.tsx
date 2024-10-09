@@ -86,6 +86,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -1506,7 +1507,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
             firstRatio: "50%",
             secondRatio: "50%",
             lineStyle: {height: "auto"},
-            firstNodeStyle: {height: "auto"},
+            firstNodeStyle: {height: "auto"}
         }
         if (!isShowCode) {
             p.firstRatio = "0%"
@@ -1637,7 +1638,9 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                                         <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
                                     </Descriptions.Item>
                                     <Descriptions.Item label='详情' span={column}>
-                                        <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Details}` || "-"}</div>
+                                        <div style={{height: 180}}>
+                                            <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
+                                        </div>
                                     </Descriptions.Item>
                                 </>
                             </Descriptions>
