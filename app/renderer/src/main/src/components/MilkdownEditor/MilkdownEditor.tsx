@@ -1,10 +1,9 @@
 import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
-import React, {forwardRef, useEffect, useImperativeHandle, useRef} from "react"
+import React, {useEffect} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {blockquoteSchema, codeBlockSchema, commonmark} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
-import {nord} from "@milkdown/theme-nord"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 
@@ -24,7 +23,9 @@ import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock"
 import {Blockquote} from "./Blockquote"
-import {CustomMilkdownProps, MilkdownEditorProps, EditorMilkdownProps} from "./MilkdownEditorType"
+import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
+import {alterCustomPlugin} from "./utils/alertPlugin"
+
 const markdown = `
 # 1-1  Milkdown React Commonmark
 
@@ -56,6 +57,24 @@ const markdown = `
 ### 2-3  Milkdown React Commonmark
 ### 2-3  Milkdown React Commonmark
 
+
+> \[!NOTE]
+> Useful information that users should know, even when skimming content.
+
+> fdsfdsf
+
+:::note
+markdown
+:::
+:::tip
+markdown
+:::
+:::danger
+markdown
+:::
+:::caution
+markdown
+:::
 
 Maybe more? ![]()
 
@@ -117,7 +136,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             component: BlockView
                         })
                     })
-
                     ctx.update(imageBlockConfig.key, (value) => ({
                         uploadButton: () => <div>uploadButton</div>,
                         imageIcon: () => <div>imageBlockConfig-imageIcon</div>,
@@ -190,6 +208,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // placeholder
                 .use(placeholderPlugin)
                 .use(placeholderConfig)
+                // alterCustomPlugin
+                .use([...alterCustomPlugin()])
         )
     }, [])
     useEffect(() => {
