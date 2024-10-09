@@ -113,6 +113,7 @@ import {
     BrutePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    ModifyNotepadPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
     RiskPageInfoProps,
@@ -392,6 +393,8 @@ export interface ComponentParams {
     auditCodePageInfo?: AuditCodePageInfoProps
     /**代码扫描页面 */
     codeScanPageInfo?: CodeScanPageInfoProps
+    /**记事本编辑页面 */
+    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
