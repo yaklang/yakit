@@ -45,13 +45,14 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import classNames from "classnames"
 import {DragDropContext, DropResult, ResponderProvided} from "@hello-pangea/dnd"
-import {cloneDeep} from "bizcharts/lib/utils"
-import {RunnerTabs, YakRunnerWelcomePage} from "../YakRunner/RunnerTabs/RunnerTabs"
+import cloneDeep from "lodash/cloneDeep"
 import {SplitView} from "../YakRunner/SplitView/SplitView"
-import {BottomSideBar} from "../YakRunner/BottomSideBar/BottomSideBar"
-import {ShowItemType} from "../YakRunner/BottomEditorDetails/BottomEditorDetailsType"
-import {BottomEditorDetails} from "../YakRunner/BottomEditorDetails/BottomEditorDetails"
+
 import {LeftAudit} from "./LeftAudit/LeftAudit"
+import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
+import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
+import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
+import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
@@ -139,7 +140,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 })
                 // 文件结构Map
                 setMapFolderDetail(rootPath, childArr)
-                console.log("wawawa111---", rootPath, list)
                 if (list) setFileTree([{path: rootPath}])
             })
 
@@ -254,7 +254,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         loadIndexRef.current = 0
         clearMap()
         // FileTree缓存清除
-        isFirst && emiter.emit("onResetFileTree")
+        isFirst && emiter.emit("onCodeAuditResetFileTree")
     })
 
     // 加载审计树(初次加载)
@@ -358,7 +358,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         if (progress === 1) {
             setTimeout(() => {
                 onOpenAuditTreeFun(`${projectNmae}`)
-                emiter.emit("onRefreshAduitHistory")
+                emiter.emit("onCodeAuditRefreshAduitHistory")
             }, 300)
         }
 
@@ -384,7 +384,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
     // 当前展示项
-    const [showItem, setShowItem] = useState<ShowItemType>("output")
+    const [showItem, setShowItem] = useState<ShowItemType>("syntaxCheck")
     // 最后焦点聚集编辑器输出
     const onFixedEditorDetails = useMemoizedFn((element: React.ReactNode): React.ReactNode => {
         // 后续此处还需要传入焦点代码/路径等信息
@@ -521,7 +521,11 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return <></>
+            return (
+                <div className={styles["no-audit"]}>
+                    <YakitEmpty title='暂无数据' description='请选中左边文件' />
+                </div>
+            )
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
@@ -610,7 +614,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             // 校验其子项是否存在
             const childArr = getMapFolderDetail(path)
             if (childArr.length > 0) {
-                emiter.emit("onRefreshFileTree")
+                emiter.emit("onCodeAuditRefreshFileTree")
                 resolve("")
             } else {
                 handleFetchFileList(path, (value) => {
@@ -624,7 +628,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                         })
                         setMapFolderDetail(path, childArr)
                         setTimeout(() => {
-                            emiter.emit("onRefreshFileTree")
+                            emiter.emit("onCodeAuditRefreshFileTree")
                             resolve("")
                         }, 300)
                     } else {
@@ -660,7 +664,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
             setAuditRightParams(data)
             setShowAuditDetail(true)
-            emiter.emit("onRefreshAuditDetail")
+            emiter.emit("onCodeAuditRefreshAuditDetail")
         } catch (error) {}
     })
     useEffect(() => {

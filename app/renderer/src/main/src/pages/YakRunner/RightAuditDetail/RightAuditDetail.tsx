@@ -207,24 +207,27 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     // 初始默认样式
     const onInitSvgStyle = useMemoizedFn((id?: string) => {
         if (id) {
-            const titles = document.getElementsByTagName("title")
-            // 遍历所有 <title> 元素
-            for (let i = 0; i < titles.length; i++) {
-                if (titles[i].textContent === "n1") {
-                    // 获取匹配的 <title> 元素的父元素
-                    const parentElement = titles[i].parentElement
-                    if (parentElement) {
-                        // 新增class用于屏蔽通用hover样式
-                        parentElement.classList.add("node-main")
-                        // 查找该元素下的所有 ellipse 标签
-                        const ellipses = parentElement.getElementsByTagName("ellipse")
-                        // 遍历所有找到的 ellipse 标签，并添加样式
-                        for (let i = 0; i < ellipses.length; i++) {
-                            ellipses[i].style.stroke = "#8863F7"
-                            ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+            const element = document.getElementById("flowChart")
+            if (element) {
+                const titles = element.getElementsByTagName("title")
+                // 遍历所有 <title> 元素
+                for (let i = 0; i < titles.length; i++) {
+                    if (titles[i].textContent === "n1") {
+                        // 获取匹配的 <title> 元素的父元素
+                        const parentElement = titles[i].parentElement
+                        if (parentElement) {
+                            // 新增class用于屏蔽通用hover样式
+                            parentElement.classList.add("node-main")
+                            // 查找该元素下的所有 ellipse 标签
+                            const ellipses = parentElement.getElementsByTagName("ellipse")
+                            // 遍历所有找到的 ellipse 标签，并添加样式
+                            for (let i = 0; i < ellipses.length; i++) {
+                                ellipses[i].style.stroke = "#8863F7"
+                                ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+                            }
                         }
+                        break // 找到匹配的元素后停止遍历
                     }
-                    break // 找到匹配的元素后停止遍历
                 }
             }
         }
@@ -362,7 +365,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     ).run
 
     return (
-        <div className={styles["flow-chart-box"]}>
+        <div className={styles["flow-chart-box"]} id='flowChart'>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>
@@ -495,10 +498,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                         let graph_info: string[][] = JSON.parse(item.Value)
                         // 当数量小于等于10条时默认第一级展开
                         if (graph_info.length > 0 && graph_info.length <= 10) {
-                            const expendKey:string[] = graph_info.map((item,index)=>`路径${index + 1}`)
+                            const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
                             setActiveKey(expendKey)
-                        }
-                        else{
+                        } else {
                             setActiveKey(undefined)
                         }
                         setGraphLine(graph_info)

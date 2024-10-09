@@ -1,0 +1,68 @@
+.bottom-side-bar {
+    border-top: 1px solid #eaecf3;
+    border-bottom: 1px solid #eaecf3;
+    background: #f8f8f8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+
+    &-left {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        .left-item {
+            display: flex;
+            align-items: center;
+            border-right: 1px solid #eaecf3;
+            cursor: pointer;
+            user-select: none;
+
+            color: #31343f;
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 16px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: #85899e;
+            }
+        }
+
+        .left-check {
+            &-info {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 6px;
+                &:hover {
+                    background-color: rgba(204, 210, 222, 0.5);
+                }
+            }
+            &-start {
+                padding-left: 12px;
+            }
+            &-end {
+                padding-right: 12px;
+            }
+        }
+        .left-terminal-and-help {
+            gap: 4px;
+            padding: 4px 12px;
+            &:hover {
+                background-color: rgba(204, 210, 222, 0.5);
+            }
+        }
+    }
+
+    &-right {
+        padding: 4px 12px;
+        display: flex;
+        align-items: center;
+        color: #31343f;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+}
