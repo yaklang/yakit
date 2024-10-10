@@ -636,15 +636,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         }
 
         // 选填参数默认值
-        const defaultCheck = (plugin?.Params || []).filter((item) => item.Field === "re-compile")
-        if (defaultCheck.length > 0) {
-            const ele = defaultCheck[0]
+        const arr = plugin?.Params.filter((item) => !item.Required) || []
+        arr.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
             initRequiredFormValue = {
                 ...initRequiredFormValue,
                 [ele.Field]: value
             }
-        }
+        })
 
         form.setFieldsValue({...initRequiredFormValue})
     })
@@ -730,7 +729,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 }
 
 interface AuditHistoryTableProps {
-    setShowAuditList:(v:boolean) => void
+    setShowAuditList: (v: boolean) => void
 }
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
@@ -745,7 +744,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
-            if(res.Resources.length === 0){
+            if (res.Resources.length === 0) {
                 setShowAuditList(false)
                 return
             }
@@ -761,7 +760,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 setAduitData(res)
             }
         } catch (error) {
-            console.log("error",error);
+            console.log("error", error)
         }
     })
 
@@ -872,24 +871,20 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
                                         {/* 此处的Tooltip会导致页面抖动(待处理) */}
                                         <Tooltip title={"打开项目"}>
-                                        <YakitButton
-                                            type='text'
-                                            icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                            onClick={() => {
-                                                emiter.emit("onCodeAuditOpenAuditTree", item.ResourceName)
-                                            }}
-                                        />
+                                            <YakitButton
+                                                type='text'
+                                                icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                                onClick={() => {
+                                                    emiter.emit("onCodeAuditOpenAuditTree", item.ResourceName)
+                                                }}
+                                            />
                                         </Tooltip>
                                         <Divider type={"vertical"} style={{margin: 0}} />
                                         <YakitPopconfirm
-                                        title={`确定删除${item.ResourceName}`}
-                                        onConfirm={() => onDelete(item.Path)}
-                                    >
-                                        <YakitButton
-                                            type='text'
-                                            danger
-                                            icon={<OutlineTrashIcon />}
-                                        />
+                                            title={`确定删除${item.ResourceName}`}
+                                            onConfirm={() => onDelete(item.Path)}
+                                        >
+                                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
                                         </YakitPopconfirm>
                                     </div>
                                 </div>

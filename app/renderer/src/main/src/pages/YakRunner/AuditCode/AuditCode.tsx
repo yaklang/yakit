@@ -62,7 +62,7 @@ import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import useDispatcher from "../hooks/useDispatcher"
-import { addToTab } from "@/pages/MainTabs"
+import {addToTab} from "@/pages/MainTabs"
 
 const {ipcRenderer} = window.require("electron")
 
