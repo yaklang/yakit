@@ -824,6 +824,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "**webshell-manager") openMenuPage({route: YakitRoute.Beta_WebShellManager})
             if (type === "**yak-runner-code-scan") openMenuPage({route: YakitRoute.YakRunner_Code_Scan})
+            if (type === "**yak-runner-audit-code") openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
             if (type === "**webshell-opt") addWebShellOpt(data)
 
             if (type === "open-plugin-store") {
