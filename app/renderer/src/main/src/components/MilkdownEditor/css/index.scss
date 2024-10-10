@@ -27,6 +27,7 @@
         display: inline-flex;
         align-items: center;
         font-size: 12px;
+        white-space: normal;
     }
     .ProseMirror-selectednode {
         outline: 2px solid fuchsia;
