@@ -1507,7 +1507,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
             if (cacheEngineMode.current === "local") {
                 if (cacheYakitStatus.current === "link") setCheckLog(["引擎连接超时, 正在尝试重连"])
-                if (count > 8) {
+                if (count > 4) {
                     onSetYakitStatus("error")
                 }
             }
