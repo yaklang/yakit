@@ -26,7 +26,13 @@ import {Blockquote} from "./Blockquote"
 import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
 import {alterCustomPlugin} from "./utils/alertPlugin"
 
+import {diffLines} from "diff"
+import {useMemoizedFn} from "ahooks"
+
 const markdown = `
+
+~~what is Milkdown? Please~~
+
 # 1-1  Milkdown React Commonmark
 
 ## 1-2  Milkdown React Commonmark
@@ -115,11 +121,15 @@ Editor
 - List item 3
 
 `
-
+const markdown1 = `#ggg`
+const markdown2 = `#ggg
+fsdfsdf
+`
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const {setEditor} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -218,6 +228,25 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             setEditor(editor)
         }
     }, [get])
+
+    const onDifferences = useMemoizedFn((ctx) => {
+        // 获取两个文档的差异
+        const differences = diffLines(markdown1, markdown2)
+
+        let content = ""
+
+        differences.forEach((part) => {
+            if (part.removed) {
+                content += `~~${part.value}~~\n` // 用删除线标记删除内容
+            } else if (part.added) {
+                content += "`" + `${part.value}` + "`" + "\n" // 用高亮标记新增内容
+            } else {
+                content += part.value // 未改变的内容保持原样
+            }
+        })
+
+        ctx.set(defaultValueCtx, content)
+    })
     return <Milkdown />
 })
 
