@@ -23,9 +23,9 @@ const options = {
     },
     options: {
         arch: "loongarch64",
-        name: `${pruductName}`,
-        productName: `${pruductName}`,
-        genericName: `${pruductName}`,
+        name: `EnpriTrace`,
+        productName: `EnpriTrace`,
+        genericName: `EnpriTrace`,
         version: version,
         bin: `EnpriTrace`,
         icon: "app/assets/yakiteelogo.png",
