@@ -76,7 +76,12 @@
         }
     }
 }
-
+.no-audit{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 .code-scan-group-wrapper {
     height: 100%;
     display: flex;
