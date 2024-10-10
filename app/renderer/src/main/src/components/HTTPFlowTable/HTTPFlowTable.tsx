@@ -563,6 +563,11 @@ export const SourceType = [
     }
 ]
 
+interface UpdateCacheData {
+    id: number
+    tags: string
+}
+
 export const getClassNameData = (resData: HTTPFlow[]) => {
     let newData: HTTPFlow[] = []
     const length = resData.length
@@ -1267,6 +1272,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setScrollToIndex(0)
             setCurrentIndex(undefined)
             setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+            setUpdateCacheData([])
             getDataByGrpc(query, "update")
         } else {
             setIsLoop(true)
@@ -1383,8 +1389,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 是否循环接口
     const [isLoop, setIsLoop] = useState<boolean>(!serverPushStatus)
+    const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
 
-    const onRefreshQueryHTTPFlowsFun = useMemoizedFn(() => {
+    const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
+        try {
+            const updateData = JSON.parse(data)
+            if (typeof updateData !== "string") {
+                if (updateData.action === "update") {
+                    setUpdateCacheData((prev) => prev.concat(updateData))
+                }
+            }
+        } catch (error) {}
         setIsLoop(true)
     })
     useEffect(() => {
@@ -3481,6 +3496,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [pageType])
 
+    const realData = useMemo(() => {
+        if (updateCacheData.length) {
+            let findFlag = false
+            const dataMap = new Map(data.map((item) => [+item.Id, item]))
+            updateCacheData.forEach((target, index) => {
+                if (dataMap.has(target.id)) {
+                    const targetObject = dataMap.get(target.id)
+                    if (targetObject) {
+                        targetObject.Tags = target.tags
+                        updateCacheData.splice(index, 1)
+                        setUpdateCacheData(updateCacheData)
+                        findFlag = true
+                    }
+                }
+            })
+            if (findFlag) {
+                const newData = getClassNameData(data)
+                setData(newData)
+                return newData
+            }
+            return data
+        } else {
+            return data
+        }
+    }, [updateCacheData, data])
+
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
             <ReactResizeDetector
@@ -3766,7 +3807,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     isReset={isReset}
                     isRefresh={isRefresh}
                     renderKey='Id'
-                    data={data}
+                    data={realData}
                     rowSelection={{
                         isAll: isAllSelect,
                         type: "checkbox",

@@ -38,7 +38,7 @@ export const startupDuplexConn = () => {
                     break
                 // 通知QueryHTTPFlows轮询更新
                 case "httpflow":
-                    emiter.emit("onRefreshQueryHTTPFlows")
+                    emiter.emit("onRefreshQueryHTTPFlows", JSON.stringify(obj))
                     break
                 // 通知QueryYakScript轮询更新
                 case "yakscript":
