@@ -1,5 +1,6 @@
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 import {FileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 export interface YakRunnerAuditCodeProps {
 }
 
@@ -50,4 +51,26 @@ export interface YakRunnerHistoryProps {
     path: string
     // 加载的树类型
     loadTreeType?: "file" | "audit"
+}
+
+
+export interface AuditCodeStreamData {
+    Progress: number
+    Speed: string
+    CostDurationVerbose: string
+    RestDurationVerbose: string
+    Message: string
+}
+
+export interface AuditCodeStatusInfoProps {
+    title: string
+    streamData: AuditCodeStreamData
+    cancelRun: () => void
+    logInfo: StreamResult.Log[]
+    // 是否显示 剩余时间-耗时-下载速度 默认不显示
+    showDownloadDetail?: boolean
+    // 是否自动关闭
+    autoClose?: boolean
+    // 关闭
+    onClose?: () => void
 }

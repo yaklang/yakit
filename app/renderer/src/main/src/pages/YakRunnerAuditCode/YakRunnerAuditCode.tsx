@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {AuditEmiterYakUrlProps, OpenFileByPathProps, YakRunnerAuditCodeProps} from "./YakRunnerAuditCodeType"
-import {Divider, Tooltip} from "antd"
+import {AuditCodeStatusInfoProps, AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps, YakRunnerAuditCodeProps} from "./YakRunnerAuditCodeType"
+import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {AuditCode, AuditHistoryTable, AuditModalForm} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
@@ -53,6 +53,8 @@ import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
+import { SolidDocumentdownloadIcon } from "@/assets/icon/solid"
+import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
@@ -89,16 +91,18 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     })
     // export-show
-    const [exportStreamData, setExportStreamData] = useState<SavePayloadProgress>({
+    const [exportStreamData, setExportStreamData] = useState<AuditCodeStreamData>({
         Progress: 0,
         Message: "",
         CostDurationVerbose: "",
         RestDurationVerbose: "",
         Speed: "0"
     })
-    const logInfoRef = useRef<string[]>([])
+    const logInfoRef = useRef<StreamResult.Log[]>([])
 
     const onCancelAudit = () => {
+        logInfoRef.current = []
+        setShowRunAuditModal(false)
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.reset()
     }
@@ -357,12 +361,14 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
+                logInfoRef.current = []
+                setShowRunAuditModal(false)
                 onOpenAuditTreeFun(`${projectNmae}`)
                 emiter.emit("onCodeAuditRefreshAduitHistory")
             }, 300)
         }
 
-        logInfoRef.current = streamInfo.logState.map((item) => item.data).slice(0, 8)
+        logInfoRef.current = streamInfo.logState.slice(0, 8)
         setExportStreamData({
             ...exportStreamData,
             Progress: progress
@@ -798,7 +804,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                     hiddenHeader={true}
                     bodyStyle={{padding: 0}}
                 >
-                    <UploadStatusInfo
+                    <AuditCodeStatusInfo
                         title={"项目编译中..."}
                         streamData={exportStreamData}
                         cancelRun={() => {
@@ -810,5 +816,75 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 </YakitModal>
             </YakRunnerContext.Provider>
         </WaterMark>
+    )
+}
+
+
+
+// 代码审计进度信息
+export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) => {
+    const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
+    useEffect(() => {
+        if (autoClose && streamData.Progress === 1) {
+            onClose && onClose()
+        }
+    }, [autoClose, streamData.Progress])
+
+    return (
+        <div className={styles["audit-code-status-info"]}>
+            <div className={styles["hint-left-wrapper"]}>
+                <div className={styles["hint-icon"]}>
+                    <SolidDocumentdownloadIcon />
+                </div>
+            </div>
+
+            <div className={styles["hint-right-wrapper"]}>
+                <div className={styles["hint-right-download"]}>
+                    <div className={styles["hint-right-title"]}>{title}</div>
+                    <div className={styles["download-progress"]}>
+                        <Progress
+                            strokeColor='#F28B44'
+                            trailColor='#F0F2F5'
+                            percent={Math.floor((streamData.Progress || 0) * 100)}
+                            showInfo={false}
+                        />
+                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
+                    </div>
+                    {showDownloadDetail && (
+                        <div className={styles["download-info-wrapper"]}>
+                            <div>耗时 : {streamData.CostDurationVerbose}</div>
+                        </div>
+                    )}
+                    <div className={styles["log-info"]}>
+                        {logInfo.map((item) => {
+                            if (item.level === "error") {
+                                return (
+                                    <div key={item.data} className={styles["log-item-error"]}>
+                                        {item.data}
+                                    </div>
+                                )
+                            }
+                            if (item.level === "text") {
+                                return (
+                                    <div key={item.data} className={styles["log-item-text"]}>
+                                        {item.data}
+                                    </div>
+                                )
+                            }
+                            return (
+                                <div key={item.data} className={styles["log-item"]}>
+                                    {item.data}
+                                </div>
+                            )
+                        })}
+                    </div>
+                    <div className={styles["download-btn"]}>
+                        <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
+                            取消
+                        </YakitButton>
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 }
