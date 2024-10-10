@@ -19,6 +19,7 @@ import classNames from "classnames"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
+    OutlinCompileIcon,
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineCloseIcon,
@@ -34,9 +35,13 @@ import {GroupCount} from "../invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {randomString} from "@/utils/randomUtil"
+import {CodeScanExecuteResult} from "./CodeScanExecuteResult/CodeScanExecuteResult"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {grpcFetchAuditTree} from "../YakRunnerAuditCode/utils"
+import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { addToTab } from "../MainTabs"
 const {ipcRenderer} = window.require("electron")
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -172,6 +177,9 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const [pageInfo, setPageInfo] = useState<any>()
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
+    // 如若没有已编译项目则需跳转至审计编译
+    const [isShowAuditCode, setShowAuditCode] = useState<boolean>(false)
 
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginGroupRef)
@@ -191,31 +199,77 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
 
     const selectGroupListAll = useCreation(() => {
         return []
-    },[])
+    }, [])
 
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            setLoading(true)
+            const {res} = await grpcFetchAuditTree("/")
+            if (res.Resources.length === 0) {
+                setShowAuditCode(true)
+            }
+            setLoading(false)
+        } catch (error) {
+            setLoading(false)
+        }
+    })
+
+    useEffect(() => {
+        getAduitList()
+    }, [])
     return (
-        <div className={styles["yakrunner-codec-scan"]}>
-            <div
-                className={classNames(styles["left-wrapper"], {
-                    [styles["left-wrapper-hidden"]]: hidden
-                })}
-            >
-                <div className={styles["left-header-search"]}>
-                    <div className={styles["header-type-wrapper"]}>
-                        <span className={styles["header-text"]}>扫描规则</span>
+        <>
+            <YakitSpin spinning={loading}>
+                {isShowAuditCode ? (
+                    <div className={styles["no-audit"]}>
+                        <YakitEmpty
+                            title='暂无数据'
+                            description='请先进行审计'
+                            children={
+                                <div className={styles["footer"]}>
+                                    <YakitButton
+                                        icon={<OutlinCompileIcon />}
+                                        onClick={() => {
+                                            addToTab("**yak-runner-audit-code")
+                                        }}
+                                    >
+                                        代码审计
+                                    </YakitButton>
+                                </div>
+                            }
+                        />
                     </div>
-                    <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
-                        <YakitButton
-                            type='text2'
-                            onClick={onClose}
-                            icon={<OutlineCloseIcon className={styles["header-icon"]} />}
-                        ></YakitButton>
-                    </Tooltip>
-                </div>
-                <CodeScanGroupByKeyWord inViewport={inViewport} />
-            </div>
-            <CodeScanExecuteContent hidden={hidden} setHidden={setHidden} selectGroupList={selectGroupListAll} onClearAll={onClearAll} />
-        </div>
+                ) : (
+                    <div className={styles["yakrunner-codec-scan"]}>
+                        <div
+                            className={classNames(styles["left-wrapper"], {
+                                [styles["left-wrapper-hidden"]]: hidden
+                            })}
+                        >
+                            <div className={styles["left-header-search"]}>
+                                <div className={styles["header-type-wrapper"]}>
+                                    <span className={styles["header-text"]}>扫描规则</span>
+                                </div>
+                                <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
+                                    <YakitButton
+                                        type='text2'
+                                        onClick={onClose}
+                                        icon={<OutlineCloseIcon className={styles["header-icon"]} />}
+                                    ></YakitButton>
+                                </Tooltip>
+                            </div>
+                            <CodeScanGroupByKeyWord inViewport={inViewport} />
+                        </div>
+                        <CodeScanExecuteContent
+                            hidden={hidden}
+                            setHidden={setHidden}
+                            selectGroupList={selectGroupListAll}
+                            onClearAll={onClearAll}
+                        />
+                    </div>
+                )}
+            </YakitSpin>
+        </>
     )
 }
 
@@ -273,7 +327,7 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
 })
 
 const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo((props) => {
-    const {onClearAll,selectGroupList} = props
+    const {onClearAll, selectGroupList} = props
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
         valuePropName: "hidden",
@@ -495,7 +549,7 @@ export const CodeScanExecuteLog: React.FC<CodeScanExecuteLogProps> = React.memo(
 })
 
 export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo((props) => {
-    const {isExpand,selectNum} = props
+    const {isExpand, selectNum} = props
     const [form] = Form.useForm()
 
     const [runtimeId, setRuntimeId] = useState<string>("")
@@ -596,6 +650,23 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
     /**继续 */
     const onContinue = useMemoizedFn(() => {})
+
+    const [auditCodeList,setAuditCodeList] = useState<{label:string,value:string}[]>([])
+
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            const {res} = await grpcFetchAuditTree("/")
+            if (res.Resources.length > 0) {
+                const list = res.Resources.map((item)=>({label:item.ResourceName,value:item.Path}))
+                setAuditCodeList(list)
+            }
+        } catch (error) {
+        }
+    })
+
+    useEffect(() => {
+        getAduitList()
+    }, [])
     return (
         <>
             <div
@@ -615,7 +686,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     labelWrap={true}
                 >
                     <Form.Item label='项目名称' name='project'>
-                        <YakitInput placeholder='请输入项目名称' />
+                        <YakitSelect showSearch placeholder='请选择项目名称' options={auditCodeList}></YakitSelect>
                     </Form.Item>
                     <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
                         <div className={styles["code-scan-execute-form-operate"]}>
@@ -652,12 +723,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 </Form>
             </div>
             {isShowResult && (
-                <PluginExecuteResult
+                <CodeScanExecuteResult
                     streamInfo={streamInfo}
                     runtimeId={runtimeId}
                     loading={isExecuting}
                     defaultActiveKey={undefined}
-                    pluginExecuteResultWrapper={""}
                 />
             )}
         </>
