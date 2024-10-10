@@ -325,6 +325,8 @@ function NewApp() {
                             <br />
                             3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
                             <br />
+                            4. 如果您需要使用Yakit<span className={styles["sign-bold-content"]}>用于商业化目的</span>，请确保你们已经<span className={styles["sign-bold-content"]}>获得官方授权</span>，否则我们将追究您的相关责任。
+                            <br />
                             <span className={styles["sign-bold-content"]}>
                                 如果发现上述禁止行为，我们将保留追究您法律责任的权利。
                             </span>
