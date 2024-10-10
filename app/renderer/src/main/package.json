@@ -41,6 +41,7 @@
         "codemirror": "^6.0.1",
         "cross-env": "7.0.3",
         "customize-cra": "^1.0.0",
+        "diff": "^7.0.0",
         "echarts": "^5.4.2",
         "echarts-wordcloud": "^2.1.0",
         "file-loader": "^6.2.0",
