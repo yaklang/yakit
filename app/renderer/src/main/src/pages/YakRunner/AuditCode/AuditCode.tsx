@@ -62,7 +62,7 @@ import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import useDispatcher from "../hooks/useDispatcher"
-import { addToTab } from "@/pages/MainTabs"
+import {addToTab} from "@/pages/MainTabs"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -666,15 +666,14 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         }
 
         // 选填参数默认值
-        const defaultCheck = (plugin?.Params || []).filter((item) => item.Field === "re-compile")
-        if (defaultCheck.length > 0) {
-            const ele = defaultCheck[0]
+        const arr = plugin?.Params.filter((item) => !item.Required) || []
+        arr.forEach((ele) => {
             const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
             initRequiredFormValue = {
                 ...initRequiredFormValue,
                 [ele.Field]: value
             }
-        }
+        })
 
         form.setFieldsValue({...initRequiredFormValue})
     })
