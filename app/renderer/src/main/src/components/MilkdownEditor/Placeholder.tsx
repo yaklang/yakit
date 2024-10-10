@@ -76,18 +76,3 @@ export const placeholderPlugin = $prose((ctx) => {
     })
 })
 
-// export const defineFeature: DefineFeature<PlaceHolderFeatureConfig> = (editor, config) => {
-//     editor
-//         .config((ctx) => {
-//             if (config) {
-//                 ctx.update(placeholderConfig.key, (prev) => {
-//                     return {
-//                         ...prev,
-//                         ...config
-//                     }
-//                 })
-//             }
-//         })
-//         .use(placeholderPlugin)
-//         .use(placeholderConfig)
-// }
