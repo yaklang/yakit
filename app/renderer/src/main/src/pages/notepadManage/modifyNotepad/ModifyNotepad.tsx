@@ -30,6 +30,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {AuthorIcon, AuthorImg} from "@/pages/plugins/funcTemplate"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {getMarkdown} from "@milkdown/kit/utils"
 
 const onlineUserList: OnlineUsersProps[] = [
     {
@@ -96,7 +97,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     useEffect(() => {
         if (!editor) return
-        editor?.use(cataloguePlugin(getCatalogue)).create()
+        // editor?.use(cataloguePlugin(getCatalogue)).create()
+        // editor?.use(cataloguePlugin(getCatalogue))
     }, [editor])
     const getCatalogue = useDebounceFn(
         (view) => {
@@ -278,10 +280,20 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
                                 <span>创建时间:2024-05-27 15:32</span>
+                                <YakitButton
+                                    onClick={() => {
+                                        if (editor) {
+                                            const markdownContent = editor.action(getMarkdown())
+                                            console.log("当前 Markdown 内容:", markdownContent)
+                                        }
+                                    }}
+                                >
+                                    保存
+                                </YakitButton>
                             </div>
                         </div>
                         <div className={styles["notepad-editor"]}>
-                            <MilkdownEditor setEditor={setEditor} />
+                            <MilkdownEditor setEditor={setEditor} customPlugin={cataloguePlugin(getCatalogue)} />
                         </div>
                     </div>
                 </div>

@@ -36,6 +36,10 @@
     .ProseMirror-focused {
         outline: 0;
     }
+    ::selection {
+        background-color: var(--yakit-primary-2);
+        color: var(--yakit-header-color);
+    }
 }
 
 .editor {
