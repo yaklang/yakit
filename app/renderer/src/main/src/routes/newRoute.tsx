@@ -131,9 +131,9 @@ import {
 } from "./deprecatedMenu"
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
-import {YakRunner} from "@/pages/YakRunner/YakRunner"
-import { YakRunnerCodeScan } from "@/pages/YakRunnerCodeScan/YakRunnerCodeScan";
-import { YakRunnerAuditCode } from "@/pages/YakRunnerAuditCode/YakRunnerAuditCode";
+import {YakRunner} from "@/pages/yakRunner/YakRunner"
+import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan";
+import { YakRunnerAuditCode } from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode";
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
