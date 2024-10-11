@@ -39,7 +39,7 @@ import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGR
 import {randomString} from "@/utils/randomUtil"
 import {CodeScanExecuteResult} from "./CodeScanExecuteResult/CodeScanExecuteResult"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {grpcFetchAuditTree} from "../YakRunnerAuditCode/utils"
+import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import { addToTab } from "../MainTabs"
 const {ipcRenderer} = window.require("electron")

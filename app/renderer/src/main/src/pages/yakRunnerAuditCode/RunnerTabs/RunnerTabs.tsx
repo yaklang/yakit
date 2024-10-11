@@ -30,7 +30,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "@/pages/YakRunner/icon"
+import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
@@ -53,7 +53,7 @@ import {
     removeAreaFileInfo,
     setYakRunnerHistory,
     updateAreaFileInfo
-} from "@/pages/YakRunner/utils"
+} from "@/pages/yakRunner/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
@@ -77,7 +77,7 @@ import {
     YaklangLanguageSuggestionRequest
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
-import { JumpToEditorProps } from "@/pages/YakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import { JumpToEditorProps } from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 

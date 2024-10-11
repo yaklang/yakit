@@ -60,7 +60,7 @@ import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {addToTab} from "@/pages/MainTabs"
-import {JumpToEditorProps} from "@/pages/YakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 

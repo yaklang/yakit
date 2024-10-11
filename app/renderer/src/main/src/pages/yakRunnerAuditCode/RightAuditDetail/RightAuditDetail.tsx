@@ -19,8 +19,8 @@ import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} from "./GraphInfoMap"
-import {JumpToEditorProps} from "@/pages/YakRunner/BottomEditorDetails/BottomEditorDetailsType"
-import {CollapseList} from "@/pages/YakRunner/CollapseList/CollapseList"
+import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 
 interface AuditResultItemProps {

@@ -1,4 +1,4 @@
-import { LeftSideType } from "@/pages/YakRunner/LeftSideBar/LeftSideBarType"
+import { LeftSideType } from "@/pages/yakRunner/LeftSideBar/LeftSideBarType"
 
 export type YakRunnerEventProps = {
     onJumpEditorDetail: string
