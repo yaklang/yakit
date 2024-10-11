@@ -4,30 +4,9 @@ const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
 const crypto = require("crypto")
+const {Readable} = require("stream")
 
 module.exports = (win, getClient) => {
-    ipcMain.handle("upload-img", async (event, params) => {
-        const {path, type, uuid} = params
-        // 创建数据流
-        // console.log('time1',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
-        const readerStream = fs.createReadStream(path) // 可以像使用同步接口一样使用它。
-        const formData = new FormData()
-        formData.append("file_name", readerStream)
-        formData.append("type", type)
-        if (uuid) formData.append("uuid", uuid)
-        const res = httpApi(
-            "post",
-            "upload/img",
-            formData,
-            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false
-        )
-        // res.then(()=>{
-        //     console.log('time3',new Date().getHours(),new Date().getMinutes(),new Date().getSeconds());
-        // })
-        return res
-    })
-
     ipcMain.handle("upload-group-data", async (event, params) => {
         const {path} = params
         // 创建数据流
@@ -204,28 +183,40 @@ module.exports = (win, getClient) => {
         })
     })
 
-    ipcMain.handle("get-folder-under-files", async (event, params) => {
-        const {folderPath} = params
-        if (!folderPath) return 0
-        fs.readdir(folderPath, (err, files) => {
-            if (err) throw err
-            event.sender.send(`send-folder-under-files`, files)
-        })
-    })
+    // http-上传图片-通过路径上传
+    ipcMain.handle("http-upload-img-path", async (event, params) => {
+        const {path, type} = params
+        // 创建数据流,可以像使用同步接口一样使用它
+        const readerStream = fs.createReadStream(path) // 。
 
-    // 上传 base64 图片
-    ipcMain.handle("upload-base64-img", async (event, params) => {
-        const {base64, type, uuid} = params
+        const formData = new FormData()
+        formData.append("file_name", readerStream)
+        if (type) formData.append("type", type || undefined)
+        const res = httpApi(
+            "post",
+            "upload/img",
+            formData,
+            {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+            false
+        )
+        return res
+    })
+    // http-上传图片-通过base64上传
+    ipcMain.handle("http-upload-img-base64", async (event, params) => {
+        const {base64, imgInfo, type} = params
 
         // 去掉 Base64 字符串前缀
         const data = base64.replace(/^data:image\/\w+;base64,/, "")
         // 将 Base64 转换为二进制 Buffer
         const binaryData = Buffer.from(data, "base64")
+        const readable = new Readable()
+        readable._read = () => {}
+        readable.push(binaryData)
+        readable.push(null)
 
         const formData = new FormData()
-        formData.append("file_name", binaryData)
-        formData.append("type", type)
-        if (uuid) formData.append("uuid", uuid)
+        formData.append("file_name", readable, {...imgInfo})
+        if (type) formData.append("type", type || undefined)
         const res = await httpApi(
             "post",
             "upload/img",
@@ -235,5 +226,25 @@ module.exports = (win, getClient) => {
         )
 
         return res
+    })
+
+    // http-上传文件-5MB以下
+    ipcMain.handle("http-upload-file", async (event, params) => {
+        const {path, name} = params
+        // 创建数据流
+        try {
+            const readerStream = fs.createReadStream(path)
+
+            const formData = new FormData()
+            formData.append("file", readerStream)
+            formData.append("fileName", name)
+            const headers = {
+                "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
+            }
+            const res = httpApi("post", "upload/file", formData, headers, false)
+            return res
+        } catch (error) {
+            throw error
+        }
     })
 }
