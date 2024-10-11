@@ -48,6 +48,12 @@
             @extend %display-flex-center;
             gap: 4px;
             height: 24px;
+            .header-text{
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
             .heard-right {
                 @extend %display-flex-center;
                 justify-content: space-between;

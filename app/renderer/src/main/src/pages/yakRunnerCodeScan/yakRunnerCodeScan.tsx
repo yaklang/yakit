@@ -40,8 +40,8 @@ import {randomString} from "@/utils/randomUtil"
 import {CodeScanExecuteResult} from "./CodeScanExecuteResult/CodeScanExecuteResult"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../YakRunnerAuditCode/utils"
-import { YakitEmpty } from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import { addToTab } from "../MainTabs"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {addToTab} from "../MainTabs"
 const {ipcRenderer} = window.require("electron")
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -358,10 +358,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         return false
     }, [executeStatus])
 
-    const pluginLogDisabled = useCreation(() => {
-        return !isExecuting
-    }, [isExecuting])
-
     const selectGroupNum = useCreation(() => {
         return selectGroupList.length
     }, [selectGroupList])
@@ -392,38 +388,17 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                             ></YakitButton>
                         </Tooltip>
                     )}
-                    <YakitRadioButtons
-                        size='small'
-                        value={showType}
-                        onChange={(e) => {
-                            setShowType(e.target.value)
-                        }}
-                        buttonStyle='solid'
-                        options={[
-                            {
-                                value: "rule",
-                                label: "已选规则"
-                            },
-                            {
-                                value: "log",
-                                label: "插件日志",
-                                disabled: pluginLogDisabled
-                            }
-                        ]}
-                    />
-                    {showType === "rule" && (
-                        <div className={styles["heard-right"]}>
-                            <span className={styles["heard-tip"]}>
-                                Total<span className={styles["heard-number"]}>{total}</span>
-                            </span>
-                            <YakitButton type='text' danger onClick={onClearAll}>
-                                清空
-                            </YakitButton>
-                        </div>
-                    )}
+                    <span className={styles["header-text"]}>已选规则</span>
+                    <div className={styles["heard-right"]}>
+                        <span className={styles["heard-tip"]}>
+                            Total<span className={styles["heard-number"]}>{total}</span>
+                        </span>
+                        <YakitButton type='text' danger onClick={onClearAll}>
+                            清空
+                        </YakitButton>
+                    </div>
                 </div>
-                <CodeScanByGroup hidden={showType !== "rule"} setTotal={setTotal} />
-                <CodeScanExecuteLog hidden={showType !== "log"} />
+                <CodeScanByGroup hidden={false} setTotal={setTotal} />
             </div>
             <div className={styles["code-scan-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
@@ -651,17 +626,16 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
     /**继续 */
     const onContinue = useMemoizedFn(() => {})
 
-    const [auditCodeList,setAuditCodeList] = useState<{label:string,value:string}[]>([])
+    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
 
     const getAduitList = useMemoizedFn(async () => {
         try {
             const {res} = await grpcFetchAuditTree("/")
             if (res.Resources.length > 0) {
-                const list = res.Resources.map((item)=>({label:item.ResourceName,value:item.Path}))
+                const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.Path}))
                 setAuditCodeList(list)
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
 
     useEffect(() => {

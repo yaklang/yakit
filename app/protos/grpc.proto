@@ -701,9 +701,28 @@ service Yak {
   rpc AddFingerprint(AddFingerprintRequest) returns (AddFingerprintResponse);
   rpc ModifyFingerprint(ModifyFingerprintRequest) returns (ModifyFingerprintResponse);
 
+  rpc QueryFingerprint(QueryFingerprintRequest) returns (QueryFingerprintResponse);
+  rpc DeleteFingerprint(DeleteFingerprintRequest) returns (DbOperateMessage);
+  rpc UpdateFingerprint(UpdateFingerprintRequest) returns (DbOperateMessage);
+  rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage);
+  rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage);
+
+
   // 反弹shell命令生成
   rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
   rpc GenerateReverseShellCommand(GenerateReverseShellCommandRequest) returns (GenerateReverseShellCommandResponse);
+
+  // SyntaxFlow Rule
+  rpc QuerySyntaxFlowRule(QuerySyntaxFlowRuleRequest) returns (QuerySyntaxFlowRuleResponse);
+  rpc CreateSyntaxFlowRule(CreateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
+
+  // syntaxflow scan 
+  rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
+  // query result 
+  rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -5340,4 +5359,187 @@ message DbOperateMessage {
   string Operation = 2; // 操作 (增删改查)
   int64 EffectRows = 3; // 影响行数
   string ExtraMessage = 4; // 额外信息
+}
+
+message CPE {
+  string Part = 1;
+  string Vendor = 2;
+  string Product = 3;
+  string Version = 4;
+  string Update = 5;
+  string Edition = 6;
+  string Language = 7;
+}
+
+message FingerprintRule {
+  int64 Id = 1;
+  string RuleName = 2;
+  CPE cpe = 3;
+  string WebPath = 4;
+  string ExtInfo = 5;
+  string MatchExpression = 6;
+}
+
+
+message FingerprintFilter {
+  repeated string Vendor = 1;
+  repeated string Product = 2;
+  repeated int64 IncludeId = 3;
+}
+
+message QueryFingerprintRequest {
+  FingerprintFilter Filter = 1;
+  Paging Pagination = 2;
+}
+
+message QueryFingerprintResponse {
+  Paging Pagination = 1;
+  repeated FingerprintRule Data = 2;
+  int64 Total = 3;
+}
+
+message DeleteFingerprintRequest {
+  FingerprintFilter Filter = 1;
+}
+
+message CreateFingerprintRequest {
+  FingerprintRule Rule = 1;
+}
+
+message UpdateFingerprintRequest {
+  int64 Id = 1;
+  string RuleName = 2;
+  FingerprintRule Rule = 3;
+}
+
+
+message QuerySyntaxFlowRuleRequest{
+  Paging Pagination = 1;
+  SyntaxFlowRuleFilter Filter = 2;
+}
+
+message SyntaxFlowRule{
+  string RuleName =1;
+  string Content = 2;
+
+  string Language = 3;
+  string Type = 4;
+  string Severity = 5;
+  string Purpose = 6;
+  bool IsBuildInRule =7;
+
+  string Title = 8;
+  string TitleZh = 9;
+  string Description = 10;
+  bool Verified = 11;
+  bool AllowIncluded = 12;
+  string IncludedName = 13;
+  string Tag = 14;
+  string AlertDesc = 15;
+
+  string Hash = 16;
+
+  repeated string GroupName = 17;
+}
+
+message  SyntaxFlowRuleInput{
+  string RuleName = 1;
+  string Content = 2;
+  string Language = 3;
+  repeated string Tags = 4;
+}
+
+message SyntaxFlowRuleFilter {
+  repeated string RuleNames = 1;
+  repeated string Language = 2;
+  repeated string GroupNames =3;
+  repeated string Severity = 4;
+  repeated string Purpose = 5;
+  repeated string Tag = 6;
+  string Keyword = 7;
+}
+
+message CreateSyntaxFlowRuleRequest{
+  SyntaxFlowRuleInput SyntaxFlowInput =1;
+}
+
+message UpdateSyntaxFlowRuleRequest{
+  SyntaxFlowRuleInput SyntaxFlowInput =1;
+}
+
+message QuerySyntaxFlowRuleResponse{
+  Paging Pagination = 1;
+  DbOperateMessage DbMessage= 2;
+  repeated SyntaxFlowRule Rule = 3;
+}
+
+message DeleteSyntaxFlowRuleRequest{
+  SyntaxFlowRuleFilter Filter = 1;
+}
+
+message SyntaxFlowRuleGroupFilter {
+  // for fuzzing search
+  string KeyWord = 1;
+}
+
+message SyntaxFlowGroup{
+  string GroupName = 1;
+  int32  Count = 2;
+}
+
+message QuerySyntaxFlowRuleGroupRequest{
+    SyntaxFlowRuleGroupFilter Filter = 1;
+}
+
+message QuerySyntaxFlowRuleGroupResponse{
+  repeated SyntaxFlowGroup Group = 1;
+}
+
+message SyntaxFlowScanRequest{
+  string ControlMode = 1; // 控制模式 "start" "pause" "resume" 
+
+  // 启动扫描任务
+  SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
+  repeated string ProgramName = 3; // 用于指定扫描的程序 
+}
+
+message SyntaxFlowScanResponse{
+  string TaskID = 1;
+  // 扫描状态
+  string Status = 2; // "running" "paused" "stopped" "finished"
+  // 进度 
+  string CurrentRuleName = 3;
+
+  ExecResult ExecResult = 10;
+}
+
+message QuerySyntaxFlowResultRequest{
+  Paging Pagination = 2;
+  string TaskID = 1;
+}
+
+message QuerySyntaxFlowResultResponse{
+  Paging Pagination = 1;
+  repeated SyntaxFlowResult Results = 2;
+}
+
+
+message SyntaxFlowResult {
+  // result ID for yakurl(syntaxflow://)
+  uint64 ResultID  = 1; 
+
+  // rule info 
+  string RuleName = 2;
+  string Title = 3;
+  string TitleZh = 4;
+  string Description = 5;
+  string Severity = 7;
+  string Purpose = 8;
+
+  // target info 
+  string program = 9;
+  string language = 10; 
+
+  // runtime info 
+  uint64 matchedValue = 11; 
 }
