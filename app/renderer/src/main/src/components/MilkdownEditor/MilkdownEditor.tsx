@@ -8,7 +8,7 @@ import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 
 import {ProsemirrorAdapterProvider, useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
-import {tooltip, TooltipView} from "./Tooltip"
+import {tooltip, TooltipView} from "./Tooltip/Tooltip"
 import {BlockView, menuAPI} from "./Block"
 import {block} from "@milkdown/plugin-block" // 引入block插件
 import {cursor} from "@milkdown/kit/plugin/cursor"
@@ -28,8 +28,11 @@ import {alterCustomPlugin} from "./utils/alertPlugin"
 
 import {diffLines} from "diff"
 import {useMemoizedFn} from "ahooks"
+import {underlinePlugin} from "./utils/underline"
 
 const markdown = `
+
+:u[This text will be underlined]
 
 ~~what is Milkdown? Please~~
 
@@ -62,7 +65,6 @@ const markdown = `
 ### 2-3  Milkdown React Commonmark
 ### 2-3  Milkdown React Commonmark
 ### 2-3  Milkdown React Commonmark
-
 
 > \[!NOTE]
 > Useful information that users should know, even when skimming content.
@@ -126,7 +128,7 @@ const markdown2 = `#ggg
 fsdfsdf
 `
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {setEditor} = props
+    const {setEditor, customPlugin = []} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
@@ -220,6 +222,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(placeholderConfig)
                 // alterCustomPlugin
                 .use([...alterCustomPlugin()])
+                // underlinePlugin
+                .use([...underlinePlugin()])
+                .use(customPlugin)
         )
     }, [])
     useEffect(() => {
