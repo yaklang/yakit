@@ -9,7 +9,7 @@ import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import classNames from "classnames"
-import {LightningBoltIcon} from "@/assets/newIcon"
+import {LightningBoltIcon, QuestionMarkCircleIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 import {YakParamProps} from "../plugins/pluginsType"
@@ -25,6 +25,12 @@ import {OutlileHistoryIcon, OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {SolidDotsverticalIcon} from "@/assets/icon/solid"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakEditor} from "@/utils/editors"
 const {Text} = Typography
 
 const {ipcRenderer} = window.require("electron")
@@ -222,19 +228,12 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         return (
             <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? "取消查看该插件流量" : "查看该插件流量"}>
                 <OutlileHistoryIcon
+                    style={{marginLeft: curTabKey === "loaded" ? 4 : 12, marginRight: curTabKey === "loaded" ? 12 : 0}}
                     className={classNames(style["history-icon"], {
                         [style["history-icon-def"]]: !showPluginHistoryList.includes(i.ScriptName),
                         [style["history-icon-light"]]: showPluginHistoryList.includes(i.ScriptName)
                     })}
                     onClick={() => {
-                        // 多个
-                        // let arr = [...showPluginHistoryList]
-                        // if (arr.includes(i.ScriptName)) {
-                        //     arr = arr.filter((item) => item !== i.ScriptName)
-                        // } else {
-                        //     arr.push(i.ScriptName)
-                        // }
-
                         // 单个
                         let arr = [...showPluginHistoryList]
                         if (arr.includes(i.ScriptName)) {
@@ -289,14 +288,31 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             <div className={style["mitm-plugin-local-left"]}>
                 <YakitCheckbox checked={checkedStatus} onChange={() => onCheckboxClicked()} />
                 <div className={style["mitm-plugin-local-info"]}>
-                    <div className={style["mitm-plugin-local-info-left"]} onClick={() => onCheckboxClicked()}>
+                    <div
+                        className={style["mitm-plugin-local-info-left"]}
+                        onClick={() => onCheckboxClicked()}
+                        style={{
+                            width:
+                                status === "idle"
+                                    ? "calc(100% - 75px)"
+                                    : curTabKey === "loaded"
+                                    ? "calc(100% - 49px)"
+                                    : isHasParams
+                                    ? "calc(100% - 2px)"
+                                    : "calc(100% - 12px)"
+                        }}
+                    >
                         {i.HeadImg && (
                             <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
                         )}
                         <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
                     </div>
                     <div className={style["mitm-plugin-local-info-right"]}>
-                        <PluginLocalInfoIcon plugin={i} getScriptInfo={getScriptInfo} />
+                        {status === "idle" || curTabKey === "loaded" ? (
+                            <PluginLocalInfoIcon plugin={i} getScriptInfo={getScriptInfo} />
+                        ) : (
+                            <></>
+                        )}
                     </div>
                 </div>
             </div>
@@ -317,6 +333,69 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     )}
                 </>
             ) : null}
+            {status !== "idle" && curTabKey !== "loaded" && (
+                <YakitDropdownMenu
+                    menu={{
+                        data: [
+                            {
+                                key: "source-code",
+                                label: (
+                                    <YakitPopover
+                                        placement='right'
+                                        overlayClassName={style["terminal-popover"]}
+                                        content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
+                                        onVisibleChange={(v) => {
+                                            if (v && !i.Content) {
+                                                getScriptInfo(i)
+                                            }
+                                        }}
+                                        zIndex={9999}
+                                    >
+                                        <div className={style["extra-menu"]}>
+                                            <TerminalIcon className={style["plugin-local-icon"]} />
+                                            <div className={style["menu-name"]}>源码</div>
+                                        </div>
+                                    </YakitPopover>
+                                )
+                            },
+                            {
+                                key: "help-info",
+                                label: (
+                                    <Tooltip
+                                        title={i.Help || "No Description about it."}
+                                        placement='right'
+                                        overlayClassName={style["question-tooltip"]}
+                                        onVisibleChange={(v) => {
+                                            if (v && !i.Help) {
+                                                getScriptInfo(i)
+                                            }
+                                        }}
+                                    >
+                                        <div className={style["extra-menu"]}>
+                                            <QuestionMarkCircleIcon className={style["plugin-local-icon"]} />
+                                            <div className={style["menu-name"]}>帮助信息</div>
+                                        </div>
+                                    </Tooltip>
+                                )
+                            }
+                        ] as YakitMenuItemProps[],
+                        onClick: ({key}) => {
+                            switch (key) {
+                                case "source-code":
+                                    break
+                                case "help-info":
+                                    break
+                            }
+                        }
+                    }}
+                    dropdown={{
+                        trigger: ["click"],
+                        placement: "bottomLeft"
+                    }}
+                >
+                    <SolidDotsverticalIcon className={style["extra-btns-icon"]} />
+                </YakitDropdownMenu>
+            )}
         </div>
     )
 })
