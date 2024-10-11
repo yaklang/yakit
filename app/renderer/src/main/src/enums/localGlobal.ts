@@ -1,6 +1,6 @@
 export enum LocalGVS {
     /** @name 用户协议(需用户同意才能使用软件) */
-    UserProtocolAgreed = "user-protocol-agreed",
+    UserProtocolAgreed = "new-user-protocol-agreed",
 
     /** @name 缓存-本地连接的端口号 */
     YaklangEnginePort = "yaklang-engine-port",
