@@ -1,6 +1,6 @@
-import { FileTreeListProps } from "@/pages/YakRunner/FileTree/FileTreeType"
-import { FileDetailInfo } from "@/pages/YakRunner/RunnerTabs/RunnerTabsType"
-import { AreaInfoProps } from "@/pages/YakRunner/YakRunnerType"
+import { FileTreeListProps } from "@/pages/yakRunner/FileTree/FileTreeType"
+import { FileDetailInfo } from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
+import { AreaInfoProps } from "@/pages/yakRunner/YakRunnerType"
 import {Dispatch, SetStateAction, createContext} from "react"
 
 export interface YakRunnerContextStore {

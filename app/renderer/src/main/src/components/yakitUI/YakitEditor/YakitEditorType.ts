@@ -3,7 +3,7 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import { EditorMenuItemType } from "./EditorMenu"
 import { EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import { HighLightText } from "@/components/HTTPFlowDetail"
-import { Selection } from "@/pages/YakRunner/RunnerTabs/RunnerTabsType";
+import { Selection } from "@/pages/yakRunner/RunnerTabs/RunnerTabsType";
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection

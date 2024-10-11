@@ -14,7 +14,7 @@ import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
-import { HelpInfoList } from "@/pages/YakRunner/CollapseList/CollapseList"
+import { HelpInfoList } from "@/pages/yakRunner/CollapseList/CollapseList"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
