@@ -1,0 +1,544 @@
+/* ---------- RunnerTabs ----------*/
+.runner-tabs {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .extra-box {
+        padding: 0px 12px;
+        display: flex;
+        gap: 4px;
+        flex-direction: row;
+        align-items: center;
+        &-icon {
+            width: 16px;
+            height: 16px;
+            box-sizing: content-box;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #85899e;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+            &:hover {
+                background-color: var(--yakit-background-color);
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+    .tabs-pane {
+        flex: 1;
+        overflow: hidden;
+    }
+}
+
+.fake-content {
+    content: "";
+    width: 100%;
+    border-top: 1px solid;
+    left: 0;
+    position: absolute;
+    height: 0;
+}
+
+.white-link {
+    @extend .fake-content;
+    border-color: #fff;
+}
+
+.grey-link {
+    @extend .fake-content;
+    border-color: var(--yakit-border-color);
+}
+
+.primary-link {
+    @extend .fake-content;
+    border-color: var(--yakit-primary-5) !important;
+}
+
+.dragging {
+    background-color: #fff;
+
+    &::before {
+        @extend .white-link;
+        bottom: -1px;
+        border-width: 2px;
+    }
+}
+
+.base-show-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--yakit-body-text-color);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.base-operate-icon {
+    @extend .base-show-icon;
+
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+}
+
+/* ---------- RunnerTabBar ----------*/
+.runner-tab-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f8f8;
+    position: relative;
+
+    .runner-tab-body {
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        background-color: var(--yakit-card-background-color);
+        position: relative;
+
+        &::after {
+            @extend .fake-content;
+            bottom: 0;
+            border-color: var(--yakit-border-color);
+        }
+    }
+
+    .outline-plus-icon {
+        @extend .base-operate-icon;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .outline-chevron-double-left {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+        position: absolute;
+        left: 0;
+        z-index: 11;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+
+    .outline-chevron-double-right {
+        @extend .base-operate-icon;
+        background-color: var(--yakit-card-background-color);
+        width: 20px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 0;
+        user-select: none;
+
+        position: absolute;
+        right: 0px;
+        z-index: 11;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        &::after {
+            @extend .grey-link;
+            height: 1px;
+            bottom: 0px;
+            z-index: 2;
+        }
+    }
+
+    .outline-chevron-double-display-none {
+        display: none;
+    }
+
+    .bar-wrapper {
+        flex: 1;
+        overflow: hidden;
+        .bar-container {
+            width: 100%;
+            display: flex;
+            overflow: auto;
+        }
+        .bar-container::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+    }
+
+    &::after {
+        content: "";
+        width: 100%;
+        height: 1px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background-color: #eaecf3;
+    }
+}
+
+/* ---------- RunnerTabBarItem ----------*/
+.runner-tab-bar-item {
+    display: flex;
+    height: 32px;
+    padding: 4px 0px;
+    padding-left: 0;
+    align-items: center;
+    cursor: pointer;
+    // flex: 1 1;
+    word-break: keep-all;
+    position: relative;
+    overflow: hidden;
+    max-width: 200px;
+    min-width: 32px;
+    justify-content: space-between;
+    background-color: var(--yakit-card-background-color);
+    font-size: 12px;
+    transition:
+        min-width 0.1s linear,
+        padding 0.1s linear;
+    flex-basis: fit-content;
+    .item-wrapper {
+        min-width: 24px;
+        height: 32px;
+        padding: 4px 8px 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        position: relative;
+
+        img {
+            width: 16px;
+            height: 16px;
+        }
+        .text-style {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .text-style-delete {
+            text-decoration: line-through;
+        }
+        .extra-icon {
+            display: none;
+            .dot {
+                width: 10px;
+                height: 10px;
+                background: #f28b44;
+                border-radius: 50%;
+                margin: 5px;
+                position: relative;
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+.runner-tab-bar-item:hover {
+    background-color: #ffffff;
+}
+
+.runner-tab-bar-item:not(:first-child) {
+    .item-wrapper::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        width: 1px;
+        height: 16px;
+        background-color: #eaecf3;
+    }
+}
+
+.runner-tab-bar-item.selected {
+    min-width: fit-content;
+    background-color: #f0f1f3;
+    &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background-color: #f0f1f3;
+        z-index: 10;
+    }
+
+    .item-wrapper {
+        .text-style {
+            white-space: nowrap;
+            color: #f28b44;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+        .extra-icon {
+            display: block;
+            .dot {
+                display: none;
+            }
+            .del-btn {
+                display: block;
+            }
+        }
+        .extra-icon.extra-icon-dot {
+            .dot {
+                display: block;
+            }
+            .del-btn {
+                display: none;
+            }
+            &:hover {
+                .dot {
+                    display: none;
+                }
+                .del-btn {
+                    display: block;
+                }
+            }
+        }
+        &::before {
+            display: none;
+        }
+    }
+}
+
+.runner-tab-bar-item.active {
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        border-radius: 2px 2px 0px 0px;
+        background: #f28b44;
+        z-index: 10;
+    }
+}
+
+.runner-tab-bar-item.selected + .runner-tab-bar-item {
+    .item-wrapper::before {
+        display: none;
+    }
+}
+
+.runner-tab-bar-item.dragging {
+    border: 1px solid #f28b44;
+    border-radius: 4px;
+    background-color: rgba(242, 139, 68, 0.06);
+    &.selected {
+        &::before {
+            visibility: hidden;
+            opacity: 0;
+        }
+        &::after {
+            visibility: hidden;
+            opacity: 0;
+        }
+    }
+}
+
+/* ---------- RunnerTabPane ----------*/
+.runner-tab-pane {
+    height: 100%;
+    background-color: #f0f1f3;
+    .warning-editor {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* ---------- YakRunnerWelcomePage ----------*/
+.yak-runner-welcome-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    overflow: auto;
+
+    .title {
+        .icon-style {
+            display: flex;
+            justify-content: center;
+            svg {
+                width: 72px;
+                height: 72px;
+            }
+        }
+        .header-style {
+            color: #31343f;
+            font-size: 32px;
+            font-weight: 600;
+            line-height: 40px;
+        }
+    }
+    .operate-box {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding: 0px 145px;
+        .operate {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-radius: 8px;
+            background: #f8f8f8;
+            .title-style {
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+                text-align: center;
+            }
+            .operate-btn-group {
+                display: flex;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 16px;
+                .btn-style {
+                    flex: 1 0 0;
+                    padding: 16px 16px 16px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    user-select: none;
+                    .btn-title {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        color: #31343f;
+                        font-size: 14px;
+                        font-weight: 400;
+                        line-height: 20px;
+                        white-space: nowrap;
+                        svg {
+                            width: 32px;
+                            height: 32px;
+                        }
+                    }
+
+                    .icon-style {
+                        svg {
+                            width: 20px;
+                            height: 20px;
+                            color: #85899e;
+                        }
+                    }
+                }
+                .btn-new-file {
+                    background: rgba(255, 182, 96, 0.1);
+                    &:hover {
+                        background: rgba(255, 182, 96, 0.2);
+                    }
+                }
+                .btn-open-file {
+                    background: rgba(86, 201, 145, 0.1);
+                    &:hover {
+                        background: rgba(86, 201, 145, 0.2);
+                    }
+                }
+                .btn-open-folder {
+                    background: rgba(53, 216, 238, 0.1);
+                    &:hover {
+                        background: rgba(53, 216, 238, 0.2);
+                    }
+                }
+                .btn-open-compile {
+                    background-color: rgba(136, 99, 247, 0.1);
+                    &:hover {
+                        background: rgba(136, 99, 247, 0.2);
+                    }
+                }
+            }
+        }
+
+        .recent-open {
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            .title-style {
+                color: #31343f;
+                font-size: 14px;
+                font-weight: 600;
+                line-height: 20px;
+            }
+            .recent-list {
+                display: flex;
+                flex-direction: column;
+                .list-opt {
+                    cursor: pointer;
+                    padding: 4px 0px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 8px;
+                    font-size: 14px;
+                    font-weight: 400;
+                    line-height: 20px;
+                    white-space: nowrap;
+                    .file-name {
+                        color: #f28b44;
+                    }
+                    .file-path {
+                        color: #b4bbca;
+                    }
+                    &:hover {
+                        .file-path {
+                            color: #f28b44;
+                            text-decoration: underline;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+.hint-right-btn {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group-wrapper {
+        display: flex;
+        gap: 8px;
+    }
+}
