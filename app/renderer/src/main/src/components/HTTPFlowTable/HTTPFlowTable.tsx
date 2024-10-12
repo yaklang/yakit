@@ -77,7 +77,7 @@ import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
 import {onSetRemoteValuesBase} from "../yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
-
+import cloneDeep from "lodash/cloneDeep"
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
@@ -1070,24 +1070,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
-
-        // 查询数据
         updateQueryParams(query)
+
+        // 真正需要传给后端的查询数据
+        const realQuery = cloneDeep(query)
+        // 表格上的顺序
+        const tableOrder = query.Pagination.Order
+        // 倒序时需要额外处理传给后端顺序
+        if (["desc", "none"].includes(tableOrder)) {
+            if (["top", "offset"].includes(type)) {
+                realQuery.Pagination.Order = "asc"
+            }
+        }
         ipcRenderer
-            .invoke("QueryHTTPFlows", query)
+            .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
                 const resData = rsp?.Data || []
                 const newData: HTTPFlow[] = getClassNameData(resData)
+                const copyData = newData.slice()
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
                         return
                     }
-
-                    if (["desc", "none"].includes(query.Pagination.Order)) {
-                        setData([...newData, ...data])
-                        maxIdRef.current = newData[0].Id
+                    if (["desc", "none"].includes(tableOrder)) {
+                        const reverseData = copyData.reverse()
+                        setData([...reverseData, ...data])
+                        maxIdRef.current = reverseData[0].Id
                     } else {
                         // 升序
                         if (rsp.Pagination.Limit - data.length >= 0) {
@@ -1103,7 +1113,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                     const arr = [...data, ...newData]
                     setData(arr)
-                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                    if (["desc", "none"].includes(tableOrder)) {
                         minIdRef.current = newData[newData.length - 1].Id
                     } else {
                         // 升序
@@ -1115,13 +1125,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         serverPushStatus && setIsLoop(false)
                         return
                     }
-                    if (["desc", "none"].includes(query.Pagination.Order)) {
-                        const newOffsetData = newData.concat(getOffsetData())
+                    if (["desc", "none"].includes(tableOrder)) {
+                        const reverseData = copyData.reverse()
+                        const newOffsetData = reverseData.concat(getOffsetData())
                         maxIdRef.current = newOffsetData[0].Id
                         setOffsetData(newOffsetData)
                     }
                 } else {
-                    // if (rsp?.Data.length > 0 && data.length > 0 && rsp?.Data[0].Id === data[0].Id) return
                     if (resData.length <= 0) {
                         // 没有数据
                         serverPushStatus && setIsLoop(false)
@@ -1131,7 +1141,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setIsRefresh(!isRefresh)
                     setPagination(rsp.Pagination)
                     setData([...newData])
-                    if (["desc", "none"].includes(query.Pagination.Order)) {
+                    if (["desc", "none"].includes(tableOrder)) {
                         maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
                         minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
                     } else {
