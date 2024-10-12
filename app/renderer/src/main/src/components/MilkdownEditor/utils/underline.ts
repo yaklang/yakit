@@ -52,7 +52,7 @@ const underlineInputRule = $inputRule((ctx) => {
     return markRule(/:u\[(.+?)\]/, underlineSchema.type(ctx))
 })
 
-const underlineCommand = $command("toggleUnderlineCommand", (ctx) => () => toggleMark(underlineSchema.type(ctx)))
+export const underlineCommand = $command("toggleUnderlineCommand", (ctx) => () => toggleMark(underlineSchema.type(ctx)))
 export const underlinePlugin = () => [
     underlineMarkAttr,
     underlineSchema.mark,

@@ -22,6 +22,9 @@
     .tooltip-t-wrapper {
         padding: 12px 0 12px 12px;
     }
+    .tooltip-light-wrapper {
+        padding: 12px 0;
+    }
     .tooltip-t {
         display: flex;
         align-items: center;
@@ -120,6 +123,35 @@
                     height: 20px;
                 }
             }
+        }
+    }
+    .tooltip-light-popover-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .tooltip-type-item {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .item-remove {
+            background-color: #fff;
+            background: linear-gradient(45deg, transparent 48.5%, #f00 56.5%, #f00 36.5%, transparent 51.5%);
+            border: 1px solid var(--yakit-border-color);
+        }
+        .item-note {
+            background-color: var(--yakit-border-color);
+        }
+
+        .item-success {
+            background-color: var(--yakit-success-5);
+        }
+        .item-danger {
+            background-color: var(--yakit-danger-5);
+        }
+        .item-warning {
+            background-color: var(--yakit-warning-5);
         }
     }
 }
