@@ -214,7 +214,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         <AuthorImg />
                     </div>
                 </div>
-
                 <div className={classNames(styles["notepad"])} ref={notepadRef}>
                     <div className={styles["notepad-catalogue-wrapper"]}>
                         <div
