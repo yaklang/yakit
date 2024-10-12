@@ -44,8 +44,8 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
     const [records, setRecords] = useState<DNSLogEvent[]>([])
     const [total, setTotal] = useState<number>(0)
     const [onlyARecord, setOnlyARecord, getOnlyARecord] = useGetState(false)
-    const [dnsMode, setDNSMode, getDNSMode] = useGetState<string>("")
-    const [useLocal, setUseLocal, getUseLocal] = useGetState<boolean>(true)
+    const [dnsMode, setDNSMode, getDNSMode] = useGetState<string>("内置")
+    const [useLocal, setUseLocal, getUseLocal] = useGetState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
 
     useEffect(() => {
