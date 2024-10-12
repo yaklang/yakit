@@ -2,6 +2,7 @@ import {Ctx} from "@milkdown/kit/ctx"
 import {tooltipFactory, TooltipProvider} from "@milkdown/kit/plugin/tooltip"
 import {
     codeBlockSchema,
+    createCodeBlockCommand,
     listItemSchema,
     toggleEmphasisCommand,
     toggleInlineCodeCommand,
@@ -201,11 +202,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 })
                 break
             case "代码块":
-                action((ctx) => {
-                    const {dispatch, state} = view
-                    const command = setWrapInBlockType(codeBlockSchema.type(ctx))
-                    command(state, dispatch)
-                })
+                action(callCommand(createCodeBlockCommand.key))
                 break
             case "引用":
                 action(callCommand(wrapInBlockquoteCommand.key))

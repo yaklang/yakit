@@ -2,7 +2,7 @@ import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
 import React, {useEffect} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
-import {blockquoteSchema, codeBlockSchema, commonmark} from "@milkdown/kit/preset/commonmark"
+import {blockquoteSchema, codeBlockSchema, commonmark, listItemSchema} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
@@ -13,7 +13,6 @@ import {BlockView, menuAPI} from "./Block"
 import {block} from "@milkdown/plugin-block" // 引入block插件
 import {cursor} from "@milkdown/kit/plugin/cursor"
 import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
-import {listItemBlockComponent} from "@milkdown/kit/component/list-item-block"
 
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
 
@@ -29,6 +28,7 @@ import {alterCustomPlugin} from "./utils/alertPlugin"
 import {diffLines} from "diff"
 import {useMemoizedFn} from "ahooks"
 import {underlinePlugin} from "./utils/underline"
+import {ListItem} from "./ListItem/ListItem"
 
 const markdown = `
 
@@ -158,20 +158,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         onUpload: value.onUpload
                     }))
 
-                    // ctx.set(listItemBlockConfig.key, {
-                    //     renderLabel: ({label, listType, checked, readonly}) => {
-                    //         if (checked == null) {
-                    //             if (listType === "bullet") return <span className='label'>{listType}</span>
-
-                    //             return <span className='label'>{label}</span>
-                    //         }
-
-                    //         if (checked) return <span className='label'>{label}</span>
-
-                    //         return <span className='label'>{label}</span>
-                    //     }
-                    // })
-
                     ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
                         ...defaultConfig,
                         linkIcon: () => "🔗",
@@ -204,7 +190,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // image
                 .use(imageBlockComponent)
                 // listItem
-                .use(listItemBlockComponent)
+                .use($view(listItemSchema.node, () => nodeViewFactory({component: ListItem})))
                 // code
                 // .use(codeBlockComponent)
                 .use(
