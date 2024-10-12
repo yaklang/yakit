@@ -77,8 +77,7 @@ import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
 import {onSetRemoteValuesBase} from "../yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
-import { cloneDeep } from "bizcharts/lib/utils"
-
+import cloneDeep from "lodash/cloneDeep"
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
