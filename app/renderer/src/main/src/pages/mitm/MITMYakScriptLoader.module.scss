@@ -59,7 +59,9 @@
     }
     .lightning-bolt-icon {
         color: var(--yakit-primary-5);
-        width: 16px;
+        svg {
+            width: 16px;
+        }
     }
     .history-icon {
         svg {

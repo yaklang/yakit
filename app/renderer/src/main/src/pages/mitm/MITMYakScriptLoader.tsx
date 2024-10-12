@@ -9,7 +9,6 @@ import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
 import classNames from "classnames"
-import {LightningBoltIcon, QuestionMarkCircleIcon, TerminalIcon} from "@/assets/newIcon"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 import {YakParamProps} from "../plugins/pluginsType"
@@ -21,13 +20,11 @@ import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExe
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlileHistoryIcon, OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlileHistoryIcon, OutlineLightningboltIcon, OutlinePencilaltIcon, OutlineQuestionmarkcircleIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {SolidCloudpluginIcon, SolidOfficialpluginIcon, SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {SolidDotsverticalIcon} from "@/assets/icon/solid"
+import {SolidDotsverticalIcon, SolidLightningboltIcon} from "@/assets/icon/solid"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
@@ -278,7 +275,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     p.onSendToPatch && p.onSendToPatch(i)
                 }}
             >
-                <LightningBoltIcon className={style["lightning-bolt-icon"]} />
+                <SolidLightningboltIcon className={style["lightning-bolt-icon"]} />
             </YakitPopconfirm>
         )
     }, [i, p])
@@ -352,7 +349,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                         zIndex={9999}
                                     >
                                         <div className={style["extra-menu"]}>
-                                            <TerminalIcon className={style["plugin-local-icon"]} />
+                                            <OutlineTerminalIcon className={style["plugin-local-icon"]} />
                                             <div className={style["menu-name"]}>源码</div>
                                         </div>
                                     </YakitPopover>
@@ -372,7 +369,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                         }}
                                     >
                                         <div className={style["extra-menu"]}>
-                                            <QuestionMarkCircleIcon className={style["plugin-local-icon"]} />
+                                            <OutlineQuestionmarkcircleIcon className={style["plugin-local-icon"]} />
                                             <div className={style["menu-name"]}>帮助信息</div>
                                         </div>
                                     </Tooltip>
