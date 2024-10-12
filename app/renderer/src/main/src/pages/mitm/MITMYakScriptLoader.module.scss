@@ -12,7 +12,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        width: calc(100% - 62px);
+        width: calc(100% - 96px);
         flex: 1;
         padding-left: 2px;
         .mitm-plugin-local-info {
@@ -24,7 +24,6 @@
             .mitm-plugin-local-info-left {
                 display: flex;
                 align-items: center;
-                width: calc(100% - 100px);
                 cursor: pointer;
                 .plugin-local-headImg {
                     width: 28px;
@@ -56,19 +55,18 @@
             width: 16px;
             color: var(--yakit-helper-text-color);
         }
+        margin-left: 12px;
     }
     .lightning-bolt-icon {
         color: var(--yakit-primary-5);
-        margin-left: 24px;
-        width: 16px;
-        margin-right: 4px;
+        svg {
+            width: 16px;
+        }
     }
     .history-icon {
         svg {
             width: 16px;
         }
-        margin-left: 24px;
-        margin-right: 4px;
     }
 
     .history-icon-def {
@@ -81,10 +79,71 @@
             color: var(--yakit-primary-5);
         }
     }
+
+    .extra-btns-icon {
+        margin-right: 12px;
+        margin-left: 12px;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-helper-text-color);
+        }
+    }
 }
 
 .mitm-params-set {
     max-height: 700px;
     margin: 15px 10px;
     overflow: auto;
+}
+
+.extra-menu {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: 100%;
+    svg {
+        height: 16px;
+        width: 16px;
+    }
+    .menu-name {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+}
+
+.plugin-local-icon {
+    color: var(--yakit-helper-text-color);
+    cursor: pointer;
+
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.terminal-popover {
+    width: 429px;
+
+    :global {
+        .ant-popover-inner-content {
+            height: 40vh;
+            padding: 4px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            right: 0;
+        }
+
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
+        }
+    }
 }

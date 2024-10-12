@@ -157,7 +157,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 icon: <ExclamationCircleOutlined />,
                 content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
                 okText: "确认",
-                cancelText: "取消",
+                cancelText: "去配置",
                 closable: true,
                 centered: true,
                 closeIcon: (
@@ -173,6 +173,10 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 ),
                 onOk: () => {
                     execStartMITM(values)
+                },
+                onCancel: () => {
+                    props.setVisible(true)
+                    Modal.destroyAll()
                 },
                 cancelButtonProps: {size: "small", className: "modal-cancel-button"},
                 okButtonProps: {size: "small", className: "modal-ok-button"}
@@ -409,6 +413,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                                 execStartMITM(values)
                             }}
                             repRuleFlag={openRepRuleFlag}
+                            onSetVisible={props.setVisible}
                         />
                         <YakitButton type='text' size='large' onClick={() => setAdvancedFormVisible(true)}>
                             高级配置
