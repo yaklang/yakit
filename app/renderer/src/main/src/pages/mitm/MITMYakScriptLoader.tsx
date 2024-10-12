@@ -20,7 +20,13 @@ import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExe
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlileHistoryIcon, OutlineLightningboltIcon, OutlinePencilaltIcon, OutlineQuestionmarkcircleIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {
+    OutlileHistoryIcon,
+    OutlineLightningboltIcon,
+    OutlinePencilaltIcon,
+    OutlineQuestionmarkcircleIcon,
+    OutlineTerminalIcon
+} from "@/assets/icon/outline"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
@@ -275,7 +281,10 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     p.onSendToPatch && p.onSendToPatch(i)
                 }}
             >
-                <SolidLightningboltIcon className={style["lightning-bolt-icon"]} />
+                <SolidLightningboltIcon
+                    className={style["lightning-bolt-icon"]}
+                    style={{marginLeft: curTabKey === "loaded" ? 4 : 0, marginRight: curTabKey === "loaded" ? 12 : 0}}
+                />
             </YakitPopconfirm>
         )
     }, [i, p])
