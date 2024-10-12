@@ -2,15 +2,21 @@ import {Ctx} from "@milkdown/kit/ctx"
 import {tooltipFactory, TooltipProvider} from "@milkdown/kit/plugin/tooltip"
 import {
     codeBlockSchema,
+    listItemSchema,
     toggleEmphasisCommand,
     toggleInlineCodeCommand,
-    toggleStrongCommand
+    toggleStrongCommand,
+    turnIntoTextCommand,
+    wrapInBlockquoteCommand,
+    wrapInBulletListCommand,
+    wrapInHeadingCommand,
+    wrapInOrderedListCommand
 } from "@milkdown/kit/preset/commonmark"
 import {useInstance} from "@milkdown/react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
 import {ReactNode, useCallback, useEffect, useRef, useState} from "react"
 import {callCommand} from "@milkdown/kit/utils"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {
     IconBold,
     IconCheckSquare,
@@ -29,11 +35,20 @@ import {
 } from "../icon/icon"
 import styles from "./Tooltip.module.scss"
 import React from "react"
-import {OutlineAnnotationIcon, OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
+import {
+    OutlineAnnotationIcon,
+    OutlineChevrondownIcon,
+    OutlineChevronupIcon,
+    OutlineLightbulbIcon
+} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {toggleStrikethroughCommand} from "@milkdown/kit/preset/gfm"
 import {NodeType, Attrs} from "@milkdown/kit/prose/model"
-import {Command, Transaction} from "@milkdown/kit/prose/state"
+import {Transaction} from "@milkdown/kit/prose/state"
+import {setWrapInBlockType} from "./utils"
+import classNames from "classnames"
+import {alterCommand, alterToParagraphCommand} from "../utils/alertPlugin"
+import {underlineCommand} from "../utils/underline"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -92,33 +107,11 @@ const tooltipTextList = [
         label: "引用"
     }
 ]
-const addBlockType = (tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) => {
-    const node = nodeType.createAndFill(attrs)
-    if (!node) return null
-
-    return tr.replaceSelectionWith(node)
-}
-const clearRange = (tr: Transaction) => {
-    const {$from, $to} = tr.selection
-    const {pos: from} = $from
-    const {pos: to} = $to
-    tr = tr.deleteRange(from - $from.node().content.size, to)
-    return tr
-}
-const clearContentAndAddBlockType = (nodeType: NodeType, attrs: Attrs | null = null) => {
-    return (state, dispatch) => {
-        const tr = addBlockType(clearRange(state.tr), nodeType, attrs)
-        if (!tr) return false
-
-        if (dispatch) dispatch(tr.scrollIntoView())
-
-        return true
-    }
-}
 
 interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
-    const [visible, setVisible] = useState<boolean>(false)
+    const [visibleText, setVisibleText] = useState<boolean>(false)
+    const [visibleLight, setVisibleLight] = useState<boolean>(false)
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<TooltipProvider>()
 
@@ -138,7 +131,10 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             return
         }
         tooltipProvider.current = new TooltipProvider({
-            content: div
+            content: div,
+            offset: {
+                crossAxis: 100
+            }
         })
 
         return () => {
@@ -168,15 +164,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
     })
     const onUnderline = useMemoizedFn((e) => {
         e.preventDefault()
-        action(callCommand("toggleUnderlineCommand"))
+        action(callCommand(underlineCommand.key))
     })
     const onAddCode = useMemoizedFn((e) => {
         e.preventDefault()
-        const {dispatch, state} = view
-        const editor = get()
-        if (!editor) return
-        const command = clearContentAndAddBlockType(codeBlockSchema.type(editor.ctx))
-        command(state, dispatch)
+        action(callCommand(toggleInlineCodeCommand.key))
     })
     const onComment = useMemoizedFn((e) => {
         e.preventDefault()
@@ -184,18 +176,63 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
     const onText = useMemoizedFn(({label}) => {
         switch (label) {
             case "正文":
+                action(callCommand(turnIntoTextCommand.key))
                 break
-
+            case "一级标题":
+                action(callCommand(wrapInHeadingCommand.key, 1))
+                break
+            case "二级标题":
+                action(callCommand(wrapInHeadingCommand.key, 2))
+                break
+            case "三级标题":
+                action(callCommand(wrapInHeadingCommand.key, 3))
+                break
+            case "有序列表":
+                action(callCommand(wrapInOrderedListCommand.key))
+                break
+            case "无序列表":
+                action(callCommand(wrapInBulletListCommand.key))
+                break
+            case "任务":
+                action((ctx) => {
+                    const {dispatch, state} = view
+                    const command = setWrapInBlockType(listItemSchema.type(ctx), {checked: false})
+                    command(state, dispatch)
+                })
+                break
+            case "代码块":
+                action((ctx) => {
+                    const {dispatch, state} = view
+                    const command = setWrapInBlockType(codeBlockSchema.type(ctx))
+                    command(state, dispatch)
+                })
+                break
+            case "引用":
+                action(callCommand(wrapInBlockquoteCommand.key))
+                break
             default:
                 break
         }
+        setVisibleText(false)
+    })
+    const onLight = useMemoizedFn((type: string) => {
+        switch (type) {
+            case "remove":
+                action(callCommand(alterToParagraphCommand.key))
+                break
+            default:
+                action(callCommand(alterCommand.key, type))
+                break
+        }
+        setVisibleLight(false)
     })
     return (
         <div className={styles["tooltip"]} ref={ref}>
             <YakitPopover
                 overlayClassName={styles["tooltip-popover"]}
                 placement='bottomLeft'
-                onVisibleChange={setVisible}
+                visible={visibleText}
+                onVisibleChange={setVisibleText}
                 content={
                     <div className={styles["tooltip-popover-content"]}>
                         {tooltipTextList.map((item) => {
@@ -214,7 +251,36 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 <div className={styles["tooltip-t-wrapper"]}>
                     <div className={styles["tooltip-t"]}>
                         <IconType />
-                        {visible ? (
+                        {visibleText ? (
+                            <OutlineChevronupIcon className={styles["t-icon"]} />
+                        ) : (
+                            <OutlineChevrondownIcon className={styles["t-icon"]} />
+                        )}
+                    </div>
+                </div>
+            </YakitPopover>
+            <div className={styles["tooltip-divider"]} />
+            <YakitPopover
+                overlayClassName={styles["tooltip-popover"]}
+                placement='bottomLeft'
+                visible={visibleLight}
+                onVisibleChange={setVisibleLight}
+                content={
+                    <div className={styles["tooltip-light-popover-content"]}>
+                        {["remove", "note", "success", "warning", "danger"].map((type) => (
+                            <div
+                                key={type}
+                                className={classNames(styles["tooltip-type-item"], styles[`item-${type}`])}
+                                onClick={() => onLight(type)}
+                            />
+                        ))}
+                    </div>
+                }
+            >
+                <div className={styles["tooltip-light-wrapper"]}>
+                    <div className={styles["tooltip-t"]}>
+                        <OutlineLightbulbIcon />
+                        {visibleLight ? (
                             <OutlineChevronupIcon className={styles["t-icon"]} />
                         ) : (
                             <OutlineChevrondownIcon className={styles["t-icon"]} />

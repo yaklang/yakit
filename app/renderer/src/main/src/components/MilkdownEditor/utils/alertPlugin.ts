@@ -4,6 +4,7 @@ import {wrappingInputRule} from "@milkdown/prose/inputrules"
 import {$inputRule} from "@milkdown/kit/utils"
 import {wrapIn} from "@milkdown/kit/prose/commands"
 import directive from "remark-directive"
+import {Node} from "@milkdown/kit/prose/model"
 
 const alterCustomId = "alter-custom"
 const alterCustomAttr = $nodeAttr("alter-custom", () => ({"data-type": alterCustomId}))
@@ -68,7 +69,34 @@ const alterInputRule = $inputRule((ctx) => {
     return wrappingInputRule(rule, alterCustomSchema.type(ctx), (match) => ({type: match[1]}))
 })
 
-const alterCommand = $command(`command-${alterCustomId}`, (ctx) => () => wrapIn(alterCustomSchema.type(ctx)))
+export const alterCommand = $command(
+    `command-${alterCustomId}`,
+    (ctx) => (type) =>
+        wrapIn(alterCustomSchema.type(ctx), {
+            type
+        })
+)
+
+export const alterToParagraphCommand = $command(`alterToParagraphCommand`, (ctx) => () => {
+    return (state, dispatch) => {
+        const {from, to} = state.selection
+        // 检查选区是否有效
+        if (from === to) {
+            return false // 没有选中任何内容
+        }
+        // 获取当前选中的节点
+        const selectedNode = state.doc.nodeAt(from)
+        if (selectedNode && selectedNode.type.name === alterCustomId) {
+            // 创建新的内容节点，将子节点放入新的结构中
+            const content = selectedNode.content as any as Node
+            const transaction = state.tr.replaceRangeWith(from, to, content)
+            if (dispatch) dispatch(transaction)
+            return true // 命令成功执行
+        }
+
+        return false // 命令未成功执行
+    }
+})
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -79,6 +107,7 @@ export const alterCustomPlugin = () => {
         alterCustomSchema.node,
         alterCustomSchema.ctx,
         alterInputRule,
-        alterCommand
+        alterCommand,
+        alterToParagraphCommand
     ]
 }
