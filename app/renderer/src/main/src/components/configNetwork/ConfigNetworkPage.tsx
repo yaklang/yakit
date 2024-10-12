@@ -36,6 +36,7 @@ import {LocalGVS} from "@/enums/localGlobal"
 import {RemoteGV} from "@/yakitGV"
 import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
 import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} from "./NewThirdPartyApplicationConfig"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 
 export interface ConfigNetworkPageProp {}
 
@@ -75,6 +76,8 @@ export interface GlobalNetworkConfig {
     IncludePluginScanURIs: string[]
 
     DbSaveSync: boolean
+
+    CallPluginTimeout: number
 }
 
 export interface ThirdPartyApplicationConfig {
@@ -138,7 +141,8 @@ export const defaultParams: GlobalNetworkConfig = {
     SynScanNetInterface: "",
     ExcludePluginScanURIs: [],
     IncludePluginScanURIs: [],
-    DbSaveSync: false
+    DbSaveSync: false,
+    CallPluginTimeout: 60
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -757,6 +761,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             const {value} = e.target
                                             setParams({...params, GlobalProxy: value.split(",")})
                                         }}
+                                    />
+                                </Form.Item>
+                                <Form.Item label={"插件执行超时限制"}>
+                                    <YakitInputNumber
+                                        size='small'
+                                        value={params.CallPluginTimeout}
+                                        onChange={(e) => {
+                                            setParams({...params, CallPluginTimeout: e as number})
+                                        }}
+                                    
                                     />
                                 </Form.Item>
                                 <Form.Item label={"免配置启动路径"}>

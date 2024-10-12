@@ -1177,6 +1177,9 @@ message GlobalNetworkConfig {
 
   // 开启数据库同步存储
   bool DbSaveSync = 19;
+
+  // 插件执行配置
+  float CallPluginTimeout = 20;
 }
 
 message AuthInfo {
