@@ -197,7 +197,9 @@ module.exports = (win, getClient) => {
             "upload/img",
             formData,
             {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false
+            false,
+            undefined,
+            {cancelInterrupt: true}
         )
         return res
     })
@@ -222,7 +224,9 @@ module.exports = (win, getClient) => {
             "upload/img",
             formData,
             {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
-            false
+            false,
+            undefined,
+            {cancelInterrupt: true}
         )
 
         return res
@@ -241,7 +245,7 @@ module.exports = (win, getClient) => {
             const headers = {
                 "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`
             }
-            const res = httpApi("post", "upload/file", formData, headers, false)
+            const res = httpApi("post", "upload/file", formData, headers, false, undefined, {cancelInterrupt: true})
             return res
         } catch (error) {
             throw error
