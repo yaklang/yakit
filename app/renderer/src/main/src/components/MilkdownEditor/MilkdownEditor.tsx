@@ -24,6 +24,7 @@ import {CustomCodeComponent} from "./CodeBlock"
 import {Blockquote} from "./Blockquote"
 import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
 import {alterCustomPlugin} from "./utils/alertPlugin"
+import {commentPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
 import {useMemoizedFn} from "ahooks"
@@ -33,6 +34,8 @@ import {ListItem} from "./ListItem/ListItem"
 const markdown = `
 
 :u[This text will be underlined]
+
+:comment[fdsfdsfds]{commentId="111"}
 
 ~~what is Milkdown? Please~~
 
@@ -210,6 +213,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use([...alterCustomPlugin()])
                 // underlinePlugin
                 .use([...underlinePlugin()])
+                // commentPlugin
+                .use([...commentPlugin()])
                 .use(customPlugin)
         )
     }, [])
