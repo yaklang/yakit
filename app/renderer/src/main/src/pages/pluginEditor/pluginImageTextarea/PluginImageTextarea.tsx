@@ -31,6 +31,15 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
         )
 
         const getData = useMemoizedFn(() => {
+            if (imgLoading) {
+                failed("图片正在上传中, 请稍候在操作...")
+                return null
+            }
+            if (delImgs.length > 0) {
+                failed("图片正在删除中, 请稍候在操作...")
+                return null
+            }
+
             return {
                 value: value,
                 imgs: cloneDeep(imgs)
@@ -146,13 +155,12 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             const findIndex = delImgs.findIndex((item) => item === info.url)
             if (findIndex !== -1) return
 
-            setDelImgs((pre) => pre.concat([info.url]))
             const [name, path] = info.url.split("/").reverse()
             if (!name || !path) {
                 failed(`删除图片出现异常，异常值: ${info.url}`)
-                setDelImgs((pre) => pre.filter((item) => item !== info.url))
                 return
             }
+            setDelImgs((pre) => pre.concat([info.url]))
             const fileName = `${path}/${name}`
             httpDeleteOSSResource({file_name: [fileName]})
                 .then(() => {
@@ -191,7 +199,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
                 })}
                 onClick={handleTextareaFocus}
             >
-                {(true || !!quotaionContent) && (
+                {(false || !!quotaionContent) && (
                     <div className={styles["plugin-image-textarea-quotation"]}>
                         <div className={styles["del-btn"]} onClick={handleDelQuotation}>
                             <OutlineXIcon />
@@ -209,6 +217,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
                     bordered={false}
                     autoSize={{minRows: 1, maxRows: 3}}
                     placeholder='说点什么...(tip: 可以粘贴图片了)'
+                    spellCheck={false}
                     maxLength={150}
                     onPaste={handlePaste}
                     onFocus={handleFocus}
@@ -265,7 +274,7 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
                     <Upload
                         accept='image/jpeg,image/png,image/jpg,image/gif'
                         multiple={false}
-                        disabled={imgLoading}
+                        disabled={imgLoading || imgsLength >= 6}
                         showUploadList={false}
                         beforeUpload={(file: any) => {
                             if ("image/jpeg,image/png,image/jpg,image/gif".indexOf(file.type) === -1) {

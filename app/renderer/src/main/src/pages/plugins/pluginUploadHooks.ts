@@ -16,6 +16,7 @@ export interface SaveYakScriptToOnlineRequest {
     ScriptNames: string[]
     IsPrivate: boolean
     All?: boolean
+    PluginSupplement?: string
 }
 export interface SaveYakScriptToOnlineResponse {
     Progress: number
@@ -78,6 +79,7 @@ export default function usePluginUploadHooks(props: PluginUploadHooks) {
             ...uploadParams
         }
         pluginNameListRef.current = params.ScriptNames
+        console.log("grpc:SaveYakScriptToOnline\n", JSON.stringify(params), taskToken)
         ipcRenderer.invoke("SaveYakScriptToOnline", params, taskToken)
     }
     const onCancel = () => {

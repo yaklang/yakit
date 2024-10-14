@@ -478,18 +478,30 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         if (!uploadPlugin.current) return
         setUploadHint(true)
     })
-    const uploadHintCallback = useMemoizedFn((result: boolean, plugin?: YakScript) => {
-        if (result && plugin) {
-            dispatch({
-                type: "replace",
-                payload: {
-                    item: {...plugin}
-                }
-            })
+    const uploadHintCallback = useMemoizedFn(
+        (result: boolean, plugin?: YakScript, onlinePlugin?: API.PostPluginsResponse) => {
+            // 新建云端
+            if (result && plugin) {
+                dispatch({
+                    type: "replace",
+                    payload: {
+                        item: {...plugin}
+                    }
+                })
+            }
+            // 编辑云端(有 uuid，但是云端上传时被删除)
+            if (result && !plugin && onlinePlugin && uploadPlugin.current) {
+                dispatch({
+                    type: "replace",
+                    payload: {
+                        item: {...uploadPlugin.current, ScriptName: onlinePlugin.script_name, UUID: onlinePlugin.uuid}
+                    }
+                })
+            }
+            uploadPlugin.current = undefined
+            setUploadHint(false)
         }
-        uploadPlugin.current = undefined
-        setUploadHint(false)
-    })
+    )
     /** ---------- 上传插件 End ---------- */
 
     /** ---------- 导出插件 Start ---------- */

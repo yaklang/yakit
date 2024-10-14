@@ -42,10 +42,9 @@ import {onCodeToInfo} from "@/pages/plugins/editDetails/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useStore} from "@/store"
-import {ModifyPluginReason, PluginSyncAndCopyModal} from "@/pages/plugins/editDetails/PluginEditDetails"
+import {PluginSyncAndCopyModal} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {API} from "@/services/swagger/resposeType"
-import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
-import {httpCopyPluginToOnline, httpUploadPluginToOnline} from "@/pages/pluginHub/utils/http"
+import {httpCopyPluginToOnline} from "@/pages/pluginHub/utils/http"
 import {localYakInfo} from "@/pages/plugins/pluginsType"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {apiFetchOnlinePluginInfo} from "@/pages/plugins/utils"
@@ -56,6 +55,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {APIFunc} from "@/apiUtils/type"
+import {PluginUploadModal} from "@/pages/pluginHub/pluginUploadModal/PluginUploadModal"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -163,7 +163,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         // 是否为线上本人的插件
         const [isAuthors, setIsAuthors] = useState<boolean>(false)
 
-        // 每次本地保存后的记录插件信息
+        /** 每次本地保存后的记录插件信息 */
         const savedPluginInfo = useRef<YakScript>()
 
         // 获取插件线上信息
@@ -600,9 +600,11 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     handleTimeLoadingToFalse(setLocalLoading)
                 })
         })
+
         // 同步至云端
         const onBtnOnlineSave = useMemoizedFn(async () => {
             if (onlineLoading) return
+            if (showUploadPlugin) return
             if (!isLogin) {
                 yakitNotify("error", "登录后才可同步至云端")
                 return
@@ -616,7 +618,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
 
             const localRequest = pluginConvertUIToLocal(plugin, savedPluginInfo.current)
-            const onlineRequest = pluginConvertUIToOnline(plugin, savedPluginInfo.current)
 
             // 先本地保存
             handleLocalSave(localRequest)
@@ -635,13 +636,9 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         })
                     }
 
-                    if (syncCopyHint) {
-                        handleTimeLoadingToFalse(setOnlineLoading)
-                        return
-                    }
-                    onlineOPPlugin.current = onlineRequest
-                    syncOrCopy.current = true
-                    setSyncCopyHint(true)
+                    uploadType.current = "upload"
+                    uploadPlugin.current = cloneDeep(res)
+                    setShowUploadPlugin(true)
                 })
                 .catch((err) => {
                     handleTimeLoadingToFalse(setOnlineLoading)
@@ -665,17 +662,17 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
             const onlineRequest = pluginConvertUIToOnline(plugin, initLocalPlugin.current)
 
-            if (syncCopyHint) {
+            if (copyHint) {
                 handleTimeLoadingToFalse(setOnlineLoading)
                 return
             }
             onlineOPPlugin.current = onlineRequest
-            syncOrCopy.current = false
-            setSyncCopyHint(true)
+            setCopyHint(true)
         })
         // 提交至云端
         const onBtnSubmitOnline = useMemoizedFn(async () => {
             if (modifyLoading) return
+            if (showUploadPlugin) return
             if (!isLogin) {
                 yakitNotify("error", "登录后才可提交至云端")
                 return
@@ -689,7 +686,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }
 
             const localRequest = pluginConvertUIToLocal(plugin, savedPluginInfo.current)
-            const onlineRequest = pluginConvertUIToOnline(plugin, savedPluginInfo.current)
             // 先本地保存
             handleLocalSave(localRequest)
                 .then((res) => {
@@ -714,22 +710,9 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         return
                     }
 
-                    onlineOPPlugin.current = onlineRequest
-                    if (initOnlinePlugin.current.is_private) {
-                        if (modifyReason) {
-                            handleTimeLoadingToFalse(setModifyLoading)
-                            return
-                        }
-                        isNewOnline.current = false
-                        setModifyReason(true)
-                    } else {
-                        if (pluginTest) {
-                            handleTimeLoadingToFalse(setModifyLoading)
-                            return
-                        }
-                        isNewOnline.current = false
-                        setPluginTest(true)
-                    }
+                    uploadType.current = "submit"
+                    uploadPlugin.current = cloneDeep(res)
+                    setShowUploadPlugin(true)
                 })
                 .catch((err) => {
                     handleTimeLoadingToFalse(setModifyLoading)
@@ -738,141 +721,110 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         })
         /** ---------- 按钮组逻辑 End ---------- */
 
-        /** ---------- 同步复制弹窗 & 插件评分弹框 & 修改意见弹框 Start ---------- */
+        /** ---------- 上传/提交插件弹框 Start ---------- */
+        const uploadType = useRef<"upload" | "submit">("upload")
+        // 同步和提交按钮的弹框依赖信息
+        const uploadPlugin = useRef<YakScript>()
+        const [showUploadPlugin, setShowUploadPlugin] = useState<boolean>(false)
+        const handleShowUploadPluginCallback = useMemoizedFn(
+            (result: boolean, plugin?: YakScript, onlinePlugin?: API.PostPluginsResponse) => {
+                if (uploadType.current === "upload" && result) {
+                    if (plugin) {
+                        const info: KeyParamsFetchPluginDetail = {
+                            id: Number(plugin.Id) || 0,
+                            name: plugin.ScriptName,
+                            uuid: plugin.UUID || ""
+                        }
+                        if (isEdit) {
+                            handleEditSuccessCallback({
+                                opType: "upload",
+                                info: info
+                            })
+                            emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
+                        } else {
+                            emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
+                            handleClosePage()
+                        }
+                    }
+                    handleTimeLoadingToFalse(setOnlineLoading)
+                }
+
+                if (uploadType.current === "submit" && result) {
+                    // 提交操作只存在编辑页面，新建无该操作
+                    if (!isEdit) return
+
+                    if (plugin) {
+                        const info: KeyParamsFetchPluginDetail = {
+                            id: Number(plugin.Id) || 0,
+                            name: plugin.ScriptName,
+                            uuid: plugin.UUID || ""
+                        }
+                        handleEditSuccessCallback({
+                            opType: "submit",
+                            info: info
+                        })
+                        emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
+                    } else {
+                        if (onlinePlugin) {
+                            handleEditSuccessCallback({
+                                opType: "submit",
+                                info: {
+                                    id: Number(savedPluginInfo.current?.Id || 0) || 0,
+                                    name: onlinePlugin.script_name,
+                                    uuid: onlinePlugin.uuid
+                                }
+                            })
+                        }
+                    }
+
+                    handleTimeLoadingToFalse(setModifyLoading)
+                }
+
+                setShowUploadPlugin(false)
+            }
+        )
+        /** ---------- 上传/提交插件弹框 End ---------- */
+
+        /** ---------- 复制弹窗 Start ---------- */
         // 同步|复制|提交的插件信息
         const onlineOPPlugin = useRef<API.PluginsRequest>()
-        // 同步还是复制-true为同步|false为复制
-        const syncOrCopy = useRef<boolean>(true)
-        const [syncCopyHint, setSyncCopyHint] = useState<boolean>(false)
-        const handleResetSyncCopyHint = useMemoizedFn(() => {
-            syncOrCopy.current = true
-            setSyncCopyHint(false)
+        const [copyHint, setCopyHint] = useState<boolean>(false)
+        const handleResetCopyHint = useMemoizedFn(() => {
+            setCopyHint(false)
         })
-        const onSyncCopyHintCallback = useMemoizedFn((isCallback: boolean, param?: {type: string; name: string}) => {
+        const onCopyHintCallback = useMemoizedFn((isCallback: boolean, param?: {type: string; name: string}) => {
             // 手动关闭弹窗|没有获取到进行修改的插件信息
             if (!isCallback || !onlineOPPlugin.current) {
-                handleResetSyncCopyHint()
+                handleResetCopyHint()
                 handleTimeLoadingToFalse(setOnlineLoading)
                 if (!onlineOPPlugin.current) yakitNotify("error", "操作未获取到插件信息，请重试!")
                 return
             }
 
-            const isSync = syncOrCopy.current
             setTimeout(() => {
-                handleResetSyncCopyHint()
+                handleResetCopyHint()
             }, 100)
 
-            // 点击弹窗的提交按钮
-            if (!isSync) {
-                if (!param?.name) {
-                    yakitNotify("error", "未获取到复制的新插件名")
-                    handleTimeLoadingToFalse(setOnlineLoading)
-                    return
-                }
-                const request: API.CopyPluginsRequest = {
-                    ...onlineOPPlugin.current,
-                    script_name: param.name,
-                    is_private: true,
-                    base_plugin_id: +(initOnlinePlugin.current?.id || 0)
-                }
-                httpCopyPluginToOnline(request)
-                    .then((onlineRes) => {
-                        // 复制操作只存在编辑页面，新建不存在该操作
-                        // 下载复制的插件
-                        grpcDownloadOnlinePlugin({uuid: onlineRes.uuid})
-                            .then((localRes) => {
-                                yakitNotify("success", "插件复制至云端成功, 并已下载至本地")
-                                if (isEdit) {
-                                    // 刷新我的列表
-                                    emiter.emit("onRefreshOwnPluginList")
-                                    const info: KeyParamsFetchPluginDetail = {
-                                        id: Number(localRes.Id) || 0,
-                                        name: localRes.ScriptName,
-                                        uuid: localRes.UUID || ""
-                                    }
-                                    handleEditSuccessCallback({
-                                        opType: "copy",
-                                        info: info
-                                    })
-                                    emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
-                                }
-                            })
-                            .catch(() => {})
-                    })
-                    .catch(() => {})
-                    .finally(() => {
-                        handleTimeLoadingToFalse(setOnlineLoading)
-                    })
-            } else {
-                // 公开的新插件需要走基础检测流程
-                if (param && param.type === "public") {
-                    if (pluginTest) {
-                        handleTimeLoadingToFalse(setOnlineLoading)
-                        return
-                    }
-                    onlineOPPlugin.current = {...onlineOPPlugin.current, is_private: false}
-                    isNewOnline.current = true
-                    setPluginTest(true)
-                }
-                // 私密的插件直接保存，不用走基础检测流程
-                if (param && param.type === "private") {
-                    httpUploadPluginToOnline({...onlineOPPlugin.current, is_private: true})
-                        .then((onlineRes) => {
-                            // 下载同步的私密插件
-                            grpcDownloadOnlinePlugin({uuid: onlineRes.uuid})
-                                .then((localRes) => {
-                                    yakitNotify("success", "插件同步至云端成功, 并已下载至本地")
-                                    // 刷新我的列表
-                                    emiter.emit("onRefreshOwnPluginList")
-                                    const info: KeyParamsFetchPluginDetail = {
-                                        id: Number(localRes.Id) || 0,
-                                        name: localRes.ScriptName,
-                                        uuid: localRes.UUID || ""
-                                    }
-                                    if (isEdit) {
-                                        handleEditSuccessCallback({
-                                            opType: "upload",
-                                            info: info
-                                        })
-                                        emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
-                                    } else {
-                                        emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
-                                        handleClosePage()
-                                    }
-                                })
-                                .catch(() => {})
-                        })
-                        .catch((err) => {})
-                        .finally(() => {
-                            handleTimeLoadingToFalse(setOnlineLoading)
-                        })
-                }
-            }
-        })
-
-        // 插件评分弹框
-        const isNewOnline = useRef<boolean>(true)
-        const [pluginTest, setPluginTest] = useState<boolean>(false)
-        const onTestCallback = useMemoizedFn((value: boolean) => {
-            if (!onlineOPPlugin.current) {
+            // 复制插件
+            if (!param?.name) {
+                yakitNotify("error", "未获取到复制的新插件名")
                 handleTimeLoadingToFalse(setOnlineLoading)
-                yakitNotify("error", "操作未获取到插件信息，请重试!")
                 return
             }
-
-            if (isNewOnline.current) {
-                if (!value) {
-                    setTimeout(() => {
-                        setPluginTest(false)
-                        setOnlineLoading(false)
-                    }, 200)
-                    return
-                }
-                httpUploadPluginToOnline(onlineOPPlugin.current)
-                    .then((onlineRes) => {
-                        grpcDownloadOnlinePlugin({uuid: onlineRes.uuid})
-                            .then((localRes) => {
-                                yakitNotify("success", "插件同步至云端成功, 并已下载至本地")
+            const request: API.CopyPluginsRequest = {
+                ...onlineOPPlugin.current,
+                script_name: param.name,
+                is_private: true,
+                base_plugin_id: +(initOnlinePlugin.current?.id || 0)
+            }
+            httpCopyPluginToOnline(request)
+                .then((onlineRes) => {
+                    // 复制操作只存在编辑页面，新建不存在该操作
+                    // 下载复制的插件
+                    grpcDownloadOnlinePlugin({uuid: onlineRes.uuid})
+                        .then((localRes) => {
+                            yakitNotify("success", "插件复制至云端成功, 并已下载至本地")
+                            if (isEdit) {
                                 // 刷新我的列表
                                 emiter.emit("onRefreshOwnPluginList")
                                 const info: KeyParamsFetchPluginDetail = {
@@ -880,113 +832,22 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     name: localRes.ScriptName,
                                     uuid: localRes.UUID || ""
                                 }
-                                if (isEdit) {
-                                    handleEditSuccessCallback({
-                                        opType: "upload",
-                                        info: info
-                                    })
-                                    emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
-                                } else {
-                                    emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
-                                    handleClosePage()
-                                }
-                            })
-                            .catch((err) => {})
-                    })
-                    .catch((err) => {})
-                    .finally(() => {
-                        setTimeout(() => {
-                            setPluginTest(false)
-                            setOnlineLoading(false)
-                        }, 200)
-                    })
-            } else {
-                if (value) {
-                    setTimeout(() => {
-                        setPluginTest(false)
-                        setModifyReason(true)
-                    }, 300)
-                } else {
-                    setTimeout(() => {
-                        setPluginTest(false)
-                        setModifyLoading(false)
-                    }, 200)
-                }
-            }
-        })
-
-        // 修改意见弹框
-        const [modifyReason, setModifyReason] = useState<boolean>(false)
-        const onModifyReason = useMemoizedFn((isSubmit: boolean, content?: string) => {
-            if (!isSubmit) {
-                setTimeout(() => {
-                    setModifyReason(false)
-                    setModifyLoading(false)
-                }, 200)
-                return
-            }
-
-            if (!onlineOPPlugin.current) {
-                setTimeout(() => {
-                    setModifyReason(false)
-                    setModifyLoading(false)
-                }, 200)
-                yakitNotify("error", "该插件无线上信息，无法提交修改")
-                return
-            }
-
-            if (isSubmit) {
-                httpUploadPluginToOnline({
-                    ...onlineOPPlugin.current,
-                    uuid: initOnlinePlugin.current?.uuid,
-                    logDescription: content
-                })
-                    .then((res) => {
-                        // 提交操作只存在编辑页面，新建无该操作
-                        if (!isEdit) return
-
-                        const {isUpdate} = res
-                        // 编辑线上插件不存在，操作转为新建线上插件
-                        if (!isUpdate) {
-                            // 下载插件
-                            grpcDownloadOnlinePlugin({uuid: res.uuid})
-                                .then((localRes) => {
-                                    // 刷新我的列表
-                                    emiter.emit("onRefreshOwnPluginList")
-                                    const info: KeyParamsFetchPluginDetail = {
-                                        id: Number(localRes.Id) || 0,
-                                        name: localRes.ScriptName,
-                                        uuid: localRes.UUID || ""
-                                    }
-                                    handleEditSuccessCallback({
-                                        opType: "submit",
-                                        info: info
-                                    })
-                                    emiter.emit("editorLocalNewToLocalList", JSON.stringify(info))
+                                handleEditSuccessCallback({
+                                    opType: "copy",
+                                    info: info
                                 })
-                                .catch(() => {})
-                        } else {
-                            if (isAuthors) {
-                                // 自己插件刷新我的插件列表
-                                emiter.emit("onRefreshOwnPluginList")
+                                emiter.emit("editorLocalSaveToLocalList", JSON.stringify(info))
                             }
-                            handleEditSuccessCallback({
-                                opType: "submit",
-                                info: {
-                                    id: Number(savedPluginInfo.current?.Id || 0) || 0,
-                                    name: res.script_name,
-                                    uuid: res.uuid
-                                }
-                            })
-                        }
-                    })
-                    .catch(() => {})
-                    .finally(() => {
-                        handleTimeLoadingToFalse(setModifyLoading)
-                    })
-            }
+                        })
+                        .catch(() => {})
+                })
+                .catch(() => {})
+                .finally(() => {
+                    handleTimeLoadingToFalse(setOnlineLoading)
+                })
         })
-        /** ---------- 同步复制弹窗 & 插件评分弹框 & 修改意见弹框 End ---------- */
+
+        /** ---------- 同步复制弹窗 End ---------- */
 
         /** ---------- 新建功能页关闭时的二次确认 Start ---------- */
         // 注册页面外部操作的二次提示配置信息
@@ -1144,18 +1005,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             </div>
                         </div>
 
-                        <PluginSyncAndCopyModal
-                            isCopy={!syncOrCopy.current}
-                            visible={syncCopyHint}
-                            setVisible={onSyncCopyHintCallback}
-                        />
-                        <CodeScoreModal
-                            type={onlineOPPlugin.current?.type || ""}
-                            code={onlineOPPlugin.current?.content || ""}
-                            visible={pluginTest}
-                            onCancel={onTestCallback}
-                        />
-                        <ModifyPluginReason visible={modifyReason} onCancel={onModifyReason} />
+                        <PluginSyncAndCopyModal isCopy={true} visible={copyHint} setVisible={onCopyHintCallback} />
 
                         <YakitHint
                             getContainer={wrapperRef.current || undefined}
@@ -1168,6 +1018,14 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             okButtonProps={{loading: copyLoading}}
                             onOk={onOldDataOk}
                             onCancel={onOldDataCancel}
+                        />
+
+                        {/* 单个插件上传 */}
+                        <PluginUploadModal
+                            isLogin={isLogin}
+                            info={uploadPlugin.current}
+                            visible={showUploadPlugin}
+                            callback={handleShowUploadPluginCallback}
                         />
                     </div>
                 </YakitSpin>
