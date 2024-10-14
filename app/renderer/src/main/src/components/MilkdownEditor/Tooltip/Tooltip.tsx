@@ -50,6 +50,7 @@ import {setWrapInBlockType} from "./utils"
 import classNames from "classnames"
 import {alterCommand, alterToParagraphCommand} from "../utils/alertPlugin"
 import {underlineCommand} from "../utils/underline"
+import {commentCommand} from "../utils/commentPlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -171,8 +172,9 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         e.preventDefault()
         action(callCommand(toggleInlineCodeCommand.key))
     })
-    const onComment = useMemoizedFn((e) => {
+    const onAddComment = useMemoizedFn((e) => {
         e.preventDefault()
+        action(callCommand(commentCommand.key, "111"))
     })
     const onText = useMemoizedFn(({label}) => {
         switch (label) {
@@ -292,7 +294,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 <TooltipIcon icon={<IconItalic />} onClick={onEmphasis} />
                 <TooltipIcon icon={<IconUnderline />} onClick={onUnderline} />
                 <TooltipIcon icon={<IconCode2 />} onClick={onAddCode} />
-                <TooltipIcon icon={<OutlineAnnotationIcon />} onClick={onComment} />
+                <TooltipIcon icon={<OutlineAnnotationIcon />} onClick={onAddComment} />
             </div>
         </div>
     )
