@@ -718,6 +718,11 @@ service Yak {
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
+
+  // syntaxflow scan 
+  rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
+  // query result 
+  rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -5474,6 +5479,7 @@ message QuerySyntaxFlowRuleResponse{
   Paging Pagination = 1;
   DbOperateMessage DbMessage= 2;
   repeated SyntaxFlowRule Rule = 3;
+  uint64 Total = 4;
 }
 
 message DeleteSyntaxFlowRuleRequest{
@@ -5496,4 +5502,69 @@ message QuerySyntaxFlowRuleGroupRequest{
 
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
+}
+
+message SyntaxFlowScanRequest{
+  string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
+
+  // 启动扫描任务
+  SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
+  repeated string ProgramName = 3; // 用于指定扫描的程序 
+}
+
+message SyntaxFlowScanResponse{
+  string TaskID = 1;
+  // 扫描状态
+  string Status = 2; // "running" "paused" "stopped" "finished"
+  // 进度 
+  string CurrentRuleName = 3;
+
+  ExecResult ExecResult = 10;
+}
+
+
+message SyntaxFlowResultFilter {
+  repeated string TaskIDs = 1; 
+  repeated string ResultIDs = 2; 
+  repeated string RuleNames = 3;
+  repeated string ProgramNames = 4;
+
+  string Keyword = 5;
+
+  uint64 MinMatchedValue = 6;
+  uint64 MaxMatchedValue = 7;
+}
+
+message QuerySyntaxFlowResultRequest{
+  Paging Pagination = 2;
+  SyntaxFlowResultFilter Filter = 1;
+}
+
+message QuerySyntaxFlowResultResponse{
+  Paging Pagination = 1;
+  DbOperateMessage DbMessage= 2;
+  repeated SyntaxFlowResult Results = 3;
+  uint64 Total = 4;
+}
+
+
+message SyntaxFlowResult {
+  // result ID for yakurl(syntaxflow://)
+  uint64 ResultID  = 1; 
+  string TaskID = 2;
+
+  // rule info 
+  string RuleName = 3;
+  string Title = 4;
+  string TitleZh = 5;
+  string Description = 6;
+  string Severity = 7;
+  string Purpose = 8;
+
+  // target info 
+  string ProgramName = 9;
+  string Language = 10; 
+
+  // runtime info 
+  uint64 RiskCount = 11;
 }

@@ -139,6 +139,11 @@ export interface PocPageInfoProps {
     /**执行任务的状态 */
     hybridScanMode: HybridScanModeType
 }
+
+export interface CodeScanPageInfoProps {
+    selectGroupListByKeyWord?: string[]
+}
+
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string

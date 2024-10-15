@@ -549,7 +549,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Code_Scan:
-            return <YakRunnerCodeScan />
+            return <YakRunnerCodeScan pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Code:
             return <YakRunnerAuditCode />
         default:
