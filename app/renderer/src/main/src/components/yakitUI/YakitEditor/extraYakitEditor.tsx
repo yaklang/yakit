@@ -345,7 +345,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                 yakitNotify("info", "无数据包-无法复制 Body")
                                 return
                             }
-                            ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
+                            ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag:true}).then((bytes: {Raw: Uint8Array}) => {
                                 ipcRenderer
                                     .invoke("BytesToBase64", {
                                         Bytes: bytes.Raw
