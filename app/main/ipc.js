@@ -184,6 +184,7 @@ module.exports = {
         require("./handlers/portScan")(win, getClient)
         require("./handlers/startBrute")(win, getClient)
         require("./handlers/webshell")(win, getClient)
+        require("./handlers/syntaxFlow")(win, getClient)
 
         // start chrome manager
         try {
