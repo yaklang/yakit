@@ -1,11 +1,11 @@
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { RequestYakURLResponse } from "../yakURLTree/data"
-import { FileDefault, FileSuffix, FolderDefault } from "../yakRunner/FileTree/icon"
-import { FileNodeMapProps } from "../yakRunner/FileTree/FileTreeType"
-import { AuditYakUrlProps } from "./AuditCode/AuditCodeType"
-import { YakRunnerHistoryProps } from "../yakRunner/YakRunnerType"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RequestYakURLResponse} from "../yakURLTree/data"
+import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
+import {FileNodeMapProps} from "../yakRunner/FileTree/FileTreeType"
+import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
+import {YakRunnerHistoryProps} from "../yakRunner/YakRunnerType"
 import emiter from "@/utils/eventBus/eventBus"
-import { failed } from "@/utils/notification"
+import {failed} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -82,8 +82,6 @@ export const grpcFetchDeleteAudit: (path: string) => Promise<FileNodeMapProps[]>
     })
 }
 
-
-
 interface YakRunnerLastFolderExpandedProps {
     folderPath: string
     expandedKeys: string[]
@@ -119,13 +117,12 @@ export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExp
     })
 }
 
-
 /**
  * @name 代码审计
  */
 export const loadAuditFromYakURLRaw = (
     params: AuditYakUrlProps,
-    body: Uint8Array
+    body?: Uint8Array
 ): Promise<RequestYakURLResponse | null> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
@@ -160,7 +157,6 @@ export const getNameByPath = (filePath: string): Promise<string> => {
             })
     })
 }
-
 
 const YakRunnerAuditOpenHistory = "YakRunnerAuditOpenHistory"
 
