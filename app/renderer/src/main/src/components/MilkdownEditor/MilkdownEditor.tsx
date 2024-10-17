@@ -31,6 +31,7 @@ import {useCreation, useMemoizedFn} from "ahooks"
 import {underlinePlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
+import {trailing} from "@milkdown/kit/plugin/trailing"
 
 const markdown = `
 
@@ -131,6 +132,12 @@ Editor
 `
 const markdown1 = `
 #ggg
+| Feature      | Description                                          | Example                   |
+| ------------ | ---------------------------------------------------- | ------------------------- |
+| 🎨 Theme     | Create your own theme with CSS                       | Nord, Dracula             |
+| 🧩 Plugin    | Create your own plugin to extend the editor          | Search, Collab            |
+| 📦 Component | Create your own component to build your own editor   | Slash Menu, Toolbar       |
+| 📚 Syntax    | Create your own syntax to extend the markdown parser | Image with Caption, LaTex |
 `
 const markdown2 = `#ggg
 fsdfsdf
@@ -173,7 +180,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, markdown1)
+                    ctx.set(defaultValueCtx, markdown)
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
@@ -208,6 +215,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(tooltip)
                 .use(history)
                 .use(clipboard)
+                // trailing
+                .use(trailing)
                 // Add a custom node view
                 .use(
                     $view(blockquoteSchema.node, () =>
