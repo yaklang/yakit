@@ -1,4 +1,4 @@
-import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, editorStateCtx, rootCtx} from "@milkdown/kit/core"
 import React, {useEffect} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
@@ -9,8 +9,8 @@ import {clipboard} from "@milkdown/kit/plugin/clipboard"
 
 import {ProsemirrorAdapterProvider, useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
 import {tooltip, TooltipView} from "./Tooltip/Tooltip"
-import {BlockView, menuAPI} from "./Block"
-import {block} from "@milkdown/plugin-block" // 引入block插件
+import {BlockView} from "./Block/Block"
+import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {cursor} from "@milkdown/kit/plugin/cursor"
 import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 
@@ -27,13 +27,16 @@ import {alterCustomPlugin} from "./utils/alertPlugin"
 import {commentPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {underlinePlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
+import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
 
 const markdown = `
 
 :u[This text will be underlined]
+
+***
 
 :comment[fdsfdsfds]{commentId="111"}
 
@@ -126,31 +129,57 @@ Editor
 - List item 3
 
 `
-const markdown1 = `#ggg`
+const markdown1 = `
+#ggg
+`
 const markdown2 = `#ggg
 fsdfsdf
 `
+
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const {setEditor, customPlugin = []} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
+
+    const blockPlugins: MilkdownPlugin[] = useCreation(() => {
+        return [
+            block,
+            (ctx: Ctx) => () => {
+                ctx.set(block.key, {
+                    view: pluginViewFactory({
+                        component: BlockView
+                    })
+                })
+            },
+            (ctx: Ctx) => () => {
+                ctx.update(blockConfig.key, () => ({
+                    filterNodes: (pos, node) => {
+                        if (node.type.name === "paragraph" && !node.content.size) {
+                            return true
+                        }
+                        return false
+                    }
+                }))
+            }
+        ].flat()
+    }, [pluginViewFactory])
+
+    const placeholder = useCreation(() => {
+        return [placeholderConfig, placeholderPlugin].flat()
+    }, [])
 
     const {get} = useEditor((root) => {
         return (
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, markdown)
+                    ctx.set(defaultValueCtx, markdown1)
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
                         })
                     })
-                    ctx.set(block.key, {
-                        view: pluginViewFactory({
-                            component: BlockView
-                        })
-                    })
+
                     ctx.update(imageBlockConfig.key, (value) => ({
                         uploadButton: () => <div>uploadButton</div>,
                         imageIcon: () => <div>imageBlockConfig-imageIcon</div>,
@@ -188,8 +217,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     )
                 )
                 // block
-                .use(block) // 使用 block 插件，启用块手柄
-                .use(menuAPI)
+                .use(blockPlugins)
                 // image
                 .use(imageBlockComponent)
                 // listItem
@@ -207,8 +235,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // linkTooltip
                 .use(linkTooltipPlugin)
                 // placeholder
-                .use(placeholderPlugin)
-                .use(placeholderConfig)
+                .use(placeholder)
+                // table
+                // .use(tableBlock)
                 // alterCustomPlugin
                 .use([...alterCustomPlugin()])
                 // underlinePlugin
