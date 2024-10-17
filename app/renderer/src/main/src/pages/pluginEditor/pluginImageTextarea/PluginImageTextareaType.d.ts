@@ -16,6 +16,7 @@ export interface PluginImageTextareaProps {
     ref?: ForwardedRef<PluginImageTextareaRefProps>
     /** 使用场景: 评论|补充资料 */
     type?: "comment" | "supplement"
+    className?: string
     onSubmit?: (data: ImageTextareaData) => any
 }
 

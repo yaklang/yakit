@@ -36,6 +36,7 @@ import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
+import {PluginLog} from "../pluginLog/PluginLog"
 
 const {TabPane} = PluginTabs
 
@@ -823,7 +824,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         basePluginName={copySourcePlugin}
                                         infoExtra={infoExtraNode}
                                     />
-                                    <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} />
+                                    {/* <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} /> */}
+                                    {onlinePlugin && <PluginLog getContainer={wrapperId} plugin={onlinePlugin} />}
                                 </div>
                             </TabPane>
                         </PluginTabs>

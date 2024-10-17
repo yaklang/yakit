@@ -19,7 +19,7 @@ const ImgMaxSize = 1 * 1024 * 1024
 
 export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
     forwardRef((props, ref) => {
-        const {type = "comment", onSubmit} = props
+        const {className, type = "comment", onSubmit} = props
 
         useImperativeHandle(
             ref,
@@ -46,7 +46,11 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
             }
         })
 
-        const onReply = useMemoizedFn(() => {})
+        const onReply = useMemoizedFn(() => {
+            const data = getData()
+            if (!data) return
+            onSubmit && onSubmit(data)
+        })
 
         /** ----------  引用相关功能 Start ---------- */
         const quotationInfo = useRef<{name: string; content: string}>()
@@ -194,12 +198,16 @@ export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
 
         return (
             <div
-                className={classNames(styles["plugin-image-textarea"], {
-                    [styles["plugin-image-textarea-focus"]]: textareaFocus
-                })}
+                className={classNames(
+                    styles["plugin-image-textarea"],
+                    {
+                        [styles["plugin-image-textarea-focus"]]: textareaFocus
+                    },
+                    className
+                )}
                 onClick={handleTextareaFocus}
             >
-                {(false || !!quotaionContent) && (
+                {(true || !!quotaionContent) && (
                     <div className={styles["plugin-image-textarea-quotation"]}>
                         <div className={styles["del-btn"]} onClick={handleDelQuotation}>
                             <OutlineXIcon />
