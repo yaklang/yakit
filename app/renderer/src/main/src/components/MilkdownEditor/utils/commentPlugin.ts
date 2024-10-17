@@ -1,13 +1,6 @@
 import {$command, $nodeSchema, $nodeAttr} from "@milkdown/utils"
-import {setBlockType, wrapIn} from "@milkdown/kit/prose/commands"
-import {$inputRule, $remark} from "@milkdown/kit/utils"
-import {wrappingInputRule} from "@milkdown/prose/inputrules"
-import directive from "remark-directive"
-import {Attrs, MarkType} from "@milkdown/kit/prose/model"
-import {Selection, TextSelection} from "@milkdown/kit/prose/state"
-import {nodeViewCtx} from "@milkdown/kit/core"
-import {setWrapInBlockType} from "../Tooltip/utils"
-import {headingSchema} from "@milkdown/kit/preset/commonmark"
+import {Attrs} from "@milkdown/kit/prose/model"
+import {TextSelection} from "@milkdown/kit/prose/state"
 
 const commentCustomId = "comment-custom"
 const commentCustomAttr = $nodeAttr("comment-custom", () => ({"data-type": commentCustomId}))
