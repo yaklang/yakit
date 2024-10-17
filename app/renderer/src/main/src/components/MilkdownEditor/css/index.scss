@@ -8,6 +8,7 @@
 @use "./placeholder.scss";
 @use "./blockquote.scss";
 @use "./hr.scss";
+@use "./table.scss";
 
 .milkdown {
     overscroll-behavior: none;
@@ -18,7 +19,8 @@
     color: var(--yakit-header-color);
     font-size: 14px;
     font-weight: 400;
-    line-height: 20px;
+    line-height: 24px;
+    background-color: aliceblue;
     code {
         height: 20px;
         border-radius: 4px;
@@ -32,7 +34,8 @@
         white-space: normal;
     }
     .ProseMirror-selectednode {
-        outline: 2px solid fuchsia;
+        background-color: var(--yakit-primary-2);
+        border-radius: 4px;
     }
 
     .ProseMirror-focused {
