@@ -16,7 +16,7 @@ const customTypes = ["danger", "success", "tip", "note", "warning", "caution"]
 // note
 const rule = /:::(danger|success|tip|note|warning|caution)(\s|\n)/
 
-const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
+export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
     group: "block",
     content: `block*`,
     atom: true,

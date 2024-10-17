@@ -46,11 +46,11 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {toggleStrikethroughCommand} from "@milkdown/kit/preset/gfm"
 import {NodeType, Attrs} from "@milkdown/kit/prose/model"
 import {Transaction} from "@milkdown/kit/prose/state"
-import {setWrapInBlockType} from "./utils"
 import classNames from "classnames"
 import {alterCommand, alterToParagraphCommand} from "../utils/alertPlugin"
 import {underlineCommand} from "../utils/underline"
 import {commentCommand} from "../utils/commentPlugin"
+import {setWrapInBlockType} from "../utils/utils"
 
 export const tooltip = tooltipFactory("Text")
 
