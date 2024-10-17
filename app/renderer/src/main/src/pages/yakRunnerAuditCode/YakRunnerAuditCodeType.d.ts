@@ -26,7 +26,7 @@ export interface OpenFileByPathProps {
 }
 
 export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {
-    Body: string
+    Body?: string
 }
 
 

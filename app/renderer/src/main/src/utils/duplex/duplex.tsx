@@ -54,9 +54,7 @@ export const startupDuplexConn = () => {
                     break
                 // 代码扫描-审计结果表
                 case "syntaxflow_result":
-                    if(obj.action === "create"){
-                        emiter.emit("onRefreshCodeScanResult",obj.task_id)
-                    }
+                    emiter.emit("onRefreshCodeScanResult",JSON.stringify(obj))
                     break
                 }
                 

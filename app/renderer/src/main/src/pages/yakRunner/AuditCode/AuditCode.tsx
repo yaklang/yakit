@@ -360,7 +360,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 return
             }
             if (childArr.length > 0) {
-                emiter.emit("onRefreshFileTree")
+                emiter.emit("onRefreshAuditTree")
                 resolve("")
             } else {
                 if (lastValue.current.length > 0) {

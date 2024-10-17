@@ -35,7 +35,15 @@ export interface CodeScanByGroupProps {
     selectGroupList: string[]
 }
 
+export interface CodeScanExecuteContentRefProps {
+    onStopExecute: () => void
+    onStartExecute: () => void
+    onPause: () => void
+    onContinue: () => void
+}
+
 export interface CodeScaMainExecuteContentProps {
+    ref?: React.ForwardedRef<CodeScanExecuteContentRefProps>
     isExpand: boolean
     setIsExpand: (v: boolean) => void
     setHidden: (v: boolean) => void
@@ -121,7 +129,7 @@ export interface SyntaxFlowScanRequest {
     ProgramName: string[]
 }
 
-export type SyntaxFlowScanStatus = "running" | "paused" | "stopped" | "finished"
+export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
 
 export interface SyntaxFlowScanResponse {
     TaskID: string
@@ -136,8 +144,10 @@ export interface SyntaxFlowResultFilter {
     RuleNames: string[]
     ProgramNames: string[]
     Keyword: string
-    MinMatchedValue: number
-    MaxMatchedValue: number
+    OnlyRisk: boolean
+    AfterID?: number
+    BeforeID?: number
+    Severity?: string[]
 }
 
 export interface QuerySyntaxFlowResultRequest {

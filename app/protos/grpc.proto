@@ -2997,6 +2997,10 @@ message Risk {
   string TaskName = 26;
   string Tags = 27;
   bool IsRead = 28;
+
+  uint64 ResultID = 30;
+  string SyntaxFlowVariable = 31;
+  string ProgramName  = 32;
 }
 
 message QueryRisksRequest {
@@ -5503,7 +5507,6 @@ message QuerySyntaxFlowRuleGroupRequest{
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
 }
-
 message SyntaxFlowScanRequest{
   string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
 
@@ -5516,10 +5519,12 @@ message SyntaxFlowScanResponse{
   string TaskID = 1;
   // 扫描状态
   string Status = 2; // "running" "paused" "stopped" "finished"
-  // 进度 
-  string CurrentRuleName = 3;
 
-  ExecResult ExecResult = 10;
+  ExecResult ExecResult = 3;
+
+  // result 
+  SyntaxFlowResult Result = 4;
+  repeated Risk risks = 5;
 }
 
 
@@ -5531,8 +5536,13 @@ message SyntaxFlowResultFilter {
 
   string Keyword = 5;
 
-  uint64 MinMatchedValue = 6;
-  uint64 MaxMatchedValue = 7;
+
+  bool OnlyRisk = 6;
+
+  int64 AfterID = 7; 
+  int64 BeforeID = 8;
+
+  repeated string Severity = 9;  //  "info", "low", "middle", "critical", "high"
 }
 
 message QuerySyntaxFlowResultRequest{
@@ -5558,7 +5568,7 @@ message SyntaxFlowResult {
   string Title = 4;
   string TitleZh = 5;
   string Description = 6;
-  string Severity = 7;
+  string Severity = 7; //  "info", "low", "middle", "critical", "high"
   string Purpose = 8;
 
   // target info 

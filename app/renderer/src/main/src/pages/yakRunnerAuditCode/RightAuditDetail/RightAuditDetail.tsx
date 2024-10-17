@@ -325,7 +325,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             const svg = svgRef.current as SVGSVGElement
             svg.style.transform = `scale(${scale})`
             svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
-            // console.log("uuu", offset)
             svg.style.position = "relative"
             svg.style.left = `${offset.x}px`
             svg.style.top = `${offset.y}px`
@@ -470,48 +469,50 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     }, [isShowAuditDetail, auditRightParams])
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
-        clearMapGraphInfoDetail()
-        const {Schema, Location, Path, Body} = params
-        const body = StringToUint8Array(Body)
-        const result = await loadAuditFromYakURLRaw({Schema, Location, Path}, body)
-        if (result && result.Resources.length > 0) {
-            result.Resources[0].Extra.forEach((item) => {
-                if (item.Key === "graph") {
-                    setGraph(item.Value)
-                }
-                if (item.Key === "graph_info") {
-                    try {
-                        let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
-                        graph_info.forEach((item) => {
-                            setMapGraphInfoDetail(item.node_id, item)
-                        })
-                    } catch (error) {}
-                }
-                if (item.Key === "message") {
-                    setMessage(item.Value)
-                }
-                if (item.Key === "node_id") {
-                    setNodeId(item.Value)
-                }
-                if (item.Key === "graph_line") {
-                    try {
-                        let graph_info: string[][] = JSON.parse(item.Value)
-                        // 当数量小于等于10条时默认第一级展开
-                        if (graph_info.length > 0 && graph_info.length <= 10) {
-                            const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
-                            setActiveKey(expendKey)
-                        } else {
+        try {
+            clearMapGraphInfoDetail()
+            const {Body, ...auditYakUrl} = params
+            const body = Body ? StringToUint8Array(Body) : undefined
+            const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
+            if (result && result.Resources.length > 0) {
+                result.Resources[0].Extra.forEach((item) => {
+                    if (item.Key === "graph") {
+                        setGraph(item.Value)
+                    }
+                    if (item.Key === "graph_info") {
+                        try {
+                            let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
+                            graph_info.forEach((item) => {
+                                setMapGraphInfoDetail(item.node_id, item)
+                            })
+                        } catch (error) {}
+                    }
+                    if (item.Key === "message") {
+                        setMessage(item.Value)
+                    }
+                    if (item.Key === "node_id") {
+                        setNodeId(item.Value)
+                    }
+                    if (item.Key === "graph_line") {
+                        try {
+                            let graph_info: string[][] = JSON.parse(item.Value)
+                            // 当数量小于等于10条时默认第一级展开
+                            if (graph_info.length > 0 && graph_info.length <= 10) {
+                                const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
+                                setActiveKey(expendKey)
+                            } else {
+                                setActiveKey(undefined)
+                            }
+                            setGraphLine(graph_info)
+                        } catch (error) {
+                            setGraphLine(undefined)
                             setActiveKey(undefined)
                         }
-                        setGraphLine(graph_info)
-                    } catch (error) {
-                        setGraphLine(undefined)
-                        setActiveKey(undefined)
                     }
-                }
-            })
-            setRefresh(!refresh)
-        }
+                })
+                setRefresh(!refresh)
+            }
+        } catch (error) {}
     })
 
     // 跳转详情
