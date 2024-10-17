@@ -40,4 +40,9 @@ export interface Risk {
     ResponseString?: string
     /**前端使用:表格样式 */
     cellClassName?: string
+
+    /** 代码扫描 */
+    ResultID?: number
+    SyntaxFlowVariable?: string
+    ProgramName?: string
 }

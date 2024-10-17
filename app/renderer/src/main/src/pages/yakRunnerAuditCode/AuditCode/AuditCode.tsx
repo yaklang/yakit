@@ -37,6 +37,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {
     OutlinCompileIcon,
     OutlineArrowcirclerightIcon,
+    OutlineBugIcon,
     OutlineChevronrightIcon,
     OutlineDeprecatedIcon,
     OutlineScanIcon,
@@ -181,6 +182,11 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                                 </Tooltip>
                             )}
                         </div>
+                        {info.ResourceType === "variable" && info.VerboseType === "alert" && (
+                            <div className={styles["bug"]}>
+                                <OutlineBugIcon />
+                            </div>
+                        )}
                         {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
                     </div>
                 </div>
@@ -190,13 +196,27 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 })
 
 export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
-    const {data, expandedKeys, setExpandedKeys, onLoadData, foucsedKey, setFoucsedKey, onJump} = props
+    const {
+        data,
+        expandedKeys,
+        setExpandedKeys,
+        onLoadData,
+        foucsedKey,
+        setFoucsedKey,
+        onJump,
+        onlyJump,
+        wrapClassName
+    } = props
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
 
     const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
+        if (onlyJump) {
+            onJump(node)
+            return
+        }
         if (detail?.url) {
             emiter.emit("onCodeAuditScrollToFileTree", detail?.url)
         }
@@ -252,7 +272,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     })
 
     return (
-        <div ref={wrapper} className={styles["audit-tree"]}>
+        <div ref={wrapper} className={classNames(styles["audit-tree"], wrapClassName)}>
             <Tree
                 ref={treeRef}
                 height={size?.height}
@@ -294,17 +314,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
 
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
-    const onCodeAuditRefreshAuditTreeFun = useMemoizedFn(() => {
-        setRefreshTree(!refreshTree)
-    })
-
-    useEffect(() => {
-        // 刷新审计树
-        emiter.on("onCodeAuditRefreshAuditTree", onCodeAuditRefreshAuditTreeFun)
-        return () => {
-            emiter.off("onCodeAuditRefreshAuditTree", onCodeAuditRefreshAuditTreeFun)
-        }
-    }, [])
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
         return ids.map((id) => {
@@ -358,7 +367,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 return
             }
             if (childArr.length > 0) {
-                emiter.emit("onCodeAuditRefreshFileTree")
+                setRefreshTree(!refreshTree)
                 resolve("")
             } else {
                 if (lastValue.current.length > 0) {
@@ -393,7 +402,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         })
                         setMapAuditChildDetail(path, variableIds)
                         setTimeout(() => {
-                            emiter.emit("onCodeAuditRefreshAuditTree")
+                            setRefreshTree(!refreshTree)
                             resolve("")
                         }, 300)
                     } else {
@@ -417,7 +426,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         clearMapAuditChildDetail()
         clearMapAuditDetail()
         setExpandedKeys([])
-        emiter.emit("onCodeAuditRefreshAuditTree")
+        setRefreshTree(!refreshTree)
     })
 
     useUpdateEffect(() => {
@@ -440,7 +449,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             lastValue.current = value
             const result = await loadAuditFromYakURLRaw(params, body)
             if (result && result.Resources.length > 0) {
-                const TopId = "top-message"
                 let messageIds: string[] = []
                 let variableIds: string[] = []
                 // 构造树结构
@@ -490,7 +498,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     setMapAuditChildDetail(TopId, messageIds)
                 }
                 setMapAuditChildDetail("/", [...topIds, ...variableIds])
-                emiter.emit("onCodeAuditRefreshAuditTree")
+                setRefreshTree(!refreshTree)
             } else {
                 setShowEmpty(true)
             }

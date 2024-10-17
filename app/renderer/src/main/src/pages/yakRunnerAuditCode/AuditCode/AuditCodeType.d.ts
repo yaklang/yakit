@@ -1,8 +1,8 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 
 export interface YakURLKVPair {
-    Key: string;
-    Value: string;
+    Key: string
+    Value: string
 }
 
 export interface AuditCodeProps {}
@@ -14,19 +14,21 @@ export interface AuditTreeProps {
     onLoadData: (node: AuditNodeProps) => Promise<any>
     foucsedKey: string
     setFoucsedKey: (v: string) => void
-    onJump: (v:AuditNodeProps) => void
+    onJump: (v: AuditNodeProps) => void
+    onlyJump?: boolean
+    wrapClassName?: string
 }
 
-export interface AuditNodeDetailProps{
-    fileName: string;
-    start_line: number;
-    url: string;
+export interface AuditNodeDetailProps {
+    fileName: string
+    start_line: number
+    url: string
 }
 
 export interface AuditTreeNodeProps {
     info: AuditNodeProps
     expandedKeys: string[]
-    onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?:AuditNodeDetailProps) => any
+    onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     setFoucsedKey: (v: string) => void
@@ -70,6 +72,10 @@ export interface AuditNodeProps {
 
 export interface AuditYakUrlProps {
     Schema: string
-    Location: string
-    Path: string
+    Path: string 
+    // 正常操作查询
+    Location?: string
+    // 带参查询
+    ProgramName?: string
+    Query?: {Key: string; Value: number}[]
 }

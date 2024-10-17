@@ -67,3 +67,17 @@ export interface YakitRiskSelectTagProps {
     onClose?: () => void
     onSave: (info: Risk) => void
 }
+
+export interface YakitCodeScanRiskDetailsProps {
+    className?: string
+    info: Risk
+    onClickIP?: (info: Risk) => void
+    border?: boolean
+}
+
+export interface YakURLDataItemProps {
+    index:string
+    code_range:string
+    source: string
+    ResourceType:string
+}

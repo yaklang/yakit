@@ -1,8 +1,9 @@
-import React, {useEffect, useReducer, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useReducer, useRef, useState} from "react"
 import {
     CodeScaMainExecuteContentProps,
     CodeScanByGroupProps,
     CodeScanExecuteContentProps,
+    CodeScanExecuteContentRefProps,
     CodeScanGroupByKeyWordItemProps,
     CodeScanGroupByKeyWordProps,
     FlowRuleDetailsListItemProps,
@@ -50,7 +51,12 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {addToTab} from "../MainTabs"
-import {apiFetchQuerySyntaxFlowRule, apiFetchQuerySyntaxFlowRuleGroup, apiSyntaxFlowScan} from "./utils"
+import {
+    apiCancelSyntaxFlowScan,
+    apiFetchQuerySyntaxFlowRule,
+    apiFetchQuerySyntaxFlowRuleGroup,
+    apiSyntaxFlowScan
+} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -58,6 +64,8 @@ import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {isCommunityEdition} from "@/utils/envfile"
+import {WaterMark} from "@ant-design/pro-layout"
 const {ipcRenderer} = window.require("electron")
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -278,8 +286,16 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     useEffect(() => {
         getAduitList()
     }, [])
+
+    const waterMarkStr = useMemo(() => {
+        if (isCommunityEdition()) {
+            return "Yakit技术浏览版仅供技术交流使用"
+        }
+        return " "
+    }, [])
+
     return (
-        <>
+        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakitSpin spinning={loading}>
                 {isShowAuditCode ? (
                     <div className={styles["no-audit"]}>
@@ -335,7 +351,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     </div>
                 )}
             </YakitSpin>
-        </>
+        </WaterMark>
     )
 }
 
@@ -472,6 +488,8 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
 
 const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo((props) => {
     const {onClearAll, selectGroupList, pageInfo} = props
+    /** 子组件方法传递给父组件 */
+    const codeScanExecuteContentRef = useRef<CodeScanExecuteContentRefProps>(null)
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
         defaultValue: false,
         valuePropName: "hidden",
@@ -507,8 +525,8 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     }, [selectGroupList])
 
     const isShowFlowRule = useCreation(() => {
-        return selectGroupList.length > 0 || isExecuting
-    }, [selectGroupList, isExecuting])
+        return selectGroupList.length > 0
+    }, [selectGroupList])
 
     const onExpand = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -519,13 +537,22 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         setExecuteStatus(val)
     })
 
-    const onStartExecute = useMemoizedFn(() => {})
+    const onExecuteInTop = useMemoizedFn((e) => {
+        e.stopPropagation()
+        codeScanExecuteContentRef.current?.onStartExecute()
+    })
 
-    const onStopExecute = useMemoizedFn(() => {})
+    const onStopExecute = useMemoizedFn(() => {
+        codeScanExecuteContentRef.current?.onStopExecute()
+    })
 
-    const onPause = useMemoizedFn((e) => {})
+    const onPause = useMemoizedFn((e) => {
+        codeScanExecuteContentRef.current?.onPause()
+    })
 
-    const onContinue = useMemoizedFn((e) => {})
+    const onContinue = useMemoizedFn((e) => {
+        codeScanExecuteContentRef.current?.onContinue()
+    })
 
     return (
         <>
@@ -563,7 +590,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         {progressList.length === 1 && (
                             <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                         )}
-                        <YakitButton
+                        {/* <YakitButton
                             type='text'
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -572,11 +599,11 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                             style={{padding: 0}}
                         >
                             任务列表
-                        </YakitButton>
+                        </YakitButton> */}
                         {isExecuting
                             ? !isExpand && (
                                   <>
-                                      {executeStatus === "paused" && !pauseLoading && (
+                                      {/* {executeStatus === "paused" && !pauseLoading && (
                                           <YakitButton onClick={onContinue} loading={continueLoading}>
                                               继续
                                           </YakitButton>
@@ -585,7 +612,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                           <YakitButton onClick={onPause} loading={pauseLoading}>
                                               暂停
                                           </YakitButton>
-                                      )}
+                                      )} */}
                                       <YakitButton
                                           danger
                                           onClick={onStopExecute}
@@ -598,7 +625,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                               )
                             : !isExpand && (
                                   <>
-                                      <YakitButton onClick={onStartExecute}>执行</YakitButton>
+                                      <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
                                       <div className={styles["divider-style"]}></div>
                                   </>
                               )}
@@ -614,6 +641,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                 </ExpandAndRetract>
                 <div className={styles["code-scan-executor-body"]}>
                     <CodeScanMainExecuteContent
+                        ref={codeScanExecuteContentRef}
                         isExpand={isExpand}
                         setIsExpand={setIsExpand}
                         setProgressList={setProgressList}
@@ -639,223 +667,276 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     )
 })
 
-export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo((props) => {
-    const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList} = props
-    const [form] = Form.useForm()
+export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList} = props
+        const [form] = Form.useForm()
 
-    const [runtimeId, setRuntimeId] = useState<string>("")
-
-    const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "pauseLoading",
-        trigger: "setPauseLoading"
-    })
-    const [continueLoading, setContinueLoading] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "continueLoading",
-        trigger: "setContinueLoading"
-    })
-    /**执行状态 */
-    const [executeStatus, setExecuteStatus] = useControllableValue<any>(props, {
-        defaultValue: "default",
-        valuePropName: "executeStatus",
-        trigger: "setExecuteStatus"
-    })
-    const [token, setToken] = useState(randomString(20))
-
-    const isExecuting = useCreation(() => {
-        if (executeStatus === "process") return true
-        if (executeStatus === "paused") return true
-        return false
-    }, [])
-
-    const isShowResult = useCreation(() => {
-        return isExecuting || runtimeId
-    }, [isExecuting, runtimeId])
-
-    const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
-        logState: []
-    })
-
-    // logs
-    let messages = useRef<StreamResult.Log[]>([])
-
-    useEffect(() => {
-        let id = setInterval(() => {
-            setStreamInfo({logState: messages.current})
-        }, 500)
-        return () => clearInterval(id)
-    }, [])
-
-    useEffect(() => {
-        ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
-            if (res) {
-                const data = res.ExecResult
-                if (!!res.Status) {
-                    setExecuteStatus(res.Status)
+        useImperativeHandle(
+            ref,
+            () => ({
+                onStopExecute,
+                onPause,
+                onContinue,
+                onStartExecute: () => {
+                    form.validateFields()
+                        .then(onStartExecute)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
                 }
-                if (!!data?.RuntimeID) {
-                    setRuntimeId(data.RuntimeID)
-                }
-                if (data.IsMessage) {
-                    try {
-                        let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-                        if (obj.type === "log") {
-                            const log = obj.content as StreamResult.Log
-                            messages.current.unshift({
-                                ...log,
-                                id: res.TaskID
-                            })
-                            // 只缓存 100 条结果（日志类型 + 数据类型）
-                            if (messages.current.length > 100) {
-                                messages.current.pop()
+            }),
+            [form]
+        )
+
+        const [runtimeId, setRuntimeId] = useState<string>("")
+
+        const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "pauseLoading",
+            trigger: "setPauseLoading"
+        })
+        const [continueLoading, setContinueLoading] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "continueLoading",
+            trigger: "setContinueLoading"
+        })
+        /**执行状态 */
+        const [executeStatus, setExecuteStatus] = useControllableValue<SyntaxFlowScanExecuteState>(props, {
+            defaultValue: "default",
+            valuePropName: "executeStatus",
+            trigger: "setExecuteStatus"
+        })
+        const [token, setToken] = useState(randomString(20))
+
+        const isExecuting = useCreation(() => {
+            if (executeStatus === "process") return true
+            if (executeStatus === "paused") return true
+            return false
+        }, [executeStatus])
+
+        const isShowResult = useCreation(() => {
+            return isExecuting || runtimeId
+        }, [isExecuting, runtimeId])
+
+        const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
+            logState: []
+        })
+
+        // logs
+        let messages = useRef<StreamResult.Log[]>([])
+
+        useEffect(() => {
+            let id = setInterval(() => {
+                setStreamInfo({logState: messages.current})
+            }, 500)
+            return () => clearInterval(id)
+        }, [])
+
+        useEffect(() => {
+            ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
+                if (res) {
+                    const data = res.ExecResult
+                    if (!!res.Status) {
+                        switch (res.Status) {
+                            case "done":
+                                setExecuteStatus("finished")
+                                break
+                            case "error":
+                                setExecuteStatus("error")
+                                break
+                            case "executing":
+                                setPauseLoading(false)
+                                setContinueLoading(false)
+                                setExecuteStatus("process")
+                                break
+                            case "paused":
+                                setExecuteStatus("paused")
+                                break
+                            default:
+                                break
+                        }
+                    }
+                    if (!!data?.RuntimeID) {
+                        setRuntimeId(data.RuntimeID)
+                    }
+                    if (data.IsMessage) {
+                        try {
+                            let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+                            if (obj.type === "log") {
+                                const log = obj.content as StreamResult.Log
+                                messages.current.unshift({
+                                    ...log,
+                                    id: res.TaskID
+                                })
+                                // 只缓存 100 条结果（日志类型 + 数据类型）
+                                if (messages.current.length > 100) {
+                                    messages.current.pop()
+                                }
                             }
-                        }
-                        if (obj.type === "progress") {
-                            setProgressList([obj.content] as StreamResult.Progress[])
-                        }
-                    } catch (error) {}
+                            if (obj.type === "progress") {
+                                setProgressList([obj.content] as StreamResult.Progress[])
+                            }
+                        } catch (error) {}
+                    }
+                }
+            })
+            ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+                setTimeout(() => {
+                    setExecuteStatus("error")
+                    setPauseLoading(false)
+                    setContinueLoading(false)
+                }, 200)
+                yakitNotify("error", `[Mod] flow-scan error: ${error}`)
+            })
+            ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+                info("[SyntaxFlowScan] finished")
+                setTimeout(() => {
+                    messages.current = []
+                    setPauseLoading(false)
+                    setContinueLoading(false)
+                }, 200)
+            })
+            return () => {
+                ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            }
+        }, [])
+
+        /**开始执行 */
+        const onStartExecute = useMemoizedFn(async (value) => {
+            const {project} = value
+            const params: SyntaxFlowScanRequest = {
+                ControlMode: "start",
+                ProgramName: [project],
+                Filter: {
+                    RuleNames: [],
+                    Language: [],
+                    GroupNames: selectGroupList,
+                    Severity: [],
+                    Purpose: [],
+                    Tag: [],
+                    Keyword: ""
                 }
             }
+            console.log("onStartExecute---", params)
+            apiSyntaxFlowScan(params, token).then(() => {
+                setIsExpand(false)
+                setExecuteStatus("process")
+                if (setHidden) setHidden(true)
+            })
         })
-        ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            setTimeout(() => {
-                setExecuteStatus("error")
-                setPauseLoading(false)
-                setContinueLoading(false)
-            }, 200)
-            yakitNotify("error", `[Mod] flow-scan error: ${error}`)
+
+        /**取消执行 */
+        const onStopExecute = useMemoizedFn(() => {
+            apiCancelSyntaxFlowScan(token).then(() => {
+                setExecuteStatus("finished")
+            })
         })
-        ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            info("[SyntaxFlowScan] finished")
-            setTimeout(() => {
-                messages.current = []
-                setPauseLoading(false)
-                setContinueLoading(false)
-            }, 200)
+
+        /**暂停 */
+        const onPause = useMemoizedFn(() => {
+            setPauseLoading(true)
+            // apiHybridScanByMode(runtimeId, "pause", tokenRef.current)
         })
-        return () => {
-            ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
-        }
-    }, [])
 
-    /**开始执行 */
-    const onStartExecute = useMemoizedFn(async (value) => {
-        const {project} = value
-        const params: SyntaxFlowScanRequest = {
-            ControlMode: "start",
-            ProgramName: [project],
-            Filter: {
-                RuleNames: [],
-                Language: [],
-                GroupNames: selectGroupList,
-                Severity: [],
-                Purpose: [],
-                Tag: [],
-                Keyword: ""
-            }
-        }
-        console.log("onStartExecute---", params)
-        apiSyntaxFlowScan(params, token).then(() => {
-            setIsExpand(false)
-            setExecuteStatus("process")
-            if (setHidden) setHidden(true)
+        /**继续 */
+        const onContinue = useMemoizedFn(() => {
+            setContinueLoading(true)
+            // hybridScanStreamEvent.reset()
+            // apiHybridScanByMode(runtimeId, "resume", tokenRef.current).then(() => {
+            //     hybridScanStreamEvent.start()
+            // })
         })
-    })
 
-    /**取消执行 */
-    const onStopExecute = useMemoizedFn(() => {})
+        const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
 
-    /**暂停 */
-    const onPause = useMemoizedFn(() => {})
+        const getAduitList = useMemoizedFn(async () => {
+            try {
+                const {res} = await grpcFetchAuditTree("/")
+                if (res.Resources.length > 0) {
+                    const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.ResourceName}))
+                    setAuditCodeList(list)
+                }
+            } catch (error) {}
+        })
 
-    /**继续 */
-    const onContinue = useMemoizedFn(() => {})
-
-    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
-
-    const getAduitList = useMemoizedFn(async () => {
-        try {
-            const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length > 0) {
-                const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.ResourceName}))
-                setAuditCodeList(list)
-            }
-        } catch (error) {}
-    })
-
-    useEffect(() => {
-        getAduitList()
-    }, [])
-    return (
-        <>
-            <div
-                className={classNames(styles["code-scan-execute-form-wrapper"], {
-                    [styles["code-scan-execute-form-wrapper-hidden"]]: !isExpand
-                })}
-            >
-                <Form
-                    form={form}
-                    onFinish={onStartExecute}
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                    labelWrap={true}
+        useEffect(() => {
+            getAduitList()
+        }, [])
+        return (
+            <>
+                <div
+                    className={classNames(styles["code-scan-execute-form-wrapper"], {
+                        [styles["code-scan-execute-form-wrapper-hidden"]]: !isExpand
+                    })}
                 >
-                    <Form.Item label='项目名称' name='project'>
-                        <YakitSelect showSearch placeholder='请选择项目名称' options={auditCodeList}></YakitSelect>
-                    </Form.Item>
-                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                        <div className={styles["code-scan-execute-form-operate"]}>
-                            {isExecuting ? (
-                                <>
-                                    {executeStatus === "paused" && !pauseLoading && (
-                                        <YakitButton size='large' onClick={onContinue} loading={continueLoading}>
-                                            继续
+                    <Form
+                        form={form}
+                        onFinish={onStartExecute}
+                        labelCol={{span: 6}}
+                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                        validateMessages={{
+                            /* eslint-disable no-template-curly-in-string */
+                            required: "${label} 是必填字段"
+                        }}
+                        labelWrap={true}
+                    >
+                        <Form.Item
+                            label='项目名称'
+                            name='project'
+                            rules={[{required: true, message: "请选择项目名称"}]}
+                        >
+                            <YakitSelect showSearch placeholder='请选择项目名称' options={auditCodeList}></YakitSelect>
+                        </Form.Item>
+                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                            <div className={styles["code-scan-execute-form-operate"]}>
+                                {isExecuting ? (
+                                    <>
+                                        {/* {executeStatus === "paused" && !pauseLoading && (
+                                            <YakitButton size='large' onClick={onContinue} loading={continueLoading}>
+                                                继续
+                                            </YakitButton>
+                                        )} */}
+                                        {/* {(executeStatus === "process" || pauseLoading) && (
+                                            <YakitButton size='large' onClick={onPause} loading={pauseLoading}>
+                                                暂停
+                                            </YakitButton>
+                                        )} */}
+                                        <YakitButton
+                                            danger
+                                            onClick={onStopExecute}
+                                            size='large'
+                                            disabled={pauseLoading || continueLoading}
+                                        >
+                                            停止
                                         </YakitButton>
-                                    )}
-                                    {(executeStatus === "process" || pauseLoading) && (
-                                        <YakitButton size='large' onClick={onPause} loading={pauseLoading}>
-                                            暂停
+                                    </>
+                                ) : (
+                                    <>
+                                        <YakitButton htmlType='submit' size='large'>
+                                            开始执行
                                         </YakitButton>
-                                    )}
-                                    <YakitButton
-                                        danger
-                                        onClick={onStopExecute}
-                                        size='large'
-                                        disabled={pauseLoading || continueLoading}
-                                    >
-                                        停止
-                                    </YakitButton>
-                                </>
-                            ) : (
-                                <>
-                                    <YakitButton htmlType='submit' size='large'>
-                                        开始执行
-                                    </YakitButton>
-                                </>
-                            )}
-                        </div>
-                    </Form.Item>
-                </Form>
-            </div>
-            {isShowResult && (
-                <CodeScanExecuteResult
-                    streamInfo={streamInfo}
-                    runtimeId={runtimeId}
-                    loading={isExecuting}
-                    defaultActiveKey={undefined}
-                />
-            )}
-        </>
-    )
-})
+                                    </>
+                                )}
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </div>
+                {isShowResult && (
+                    <CodeScanExecuteResult
+                        streamInfo={streamInfo}
+                        runtimeId={runtimeId}
+                        isExecuting={isExecuting}
+                        defaultActiveKey={undefined}
+                    />
+                )}
+            </>
+        )
+    })
+)
 
 /**@name 代码扫描中规则列表的item */
 export const FlowRuleDetailsListItem: (props: FlowRuleDetailsListItemProps) => any = React.memo((props) => {

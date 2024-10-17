@@ -2,9 +2,11 @@ import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import {
     QueryRisksRequest,
     QueryRisksResponse,
+    YakitCodeScanRiskDetailsProps,
     YakitRiskDetailsProps,
     YakitRiskSelectTagProps,
-    YakitRiskTableProps
+    YakitRiskTableProps,
+    YakURLDataItemProps
 } from "./YakitRiskTableType"
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -79,7 +81,7 @@ import {defQueryRisksRequest} from "./constants"
 import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {Uint8ArrayToString} from "@/utils/str"
+import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
@@ -87,6 +89,9 @@ import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import { AuditResultItem, CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
+import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -1121,6 +1126,14 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             return
         }
     })
+
+    const isShowCodeScanDetail = useMemoizedFn((selectItem: Risk) => {
+        const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
+        if (ResultID && SyntaxFlowVariable && ProgramName) {
+            return true
+        }
+        return false
+    })
     return (
         <div className={classNames(styles["yakit-risk-table"], riskWrapperClassName)} ref={riskTableRef}>
             <ReactResizeDetector
@@ -1303,14 +1316,24 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 secondNode={
                     currentSelectItem && (
-                        <YakitRiskDetails
-                            info={currentSelectItem}
-                            className={styles["yakit-risk-details"]}
-                            onClickIP={onClickIP}
-                            border={yakitRiskDetailsBorder}
-                            isShowExtra={!excludeColumnsKey.includes("action")}
-                            onRetest={onRetest}
-                        />
+                        <>
+                            {isShowCodeScanDetail(currentSelectItem) ? (
+                                <YakitCodeScanRiskDetails
+                                    info={currentSelectItem}
+                                    onClickIP={onClickIP}
+                                    className={styles["yakit-code-scan-risk-details"]}
+                                />
+                            ) : (
+                                <YakitRiskDetails
+                                    info={currentSelectItem}
+                                    className={styles["yakit-risk-details"]}
+                                    onClickIP={onClickIP}
+                                    border={yakitRiskDetailsBorder}
+                                    isShowExtra={!excludeColumnsKey.includes("action")}
+                                    onRetest={onRetest}
+                                />
+                            )}
+                        </>
                     )
                 }
                 {...ResizeBoxProps}
@@ -1398,6 +1421,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
     const [isShowCode, setIsShowCode] = useState<boolean>(true)
     const descriptionsRef = useRef<HTMLDivElement>(null)
     const descriptionsDivWidth = useListenWidth(descriptionsRef)
+    console.log("YakitRiskDetails---", info)
 
     useEffect(() => {
         const isRequestString = !!requestString(info)
@@ -1518,6 +1542,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         }
         return p
     }, [isShowCode])
+
     return (
         <>
             <div
@@ -1652,5 +1677,211 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                 />
             </div>
         </>
+    )
+})
+
+export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
+    const {info, className, border} = props
+    console.log("info---", info)
+
+    const [activeKey, setActiveKey] = useState<string | string[]>()
+    const [yakURLData,setYakURLData] = useState<YakURLDataItemProps[]>([])
+
+    const descriptionsRef = useRef<HTMLDivElement>(null)
+    const descriptionsDivWidth = useListenWidth(descriptionsRef)
+
+    useEffect(() => {
+        const {ResultID, SyntaxFlowVariable, ProgramName} = info
+        if (ResultID && SyntaxFlowVariable && ProgramName) {
+            const params: AuditEmiterYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: ProgramName,
+                Path: `/${SyntaxFlowVariable}`,
+                Query: [{Key: "result_id", Value: ResultID}]
+            }
+            initData(params)
+        }
+    }, [info])
+
+    const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
+        try {
+            const {Body, ...auditYakUrl} = params
+            const body = Body ? StringToUint8Array(Body) : undefined
+            const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
+            console.log("resultxxx---",result);
+            
+            if (result && result.Resources.length > 0) {
+                let arr:YakURLDataItemProps[] = []
+                result.Resources.filter((item)=>item.ResourceType==="value").forEach((item) => {
+                    let obj = {
+                        index:"",
+                        code_range:"",
+                        source:"",
+                        ResourceType:item.ResourceType
+                    }
+                    item.Extra.forEach((itemIn)=>{
+                        if(["index","code_range","source"].includes(itemIn.Key)){
+                            obj[itemIn.Key] = itemIn.Value
+                        }
+                    })
+                    arr.push(obj)
+                })
+                setYakURLData(arr)
+            }
+        } catch (error) {}
+    })
+
+    const column = useCreation(() => {
+        if (descriptionsDivWidth > 600) return 3
+        return 1
+    }, [descriptionsDivWidth])
+
+    const extraResizeBoxProps = useCreation(() => {
+        let p: YakitResizeBoxProps = {
+            firstNode: <></>,
+            secondNode: <></>,
+            firstRatio: "50%",
+            secondRatio: "50%",
+            lineStyle: {height: "auto"},
+            firstNodeStyle: {height: "auto"}
+        }
+        return p
+    }, [])
+
+    const onClickIP = useMemoizedFn(() => {
+        if (props.onClickIP) props.onClickIP(info)
+    })
+
+    const severityInfo = useCreation(() => {
+        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
+        let icon = <></>
+        switch (severity?.name) {
+            case "信息":
+                icon = <IconSolidInfoRiskIcon />
+                break
+            case "低危":
+                icon = <IconSolidLowRiskIcon />
+                break
+            case "中危":
+                icon = <IconSolidMediumRiskIcon />
+                break
+            case "高危":
+                icon = <IconSolidHighRiskIcon />
+                break
+            case "严重":
+                icon = <IconSolidSeriousIcon />
+                break
+            default:
+                icon = <IconSolidDefaultRiskIcon />
+                break
+        }
+        return {
+            icon,
+            tag: severity?.tag || "default",
+            name: severity?.name || info?.Severity || "-"
+        }
+    }, [info.Severity])
+
+    // 跳转详情
+    const onDetail = useMemoizedFn(async (data: CodeRangeProps) => {})
+    return (
+        <div
+            className={classNames(
+                styles["yakit-risk-details-content"],
+                "yakit-descriptions",
+                {
+                    [styles["yakit-risk-details-content-no-border"]]: !border
+                },
+                className
+            )}
+        >
+            <div className={styles["content-heard"]}>
+                <div className={styles["content-heard-left"]}>
+                    <div className={styles["content-heard-severity"]}>
+                        {severityInfo.icon}
+                        <span
+                            className={classNames(
+                                styles["content-heard-severity-name"],
+                                styles[`severity-${severityInfo.tag}`]
+                            )}
+                        >
+                            {severityInfo.name}
+                        </span>
+                    </div>
+                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                    <div className={styles["content-heard-body"]}>
+                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
+                            {info.Title || "-"}
+                        </div>
+                        <div className={styles["content-heard-body-description"]}>
+                            <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
+                                ID:{info.Id}
+                            </YakitTag>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["content-heard-body-time"]}>
+                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div className={styles["content-heard-right"]}>
+                    <FuncBtn
+                        maxWidth={1200}
+                        type='outline2'
+                        icon={<OutlinePlayIcon />}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                        }}
+                        name='在代码审计中打开'
+                    />
+                </div>
+            </div>
+            <YakitResizeBox
+                {...extraResizeBoxProps}
+                firstNode={
+                    <div className={styles["content-resize-first"]}>
+                        <div className={styles["title"]}>相关代码段</div>
+                        {
+                            yakURLData.map((item)=>{
+                                return <></>
+                                // <AuditResultItem />
+                            })
+                        }
+                    </div>
+                }
+                secondNode={
+                    <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                        <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                            <Descriptions.Item label='类型'>
+                                {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                            </Descriptions.Item>
+                            <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                            <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                            <>
+                                <Descriptions.Item
+                                    label='漏洞描述'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Description || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item
+                                    label='解决方案'
+                                    span={column}
+                                    contentStyle={{whiteSpace: "pre-wrap"}}
+                                >
+                                    {info.Solution || "-"}
+                                </Descriptions.Item>
+                            </>
+                        </Descriptions>
+                        <div className={styles["no-more"]}>暂无更多</div>
+                    </div>
+                }
+                firstMinSize={200}
+                secondMinSize={400}
+            />
+        </div>
     )
 })

@@ -254,3 +254,9 @@ $keyColor: map-keys($tagColor);
         gap: 8px;
     }
 }
+
+.yakit-code-scan-risk-details{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
