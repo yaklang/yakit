@@ -330,6 +330,39 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 }
             }
+            menuItems = Object.keys(menuItems).reduce((ac, a) => {
+                if (a === "downloadBody") {
+                    ac["copyBodyBase64"] = {
+                        menu: [
+                            {
+                                key: "copyBodyBase64",
+                                label: "复制body（base64）"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            const text = editor.getModel()?.getValue()
+                            if (!text) {
+                                yakitNotify("info", "无数据包-无法复制 Body")
+                                return
+                            }
+                            ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag:true}).then((bytes: {Raw: Uint8Array}) => {
+                                ipcRenderer
+                                    .invoke("BytesToBase64", {
+                                        Bytes: bytes.Raw
+                                    })
+                                    .then((res: {Base64: string}) => {
+                                        callCopyToClipboard(res.Base64)
+                                    })
+                                    .catch((err) => {
+                                        yakitNotify("error", `${err}`)
+                                    })
+                            })
+                        }
+                    }
+                }
+                ac[a] = menuItems[a]
+                return ac
+            }, {}) as OtherMenuListProps
         }
 
         if (url) {

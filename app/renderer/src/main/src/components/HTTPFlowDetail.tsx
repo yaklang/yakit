@@ -896,40 +896,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         downstreamProxyStr
     } = props
 
-    const copyRequestBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
-        if (!flow?.RawRequestBodyBase64) return {}
-        return {
-            copyRequestBase64Body: {
-                menu: [
-                    {
-                        key: "copy-request-base64-body",
-                        label: "复制请求Body (Base64)"
-                    }
-                ],
-                onRun: () => {
-                    callCopyToClipboard(flow?.RawRequestBodyBase64 || "")
-                }
-            }
-        }
-    }, [flow?.RawRequestBodyBase64])
-
-    const copyResponseBase64BodyMenuItem: OtherMenuListProps | {} = useMemo(() => {
-        if (!flow?.RawResponseBodyBase64) return {}
-        return {
-            copyResponseBase64Body: {
-                menu: [
-                    {
-                        key: "copy-response-base64-body",
-                        label: "复制响应Body (Base64)"
-                    }
-                ],
-                onRun: () => {
-                    callCopyToClipboard(flow?.RawResponseBodyBase64 || "")
-                }
-            }
-        }
-    }, [flow?.RawResponseBodyBase64])
-
     // 编辑器发送到对比器
     const {compareState, setCompareLeft, setCompareRight} = useHttpFlowStore()
     const sendCodeCompareMenuItem = (type: string) => {
@@ -1277,7 +1243,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noHex={true}
                         noMinimap={true}
                         contextMenu={{
-                            ...copyRequestBase64BodyMenuItem,
                             ...sendCodeCompareMenuItem("request")
                         }}
                         // 这个为了解决不可见字符的问题
@@ -1379,7 +1344,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             return titleEle
                         })()}
                         contextMenu={{
-                            ...copyResponseBase64BodyMenuItem,
                             ...sendCodeCompareMenuItem("response")
                         }}
                         extra={secondNodeResExtraBtn()}
