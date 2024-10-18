@@ -407,7 +407,7 @@ const CVETableList: React.FC<CVETableListProps> = React.memo((props) => {
                                     inputSearchModuleTypeProps={{
                                         size: "middle",
                                         value: params[searchType],
-                                        placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CEW编号搜索",
+                                        placeholder: searchType === "Keywords" ? "CVE编号或关键字搜索" : "CWE编号搜索",
                                         onChange: (e) => {
                                             setParams({
                                                 ...params,
