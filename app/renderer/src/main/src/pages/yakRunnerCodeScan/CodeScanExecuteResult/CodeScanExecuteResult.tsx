@@ -10,7 +10,10 @@ import {EngineConsole} from "@/components/baseConsole/BaseConsole"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {LocalPluginLog} from "@/pages/plugins/operator/pluginExecuteResult/LocalPluginLog"
 import {CodeScanResult} from "../CodeScanResultTable/CodeScanResultTable"
-import {CodeScanRisksTable} from "../CodeScanRisksTable/CodeScanRisksTable"
+import { VulnerabilitiesRisksTable } from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import { defQueryRisksRequest } from "@/pages/risks/YakitRiskTable/constants"
+import { QueryRisksRequest } from "@/pages/risks/YakitRiskTable/YakitRiskTableType"
+import { apiQueryRisks } from "@/pages/risks/YakitRiskTable/utils"
 const {ipcRenderer} = window.require("electron")
 const {TabPane} = PluginTabs
 export interface CodeScanStreamInfo {
@@ -42,20 +45,20 @@ export const CodeScanExecuteResult: React.FC<CodeScanExecuteResultProps> = (prop
     }, interval)
 
     const getTotal = useMemoizedFn(() => {
-        // const params: QueryRisksRequest = {
-        //     ...defQueryRisksRequest,
-        //     Pagination: {
-        //         ...defQueryRisksRequest.Pagination,
-        //         Page: 1,
-        //         Limit: 1
-        //     },
-        //     RuntimeId: runtimeId
-        // }
-        // apiQueryRisks(params).then((allRes) => {
-        //     if (+allRes.Total > 0) {
-        //         setTempTotal(+allRes.Total)
-        //     }
-        // })
+        const params: QueryRisksRequest = {
+            ...defQueryRisksRequest,
+            Pagination: {
+                ...defQueryRisksRequest.Pagination,
+                Page: 1,
+                Limit: 1
+            },
+            RuntimeId: runtimeId
+        }
+        apiQueryRisks(params).then((allRes) => {
+            if (+allRes.Total > 0) {
+                setTempTotal(+allRes.Total)
+            }
+        })
     })
 
     /**
@@ -73,7 +76,7 @@ export const CodeScanExecuteResult: React.FC<CodeScanExecuteResultProps> = (prop
     const renderTabContent = useMemoizedFn((ele: HoldGRPCStreamProps.InfoTab) => {
         switch (ele.type) {
             case "risk":
-                return <CodeScanRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={onSetRiskTotal} />
+                return <VulnerabilitiesRisksTable runtimeId={runtimeId} allTotal={allTotal} setAllTotal={onSetRiskTotal} />
             case "result":
                 return <CodeScanResult isExecuting={isExecuting} runtimeId={runtimeId} />
             case "log":

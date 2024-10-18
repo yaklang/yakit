@@ -17,6 +17,7 @@ export interface AuditTreeProps {
     onJump: (v: AuditNodeProps) => void
     onlyJump?: boolean
     wrapClassName?: string
+    bugId?: string
 }
 
 export interface AuditNodeDetailProps {
@@ -32,6 +33,8 @@ export interface AuditTreeNodeProps {
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     setFoucsedKey: (v: string) => void
+    onJump: (info: AuditNodeProps) => void
+    bugId?: string
 }
 
 // Map存储列表详情
@@ -72,7 +75,7 @@ export interface AuditNodeProps {
 
 export interface AuditYakUrlProps {
     Schema: string
-    Path: string 
+    Path: string
     // 正常操作查询
     Location?: string
     // 带参查询

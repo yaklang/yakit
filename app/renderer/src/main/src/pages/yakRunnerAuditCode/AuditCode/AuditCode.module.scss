@@ -183,6 +183,9 @@
                 width: 14px;
             }
         }
+        .active-bug {
+            color: var(--yakit-primary-5);
+        }
         .count {
             color: #b4bbca;
             font-size: 12px;
@@ -205,9 +208,6 @@
         border-radius: 4px;
         padding-top: 2px;
         padding-bottom: 2px;
-        .bug{
-            color: var(--yakit-primary-5);
-        }
     }
 
     .icon-box {

@@ -122,7 +122,7 @@ export const getYakRunnerLastFolderExpanded = (): Promise<YakRunnerLastFolderExp
  */
 export const loadAuditFromYakURLRaw = (
     params: AuditYakUrlProps,
-    body?: Uint8Array
+    body?: Buffer
 ): Promise<RequestYakURLResponse | null> => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
