@@ -19,6 +19,8 @@ import {AuditTree} from "@/pages/yakRunnerAuditCode/AuditCode/AuditCode"
 import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {RightAuditDetail} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {Risk} from "@/pages/risks/schema"
+import {AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
@@ -196,6 +198,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                 Query: [{Key: "result_id", Value: rowData.ResultID}]
             }
             const result = await loadAuditFromYakURLRaw(params)
+            console.log("first---", result)
 
             if (result && result.Resources.length > 0) {
                 let messageIds: string[] = []
@@ -266,13 +269,26 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
+    const [bugHash, setBugHash] = useState<string>()
+    const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
         console.log("onJump---", node)
-        setFoucsedKey(node.id)
+        
         // 预留打开BUG详情
         if (node.ResourceType === "variable" && node.VerboseType === "alert") {
+            try {
+                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+                const hash = arr[0].Value
+                setBugHash(hash)
+                setShowAuditDetail(true)
+                setBugId(node.id)
+            } catch (error) {
+                failed(`打开错误${error}`)
+            }
         }
         if (node.ResourceType === "value") {
+            setBugId(undefined)
+            setFoucsedKey(node.id)
             const rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
                 Location: rowData.ProgramName,
@@ -330,6 +346,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                                     onJump={onJump}
                                     onlyJump={true}
                                     wrapClassName={styles["audit-tree-wrap"]}
+                                    bugId={bugId}
                                 />
                             )}
                         </div>
@@ -337,11 +354,17 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                     secondNode={
                         <>
                             {isShowAuditDetail ? (
-                                <RightAuditDetail
-                                    auditRightParams={auditRightParams}
-                                    isShowAuditDetail={isShowAuditDetail}
-                                    setShowAuditDetail={setShowAuditDetail}
-                                />
+                                <>
+                                    {bugId && bugHash ? (
+                                        <RightBugDetail bugHash={bugHash} />
+                                    ) : (
+                                        <RightAuditDetail
+                                            auditRightParams={auditRightParams}
+                                            isShowAuditDetail={isShowAuditDetail}
+                                            setShowAuditDetail={setShowAuditDetail}
+                                        />
+                                    )}
+                                </>
                             ) : (
                                 <div className={styles["no-audit"]}>
                                     <YakitEmpty title='暂无数据' description='请选择左边内容' />
@@ -354,3 +377,22 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
         </YakitDrawer>
     )
 }
+
+interface RightBugDetailProps {
+    bugHash: string
+}
+
+export const RightBugDetail: React.FC<RightBugDetailProps> = React.memo((props) => {
+    const {bugHash} = props
+    const [info, setInfo] = useState<Risk>()
+    useEffect(() => {
+        ipcRenderer
+            .invoke("QueryRisk", {Hash: bugHash})
+            .then((res: Risk) => {
+                if (!res) return
+                setInfo(res)
+            })
+            .catch((err) => {})
+    }, [bugHash])
+    return <>{info && <AuditResultDescribe info={info} columnSize={1}/>}</>
+})

@@ -132,6 +132,10 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
         }
     }, [])
 
+    useUpdateEffect(()=>{
+        setData([])
+    },[runtimeId])
+
     const getAddDataByGrpc = useMemoizedFn((query) => {
         if (!isLoop) return
         const clientHeight = tableRef.current?.containerRef?.clientHeight
