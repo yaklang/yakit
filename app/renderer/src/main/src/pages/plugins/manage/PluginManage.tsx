@@ -35,7 +35,7 @@ import {
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Form, Tooltip} from "antd"
+import {Form, Radio, Tooltip} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -335,6 +335,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     )
     // 删除插件(首页批量|清空|单个|详情内删除共用一个方法)
     const onReasonCallback = useMemoizedFn((reason: string) => {
+        console.log("reason", reason)
+        return
         const type = showReason.type
 
         // 是否全选
@@ -348,80 +350,80 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         // 搜索筛选条件
         let delFilter: PluginFilterParams = {...filters}
 
-        // 如果是从详情页过来的回调事件
-        if (activeDetailData.current) {
-            delAllCheck = activeDetailData.current.allCheck
-            selectTotal = activeDetailData.current.allCheck
-                ? response.pagemeta.total
-                : activeDetailData.current.selectList.length
-            selectUuids = activeDetailData.current.selectList.map((item) => item.uuid)
-            delSearch = {...activeDetailData.current.search}
-            delFilter = {...activeDetailData.current.filter}
-        }
+        // // 如果是从详情页过来的回调事件
+        // if (activeDetailData.current) {
+        //     delAllCheck = activeDetailData.current.allCheck
+        //     selectTotal = activeDetailData.current.allCheck
+        //         ? response.pagemeta.total
+        //         : activeDetailData.current.selectList.length
+        //     selectUuids = activeDetailData.current.selectList.map((item) => item.uuid)
+        //     delSearch = {...activeDetailData.current.search}
+        //     delFilter = {...activeDetailData.current.filter}
+        // }
 
-        // 获取单个删除插件的信息
-        const onlyPlugin: YakitPluginOnlineDetail | undefined = activeDelPlugin.current
-        onCancelReason()
+        // // 获取单个删除插件的信息
+        // const onlyPlugin: YakitPluginOnlineDetail | undefined = activeDelPlugin.current
+        // onCancelReason()
 
-        // 删除插件逻辑
-        if (type === "del") {
-            // 清空操作(无视搜索条件)
-            if (selectTotal === 0 && !onlyPlugin) {
-                apiDelPlugins({description: reason}, () => {
-                    setSearchs({...delSearch})
-                    setFilters({...delFilter})
-                    onClearSelecteds()
-                    if (!!plugin) setPlugin(undefined)
-                })
-            }
-            // 单个删除
-            else if (!!onlyPlugin) {
-                let delRequest: API.PluginsWhereDeleteRequest = {uuid: [onlyPlugin.uuid]}
-                apiDelPlugins({...delRequest, description: reason}, () => {
-                    // 当前
+        // // 删除插件逻辑
+        // if (type === "del") {
+        //     // 清空操作(无视搜索条件)
+        //     if (selectTotal === 0 && !onlyPlugin) {
+        //         apiDelPlugins({description: reason}, () => {
+        //             setSearchs({...delSearch})
+        //             setFilters({...delFilter})
+        //             onClearSelecteds()
+        //             if (!!plugin) setPlugin(undefined)
+        //         })
+        //     }
+        //     // 单个删除
+        //     else if (!!onlyPlugin) {
+        //         let delRequest: API.PluginsWhereDeleteRequest = {uuid: [onlyPlugin.uuid]}
+        //         apiDelPlugins({...delRequest, description: reason}, () => {
+        //             // 当前
 
-                    const next: YakitPluginOnlineDetail = response.data[showPluginIndex.current + 1]
-                    dispatch({
-                        type: "remove",
-                        payload: {
-                            itemList: [onlyPlugin]
-                        }
-                    })
+        //             const next: YakitPluginOnlineDetail = response.data[showPluginIndex.current + 1]
+        //             dispatch({
+        //                 type: "remove",
+        //                 payload: {
+        //                     itemList: [onlyPlugin]
+        //                 }
+        //             })
 
-                    if (!!plugin) {
-                        // 将删除结果回传到详情页
-                        if (detailRef && detailRef.current) {
-                            detailRef.current.onDelCallback([onlyPlugin], true)
-                        }
-                        setPlugin({...next})
-                    } else {
-                        // 首页的单独删除
-                        const index = selectUUIDs.findIndex((item) => item === onlyPlugin?.uuid)
-                        if (index > -1) {
-                            optCheck(onlyPlugin, false)
-                        }
-                    }
-                    onInit(true)
-                })
-            }
-            // 批量删除
-            // 详情的批量删除成功后自动返回首页
-            else if (!activeDelPlugin.current) {
-                let delRequest: API.PluginsWhereDeleteRequest = {}
-                if (delAllCheck) {
-                    delRequest = {...convertPluginsRequestParams(delFilter, delSearch), description: reason}
-                } else {
-                    delRequest = {uuid: selectUuids, description: reason}
-                }
-                apiDelPlugins(delRequest, () => {
-                    setSearchs({...delSearch})
-                    setFilters({...delFilter})
-                    onClearSelecteds()
-                    // 以前详情页的逻辑
-                    if (!!plugin) setPlugin(undefined)
-                })
-            }
-        }
+        //             if (!!plugin) {
+        //                 // 将删除结果回传到详情页
+        //                 if (detailRef && detailRef.current) {
+        //                     detailRef.current.onDelCallback([onlyPlugin], true)
+        //                 }
+        //                 setPlugin({...next})
+        //             } else {
+        //                 // 首页的单独删除
+        //                 const index = selectUUIDs.findIndex((item) => item === onlyPlugin?.uuid)
+        //                 if (index > -1) {
+        //                     optCheck(onlyPlugin, false)
+        //                 }
+        //             }
+        //             onInit(true)
+        //         })
+        //     }
+        //     // 批量删除
+        //     // 详情的批量删除成功后自动返回首页
+        //     else if (!activeDelPlugin.current) {
+        //         let delRequest: API.PluginsWhereDeleteRequest = {}
+        //         if (delAllCheck) {
+        //             delRequest = {...convertPluginsRequestParams(delFilter, delSearch), description: reason}
+        //         } else {
+        //             delRequest = {uuid: selectUuids, description: reason}
+        //         }
+        //         apiDelPlugins(delRequest, () => {
+        //             setSearchs({...delSearch})
+        //             setFilters({...delFilter})
+        //             onClearSelecteds()
+        //             // 以前详情页的逻辑
+        //             if (!!plugin) setPlugin(undefined)
+        //         })
+        //     }
+        // }
     })
 
     /** 插件展示(列表|网格) */
@@ -1533,12 +1535,17 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
     }, [visible])
 
     const [value, setValue] = useState<string>("")
+    const [kind, setKind] = useState<"body" | "extra">("body")
     const onSubmit = useMemoizedFn(() => {
         if (!value) {
             yakitNotify("error", "请输入删除原因!")
             return
         }
-        onOK(value)
+        let data = value
+        if (type === "nopass") {
+            data = `${kind}\n${value}`
+        }
+        onOK(data)
     })
 
     return (
@@ -1556,8 +1563,33 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
             bodyStyle={{padding: 0}}
         >
             <div className={styles["reason-modal-body"]}>
+                {type === "nopass" && (
+                    <div className={styles["no-pass-kind"]}>
+                        <Radio
+                            className='plugins-radio-wrapper'
+                            checked={kind === "body"}
+                            onClick={(e) => {
+                                if (kind === "body") return
+                                setKind("body")
+                            }}
+                        >
+                            内容不通过
+                        </Radio>
+                        <Radio
+                            className='plugins-radio-wrapper'
+                            checked={kind === "extra"}
+                            onClick={(e) => {
+                                if (kind === "extra") return
+                                setKind("extra")
+                            }}
+                        >
+                            补充资料不通过
+                        </Radio>
+                    </div>
+                )}
                 <YakitInput.TextArea
                     autoSize={{minRows: 3, maxRows: 3}}
+                    isShowResize={false}
                     showCount
                     value={value}
                     maxLength={150}

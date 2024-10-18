@@ -203,6 +203,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then(async (res) => {
                     setIsEdit(true)
                     const [online, local] = res
+                    console.log("online, local", online, local)
 
                     if (online.status === "fulfilled") {
                         initOnlinePlugin.current = {...online.value}
@@ -769,7 +770,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             handleEditSuccessCallback({
                                 opType: "submit",
                                 info: {
-                                    id: Number(savedPluginInfo.current?.Id || 0) || 0,
+                                    id: Number(uploadPlugin.current?.Id || 0) || 0,
                                     name: onlinePlugin.script_name,
                                     uuid: onlinePlugin.uuid
                                 }
