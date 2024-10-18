@@ -407,7 +407,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
 })
 
 /**风险与漏洞tab表 */
-const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
+export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
     const {runtimeId} = props
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [allTotal, setAllTotal] = useControllableValue<number>(props, {

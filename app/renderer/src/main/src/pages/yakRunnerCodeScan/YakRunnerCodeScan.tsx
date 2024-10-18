@@ -737,6 +737,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
                     const data = res.ExecResult
+                    
                     if (!!res.Status) {
                         switch (res.Status) {
                             case "done":
@@ -760,7 +761,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     if (!!data?.RuntimeID) {
                         setRuntimeId(data.RuntimeID)
                     }
-                    if (data.IsMessage) {
+                    if (data && data.IsMessage) {
                         try {
                             let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
                             if (obj.type === "log") {

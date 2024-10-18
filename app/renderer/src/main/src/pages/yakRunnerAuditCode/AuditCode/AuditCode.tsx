@@ -65,8 +65,13 @@ import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEdi
 
 const {ipcRenderer} = window.require("electron")
 
+export const isBugFun = (info: AuditNodeProps) => {
+    if (info.ResourceType === "variable" && info.VerboseType === "alert") return true
+    return false
+}
+
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys} = props
+    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onJump, bugId} = props
 
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info, getDetail)
@@ -145,6 +150,10 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
         } catch (error) {}
     }, [info])
 
+    const goBUGDetail = useMemoizedFn((e) => {
+        e.stopPropagation()
+        onJump(info)
+    })
     return (
         <>
             {info.isBottom ? (
@@ -182,8 +191,13 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                                 </Tooltip>
                             )}
                         </div>
-                        {info.ResourceType === "variable" && info.VerboseType === "alert" && (
-                            <div className={styles["bug"]}>
+                        {isBugFun(info) && (
+                            <div
+                                className={classNames(styles["bug"], {
+                                    [styles["active-bug"]]: bugId === info.id
+                                })}
+                                onClick={goBUGDetail}
+                            >
                                 <OutlineBugIcon />
                             </div>
                         )}
@@ -205,7 +219,8 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         setFoucsedKey,
         onJump,
         onlyJump,
-        wrapClassName
+        wrapClassName,
+        bugId
     } = props
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
@@ -294,6 +309,8 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
                             setFoucsedKey={setFoucsedKey}
+                            onJump={onJump}
+                            bugId={bugId}
                         />
                     )
                 }}
