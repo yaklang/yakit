@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {Form, Upload} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {info, yakitFailed, warn, failed} from "@/utils/notification"
+import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -11,6 +11,8 @@ import classNames from "classnames"
 import {getRemoteValue, setRemoteValue} from "./kv"
 import {RemoteGV} from "@/yakitGV"
 import styles from "./ConfigSystemProxy.module.scss"
+import emiter from "./eventBus/eventBus"
+import {APINoRequestFunc} from "@/apiUtils/type"
 
 export interface ConfigSystemProxyProp {
     defaultProxy?: string
@@ -18,6 +20,22 @@ export interface ConfigSystemProxyProp {
 }
 
 const {ipcRenderer} = window.require("electron")
+
+export interface GetSystemProxyResult {
+    CurrentProxy: string
+    Enable: boolean
+}
+export const apiGetSystemProxy: APINoRequestFunc<GetSystemProxyResult> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("GetSystemProxy")
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取系统代理失败:" + e)
+                reject(e)
+            })
+    })
+}
 
 export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
     const {defaultProxy, onClose} = props
@@ -36,8 +54,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
 
     const update = useMemoizedFn(() => {
         setLoading(true)
-        ipcRenderer
-            .invoke("GetSystemProxy", {})
+        apiGetSystemProxy()
             .then((req: {CurrentProxy: string; Enable: boolean}) => {
                 setCurrent(req)
                 setProxy(req.CurrentProxy ? req.CurrentProxy : "127.0.0.1:8083")
@@ -60,6 +77,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
             .then((e) => {
                 info("设置系统代理成功")
                 onClose()
+                emiter.emit("onRefConfigSystemProxy", "")
             })
             .catch((err) => {
                 yakitFailed("设置系统代理失败:" + err)

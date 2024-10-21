@@ -150,6 +150,7 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "../layout/mainOperatorContent/utils"
+import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -2100,8 +2101,30 @@ interface FuzzerExtraShowProps {
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
     const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
+    const divRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(divRef)
+    useEffect(() => {
+        if (!inViewport) return
+        getConfigSystemProxy()
+        emiter.on("onRefConfigSystemProxy", getConfigSystemProxy)
+        return () => {
+            emiter.off("onRefConfigSystemProxy", getConfigSystemProxy)
+        }
+    }, [inViewport])
+    const getConfigSystemProxy = useMemoizedFn(() => {
+        apiGetSystemProxy().then((res: GetSystemProxyResult) => {
+            setSystemProxy({
+                ...res,
+                CurrentProxy: res.CurrentProxy ? res.CurrentProxy : "127.0.0.1:8083"
+            })
+        })
+    })
+    const isShowSystemProxy = useCreation(() => {
+        return systemProxy?.Enable && !advancedConfigValue.noSystemProxy && !advancedConfigValue.proxy.length
+    }, [systemProxy, advancedConfigValue.noSystemProxy, advancedConfigValue.proxy])
     return (
-        <div className={styles["display-flex"]}>
+        <div className={styles["display-flex"]} ref={divRef}>
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
@@ -2110,6 +2133,8 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                     </YakitTag>
                 </Tooltip>
             )}
+            {isShowSystemProxy && <YakitTag color='green'>系统代理:{systemProxy?.CurrentProxy}</YakitTag>}
+
             {advancedConfigValue.actualHost && (
                 <YakitTag color='danger' className={classNames(styles["actualHost-text"], "content-ellipsis")}>
                     真实Host:{advancedConfigValue.actualHost}
@@ -2121,6 +2146,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                     {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
                         <YakitTag color='danger'>匹配失败</YakitTag>
                     )}
+                    <YakitTag color='danger'>匹配失败</YakitTag>
                 </>
             )}
         </div>
