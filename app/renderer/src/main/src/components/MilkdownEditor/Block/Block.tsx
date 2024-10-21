@@ -31,8 +31,17 @@ import {
 import {useMemoizedFn} from "ahooks"
 import {Ctx} from "@milkdown/kit/ctx"
 import {alterCustomSchema} from "../utils/alertPlugin"
-import {yakitNotify} from "@/utils/notification"
-import {clearContentAndAddBlockType, clearContentAndSetBlockType, clearContentAndWrapInBlockType} from "../utils/utils"
+import {
+    clearContentAndAddBlockType,
+    clearContentAndSetBlockType,
+    clearContentAndWrapInBlockType} from "../utils/utils"
+import {fileCommand} from "../utils/uploadPlugin"
+import {callCommand} from "@milkdown/kit/utils"
+import {insertImageBlockCommand} from "../utils/imageBlock"
+
+const {ipcRenderer} = window.require("electron")
+
+const imgTypes = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".svg"]
 
 const addList = [
     {
@@ -193,8 +202,31 @@ export const BlockView = (block) => {
                 })
                 break
             case "上传文件":
-                // action((ctx) => {})
-                yakitNotify("info", "开发中...")
+                ipcRenderer
+                    .invoke("openDialog", {
+                        title: "请选择文件",
+                        properties: ["openFile"]
+                    })
+                    .then((data: {filePaths: string[]}) => {
+                        const filesLength = data.filePaths.length
+                        if (filesLength) {
+                            const path = data.filePaths[0].replace(/\\/g, "\\")
+                            const index = path.lastIndexOf(".")
+                            const fileType = path.substring(index, path.length)
+                            if (imgTypes.includes(fileType)) {
+                                action(
+                                    callCommand(insertImageBlockCommand.key, {
+                                        src: `atom://${path}`,
+                                        alt: path,
+                                        title: ""
+                                    })
+                                )
+                            } else {
+                                action(callCommand(fileCommand.key, {id: "0", path}))
+                            }
+                        }
+                    })
+
                 break
             case "分割线":
                 action((ctx) => {
