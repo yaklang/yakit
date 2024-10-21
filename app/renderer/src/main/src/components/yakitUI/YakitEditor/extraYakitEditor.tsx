@@ -23,6 +23,8 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
 import {v4 as uuidv4} from "uuid"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -272,7 +274,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         ]
                     }
                 ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                onRun: async (editor: YakitIMonacoEditor, key: string) => {
                     if (pageId) {
                         const pageInfo: PageNodeItemProps | undefined = queryPagesDataById(
                             YakitRoute.HTTPFuzzer,
@@ -280,8 +282,13 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         )
                         if (pageInfo && pageInfo.pageParamsInfo.webFuzzerPageInfo) {
                             const {advancedConfigValue, request} = pageInfo.pageParamsInfo.webFuzzerPageInfo
+                            let advancedConfigShow = defaultAdvancedConfigShow
+                            try {
+                                const resShow = await getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow)
+                                advancedConfigShow = JSON.parse(resShow)
+                            } catch (error) {}
                             const params: ShareValueProps = {
-                                advancedConfigShow: defaultAdvancedConfigShow,
+                                advancedConfigShow,
                                 request,
                                 advancedConfiguration: advancedConfigValue
                             }
