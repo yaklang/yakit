@@ -6,11 +6,11 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {onImportShare} from "@/pages/fuzzer/components/ShareImport"
 import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
-import { OutlineSaveIcon } from "@/assets/icon/outline"
-import { SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon } from "@/assets/icon/solid"
+import {OutlineSaveIcon} from "@/assets/icon/outline"
+import {SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon/solid"
 
 import styles from "./ExtraMenu.module.scss"
-import { ImportLocalPlugin, LoadPluginMode } from "@/pages/mitm/MITMPage"
+import {ImportLocalPlugin, LoadPluginMode} from "@/pages/mitm/MITMPage"
 
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
@@ -51,10 +51,10 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         key: "import-plugin",
                         label: "导入插件",
                         children: [
-                            { key: 'local', label: "本地插件" },
-                            { key: 'uploadId', label: "插件 ID" },
-                            { key: 'giturl', label: "线上 Nuclei" },
-                            { key: 'local-nuclei', label: "本地 Nuclei" },
+                            {key: "local", label: "本地插件"},
+                            {key: "uploadId", label: "插件 ID"},
+                            {key: "giturl", label: "线上 Nuclei"},
+                            {key: "local-nuclei", label: "本地 Nuclei"}
                         ]
                     },
                     {
@@ -102,7 +102,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 onClick={() => {
                     onMenuSelect({route: YakitRoute.PayloadManager})
                 }}
-                icon={<SolidPayloadIcon/>}
+                icon={<SolidPayloadIcon />}
             >
                 Payload
             </YakitButton>
@@ -114,6 +114,15 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 icon={<SolidTerminalIcon />}
             >
                 Yak Runner
+            </YakitButton>
+            <YakitButton
+                onClick={() =>
+                    onMenuSelect({
+                        route: YakitRoute.Modify_Notepad
+                    })
+                }
+            >
+                记事本
             </YakitButton>
             <ImportLocalPlugin
                 visible={visibleImport}
