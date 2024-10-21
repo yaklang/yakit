@@ -10,4 +10,6 @@ export type GlobalEventProps = {
     cancelPerformanceSampling?: string
     /**刷新顶部漏洞风险的已读未读状态 */
     onRefRisksRead: string
+    /**系统代理已刷新 */
+    onRefConfigSystemProxy: string
 }

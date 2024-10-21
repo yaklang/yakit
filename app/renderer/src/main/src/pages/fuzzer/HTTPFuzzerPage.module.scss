@@ -130,6 +130,8 @@
 .display-flex {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 0;
 }
 
 .chevron-icon {
