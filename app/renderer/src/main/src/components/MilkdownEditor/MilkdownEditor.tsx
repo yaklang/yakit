@@ -1,4 +1,4 @@
-import {defaultValueCtx, Editor, editorStateCtx, rootCtx} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
 import React, {useEffect} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
@@ -32,6 +32,15 @@ import {underlinePlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
 import {trailing} from "@milkdown/kit/plugin/trailing"
+
+import {upload, uploadConfig} from "@milkdown/kit/plugin/upload"
+import type {Node} from "@milkdown/kit/prose/model"
+import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
+
+import {html} from "atomico"
+import {fileCustomSchema, uploadCustomPlugin} from "./utils/uploadPlugin"
+import {CustomFile} from "./CustomFile/CustomFile"
+import {insertImageBlockCommand} from "./utils/imageBlock"
 
 const markdown = `
 
@@ -132,12 +141,13 @@ Editor
 `
 const markdown1 = `
 #ggg
-| Feature      | Description                                          | Example                   |
-| ------------ | ---------------------------------------------------- | ------------------------- |
-| 🎨 Theme     | Create your own theme with CSS                       | Nord, Dracula             |
-| 🧩 Plugin    | Create your own plugin to extend the editor          | Search, Collab            |
-| 📦 Component | Create your own component to build your own editor   | Slash Menu, Toolbar       |
-| 📚 Syntax    | Create your own syntax to extend the markdown parser | Image with Caption, LaTex |
+
+:file[]{fileId="111"}
+
+![1.00](https://milkdown.dev/polar.jpeg "Hello by a polar bear")
+
+Maybe more? ![]()
+
 `
 const markdown2 = `#ggg
 fsdfsdf
@@ -175,28 +185,122 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         return [placeholderConfig, placeholderPlugin].flat()
     }, [])
 
+    const uploadPlugins = useCreation(() => {
+        return [
+            upload,
+            $view(fileCustomSchema.node, () =>
+                nodeViewFactory({
+                    component: CustomFile
+                })
+            ),
+            (ctx: Ctx) => () => {
+                ctx.update(uploadConfig.key, (prev) => ({
+                    ...prev,
+                    uploader: async (files, schema) => {
+                        // console.log("uploadConfig-files", files)
+                        const images: File[] = []
+
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files.item(i)
+                            if (!file) {
+                                continue
+                            }
+
+                            // You can handle whatever the file type you want, we handle image here.
+                            if (!file.type.includes("image")) {
+                                continue
+                            }
+
+                            images.push(file)
+                        }
+
+                        const nodes: Node[] = await Promise.all(
+                            images.map(async (image) => {
+                                // const src = await YourUploadAPI(image)
+                                const src = "https://milkdown.dev/polar.jpeg"
+                                const alt = image.name
+                                return schema.nodes.image.createAndFill({
+                                    src,
+                                    alt
+                                }) as Node
+                            })
+                        )
+
+                        return nodes
+                    }
+                }))
+            }
+        ].flat()
+    }, [])
+
+    const imagePlugin = useCreation(() => {
+        return [
+            ...uploadCustomPlugin(),
+            imageBlockComponent,
+            imageInlineComponent,
+            insertImageBlockCommand,
+            (ctx: Ctx) => () => {
+                ctx.update(imageBlockConfig.key, (value) => ({
+                    ...value,
+                    captionIcon: () => html`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    `,
+                    onUpload: async (file: File) => {
+                        console.log("imageBlockConfig-file", file)
+                        const url = "https://milkdown.dev/polar.jpeg"
+                        return url
+                    }
+                }))
+            },
+            (ctx: Ctx) => () => {
+                ctx.update(inlineImageConfig.key, (value) => ({
+                    ...value,
+                    imageIcon: () =>
+                        html`<svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M4 16L8.58579 11.4142C9.36683 10.6332 10.6332 10.6332 11.4142 11.4142L16 16M14 14L15.5858 12.4142C16.3668 11.6332 17.6332 11.6332 18.4142 12.4142L20 14M14 8H14.01M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                            <circle cx="14" cy="8" r="1" fill="currentColor" />
+                        </svg> `,
+                    onUpload: async (file: File) => {
+                        // console.log("file", file)
+                        const url = "https://milkdown.dev/polar.jpeg"
+                        return url
+                    }
+                }))
+            }
+        ].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, markdown)
+                    ctx.set(defaultValueCtx, markdown1)
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
                         })
                     })
-
-                    ctx.update(imageBlockConfig.key, (value) => ({
-                        uploadButton: () => <div>uploadButton</div>,
-                        imageIcon: () => <div>imageBlockConfig-imageIcon</div>,
-                        captionIcon: () => <div>captionIcon</div>,
-                        confirmButton: () => <div>confirm</div>,
-                        captionPlaceholderText: "Write Image Caption",
-                        uploadPlaceholderText: "or paste link",
-                        onUpload: value.onUpload
-                    }))
-
                     ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
                         ...defaultConfig,
                         linkIcon: () => "🔗",
@@ -227,8 +331,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 )
                 // block
                 .use(blockPlugins)
+                // upload
+                .use(uploadPlugins)
                 // image
-                .use(imageBlockComponent)
+                .use(imagePlugin)
                 // listItem
                 .use($view(listItemSchema.node, () => nodeViewFactory({component: ListItem})))
                 // code
