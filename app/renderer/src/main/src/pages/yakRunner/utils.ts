@@ -992,7 +992,7 @@ export const loadFolderDetail = (path, loadTreeType?: "file" | "audit") => {
  */
 export const loadAuditFromYakURLRaw = (
     params: AuditYakUrlProps,
-    body: Uint8Array
+    body: Buffer
 ): Promise<RequestYakURLResponse | null> => {
     // console.log("审计参数", {
     //     Method: "GET",

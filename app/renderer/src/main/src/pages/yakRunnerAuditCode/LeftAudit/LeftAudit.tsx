@@ -10,8 +10,10 @@ import classNames from "classnames"
 import {AuditCode} from "../AuditCode/AuditCode"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import { RunnerFileTree } from "../RunnerFileTree/RunnerFileTree"
+import { AuditEmiterYakUrlProps } from "../YakRunnerAuditCodeType"
 const {ipcRenderer} = window.require("electron")
-export interface LeftAuditProps {}
+export interface LeftAuditProps {
+}
 export const LeftAudit: React.FC<LeftAuditProps> = (props) => {
     return (
         <div className={styles['left-audit']}>

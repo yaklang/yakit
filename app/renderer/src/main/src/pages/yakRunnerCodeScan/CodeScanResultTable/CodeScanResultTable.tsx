@@ -31,6 +31,8 @@ import {addToTab} from "@/pages/MainTabs"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AuditTree} from "@/pages/yakRunnerAuditCode/AuditCode/AuditCode"
 import {AuditCodeDetailDrawer} from "../AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 
 const OFFSET_LIMIT = 30
@@ -132,9 +134,9 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
         }
     }, [])
 
-    useUpdateEffect(()=>{
+    useUpdateEffect(() => {
         setData([])
-    },[runtimeId])
+    }, [runtimeId])
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
         if (!isLoop) return
@@ -496,7 +498,20 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
                                 type='text2'
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    addToTab("**yak-runner-audit-code")
+                                    // 跳转到审计页面的参数
+                                    const params: AuditCodePageInfoProps = {
+                                        Schema: "syntaxflow",
+                                        Location: rowData.ProgramName,
+                                        Path: `/`,
+                                        Query: [{Key: "result_id", Value: rowData.ResultID}]
+                                    }
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_Audit_Code,
+                                            params
+                                        })
+                                    )
                                 }}
                                 icon={<OutlineTerminalIcon />}
                             />
@@ -540,7 +555,6 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
             const updateData = JSON.parse(data)
             if (typeof updateData !== "string" && updateData.task_id === runtimeId) {
                 if (updateData.action === "update") {
-                    console.log("loop---")
                     setIsLoop(true)
                 }
             }
