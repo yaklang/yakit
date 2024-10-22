@@ -2,7 +2,7 @@ import React, {memo, ReactNode, useEffect, useImperativeHandle, useMemo, useRef,
 import {useDebounceEffect, useGetState, useMemoizedFn, useScroll, useVirtualList} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryGeneralRequest} from "../invoker/schema"
-import {failed, info, yakitFailed, warn} from "@/utils/notification"
+import {failed, info, yakitFailed, warn, success} from "@/utils/notification"
 import {
     ChevronDownIcon,
     ChevronRightIcon,
@@ -782,7 +782,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ipcRenderer
                             .invoke("UpdateProject", newProject)
                             .then((res) => {
-                                info("编辑项目成功")
+                                success("编辑项目成功")
                                 setModalInfo({visible: false})
                                 setNewProjectInfo(res)
                                 setTimeout(() => {
@@ -801,7 +801,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ipcRenderer
                             .invoke("NewProject", newProject)
                             .then((res) => {
-                                info("创建新项目成功")
+                                success("创建新项目成功")
                                 setModalInfo({visible: false})
                                 setParams({...params, Pagination: {...params.Pagination, Page: 1}})
                                 setNewProjectInfo(res)
@@ -811,7 +811,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                 }, 300)
                             })
                             .catch((e) => {
-                                failed(`${projectInfo.Id ? "编辑" : "创建新"}项目失败：${e}`)
+                                failed(`创建新项目失败：${e}`)
                             })
                             .finally(() => {
                                 setTimeout(() => {
@@ -829,38 +829,71 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         ChildFolderId: folderInfo.ChildFolderId ? +folderInfo.ChildFolderId : 0,
                         Type: "file"
                     }
-
                     if (newFolder.ProjectName === folderInfo.oldName) {
-                        if (folderInfo.Id) newFolder.Id = +folderInfo.Id
-                        ipcRenderer
-                            .invoke("NewProject", newFolder)
-                            .then(() => {
-                                info(folderInfo.Id ? "编辑文件夹成功" : "创建新文件夹成功")
-                                setModalInfo({visible: false})
-                                setParams({...params, Pagination: {...params.Pagination, Page: 1}})
-                                setTimeout(() => update(), 300)
-                            })
-                            .catch((e) => {
-                                info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败：${e}`)
-                            })
-                            .finally(() => {
-                                setTimeout(() => {
-                                    setModalLoading(false)
-                                }, 300)
-                            })
+                        if (folderInfo.Id) {
+                            newFolder.Id = +folderInfo.Id
+                            ipcRenderer
+                                .invoke("UpdateProject", newFolder)
+                                .then((res) => {
+                                    success("编辑文件夹成功")
+                                    setModalInfo({visible: false})
+                                    setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                    setTimeout(() => update(), 300)
+                                })
+                                .catch((e) => {
+                                    failed(`编辑文件夹失败：${e}`)
+                                })
+                                .finally(() => {
+                                    setTimeout(() => {
+                                        setModalLoading(false)
+                                    }, 300)
+                                })
+                        } else {
+                            ipcRenderer
+                                .invoke("NewProject", newFolder)
+                                .then(() => {
+                                    success("创建新文件夹成功")
+                                    setModalInfo({visible: false})
+                                    setParams({...params, Pagination: {...params.Pagination, Page: 1}})
+                                    setTimeout(() => update(), 300)
+                                })
+                                .catch((e) => {
+                                    failed(`创建新文件夹失败：${e}`)
+                                })
+                                .finally(() => {
+                                    setTimeout(() => {
+                                        setModalLoading(false)
+                                    }, 300)
+                                })
+                        }
                     } else {
                         ipcRenderer
                             .invoke("IsProjectNameValid", newFolder)
                             .then((e) => {
-                                if (folderInfo.Id) newFolder.Id = +folderInfo.Id
-                                ipcRenderer
-                                    .invoke("NewProject", newFolder)
-                                    .then(({Id, ProjectName}: {Id: number; ProjectName: string}) => {
-                                        info(folderInfo.Id ? "编辑文件夹成功" : "创建新文件夹成功")
-                                        setModalInfo({visible: false})
-                                        if (folderInfo.Id) {
+                                if (folderInfo.Id) {
+                                    newFolder.Id = +folderInfo.Id
+                                    ipcRenderer
+                                        .invoke("UpdateProject", newFolder)
+                                        .then((res) => {
+                                            success("编辑文件夹成功")
+                                            setModalInfo({visible: false})
                                             setParams({...params, Pagination: {...params.Pagination, Page: 1}})
-                                        } else {
+                                            setTimeout(() => update(), 300)
+                                        })
+                                        .catch((e) => {
+                                            failed(`编辑文件夹失败：${e}`)
+                                        })
+                                        .finally(() => {
+                                            setTimeout(() => {
+                                                setModalLoading(false)
+                                            }, 300)
+                                        })
+                                } else {
+                                    ipcRenderer
+                                        .invoke("NewProject", newFolder)
+                                        .then(({Id, ProjectName}: {Id: number; ProjectName: string}) => {
+                                            success("创建新文件夹成功")
+                                            setModalInfo({visible: false})
                                             if (folderInfo.parent) {
                                                 setFiles([
                                                     {...folderInfo.parent},
@@ -873,27 +906,29 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                     Pagination: {...params.Pagination, Page: 1}
                                                 })
                                             } else {
-                                                setFiles([{...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}])
+                                                setFiles([
+                                                    {...DefaultProjectInfo, Id: +Id, ProjectName: ProjectName}
+                                                ])
                                                 setParams({
                                                     Type: "all",
                                                     FolderId: +Id,
                                                     Pagination: {...params.Pagination, Page: 1}
                                                 })
                                             }
-                                        }
-                                        setTimeout(() => update(), 300)
-                                    })
-                                    .catch((e) => {
-                                        info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败：${e}`)
-                                    })
-                                    .finally(() => {
-                                        setTimeout(() => {
-                                            setModalLoading(false)
-                                        }, 300)
-                                    })
+                                            setTimeout(() => update(), 300)
+                                        })
+                                        .catch((e) => {
+                                            failed(`创建新文件夹失败：${e}`)
+                                        })
+                                        .finally(() => {
+                                            setTimeout(() => {
+                                                setModalLoading(false)
+                                            }, 300)
+                                        })
+                                }
                             })
                             .catch((e) => {
-                                info(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败，文件夹名校验不通过：${e}`)
+                                failed(`${folderInfo.Id ? "编辑" : "创建新"}文件夹失败，文件夹名校验不通过：${e}`)
                                 setTimeout(() => {
                                     setModalLoading(false)
                                 }, 300)
@@ -1761,7 +1796,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             }
             const type = isFolder ? "isNewFolder" : "isNewProject"
 
-            if(!isCommunityEdition()){
+            if (!isCommunityEdition()) {
                 data.Description = isHasDescription ? JSON.stringify(v?.Description) : ""
             }
 
