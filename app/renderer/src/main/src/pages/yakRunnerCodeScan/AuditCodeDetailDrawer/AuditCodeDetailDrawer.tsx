@@ -20,7 +20,11 @@ import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditC
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {RightAuditDetail} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {Risk} from "@/pages/risks/schema"
-import {AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import { addToTab } from "@/pages/MainTabs"
+import { YakitRoute } from "@/enums/yakitRoute"
+import emiter from "@/utils/eventBus/eventBus"
+import { AuditCodePageInfoProps } from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
@@ -133,12 +137,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                     Path: path,
                     Query: [{Key: "result_id", Value: rowData.ResultID}]
                 }
-                console.log("handleAuditLoadData---", params)
-
                 const result = await loadAuditFromYakURLRaw(params)
-
-                console.log("result---", result)
-
                 if (result) {
                     let variableIds: string[] = []
                     result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
@@ -198,7 +197,6 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                 Query: [{Key: "result_id", Value: rowData.ResultID}]
             }
             const result = await loadAuditFromYakURLRaw(params)
-            console.log("first---", result)
 
             if (result && result.Resources.length > 0) {
                 let messageIds: string[] = []
@@ -272,8 +270,6 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     const [bugHash, setBugHash] = useState<string>()
     const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
-        console.log("onJump---", node)
-        
         // 预留打开BUG详情
         if (node.ResourceType === "variable" && node.VerboseType === "alert") {
             try {
@@ -299,6 +295,24 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
             setShowAuditDetail(true)
         }
     })
+
+    // 跳转到代码审计页面
+    const jumpCodeScanPage = useMemoizedFn(() => {
+        // 跳转到审计页面的参数
+        const params: AuditCodePageInfoProps = {
+            Schema: "syntaxflow",
+            Location: rowData.ProgramName,
+            Path: `/`,
+            Query: [{Key: "result_id", Value: rowData.ResultID}]
+        }
+        emiter.emit(
+            "openPage",
+            JSON.stringify({
+                route: YakitRoute.YakRunner_Audit_Code,
+                params
+            })
+        )
+    })
     return (
         <YakitDrawer
             visible={visible}
@@ -306,7 +320,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
             width='80%'
             title='审计详情'
             extra={
-                <YakitButton icon={<OutlineTerminalIcon />} type='outline2'>
+                <YakitButton icon={<OutlineTerminalIcon />} type='outline2' onClick={() => jumpCodeScanPage()}>
                     在代码审计中打开
                 </YakitButton>
             }
@@ -394,5 +408,5 @@ export const RightBugDetail: React.FC<RightBugDetailProps> = React.memo((props) 
             })
             .catch((err) => {})
     }, [bugHash])
-    return <>{info && <AuditResultDescribe info={info} columnSize={1}/>}</>
+    return <>{info && <RightBugAuditResult info={info} columnSize={1} />}</>
 })

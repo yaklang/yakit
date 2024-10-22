@@ -108,6 +108,7 @@ import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
 import {PluginBatchExecutor} from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
 import {
     AddYakitScriptPageInfoProps,
+    AuditCodePageInfoProps,
     BrutePageInfoProps,
     HTTPHackerPageInfoProps,
     PluginBatchExecutorPageInfoProps,
@@ -387,6 +388,8 @@ export interface ComponentParams {
     riskPageInfoProps?: RiskPageInfoProps
     /**MITM劫持页面 */
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
+    /**代码审计页面 */
+    auditCodePageInfo?: AuditCodePageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -549,9 +552,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Code_Scan:
-            return <YakRunnerCodeScan pageId={params?.id || ""} />
+            return <YakRunnerCodeScan pageId={params?.id || ""}/>
         case YakitRoute.YakRunner_Audit_Code:
-            return <YakRunnerAuditCode />
+            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo}/>
         default:
             return <div />
     }

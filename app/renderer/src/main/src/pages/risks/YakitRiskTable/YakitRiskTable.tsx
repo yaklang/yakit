@@ -83,7 +83,7 @@ import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {PluginHubPageInfoProps} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, PluginHubPageInfoProps} from "@/store/pageInfo"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
@@ -92,6 +92,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
 import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
+import {addToTab} from "@/pages/MainTabs"
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -1711,7 +1712,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                     let obj: any = {
                         index: "",
                         source: "",
-                        ResourceType: item.ResourceType
+                        ResourceName: item.ResourceName
                     }
                     item.Extra.forEach((itemIn) => {
                         if (["index", "source"].includes(itemIn.Key)) {
@@ -1789,17 +1790,25 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
     }, [info.Severity])
 
     // 跳转到代码审计页面
-    const jumpCodeScanPage = useMemoizedFn((v?: string) => {
+    const jumpCodeScanPage = useMemoizedFn((value?: string) => {
         const {ProgramName, SyntaxFlowVariable, ResultID} = info
         if (ResultID && SyntaxFlowVariable && ProgramName) {
             // 跳转到审计页面的参数
-            const params: AuditEmiterYakUrlProps = {
+            const params: AuditCodePageInfoProps = {
                 Schema: "syntaxflow",
                 Location: ProgramName,
-                Path: `/${SyntaxFlowVariable}${v}`,
+                Path: `/`,
+                Variable: SyntaxFlowVariable,
+                Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
-            console.log("params---", params)
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.YakRunner_Audit_Code,
+                    params
+                })
+            )
         }
     })
 
@@ -1830,7 +1839,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                     <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
                     <div className={styles["content-heard-body"]}>
                         <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
-                            {info.Title || "-"}
+                            {info?.TitleVerbose || info.Title || "-"}
                         </div>
                         <div className={styles["content-heard-body-description"]}>
                             <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
@@ -1917,6 +1926,105 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
     )
 })
 
+export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
+    const {info, columnSize} = props
+
+    const descriptionsRef = useRef<HTMLDivElement>(null)
+    const descriptionsDivWidth = useListenWidth(descriptionsRef)
+
+    const column = useCreation(() => {
+        if (columnSize) return columnSize
+        if (descriptionsDivWidth > 600) return 3
+        return 1
+    }, [descriptionsDivWidth])
+
+    const severityInfo = useCreation(() => {
+        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
+        let icon = <></>
+        switch (severity?.name) {
+            case "信息":
+                icon = <IconSolidInfoRiskIcon />
+                break
+            case "低危":
+                icon = <IconSolidLowRiskIcon />
+                break
+            case "中危":
+                icon = <IconSolidMediumRiskIcon />
+                break
+            case "高危":
+                icon = <IconSolidHighRiskIcon />
+                break
+            case "严重":
+                icon = <IconSolidSeriousIcon />
+                break
+            default:
+                icon = <IconSolidDefaultRiskIcon />
+                break
+        }
+        return {
+            icon,
+            tag: severity?.tag || "default",
+            name: severity?.name || info?.Severity || "-"
+        }
+    }, [info.Severity])
+    return (
+        <div
+            className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
+                [styles["yakit-risk-details-content-no-border"]]: true
+            })}
+        >
+            <div className={styles["content-heard"]}>
+                <div className={styles["content-heard-left"]}>
+                    <div className={styles["content-heard-severity"]}>
+                        {severityInfo.icon}
+                        <span
+                            className={classNames(
+                                styles["content-heard-severity-name"],
+                                styles[`severity-${severityInfo.tag}`]
+                            )}
+                        >
+                            {severityInfo.name}
+                        </span>
+                    </div>
+                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                    <div className={styles["content-heard-body"]}>
+                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
+                            {info.Title || "-"}
+                        </div>
+                        <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
+                            <YakitTag color='info'>ID:{info.Id}</YakitTag>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["content-heard-body-time"]}>
+                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+                <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
+                    <Descriptions.Item label='类型'>
+                        {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
+                    </Descriptions.Item>
+                    <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
+                    <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                    <>
+                        <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                            {info.Description || "-"}
+                        </Descriptions.Item>
+                        <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
+                            {info.Solution || "-"}
+                        </Descriptions.Item>
+                    </>
+                </Descriptions>
+                <div className={styles["no-more"]}>暂无更多</div>
+            </div>
+        </div>
+    )
+})
+
 interface AuditResultCollapseProps {
     data: YakURLDataItemProps[]
     jumpCodeScanPage: (v: string) => void
@@ -1926,13 +2034,13 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
     const {data, jumpCodeScanPage} = props
 
     const titleRender = (info: YakURLDataItemProps) => {
-        const {index, code_range, source, ResourceType} = info
+        const {index, code_range, source, ResourceName} = info
         const lastSlashIndex = code_range.url.lastIndexOf("/")
         const fileName = code_range.url.substring(lastSlashIndex + 1)
         return (
             <div className={styles["node-content"]}>
                 <div className={classNames(styles["content-body"])}>
-                    <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>{ResourceType}</div>
+                    <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>{ResourceName}</div>
                     <Tooltip title={`${code_range.url}:${code_range.start_line}`}>
                         <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
                             {fileName}:{code_range.start_line}

@@ -176,6 +176,17 @@ export interface HTTPHackerPageInfoProps {
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
+export interface AuditCodePageInfoProps {
+    Schema: string
+    // 基础路径 / 由Path、Variable、Value组成完整路径信息
+    Path: string
+    Variable?: string
+    Value?: string
+    // 正常操作查询
+    Location: string
+    Query: {Key: string; Value: number}[]
+}
+
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
 

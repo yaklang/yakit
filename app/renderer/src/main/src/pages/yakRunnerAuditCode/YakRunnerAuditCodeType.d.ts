@@ -1,7 +1,9 @@
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 import {FileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import { AuditCodePageInfoProps } from "@/store/pageInfo"
 export interface YakRunnerAuditCodeProps {
+    auditCodePageInfo?: AuditCodePageInfoProps
 }
 
 export interface Selection {

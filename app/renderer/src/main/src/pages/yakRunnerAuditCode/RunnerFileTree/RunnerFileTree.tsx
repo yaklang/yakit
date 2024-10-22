@@ -45,6 +45,7 @@ import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {FileNodeProps, FileTreeListProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import { FileTree } from "../FileTree/FileTree"
 import { addToTab } from "@/pages/MainTabs"
+import { YakitRoute } from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -237,7 +238,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                                         type='text2'
                                         icon={<OutlineScanIcon />}
                                         onClick={() => {
-                                            addToTab("**yak-runner-code-scan")
+                                            addToTab(YakitRoute.YakRunner_Code_Scan)
                                         }}
                                     />
                                 </Tooltip>

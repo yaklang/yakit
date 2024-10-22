@@ -419,6 +419,11 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
         ...defQueryRisksRequest,
         RuntimeId: runtimeId
     })
+
+    useUpdateEffect(() => {
+        setQuery({...query, RuntimeId: runtimeId})
+    }, [runtimeId])
+
     const onJumpRisk = useMemoizedFn(() => {
         const info: RouteToPageProps = {
             route: YakitRoute.DB_Risk
