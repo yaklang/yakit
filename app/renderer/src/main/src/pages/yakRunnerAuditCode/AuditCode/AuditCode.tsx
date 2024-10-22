@@ -62,17 +62,43 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {addToTab} from "@/pages/MainTabs"
 import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 
 const {ipcRenderer} = window.require("electron")
 
 export const isBugFun = (info: AuditNodeProps) => {
-    if (info.ResourceType === "variable" && info.VerboseType === "alert") return true
-    return false
+    try {
+        const arr = info.Extra.filter((item) => item.Key === "risk_hash")
+        if (info.ResourceType === "variable" && info.VerboseType === "alert" && arr.length > 0) return true
+        return false
+    } catch (error) {
+        return false
+    }
+}
+
+export const getDetailFun = (info: AuditNodeProps) => {
+    try {
+        if (info.ResourceType === "value") {
+            const arr = info.Extra.filter((item) => item.Key === "code_range")
+            if (arr.length > 0) {
+                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const {url, start_line, start_column, end_line, end_column} = item
+                const lastSlashIndex = url.lastIndexOf("/")
+                const fileName = url.substring(lastSlashIndex + 1)
+                return {
+                    fileName,
+                    start_line,
+                    url
+                }
+            }
+        }
+        return undefined
+    } catch (error) {}
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
     const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onJump, bugId} = props
-
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info, getDetail)
     })
@@ -131,23 +157,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
     // 获取详情
     const getDetail = useMemo(() => {
-        try {
-            if (info.ResourceType === "value") {
-                const arr = info.Extra.filter((item) => item.Key === "code_range")
-                if (arr.length > 0) {
-                    const item: CodeRangeProps = JSON.parse(arr[0].Value)
-                    const {url, start_line, start_column, end_line, end_column} = item
-                    const lastSlashIndex = url.lastIndexOf("/")
-                    const fileName = url.substring(lastSlashIndex + 1)
-                    return {
-                        fileName,
-                        start_line,
-                        url
-                    }
-                }
-            }
-            return undefined
-        } catch (error) {}
+        return getDetailFun(info)
     }, [info])
 
     const goBUGDetail = useMemoizedFn((e) => {
@@ -222,10 +232,22 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         wrapClassName,
         bugId
     } = props
+    const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
+
+    const defaultOpenIdRef = useRef<string>()
+    useEffect(() => {
+        if (pageInfo) {
+            const {Path, Variable, Value} = pageInfo
+            // && info.id === pageInfo
+            if (Variable && Value) {
+                defaultOpenIdRef.current = `${Path}${Variable}${Value}`
+            }
+        }
+    }, [pageInfo])
 
     const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
@@ -301,6 +323,10 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 // 解决重复打开一个节点时 能加载
                 loadedKeys={[]}
                 titleRender={(nodeData) => {
+                    if (nodeData.id === defaultOpenIdRef.current) {
+                        defaultOpenIdRef.current = undefined
+                        handleSelect(true, nodeData, getDetailFun(nodeData))
+                    }
                     return (
                         <AuditTreeNode
                             info={nodeData}
@@ -322,7 +348,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
-    const {projectNmae} = useStore()
+    const {projectNmae, pageInfo} = useStore()
 
     const [value, setValue] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -357,8 +383,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const auditDetailTree = useMemo(() => {
         const ids: string[] = getMapAuditChildDetail("/")
         const initTree = initAuditTree(ids, 1)
-        if (initTree.length > 0) {
-            initTree.push({
+        // 归类排序
+        const initTreeLeaf = initTree.filter((item) => item.isLeaf)
+        const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
+        const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
+        if (newInitTree.length > 0) {
+            newInitTree.push({
                 parent: null,
                 name: "已经到底啦~",
                 id: "111",
@@ -370,11 +400,10 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Size: 0
             })
         }
-        return initTree
+        return newInitTree
     }, [refreshTree])
 
     const lastValue = useRef<string>("")
-
     const handleAuditLoadData = useMemoizedFn((id: string) => {
         return new Promise(async (resolve, reject) => {
             // 校验其子项是否存在
@@ -387,44 +416,51 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 setRefreshTree(!refreshTree)
                 resolve("")
             } else {
-                if (lastValue.current.length > 0) {
-                    const path = id
-                    const params: AuditYakUrlProps = {
-                        Schema: "syntaxflow",
-                        Location: projectNmae || "",
+                const path = id
+                let params: AuditYakUrlProps = {
+                    Schema: "syntaxflow",
+                    Location: projectNmae || "",
+                    Path: path
+                }
+                let body: Buffer | undefined = undefined
+                if (!pageInfo) {
+                    body = StringToUint8Array(lastValue.current)
+                }
+                if (pageInfo) {
+                    const {Variable, Value, ...rest} = pageInfo
+                    params = {
+                        ...rest,
                         Path: path
                     }
-                    const body = StringToUint8Array(lastValue.current)
-                    const result = await loadAuditFromYakURLRaw(params, body)
-                    if (result) {
-                        let variableIds: string[] = []
-                        result.Resources.forEach((item, index) => {
-                            const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
-                            let value: string = `${index}`
-                            const arr = Extra.filter((item) => item.Key === "index")
-                            if (arr.length > 0) {
-                                value = arr[0].Value
-                            }
-                            const newId = `${id}/${value}`
-                            variableIds.push(newId)
-                            setMapAuditDetail(newId, {
-                                parent: path,
-                                id: newId,
-                                name: ResourceName,
-                                ResourceType,
-                                VerboseType,
-                                Size,
-                                Extra
-                            })
+                }
+                const result = await loadAuditFromYakURLRaw(params, body)
+
+                if (result) {
+                    let variableIds: string[] = []
+                    result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                        const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                        let value: string = `${index}`
+                        const arr = Extra.filter((item) => item.Key === "index")
+                        if (arr.length > 0) {
+                            value = arr[0].Value
+                        }
+                        const newId = `${id}/${value}`
+                        variableIds.push(newId)
+                        setMapAuditDetail(newId, {
+                            parent: path,
+                            id: newId,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
                         })
-                        setMapAuditChildDetail(path, variableIds)
-                        setTimeout(() => {
-                            setRefreshTree(!refreshTree)
-                            resolve("")
-                        }, 300)
-                    } else {
-                        reject()
-                    }
+                    })
+                    setMapAuditChildDetail(path, variableIds)
+                    setTimeout(() => {
+                        setRefreshTree(!refreshTree)
+                        resolve("")
+                    }, 300)
                 } else {
                     reject()
                 }
@@ -443,7 +479,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         clearMapAuditChildDetail()
         clearMapAuditDetail()
         setExpandedKeys([])
-        setRefreshTree(!refreshTree)
     })
 
     useUpdateEffect(() => {
@@ -457,19 +492,33 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             setLoading(true)
             setShowEmpty(false)
             const path: string = "/"
-            const params: AuditYakUrlProps = {
+            let params: AuditYakUrlProps = {
                 Schema: "syntaxflow",
                 Location: projectNmae || "",
                 Path: path
             }
-            const body = StringToUint8Array(value)
-            lastValue.current = value
+            let body: Buffer | undefined = undefined
+            if (!pageInfo) {
+                body = StringToUint8Array(value)
+                lastValue.current = value
+            }
+            if (pageInfo) {
+                lastValue.current = ""
+                const {Variable, Value, ...rest} = pageInfo
+                // 此处请求Path固定为/ 因为不用拼接Variable、Value
+                params = rest
+                // 默认展开项
+                if (Variable) {
+                    setExpandedKeys([`${pageInfo.Path}${Variable}`])
+                }
+            }
             const result = await loadAuditFromYakURLRaw(params, body)
+
             if (result && result.Resources.length > 0) {
                 let messageIds: string[] = []
                 let variableIds: string[] = []
                 // 构造树结构
-                result.Resources.forEach((item, index) => {
+                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
                     const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
                     // 警告信息（置顶显示）前端收集折叠
                     if (ResourceType === "message") {
@@ -527,14 +576,45 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
-    const onJump = useMemoizedFn((v: AuditNodeProps) => {
-        if (v.ResourceType === "value") {
-            const rightParams: AuditEmiterYakUrlProps = {
+    useEffect(() => {
+        if (pageInfo) {
+            onSubmit()
+        }
+        else{
+            resetMap()
+            setRefreshTree(!refreshTree)
+        }
+    }, [pageInfo])
+
+    const [bugId, setBugId] = useState<string>()
+    const onJump = useMemoizedFn((node: AuditNodeProps) => {
+        // 预留打开BUG详情
+        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
+            try {
+                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+                const hash = arr[0].Value
+                setBugId(node.id)
+                emiter.emit("onCodeAuditOpenRightBugDetail", hash)
+            } catch (error) {
+                failed(`打开错误${error}`)
+            }
+        }
+        if (node.ResourceType === "value") {
+            setBugId(undefined)
+            let rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
                 Location: projectNmae || "",
-                Path: v.id,
+                Path: node.id,
                 Body: value
             }
+            if (pageInfo) {
+                const {...rest} = pageInfo
+                rightParams = {
+                    ...rest,
+                    Path: node.id
+                }
+            }
+            // console.log("opop",data);
             emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
         }
     })
@@ -545,19 +625,21 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     <div className={styles["title"]}>代码审计</div>
                 </div>
 
-                <div className={styles["textarea-box"]}>
-                    <YakitTextArea
-                        textAreaSize='small'
-                        value={value}
-                        setValue={setValue}
-                        isLimit={false}
-                        onSubmit={onSubmit}
-                        submitTxt={"开始审计"}
-                        rows={1}
-                        isAlwaysShow={true}
-                        placeholder='请输入审计规则...'
-                    />
-                </div>
+                {!pageInfo && (
+                    <div className={styles["textarea-box"]}>
+                        <YakitTextArea
+                            textAreaSize='small'
+                            value={value}
+                            setValue={setValue}
+                            isLimit={false}
+                            onSubmit={onSubmit}
+                            submitTxt={"开始审计"}
+                            rows={1}
+                            isAlwaysShow={true}
+                            placeholder='请输入审计规则...'
+                        />
+                    </div>
+                )}
 
                 {isShowEmpty ? (
                     <div className={styles["no-data"]}>暂无数据</div>
@@ -570,6 +652,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         foucsedKey={foucsedKey}
                         setFoucsedKey={setFoucsedKey}
                         onJump={onJump}
+                        bugId={bugId}
                     />
                 )}
             </div>
@@ -784,9 +867,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             } else {
                 setAduitData(res)
             }
-        } catch (error) {
-            console.log("error", error)
-        }
+        } catch (error) {}
     })
 
     const getAuditPath = useMemoizedFn((val: YakURLResource) => {
@@ -889,7 +970,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                 type='text'
                                                 icon={<OutlineScanIcon className={styles["to-icon"]} />}
                                                 onClick={() => {
-                                                    addToTab("**yak-runner-code-scan")
+                                                    addToTab(YakitRoute.YakRunner_Code_Scan)
                                                 }}
                                             />
                                         </Tooltip>

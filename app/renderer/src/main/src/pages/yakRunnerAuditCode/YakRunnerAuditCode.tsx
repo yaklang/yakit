@@ -1,8 +1,14 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {AuditCodeStatusInfoProps, AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps, YakRunnerAuditCodeProps} from "./YakRunnerAuditCodeType"
+import {
+    AuditCodeStatusInfoProps,
+    AuditCodeStreamData,
+    AuditEmiterYakUrlProps,
+    OpenFileByPathProps,
+    YakRunnerAuditCodeProps
+} from "./YakRunnerAuditCodeType"
 import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {AuditCode, AuditHistoryTable, AuditModalForm} from "./AuditCode/AuditCode"
+import {AuditHistoryTable, AuditModalForm} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
 import {getNameByPath, grpcFetchAuditTree, setYakRunnerHistory} from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
@@ -53,17 +59,22 @@ import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
-import { SolidDocumentdownloadIcon } from "@/assets/icon/solid"
-import { StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import { RightBugDetail } from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import { AuditCodePageInfoProps } from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
+    const {auditCodePageInfo} = props
+    // 页面数据
+    const [pageInfo, setPageInfo] = useState<AuditCodePageInfoProps | undefined>(auditCodePageInfo)
     const [loading, setLoading] = useState<boolean>(false)
     // 是否展示已编译项目列表
     const [isShowAuditList, setShowAuditList] = useState<boolean>(false)
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     /** ---------- 审计树 ---------- */
-    const [projectNmae, setProjectNmae] = useState<string>()
+    const [projectNmae, setProjectNmae] = useState<string | undefined>(auditCodePageInfo?.Location)
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
 
@@ -106,6 +117,25 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.reset()
     }
+
+    const setAuditCodePageInfo = useMemoizedFn((auditCodePageInfo: string) => {
+        try {
+            const newPageInfo: AuditCodePageInfoProps = JSON.parse(auditCodePageInfo)
+            setPageInfo(newPageInfo)
+            const {Location} = newPageInfo
+            setProjectNmae(Location)
+            onInitTreeFun(`/${Location}`)
+        } catch (error) {}
+    })
+    useEffect(() => {
+        if (pageInfo) {
+            onInitTreeFun(`/${pageInfo.Location}`)
+        }
+        emiter.on("onAuditCodePageInfo", setAuditCodePageInfo)
+        return () => {
+            emiter.off("onAuditCodePageInfo", setAuditCodePageInfo)
+        }
+    }, [])
 
     const onCloseCompileModal = useMemoizedFn(() => {
         setInitDefault(false)
@@ -263,7 +293,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
-        console.log("审计树---", name)
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
     })
@@ -364,6 +393,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 logInfoRef.current = []
                 setShowRunAuditModal(false)
                 onOpenAuditTreeFun(`${projectNmae}`)
+                setPageInfo(undefined)
                 emiter.emit("onCodeAuditRefreshAduitHistory")
             }, 300)
         }
@@ -647,15 +677,17 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
+            pageInfo: pageInfo,
             fileTree: fileTree,
             projectNmae: projectNmae,
             areaInfo: areaInfo,
             activeFile: activeFile
         }
-    }, [fileTree, projectNmae, areaInfo, activeFile])
+    }, [pageInfo, fileTree, projectNmae, areaInfo, activeFile])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
+            setPageInfo: setPageInfo,
             setFileTree: setFileTree,
             setProjectNmae: setProjectNmae,
             handleFileLoadData: handleFileLoadData,
@@ -664,20 +696,33 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     }, [])
 
+    const [bugHash, setBugHash] = useState<string>()
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
+
+    const onOpenAuditRightBugDetailFun = useMemoizedFn((hash: string) => {
+        setBugHash(hash)
+        setAuditRightParams(undefined)
+        setShowAuditDetail(true)
+    })
+    
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
+            setBugHash(undefined)
             setAuditRightParams(data)
             setShowAuditDetail(true)
             emiter.emit("onCodeAuditRefreshAuditDetail")
         } catch (error) {}
     })
+    
     useEffect(() => {
-        // 打开编译右侧详情
+        // 正常打开编译右侧详情
         emiter.on("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+        // 打开编译右侧BUG详情
+        emiter.on("onCodeAuditOpenRightBugDetail", onOpenAuditRightBugDetailFun)
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+            emiter.off("onCodeAuditOpenRightBugDetail", onOpenAuditRightBugDetailFun)
         }
     }, [])
 
@@ -727,11 +772,17 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                             </div>
                                         }
                                         secondNode={
-                                            <RightAuditDetail
-                                                auditRightParams={auditRightParams}
-                                                isShowAuditDetail={isShowAuditDetail}
-                                                setShowAuditDetail={setShowAuditDetail}
-                                            />
+                                            <>
+                                                {bugHash ? (
+                                                    <RightBugDetail bugHash={bugHash} />
+                                                ) : (
+                                                    <RightAuditDetail
+                                                        auditRightParams={auditRightParams}
+                                                        isShowAuditDetail={isShowAuditDetail}
+                                                        setShowAuditDetail={setShowAuditDetail}
+                                                    />
+                                                )}
+                                            </>
                                         }
                                     />
                                 }
@@ -818,8 +869,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         </WaterMark>
     )
 }
-
-
 
 // 代码审计进度信息
 export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) => {

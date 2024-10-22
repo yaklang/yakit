@@ -63,6 +63,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import useDispatcher from "../hooks/useDispatcher"
 import {addToTab} from "@/pages/MainTabs"
+import { YakitRoute } from "@/enums/yakitRoute"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -930,7 +931,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                 type='text'
                                                 icon={<OutlineScanIcon className={styles["to-icon"]} />}
                                                 onClick={() => {
-                                                    addToTab("**yak-runner-code-scan")
+                                                    addToTab(YakitRoute.YakRunner_Code_Scan)
                                                 }}
                                             />
                                         </Tooltip>

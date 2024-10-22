@@ -97,6 +97,7 @@ import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
 import {
     AddYakitScriptPageInfoProps,
+    AuditCodePageInfoProps,
     HTTPHackerPageInfoProps,
     PageNodeItemProps,
     PageProps,
@@ -492,10 +493,49 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.HTTPHacker:
                 addHTTPHackerPage(params)
                 break
+            case YakitRoute.YakRunner_Audit_Code:
+                addYakRunnerAuditCodePage(params)
+                break
             default:
                 break
         }
     })
+    const addYakRunnerAuditCodePage = useMemoizedFn((data: AuditCodePageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Code).length
+        if (isExist && data) {
+            emiter.emit("onAuditCodePageInfo", JSON.stringify(data))
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.YakRunner_Audit_Code,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.YakRunner_Audit_Code,
+                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]?.label || "",
+                    pageParamsInfo: {
+                        auditCodePageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.YakRunner_Audit_Code,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.YakRunner_Audit_Code, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.YakRunner_Audit_Code},
+            {
+                pageParams: {
+                    auditCodePageInfo: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
+
     const addHTTPHackerPage = useMemoizedFn((data: HTTPHackerPageInfoProps) => {
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
@@ -823,8 +863,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**config-network") openMenuPage({route: YakitRoute.Beta_ConfigNetwork})
             if (type === "**beta-debug-traffic-analize") openMenuPage({route: YakitRoute.Beta_DebugTrafficAnalize})
             if (type === "**webshell-manager") openMenuPage({route: YakitRoute.Beta_WebShellManager})
-            if (type === "**yak-runner-code-scan") openMenuPage({route: YakitRoute.YakRunner_Code_Scan})
-            if (type === "**yak-runner-audit-code") openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
             if (type === "**webshell-opt") addWebShellOpt(data)
 
             if (type === "open-plugin-store") {
@@ -858,6 +896,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     }
                 )
+            }
+            if (type === YakitRoute.YakRunner_Code_Scan) {
+                openMenuPage({route: YakitRoute.YakRunner_Code_Scan})
+            }
+            if (type === YakitRoute.YakRunner_Audit_Code) {
+                openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
             }
             console.info("send to tab: ", type)
         })

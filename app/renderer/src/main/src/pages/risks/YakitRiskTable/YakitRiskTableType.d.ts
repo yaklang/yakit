@@ -79,5 +79,5 @@ export interface YakURLDataItemProps {
     index:string
     code_range:CodeRangeProps
     source: string
-    ResourceType:string
+    ResourceName:string
 }

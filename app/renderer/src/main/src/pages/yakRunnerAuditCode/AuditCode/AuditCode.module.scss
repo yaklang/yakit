@@ -340,9 +340,13 @@
                     align-items: center;
                 }
                 .audit-path {
+                    display: flex;
+                    align-items: center;
                     flex: 2;
                 }
                 .audit-time {
+                    display: flex;
+                    align-items: center;
                     width: 200px;
                 }
                 .audit-opt {

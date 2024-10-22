@@ -25,7 +25,6 @@ export const apiFetchQuerySyntaxFlowRuleGroup: (
         ipcRenderer
             .invoke("QuerySyntaxFlowRuleGroup", queryParams)
             .then((res: QuerySyntaxFlowRuleGroupResponse) => {
-                console.log("QuerySyntaxFlowRuleGroup---", params, res)
                 resolve(res.Group)
             })
             .catch((e) => {

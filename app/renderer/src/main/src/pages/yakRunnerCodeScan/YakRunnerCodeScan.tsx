@@ -116,7 +116,7 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
     }, [selectGroupList, allCheck])
 
     const onSearch = useMemoizedFn((val) => {
-        if (!val) return
+        // if (!val) return
         init(val)
     })
     const onPressEnter = useMemoizedFn((e) => {
@@ -307,7 +307,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                                     <YakitButton
                                         icon={<OutlinCompileIcon />}
                                         onClick={() => {
-                                            addToTab("**yak-runner-audit-code")
+                                            addToTab(YakitRoute.YakRunner_Audit_Code)
                                         }}
                                     >
                                         代码审计
@@ -822,7 +822,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Keyword: ""
                 }
             }
-            console.log("onStartExecute---", params)
             apiSyntaxFlowScan(params, token).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
