@@ -1,0 +1,106 @@
+.notepad-share-modal {
+    .notepad-title {
+        display: flex;
+        padding: 16px 4px 12px 16px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        background: var(--yakit-card-background-color);
+        border-bottom: 1px solid var(--yakit-border-color);
+        border-radius: 8px 8px 0 0;
+        width: 400px;
+
+        .title-text {
+            color: var(--yakit-header-color);
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 600;
+            line-height: 24px;
+        }
+    }
+    .notepad-content {
+        display: flex;
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+        .notepad-user-select {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            :global {
+                .ant-select-multiple .ant-select-selector {
+                    padding: 1px 46px 1px 28px;
+                }
+                .ant-select-multiple .ant-select-selection-placeholder {
+                    left: 36px;
+                }
+                .ant-select-selection-overflow {
+                    max-width: calc(100% - 28px);
+                }
+                .ant-select-clear {
+                    right: 74px;
+                    top: 13px;
+                }
+            }
+            .user-icon {
+                position: absolute;
+                top: 6px;
+                left: 8px;
+                color: var(--yakit-body-text-color);
+                z-index: 2;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+            .user-authority {
+                position: absolute;
+                top: 2px;
+                right: 0;
+                z-index: 2;
+            }
+        }
+        .notepad-text-body {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .notepad-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    }
+}
+
+.user-tag-render {
+    .user-img {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+.user-item {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    gap: 8px;
+    .user-img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid var(--yakit-border-color);
+        flex-shrink: 0;
+    }
+    .user-name {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+    }
+}
