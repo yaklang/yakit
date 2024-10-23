@@ -1,4 +1,5 @@
 import {YakParamProps, YakRiskInfoProps} from "../plugins/pluginsType"
+import {TextareaForImage} from "./pluginImageTextarea/PluginImageTextareaType"
 
 /** @name 获取插件信息的关键参数(前端逻辑专属) */
 export interface KeyParamsFetchPluginDetail {
@@ -31,4 +32,11 @@ export interface YakitPluginInfo extends YakitPluginBaseInfo {
     RiskDetail?: YakRiskInfoProps[]
     /** 参数信息 */
     Params?: YakParamProps[]
+}
+
+/** @name 插件补充资料 */
+export interface YakitPluginSupplement {
+    text: string
+    imgs: TextareaForImage[]
+    fileInfo: {url: string; fileName: string}
 }

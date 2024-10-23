@@ -133,6 +133,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     return item
                 })
                 form.setFieldsValue({...data, Tags: [...newTags]})
+                setEnablePluginSelector(data.EnablePluginSelector || false)
             } else {
                 form.setFieldsValue({Type: initType || ""})
             }

@@ -2,7 +2,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 import {onCodeToInfo} from "@/pages/plugins/editDetails/utils"
 import cloneDeep from "lodash/cloneDeep"
-import {YakitPluginBaseInfo, YakitPluginInfo} from "../base"
+import {YakitPluginBaseInfo, YakitPluginInfo, YakitPluginSupplement} from "../base"
 import {API} from "@/services/swagger/resposeType"
 import {DefaultAPIPluginsRequest, DefaultGRPCSavePluginRequest} from "../defaultconstants"
 import {toolDelInvalidKV} from "@/utils/tool"
@@ -13,6 +13,7 @@ import {
 } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {KVPair} from "@/models/kv"
+import {ImageTextareaData} from "../pluginImageTextarea/PluginImageTextareaType"
 
 /**
  * @name 本地插件参数数据(YakParamProps)-转换成-线上插件参数数据(API.YakitPluginParam)
@@ -116,7 +117,8 @@ export const pluginConvertLocalToUI = async (value: YakScript) => {
             return self.indexOf(item) === index
         })
 
-    const newPluginSelectorTypes: string[] = (data.PluginSelectorTypes || "").split(",") || []
+    let newPluginSelectorTypes: string[] = []
+    if (data.PluginSelectorTypes) newPluginSelectorTypes = data.PluginSelectorTypes.split(",") || []
 
     const info: YakitPluginBaseInfo = {
         Type: data.Type,
@@ -124,7 +126,7 @@ export const pluginConvertLocalToUI = async (value: YakScript) => {
         Help: data.Help || undefined,
         Tags: [...newTags],
         EnablePluginSelector: data.EnablePluginSelector || false,
-        PluginSelectorTypes: [...newPluginSelectorTypes]
+        PluginSelectorTypes: newPluginSelectorTypes.length === 0 ? undefined : [...newPluginSelectorTypes]
     }
 
     return info
@@ -305,4 +307,141 @@ export const splitPluginParamsData = (value: Record<string, any>, customs: YakPa
 export const delInvalidPluginExecuteParams = (kvs: KVPair[], params: YakParamProps[]) => {
     const keys = params.map((item) => item.Field)
     return kvs.filter((item) => keys.includes(item.Key))
+}
+
+/**
+ * @name 合并插件日志(API.PluginsAuditDetailResponse)转换前端插件结构对{old: YakitPluginBaseInfo, new: YakitPluginBaseInfo}
+ */
+export const pluginConvertMergeToUIs = async (value: API.PluginsAuditDetailResponse) => {
+    // 旧插件基础信息
+    let oldBaseInfo: YakitPluginBaseInfo | null = {
+        Type: "",
+        ScriptName: "",
+        Help: "",
+        Tags: [],
+        EnablePluginSelector: false,
+        PluginSelectorTypes: []
+    }
+    // 新插件基础信息
+    let newBaseInfo: YakitPluginBaseInfo = {
+        Type: "",
+        ScriptName: "",
+        Help: "",
+        Tags: [],
+        EnablePluginSelector: false,
+        PluginSelectorTypes: []
+    }
+
+    newBaseInfo.Type = value.type || ""
+    newBaseInfo.ScriptName = value.script_name || ""
+    newBaseInfo.Help = value.help || ""
+    let newTags: string[] = []
+    if (value.tags === "null" || !value.tags) {
+        newTags = []
+    } else {
+        newTags = (value.tags || "").split(",")
+    }
+    const codeInfo =
+        GetPluginLanguage(value.type) === "yak"
+            ? await onCodeToInfo({type: value.type || "yak", code: value.content})
+            : null
+    if (codeInfo && codeInfo.Tags.length > 0) {
+        newTags = newTags.concat(codeInfo.Tags).filter((item, index, self) => {
+            return self.indexOf(item) === index
+        })
+    }
+    newBaseInfo.Tags = newTags || []
+    newBaseInfo.EnablePluginSelector = value.enable_plugin_selector || false
+    if (value.plugin_selector_types) newBaseInfo.PluginSelectorTypes = value.plugin_selector_types.split(",") || []
+
+    if (value.merge_before_plugins) {
+        const data = cloneDeep(value.merge_before_plugins)
+        oldBaseInfo.Type = data.type || ""
+        oldBaseInfo.ScriptName = data.script_name || ""
+        oldBaseInfo.Help = data.help || ""
+        let oldTags: string[] = []
+        if (data.tags === "null" || !data.tags) {
+            oldTags = []
+        } else {
+            oldTags = (data.tags || "").split(",")
+        }
+        const codeInfo =
+            GetPluginLanguage(oldBaseInfo.Type) === "yak"
+                ? await onCodeToInfo({type: data.type || "yak", code: data.content || ""})
+                : null
+        if (codeInfo && codeInfo.Tags.length > 0) {
+            oldTags = oldTags.concat(codeInfo.Tags).filter((item, index, self) => {
+                return self.indexOf(item) === index
+            })
+        }
+        oldBaseInfo.Tags = oldTags || []
+        oldBaseInfo.EnablePluginSelector = data.enable_plugin_selector || false
+        if (data.plugin_selector_types) oldBaseInfo.PluginSelectorTypes = data.plugin_selector_types.split(",") || []
+    } else {
+        oldBaseInfo = null
+    }
+
+    return {oldInfo: oldBaseInfo, newInfo: newBaseInfo}
+}
+
+/**
+ * @name 将插件补充资料转换成JSON
+ */
+export const pluginSupplementConvertToJSON = (data: ImageTextareaData, file: {url: string; name: string}) => {
+    const isContent = !!data.value
+    const isImage = data.imgs.length > 0
+    const isFile = !!file.url
+
+    if (!isContent && !isImage && !isFile) return ""
+
+    const info: any[] = []
+    if (isContent) {
+        info.push({type: "text", value: data.value})
+    }
+    if (isImage) {
+        for (let item of data.imgs) {
+            info.push({type: "image", value: item})
+        }
+    }
+    if (isFile) {
+        info.push({type: "file", value: file})
+    }
+
+    return JSON.stringify(info)
+}
+
+/**
+ * @name 将JSON转换成补充资料数据
+ */
+export const pluginSupplementJSONConvertToData = (json: string) => {
+    const supplement: YakitPluginSupplement = {
+        text: "",
+        imgs: [],
+        fileInfo: {fileName: "", url: ""}
+    }
+
+    try {
+        const data = JSON.parse(json)
+        if (!Array.isArray(data)) return null
+        for (let item of data) {
+            if (item.type === "text") {
+                supplement.text += item.value
+            }
+            if (item.type === "image") {
+                supplement.imgs.push(item.value)
+            }
+            if (item.type === "file") {
+                supplement.fileInfo = {url: item.value.url, fileName: item.value.name}
+            }
+        }
+        if (
+            !supplement.text &&
+            supplement.imgs.length === 0 &&
+            (!supplement.fileInfo.url || !supplement.fileInfo.fileName)
+        ) {
+            return null
+        }
+        return supplement
+    } catch (error) {}
+    return null
 }
