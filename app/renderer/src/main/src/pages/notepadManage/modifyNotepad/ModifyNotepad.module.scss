@@ -201,3 +201,19 @@
         }
     }
 }
+
+.share-popover {
+    :global {
+        .ant-popover-inner {
+            border-radius: 8px;
+        }
+        .ant-popover-inner-content {
+            padding: 0;
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 8px;
+        }
+        .ant-popover-arrow-content {
+            background-color: var(--yakit-card-background-color) !important;
+        }
+    }
+}
