@@ -51,7 +51,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
     // 插件类型
     const pluginType = useMemo(() => {
         if (prInfo) return prInfo.type || undefined
-        return "yak" || undefined
+        return "yak"
     }, [prInfo])
     // 插件类型名和tag颜色
     const pluginTypeTag = useMemo(() => {
@@ -202,7 +202,7 @@ export const PluginLogDetail: React.FC<PluginLogDetailProps> = memo((props) => {
                 httpMergePluginOperate({...info, ...audit})
                     .then(() => {
                         // 合并操作成功后,通知审核详情页刷新数据(如果详情页插件和合并插件是同一个的情况下触发)
-                        emiter.emit("logMergeModifyToManageDetail", prInfo.uuid)
+                        emiter.emit("logMergeModifyToPluginDetail", prInfo.uuid)
                         resolve("success")
                     })
                     .catch(() => {

@@ -69,7 +69,7 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
                 )
             },
             {
-                title: "补充资料",
+                title: "下一步", //补充资料",
                 content: <PluginUploadSupplement nextName='下一步' loading={false} callback={handleUploadSupplement} />
             },
             {
