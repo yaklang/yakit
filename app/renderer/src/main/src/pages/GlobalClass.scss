@@ -17,6 +17,9 @@ body {
 
 a {
     color: var(--yakit-primary-5);
+    &:hover {
+        color: var(--yakit-primary-4);
+    }
 }
 
 /* 内容过长省略样式 */

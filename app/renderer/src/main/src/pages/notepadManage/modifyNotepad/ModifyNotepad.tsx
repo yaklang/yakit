@@ -31,6 +31,9 @@ import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {AuthorIcon, AuthorImg} from "@/pages/plugins/funcTemplate"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {getMarkdown} from "@milkdown/kit/utils"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+
+const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
 const onlineUserList: OnlineUsersProps[] = [
     {
@@ -79,6 +82,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const [expand, setExpand] = useState<boolean>(true)
     const [onlineUsers, setOnlineUsers] = useState<OnlineUsersProps[]>(onlineUserList)
     const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
+
+    const [shareVisible, setShareVisible] = useState<boolean>(false)
 
     const notepadRef = useRef<HTMLDivElement>(null)
     const treeKeysRef = useRef<string[]>([])
@@ -191,9 +196,21 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 />
                             ))}
                         </div>
-                        <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large'>
-                            分享
-                        </YakitButton>
+                        <YakitPopover
+                            content={
+                                <React.Suspense fallback={"loading"}>
+                                    <NotepadShareModal documentName={tabName} onClose={() => setShareVisible(false)} />
+                                </React.Suspense>
+                            }
+                            visible={shareVisible}
+                            onVisibleChange={setShareVisible}
+                            overlayClassName={styles["share-popover"]}
+                            placement='bottom'
+                        >
+                            <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large'>
+                                分享
+                            </YakitButton>
+                        </YakitPopover>
                         <YakitButton type='primary' icon={<OutlineClouddownloadIcon />} size='large'>
                             下载
                         </YakitButton>
