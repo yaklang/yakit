@@ -21,10 +21,10 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {RightAuditDetail} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {Risk} from "@/pages/risks/schema"
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
-import { addToTab } from "@/pages/MainTabs"
-import { YakitRoute } from "@/enums/yakitRoute"
+import {addToTab} from "@/pages/MainTabs"
+import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
-import { AuditCodePageInfoProps } from "@/store/pageInfo"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
@@ -274,10 +274,12 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
         if (node.ResourceType === "variable" && node.VerboseType === "alert") {
             try {
                 const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                const hash = arr[0].Value
-                setBugHash(hash)
-                setShowAuditDetail(true)
-                setBugId(node.id)
+                if (arr.length > 0) {
+                    const hash = arr[0].Value
+                    setBugHash(hash)
+                    setShowAuditDetail(true)
+                    setBugId(node.id)
+                }
             } catch (error) {
                 failed(`打开错误${error}`)
             }

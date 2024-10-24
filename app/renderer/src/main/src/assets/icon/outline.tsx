@@ -5526,3 +5526,19 @@ const OutlineScan = () => (
 export const OutlineScanIcon = (props: Partial<IconProps>) => {
     return <Icon component={OutlineScan} {...props} />
 }
+
+const PositionIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M2 12H6M12 2V6M18 12H22M12 18V22M20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12ZM14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12Z'
+            stroke='currentColor'
+            strokeWidth='2'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const OutlinePositionIcon = (props: Partial<IconProps>) => {
+    return <Icon component={PositionIcon} {...props} />
+}

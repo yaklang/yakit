@@ -5,6 +5,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlinCompileIcon,
     OutlinePluscircleIcon,
+    OutlinePositionIcon,
     OutlineRefreshIcon,
     OutlineScanIcon,
     OutlineXIcon
@@ -256,7 +257,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                     <YakitButton
                                         disabled={fileTreeLoad || fileTree.length === 0}
                                         type='text2'
-                                        icon={<OutlineScanIcon />}
+                                        icon={<OutlinePositionIcon />}
                                         onClick={onActiveFileScrollToFileTree}
                                     />
                                 </Tooltip>

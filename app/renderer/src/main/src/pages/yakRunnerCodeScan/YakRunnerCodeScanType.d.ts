@@ -40,6 +40,7 @@ export interface CodeScanExecuteContentRefProps {
     onStartExecute: () => void
     onPause: () => void
     onContinue: () => void
+    onSetProject: (v:string) => void
 }
 
 export interface CodeScaMainExecuteContentProps {
@@ -52,6 +53,8 @@ export interface CodeScaMainExecuteContentProps {
     selectGroupList: string[]
     /**进度条信息 */
     setProgressList: (s: StreamResult.Progress[]) => void
+    // 项目名称列表
+    auditCodeList:{label: string; value: string}[]
 }
 
 export interface FlowRuleDetailsListItemProps {
