@@ -650,7 +650,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     Page: 1,
                     Limit: 10
                 },
-                HTTPFlowHash: i.Hash
+                HTTPFlowHiddenIndex: i.HiddenIndex
             })
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 if (rsp.Total > 0) {
@@ -788,7 +788,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
                     <Col span={5}>
                         <HTTPFlowExtractedDataTable
-                            httpFlowHash={flow?.Hash || ""}
+                            hiddenIndex={flow?.HiddenIndex || ""}
                             title={
                                 <div className={styles["table-header"]}>
                                     <Button.Group size={"small"}>
