@@ -33,6 +33,7 @@ import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEdit
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
+import {PluginLog} from "../pluginLog/PluginLog"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -778,7 +779,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 )}
                             </TabPane>
-                            <TabPane tab='评论' key='comment' disabled={!hasOnline}>
+                            {/* <TabPane tab='评论' key='comment' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
                                         pluginName={onlinePlugin?.script_name || "-"}
@@ -804,7 +805,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         </div>
                                     )}
                                 </div>
-                            </TabPane>
+                            </TabPane> */}
                             <TabPane tab='日志' key='log' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
@@ -823,7 +824,14 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         basePluginName={copySourcePlugin}
                                         infoExtra={infoExtraNode}
                                     />
-                                    <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} />
+                                    {/* <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} /> */}
+                                    {onlinePlugin ? (
+                                        <PluginLog getContainer={wrapperId} plugin={onlinePlugin} />
+                                    ) : (
+                                        <div className={styles["tab-pane-empty"]}>
+                                            <YakitEmpty title='暂无日志信息' />
+                                        </div>
+                                    )}
                                 </div>
                             </TabPane>
                         </PluginTabs>

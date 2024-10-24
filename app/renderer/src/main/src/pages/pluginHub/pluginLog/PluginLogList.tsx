@@ -15,7 +15,7 @@ import styles from "./PluginLog.module.scss"
 
 /** @name 插件日志 */
 export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
-    const {triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals} = props
+    const {triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals, callbackTotal} = props
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(wrapperRef)
@@ -121,6 +121,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                 let data: API.PluginsLogsDetail[] = []
                 if (!beforeId.current) {
                     total.current = res.pagemeta.total
+                    callbackTotal && callbackTotal(total.current)
                     data = data.concat(res.data || [])
                 } else {
                     data = data.concat(response.data)
