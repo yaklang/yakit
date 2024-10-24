@@ -1638,6 +1638,7 @@ message QueryMITMRuleExtractedDataResponse {
 message QueryMITMRuleExtractedDataRequest {
   Paging Pagination = 1;
   string HTTPFlowHash = 2;
+  string HTTPFlowHiddenIndex = 3;
 }
 
 message ExportProjectRequest {
@@ -4747,6 +4748,7 @@ message HTTPFlow {
   // payloads (web fuzzer)
   repeated string Payloads = 47;
   int64 DurationMs = 48;
+  string HiddenIndex = 49;
 }
 
 message FuzzableParam {

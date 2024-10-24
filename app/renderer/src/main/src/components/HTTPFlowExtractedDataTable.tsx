@@ -9,7 +9,7 @@ import {HighLightText} from "./HTTPFlowDetail"
 const {Text} = Typography
 export interface HTTPFlowExtractedDataTableProp {
     title: React.ReactNode
-    httpFlowHash: string
+    hiddenIndex: string
     onSetHighLightText: (highLightText: HighLightText[]) => void
 }
 
@@ -28,17 +28,21 @@ export interface HTTPFlowExtractedData {
     IsMatchRequest: boolean
 }
 
+interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
+    HiddenIndex?: string
+}
+
 export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = (props) => {
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination())
     const [loading, setLoading] = useState(false)
     const [data, setData] = useState<HTTPFlowExtractedData[]>([])
-    const [params, setParams] = useState<QueryGeneralRequest & {HTTPFlowHash: string}>({
-        HTTPFlowHash: props.httpFlowHash,
+    const [params, setParams] = useState<QueryMITMRuleExtractedDataRequest>({
+        HiddenIndex: props.hiddenIndex,
         Pagination: genDefaultPagination()
     })
     const [total, setTotal] = useState(0)
 
-    const update = useMemoizedFn((page?: number, limit?: number, HTTPFlowHash?: string) => {
+    const update = useMemoizedFn((page?: number, limit?: number, hiddenIndex?: string) => {
         const paginationProps = {
             Page: page || 1,
             Limit: limit || pagination.Limit
@@ -48,7 +52,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             .invoke("QueryMITMRuleExtractedData", {
                 ...params,
                 Pagination: paginationProps,
-                HTTPFlowHash: HTTPFlowHash ? HTTPFlowHash : params.HTTPFlowHash
+                HTTPFlowHiddenIndex: hiddenIndex ? hiddenIndex : params.HiddenIndex
             })
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
@@ -67,12 +71,12 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     })
 
     useEffect(() => {
-        if (!props.httpFlowHash) {
+        if (!props.hiddenIndex) {
             return
         }
-        setParams({...params, HTTPFlowHash: props.httpFlowHash})
-        update(1, 10, props.httpFlowHash)
-    }, [props.httpFlowHash])
+        setParams({...params, HiddenIndex: props.hiddenIndex})
+        update(1, 10, props.hiddenIndex)
+    }, [props.hiddenIndex])
 
     return (
         <div className={styles["httpFlow-data-table"]}>

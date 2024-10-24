@@ -161,6 +161,8 @@ export interface HTTPFlow {
     /**前端 Uint8Array对应的string */
     RequestString: string
     ResponseString: string
+
+    HiddenIndex?:string
 }
 /**获取请求包Request和响应包Response  string */
 export const getHTTPFlowReqAndResToString = (flow: HTTPFlow) => {
