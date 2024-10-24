@@ -66,6 +66,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {WaterMark} from "@ant-design/pro-layout"
+import {AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 const {ipcRenderer} = window.require("electron")
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -513,7 +514,8 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const [continueLoading, setContinueLoading] = useState<boolean>(false)
     // 任务列表抽屉
     const [visibleRaskList, setVisibleRaskList] = useState<boolean>(false)
-
+    // 项目编译
+    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
@@ -554,6 +556,33 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         codeScanExecuteContentRef.current?.onContinue()
     })
 
+    const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
+
+    const getAduitList = useMemoizedFn(async () => {
+        try {
+            const {res} = await grpcFetchAuditTree("/")
+            if (res.Resources.length > 0) {
+                const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.ResourceName}))
+                console.log("list---",list);
+                
+                setAuditCodeList(list)
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        getAduitList()
+    }, [])
+
+    const onCloseCompileModal = useMemoizedFn(() => {
+        setShowCompileModal(false)
+    })
+
+    const onSuccee = useMemoizedFn((path: string) => {
+        setShowCompileModal(false)
+        getAduitList()
+        codeScanExecuteContentRef.current?.onSetProject(path)
+    })
     return (
         <>
             {isShowFlowRule && (
@@ -600,6 +629,17 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         >
                             任务列表
                         </YakitButton> */}
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setShowCompileModal(true)
+                            }}
+                            disabled={isExecuting}
+                            style={{padding: 0}}
+                        >
+                            编译项目
+                        </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
@@ -649,6 +689,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         setExecuteStatus={onSetExecuteStatus}
                         selectGroupList={selectGroupList}
                         setHidden={setHidden}
+                        auditCodeList={auditCodeList}
                     />
                 </div>
             </div>
@@ -663,13 +704,15 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     </>
                 )}
             </React.Suspense>
+
+            {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
         </>
     )
 })
 
 export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList} = props
+        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList,auditCodeList} = props
         const [form] = Form.useForm()
 
         useImperativeHandle(
@@ -684,6 +727,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         .catch((e) => {
                             setIsExpand(true)
                         })
+                },
+                onSetProject:(project:string)=>{
+                    console.log("onSetProject---",project);
+                    form.setFieldsValue({
+                        project
+                    })
                 }
             }),
             [form]
@@ -851,21 +900,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             // })
         })
 
-        const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
-
-        const getAduitList = useMemoizedFn(async () => {
-            try {
-                const {res} = await grpcFetchAuditTree("/")
-                if (res.Resources.length > 0) {
-                    const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.ResourceName}))
-                    setAuditCodeList(list)
-                }
-            } catch (error) {}
-        })
-
-        useEffect(() => {
-            getAduitList()
-        }, [])
         return (
             <>
                 <div

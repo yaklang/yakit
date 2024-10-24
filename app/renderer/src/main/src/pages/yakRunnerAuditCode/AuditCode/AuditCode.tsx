@@ -57,7 +57,7 @@ import {
     SolidPluscircleIcon,
     SolidXcircleIcon
 } from "@/assets/icon/solid"
-import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {AuditCodeStreamData, AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
@@ -71,6 +71,9 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
+import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -635,12 +638,14 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
         // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert" && parseInt(`${node.Size}`) !== 0) {
+        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
             try {
                 const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                const hash = arr[0].Value
-                setBugId(node.id)
-                emiter.emit("onCodeAuditOpenRightBugDetail", hash)
+                if (arr.length > 0) {
+                    const hash = arr[0].Value
+                    setBugId(node.id)
+                    emiter.emit("onCodeAuditOpenRightBugDetail", hash)
+                }
             } catch (error) {
                 failed(`打开错误${error}`)
             }
@@ -660,7 +665,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     Path: node.id
                 }
             }
-            // console.log("opop",data);
             emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
         }
     })
@@ -711,14 +715,15 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 }
 
 interface AuditModalFormProps {
-    onCancle: () => void
-    isInitDefault: boolean
+    onCancel: () => void
+    // 拆分后不在有默认值
+    isInitDefault?: boolean
     isExecuting: boolean
     onStartAudit: (path: string, v: DebugPluginRequest) => void
 }
 
 export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
-    const {onCancle, isInitDefault, isExecuting, onStartAudit} = props
+    const {onCancel, isInitDefault = false, isExecuting, onStartAudit} = props
     const {fileTree} = useStore()
     const [loading, setLoading] = useState<boolean>(true)
 
@@ -877,12 +882,134 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 ) : null}
             </Form>
             <div className={styles["audit-form-footer"]}>
-                <YakitButton type='outline2' onClick={onCancle}>
+                <YakitButton type='outline2' onClick={onCancel}>
                     取消
                 </YakitButton>
                 <YakitButton onClick={onStartExecute}>开始编译</YakitButton>
             </div>
         </YakitSpin>
+    )
+}
+
+interface AuditModalFormModalProps {
+    onCancel: () => void
+    onSuccee: (path: string) => void
+    isInitDefault?: boolean
+}
+
+// 公共封装组件用于新建项目
+export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
+    const {onCancel, onSuccee, isInitDefault} = props
+    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
+    const tokenRef = useRef<string>(randomString(40))
+    const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
+    /** 是否在执行中 */
+    const [isExecuting, setIsExecuting] = useState<boolean>(false)
+    const [runtimeId, setRuntimeId] = useState<string>("")
+    const pathCacheRef = useRef<string>("")
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => {
+                setShowRunAuditModal(false)
+                setIsExecuting(false)
+            }, 300)
+        },
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            setRuntimeId(rId)
+        }
+    })
+    // export-show
+    const [exportStreamData, setExportStreamData] = useState<AuditCodeStreamData>({
+        Progress: 0,
+        Message: "",
+        CostDurationVerbose: "",
+        RestDurationVerbose: "",
+        Speed: "0"
+    })
+    const logInfoRef = useRef<StreamResult.Log[]>([])
+    // 执行审计
+    const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
+        debugPluginStreamEvent.reset()
+        setRuntimeId("")
+        pathCacheRef.current = path
+        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+            setIsExecuting(true)
+            setShowCompileModal(false)
+            setShowRunAuditModal(true)
+            debugPluginStreamEvent.start()
+        })
+    })
+
+    const onCancelAudit = () => {
+        logInfoRef.current = []
+        setShowRunAuditModal(false)
+        debugPluginStreamEvent.cancel()
+        debugPluginStreamEvent.reset()
+        onCancel()
+    }
+
+    useEffect(() => {
+        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+        // 当任务结束时 跳转打开编译列表
+        if (progress === 1) {
+            setTimeout(() => {
+                logInfoRef.current = []
+                setShowRunAuditModal(false)
+                onSuccee(pathCacheRef.current)
+            }, 300)
+        }
+        logInfoRef.current = streamInfo.logState.slice(0, 8)
+        setExportStreamData({
+            ...exportStreamData,
+            Progress: progress
+        })
+    }, [streamInfo])
+    return (
+        <>
+            <YakitModal
+                visible={isShowCompileModal}
+                bodyStyle={{padding: 0}}
+                title={"编译项目"}
+                footer={null}
+                onCancel={onCancel}
+                maskClosable={false}
+            >
+                <AuditModalForm
+                    isInitDefault={isInitDefault}
+                    onCancel={onCancel}
+                    isExecuting={isExecuting}
+                    onStartAudit={onStartAudit}
+                />
+            </YakitModal>
+            {/* 编译项目进度条弹窗 */}
+            <YakitModal
+                centered
+                getContainer={document.getElementById("new-payload") || document.body}
+                visible={isShowRunAuditModal}
+                title={null}
+                footer={null}
+                width={520}
+                type='white'
+                closable={false}
+                hiddenHeader={true}
+                bodyStyle={{padding: 0}}
+            >
+                <AuditCodeStatusInfo
+                    title={"项目编译中..."}
+                    streamData={exportStreamData}
+                    cancelRun={() => {
+                        onCancelAudit()
+                    }}
+                    logInfo={logInfoRef.current}
+                    showDownloadDetail={false}
+                />
+            </YakitModal>
+        </>
     )
 }
 

@@ -8,7 +8,7 @@ import {
 } from "./YakRunnerAuditCodeType"
 import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {AuditHistoryTable, AuditModalForm} from "./AuditCode/AuditCode"
+import {AuditHistoryTable, AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
 import {getNameByPath, grpcFetchAuditTree, setYakRunnerHistory} from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
@@ -61,8 +61,8 @@ import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import { RightBugDetail } from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
-import { AuditCodePageInfoProps } from "@/store/pageInfo"
+import {RightBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -78,45 +78,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
 
-    const tokenRef = useRef<string>(randomString(40))
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
-    const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
-    const [isInitDefault, setInitDefault] = useState<boolean>(false)
-    /** 是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        taskName: "debug-plugin",
-        apiKey: "DebugPlugin",
-        token: tokenRef.current,
-        onEnd: () => {
-            debugPluginStreamEvent.stop()
-            setTimeout(() => {
-                setShowRunAuditModal(false)
-                setIsExecuting(false)
-            }, 300)
-        },
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-            setRuntimeId(rId)
-        }
-    })
-    // export-show
-    const [exportStreamData, setExportStreamData] = useState<AuditCodeStreamData>({
-        Progress: 0,
-        Message: "",
-        CostDurationVerbose: "",
-        RestDurationVerbose: "",
-        Speed: "0"
-    })
-    const logInfoRef = useRef<StreamResult.Log[]>([])
-
-    const onCancelAudit = () => {
-        logInfoRef.current = []
-        setShowRunAuditModal(false)
-        debugPluginStreamEvent.cancel()
-        debugPluginStreamEvent.reset()
-    }
 
     const setAuditCodePageInfo = useMemoizedFn((auditCodePageInfo: string) => {
         try {
@@ -138,7 +100,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     }, [])
 
     const onCloseCompileModal = useMemoizedFn(() => {
-        setInitDefault(false)
         setShowCompileModal(false)
     })
 
@@ -227,7 +188,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     // 接口是否运行中
     const isFetchRef = useRef<boolean>(false)
     // 当前文件树是否加载中
-    const [fileTreeLoad,setFileTreeLoad] = useState<boolean>(false)
+    const [fileTreeLoad, setFileTreeLoad] = useState<boolean>(false)
 
     // 提前注入Map
     const insertFileMap = useMemoizedFn((path) => {
@@ -256,7 +217,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         if (fileTree.length === 0) return
         const keys = getMapAllFileKey()
         const index = loadIndexRef.current
-        if(keys.length === 0) return
+        if (keys.length === 0) return
         if (!keys[index]) {
             // 预加载完成
             loadFileLoopRef.current = false
@@ -288,7 +249,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         loadIndexRef.current = 0
         clearMap()
         let id = setInterval(() => {
-            if(!loadFileLoopRef.current) return
+            if (!loadFileLoopRef.current) return
             loadFileMap()
         }, 100)
         return () => clearInterval(id)
@@ -386,7 +347,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     })
 
     // 重置页面
-    const onInitAuditCodePageFun = useMemoizedFn(()=>{
+    const onInitAuditCodePageFun = useMemoizedFn(() => {
         setPageInfo(undefined)
         setFileTree([])
         setProjectNmae(undefined)
@@ -409,39 +370,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             emiter.off("onCodeAuditOpenFileByPath", onOpenFileByPathFun)
         }
     }, [])
-
-    useEffect(() => {
-        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-        // 当任务结束时 跳转打开编译列表
-        if (progress === 1) {
-            setTimeout(() => {
-                logInfoRef.current = []
-                setShowRunAuditModal(false)
-                onOpenAuditTreeFun(`${projectNmae}`)
-                setPageInfo(undefined)
-                emiter.emit("onCodeAuditRefreshAduitHistory")
-            }, 300)
-        }
-
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
-        setExportStreamData({
-            ...exportStreamData,
-            Progress: progress
-        })
-    }, [streamInfo])
-
-    // 执行审计
-    const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
-        debugPluginStreamEvent.reset()
-        setRuntimeId("")
-        setProjectNmae(path)
-        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
-            setIsExecuting(true)
-            setShowCompileModal(false)
-            setShowRunAuditModal(true)
-            debugPluginStreamEvent.start()
-        })
-    })
 
     const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
     // 当前展示项
@@ -637,10 +565,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     })
 
     // initDefault是否加载表单默认值
-    const onOpenAuditModalFun = useMemoizedFn((initDefault?: string) => {
-        if (initDefault) {
-            setInitDefault(true)
-        }
+    const onOpenAuditModalFun = useMemoizedFn(() => {
         setShowCompileModal(true)
     })
 
@@ -729,7 +654,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         setAuditRightParams(undefined)
         setShowAuditDetail(true)
     })
-    
+
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
@@ -739,7 +664,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             emiter.emit("onCodeAuditRefreshAuditDetail")
         } catch (error) {}
     })
-    
+
     useEffect(() => {
         // 正常打开编译右侧详情
         emiter.on("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
@@ -758,6 +683,14 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         return " "
     }, [])
 
+    const onSuccee = (path: string) => {
+        onCloseCompileModal()
+        setProjectNmae(path)
+        onOpenAuditTreeFun(`${path}`)
+        setPageInfo(undefined)
+        emiter.emit("onCodeAuditRefreshAduitHistory")
+    }
+
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakRunnerContext.Provider value={{store, dispatcher}}>
@@ -772,7 +705,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 firstMinSize={200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
-                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad}/>}
+                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad} />}
                                 secondNodeStyle={{overflow: "unset", padding: 0}}
                                 secondNode={
                                     <YakitResizeBox
@@ -829,7 +762,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                             <div className={styles["footer"]}>
                                                 <YakitButton
                                                     icon={<OutlinCompileIcon />}
-                                                    onClick={() => emiter.emit("onExecuteAuditModal")}
+                                                    onClick={() => onOpenAuditModalFun()}
                                                 >
                                                     编译项目
                                                 </YakitButton>
@@ -848,48 +781,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                         )}
                     </>
                 )}
-                {/* 编译项目弹窗 */}
-                {isShowCompileModal && (
-                    <YakitModal
-                        visible={isShowCompileModal}
-                        bodyStyle={{padding: 0}}
-                        title={"编译项目"}
-                        footer={null}
-                        onCancel={onCloseCompileModal}
-                        maskClosable={false}
-                    >
-                        <AuditModalForm
-                            isInitDefault={isInitDefault}
-                            onCancle={onCloseCompileModal}
-                            isExecuting={isExecuting}
-                            onStartAudit={onStartAudit}
-                        />
-                    </YakitModal>
-                )}
 
-                {/* 编译项目进度条弹窗 */}
-                <YakitModal
-                    centered
-                    getContainer={document.getElementById("new-payload") || document.body}
-                    visible={isShowRunAuditModal}
-                    title={null}
-                    footer={null}
-                    width={520}
-                    type='white'
-                    closable={false}
-                    hiddenHeader={true}
-                    bodyStyle={{padding: 0}}
-                >
-                    <AuditCodeStatusInfo
-                        title={"项目编译中..."}
-                        streamData={exportStreamData}
-                        cancelRun={() => {
-                            onCancelAudit()
-                        }}
-                        logInfo={logInfoRef.current}
-                        showDownloadDetail={false}
+                {isShowCompileModal && (
+                    <AuditModalFormModal
+                        onCancel={onCloseCompileModal}
+                        onSuccee={onSuccee}
                     />
-                </YakitModal>
+                )}
             </YakRunnerContext.Provider>
         </WaterMark>
     )
