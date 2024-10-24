@@ -137,6 +137,42 @@
     top: 30%;
 }
 
+.preview-reply {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 20px;
+    .header-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        .author-name {
+            white-space: nowrap;
+            color: #31343f;
+        }
+        .log-time {
+            white-space: nowrap;
+            overflow: hidden;
+            color: #85899e;
+        }
+    }
+    .content-wrapper {
+        padding-left: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .description-style {
+            width: 100%;
+            overflow: hidden;
+
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+    }
+}
+
 // ---------- 插件日志各种类型对应样式 ----------
 .plugin-log-type-info {
     --plugin-log-type-background: #f0f1f3;
@@ -324,6 +360,7 @@
                 background-color: #eaecf3;
             }
             .reply-content {
+                cursor: pointer;
                 overflow: hidden;
                 display: flex;
                 gap: 8px;

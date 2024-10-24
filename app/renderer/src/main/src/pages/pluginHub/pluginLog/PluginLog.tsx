@@ -59,7 +59,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
 
     useEffect(() => {
         handleFetchAllTotal()
-    }, [])
+    }, [plugin])
     const [tabTotal, setTabTotal] = useState<Record<string, number>>({})
     const handleFetchAllTotal = useMemoizedFn(() => {
         httpFetchPluginLogsAllTotal(plugin.uuid)

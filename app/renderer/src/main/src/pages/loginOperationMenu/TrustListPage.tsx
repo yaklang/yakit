@@ -451,7 +451,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
             })
                 .then((res) => {
                     const {data = []} = res
-                    setUserList({data: data})
+                    setUserList({data: data || []})
                 })
                 .catch((err) => {
                     yakitNotify("error", "获取普通用户失败：" + err)

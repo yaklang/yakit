@@ -317,7 +317,12 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
                 <>
                     <div className={styles["reply-style"]}>
                         <div className={styles["reply-line"]}></div>
-                        <div className={styles["reply-content"]}>
+                        <div
+                            className={styles["reply-content"]}
+                            onClick={() => {
+                                handleType("quotation")
+                            }}
+                        >
                             {!!replyText && (
                                 <div
                                     className={classNames(styles["content-style"], "yakit-content-single-ellipsis")}
