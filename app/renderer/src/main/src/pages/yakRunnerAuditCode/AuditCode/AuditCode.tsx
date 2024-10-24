@@ -51,7 +51,12 @@ import {LoadingOutlined} from "@ant-design/icons"
 import {StringToUint8Array} from "@/utils/str"
 import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./AuditTree/AuditMap"
 import {clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail} from "./AuditTree/ChildMap"
-import {SolidExclamationIcon, SolidInformationcircleIcon, SolidXcircleIcon} from "@/assets/icon/solid"
+import {
+    SolidExclamationIcon,
+    SolidInformationcircleIcon,
+    SolidPluscircleIcon,
+    SolidXcircleIcon
+} from "@/assets/icon/solid"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {RequestYakURLResponse, YakURLResource} from "@/pages/yakURLTree/data"
@@ -64,6 +69,8 @@ import {addToTab} from "@/pages/MainTabs"
 import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
+import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
+import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -357,6 +364,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
 
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const [disabled, setDisabled] = useState<boolean>(true)
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
         return ids.map((id) => {
@@ -387,19 +395,17 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const initTreeLeaf = initTree.filter((item) => item.isLeaf)
         const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
         const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
-        if (newInitTree.length > 0) {
-            newInitTree.push({
-                parent: null,
-                name: "已经到底啦~",
-                id: "111",
-                depth: 1,
-                isBottom: true,
-                Extra: [],
-                ResourceType: "",
-                VerboseType: "",
-                Size: 0
-            })
-        }
+        newInitTree.push({
+            parent: null,
+            name: "已经到底啦~",
+            id: "111",
+            depth: 1,
+            isBottom: true,
+            Extra: [],
+            ResourceType: "",
+            VerboseType: "",
+            Size: 0
+        })
         return newInitTree
     }, [refreshTree])
 
@@ -422,16 +428,17 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     Location: projectNmae || "",
                     Path: path
                 }
-                let body: Buffer | undefined = undefined
-                if (!pageInfo) {
-                    body = StringToUint8Array(lastValue.current)
-                }
+                const body: Buffer = StringToUint8Array(lastValue.current)
                 if (pageInfo) {
                     const {Variable, Value, ...rest} = pageInfo
                     params = {
                         ...rest,
                         Path: path
                     }
+                }
+                // 如若已输入代码审计框
+                if (!disabled && (params?.Query || []).length > 0) {
+                    params.Query = []
                 }
                 const result = await loadAuditFromYakURLRaw(params, body)
 
@@ -483,7 +490,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
     useUpdateEffect(() => {
         setValue("")
+        setDisabled(true)
         resetMap()
+        setRefreshTree(!refreshTree)
     }, [projectNmae])
 
     const onSubmit = useMemoizedFn(async () => {
@@ -497,13 +506,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Location: projectNmae || "",
                 Path: path
             }
-            let body: Buffer | undefined = undefined
-            if (!pageInfo) {
-                body = StringToUint8Array(value)
-                lastValue.current = value
-            }
+            const body: Buffer = StringToUint8Array(value)
+            lastValue.current = value
             if (pageInfo) {
-                lastValue.current = ""
                 const {Variable, Value, ...rest} = pageInfo
                 // 此处请求Path固定为/ 因为不用拼接Variable、Value
                 params = rest
@@ -512,8 +517,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     setExpandedKeys([`${pageInfo.Path}${Variable}`])
                 }
             }
+            // 如若已输入代码审计框
+            if (!disabled && (params?.Query || []).length > 0) {
+                params.Query = []
+            }
             const result = await loadAuditFromYakURLRaw(params, body)
-
             if (result && result.Resources.length > 0) {
                 let messageIds: string[] = []
                 let variableIds: string[] = []
@@ -576,11 +584,49 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
-    useEffect(() => {
-        if (pageInfo) {
-            onSubmit()
+    // 获取文本域输入框
+    const onGrpcSetTextArea = useMemoizedFn((arr: {Key: string; Value: number}[]) => {
+        let resultId: number | null = null
+        arr.forEach((item) => {
+            if (item.Key === "result_id") {
+                resultId = item.Value
+            }
+        })
+        if (resultId) {
+            const Pagination = {
+                Page: 1,
+                Limit: 10,
+                Order: "desc",
+                OrderBy: "Id"
+            }
+            apiFetchQuerySyntaxFlowResult({
+                Pagination,
+                Filter: {
+                    TaskIDs: [],
+                    ResultIDs: [resultId],
+                    RuleNames: [],
+                    ProgramNames: [],
+                    Keyword: "",
+                    OnlyRisk: false
+                }
+            })
+                .then((rsp: QuerySyntaxFlowResultResponse) => {
+                    const resData = rsp?.Results || []
+                    if (resData.length > 0) {
+                        setValue(resData[0].RuleContent)
+                    }
+                })
+                .catch(() => {})
         }
-        else{
+    })
+
+    useEffect(() => {
+        setDisabled(true)
+        if (pageInfo) {
+            onGrpcSetTextArea(pageInfo.Query)
+            onSubmit()
+        } else {
+            setValue("")
             resetMap()
             setRefreshTree(!refreshTree)
         }
@@ -589,7 +635,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
         // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
+        if (node.ResourceType === "variable" && node.VerboseType === "alert" && parseInt(`${node.Size}`) !== 0) {
             try {
                 const arr = node.Extra.filter((item) => item.Key === "risk_hash")
                 const hash = arr[0].Value
@@ -618,6 +664,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
         }
     })
+
+    const setTextArea = useMemoizedFn((value: string) => {
+        setDisabled(false)
+        setValue(value)
+    })
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["audit-code"]}>
@@ -625,21 +676,20 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     <div className={styles["title"]}>代码审计</div>
                 </div>
 
-                {!pageInfo && (
-                    <div className={styles["textarea-box"]}>
-                        <YakitTextArea
-                            textAreaSize='small'
-                            value={value}
-                            setValue={setValue}
-                            isLimit={false}
-                            onSubmit={onSubmit}
-                            submitTxt={"开始审计"}
-                            rows={1}
-                            isAlwaysShow={true}
-                            placeholder='请输入审计规则...'
-                        />
-                    </div>
-                )}
+                <div className={styles["textarea-box"]}>
+                    <YakitTextArea
+                        textAreaSize='small'
+                        value={value}
+                        setValue={setTextArea}
+                        isLimit={false}
+                        onSubmit={onSubmit}
+                        submitTxt={"开始审计"}
+                        rows={1}
+                        isAlwaysShow={true}
+                        placeholder='请输入审计规则...'
+                        noSubmit={disabled}
+                    />
+                </div>
 
                 {isShowEmpty ? (
                     <div className={styles["no-data"]}>暂无数据</div>
@@ -938,6 +988,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             setSearch(e.target.value)
                         }}
                     />
+                    <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
+                        添加项目
+                    </YakitButton>
                 </div>
             </div>
 

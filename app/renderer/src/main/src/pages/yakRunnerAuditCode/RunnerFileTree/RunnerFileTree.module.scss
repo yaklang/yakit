@@ -31,12 +31,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            .title-style {
-                color: #85899e;
-                font-size: 12px;
-                font-weight: 500;
-                line-height: 16px;
+            .title-box {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                .title-style {
+                    white-space: nowrap;
+                    color: #85899e;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 16px;
+                }
             }
+
             .extra {
                 display: flex;
                 gap: 8px;

@@ -46,10 +46,13 @@
             flex-direction: column;
             gap: 8px;
             .message-box {
-                color: #31343f;
+                padding: 2px 10px;
+                color: var(--yakit-header-color);
                 font-size: 12px;
-                font-weight: 400;
-                line-height: 18px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 16px;
+
             }
             .title-render {
                 color: #31343f;

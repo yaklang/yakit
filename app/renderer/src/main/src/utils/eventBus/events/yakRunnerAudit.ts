@@ -30,4 +30,6 @@ export type YakRunnerAuditEventProps = {
     onCodeAuditRefreshAuditDetail?: string
     // 监听页面数据更新
     onAuditCodePageInfo: string
+    // 重置整个代码审计页面
+    onInitAuditCodePage?: string
 }

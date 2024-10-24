@@ -69,6 +69,7 @@ interface PageParamsInfoProps {
     /**新建漏洞与风险统计页面 */
     riskPageInfo?: RiskPageInfoProps
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
+    auditCodePageInfo?: AuditCodePageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {

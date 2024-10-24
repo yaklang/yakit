@@ -2,7 +2,13 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineScanIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlinCompileIcon,
+    OutlinePluscircleIcon,
+    OutlineRefreshIcon,
+    OutlineScanIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
@@ -43,15 +49,16 @@ import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {FileNodeProps, FileTreeListProps} from "@/pages/yakRunner/FileTree/FileTreeType"
-import { FileTree } from "../FileTree/FileTree"
-import { addToTab } from "@/pages/MainTabs"
-import { YakitRoute } from "@/enums/yakitRoute"
+import {FileTree} from "../FileTree/FileTree"
+import {addToTab} from "@/pages/MainTabs"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const {ipcRenderer} = window.require("electron")
 
-export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
-    const {} = props
-    const {fileTree} = useStore()
+export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
+    const {fileTreeLoad} = props
+    const {fileTree, activeFile} = useStore()
     const {handleFileLoadData} = useDispatcher()
 
     const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
@@ -101,7 +108,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             emiter.off("onCodeAuditRefreshFileTree", onRefreshFileTreeFun)
         }
     }, [])
-    
+
     const fileDetailTree = useMemo(() => {
         const initTree = initFileTree(fileTree, 1)
         if (initTree.length > 0) {
@@ -186,13 +193,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         const index = path.indexOf("-")
         // 使用 substring 方法获取第一个 "-" 后的所有内容
         const rootPath = path.substring(index + 1)
-        emiter.emit("onOpenAuditTree", rootPath)
+        emiter.emit("onCodeAuditOpenAuditTree", rootPath)
     })
 
     const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
         switch (key) {
             case "auditCode":
                 auditCode()
+                break
+            case "aduitAllList":
+                emiter.emit("onInitAuditCodePage")
                 break
             default:
                 if (keyPath.includes("auditHistory")) {
@@ -222,6 +232,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
     )
 
+    // 定位
+    const onActiveFileScrollToFileTree = useMemoizedFn(() => {
+        if (activeFile && (activeFile.parent || activeFile.fileSourceType === "audit")) {
+            emiter.emit("onCodeAuditScrollToFileTree", activeFile.path)
+        }
+    })
+
     return (
         <div className={styles["runner-file-tree"]}>
             <div className={styles["container"]}>
@@ -230,8 +247,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
-                            <div className={styles["title-style"]}>文件列表</div>
+                            <div className={styles["title-box"]}>
+                                <div className={styles["title-style"]}>文件列表</div>
+                                {fileTreeLoad && <YakitSpin size='small' />}
+                            </div>
                             <div className={styles["extra"]}>
+                                <Tooltip title={"定位"}>
+                                    <YakitButton
+                                        disabled={fileTreeLoad || fileTree.length === 0}
+                                        type='text2'
+                                        icon={<OutlineScanIcon />}
+                                        onClick={onActiveFileScrollToFileTree}
+                                    />
+                                </Tooltip>
                                 <Tooltip title={"代码扫描"}>
                                     <YakitButton
                                         disabled={fileTree.length === 0}
@@ -286,7 +314,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             </div>
         </div>
     )
-}
+})
 
 export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {} = props
