@@ -52,6 +52,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitPluginSupplement} from "@/pages/pluginEditor/base"
 import {DownloadingState} from "@/yakitGVDefine"
+import {PluginLog} from "@/pages/pluginHub/pluginLog/PluginLog"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -1092,7 +1093,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     type={plugin.type}
                                     wrapperClassName={styles["plugin-info-header"]}
                                 />
-                                <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} />
+                                <PluginLog getContainer={pageWrapId} plugin={plugin} />
+                                {/* <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} /> */}
                             </div>
                         </TabPane>
                     </PluginTabs>

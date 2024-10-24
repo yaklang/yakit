@@ -111,7 +111,7 @@ export const httpFetchPluginLogs: APIFunc<FetchPluginLogsRequest, API.PluginsLog
             order: page.order || "desc"
         }
 
-        console.log("method:get|api:plugins/logs\n", JSON.stringify(params), "\n", JSON.stringify(data))
+        // console.log("method:get|api:plugins/logs\n", JSON.stringify(params), "\n", JSON.stringify(data))
         NetWorkApi<API.LogsRequest, API.PluginsLogsResponse>({
             method: "get",
             url: "plugins/logs",
@@ -156,7 +156,7 @@ export const httpFetchMergePluginDetail: APIFunc<FetchMergePluginDetailRequest, 
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        // console.log("method:get|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<FetchMergePluginDetailRequest, API.PluginsAuditDetailResponse>({
             method: "get",
             url: "plugins/merge/update/detail",
@@ -178,7 +178,7 @@ export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.Plugins
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
+        // console.log("method:post|api:plugins/merge/update/detail\n", JSON.stringify(request))
         NetWorkApi<API.PluginMergeRequest, API.PluginsLogsDetail>({
             method: "post",
             url: "plugins/merge/update/detail",
@@ -197,7 +197,7 @@ export const httpMergePluginOperate: APIFunc<API.PluginMergeRequest, API.Plugins
  */
 export const httpPublishComment: APIFunc<API.CommentLogRequest, API.ActionSucceeded> = (request, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:post|api:comment/logs\n", JSON.stringify(request))
+        // console.log("method:post|api:comment/logs\n", JSON.stringify(request))
         NetWorkApi<API.CommentLogRequest, API.ActionSucceeded>({
             method: "post",
             url: "comment/logs",
@@ -216,7 +216,7 @@ export const httpPublishComment: APIFunc<API.CommentLogRequest, API.ActionSuccee
  */
 export const httpDeleteComment: APIFunc<number, API.ActionSucceeded> = (request, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:delete|api:comment/logs\n", JSON.stringify(request))
+        // console.log("method:delete|api:comment/logs\n", JSON.stringify(request))
         NetWorkApi<{logId: number}, API.ActionSucceeded>({
             method: "delete",
             url: "comment/logs",

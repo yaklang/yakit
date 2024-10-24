@@ -15,11 +15,10 @@ export interface HttpUploadImgPathRequest extends HttpUploadImgBaseRequest {
 /** @name 上传图片(文件路径) */
 export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request}))
+        // console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request}))
         ipcRenderer
             .invoke("http-upload-img-path", request)
             .then((res) => {
-                console.log("http-upload-img-path-res", res)
                 if (res?.code === 200 && res?.data) {
                     resolve(res.data)
                 } else {
@@ -42,11 +41,10 @@ export interface HttpUploadImgBase64Request extends HttpUploadImgBaseRequest {
 /** @name 上传图片(base64) */
 export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request, base64: "base64"}))
+        // console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request, base64: "base64"}))
         ipcRenderer
             .invoke("http-upload-img-base64", request)
             .then((res) => {
-                console.log("res", res)
                 if (res?.code === 200 && res?.data) {
                     resolve(res.data)
                 } else {
@@ -72,11 +70,10 @@ export interface httpUploadFileFileInfo {
  */
 export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        console.log("api:http-upload-file\n", JSON.stringify(request))
+        // console.log("api:http-upload-file\n", JSON.stringify(request))
         ipcRenderer
             .invoke("http-upload-file", request)
             .then((res) => {
-                console.log("res", res)
                 if (res?.code === 200 && res?.data) {
                     resolve(res.data)
                 } else {
@@ -95,7 +92,7 @@ export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request,
 /** @name 删除 OSS 资源 */
 export const httpDeleteOSSResource: APIFunc<API.DeleteOssResource, API.ActionSucceeded> = (info, hiddenError) => {
     return new Promise((resolve, reject) => {
-        console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
+        // console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
         NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
             method: "delete",
             url: "oss/resource",

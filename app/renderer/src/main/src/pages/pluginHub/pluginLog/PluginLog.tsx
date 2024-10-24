@@ -17,6 +17,8 @@ import {useStore} from "@/store"
 import {UserPlatformType} from "@/pages/globalVariable"
 import {UnLoginSvgIcon} from "@/components/layout/icons"
 import {failed} from "@/utils/notification"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 
 import yakitImg from "@/assets/yakit.jpg"
 import classNames from "classnames"
@@ -57,7 +59,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
 
     useEffect(() => {
         handleFetchAllTotal()
-    }, [])
+    }, [plugin])
     const [tabTotal, setTabTotal] = useState<Record<string, number>>({})
     const handleFetchAllTotal = useMemoizedFn(() => {
         httpFetchPluginLogsAllTotal(plugin.uuid)
@@ -70,6 +72,21 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                 setTabTotal({...totals})
             })
             .catch(() => {})
+    })
+    const handleUpdateTotal = useMemoizedFn((type: string, total: number) => {
+        if (tabTotal[type] !== total) {
+            setTabTotal((prev) => {
+                return {
+                    ...prev,
+                    [type]: total
+                }
+            })
+        }
+    })
+
+    const onRefresh = useMemoizedFn(() => {
+        handleFetchAllTotal()
+        handleTriggerRefresh()
     })
 
     /** ---------- 评论&回复 Start ---------- */
@@ -84,7 +101,7 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
             references.current = cloneDeep(info)
             if (info.logType === "check") {
                 const strs = info.description.split("\n")
-                strs.shift()
+                // strs.shift()
                 setQuotation({
                     userName: info.userName,
                     content: strs.join("\n") || "",
@@ -138,21 +155,25 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
     return (
         <div className={styles["plugin-log"]}>
             <div className={styles["plugin-log-tab-header"]}>
-                {PluginLogTabBars.map((item) => {
-                    const count = (tabTotal || {})[item.name] || 0
-                    return (
-                        <div
-                            key={item.key}
-                            className={classNames(styles["header-opt"], {
-                                [styles["haeder-active"]]: active === item.key
-                            })}
-                            onClick={() => onSetActive(item.key)}
-                        >
-                            {item.name}
-                            <div className={styles["total-tag"]}>{count}</div>
-                        </div>
-                    )
-                })}
+                <div className={styles["header-list"]}>
+                    {PluginLogTabBars.map((item) => {
+                        const count = (tabTotal || {})[item.name] || 0
+                        return (
+                            <div
+                                key={item.key}
+                                className={classNames(styles["header-opt"], {
+                                    [styles["haeder-active"]]: active === item.key
+                                })}
+                                onClick={() => onSetActive(item.key)}
+                            >
+                                {item.name}
+                                <div className={styles["total-tag"]}>{count}</div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefresh}></YakitButton>
             </div>
 
             <div className={styles["plugin-log-tab-body"]}>
@@ -168,6 +189,9 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                             {...props}
                             onReply={handleReply}
                             onRefreshTotals={handleFetchAllTotal}
+                            callbackTotal={(count) => {
+                                handleUpdateTotal("all", count)
+                            }}
                         />
                     </div>
                 )}
@@ -183,6 +207,9 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                             {...props}
                             onReply={handleReply}
                             onRefreshTotals={handleFetchAllTotal}
+                            callbackTotal={(count) => {
+                                handleUpdateTotal("check", count)
+                            }}
                         />
                     </div>
                 )}
@@ -198,6 +225,9 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                             {...props}
                             onReply={handleReply}
                             onRefreshTotals={handleFetchAllTotal}
+                            callbackTotal={(count) => {
+                                handleUpdateTotal("update", count)
+                            }}
                         />
                     </div>
                 )}
@@ -213,6 +243,9 @@ export const PluginLog: React.FC<PluginLogProps> = memo((props) => {
                             {...props}
                             onReply={handleReply}
                             onRefreshTotals={handleFetchAllTotal}
+                            callbackTotal={(count) => {
+                                handleUpdateTotal("comment", count)
+                            }}
                         />
                     </div>
                 )}

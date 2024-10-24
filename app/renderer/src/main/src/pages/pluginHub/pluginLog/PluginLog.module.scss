@@ -11,11 +11,17 @@
 }
 
 .plugin-log-tab-header {
-    height: 32px;
     padding-right: 8px;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid #eaecf3;
+    .header-list {
+        display: flex;
+        align-items: center;
+    }
     .header-opt {
+        height: 31px;
         padding: 4px 12px;
         display: flex;
         align-items: center;
@@ -129,6 +135,42 @@
 }
 .plugin-log-del-comment-hit {
     top: 30%;
+}
+
+.preview-reply {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 20px;
+    .header-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        .author-name {
+            white-space: nowrap;
+            color: #31343f;
+        }
+        .log-time {
+            white-space: nowrap;
+            overflow: hidden;
+            color: #85899e;
+        }
+    }
+    .content-wrapper {
+        padding-left: 30px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        .description-style {
+            width: 100%;
+            overflow: hidden;
+
+            color: #31343f;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 20px;
+        }
+    }
 }
 
 // ---------- 插件日志各种类型对应样式 ----------
@@ -245,6 +287,7 @@
                 background-color: #ffffff;
             }
             .author-name {
+                white-space: nowrap;
                 color: #31343f;
             }
             .author-name + .log-content {
@@ -254,12 +297,15 @@
                 margin-left: 6px;
             }
             .log-content {
+                white-space: nowrap;
                 color: var(--plugin-log-type-content, #85899e);
             }
             .log-content + .reply-name {
                 margin-left: 6px;
             }
             .log-time {
+                white-space: nowrap;
+                overflow: hidden;
                 color: #85899e;
             }
         }
@@ -314,6 +360,7 @@
                 background-color: #eaecf3;
             }
             .reply-content {
+                cursor: pointer;
                 overflow: hidden;
                 display: flex;
                 gap: 8px;

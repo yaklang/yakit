@@ -36,6 +36,8 @@ export interface PluginLogListProps extends PluginLogProps {
     type: PluginLogType
     onReply: (info: API.PluginsLogsDetail) => void
     onRefreshTotals: () => void
+    /** 更新 total 数据 */
+    callbackTotal?: (total: number) => void
 }
 
 /** ---------- PluginLogOpt ----------  */

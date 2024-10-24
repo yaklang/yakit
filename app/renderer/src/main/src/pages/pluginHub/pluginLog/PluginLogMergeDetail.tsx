@@ -120,7 +120,6 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
         setLoading(true)
         httpFetchMergePluginDetail({uuid: uuid, up_log_id: id})
             .then(async (res) => {
-                console.log("获取合并插件信息\n", res)
                 if (res) {
                     setPRInfo(res)
                     // 旧源码
@@ -237,7 +236,6 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
                     const info = convertRemoteToRemoteInfo(prInfo, data)
                     httpMergePluginOperate({...info, ...audit})
                         .then((res) => {
-                            console.log("通过合并或者不通过合并后的返回内容", res)
                             // 合并操作成功后,通知所有插件详情页刷新数据(如果详情页插件和合并插件是同一个的情况下触发)
                             emiter.emit("logMergeModifyToPluginDetail", prInfo.uuid)
                             resolve(res)
@@ -810,7 +808,6 @@ export const PluginLogCodeDiff: React.FC<PluginLogCodeDiffProps> = memo((props) 
         setLoading(true)
         httpFetchMergePluginDetail({uuid: uuid, up_log_id: id})
             .then(async (res) => {
-                console.log("获取对比代码信息\n", res)
                 if (res) {
                     language.current = GetPluginLanguage(res.type)
                     // 获取对比器-修改源码

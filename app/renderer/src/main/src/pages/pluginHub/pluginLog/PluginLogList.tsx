@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {useDebounceEffect, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
 import {PluginLogListProps} from "./PluginLogType"
 import {API} from "@/services/swagger/resposeType"
 import {PluginLogOpt} from "./PluginLogOpt"
@@ -9,13 +9,22 @@ import {useStore} from "@/store"
 import {PluginLogCodeDiff, PluginLogMergeDetail} from "./PluginLogMergeDetail"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import cloneDeep from "lodash/cloneDeep"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {AuthorImg} from "@/pages/plugins/funcTemplate"
+import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
+import {TextareaForImage} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType"
+import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
+import {ImagePreviewList} from "../utilsUI/UtilsTemplate"
+import {formatTimestamp} from "@/utils/timeUtil"
 
-import classNames from "classnames"
+// import classNames from "classnames"
 import styles from "./PluginLog.module.scss"
+import UnLogin from "@/assets/unLogin.png"
 
 /** @name 插件日志 */
 export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
-    const {triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals} = props
+    const {triggerRefresh, getContainer, type, plugin, onReply, onRefreshTotals, callbackTotal} = props
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(wrapperRef)
@@ -117,10 +126,10 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         setLoading(true)
         httpFetchPluginLogs({data: request, params: {limit: limit}})
             .then((res) => {
-                console.log("日志列表", `type:${type}`, res)
                 let data: API.PluginsLogsDetail[] = []
                 if (!beforeId.current) {
                     total.current = res.pagemeta.total
+                    callbackTotal && callbackTotal(total.current)
                     data = data.concat(res.data || [])
                 } else {
                     data = data.concat(response.data)
@@ -145,15 +154,18 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
             })
     })
     // 初始化请求日志列表数据
-    const resetFetchLogs = useMemoizedFn(() => {
-        handleReset()
-        handleFetchLogs()
-        // if (["all", "check"].includes(type)) {
-        //     handleFetchNewCheckLog(handleFetchLogs)
-        // } else {
-        //     handleFetchLogs()
-        // }
-    })
+    const resetFetchLogs = useDebounceFn(
+        useMemoizedFn(() => {
+            handleReset()
+            handleFetchLogs()
+            // if (["all", "check"].includes(type)) {
+            //     handleFetchNewCheckLog(handleFetchLogs)
+            // } else {
+            //     handleFetchLogs()
+            // }
+        }),
+        {wait: 300, leading: true}
+    ).run
     // 加载更多
     const onLoadMore = useThrottleFn(
         useMemoizedFn(() => {
@@ -208,6 +220,9 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
         }
         if (type === "supplement") {
             return
+        }
+        if (type === "quotation") {
+            handleOpenShowQuotaion(info)
         }
     })
     /** ---------- 合并功能 Start ---------- */
@@ -290,6 +305,59 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
     })
     /** ---------- 删除评论|回复 End ---------- */
 
+    /** ---------- 预览回复里的引用 Start ---------- */
+    const replyInfo = useRef<API.PluginsLogsDetail>()
+    const [showQuotation, setShowQuotation] = useState<boolean>(false)
+    const handleOpenShowQuotaion = useMemoizedFn((info: API.PluginsLogsDetail) => {
+        if (showQuotation) return
+        replyInfo.current = cloneDeep(info)
+        setShowQuotation(true)
+    })
+    const handleCancelShowQuotaion = useMemoizedFn(() => {
+        replyInfo.current = undefined
+        setShowQuotation(false)
+    })
+    const replyRoleTag = useMemoizedFn(() => {
+        if (!replyInfo.current) return null
+        const {parentComment} = replyInfo.current
+        if (!parentComment) return null
+        const isAuthors = parentComment.isAuthors
+        const role = parentComment.userRole
+
+        if (isAuthors) {
+            return <YakitRoundCornerTag color='info'>作者</YakitRoundCornerTag>
+        }
+        if (role === "admin") {
+            return <YakitRoundCornerTag color='blue'>管理员</YakitRoundCornerTag>
+        }
+        if (role === "trusted") {
+            return <YakitRoundCornerTag color='green'>信任用户</YakitRoundCornerTag>
+        }
+        if (role === "auditor") {
+            return <YakitRoundCornerTag color='blue'>审核员</YakitRoundCornerTag>
+        }
+
+        return null
+    })
+    const replyContent = useMemoizedFn(() => {
+        const contents: {text: string; imgs: TextareaForImage[]} = {text: "", imgs: []}
+        if (!replyInfo.current) return contents
+        const {parentComment} = replyInfo.current
+        if (!parentComment) return contents
+
+        if (parentComment.logType === "comment") {
+            const data = pluginSupplementJSONConvertToData(parentComment.description)
+            if (!data) return contents
+            contents.text = data.text
+            contents.imgs = data.imgs
+            return contents
+        } else {
+            contents.text = parentComment.description
+            return contents
+        }
+    })
+    /** ---------- 预览回复里的引用 End ---------- */
+
     return (
         <div ref={wrapperRef} className={styles["plugin-log-list"]} onScroll={() => onLoadMore()}>
             <div className={styles["list-wrapper"]}>
@@ -344,6 +412,38 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                 onOk={handleDelCommentOK}
                 onCancel={handleDelCommentClose}
             />
+
+            {/* 回复的引用预览 */}
+            {replyInfo.current && (
+                <YakitModal
+                    getContainer={document.getElementById(getContainer || "") || undefined}
+                    title='评论详情'
+                    type='white'
+                    visible={showQuotation}
+                    centered={true}
+                    footer={null}
+                    onCancel={handleCancelShowQuotaion}
+                >
+                    <div className={styles["preview-reply"]}>
+                        <div className={styles["header-wrapper"]}>
+                            <AuthorImg src={replyInfo.current.parentComment?.headImg || UnLogin} />
+                            <div className={styles["author-name"]}>{replyInfo.current.parentComment?.userName}</div>
+                            {replyRoleTag()}
+                            <div className={styles["log-time"]}>{` · ${formatTimestamp(
+                                replyInfo.current.parentComment?.updated_at || 0
+                            )}`}</div>
+                        </div>
+                        <div className={styles["content-wrapper"]}>
+                            <div className={styles["description-style"]}>{replyContent().text || ""}</div>
+                            {replyContent().imgs.length > 0 && (
+                                <div>
+                                    <ImagePreviewList imgs={replyContent().imgs} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </YakitModal>
+            )}
         </div>
     )
 })
