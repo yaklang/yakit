@@ -1533,12 +1533,17 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
     }, [visible])
 
     const [value, setValue] = useState<string>("")
+    // const [kind, setKind] = useState<"body" | "extra">("body")
     const onSubmit = useMemoizedFn(() => {
         if (!value) {
             yakitNotify("error", "请输入删除原因!")
             return
         }
-        onOK(value)
+        let data = value
+        if (type === "nopass") {
+            data = value //`${kind}\n${value}`
+        }
+        onOK(data)
     })
 
     return (
@@ -1556,8 +1561,34 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
             bodyStyle={{padding: 0}}
         >
             <div className={styles["reason-modal-body"]}>
+                {
+                    type === "nopass" && null
+                    // <div className={styles["no-pass-kind"]}>
+                    //     <Radio
+                    //         className='plugins-radio-wrapper'
+                    //         checked={kind === "body"}
+                    //         onClick={(e) => {
+                    //             if (kind === "body") return
+                    //             setKind("body")
+                    //         }}
+                    //     >
+                    //         内容不通过
+                    //     </Radio>
+                    //     <Radio
+                    //         className='plugins-radio-wrapper'
+                    //         checked={kind === "extra"}
+                    //         onClick={(e) => {
+                    //             if (kind === "extra") return
+                    //             setKind("extra")
+                    //         }}
+                    //     >
+                    //         补充资料不通过
+                    //     </Radio>
+                    // </div>
+                }
                 <YakitInput.TextArea
                     autoSize={{minRows: 3, maxRows: 3}}
+                    isShowResize={false}
                     showCount
                     value={value}
                     maxLength={150}

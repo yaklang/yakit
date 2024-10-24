@@ -61,7 +61,7 @@ service.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             const res = {
                 code: 401,
-                message: error.response.data.reason,
+                message: error.response.data?.message || error.response.data.reason,
                 userInfo: USER_INFO
             }
             return Promise.resolve(res)
@@ -89,7 +89,12 @@ service.interceptors.response.use(
     }
 )
 let cancelTokenSource = null
-function httpApi(method, url, params, headers, isAddParams = true, timeout = DefaultTimeOut) {
+/**
+ * @param {Object} argParams - 额外参数
+ * @param {Boolean} argParams.cancelInterrupt - 是否取消主动中断操作
+ */
+function httpApi(method, url, params, headers, isAddParams = true, timeout = DefaultTimeOut, argParams) {
+    const {cancelInterrupt} = argParams || {}
     if (!["get", "post"].includes(method)) {
         return Promise.reject(`call yak echo failed: ${e}`)
     }
@@ -106,7 +111,7 @@ function httpApi(method, url, params, headers, isAddParams = true, timeout = Def
         params: isAddParams ? params : undefined,
         data: method === "post" ? params : undefined,
         timeout,
-        cancelToken: cancelTokenSource.token
+        cancelToken: !!cancelInterrupt ? undefined : cancelTokenSource.token
     }).finally(() => {
         // 请求完成后清理cancelTokenSource
         cancelTokenSource = null

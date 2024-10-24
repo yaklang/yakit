@@ -1,8 +1,7 @@
-import React, {ReactNode, memo, useEffect, useMemo, useRef, useState} from "react"
-import {Alert, Avatar, Button, Layout, Modal, Space, Upload} from "antd"
+import React, {ReactNode, useEffect, useRef, useState} from "react"
+import {Avatar, Layout, Modal, Upload} from "antd"
 import {CameraOutlined} from "@ant-design/icons"
-import {failed, info, success, yakitNotify} from "../utils/notification"
-import {showModal} from "../utils/showModal"
+import {failed, success} from "../utils/notification"
 import {
     CompletionTotal,
     MethodSuggestion,
@@ -18,7 +17,7 @@ import SetPassword from "./SetPassword"
 import {useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
-import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setLocalValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -29,7 +28,7 @@ import {
     isEnterpriseOrSimpleEdition
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
-import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
+import {CodeGV, RemoteGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
 import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
@@ -44,12 +43,10 @@ import {MainOperatorContent} from "./layout/mainOperatorContent/MainOperatorCont
 import {MultipleNodeInfo} from "./layout/mainOperatorContent/MainOperatorContentType"
 import {WaterMark} from "@ant-design/pro-layout"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 import "./main.scss"
 import "./GlobalClass.scss"
-import {YakitSystem} from "@/yakitGVDefine"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -123,29 +120,17 @@ export const SetUserInfo: React.FC<SetUserInfoProp> = React.memo((props) => {
 
     // OSS远程头像删除
     const deleteAvatar = useMemoizedFn((imgName) => {
-        NetWorkApi<API.DeleteResource, API.ActionSucceeded>({
-            method: "post",
-            url: "delete/resource",
-            data: {
-                file_type: "img",
-                file_name: [imgName]
-            }
-        })
-            .then((result) => {
-                // if(result.ok){
-                //     success("原有头像删除成功")
-                // }
-            })
+        httpDeleteOSSResource({file_name: [imgName]}, true)
+            .then(() => {})
             .catch((err) => {
                 failed("头像更换失败：" + err)
             })
-            .finally(() => {})
     })
 
     // 修改头像
     const setAvatar = useMemoizedFn(async (file) => {
         await ipcRenderer
-            .invoke("upload-img", {path: file.path, type: file.type})
+            .invoke("http-upload-img-path", {path: file.path, type: "headImg"})
             .then((res) => {
                 let imgUrl: string = res.data
                 NetWorkApi<API.UpUserInfoRequest, API.ActionSucceeded>({

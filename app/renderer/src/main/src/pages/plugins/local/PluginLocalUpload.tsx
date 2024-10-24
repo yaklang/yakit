@@ -1,19 +1,16 @@
 import React, {useState, useMemo, useRef, useEffect} from "react"
-
 import YakitSteps from "./YakitSteps/YakitSteps"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useMemoizedFn, useGetState} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {Radio, Progress} from "antd"
-import {YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {randomString} from "@/utils/randomUtil"
-import {DownloadOnlinePluginAllResProps} from "@/pages/yakitStore/YakitStorePage"
 import {failed, yakitNotify} from "@/utils/notification"
-import classNames from "classnames"
 import {YakScript} from "@/pages/invoker/schema"
 import {CodeScoreModule} from "../funcTemplate"
 import usePluginUploadHooks, {SaveYakScriptToOnlineRequest, SaveYakScriptToOnlineResponse} from "../pluginUploadHooks"
+import {PluginUploadSupplement} from "@/pages/pluginHub/pluginUploadModal/PluginUploadModal"
 
+import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./PluginLocalUpload.module.scss"
 
@@ -30,21 +27,30 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
     const [isPrivate, setIsPrivate] = useState<boolean>(true)
 
     const [successPluginNames, setSuccessPluginNames] = useState<string[]>([])
-
+    const [supplementJson, setSupplementJson] = useState<string>("")
+    // 选择展示类型
     const onPrivateSelectionPrev = useMemoizedFn((v) => {
         if (v) {
             // true 选择的私密，私密会跳过检测，直接上传
-            setCurrent(current + 2)
+            setCurrent(current + 3)
             setSuccessPluginNames(pluginNames)
         } else {
             setCurrent(current + 1)
         }
         setIsPrivate(v)
     })
+    // 返回符合的插件名集合
     const onAutoTestNext = useMemoizedFn((pluginNames) => {
         setCurrent(current + 1)
         setSuccessPluginNames(pluginNames)
     })
+
+    // 返回补充资料
+    const handleUploadSupplement = useMemoizedFn((data: string) => {
+        setCurrent(current + 1)
+        setSupplementJson(data)
+    })
+
     const steps = useMemo(() => {
         return [
             {
@@ -63,19 +69,24 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
                 )
             },
             {
+                title: "下一步", //补充资料",
+                content: <PluginUploadSupplement nextName='下一步' loading={false} callback={handleUploadSupplement} />
+            },
+            {
                 title: "上传中",
                 content: (
                     <PluginUpload
-                        show={current === 2 && successPluginNames.length > 0}
+                        show={current === 3 && successPluginNames.length > 0}
                         pluginNames={successPluginNames}
                         onSave={onClose}
                         onCancel={onClose}
                         isPrivate={isPrivate}
+                        supplementJson={supplementJson}
                     />
                 )
             }
         ]
-    }, [current, successPluginNames, pluginNames, isPrivate])
+    }, [current, successPluginNames, pluginNames, isPrivate, supplementJson])
     return (
         <div className={styles["plugin-local-upload"]}>
             <YakitSteps current={current}>
@@ -83,15 +94,17 @@ export const PluginLocalUpload: React.FC<PluginLocalUploadProps> = React.memo((p
                     <YakitSteps.YakitStep key={item.title} title={item.title} />
                 ))}
             </YakitSteps>
-            <div className={styles["header-wrapper"]}>
-                <div className={styles["title-style"]}>提示：</div>
-                <div className={styles["header-body"]}>
-                    <div className={styles["opt-content"]}>
-                        <div className={styles["content-order"]}>1</div>
-                        批量上传只支持新增，更新插件请点击编辑逐个进行更新
+            {current !== 2 && (
+                <div className={styles["header-wrapper"]}>
+                    <div className={styles["title-style"]}>提示：</div>
+                    <div className={styles["header-body"]}>
+                        <div className={styles["opt-content"]}>
+                            <div className={styles["content-order"]}>1</div>
+                            批量上传只支持新增，更新插件请点击编辑逐个进行更新
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
             <div className={styles["plugin-local-upload-steps-content"]}>{steps[current]?.content}</div>
         </div>
     )
@@ -293,6 +306,8 @@ interface PluginUploadProps {
     show: boolean
     /**选择的插件 */
     pluginNames: string[]
+    /** 插件的补充资料 */
+    supplementJson?: string
     /**取消 */
     onCancel: () => void
     /**
@@ -303,7 +318,7 @@ interface PluginUploadProps {
     footerClassName?: string
 }
 export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
-    const {isUploadAll, isPrivate, show, pluginNames, onSave, onCancel, footerClassName} = props
+    const {isUploadAll, isPrivate, show, pluginNames, supplementJson, onSave, onCancel, footerClassName} = props
     const taskTokenRef = useRef(randomString(40))
     const [percent, setPercent] = useState<number>(0)
     const [messageList, setMessageList] = useState<MessageListProps[]>([])
@@ -358,6 +373,7 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
             IsPrivate: isPrivate,
             All: isUploadAll
         }
+        if (supplementJson) params.PluginSupplement = supplementJson
         onStart(params)
     })
     const onClickNext = useMemoizedFn(() => {

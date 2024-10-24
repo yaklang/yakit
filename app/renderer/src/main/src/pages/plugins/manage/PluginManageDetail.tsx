@@ -9,11 +9,17 @@ import {
     statusTag
 } from "../baseTemplate"
 import {SolidBadgecheckIcon, SolidBanIcon} from "@/assets/icon/solid"
-import {OutlineClouddownloadIcon, OutlineCodeIcon, OutlineLightbulbIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineClouddownloadIcon,
+    OutlineCodeIcon,
+    OutlineLightbulbIcon,
+    OutlineLoadingIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
-import {Tooltip} from "antd"
+import {Image, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     PluginFilterParams,
@@ -30,13 +36,13 @@ import {OnlinePluginAppAction} from "../pluginReducer"
 import {YakitPluginListOnlineResponse, YakitPluginOnlineDetail} from "../online/PluginsOnlineType"
 import {convertPluginsRequestParams} from "../utils"
 import {convertRemoteToRemoteInfo, onCodeToInfo} from "../editDetails/utils"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {PluginDebug} from "../pluginDebug/PluginDebug"
 import {GetPluginLanguage} from "../builtInData"
 import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
-import {riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
+import {pluginSupplementJSONConvertToData, riskDetailConvertOnlineToLocal} from "@/pages/pluginEditor/utils/convert"
 import {httpAuditPluginOperate, httpFetchAuditPluginDetail} from "@/pages/pluginHub/utils/http"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
@@ -44,6 +50,9 @@ import useAdmin from "@/hook/useAdmin"
 import {PluginLogs} from "../log/PluginLog"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitPluginSupplement} from "@/pages/pluginEditor/base"
+import {DownloadingState} from "@/yakitGVDefine"
+import {PluginLog} from "@/pages/pluginHub/pluginLog/PluginLog"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -52,6 +61,8 @@ import styles from "./pluginManage.module.scss"
 const {TabPane} = PluginTabs
 
 const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+const {ipcRenderer} = window.require("electron")
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -179,6 +190,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 img: res.apply_user_head_img || "",
                                 description: res.logDescription || ""
                             })
+                            // 获取补充资料
+                            const supplementInfo = pluginSupplementJSONConvertToData(res.pluginSupplement || "")
+                            setSupplement(supplementInfo ? {...supplementInfo} : undefined)
                             // 设置基础信息
                             let infoData: PluginBaseParamProps = {
                                 ScriptName: res.script_name,
@@ -242,9 +256,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         })
         // 日志里的合并影响审核插件的状态，所以需要获取最新数据展示
         useEffect(() => {
-            emiter.on("logMergeModifyToManageDetail", updateDetail)
+            emiter.on("logMergeModifyToPluginDetail", updateDetail)
             return () => {
-                emiter.off("logMergeModifyToManageDetail", updateDetail)
+                emiter.off("logMergeModifyToPluginDetail", updateDetail)
             }
         }, [])
 
@@ -349,6 +363,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         // 修改者信息
         const [apply, setApply] = useState<{name: string; img: string; description: string}>()
         const isApply = useMemo(() => !!(apply && apply.name), [apply])
+
+        // 补充资料
+        const [supplement, setSupplement] = useState<YakitPluginSupplement>()
 
         // 插件基础信息-相关逻辑
         const infoRef = useRef<PluginInfoRefProps>(null)
@@ -686,6 +703,49 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             return params
         })
 
+        // 预览
+        const [preview, setPreview] = useState<boolean>(false)
+        const current = useRef<number>(0)
+        const handlePreview = useMemoizedFn((index: number) => {
+            if (preview) return
+            current.current = index
+            setPreview(true)
+        })
+
+        const [downloadFileLoading, setDownloadFileLoading] = useState<boolean>(false)
+        // 下载附件里的压缩包
+        const downloadSupplementFile = useMemoizedFn(() => {
+            if (downloadFileLoading) return
+            if (!supplement) {
+                failed("补充资料里无压缩包附件")
+                return
+            }
+            const {
+                fileInfo: {url, fileName}
+            } = supplement
+            if (!url || !fileName) {
+                failed("补充资料里无压缩包附件")
+                return
+            }
+            setDownloadFileLoading(true)
+            ipcRenderer.invoke("download-url-to-path", {url: url, fileName: fileName})
+        })
+        useEffect(() => {
+            ipcRenderer.on(`download-url-to-path-progress`, (e, data: {state: DownloadingState; openPath: string}) => {
+                const {state, openPath} = data
+                if (state.percent >= 1) {
+                    ipcRenderer.invoke("shell-open-abs-file", openPath)
+                    setTimeout(() => {
+                        setDownloadFileLoading(false)
+                    }, 200)
+                }
+            })
+
+            return () => {
+                ipcRenderer.removeAllListeners(`download-url-to-path-progress`)
+            }
+        }, [])
+
         const extraNode = useMemo(() => {
             if (!plugin) return null
             return (
@@ -915,6 +975,66 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                     tagsCallback={onTagsCallback}
                                                 />
                                             </div>
+
+                                            {/* {supplement && (
+                                                <div className={styles["plugin-supplement"]}>
+                                                    <div className={styles["supplement-header"]}>补充资料</div>
+                                                    {supplement.text && (
+                                                        <div className={styles["supplement-text"]}>
+                                                            {supplement.text}
+                                                        </div>
+                                                    )}
+                                                    {supplement.imgs.length > 0 && (
+                                                        <div className={styles["supplement-image"]}>
+                                                            {supplement.imgs.map((item, index) => {
+                                                                return (
+                                                                    <div
+                                                                        className={classNames(styles["img-opt"])}
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                        }}
+                                                                    >
+                                                                        <Image
+                                                                            key={item.url}
+                                                                            src={item.url}
+                                                                            className={styles["img-style"]}
+                                                                            preview={false}
+                                                                        />
+                                                                        <div
+                                                                            className={styles["mask-box"]}
+                                                                            onClick={() => {
+                                                                                handlePreview(index)
+                                                                            }}
+                                                                        >
+                                                                            预览
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                    {supplement.fileInfo.url && supplement.fileInfo.fileName && (
+                                                        <div className={styles["supplement-file"]}>
+                                                            附件：
+                                                            <span
+                                                                className={classNames(styles["span-style"], {
+                                                                    [styles["span-bin-style "]]: downloadFileLoading
+                                                                })}
+                                                                onClick={downloadSupplementFile}
+                                                            >
+                                                                {supplement.fileInfo.fileName}
+                                                            </span>
+                                                            {downloadFileLoading && (
+                                                                <div className={styles["loading-icon"]}>
+                                                                    <OutlineLoadingIcon className='icon-rotate-animation' />
+                                                                    下载中...
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )} */}
+
                                             <div className={styles["plugin-setting-info"]}>
                                                 <div className={styles["setting-header"]}>插件配置</div>
                                                 <div className={styles["setting-body"]}>
@@ -973,7 +1093,8 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     type={plugin.type}
                                     wrapperClassName={styles["plugin-info-header"]}
                                 />
-                                <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} />
+                                <PluginLog getContainer={pageWrapId} plugin={plugin} />
+                                {/* <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} /> */}
                             </div>
                         </TabPane>
                     </PluginTabs>
@@ -1019,6 +1140,23 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         )}
                     </YakitModal>
                 )}
+
+                {/* 图片预览 */}
+                {/* <div style={{display: "none"}}>
+                    <Image.PreviewGroup
+                        preview={{
+                            visible: preview,
+                            onVisibleChange: (show) => {
+                                setPreview(show)
+                            },
+                            current: current.current
+                        }}
+                    >
+                        {(supplement?.imgs || []).map((item) => {
+                            return <Image src={item.url} />
+                        })}
+                    </Image.PreviewGroup>
+                </div> */}
             </PluginDetails>
         )
     })
