@@ -155,7 +155,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 
     return (
         <div className={styles["audit-result-box"]}>
-            {message && <div className={styles["message-box"]}>{message}</div>}
+            {message && <div className={classNames(styles["message-box"])}>{message}</div>}
             {/* 以下为折叠面板 */}
             <CollapseList
                 type='output'

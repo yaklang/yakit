@@ -143,10 +143,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     })
 
     const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
+        resetMap(isFirst)
         onResetAuditStatusFun()
         const lastFolder = await getNameByPath(rootPath)
         if (rootPath.length > 0 && lastFolder.length > 0) {
-            resetMap(isFirst)
             const node: FileNodeMapProps = {
                 parent: null,
                 name: lastFolder,
@@ -222,8 +222,12 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     // 轮询下标
     const loadIndexRef = useRef<number>(0)
+    // 是否轮询预加载文件树
+    const loadFileLoopRef = useRef<boolean>(false)
     // 接口是否运行中
     const isFetchRef = useRef<boolean>(false)
+    // 当前文件树是否加载中
+    const [fileTreeLoad,setFileTreeLoad] = useState<boolean>(false)
 
     // 提前注入Map
     const insertFileMap = useMemoizedFn((path) => {
@@ -252,7 +256,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         if (fileTree.length === 0) return
         const keys = getMapAllFileKey()
         const index = loadIndexRef.current
-        if (!keys[index]) return
+        if(keys.length === 0) return
+        if (!keys[index]) {
+            // 预加载完成
+            loadFileLoopRef.current = false
+            setFileTreeLoad(false)
+            return
+        }
         // 如果为文件时无需加载 加载下一个
         if (!getMapFileDetail(keys[index]).isFolder) {
             loadIndexRef.current += 1
@@ -278,6 +288,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         loadIndexRef.current = 0
         clearMap()
         let id = setInterval(() => {
+            if(!loadFileLoopRef.current) return
             loadFileMap()
         }, 100)
         return () => clearInterval(id)
@@ -286,13 +297,16 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     // 重置Map与轮询
     const resetMap = useMemoizedFn((isFirst) => {
         loadIndexRef.current = 0
+        loadFileLoopRef.current = true
         clearMap()
+        setFileTreeLoad(true)
         // FileTree缓存清除
         isFirst && emiter.emit("onCodeAuditResetFileTree")
     })
 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
+        setPageInfo(undefined)
         setProjectNmae(name)
         onInitTreeFun(`/${name}`)
     })
@@ -371,6 +385,15 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     })
 
+    // 重置页面
+    const onInitAuditCodePageFun = useMemoizedFn(()=>{
+        setPageInfo(undefined)
+        setFileTree([])
+        setProjectNmae(undefined)
+        setAreaInfo([])
+        setActiveFile(undefined)
+    })
+
     useEffect(() => {
         // 监听审计树打开
         emiter.on("onCodeAuditOpenAuditTree", onOpenAuditTreeFun)
@@ -378,6 +401,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         emiter.on("onCodeAuditRefreshTree", onCodeAuditRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onCodeAuditOpenFileByPath", onOpenFileByPathFun)
+        // 重置整个页面
+        emiter.on("onInitAuditCodePage", onInitAuditCodePageFun)
         return () => {
             emiter.off("onCodeAuditOpenAuditTree", onOpenAuditTreeFun)
             emiter.off("onCodeAuditRefreshTree", onCodeAuditRefreshTreeFun)
@@ -747,7 +772,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 firstMinSize={200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
-                                firstNode={<LeftAudit />}
+                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad}/>}
                                 secondNodeStyle={{overflow: "unset", padding: 0}}
                                 secondNode={
                                     <YakitResizeBox

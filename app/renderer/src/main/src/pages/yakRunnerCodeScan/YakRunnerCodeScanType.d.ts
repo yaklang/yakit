@@ -167,6 +167,7 @@ export interface SyntaxFlowResult {
     ProgramName: string
     Language: string
     RiskCount: number
+    RuleContent: string
 }
 
 export interface QuerySyntaxFlowResultResponse {

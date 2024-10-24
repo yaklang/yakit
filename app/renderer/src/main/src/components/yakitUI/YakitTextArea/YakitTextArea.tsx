@@ -139,6 +139,8 @@ export interface YakitTextAreaProps extends TextAreaProps {
     submitTxt?: string
     rows?: number
     isAlwaysShow?: boolean
+    // 是否不允许提交
+    noSubmit?: boolean
 }
 export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
     const {
@@ -156,6 +158,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
         submitTxt = "发布评论",
         rows = 4,
         isAlwaysShow,
+        noSubmit = false,
         ...resProps
     } = props
     const [filesLoading, setFilesLoading] = useState<boolean>(false)
@@ -365,6 +368,7 @@ export const YakitTextArea: React.FC<YakitTextAreaProps> = (props) => {
                                                 onClick={() => {
                                                     onSubmit && onSubmit()
                                                 }}
+                                                disabled={noSubmit}
                                             >
                                                 {submitTxt || "确认"}
                                             </YakitButton>

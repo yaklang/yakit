@@ -480,7 +480,7 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
         >
             <div className={styles["item-tip"]}>
                 <span className={styles["item-tip-name"]}>{item.GroupName}</span>
-                <span className={styles["item-tip-number"]}>{item.Count}个插件</span>
+                <span className={styles["item-tip-number"]}>{item.Count}个规则</span>
             </div>
         </div>
     )
@@ -737,7 +737,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
                     const data = res.ExecResult
-                    
+
                     if (!!res.Status) {
                         switch (res.Status) {
                             case "done":
@@ -916,7 +916,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     </>
                                 ) : (
                                     <>
-                                        <YakitButton htmlType='submit' size='large'>
+                                        <YakitButton
+                                            htmlType='submit'
+                                            size='large'
+                                            disabled={selectGroupList.length === 0}
+                                        >
                                             开始执行
                                         </YakitButton>
                                     </>
