@@ -3996,7 +3996,6 @@ message SaveYakScriptToOnlineRequest {
   string Token = 2;
   bool IsPrivate = 3;
   bool All = 4;
-  string PluginSupplement= 5;
 }
 
 message SaveYakScriptToOnlineResponse {
@@ -5507,6 +5506,7 @@ message QuerySyntaxFlowRuleGroupRequest{
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
 }
+
 message SyntaxFlowScanRequest{
   string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
 
@@ -5518,7 +5518,7 @@ message SyntaxFlowScanRequest{
 message SyntaxFlowScanResponse{
   string TaskID = 1;
   // 扫描状态
-  string Status = 2; // "running" "paused" "stopped" "finished"
+  string Status = 2; // "executing" | "done" | "paused" | "error"
 
   ExecResult ExecResult = 3;
 
@@ -5554,7 +5554,7 @@ message QuerySyntaxFlowResultResponse{
   Paging Pagination = 1;
   DbOperateMessage DbMessage= 2;
   repeated SyntaxFlowResult Results = 3;
-  uint64 Total = 4;
+  uint64 Total = 4; 
 }
 
 
@@ -5576,6 +5576,7 @@ message SyntaxFlowResult {
   string Language = 10; 
 
   // runtime info 
-  uint64 RiskCount = 11;
+  uint64 RiskCount = 11; 
+
   string RuleContent = 12;
 }
