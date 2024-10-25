@@ -484,7 +484,7 @@ export declare namespace API {
          */
         listType?: string
         /**
-         * 审核状态,0待审核，1通过审核，2审核不通过
+         * 审核状态,0待审核，1通过审核，2审核不通过，3审核中
          */
         status?: number[]
         /**
@@ -493,6 +493,10 @@ export declare namespace API {
         script_name?: string[]
         pluginGroup?: PluginsWherePluginGroup
         excludePluginTypes?: string[]
+        /**
+         * 全文搜索
+         */
+        fullText?: string
     }
     export interface PluginsWherePluginGroup {
         unSetGroup?: boolean
@@ -552,6 +556,10 @@ export declare namespace API {
         group?: string
         riskInfo?: PluginsRiskDetail[]
         isCorePlugin?: boolean
+        /**
+         * 插件附件
+         */
+        pluginSupplement?: string
     }
     export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
     export interface PluginsRecycle {
@@ -564,47 +572,27 @@ export declare namespace API {
          */
         dumpType: string
     }
+    export interface PluginsLogsTabResponse {
+        data: PluginsLogsTab[]
+    }
+    export interface PluginsLogsTab {
+        tabName: string
+        count: number
+    }
     export interface PluginsLogsResponse extends Paging {
         data: PluginsLogsDetail[]
     }
-    export interface PluginsLogsDetail extends GormBaseModel, HandleUser, PluginComment {
+    export interface PluginsLogsDetailExpand {
         /**
-         * 操作人名称
+         * 上级评论内容
          */
-        userName: string
+        parentComment?: LogsDetail
         /**
-         * 操作人头像
+         * 合并处理人信息
          */
-        headImg: string
-        /**
-         * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
-         */
-        userRole: string
-        /**
-         * 操作人是否是作者 true 是   false否
-         */
-        isAuthors: boolean
-        /**
-         * 审核状态
-         */
-        checkStatus: number
-        /**
-         * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请  comment:评论
-         */
-        logType: string
-        /**
-         * 描述/评论
-         */
-        description: string
-        /**
-         * 登陆用户是否是插件作者
-         */
-        loginIsPluginUser: boolean
-        /**
-         * 描述/评论 图片
-         */
-        descriptionImg?: string
+        handleUser?: HandleUser
     }
+    export interface PluginsLogsDetail extends LogsDetail, PluginsLogsDetailExpand {}
     export interface PluginsListResponse extends Paging {
         data: PluginsDetail[]
     }
@@ -689,6 +677,10 @@ export declare namespace API {
          */
         collaborator?: CollaboratorInfo[]
         isAuthor?: boolean
+        /**
+         * 插件附件
+         */
+        pluginSupplement?: string
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
     export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail, PluginsAuditButton {}
@@ -811,7 +803,22 @@ export declare namespace API {
         week_incre_num: number
         lastWeek_incre_num: number
     }
-    export interface PluginComment {
+    export interface PluginAuditRequest extends PluginsRequest, PluginAudit {}
+    export interface PluginAudit {
+        /**
+         * 审核 'true' 通过 'false' 不通过
+         */
+        status: string
+        /**
+         * 必传
+         */
+        uuid: string
+        /**
+         * 不通过时必传
+         */
+        logDescription?: string
+    }
+    export interface ParentComment {
         /**
          * 操作人名称
          */
@@ -833,24 +840,9 @@ export declare namespace API {
          */
         description: string
         /**
-         * 描述/评论 图片
+         * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
          */
-        descriptionImg?: string
-    }
-    export interface PluginAuditRequest extends PluginsRequest, PluginAudit {}
-    export interface PluginAudit {
-        /**
-         * 审核 'true' 通过 'false' 不通过
-         */
-        status: string
-        /**
-         * 必传
-         */
-        uuid: string
-        /**
-         * 不通过时必传
-         */
-        logDescription?: string
+        userRole: string
     }
     export interface Paging {
         pagemeta: PageMeta
@@ -930,6 +922,47 @@ export declare namespace API {
     export interface LogsRequest {
         uuid: string
         token?: string
+        afterId?: number
+        beforeId?: number
+        logType?: string
+    }
+    export interface LogsDetail extends GormBaseModel {
+        /**
+         * 操作人名称
+         */
+        userName: string
+        /**
+         * 操作人头像
+         */
+        headImg: string
+        /**
+         * 作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
+         */
+        userRole: string
+        /**
+         * 操作人是否是插件作者 true 是   false否
+         */
+        isAuthors: boolean
+        /**
+         * 审核状态
+         */
+        checkStatus: number
+        /**
+         * 日志类型 submit:新增 delete:删除  update:修改  check:审核 recover:恢复 applyMerge: 合并申请  comment:评论
+         */
+        logType: string
+        /**
+         * 描述/评论
+         */
+        description: string
+        /**
+         * 登陆用户是否是插件作者
+         */
+        loginIsPluginUser: boolean
+        /**
+         * 登录用户是否是日志操作者
+         */
+        loginIsLogUser?: boolean
     }
     export interface IsExtractCodeResponse {
         is_extract_code: boolean
@@ -1070,6 +1103,7 @@ export declare namespace API {
          * 流程作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
          */
         handleUserRole?: string
+        isAuthor?: boolean
     }
     export interface GroupResponseDetail {
         value: string
@@ -1151,6 +1185,9 @@ export declare namespace API {
         keywords?: string
         is_recycle?: boolean
     }
+    export interface DeleteOssResource {
+        file_name: string[]
+    }
     export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
     export interface CopyPlugins {
         /**
@@ -1172,8 +1209,7 @@ export declare namespace API {
     }
     export interface CommentLogRequest {
         uuid: string
-        description_img?: string[]
-        parent_id?: number
+        logId?: number
         description?: string
     }
     export interface CommentListResponse extends Paging {

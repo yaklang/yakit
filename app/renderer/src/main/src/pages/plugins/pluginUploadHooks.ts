@@ -16,6 +16,7 @@ export interface SaveYakScriptToOnlineRequest {
     ScriptNames: string[]
     IsPrivate: boolean
     All?: boolean
+    PluginSupplement?: string
 }
 export interface SaveYakScriptToOnlineResponse {
     Progress: number

@@ -1,0 +1,131 @@
+// ---------- ImagePreviewList ----------
+.image-preview-list {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.image-preview-list-opt {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    width: 56px;
+    height: 56px;
+    :global {
+        .ant-image {
+            border-radius: 4px;
+            overflow: hidden;
+            img {
+                height: 100%;
+                width: 100%;
+                object-fit: cover;
+                overflow: hidden;
+            }
+        }
+    }
+    .img-style {
+        width: 56px;
+        height: 56px;
+    }
+    .mask-box {
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        background-color: rgba(0, 0, 0, 0.2);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+    .img-close {
+        cursor: pointer;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        width: 22px;
+        height: 22px;
+        padding: 4px;
+        border-radius: 20px;
+        border: 2px solid #fff;
+        background: #f0f1f3;
+        position: absolute;
+        top: -12px;
+        right: -12px;
+        overflow: hidden;
+        transition: all 0.2s ease-in-out;
+        svg {
+            height: 12px;
+            width: 12px;
+            color: #85899e;
+        }
+        &:hover {
+            background-color: var(--yakit-primary-5);
+            svg {
+                color: #ffffff;
+            }
+        }
+    }
+    .mask-spin {
+        width: 100%;
+        height: 100%;
+        display: none;
+        border-radius: 4px;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        background-color: rgba(0, 0, 0, 0.2);
+        .spin-style {
+            justify-content: center;
+            align-items: center;
+        }
+    }
+    &:hover {
+        .mask-box {
+            display: flex;
+        }
+        .img-close {
+            display: flex;
+        }
+    }
+}
+.image-preview-list-opt.loading {
+    .mask-box {
+        display: none;
+    }
+    .img-close {
+        display: none;
+    }
+    .mask-spin {
+        display: block;
+    }
+}
+
+.image-preview-list-opt-surplus {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 4px;
+    font-size: 46px;
+    font-weight: 500;
+    color: #ccd2de;
+    background-color: rgba(#31343f, 0.05);
+}
+
+.popover-preview-list {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}

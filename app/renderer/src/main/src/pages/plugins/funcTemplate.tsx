@@ -468,7 +468,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
 
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
         if (has(filters, value.tagType)) {
-            filters[value.tagType] = (filters[value.tagType]||[]).filter((ele) => ele.value !== value.value)
+            filters[value.tagType] = (filters[value.tagType] || []).filter((ele) => ele.value !== value.value)
             setFilters({...filters})
         }
     })
@@ -1175,7 +1175,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 
 /** @name 用户头像(头像右下角带小icon) */
 export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
-    const {size = "middle", src, builtInIcon, icon} = props
+    const {size = "middle", src, builtInIcon, icon, wrapperClassName} = props
     const [isError, setIsError] = useState<boolean>(false)
     const srcUrl = useMemo(() => {
         if (isError) return UnLogin
@@ -1230,7 +1230,7 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
         }
     })
     return (
-        <div className={imgBodyClass}>
+        <div className={classNames(imgBodyClass, wrapperClassName)}>
             <img className={imgClass} src={srcUrl} alt='' onError={onErrorImg} />
             {iconNode && <div className={styles["author-img-mask"]}>{iconNode}</div>}
         </div>

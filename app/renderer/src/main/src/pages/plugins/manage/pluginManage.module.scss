@@ -41,6 +41,9 @@
 // 不通过|删除原因弹窗
 .reason-modal-body {
     padding: 16px 24px 24px 24px;
+    .no-pass-kind {
+        padding-bottom: 20px;
+    }
     .hint-wrapper {
         color: #b4bbca;
         font-size: 14px;
@@ -139,6 +142,102 @@
                             color: #31343f;
                             font-size: 12px;
                             line-height: 16px;
+                        }
+                    }
+                }
+            }
+
+            .plugin-supplement {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                color: #31343f;
+                .supplement-header {
+                    height: 24px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .supplement-text {
+                    padding-left: 14px;
+                    font-size: 14px;
+                    line-height: 20px;
+                    max-height: 60px;
+                }
+                .supplement-image {
+                    padding-left: 14px;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    .img-opt {
+                        cursor: pointer;
+                        position: relative;
+                        display: flex;
+                        width: 56px;
+                        height: 56px;
+                        :global {
+                            .ant-image {
+                                border-radius: 4px;
+                                overflow: hidden;
+                                img {
+                                    height: 100%;
+                                    width: 100%;
+                                    object-fit: cover;
+                                    overflow: hidden;
+                                }
+                            }
+                        }
+                        .img-style {
+                            width: 56px;
+                            height: 56px;
+                        }
+                        .mask-box {
+                            width: 100%;
+                            height: 100%;
+                            display: none;
+                            justify-content: center;
+                            align-items: center;
+                            align-items: center;
+                            justify-content: center;
+                            border-radius: 4px;
+                            position: absolute;
+                            top: 0px;
+                            left: 0px;
+                            background-color: rgba(0, 0, 0, 0.2);
+                            color: #fff;
+                            font-size: 12px;
+                            font-weight: 400;
+                            line-height: 16px;
+                        }
+                        &:hover {
+                            .mask-box {
+                                display: flex;
+                            }
+                        }
+                    }
+                }
+                .supplement-file {
+                    padding-left: 14px;
+                    font-size: 14px;
+                    line-height: 20px;
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    .span-style {
+                        color: #f28b44;
+                        cursor: pointer;
+                    }
+                    .span-bin-style {
+                        cursor: not-allowed;
+                    }
+                    .loading-icon {
+                        padding-left: 20px;
+                        color: #f28b44;
+                        display: flex;
+                        align-items: center;
+                        svg {
+                            width: 16px;
+                            height: 16px;
                         }
                     }
                 }
