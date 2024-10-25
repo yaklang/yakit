@@ -7,7 +7,7 @@ import {Dispatch, SetStateAction, createContext} from "react"
 export interface YakRunnerContextStore {
     pageInfo?: AuditCodePageInfoProps
     fileTree: FileTreeListProps[]
-    projectNmae: string | undefined
+    projectName: string | undefined
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
 }
@@ -15,7 +15,7 @@ export interface YakRunnerContextStore {
 export interface YakRunnerContextDispatcher {
     setPageInfo?: Dispatch<SetStateAction<AuditCodePageInfoProps | undefined>>
     setFileTree?: Dispatch<SetStateAction<FileTreeListProps[]>>
-    setProjectNmae?: Dispatch<SetStateAction<string | undefined>>
+    setProjectName?: Dispatch<SetStateAction<string | undefined>>
     handleFileLoadData?: (path: string) => Promise<any>
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
@@ -30,14 +30,14 @@ export default createContext<YakRunnerContextValue>({
     store: {
         pageInfo: undefined,
         fileTree: [],
-        projectNmae: undefined,
+        projectName: undefined,
         areaInfo: [],
         activeFile: undefined
     },
     dispatcher: {
         setPageInfo: undefined,
         setFileTree: undefined,
-        setProjectNmae: undefined,
+        setProjectName: undefined,
         handleFileLoadData: undefined,
         setAreaInfo: undefined,
         setActiveFile: undefined

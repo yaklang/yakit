@@ -61,7 +61,7 @@ import {DebugPluginRequest, apiDebugPlugin} from "@/pages/plugins/utils"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
-import {YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {isShowCodeScanDetail, YakitCodeScanRiskDetails, YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {SolidPlayIcon} from "@/assets/icon/solid"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
@@ -2109,7 +2109,9 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     title: "详情",
                     content: (
                         <div style={{overflow: "auto",maxHeight:'70vh'}}>
-                            <YakitRiskDetails info={res} />
+                            {
+                                isShowCodeScanDetail(res)?<YakitCodeScanRiskDetails info={res}/>:<YakitRiskDetails info={res} />
+                            }
                         </div>
                     )
                 })

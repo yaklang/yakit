@@ -302,15 +302,6 @@ $keyColor: map-keys($tagColor);
                     overflow: hidden;
                 }
             }
-            .jump {
-                color: #f28b44;
-                font-size: 12px;
-                font-weight: 400;
-                &:hover {
-                    cursor: pointer;
-                    text-decoration: underline;
-                }
-            }
         }
         .ir-code-box {
             padding: 8px;
@@ -342,6 +333,14 @@ $keyColor: map-keys($tagColor);
     font-size: 12px;
     line-height: 16px;
     cursor: no-drop;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    svg{
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-disable-text-color);
+    }
 }
 
 .no-more {

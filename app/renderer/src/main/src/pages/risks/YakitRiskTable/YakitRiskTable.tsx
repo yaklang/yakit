@@ -33,6 +33,7 @@ import {
     OutlinePlayIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
+    OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -93,6 +94,14 @@ import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
 import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
+
+export const isShowCodeScanDetail = (selectItem: Risk) => {
+    const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
+    if (ResultID && SyntaxFlowVariable && ProgramName) {
+        return true
+    }
+    return false
+}
 
 const batchExportMenuData: YakitMenuItemProps[] = [
     {
@@ -551,21 +560,45 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             icon={<OutlineTrashIcon />}
                         />
                         <Divider type='vertical' />
-                        <Tooltip
-                            title='复测'
-                            destroyTooltipOnHide={true}
-                            overlayStyle={{paddingBottom: 0}}
-                            placement='top'
-                        >
-                            <YakitButton
-                                type='text'
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onRetest(record)
-                                }}
-                                icon={<OutlinePlayIcon />}
-                            />
-                        </Tooltip>
+                        {isShowCodeScanDetail(record) ? (
+                            <Tooltip title={"在代码审计中打开"}>
+                                <YakitButton
+                                    type='text'
+                                    icon={<OutlineTerminalIcon />}
+                                    onClick={() => {
+                                        const params: AuditCodePageInfoProps = {
+                                            Schema: "syntaxflow",
+                                            Location: record.ProgramName || "",
+                                            Path: `/`,
+                                            Query: [{Key: "result_id", Value: record.ResultID || 0}]
+                                        }
+                                        emiter.emit(
+                                            "openPage",
+                                            JSON.stringify({
+                                                route: YakitRoute.YakRunner_Audit_Code,
+                                                params
+                                            })
+                                        )
+                                    }}
+                                />
+                            </Tooltip>
+                        ) : (
+                            <Tooltip
+                                title='复测'
+                                destroyTooltipOnHide={true}
+                                overlayStyle={{paddingBottom: 0}}
+                                placement='top'
+                            >
+                                <YakitButton
+                                    type='text'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onRetest(record)
+                                    }}
+                                    icon={<OutlinePlayIcon />}
+                                />
+                            </Tooltip>
+                        )}
                     </>
                 )
             }
@@ -1128,13 +1161,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
 
-    const isShowCodeScanDetail = useMemoizedFn((selectItem: Risk) => {
-        const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
-        if (ResultID && SyntaxFlowVariable && ProgramName) {
-            return true
-        }
-        return false
-    })
     return (
         <div className={classNames(styles["yakit-risk-table"], riskWrapperClassName)} ref={riskTableRef}>
             <ReactResizeDetector
@@ -1323,6 +1349,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                     info={currentSelectItem}
                                     onClickIP={onClickIP}
                                     className={styles["yakit-code-scan-risk-details"]}
+                                    isShowExtra={true}
                                 />
                             ) : (
                                 <YakitRiskDetails
@@ -1681,7 +1708,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 })
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
-    const {info, className, border} = props
+    const {info, className, border, isShowExtra} = props
 
     const [activeKey, setActiveKey] = useState<string | string[]>()
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
@@ -1854,30 +1881,42 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                         </div>
                     </div>
                 </div>
-                <div className={styles["content-heard-right"]} style={{height: "100%", alignItems: "center"}}>
-                    {isShowCollapse ? (
-                        <YakitButton
-                            type='outline2'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                jumpCodeScanPage()
-                            }}
-                        >
-                            在代码审计中打开
-                        </YakitButton>
-                    ) : (
-                        <Tooltip title={`相关数据已被删除`} placement='topLeft'>
-                            <div className={styles["disabled-open"]}>在代码审计中打开</div>
-                        </Tooltip>
-                    )}
-                </div>
+                {isShowExtra && (
+                    <div className={styles["content-heard-right"]} style={{height: "100%", alignItems: "center"}}>
+                        {isShowCollapse ? (
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineTerminalIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    jumpCodeScanPage()
+                                }}
+                            >
+                                在代码审计中打开
+                            </YakitButton>
+                        ) : (
+                            <Tooltip title={`相关数据已被删除`} placement='topLeft'>
+                                <div className={styles["disabled-open"]}>
+                                    <OutlineTerminalIcon />
+                                    在代码审计中打开
+                                </div>
+                            </Tooltip>
+                        )}
+                    </div>
+                )}
             </div>
             <YakitResizeBox
                 {...extraResizeBoxProps}
                 firstNode={
                     <div className={styles["content-resize-collapse"]}>
                         <div className={styles["main-title"]}>相关代码段</div>
-                        {<AuditResultCollapse data={yakURLData} jumpCodeScanPage={jumpCodeScanPage} />}
+                        {
+                            <AuditResultCollapse
+                                data={yakURLData}
+                                jumpCodeScanPage={jumpCodeScanPage}
+                                isShowExtra={isShowExtra}
+                            />
+                        }
                     </div>
                 }
                 secondNode={<AuditResultDescribe info={info} />}
@@ -2028,10 +2067,11 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
 interface AuditResultCollapseProps {
     data: YakURLDataItemProps[]
     jumpCodeScanPage: (v: string) => void
+    isShowExtra?: boolean
 }
 
 export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
-    const {data, jumpCodeScanPage} = props
+    const {data, jumpCodeScanPage, isShowExtra} = props
 
     const titleRender = (info: YakURLDataItemProps) => {
         const {index, code_range, source, ResourceName} = info
@@ -2047,15 +2087,18 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                         </div>
                     </Tooltip>
                 </div>
-                <div
-                    className={styles["jump"]}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        jumpCodeScanPage(`/${index}`)
-                    }}
-                >
-                    跳转
-                </div>
+                {isShowExtra && (
+                    <Tooltip title={"在代码审计中打开"}>
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineTerminalIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                jumpCodeScanPage(`/${index}`)
+                            }}
+                        />
+                    </Tooltip>
+                )}
             </div>
         )
     }

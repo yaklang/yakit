@@ -22,6 +22,7 @@ import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} f
 import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {v4 as uuidv4} from "uuid"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void
@@ -187,6 +188,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
     const styleNodeRef = useRef<string>()
+    const idBoxRef = useRef<string>(`auditCodeFlowChart-${uuidv4()}`)
 
     const onElementStyle = useMemoizedFn((id, stroke, fill) => {
         // 获取 id 为 node 的元素
@@ -207,7 +209,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     // 初始默认样式
     const onInitSvgStyle = useMemoizedFn((id?: string) => {
         if (id) {
-            const element = document.getElementById("auditCodeFlowChart")
+            const element = document.getElementById(idBoxRef.current)
             if (element) {
                 const titles = element.getElementsByTagName("title")
                 // 遍历所有 <title> 元素
@@ -220,6 +222,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                             parentElement.classList.add("node-main")
                             // 查找该元素下的所有 ellipse 标签
                             const ellipses = parentElement.getElementsByTagName("ellipse")
+
                             // 遍历所有找到的 ellipse 标签，并添加样式
                             for (let i = 0; i < ellipses.length; i++) {
                                 ellipses[i].style.stroke = "#8863F7"
@@ -364,7 +367,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     ).run
 
     return (
-        <div className={styles["flow-chart-box"]} id='auditCodeFlowChart'>
+        <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>

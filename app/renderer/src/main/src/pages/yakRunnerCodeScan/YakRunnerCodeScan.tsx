@@ -226,6 +226,7 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
 
 export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const {pageId} = props
+
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -234,12 +235,13 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     )
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.YakRunner_Code_Scan, pageId)
-        if (currentItem && currentItem.pageParamsInfo.pocPageInfo) {
-            return currentItem.pageParamsInfo.pocPageInfo
+        if (currentItem && currentItem.pageParamsInfo.codeScanPageInfo) {
+            return currentItem.pageParamsInfo.codeScanPageInfo
         }
         return {...defaultCodeScanPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<CodeScanPageInfoProps>(initPageInfo())
+
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -421,7 +423,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
 
                 setResponse({
                     Pagination: res.Pagination,
-                    Rule: response ? [...response.Rule, ...res.Rule] : res.Rule,
+                    Rule: response && !reset ? [...response.Rule, ...res.Rule] : res.Rule,
                     Total: res.Total
                 })
 
@@ -563,8 +565,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
             const {res} = await grpcFetchAuditTree("/")
             if (res.Resources.length > 0) {
                 const list = res.Resources.map((item) => ({label: item.ResourceName, value: item.ResourceName}))
-                console.log("list---",list);
-                
                 setAuditCodeList(list)
             }
         } catch (error) {}
@@ -638,7 +638,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                             disabled={isExecuting}
                             style={{padding: 0}}
                         >
-                            编译项目
+                            添加项目
                         </YakitButton>
                         {isExecuting
                             ? !isExpand && (
@@ -690,6 +690,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         selectGroupList={selectGroupList}
                         setHidden={setHidden}
                         auditCodeList={auditCodeList}
+                        pageInfo={pageInfo}
                     />
                 </div>
             </div>
@@ -705,15 +706,25 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                 )}
             </React.Suspense>
 
-            {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
+            {isShowCompileModal && (
+                <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} title='添加项目' />
+            )}
         </>
     )
 })
 
 export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList,auditCodeList} = props
+        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressList, auditCodeList, pageInfo} = props
         const [form] = Form.useForm()
+
+        useEffect(() => {
+            if (pageInfo.projectName) {
+                form.setFieldsValue({
+                    project: pageInfo.projectName
+                })
+            }
+        }, [])
 
         useImperativeHandle(
             ref,
@@ -728,8 +739,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             setIsExpand(true)
                         })
                 },
-                onSetProject:(project:string)=>{
-                    console.log("onSetProject---",project);
+                onSetProject: (project: string) => {
                     form.setFieldsValue({
                         project
                     })

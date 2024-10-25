@@ -314,6 +314,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                 params
             })
         )
+        onClose()
     })
     return (
         <YakitDrawer

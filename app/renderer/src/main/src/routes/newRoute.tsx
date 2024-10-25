@@ -110,6 +110,7 @@ import {
     AddYakitScriptPageInfoProps,
     AuditCodePageInfoProps,
     BrutePageInfoProps,
+    CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
@@ -390,6 +391,8 @@ export interface ComponentParams {
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
     /**代码审计页面 */
     auditCodePageInfo?: AuditCodePageInfoProps
+    /**代码扫描页面 */
+    codeScanPageInfo?: CodeScanPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {

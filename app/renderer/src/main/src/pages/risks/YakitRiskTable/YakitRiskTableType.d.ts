@@ -73,6 +73,7 @@ export interface YakitCodeScanRiskDetailsProps {
     info: Risk
     onClickIP?: (info: Risk) => void
     border?: boolean
+    isShowExtra?: boolean
 }
 
 export interface YakURLDataItemProps {

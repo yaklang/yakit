@@ -74,7 +74,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     /** ---------- 审计树 ---------- */
-    const [projectNmae, setProjectNmae] = useState<string | undefined>(auditCodePageInfo?.Location)
+    const [projectName, setProjectName] = useState<string | undefined>(auditCodePageInfo?.Location)
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
 
@@ -85,7 +85,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const newPageInfo: AuditCodePageInfoProps = JSON.parse(auditCodePageInfo)
             setPageInfo(newPageInfo)
             const {Location} = newPageInfo
-            setProjectNmae(Location)
+            setProjectName(Location)
             onInitTreeFun(`/${Location}`)
         } catch (error) {}
     })
@@ -268,13 +268,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     // 加载审计树(初次加载)
     const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
         setPageInfo(undefined)
-        setProjectNmae(name)
+        setProjectName(name)
         onInitTreeFun(`/${name}`)
     })
 
     // 刷新审计树
     const onCodeAuditRefreshTreeFun = useMemoizedFn(() => {
-        projectNmae && onInitTreeFun(`/${projectNmae}`, false)
+        projectName && onInitTreeFun(`/${projectName}`, false)
     })
 
     // 是否正在读取中
@@ -350,7 +350,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const onInitAuditCodePageFun = useMemoizedFn(() => {
         setPageInfo(undefined)
         setFileTree([])
-        setProjectNmae(undefined)
+        setProjectName(undefined)
         setAreaInfo([])
         setActiveFile(undefined)
     })
@@ -629,17 +629,17 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         return {
             pageInfo: pageInfo,
             fileTree: fileTree,
-            projectNmae: projectNmae,
+            projectName: projectName,
             areaInfo: areaInfo,
             activeFile: activeFile
         }
-    }, [pageInfo, fileTree, projectNmae, areaInfo, activeFile])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setPageInfo: setPageInfo,
             setFileTree: setFileTree,
-            setProjectNmae: setProjectNmae,
+            setProjectName: setProjectName,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
             setActiveFile: setActiveFile
@@ -685,7 +685,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const onSuccee = (path: string) => {
         onCloseCompileModal()
-        setProjectNmae(path)
+        setProjectName(path)
         onOpenAuditTreeFun(`${path}`)
         setPageInfo(undefined)
         emiter.emit("onCodeAuditRefreshAduitHistory")
@@ -694,7 +694,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakRunnerContext.Provider value={{store, dispatcher}}>
-                {projectNmae ? (
+                {projectName ? (
                     <div className={styles["audit-code-page"]}>
                         <div className={styles["audit-code-body"]}>
                             <YakitResizeBox

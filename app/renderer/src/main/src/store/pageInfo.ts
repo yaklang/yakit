@@ -70,6 +70,7 @@ interface PageParamsInfoProps {
     riskPageInfo?: RiskPageInfoProps
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
     auditCodePageInfo?: AuditCodePageInfoProps
+    codeScanPageInfo?: CodeScanPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -141,10 +142,6 @@ export interface PocPageInfoProps {
     hybridScanMode: HybridScanModeType
 }
 
-export interface CodeScanPageInfoProps {
-    selectGroupListByKeyWord?: string[]
-}
-
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string
@@ -186,6 +183,11 @@ export interface AuditCodePageInfoProps {
     // 正常操作查询
     Location: string
     Query: {Key: string; Value: number}[]
+}
+
+export interface CodeScanPageInfoProps {
+    projectName?: string
+    selectGroupListByKeyWord?: string[]
 }
 
 interface PageInfoStoreProps {

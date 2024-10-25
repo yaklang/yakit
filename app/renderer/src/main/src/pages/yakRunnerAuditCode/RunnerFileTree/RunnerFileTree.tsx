@@ -59,7 +59,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad} = props
-    const {fileTree, activeFile} = useStore()
+    const {fileTree, activeFile, projectName} = useStore()
     const {handleFileLoadData} = useDispatcher()
 
     const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
@@ -267,7 +267,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         type='text2'
                                         icon={<OutlineScanIcon />}
                                         onClick={() => {
-                                            addToTab(YakitRoute.YakRunner_Code_Scan)
+                                            // addToTab(YakitRoute.YakRunner_Code_Scan)
+                                            emiter.emit(
+                                                "openPage",
+                                                JSON.stringify({
+                                                    route: YakitRoute.YakRunner_Code_Scan,
+                                                    params: {
+                                                        projectName
+                                                    }
+                                                })
+                                            )
                                         }}
                                     />
                                 </Tooltip>

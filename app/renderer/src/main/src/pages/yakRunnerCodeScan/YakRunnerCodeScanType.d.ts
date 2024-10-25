@@ -3,9 +3,11 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {ExecResult} from "@/pages/invoker/schema"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {CodeScanPageInfoProps} from "@/store/pageInfo"
 
 export interface YakRunnerCodeScanProps {
     pageId: string
+    CodeScanPageInfoProps?: CodeScanPageInfoProps
 }
 
 export interface CodeScanGroupByKeyWordProps {
@@ -55,6 +57,7 @@ export interface CodeScaMainExecuteContentProps {
     setProgressList: (s: StreamResult.Progress[]) => void
     // 项目名称列表
     auditCodeList:{label: string; value: string}[]
+    pageInfo: CodeScanPageInfoProps
 }
 
 export interface FlowRuleDetailsListItemProps {

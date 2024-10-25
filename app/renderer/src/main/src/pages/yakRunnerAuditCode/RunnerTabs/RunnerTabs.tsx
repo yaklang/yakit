@@ -877,7 +877,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, projectNmae} = useStore()
+    const {areaInfo, activeFile, projectName} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
@@ -1003,7 +1003,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         EndLine: position.lineNumber,
                         EndColumn: iWord.endColumn
                     },
-                    ProgramName: projectNmae,
+                    ProgramName: projectName,
                     FileName: editorInfo.path
                 } as YaklangLanguageSuggestionRequest)
                 .then((r: YaklangLanguageFindResponse) => {

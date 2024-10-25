@@ -358,7 +358,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
-    const {projectNmae, pageInfo} = useStore()
+    const {projectName, pageInfo} = useStore()
 
     const [value, setValue] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -428,7 +428,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 const path = id
                 let params: AuditYakUrlProps = {
                     Schema: "syntaxflow",
-                    Location: projectNmae || "",
+                    Location: projectName || "",
                     Path: path
                 }
                 const body: Buffer = StringToUint8Array(lastValue.current)
@@ -496,7 +496,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         setDisabled(true)
         resetMap()
         setRefreshTree(!refreshTree)
-    }, [projectNmae])
+    }, [projectName])
 
     const onSubmit = useMemoizedFn(async () => {
         try {
@@ -506,7 +506,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             const path: string = "/"
             let params: AuditYakUrlProps = {
                 Schema: "syntaxflow",
-                Location: projectNmae || "",
+                Location: projectName || "",
                 Path: path
             }
             const body: Buffer = StringToUint8Array(value)
@@ -654,7 +654,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             setBugId(undefined)
             let rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
-                Location: projectNmae || "",
+                Location: projectName || "",
                 Path: node.id,
                 Body: value
             }
@@ -895,11 +895,12 @@ interface AuditModalFormModalProps {
     onCancel: () => void
     onSuccee: (path: string) => void
     isInitDefault?: boolean
+    title?: string
 }
 
 // 公共封装组件用于新建项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-    const {onCancel, onSuccee, isInitDefault} = props
+    const {onCancel, onSuccee, isInitDefault, title} = props
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
     const tokenRef = useRef<string>(randomString(40))
     const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -974,7 +975,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
             <YakitModal
                 visible={isShowCompileModal}
                 bodyStyle={{padding: 0}}
-                title={"编译项目"}
+                title={title || "编译项目"}
                 footer={null}
                 onCancel={onCancel}
                 maskClosable={false}
@@ -1019,7 +1020,7 @@ interface AuditHistoryTableProps {
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
     const {setShowAuditList} = props
-    const {projectNmae} = useStore()
+    const {projectName} = useStore()
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
     const [search, setSearch] = useState<string>()
     useEffect(() => {
@@ -1082,7 +1083,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             await grpcFetchDeleteAudit(path)
             getAduitList()
 
-            if (path === `/${projectNmae}`) {
+            if (path === `/${projectName}`) {
                 emiter.emit("onResetAuditStatus")
             }
         } catch (error) {
@@ -1150,7 +1151,16 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                                 type='text'
                                                 icon={<OutlineScanIcon className={styles["to-icon"]} />}
                                                 onClick={() => {
-                                                    addToTab(YakitRoute.YakRunner_Code_Scan)
+                                                    // addToTab(YakitRoute.YakRunner_Code_Scan)
+                                                    emiter.emit(
+                                                        "openPage",
+                                                        JSON.stringify({
+                                                            route: YakitRoute.YakRunner_Code_Scan,
+                                                            params: {
+                                                                projectName: item.ResourceName
+                                                            }
+                                                        })
+                                                    )
                                                 }}
                                             />
                                         </Tooltip>
