@@ -368,6 +368,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             emiter.off("onCodeAuditOpenAuditTree", onOpenAuditTreeFun)
             emiter.off("onCodeAuditRefreshTree", onCodeAuditRefreshTreeFun)
             emiter.off("onCodeAuditOpenFileByPath", onOpenFileByPathFun)
+            emiter.off("onInitAuditCodePage", onInitAuditCodePageFun)
         }
     }, [])
 

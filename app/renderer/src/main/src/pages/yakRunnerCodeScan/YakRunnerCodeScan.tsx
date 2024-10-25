@@ -46,7 +46,6 @@ import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRe
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {randomString} from "@/utils/randomUtil"
-import {CodeScanExecuteResult, CodeScanStreamInfo} from "./CodeScanExecuteResult/CodeScanExecuteResult"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -67,7 +66,12 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {WaterMark} from "@ant-design/pro-layout"
 import {AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 const {ipcRenderer} = window.require("electron")
+
+export interface CodeScanStreamInfo {
+    logState: StreamResult.Log[]
+}
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
     const {inViewport} = props
@@ -974,12 +978,24 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     </Form>
                 </div>
                 {isShowResult && (
-                    <CodeScanExecuteResult
-                        streamInfo={streamInfo}
-                        runtimeId={runtimeId}
-                        isExecuting={isExecuting}
-                        defaultActiveKey={undefined}
-                    />
+                        <PluginExecuteResult
+                            streamInfo={{
+                                progressState: [],
+                                cardState: [],
+                                tabsState: [
+                                    {tabName: "审计结果", type: "result"},
+                                    {tabName: "漏洞与风险", type: "risk"},
+                                    {tabName: "日志", type: "log"},
+                                    {tabName: "Console", type: "console"}
+                                ],
+                                logState:streamInfo.logState,
+                                tabsInfoState:{},
+                                riskState:[],
+                            }}
+                            runtimeId={runtimeId}
+                            loading={isExecuting}
+                            defaultActiveKey={undefined}
+                        />
                 )}
             </>
         )

@@ -87,6 +87,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            return
             if (!getInViewport()) {
                 setIsDownCtrlCmd(false)
                 return
@@ -95,6 +96,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
             setIsDownCtrlCmd(true)
         }
         const handleKeyUp = (e: KeyboardEvent) => {
+            return
             // console.log("up", e, SystemInfo)
             if (!getInViewport()) {
                 setIsDownCtrlCmd(false)
