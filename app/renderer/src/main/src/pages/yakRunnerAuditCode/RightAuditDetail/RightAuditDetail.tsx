@@ -2,7 +2,6 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
-import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerType"
 import {StringToUint8Array} from "@/utils/str"
 import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
 import {
@@ -18,10 +17,12 @@ import {Tooltip} from "antd"
 import {instance} from "@viz-js/viz"
 import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
-import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} from "./GraphInfoMap"
-import {CollapseList} from "../CollapseList/CollapseList"
+import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {v4 as uuidv4} from "uuid"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void
@@ -49,7 +50,7 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
                         })}
                         onClick={(e) => {
                             e.stopPropagation()
-                            emiter.emit("onScrollToFileTree", code_range.url)
+                            emiter.emit("onCodeAuditScrollToFileTree", code_range.url)
                             onDetail(code_range)
                         }}
                     >
@@ -155,7 +156,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 
     return (
         <div className={styles["audit-result-box"]}>
-            {message && <div className={styles["message-box"]}>{message}</div>}
+            {message && <div className={classNames(styles["message-box"])}>{message}</div>}
             {/* 以下为折叠面板 */}
             <CollapseList
                 type='output'
@@ -187,6 +188,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
     const styleNodeRef = useRef<string>()
+    const idBoxRef = useRef<string>(`auditCodeFlowChart-${uuidv4()}`)
 
     const onElementStyle = useMemoizedFn((id, stroke, fill) => {
         // 获取 id 为 node 的元素
@@ -207,24 +209,28 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     // 初始默认样式
     const onInitSvgStyle = useMemoizedFn((id?: string) => {
         if (id) {
-            const titles = document.getElementsByTagName("title")
-            // 遍历所有 <title> 元素
-            for (let i = 0; i < titles.length; i++) {
-                if (titles[i].textContent === "n1") {
-                    // 获取匹配的 <title> 元素的父元素
-                    const parentElement = titles[i].parentElement
-                    if (parentElement) {
-                        // 新增class用于屏蔽通用hover样式
-                        parentElement.classList.add("node-main")
-                        // 查找该元素下的所有 ellipse 标签
-                        const ellipses = parentElement.getElementsByTagName("ellipse")
-                        // 遍历所有找到的 ellipse 标签，并添加样式
-                        for (let i = 0; i < ellipses.length; i++) {
-                            ellipses[i].style.stroke = "#8863F7"
-                            ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+            const element = document.getElementById(idBoxRef.current)
+            if (element) {
+                const titles = element.getElementsByTagName("title")
+                // 遍历所有 <title> 元素
+                for (let i = 0; i < titles.length; i++) {
+                    if (titles[i].textContent === "n1") {
+                        // 获取匹配的 <title> 元素的父元素
+                        const parentElement = titles[i].parentElement
+                        if (parentElement) {
+                            // 新增class用于屏蔽通用hover样式
+                            parentElement.classList.add("node-main")
+                            // 查找该元素下的所有 ellipse 标签
+                            const ellipses = parentElement.getElementsByTagName("ellipse")
+
+                            // 遍历所有找到的 ellipse 标签，并添加样式
+                            for (let i = 0; i < ellipses.length; i++) {
+                                ellipses[i].style.stroke = "#8863F7"
+                                ellipses[i].style.fill = "rgba(136, 99, 247, 0.10)"
+                            }
                         }
+                        break // 找到匹配的元素后停止遍历
                     }
-                    break // 找到匹配的元素后停止遍历
                 }
             }
         }
@@ -269,9 +275,9 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
 
     useEffect(() => {
         // 打开编译右侧详情
-        emiter.on("onRefreshAuditDetail", onRefreshAuditDetailFun)
+        emiter.on("onCodeAuditRefreshAuditDetail", onRefreshAuditDetailFun)
         return () => {
-            emiter.off("onRefreshAuditDetail", onRefreshAuditDetailFun)
+            emiter.off("onCodeAuditRefreshAuditDetail", onRefreshAuditDetailFun)
         }
     }, [])
 
@@ -322,7 +328,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             const svg = svgRef.current as SVGSVGElement
             svg.style.transform = `scale(${scale})`
             svgBoxRef.current.style.cursor = dragging ? "grabbing" : "grab"
-            // console.log("uuu", offset)
             svg.style.position = "relative"
             svg.style.left = `${offset.x}px`
             svg.style.top = `${offset.y}px`
@@ -362,7 +367,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
     ).run
 
     return (
-        <div className={styles["flow-chart-box"]}>
+        <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
                     <div className={styles["absolute-box"]}>
@@ -467,49 +472,50 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     }, [isShowAuditDetail, auditRightParams])
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
-        clearMapGraphInfoDetail()
-        const {Schema, Location, Path, Body} = params
-        const body = StringToUint8Array(Body)
-        const result = await loadAuditFromYakURLRaw({Schema, Location, Path}, body)
-        if (result && result.Resources.length > 0) {
-            result.Resources[0].Extra.forEach((item) => {
-                if (item.Key === "graph") {
-                    setGraph(item.Value)
-                }
-                if (item.Key === "graph_info") {
-                    try {
-                        let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
-                        graph_info.forEach((item) => {
-                            setMapGraphInfoDetail(item.node_id, item)
-                        })
-                    } catch (error) {}
-                }
-                if (item.Key === "message") {
-                    setMessage(item.Value)
-                }
-                if (item.Key === "node_id") {
-                    setNodeId(item.Value)
-                }
-                if (item.Key === "graph_line") {
-                    try {
-                        let graph_info: string[][] = JSON.parse(item.Value)
-                        // 当数量小于等于10条时默认第一级展开
-                        if (graph_info.length > 0 && graph_info.length <= 10) {
-                            const expendKey:string[] = graph_info.map((item,index)=>`路径${index + 1}`)
-                            setActiveKey(expendKey)
-                        }
-                        else{
+        try {
+            clearMapGraphInfoDetail()
+            const {Body, ...auditYakUrl} = params
+            const body = Body ? StringToUint8Array(Body) : undefined
+            const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
+            if (result && result.Resources.length > 0) {
+                result.Resources[0].Extra.forEach((item) => {
+                    if (item.Key === "graph") {
+                        setGraph(item.Value)
+                    }
+                    if (item.Key === "graph_info") {
+                        try {
+                            let graph_info: GraphInfoProps[] = JSON.parse(item.Value)
+                            graph_info.forEach((item) => {
+                                setMapGraphInfoDetail(item.node_id, item)
+                            })
+                        } catch (error) {}
+                    }
+                    if (item.Key === "message") {
+                        setMessage(item.Value)
+                    }
+                    if (item.Key === "node_id") {
+                        setNodeId(item.Value)
+                    }
+                    if (item.Key === "graph_line") {
+                        try {
+                            let graph_info: string[][] = JSON.parse(item.Value)
+                            // 当数量小于等于10条时默认第一级展开
+                            if (graph_info.length > 0 && graph_info.length <= 10) {
+                                const expendKey: string[] = graph_info.map((item, index) => `路径${index + 1}`)
+                                setActiveKey(expendKey)
+                            } else {
+                                setActiveKey(undefined)
+                            }
+                            setGraphLine(graph_info)
+                        } catch (error) {
+                            setGraphLine(undefined)
                             setActiveKey(undefined)
                         }
-                        setGraphLine(graph_info)
-                    } catch (error) {
-                        setGraphLine(undefined)
-                        setActiveKey(undefined)
                     }
-                }
-            })
-            setRefresh(!refresh)
-        }
+                })
+                setRefresh(!refresh)
+            }
+        } catch (error) {}
     })
 
     // 跳转详情
@@ -530,9 +536,9 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
             }
         }
         // 定位文件树
-        emiter.emit("onScrollToFileTree", url)
+        emiter.emit("onCodeAuditScrollToFileTree", url)
         // 打开文件
-        emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
         // 纯跳转行号
         setTimeout(() => {
             const obj: JumpToEditorProps = {
@@ -540,7 +546,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 id: url,
                 isSelect: false
             }
-            emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
+            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
         }, 100)
     })
 

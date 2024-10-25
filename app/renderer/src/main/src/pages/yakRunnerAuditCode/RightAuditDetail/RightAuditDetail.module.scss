@@ -1,0 +1,211 @@
+.right-audit-detail {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .header {
+        .relative-box {
+            height: 33px;
+            width: 100%;
+            position: relative;
+            .absolute-box {
+                position: absolute;
+                width: calc(100% + 4px);
+                left: -4px;
+                border-left: 1px solid #eaecf3;
+                border-bottom: 1px solid #eaecf3;
+                background: #f8f8f8;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 4px 12px;
+                align-items: center;
+                align-self: stretch;
+                .title {
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .extra {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 4px;
+                }
+            }
+        }
+    }
+    .main {
+        flex: 1;
+        overflow: hidden;
+        .audit-result-box {
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            .message-box {
+                padding: 2px 10px;
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-style: normal;
+                font-weight: 600;
+                line-height: 16px;
+
+            }
+            .title-render {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+
+            .audit-result-item {
+                .result-render {
+                    width: 100%;
+                    overflow: hidden;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    gap: 8px;
+                    .title {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 16px;
+                        overflow: hidden;
+                        flex: 1;
+                    }
+                    .url-box {
+                        width: 60px;
+                        text-align: right;
+                        color: #f28b44;
+                        font-size: 12px;
+                        font-weight: 400;
+                        line-height: 16px;
+                        overflow: hidden;
+                        &:hover {
+                            text-decoration: underline;
+                        }
+                    }
+                    .active-url-box{
+                        color: rgb(136, 99, 247);
+                    }
+                }
+                .ir-code-box {
+                    padding: 8px;
+                    border-radius: 4px;
+                    background: #f0f1f3;
+                    white-space: pre;
+                    overflow: auto;
+                }
+                :global {
+                    .ant-collapse-item > .ant-collapse-header {
+                        padding: 3px 0px 3px 0px !important;
+                    }
+                    .ant-collapse-header-text{
+                        flex: 1;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.flow-chart-box {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .header {
+        .relative-box {
+            height: 33px;
+            width: 100%;
+            position: relative;
+            .absolute-box {
+                position: absolute;
+                width: calc(100% + 4px);
+                left: -4px;
+                border-left: 1px solid #eaecf3;
+                border-bottom: 1px solid #eaecf3;
+                background: #f8f8f8;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                padding: 4px 12px;
+                align-items: center;
+                align-self: stretch;
+                .title {
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px;
+                }
+                .extra {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 4px;
+                }
+            }
+        }
+    }
+    .svg-box {
+        flex: 1;
+        overflow: hidden;
+        user-select: none;
+        svg {
+            width: 100%;
+            height: 100%;
+            :global {
+                .node text {
+                    cursor: pointer;
+                    &:hover {
+                        fill: var(--yakit-primary-5);
+                    }
+                }
+                .node-main text {
+                    cursor: unset;
+                    &:hover {
+                        fill: #31343f;
+                    }
+                }
+            }
+        }
+    }
+    .root-detail {
+        height: 152px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid #eaecf3;
+        .header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            padding: 4px 12px;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0px 12px 12px;
+            gap: 8px;
+            .url-box {
+                color: #f28b44;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                &:hover {
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
+            }
+            .ir-code-box {
+                flex: 1;
+                overflow: auto;
+                padding: 8px;
+                border-radius: 4px;
+                background: #f0f1f3;
+            }
+        }
+    }
+}

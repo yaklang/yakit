@@ -3,7 +3,7 @@ import {Risk} from "../schema"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-
+import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail";
 export interface YakitRiskTableProps {
     setRiskLoading: (b: boolean) => void
     /**是否开启高级查询 */
@@ -66,4 +66,19 @@ export interface YakitRiskSelectTagProps {
     info: Risk
     onClose?: () => void
     onSave: (info: Risk) => void
+}
+
+export interface YakitCodeScanRiskDetailsProps {
+    className?: string
+    info: Risk
+    onClickIP?: (info: Risk) => void
+    border?: boolean
+    isShowExtra?: boolean
+}
+
+export interface YakURLDataItemProps {
+    index:string
+    code_range:CodeRangeProps
+    source: string
+    ResourceName:string
 }

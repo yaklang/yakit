@@ -1,9 +1,11 @@
 import React from "react"
 import {
+    PublicAuditCodeIcon,
     PublicBasicCrawlerIcon,
     PublicBatchPluginIcon,
     PublicBruteIcon,
     PublicCVEIcon,
+    PublicCodeScanIcon,
     PublicCodecIcon,
     PublicDNSLogIcon,
     PublicDataCompareIcon,
@@ -366,6 +368,32 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     </div>
                 </>
             )}
+            {
+             mode === "代码审计" && (
+                <>
+                <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.YakRunner_Audit_Code)}>
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicAuditCodeIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>代码审计</div>
+                    </div>
+                    <div className={styles["divider-style"]}></div>
+                    <div
+                        className={styles["vertical-menu-wrapper"]}
+                        onClick={() => onMenu(YakitRoute.YakRunner_Code_Scan)}
+                    >
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicCodeScanIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>代码扫描</div>
+                    </div>
+                </>
+             )  
+            }
             {mode === "数据库" && (
                 <>
                     <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_HTTPHistory)}>

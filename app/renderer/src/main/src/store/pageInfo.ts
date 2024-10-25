@@ -69,6 +69,8 @@ interface PageParamsInfoProps {
     /**新建漏洞与风险统计页面 */
     riskPageInfo?: RiskPageInfoProps
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
+    auditCodePageInfo?: AuditCodePageInfoProps
+    codeScanPageInfo?: CodeScanPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -139,6 +141,7 @@ export interface PocPageInfoProps {
     /**执行任务的状态 */
     hybridScanMode: HybridScanModeType
 }
+
 export interface BrutePageInfoProps {
     /**输入目标 */
     targets: string
@@ -169,6 +172,22 @@ interface ImmediatelyLaunchedInfo {
 }
 export interface HTTPHackerPageInfoProps {
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
+}
+
+export interface AuditCodePageInfoProps {
+    Schema: string
+    // 基础路径 / 由Path、Variable、Value组成完整路径信息
+    Path: string
+    Variable?: string
+    Value?: string
+    // 正常操作查询
+    Location: string
+    Query: {Key: string; Value: number}[]
+}
+
+export interface CodeScanPageInfoProps {
+    projectName?: string
+    selectGroupListByKeyWord?: string[]
 }
 
 interface PageInfoStoreProps {

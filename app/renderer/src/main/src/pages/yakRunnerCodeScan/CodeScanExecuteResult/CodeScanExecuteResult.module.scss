@@ -1,0 +1,105 @@
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.code-scan-execute-result {
+    @extend %display-column-center;
+    justify-content: flex-start;
+    flex: 1;
+    overflow: hidden;
+    gap: 12px;
+    padding-top: 12px;
+    min-height: 500px;
+    .table-renderTitle {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        padding: 14px 12px 10px;
+
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px; /* 133.333% */
+        .table-renderTitle-left {
+            @extend %display-flex-center;
+            gap: 8px;
+        }
+    }
+    .code-scan-execute-result-tabBar {
+        display: inline-block;
+        margin-left: 4px;
+        padding: 0px 8px;
+        background: #f6544a;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+
+    .code-scan-execute-result-tabPane {
+        border: 1px solid var(--yakit-border-color);
+        border-top: 0;
+    }
+
+    .risks-table {
+        @extend %display-column-center;
+        overflow: hidden;
+        height: 100%;
+        .risks-table-wrapper {
+            padding: 0;
+        }
+    }
+    .table-container {
+        border: 0 !important;
+        border-top: 1px solid var(--yakit-border-color) !important;
+    }
+    .custom-table-container {
+        border: 0 !important;
+    }
+}
+
+.code-scan-result-table{
+    height: calc(100% - 30px);
+    .virtual-table-header-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .virtual-table-heard-left {
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+            .virtual-table-heard-left-item {
+                display: flex;
+                align-items: center;
+
+                .virtual-table-heard-left-text {
+                    color: var(--yakit-helper-text-color);
+                    font-size: 12px;
+                    margin-right: 4px;
+                }
+
+                .virtual-table-heard-left-number {
+                    color: var(--yakit-primary-5);
+                    font-size: 12px;
+                }
+            }
+        }
+    }
+    .domainAsset-table-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}

@@ -165,13 +165,6 @@ $keyColor: map-keys($tagColor);
         overflow-y: auto;
         height: 100%;
     }
-    .no-more {
-        font-size: 12px;
-        color: var(--yakit-helper-text-color);
-        text-align: center;
-        padding: 12px;
-        width: 100%;
-    }
 }
 .yakit-risk-details-content-no-border {
     border: 0;
@@ -253,4 +246,107 @@ $keyColor: map-keys($tagColor);
         justify-content: flex-end;
         gap: 8px;
     }
+}
+
+.yakit-code-scan-risk-details {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-resize-collapse {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    .main-title {
+        border-left: 1px solid #eaecf3;
+        border-bottom: 1px solid #eaecf3;
+        border-right: 1px solid #eaecf3;
+        background: #f8f8f8;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 4px 12px;
+        align-items: center;
+        align-self: stretch;
+
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .audit-result-collapse {
+        flex: 1;
+        overflow: auto;
+        .node-content {
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            .content-body {
+                flex: 1;
+                overflow: hidden;
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                .name {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 500;
+                    overflow: hidden;
+                }
+                .detail {
+                    color: #b4bbca;
+                    font-size: 12px;
+                    font-weight: 400;
+                    overflow: hidden;
+                }
+            }
+        }
+        .ir-code-box {
+            padding: 8px;
+            border-radius: 4px;
+            background: #f0f1f3;
+            white-space: pre;
+            overflow: auto;
+        }
+        :global {
+            .ant-collapse-item > .ant-collapse-header {
+                padding: 3px 0px 3px 0px !important;
+            }
+            .ant-collapse-header-text {
+                flex: 1;
+                overflow: hidden;
+            }
+        }
+    }
+}
+
+.disabled-open {
+    background: var(--ui-background-color);
+    color: var(--yakit-disable-text-color);
+    border-radius: 4px;
+    border: 1px solid var(--yakit-border-color);
+    height: 24px;
+    padding: 3px 8px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    cursor: no-drop;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    svg{
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-disable-text-color);
+    }
+}
+
+.no-more {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+    text-align: center;
+    padding: 12px;
+    width: 100%;
 }

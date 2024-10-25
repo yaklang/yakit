@@ -30,7 +30,6 @@ export const startupDuplexConn = () => {
     ipcRenderer.on(`${id}-data`, (e, data:DuplexConnectionProps) => {
         try {
             const obj = JSON.parse(Uint8ArrayToString(data.Data))
-            
             switch (data.MessageType) {
                 // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
                 case "global":
@@ -53,7 +52,12 @@ export const startupDuplexConn = () => {
                     const event:FileMonitorProps = obj
                     emiter.emit("onRefreshYakRunnerFileTree",JSON.stringify(event))
                     break
+                // 代码扫描-审计结果表
+                case "syntaxflow_result":
+                    emiter.emit("onRefreshCodeScanResult",JSON.stringify(obj))
+                    break
                 }
+                
 
         
         } catch (error) {}

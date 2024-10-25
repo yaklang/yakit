@@ -97,6 +97,8 @@ import {shallow} from "zustand/shallow"
 import {RemoteGV} from "@/yakitGV"
 import {
     AddYakitScriptPageInfoProps,
+    AuditCodePageInfoProps,
+    CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
     PageNodeItemProps,
     PageProps,
@@ -135,6 +137,7 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "./utils"
+import { defaultCodeScanPageInfo } from "@/defaultConstants/CodeScan"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -492,10 +495,64 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.HTTPHacker:
                 addHTTPHackerPage(params)
                 break
+            case YakitRoute.YakRunner_Audit_Code:
+                addYakRunnerAuditCodePage(params)
+                break
+            case YakitRoute.YakRunner_Code_Scan: 
+                addYakRunnerCodeScanPage(params)
+                break
             default:
                 break
         }
     })
+
+    const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {
+        openMenuPage(
+            {route: YakitRoute.YakRunner_Code_Scan},
+            {
+                pageParams: {
+                    codeScanPageInfo: {...data}
+                }
+            }
+        )
+    })
+
+    const addYakRunnerAuditCodePage = useMemoizedFn((data: AuditCodePageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Code).length
+        if (isExist && data) {
+            emiter.emit("onAuditCodePageInfo", JSON.stringify(data))
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.YakRunner_Audit_Code,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.YakRunner_Audit_Code,
+                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]?.label || "",
+                    pageParamsInfo: {
+                        auditCodePageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.YakRunner_Audit_Code,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.YakRunner_Audit_Code, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.YakRunner_Audit_Code},
+            {
+                pageParams: {
+                    auditCodePageInfo: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
+
     const addHTTPHackerPage = useMemoizedFn((data: HTTPHackerPageInfoProps) => {
         const pageNodeInfo: PageProps = {
             ...cloneDeep(defPage),
@@ -856,6 +913,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         }
                     }
                 )
+            }
+            if (type === YakitRoute.YakRunner_Code_Scan) {
+                openMenuPage({route: YakitRoute.YakRunner_Code_Scan})
+            }
+            if (type === YakitRoute.YakRunner_Audit_Code) {
+                openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
             }
             console.info("send to tab: ", type)
         })
@@ -1288,6 +1351,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, order)
                             break
+                        case YakitRoute.YakRunner_Code_Scan:
+                            onCodeScanPage(node, order)
+                            break
                         default:
                             break
                     }
@@ -1320,6 +1386,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, 1)
+                            break
+                        case YakitRoute.YakRunner_Code_Scan:
+                            onCodeScanPage(node, 1)
                             break
                         default:
                             break
@@ -1994,6 +2063,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.SimpleDetect, newPageNode)
+    })
+    /**代码扫描 */
+    const onCodeScanPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.YakRunner_Code_Scan,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                codeScanPageInfo: {...(node?.pageParams?.codeScanPageInfo || defaultCodeScanPageInfo)}
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.YakRunner_Code_Scan, newPageNode)
     })
     /**WebsocketFuzzer */
     const onWebsocketFuzzer = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
