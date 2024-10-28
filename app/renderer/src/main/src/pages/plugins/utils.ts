@@ -95,6 +95,7 @@ export const convertPluginsRequestParams = (
         // search
         keywords: search.type === "keyword" ? search.keyword : "",
         user_name: search.type === "userName" ? search.userName : "",
+        fieldKeywords: search.type === "fieldKeywords" ? search.fieldKeywords : "",
 
         // filter
         plugin_type: filter.plugin_type?.map((ele) => ele.value),
@@ -727,6 +728,7 @@ export const convertLocalPluginsRequestParams = (query: {
         // search
         Keyword: search.type === "keyword" ? search.keyword : "",
         UserName: search.type === "userName" ? search.userName : "",
+        FieldKeywords: search.type === "fieldKeywords" ? search.fieldKeywords : "",
 
         // filter
         Type: (type.map((ele) => ele.value) || []).join(","),

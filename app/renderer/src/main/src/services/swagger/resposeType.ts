@@ -496,7 +496,7 @@ export declare namespace API {
         /**
          * 全文搜索
          */
-        fullText?: string
+        fieldKeywords?: string
     }
     export interface PluginsWherePluginGroup {
         unSetGroup?: boolean

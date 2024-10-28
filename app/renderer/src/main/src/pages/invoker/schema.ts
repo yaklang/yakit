@@ -142,6 +142,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     Group?: { UnSetGroup: boolean, Group: string[], IsPocBuiltIn?: string }
     ExcludeTypes?: string[]
     IsMITMParamPlugins?: number //0->默认全部 1->是mitm带参数插件 2->mitm不带参数;
+
+    // 关键词搜索
+    FieldKeywords?: string
 }
 
 /*
