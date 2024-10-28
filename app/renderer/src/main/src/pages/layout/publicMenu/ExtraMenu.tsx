@@ -115,15 +115,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
             >
                 Yak Runner
             </YakitButton>
-            <YakitButton
-                onClick={() =>
-                    onMenuSelect({
-                        route: YakitRoute.Modify_Notepad
-                    })
-                }
-            >
-                记事本
-            </YakitButton>
             <ImportLocalPlugin
                 visible={visibleImport}
                 setVisible={(v) => {
