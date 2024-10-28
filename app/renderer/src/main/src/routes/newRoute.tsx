@@ -23,10 +23,12 @@ import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
 import {PageLoading} from "./PageLoading"
 import {
+    PrivateOutlineAuditCodeIcon,
     PrivateOutlineBasicCrawlerIcon,
     PrivateOutlineBatchPluginIcon,
     PrivateOutlineBruteIcon,
     PrivateOutlineCVEIcon,
+    PrivateOutlineCodeScanIcon,
     PrivateOutlineCodecIcon,
     PrivateOutlineDNSLogIcon,
     PrivateOutlineDataCompareIcon,
@@ -52,10 +54,12 @@ import {
     PrivateOutlineTCPPortLogIcon,
     PrivateOutlineWebFuzzerIcon,
     PrivateOutlineWebsocketFuzzerIcon,
+    PrivateSolidAuditCodeIcon,
     PrivateSolidBasicCrawlerIcon,
     PrivateSolidBatchPluginIcon,
     PrivateSolidBruteIcon,
     PrivateSolidCVEIcon,
+    PrivateSolidCodeScanIcon,
     PrivateSolidCodecIcon,
     PrivateSolidDNSLogIcon,
     PrivateSolidDataCompareIcon,
@@ -1039,14 +1043,14 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     },
     [YakitRoute.YakRunner_Audit_Code]:{
         page: YakitRoute.YakRunner_Audit_Code,
-        icon: <PrivateOutlineDataCompareIcon />,
-        hoverIcon: <PrivateSolidDataCompareIcon />,
+        icon: <PrivateOutlineAuditCodeIcon />,
+        hoverIcon: <PrivateSolidAuditCodeIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
     },
     [YakitRoute.YakRunner_Code_Scan]:{
         page: YakitRoute.YakRunner_Code_Scan,
-        icon: <PrivateOutlineDataCompareIcon />,
-        hoverIcon: <PrivateSolidDataCompareIcon />,
+        icon: <PrivateOutlineCodeScanIcon />,
+        hoverIcon: <PrivateSolidCodeScanIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
     },
     [YakitRoute.DB_Report]: {
@@ -1161,6 +1165,14 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     },
     {
         page: undefined,
+        label: "代码审计",
+        children: [
+            PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
+            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
+        ]
+    },
+    {
+        page: undefined,
         label: "专项漏洞检测",
         children: routeToChildren([YakitRoute.PoC])
     },
@@ -1197,7 +1209,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
-    }
+    },
 ]
 /**
  * @name private版扫描模式菜单配置数据
