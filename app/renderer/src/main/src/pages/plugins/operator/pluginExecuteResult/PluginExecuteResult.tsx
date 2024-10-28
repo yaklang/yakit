@@ -51,6 +51,7 @@ import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/
 import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
+import { CodeScanResult } from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
 
 const {TabPane} = PluginTabs
 
@@ -141,6 +142,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                     content: ""
                 }
                 return <PluginExecuteCode content={textInfo.content} />
+            case "result":
+                return <CodeScanResult isExecuting={loading} runtimeId={runtimeId} />
             default:
                 return <></>
         }
