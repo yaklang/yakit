@@ -135,8 +135,8 @@ import {
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/yakRunner/YakRunner"
-import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan";
-import { YakRunnerAuditCode } from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode";
+import {YakRunnerCodeScan} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan"
+import {YakRunnerAuditCode} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
@@ -308,7 +308,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
-    YakitRoute.Modify_Notepad
+    YakitRoute.Modify_Notepad,
+    YakitRoute.Notepad_Manage
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -564,9 +565,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Code_Scan:
-            return <YakRunnerCodeScan pageId={params?.id || ""}/>
+            return <YakRunnerCodeScan pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Code:
-            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo}/>
+            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
         case YakitRoute.Notepad_Manage:
             return <NotepadManage />
         case YakitRoute.Modify_Notepad:
@@ -821,8 +822,8 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label:"代码审计",
-        children:[
+        label: "代码审计",
+        children: [
             {
                 page: YakitRoute.YakRunner_Audit_Code,
                 ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
@@ -1050,13 +1051,13 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidDataCompareIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DataCompare]
     },
-    [YakitRoute.YakRunner_Audit_Code]:{
+    [YakitRoute.YakRunner_Audit_Code]: {
         page: YakitRoute.YakRunner_Audit_Code,
         icon: <PrivateOutlineDataCompareIcon />,
         hoverIcon: <PrivateSolidDataCompareIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
     },
-    [YakitRoute.YakRunner_Code_Scan]:{
+    [YakitRoute.YakRunner_Code_Scan]: {
         page: YakitRoute.YakRunner_Code_Scan,
         icon: <PrivateOutlineDataCompareIcon />,
         hoverIcon: <PrivateSolidDataCompareIcon />,
