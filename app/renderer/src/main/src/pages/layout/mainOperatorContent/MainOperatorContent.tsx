@@ -471,6 +471,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
+                break
             case YakitRoute.Modify_Notepad:
                 addModifyNotepad(params)
                 break
