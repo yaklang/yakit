@@ -34,6 +34,8 @@
         font-weight: 600;
         line-height: 16px;
         gap: 8px;
+
+        border-bottom: 1px solid var(--yakit-border-color);
         .columns-item {
             align-items: center;
             display: flex;
@@ -73,7 +75,7 @@
                     border-radius: 8px;
                 }
                 &:first-child {
-                    border-top-color: var(--yakit-border-color);
+                    border-top-width: 0;
                 }
                 .virtual-list-cell {
                     align-items: center;
