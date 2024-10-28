@@ -148,6 +148,8 @@ const markdown1 = `
 
 Maybe more? ![]()
 
+[Mirone](https://github.com/Saul-Mirone)
+
 `
 const markdown2 = `#ggg
 fsdfsdf
@@ -290,6 +292,25 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ].flat()
     }, [])
 
+    const linkTooltip = useCreation(() => {
+        return [
+            linkTooltipPlugin,
+            (ctx: Ctx) => () => {
+                ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
+                    ...defaultConfig,
+                    linkIcon: () => "🔗",
+                    editButton: () => "✎",
+                    removeButton: () => "❌",
+                    confirmButton: () => "✔️",
+                    onCopyLink: (link: string) => {
+                        console.log("Link copied:", link)
+                        yakitInfo("Link copied")
+                    }
+                }))
+            }
+        ].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -301,17 +322,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             component: TooltipView
                         })
                     })
-                    ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
-                        ...defaultConfig,
-                        linkIcon: () => "🔗",
-                        editButton: () => "✎",
-                        removeButton: () => "❌",
-                        confirmButton: () => "✔️",
-                        onCopyLink: (link: string) => {
-                            console.log("Link copied:", link)
-                            yakitInfo("Link copied")
-                        }
-                    }))
                 })
                 .use(commonmark)
                 .use(gfm)
@@ -348,7 +358,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     })
                 )
                 // linkTooltip
-                .use(linkTooltipPlugin)
+                .use(linkTooltip)
                 // placeholder
                 .use(placeholder)
                 // table
