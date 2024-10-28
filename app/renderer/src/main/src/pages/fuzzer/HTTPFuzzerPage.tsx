@@ -2146,7 +2146,6 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
                     {!httpResponse.MatchedByMatcher && advancedConfigValue.matchers?.length > 0 && (
                         <YakitTag color='danger'>匹配失败</YakitTag>
                     )}
-                    <YakitTag color='danger'>匹配失败</YakitTag>
                 </>
             )}
         </div>
