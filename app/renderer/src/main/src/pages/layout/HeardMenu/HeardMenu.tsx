@@ -23,7 +23,7 @@ import {
 } from "@/assets/newIcon"
 import ReactResizeDetector from "react-resize-detector"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {Divider, Dropdown, Tabs, Tooltip, Form} from "antd"
+import {Divider, Dropdown, Tabs, Tooltip} from "antd"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -62,7 +62,7 @@ import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import emiter from "@/utils/eventBus/eventBus"
-import {SolidPayloadIcon} from "@/assets/icon/solid"
+import {SolidClipboardlistIcon, SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
@@ -113,6 +113,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [defaultExpand])
 
     const [customizeVisible, setCustomizeVisible] = useState<boolean>(false)
+    const [notepadVisible, setNotepadVisible] = useState<boolean>(false)
 
     const [loading, setLoading] = useState<boolean>(true)
 
@@ -636,6 +637,22 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         }
     })
 
+    const onNotepad = useMemoizedFn((item) => {
+        switch (item.key) {
+            case "list":
+                onRouteMenuSelect({
+                    route: YakitRoute.Notepad_Manage
+                })
+                break
+            case "add":
+                onRouteMenuSelect({
+                    route: YakitRoute.Modify_Notepad
+                })
+                break
+            default:
+                break
+        }
+    })
     return (
         <div className={style["heard-menu-body"]}>
             <div
@@ -692,6 +709,39 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                         <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
                             <Dropdown
+                                overlayClassName={style["notepad-drop-menu"]}
+                                overlay={
+                                    <>
+                                        {[
+                                            {key: "list", label: "记事本管理"},
+                                            {key: "add", label: "新建记事本"}
+                                        ].map((item) => (
+                                            <div
+                                                key={item.key}
+                                                className={classNames(style["notepad-item"])}
+                                                onClick={() => onNotepad(item)}
+                                            >
+                                                <div className={style["notepad-item-left"]}>{item.label}</div>
+                                            </div>
+                                        ))}
+                                    </>
+                                }
+                                onVisibleChange={setNotepadVisible}
+                            >
+                                <YakitButton
+                                    type='secondary2'
+                                    className={classNames(style["heard-menu-customize"], {
+                                        [style["margin-right-0"]]: isExpand,
+                                        [style["heard-menu-customize-menu"]]: notepadVisible
+                                    })}
+                                    icon={<SolidClipboardlistIcon />}
+                                >
+                                    <div className={style["heard-menu-customize-content"]}>
+                                        记事本{(notepadVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
+                                    </div>
+                                </YakitButton>
+                            </Dropdown>
+                            <Dropdown
                                 overlayClassName={style["customize-drop-menu"]}
                                 overlay={
                                     <>
@@ -742,9 +792,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                         </YakitSpin>
                                     </>
                                 }
-                                onVisibleChange={(e) => {
-                                    setCustomizeVisible(e)
-                                }}
+                                onVisibleChange={setCustomizeVisible}
                             >
                                 <YakitButton
                                     type='secondary2'
