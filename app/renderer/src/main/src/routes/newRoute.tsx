@@ -295,7 +295,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
-    YakitRoute.Modify_Notepad
+    YakitRoute.Modify_Notepad,
+    YakitRoute.Notepad_Manage
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -532,7 +533,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.YakRunner_Code_Scan:
             return <YakRunnerCodeScan pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Code:
-            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo}/>
+            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
         case YakitRoute.Notepad_Manage:
             return <NotepadManage />
         case YakitRoute.Modify_Notepad:

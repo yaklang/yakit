@@ -183,17 +183,19 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     <div className={styles["modify-notepad-heard-extra"]}>
                         <div className={styles["modify-notepad-heard-extra-online-user"]}>
                             {onlineUsers.map((item) => (
-                                <AuthorImg
-                                    key={item.id}
-                                    src={item.img}
-                                    icon={
-                                        <div
-                                            className={styles["online-user-dot"]}
-                                            style={{backgroundColor: item.onlineStatus}}
-                                        />
-                                    }
-                                    iconClassName={styles["online-user-icon"]}
-                                />
+                                <Tooltip key={item.id} title={item.name}>
+                                    <AuthorImg
+                                        key={item.id}
+                                        src={item.img}
+                                        icon={
+                                            <div
+                                                className={styles["online-user-dot"]}
+                                                style={{backgroundColor: item.onlineStatus}}
+                                            />
+                                        }
+                                        iconClassName={styles["online-user-icon"]}
+                                    />
+                                </Tooltip>
                             ))}
                         </div>
                         <YakitPopover
