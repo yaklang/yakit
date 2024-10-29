@@ -1199,6 +1199,9 @@ message GlobalNetworkConfig {
 
   // 插件执行配置
   float CallPluginTimeout = 20;
+
+  uint64 MinTlsVersion = 21;
+  uint64 MaxTlsVersion = 22;
 }
 
 message AuthInfo {

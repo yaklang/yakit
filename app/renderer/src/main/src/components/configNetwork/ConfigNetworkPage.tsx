@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Modal, Space, Upload} from "antd"
+import {Divider, Form, Modal, Slider, Space, Upload} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {yakitInfo, warn, failed, success} from "@/utils/notification"
@@ -78,6 +78,9 @@ export interface GlobalNetworkConfig {
     DbSaveSync: boolean
 
     CallPluginTimeout: number
+
+    MinTlsVersion: number
+    MaxTlsVersion: number
 }
 
 export interface ThirdPartyApplicationConfig {
@@ -142,7 +145,9 @@ export const defaultParams: GlobalNetworkConfig = {
     ExcludePluginScanURIs: [],
     IncludePluginScanURIs: [],
     DbSaveSync: false,
-    CallPluginTimeout: 60
+    CallPluginTimeout: 60,
+    MinTlsVersion:0x300,
+    MaxTlsVersion:0x304
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -528,7 +533,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     />
                                 )}
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    TLS 客户端证书（双向认证）
+                                    TLS 客户端配置
                                 </Divider>
                                 <Form.Item label={"选择格式"}>
                                     <YakitRadioButtons
@@ -564,7 +569,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 showUploadList={false}
                                                 beforeUpload={(file) => onCertificate(file)}
                                             >
-                                                <YakitButton type={"outline2"}>添加 TLS 客户端证书</YakitButton>
+                                                <YakitButton type={"outline2"}>添加 TLS 客户端证书（双向认证）</YakitButton>
                                             </Upload>
                                             {certificateList}
                                         </Form.Item>
@@ -580,6 +585,39 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }}
                                     />
                                 )}
+                                <Form.Item label={"客户端tls版本支持"}>
+                                    <Slider
+                                        style={{width:'33%'}}
+                                        range
+                                        dots
+                                        value={[params.MinTlsVersion, params.MaxTlsVersion]}
+                                        onChange={(value)=>{
+                                            if (value.length==2) {
+                                                setParams({...params, MinTlsVersion:value[0],MaxTlsVersion: value[1]})
+                                            }
+                                        }}
+                                        min={0x300}
+                                        max={0x304}
+                                        tipFormatter={(value)=>{
+                                            switch(value){
+                                                case 0x300:
+                                                    return "SSLv3"
+                                                case 0x301 :
+                                                    return "TLS 1.0"
+                                                case 0x302:
+                                                    return "TLS 1.1"
+                                                case 0x303:
+                                                    return "TLS 1.2"
+                                                case 0x304:
+                                                    return "TLS 1.3" 
+                                                default:
+                                                    return value    
+                                            }
+                                        }}
+
+                                    />
+                                </Form.Item>
+                                
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     第三方应用配置
                                 </Divider>
