@@ -140,6 +140,8 @@ export interface PocPageInfoProps {
     runtimeId: string
     /**执行任务的状态 */
     hybridScanMode: HybridScanModeType
+    /**按关键词搜索的列表，搜索框的默认值, */
+    defGroupKeywords?: string
 }
 
 export interface BrutePageInfoProps {

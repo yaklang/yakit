@@ -8,5 +8,6 @@ export const defaultPocPageInfo: PocPageInfoProps = {
     httpFlowIds: [],
     request: new Uint8Array(),
     runtimeId: "",
-    hybridScanMode: "new"
+    hybridScanMode: "new",
+    defGroupKeywords: ""
 }
