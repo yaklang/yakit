@@ -258,7 +258,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
                     }}
                 >
                     {imgs.map((item) => {
-                        return <Image src={item.url} />
+                        return <Image key={item.url} src={item.url} />
                     })}
                 </Image.PreviewGroup>
             </div>

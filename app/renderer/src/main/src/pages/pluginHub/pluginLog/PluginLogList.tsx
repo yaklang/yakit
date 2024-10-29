@@ -13,14 +13,24 @@ import cloneDeep from "lodash/cloneDeep"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuthorImg} from "@/pages/plugins/funcTemplate"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {TextareaForImage} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType"
+import {
+    PluginImageTextareaRefProps,
+    TextareaForImage
+} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextareaType"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
 import {ImagePreviewList} from "../utilsUI/UtilsTemplate"
 import {formatTimestamp} from "@/utils/timeUtil"
 
-// import classNames from "classnames"
+import classNames from "classnames"
 import styles from "./PluginLog.module.scss"
 import UnLogin from "@/assets/unLogin.png"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {FileItem} from "fs"
+import {failed} from "@/utils/notification"
+import {httpDeleteOSSResource, httpUploadFile} from "@/apiUtils/http"
+import {OutlineLoadingIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {Upload} from "antd"
+import {PluginImageTextarea} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
 
 /** @name 插件日志 */
 export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
@@ -219,7 +229,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
             handleDelCommentOpen()
         }
         if (type === "supplement") {
-            return
+            handleOpenSupplement()
         }
         if (type === "quotation") {
             handleOpenShowQuotaion(info)
@@ -358,6 +368,92 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
     })
     /** ---------- 预览回复里的引用 End ---------- */
 
+    /** ---------- 提交补充资料 Start ---------- */
+    const [showSupplement, setShowSupplement] = useState<boolean>(false)
+    const handleOpenSupplement = useMemoizedFn(() => {
+        if (showSupplement) return
+        setShowSupplement(true)
+    })
+
+    const handleCancelSupplement = useMemoizedFn(() => {
+        setShowSupplement(false)
+    })
+
+    const textareaRef = useRef<PluginImageTextareaRefProps>(null)
+    const handleCallbackSupplement = useMemoizedFn(() => {
+        if (uploadLoading) {
+            failed("文件上传中，请稍后")
+            return
+        }
+        if (!textareaRef.current) {
+            failed("该弹框异常，请关闭后重试")
+            return
+        }
+        const info = textareaRef.current.getData()
+        if (!info) return
+    })
+
+    const [uploadLoading, setUploadLoading] = useState<boolean>(false)
+    const [fileName, setFileName] = useState<string>("")
+    const fileUrl = useRef<string>("")
+    const uploadFile = useMemoizedFn((file: FileItem) => {
+        if (uploadLoading) return
+        if (file.size > 5 * 1024 * 1024) {
+            failed("压缩包大小不能超过5MB")
+            return
+        }
+
+        let uploadUrl: string = "" // 有值代表上传成功
+        setUploadLoading(true)
+        httpUploadFile({path: file.path, name: file.name})
+            .then((res) => {
+                uploadUrl = res
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    if (uploadUrl) {
+                        fileUrl.current && deleteFile(fileUrl.current)
+                        fileUrl.current = uploadUrl
+                        setFileName(file.name)
+                    }
+                    setUploadLoading(false)
+                }, 300)
+            })
+    })
+
+    const [delArr, setDelArr] = useState<string[]>([])
+    const deleteFile = useMemoizedFn((url?: string) => {
+        let isReplace: boolean = !!url // 删除还是替换
+        const delUrl = url || fileUrl.current
+
+        if (!delUrl) return
+        const isExist = delArr.includes(delUrl)
+        if (isExist) return
+
+        const [name, path] = delUrl.split("/").reverse()
+        if (!name || !path) {
+            failed(`删除文件出现异常，异常值: ${url}`)
+            return
+        }
+        setDelArr((arr) => arr.concat([delUrl]))
+
+        let isSuccess: boolean = false
+        httpDeleteOSSResource({
+            file_name: [`${path}/${name}`]
+        })
+            .then(() => {
+                isSuccess = true
+            })
+            .finally(() => {
+                if (!isReplace) {
+                    fileUrl.current = ""
+                    setFileName("")
+                }
+                setDelArr((arr) => arr.filter((item) => item !== url))
+            })
+    })
+    /** ---------- 提交补充资料 End ---------- */
+
     return (
         <div ref={wrapperRef} className={styles["plugin-log-list"]} onScroll={() => onLoadMore()}>
             <div className={styles["list-wrapper"]}>
@@ -444,6 +540,79 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                     </div>
                 </YakitModal>
             )}
+
+            {/* 补充资料 */}
+            <YakitModal
+                getContainer={document.getElementById(getContainer || "") || undefined}
+                title='提交补充资料'
+                type='white'
+                visible={false || showSupplement}
+                centered={true}
+                footer={null}
+                onCancel={handleCancelSupplement}
+            >
+                <div className={styles["submit-supplement"]}>
+                    <div className={styles["upload-modal-supplement-item"]}>
+                        <div className={styles["item-header"]}>说明/截图</div>
+                        <div className={styles["item-body"]}>
+                            <PluginImageTextarea ref={textareaRef} type='supplement' />
+                        </div>
+                    </div>
+                    <div className={styles["upload-modal-supplement-item"]}>
+                        <div className={styles["item-header"]}>附件</div>
+                        <div className={styles["item-body"]}>
+                            <div className={styles["upload-supplement-file"]}>
+                                <Upload
+                                    accept='application/zip,.rar'
+                                    disabled={uploadLoading}
+                                    multiple={false}
+                                    showUploadList={false}
+                                    beforeUpload={(file: any) => {
+                                        uploadFile(file)
+                                        return false
+                                    }}
+                                >
+                                    <span className={styles["upload-coantent"]}>点击上传压缩包附件</span>
+                                </Upload>
+                                <span>注: 上传压缩包，提供复现流程或截图</span>
+                            </div>
+
+                            <div className={styles["upload-supplement-url"]}>
+                                {uploadLoading ? (
+                                    <>
+                                        <OutlineLoadingIcon
+                                            className={classNames(styles["icon-style"], "icon-rotate-animation")}
+                                        />
+                                        <span className={styles["loading-text-style"]}>文件上传中...</span>
+                                    </>
+                                ) : (
+                                    fileName && (
+                                        <>
+                                            <div className='content-ellipsis' title={fileName}>
+                                                {fileName}
+                                            </div>
+                                            <YakitButton
+                                                size='small'
+                                                type='text'
+                                                loading={delArr.includes(fileUrl.current)}
+                                                icon={<OutlineTrashIcon />}
+                                                onClick={() => {
+                                                    deleteFile()
+                                                }}
+                                            />
+                                        </>
+                                    )
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    <div style={{paddingTop: 24}} className={styles["upload-modal-next-btn"]}>
+                        <YakitButton loading={!!loading} onClick={handleCallbackSupplement}>
+                            提交
+                        </YakitButton>
+                    </div>
+                </div>
+            </YakitModal>
         </div>
     )
 })

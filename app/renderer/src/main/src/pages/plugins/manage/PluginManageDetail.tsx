@@ -56,12 +56,15 @@ import {PluginLog} from "@/pages/pluginHub/pluginLog/PluginLog"
 import classNames from "classnames"
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import {ImagePreviewList} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 
 const {TabPane} = PluginTabs
 
 const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
 const {ipcRenderer} = window.require("electron")
+
+const DefaultSupplement = `[{"type":"text","value":"啊这这这"},{"type":"image","value":{"url":"https://yakit-online.oss-cn-hongkong.aliyuncs.com/plugins/1nSLyO6VSN6IYZtc9qPNHw==-.png","width":409,"height":73}},{"type":"image","value":{"url":"https://yakit-online.oss-cn-hongkong.aliyuncs.com/plugins/vUxrKe58S7WQyHa2uQEowA==-.png","width":1024,"height":640}},{"type":"file","value":{"url":"https://yakit-online.oss-cn-hongkong.aliyuncs.com/plugins/VRyXbr34RJePwae92f3w4w==-交叉编译electron.zip","name":"交叉编译electron.zip"}}]`
 
 /** 详情页返回列表页 时的 关联数据 */
 export interface BackInfoProps {
@@ -180,6 +183,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 httpFetchAuditPluginDetail(info.uuid)
                     .then(async (res) => {
                         if (res) {
+                            console.log("审核插件详情", res)
                             setOldContent("")
                             // 源码
                             setContent(res.content)
@@ -190,7 +194,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 description: res.logDescription || ""
                             })
                             // 获取补充资料
-                            const supplementInfo = pluginSupplementJSONConvertToData(res.pluginSupplement || "")
+                            const supplementInfo = pluginSupplementJSONConvertToData(
+                                res.pluginSupplement || DefaultSupplement || ``
+                            )
+                            console.log("supplementInfo", supplementInfo)
                             setSupplement(supplementInfo ? {...supplementInfo} : undefined)
                             // 设置基础信息
                             let infoData: PluginBaseParamProps = {
@@ -701,15 +708,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             return params
         })
 
-        // 预览
-        const [preview, setPreview] = useState<boolean>(false)
-        const current = useRef<number>(0)
-        const handlePreview = useMemoizedFn((index: number) => {
-            if (preview) return
-            current.current = index
-            setPreview(true)
-        })
-
         const [downloadFileLoading, setDownloadFileLoading] = useState<boolean>(false)
         // 下载附件里的压缩包
         const downloadSupplementFile = useMemoizedFn(() => {
@@ -974,7 +972,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                 />
                                             </div>
 
-                                            {/* {supplement && (
+                                            {supplement && (
                                                 <div className={styles["plugin-supplement"]}>
                                                     <div className={styles["supplement-header"]}>补充资料</div>
                                                     {supplement.text && (
@@ -984,33 +982,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                     )}
                                                     {supplement.imgs.length > 0 && (
                                                         <div className={styles["supplement-image"]}>
-                                                            {supplement.imgs.map((item, index) => {
-                                                                return (
-                                                                    <div
-                                                                        className={classNames(styles["img-opt"])}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation()
-                                                                        }}
-                                                                    >
-                                                                        <Image
-                                                                            key={item.url}
-                                                                            src={item.url}
-                                                                            className={styles["img-style"]}
-                                                                            preview={false}
-                                                                        />
-                                                                        <div
-                                                                            className={styles["mask-box"]}
-                                                                            onClick={() => {
-                                                                                handlePreview(index)
-                                                                            }}
-                                                                        >
-                                                                            预览
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            })}
+                                                            <ImagePreviewList imgs={supplement.imgs} />
                                                         </div>
                                                     )}
+
                                                     {supplement.fileInfo.url && supplement.fileInfo.fileName && (
                                                         <div className={styles["supplement-file"]}>
                                                             附件：
@@ -1031,7 +1006,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         </div>
                                                     )}
                                                 </div>
-                                            )} */}
+                                            )}
 
                                             <div className={styles["plugin-setting-info"]}>
                                                 <div className={styles["setting-header"]}>插件配置</div>
@@ -1137,23 +1112,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         />
                     </YakitModal>
                 )}
-
-                {/* 图片预览 */}
-                {/* <div style={{display: "none"}}>
-                    <Image.PreviewGroup
-                        preview={{
-                            visible: preview,
-                            onVisibleChange: (show) => {
-                                setPreview(show)
-                            },
-                            current: current.current
-                        }}
-                    >
-                        {(supplement?.imgs || []).map((item) => {
-                            return <Image src={item.url} />
-                        })}
-                    </Image.PreviewGroup>
-                </div> */}
             </PluginDetails>
         )
     })

@@ -374,17 +374,17 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
         return false
     }, [typeInfo])
     // 是否展示补充资料
-    // const showSupplement = useMemo(() => {
-    // if (!userInfo.isLogin) return false
-    // if (plugin.status !== 2) return false
-    // if (info.id !== latestAudit?.id) return false
-    // if (!info.loginIsPluginUser) return false
-    // const strs = info.description.split("\n")
-    // const header = strs[0]
-    // if (!header) return
-    // if (header === "extra") return true
-    // return false
-    // }, [userInfo.isLogin, plugin.status, latestAudit, info.loginIsPluginUser, info.description])
+    const showSupplement = useMemo(() => {
+        if (!userInfo.isLogin) return false
+        if (plugin.status !== 2) return false
+        if (info.id !== latestAudit?.id) return false
+        if (!info.loginIsPluginUser) return false
+        const strs = info.description.split("\n")
+        const header = strs[0]
+        if (!header) return
+        if (header === "extra") return true
+        return false
+    }, [userInfo.isLogin, plugin.status, latestAudit, info.loginIsPluginUser, info.description])
     // 是否展示回复
     const showReply = useMemo(() => {
         if (!userInfo.isLogin) return false
@@ -458,7 +458,7 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
                                     Code
                                 </YakitButton>
                             )}
-                            {/* {showSupplement && (
+                            {showSupplement && (
                                 <YakitButton
                                     onClick={() => {
                                         handleType("supplement")
@@ -466,7 +466,7 @@ export const PluginLogOpt: React.FC<PluginLogOptProps> = memo((props) => {
                                 >
                                     补充资料
                                 </YakitButton>
-                            )} */}
+                            )}
                             {showReply && (
                                 <YakitButton
                                     className={styles["reply-btn"]}

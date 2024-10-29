@@ -33,7 +33,7 @@ module.exports = (win, getClient) => {
 
         return requestWithProgress(url, dest, undefined, (state) => {
             if (!!state) {
-                win.webContents.send("download-url-to-path-progress", {state, openPath: dest})
+                win.webContents.send("download-url-to-path-progress", {state, openPath: yakitInstallDir})
             }
         })
     })

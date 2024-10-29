@@ -201,7 +201,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
         }
         const info = pluginConvertLocalToOnline(localPlugin.current)
         setPluginLoading(true)
-        handleUpload({...info, is_private: false}) //pluginSupplement: data || undefined})
+        handleUpload({...info, is_private: false, pluginSupplement: data || undefined})
     })
 
     // 私密提交
@@ -265,9 +265,9 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
                 ) : null
             },
             {
-                title: "上传", //补充资料",
+                title: "补充资料",
                 content: (
-                    <PluginUploadSupplement nextName='上传' loading={pluginLoading} callback={handleUploadSupplement} />
+                    <PluginUploadSupplement nextName='提交' loading={pluginLoading} callback={handleUploadSupplement} />
                 )
             }
         ]
@@ -529,22 +529,21 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
 
     const textareaRef = useRef<PluginImageTextareaRefProps>(null)
     const handleSubmit = useMemoizedFn(() => {
-        callback("")
-        // if (uploadLoading) {
-        //     failed("文件上传中，请稍后")
-        //     return
-        // }
+        if (uploadLoading) {
+            failed("文件上传中，请稍后")
+            return
+        }
 
-        // if (!textareaRef.current) {
-        //     failed("该弹框异常，请关闭后重试")
-        //     return
-        // }
+        if (!textareaRef.current) {
+            failed("该弹框异常，请关闭后重试")
+            return
+        }
 
-        // const info = textareaRef.current.getData()
-        // if (!info) return
+        const info = textareaRef.current.getData()
+        if (!info) return
 
-        // const jsonStr = pluginSupplementConvertToJSON(info, {url: fileUrl.current, name: fileName})
-        // callback(jsonStr)
+        const jsonStr = pluginSupplementConvertToJSON(info, {url: fileUrl.current, name: fileName})
+        callback(jsonStr)
     })
 
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
@@ -615,24 +614,23 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
                     <div className={classNames(styles["list-opt"], styles["upload-modal-supplement-tip-order"])}>
                         <div className={styles["opt-order"]}>1</div>
                         <div className={styles["upload-modal-supplement-tip-content"]}>
-                            点击上传即可上传插件
-                            {/* 如插件为<span className={styles["strong-text"]}>漏洞检测插件</span>，请
+                            如插件为<span className={styles["strong-text"]}>漏洞检测插件</span>，请
                             <span className={styles["strong-text"]}>补充测试站</span>
                             地址，或者复现流程，并粘贴<span className={styles["strong-text"]}>复现截图</span>
                             ，该内容只有审核可见。如<span className={styles["strong-text"]}>不是漏洞检测插件</span>
                             ，直接
-                            <span className={styles["strong-text"]}>点击下一步</span>上传即可 */}
+                            <span className={styles["strong-text"]}>点击下一步</span>上传即可
                         </div>
                     </div>
                 </div>
             </div>
-            {/* <div className={styles["upload-modal-supplement-item"]}>
+            <div className={styles["upload-modal-supplement-item"]}>
                 <div className={styles["item-header"]}>说明/截图</div>
                 <div className={styles["item-body"]}>
                     <PluginImageTextarea ref={textareaRef} type='supplement' />
                 </div>
-            </div> */}
-            {/* <div className={styles["upload-modal-supplement-item"]}>
+            </div>
+            <div className={styles["upload-modal-supplement-item"]}>
                 <div className={styles["item-header"]}>附件</div>
                 <div className={styles["item-body"]}>
                     <div className={styles["upload-supplement-file"]}>
@@ -679,7 +677,7 @@ export const PluginUploadSupplement: React.FC<PluginUploadSupplementProps> = mem
                         )}
                     </div>
                 </div>
-            </div> */}
+            </div>
             <div style={{paddingTop: 24}} className={styles["upload-modal-next-btn"]}>
                 <YakitButton loading={!!loading} onClick={handleSubmit}>
                     {nextName}

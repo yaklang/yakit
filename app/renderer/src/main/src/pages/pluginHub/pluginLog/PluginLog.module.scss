@@ -173,6 +173,69 @@
     }
 }
 
+.submit-supplement {
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    .upload-modal-supplement-item {
+        width: 100%;
+        padding-top: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        .item-header {
+            width: 62px;
+            text-align: right;
+            color: #31343f;
+            font-size: 12px;
+            line-height: 22px;
+        }
+        .item-body {
+            flex: 1;
+            overflow-x: hidden;
+        }
+    }
+
+    .upload-supplement-file {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #31343f;
+        font-size: 14px;
+        line-height: 22px;
+        .upload-coantent {
+            color: #f28b44;
+            cursor: pointer;
+        }
+    }
+    .upload-supplement-url {
+        width: 100%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #31343f;
+        font-size: 14px;
+        line-height: 22px;
+
+        .loading-text-style {
+            color: var(--ui-neutral-60);
+        }
+        .icon-style {
+            color: #f28b44;
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+    .upload-modal-next-btn {
+        display: flex;
+        justify-content: center;
+    }
+}
+
 // ---------- 插件日志各种类型对应样式 ----------
 .plugin-log-type-info {
     --plugin-log-type-background: #f0f1f3;
