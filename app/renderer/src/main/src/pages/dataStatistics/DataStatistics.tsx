@@ -159,6 +159,7 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
             params: {...riseLineParams}
         })
             .then((res: API.TouristActiveResponse) => {
+                // console.log("用户数量变化趋势-tourist/change", riseLineParams, res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -325,6 +326,13 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
             params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
+                // console.log(
+                //     "活跃度统计-tourist/active",
+                //     activeLineParams,
+                //     moment(activeLineParams.startTime).format("YYYY-MM-DD HH:mm:ss"),
+                //     moment(activeLineParams.endTime).format("YYYY-MM-DD HH:mm:ss"),
+                //     res
+                // )
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -354,6 +362,7 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
             params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
+                // console.log("使用时长统计-tourist/used/time", activeLineParams, res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: string[] = []
@@ -696,7 +705,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get"
         })
             .then((data) => {
-
+                // console.log("统计-tourist", data)
                 setUserData(data)
             })
             .catch((err) => {})
@@ -781,12 +790,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     }
 
     const getDateFormat = (v: showTypeValue) => {
-        if (v === "month") {
-            return "YYYY/MM"
-        } else if (v === "year") {
-            return "YYYY"
-        } else {
+        if (v === "day") {
             return "YYYY/MM/DD"
+        } else if (v === "week") {
+            return "YYYY-wo"
+        } else if (v === "month") {
+            return "YYYY/MM"
+        } else {
+            return "YYYY"
         }
     }
 
