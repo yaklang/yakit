@@ -695,6 +695,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakRunnerContext.Provider value={{store, dispatcher}}>
+                <div className={styles['audit-code']} id="audit-code">
                 {projectName ? (
                     <div className={styles["audit-code-page"]}>
                         <div className={styles["audit-code-body"]}>
@@ -789,6 +790,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                         onSuccee={onSuccee}
                     />
                 )}
+                </div>
             </YakRunnerContext.Provider>
         </WaterMark>
     )

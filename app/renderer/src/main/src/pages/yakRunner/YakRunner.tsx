@@ -1203,7 +1203,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 {/* 编译项目进度条弹窗 */}
                 <YakitModal
                     centered
-                    getContainer={document.getElementById("new-payload") || document.body}
+                    getContainer={document.body}
                     visible={isShowRunAuditModal}
                     title={null}
                     footer={null}

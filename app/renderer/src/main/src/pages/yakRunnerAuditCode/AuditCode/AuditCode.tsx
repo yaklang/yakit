@@ -973,6 +973,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
     return (
         <>
             <YakitModal
+                getContainer={document.getElementById("audit-code") || document.body}
                 visible={isShowCompileModal}
                 bodyStyle={{padding: 0}}
                 title={title || "编译项目"}
@@ -990,7 +991,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
             {/* 编译项目进度条弹窗 */}
             <YakitModal
                 centered
-                getContainer={document.getElementById("new-payload") || document.body}
+                getContainer={document.getElementById("audit-code") || document.body}
                 visible={isShowRunAuditModal}
                 title={null}
                 footer={null}

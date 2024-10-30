@@ -9,7 +9,20 @@
         justify-content: center;
     }
 }
-
+.audit-code{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
+}
 .audit-code-page{
     width: 100%;
     height: 100%;
