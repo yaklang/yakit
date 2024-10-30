@@ -2198,6 +2198,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 setDeleteVisible(false)
             })
             .catch((e: any) => {
+                setDeleteVisible(false)
                 failed(`删除失败：${e}`)
             })
     })

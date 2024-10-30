@@ -55,7 +55,7 @@ export interface AuditNodeMapProps {
 
 export interface AuditNodeProps {
     /** 父路径 */
-    parent: string | nul
+    parent: string | null
     /** id */
     id: string
     // 层级
@@ -70,7 +70,6 @@ export interface AuditNodeProps {
     Extra: YakURLKVPair[]
     ResourceType: string
     VerboseType: string
-    name: string
     Size: number
 }
 
