@@ -746,7 +746,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             handleClosePage()
                         }
                     }
-                    handleTimeLoadingToFalse(setOnlineLoading)
                 }
 
                 if (uploadType.current === "submit" && result) {
@@ -776,10 +775,14 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             })
                         }
                     }
-
-                    handleTimeLoadingToFalse(setModifyLoading)
                 }
 
+                if (uploadType.current === "upload") {
+                    handleTimeLoadingToFalse(setOnlineLoading)
+                }
+                if (uploadType.current === "submit") {
+                    handleTimeLoadingToFalse(setModifyLoading)
+                }
                 setShowUploadPlugin(false)
             }
         )
@@ -929,6 +932,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     <HubButton
                                         width={wrapperWidth}
                                         iconWidth={1000}
+                                        loading={onlineLoading}
                                         type='outline2'
                                         size={isEdit ? "middle" : "large"}
                                         icon={<OutlineDocumentduplicateIcon />}
@@ -940,6 +944,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     <HubButton
                                         width={wrapperWidth}
                                         iconWidth={1000}
+                                        loading={modifyLoading}
                                         type='outline1'
                                         size={isEdit ? "middle" : "large"}
                                         icon={<OutlinePaperairplaneIcon />}
@@ -951,6 +956,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     <HubButton
                                         width={wrapperWidth}
                                         iconWidth={1000}
+                                        loading={onlineLoading}
                                         type='outline1'
                                         size={isEdit ? "middle" : "large"}
                                         icon={<OutlineClouduploadIcon />}
@@ -961,6 +967,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 <HubButton
                                     width={wrapperWidth}
                                     iconWidth={1000}
+                                    loading={localLoading}
                                     type='outline1'
                                     size={isEdit ? "middle" : "large"}
                                     icon={<OutlineExitIcon />}
@@ -970,6 +977,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 <HubButton
                                     width={wrapperWidth}
                                     iconWidth={1000}
+                                    loading={localLoading}
                                     size={isEdit ? "middle" : "large"}
                                     icon={<SolidStoreIcon />}
                                     name='保存'

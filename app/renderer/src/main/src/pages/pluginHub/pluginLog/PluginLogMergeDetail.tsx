@@ -488,6 +488,13 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
                     successWait={10}
                     successHint='表现良好，检测通过，开始合并修改'
                     failedHint='检测不通过，请根据提示修改'
+                    specialHint='(无法判断，是否需要继续合并)'
+                    specialBtnText='继续合并'
+                    specialExtraBtn={
+                        <YakitButton type='outline2' onClick={onCancelPass}>
+                            取消
+                        </YakitButton>
+                    }
                     callback={onCallbackScore}
                 />
             </YakitModal>

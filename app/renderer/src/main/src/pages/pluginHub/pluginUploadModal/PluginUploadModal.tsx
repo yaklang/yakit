@@ -398,21 +398,12 @@ interface PluginUploadScoreProps {
 const PluginUploadScore: React.FC<PluginUploadScoreProps> = memo((props) => {
     const {isSubmit, plugin, callback} = props
 
-    const [isSuccess, setIsSuccess] = useState<boolean>()
-
     const handleScore = useMemoizedFn((isSuccess: boolean) => {
-        setIsSuccess(isSuccess)
         if (isSuccess) callback(isSuccess)
     })
     const handleClose = useMemoizedFn(() => {
         callback(false)
     })
-
-    const btnShow = useMemo(() => {
-        if (isSuccess === undefined) return false
-        if (!isSuccess) return true
-        return false
-    }, [isSubmit, isSuccess])
 
     return (
         <>
@@ -440,12 +431,12 @@ const PluginUploadScore: React.FC<PluginUploadScoreProps> = memo((props) => {
                 isStart={true}
                 successHint={isSubmit ? "（表现良好，开始进行下一步...）" : undefined}
                 callback={handleScore}
+                specialExtraBtn={
+                    <YakitButton type='outline2' onClick={handleClose}>
+                        关闭
+                    </YakitButton>
+                }
             />
-            {btnShow && (
-                <div className={styles["upload-modal-next-btn"]}>
-                    <YakitButton onClick={handleClose}>关闭</YakitButton>
-                </div>
-            )}
         </>
     )
 })

@@ -245,7 +245,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
 
     const onDelTag = useMemoizedFn((value: TagShowOpt) => {
         if (has(filters, value.tagType)) {
-            filters[value.tagType] = (filters[value.tagType]||[]).filter((ele) => ele.value !== value.value)
+            filters[value.tagType] = (filters[value.tagType] || []).filter((ele) => ele.value !== value.value)
             setFilters({...filters})
         }
     })
@@ -1115,7 +1115,6 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                                 m.destroy()
                             } else {
                                 setStateLoading(false)
-                                // m.destroy()
                             }
                         }}
                     />

@@ -337,6 +337,14 @@ interface CodeScoreBaseProps {
     successHint?: string
     /** 评分合格的提示语(默认: "（上传失败，请修复后再上传）") */
     failedHint?: string
+    /** 特殊失败情况的提示语(该情况虽然为失败，但是可以通过评测上传，默认： (无法判断，是否需要转人工审核) ) */
+    specialHint?: string
+    /** 特殊失败情况时显示转人工按钮，按钮文案(默认： <转人工审核>) */
+    specialBtnText?: string
+    /** 特殊失败情况时，转人工按钮旁的拓展功能按钮区域 在转人工按钮左边*/
+    specialExtraBtn?: ReactNode
+    /** 隐藏特殊失败情况时的操作元素 */
+    hiddenSpecialBtn?: boolean
 }
 
 /** 插件源码评分模块 */

@@ -582,12 +582,10 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 yakitNotify("error", "未获取到插件信息，请切换插件详情后重试")
                 return
             }
-            setScore(0)
             setScoreHint(true)
         })
-        const [score, setScore] = useState<number>(0)
         const handleScoreModule = useMemoizedFn((value: boolean) => {
-            setScore(value ? 1 : 2)
+            if (value) handleScoreHintSuccess()
         })
         const handleScoreHintSuccess = useMemoizedFn(() => {
             setStatusLoading(true)
@@ -1125,19 +1123,19 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         <CodeScoreModule
                             type={plugin.type}
                             code={content}
-                            successHint='检测合格，是否通过审核'
+                            successHint='检测合格，插件通过中...'
                             failedHint='检测不合格，请修改后操作'
-                            successWait={50}
+                            successWait={1000}
                             isStart={scoreHint}
                             callback={handleScoreModule}
-                        />
-                        {score === 1 && (
-                            <div style={{display: "flex", justifyContent: "center", paddingBottom: 12}}>
-                                <YakitButton colors='success' onClick={handleScoreHintSuccess}>
-                                    确定通过
+                            specialHint='(无法判断，请确认是否通过审核)'
+                            specialBtnText='确定通过'
+                            specialExtraBtn={
+                                <YakitButton type='outline2' onClick={handleCancelScoreHint}>
+                                    关闭
                                 </YakitButton>
-                            </div>
-                        )}
+                            }
+                        />
                     </YakitModal>
                 )}
 

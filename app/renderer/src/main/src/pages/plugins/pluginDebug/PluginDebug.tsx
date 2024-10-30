@@ -668,6 +668,8 @@ export const PluginDebugBody: React.FC<PluginDebugBodyProps> = memo((props) => {
                 code={newCode || ""}
                 successHint=' '
                 failedHint=' '
+                specialHint=' '
+                hiddenSpecialBtn={true}
                 visible={scoreHint}
                 onCancel={handleScoreHintCallback}
             />

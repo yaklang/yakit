@@ -537,7 +537,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                             <YakitButton
                                                 type='text'
                                                 loading={fetchParamsLoading}
-                                                onClick={()=>handleFetchParams()}
+                                                onClick={() => handleFetchParams()}
                                             >
                                                 获取参数
                                             </YakitButton>
@@ -587,6 +587,8 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                             code={content || ""}
                             successHint=' '
                             failedHint=' '
+                            specialHint=' '
+                            hiddenSpecialBtn={true}
                             visible={scoreHint}
                             onCancel={handleScoreHintCallback}
                         />
