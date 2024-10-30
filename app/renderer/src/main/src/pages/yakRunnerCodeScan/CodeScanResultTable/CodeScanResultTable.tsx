@@ -92,7 +92,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
             RuleNames: [],
             ProgramNames: [],
             Keyword: "",
-            OnlyRisk: false
+            OnlyRisk: true
         }
     })
     const [pagination, setPagination] = useState<Paging>({
