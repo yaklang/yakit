@@ -23,6 +23,8 @@ export interface PluginGroupByKeyWordProps {
     selectGroupListByKeyWord?: string[]
     setSelectGroupListByKeyWord?: (s: string[]) => void
     setResponseToSelect: (s: GroupCount[]) => void
+    /**搜索框的默认值 */
+    defGroupKeywords?: string
 }
 export interface PluginGroupGridProps {
     inViewport: boolean

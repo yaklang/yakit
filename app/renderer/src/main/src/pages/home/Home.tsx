@@ -79,7 +79,7 @@ import {YakitGetOnlinePlugin} from "../mitm/MITMServerHijacking/MITMPluginLocalL
 import {apiQueryPortsBase} from "../assetViewer/PortTable/utils"
 import {QueryPortsRequest} from "../assetViewer/PortAssetPage"
 import mitmBg from "../../assets/mitm-bg.png"
-import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import ReactResizeDetector from "react-resize-detector"
@@ -1136,6 +1136,24 @@ const Home: React.FC<HomeProp> = (props) => {
                                     }
                                 ></YakitHint>
                                 <div className={styles["security-tools"]}>
+                                    {isEnpriTrace() && (
+                                        <div
+                                            className={styles["security-tools-item"]}
+                                            onClick={() =>
+                                                onMenuParams({
+                                                    route: YakitRoute.PoC,
+                                                    params: {
+                                                        type: 2,
+                                                        defGroupKeywords: "两高一弱",
+                                                        selectGroupListByKeyWord: ["两高一弱"]
+                                                    }
+                                                })
+                                            }
+                                        >
+                                            <PublicBruteIcon className={styles["tools-icon"]} />
+                                            <span className={styles["tools-text"]}>两高一弱</span>
+                                        </div>
+                                    )}
                                     <div
                                         className={styles["security-tools-item"]}
                                         onClick={() => onMenu({route: YakitRoute.Mod_ScanPort})}

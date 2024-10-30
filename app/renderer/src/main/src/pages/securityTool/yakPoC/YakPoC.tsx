@@ -238,6 +238,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                     pageId={pageId}
                     inViewport={inViewport}
                     hidden={type === "group"}
+                    defGroupKeywords={pageInfo.defGroupKeywords || ""}
                     selectGroupListByKeyWord={pageInfo.selectGroupListByKeyWord || []}
                     setSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
                     setResponseToSelect={setKeyWordResponseToSelect}
@@ -429,14 +430,14 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
 })
 
 const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((props) => {
-    const {pageId, hidden, inViewport, setResponseToSelect} = props
+    const {pageId, hidden, inViewport, setResponseToSelect, defGroupKeywords} = props
     const [selectGroupList, setSelectGroupList] = useControllableValue<string[]>(props, {
         defaultValue: [],
         valuePropName: "selectGroupListByKeyWord",
         trigger: "setSelectGroupListByKeyWord"
     })
 
-    const [keywords, setKeywords] = useState<string>("")
+    const [keywords, setKeywords] = useState<string>(defGroupKeywords || "")
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [response, setResponse] = useState<GroupCount[]>([])
@@ -447,6 +448,12 @@ const PluginGroupByKeyWord: React.FC<PluginGroupByKeyWordProps> = React.memo((pr
     const pocPluginKeywordsRef = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
+
+    useEffect(() => {
+        if (!defGroupKeywords) return
+        setKeywords(defGroupKeywords)
+        onSearch(defGroupKeywords)
+    }, [defGroupKeywords])
 
     useEffect(() => {
         if (inViewport) init()
