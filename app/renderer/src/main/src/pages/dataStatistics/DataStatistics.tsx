@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "@ant-design/icons"
-import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useCreation, useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./DataStatistics.module.scss"
@@ -18,6 +18,8 @@ import "moment/locale/zh-cn"
 import locale from "antd/es/date-picker/locale/zh_CN"
 import {RangePickerProps} from "antd/lib/date-picker"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 const {RangePicker} = YakitDatePicker
 const {ipcRenderer} = window.require("electron")
 
@@ -299,7 +301,7 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
 
     useUpdateEffect(() => {
         activeOrTime === "active" ? getActiveLine() : getUsedTimeLine()
-    }, [activeLineParams,activeOrTime])
+    }, [activeLineParams, activeOrTime])
 
     useEffect(() => {
         if (!echartsRef.current) return
@@ -609,7 +611,7 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
     )
 }
 type RangeValue = [Moment | null, Moment | null] | null
-type showTypeValue = "day" | "month" | "year"
+type showTypeValue = "day" | "week" | "month" | "year"
 export interface DataStatisticsProps {}
 export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const ref = useRef(null)
@@ -641,101 +643,51 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
     const [activeOrTime, setActiveOrTime] = useState<"active" | "times">("active")
 
-    // 显示的选项
-    const [activeNoShowType, setActiveNoShowType] = useState<showTypeValue[]>([])
-    useEffect(() => {
-        const firstDate = moment.unix(activeLineParams.startTime)
-        const secondDate = moment.unix(activeLineParams.endTime)
-        // 判断天数是否大于等于60
-        const isDifferenceGreaterThan60Days = firstDate.diff(secondDate, "days") > 60
-        // 判断月份是否大于等于60
-        const isDifferenceGreaterThan60Months = firstDate.diff(secondDate, "months") > 60
-        // 判断年份是否大于等于60
-        const isDifferenceGreaterThan60Years = firstDate.diff(secondDate, "years") > 60
-        let arr: showTypeValue[] = []
-        // 大于60则不可选天
-        if (isDifferenceGreaterThan60Days) {
-            arr.push("day")
-        }
-        // 大于60则不可选月
-        if (isDifferenceGreaterThan60Months) {
-            arr.push("month")
-        }
-        // 大于60则不可选年
-        if (isDifferenceGreaterThan60Years) {
-            arr.push("year")
-        }
-        setActiveNoShowType(arr)
-    }, [activeLineParams])
     const getActiveShowType = useMemo(() => {
         return [
             {
                 label: "天",
-                value: "day",
-                disabled: activeNoShowType.includes("day")
+                value: "day"
+            },
+            {
+                label: "周",
+                value: "week"
             },
             {
                 label: "月",
-                value: "month",
-                disabled: activeNoShowType.includes("month")
+                value: "month"
             },
             {
                 label: "年",
-                value: "year",
-                disabled: activeNoShowType.includes("year")
+                value: "year"
             }
         ]
-    }, [activeNoShowType])
+    }, [])
 
-    // 显示的选项
-    const [riseNoShowType, setRiseNoShowType] = useState<showTypeValue[]>([])
-    useEffect(() => {
-        const firstDate = moment.unix(riseLineParams.startTime)
-        const secondDate = moment.unix(riseLineParams.endTime)
-        // 判断天数是否大于等于60
-        const isDifferenceGreaterThan60Days = firstDate.diff(secondDate, "days") > 60
-        // 判断月份是否大于等于60
-        const isDifferenceGreaterThan60Months = firstDate.diff(secondDate, "months") > 60
-        // 判断年份是否大于等于60
-        const isDifferenceGreaterThan60Years = firstDate.diff(secondDate, "years") > 60
-        let arr: showTypeValue[] = []
-        // 大于60则不可选天
-        if (isDifferenceGreaterThan60Days) {
-            arr.push("day")
-        }
-        // 大于60则不可选月
-        if (isDifferenceGreaterThan60Months) {
-            arr.push("month")
-        }
-        // 大于60则不可选年
-        if (isDifferenceGreaterThan60Years) {
-            arr.push("year")
-        }
-        setRiseNoShowType(arr)
-    }, [riseLineParams])
     const getRiseShowType = useMemo(() => {
         return [
             {
                 label: "天",
-                value: "day",
-                disabled: riseNoShowType.includes("day")
+                value: "day"
+            },
+            {
+                label: "周",
+                value: "week"
             },
             {
                 label: "月",
-                value: "month",
-                disabled: riseNoShowType.includes("month")
+                value: "month"
             },
             {
                 label: "年",
-                value: "year",
-                disabled: riseNoShowType.includes("year")
+                value: "year"
             }
         ]
-    }, [riseNoShowType])
+    }, [])
 
     useEffect(() => {
         getUserData()
-    }, [])
+    }, [activeLineParams, activeOrTime])
 
     const getUserData = useMemoizedFn(() => {
         setLoading(true)
@@ -744,7 +696,6 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get"
         })
             .then((data) => {
-                console.log("统计", data)
 
                 setUserData(data)
             })
@@ -767,6 +718,13 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
             }
             return current && (current < beginDate || current >= moment().endOf("day"))
+        } else if (activeLineParams.showType === "week") {
+            if (activeDates) {
+                const tooLate = (activeDates[0] && current.diff(activeDates[0], "weeks") > 60) || false
+                const tooEarly = (activeDates[1] && activeDates[1].diff(current, "weeks") > 60) || false
+                return current && (current < beginDate || current >= moment().endOf("week") || tooLate || tooEarly)
+            }
+            return current && (current < beginDate || current >= moment().endOf("week"))
         } else if (riseLineParams.showType === "month") {
             if (riseDates) {
                 const tooLate = (riseDates[0] && current.diff(riseDates[0], "months") > 60) || false
@@ -795,6 +753,13 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
             }
             return current && (current < beginDate || current >= moment().endOf("day"))
+        } else if (activeLineParams.showType === "week") {
+            if (activeDates) {
+                const tooLate = (activeDates[0] && current.diff(activeDates[0], "weeks") > 60) || false
+                const tooEarly = (activeDates[1] && activeDates[1].diff(current, "weeks") > 60) || false
+                return current && (current < beginDate || current >= moment().endOf("week") || tooLate || tooEarly)
+            }
+            return current && (current < beginDate || current >= moment().endOf("week"))
         } else if (activeLineParams.showType === "month") {
             if (activeDates) {
                 const tooLate = (activeDates[0] && current.diff(activeDates[0], "months") > 60) || false
@@ -816,14 +781,24 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     }
 
     const getDateFormat = (v: showTypeValue) => {
-        if (v === "day") {
-            return "YYYY/MM/DD"
-        } else if (v === "month") {
+        if (v === "month") {
             return "YYYY/MM"
-        } else {
+        } else if (v === "year") {
             return "YYYY"
+        } else {
+            return "YYYY/MM/DD"
         }
     }
+
+    const getPicker = useMemoizedFn((showType) => {
+        switch (showType) {
+            case "day":
+            case "week":
+                return "date"
+            default:
+                return showType
+        }
+    })
 
     return (
         <div className={styles["data-statistics"]} ref={ref}>
@@ -847,6 +822,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     {userData ? numeral(userData.loginTotal).format("0,0") : ""}
                                 </div>
                                 <div className={styles["sub-title"]}>登录用户总数</div>
+                            </div>
+                            <div className={styles["refresh"]}>
+                                <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={() => getUserData()} />
                             </div>
                         </div>
                         <div className={styles["card-box"]}>
@@ -944,48 +922,25 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         setActiveHackValue(null)
                                     }
                                 }}
-                                picker={activeLineParams.showType === "day" ? "date" : activeLineParams.showType}
+                                picker={getPicker(activeLineParams.showType)}
                                 onCalendarChange={(val) => setActiveDates(val)}
                                 onChange={(time) => {
                                     const riseDates = time as [Moment, Moment] | null
+
                                     if (riseDates) {
                                         let firstDate = riseDates[0]
                                         let secondDate = riseDates[1]
-                                        if (activeLineParams.showType === "day") {
-                                            if (firstDate.isBefore(beginDate)) {
-                                                firstDate = beginDate
-                                            } else {
-                                                firstDate = moment(firstDate).startOf("day")
-                                            }
-                                            if (secondDate.isSame(today, "day")) {
-                                                secondDate = today
-                                            } else {
-                                                secondDate = moment(secondDate).endOf("day")
-                                            }
+                                        const type = getPicker(activeLineParams.showType)
+
+                                        if (firstDate.isBefore(beginDate)) {
+                                            firstDate = beginDate
+                                        } else {
+                                            firstDate = moment(firstDate).startOf(type)
                                         }
-                                        if (activeLineParams.showType === "month") {
-                                            if (firstDate.isBefore(beginDate)) {
-                                                firstDate = beginDate
-                                            } else {
-                                                firstDate = moment(firstDate).startOf("month")
-                                            }
-                                            if (secondDate.isSame(today, "month")) {
-                                                secondDate = today
-                                            } else {
-                                                secondDate = moment(secondDate).endOf("month")
-                                            }
-                                        }
-                                        if (activeLineParams.showType === "year") {
-                                            if (firstDate.isBefore(beginDate)) {
-                                                firstDate = beginDate
-                                            } else {
-                                                firstDate = moment(firstDate).startOf("year")
-                                            }
-                                            if (secondDate.isSame(today, "year")) {
-                                                secondDate = today
-                                            } else {
-                                                secondDate = moment(secondDate).endOf("year")
-                                            }
+                                        if (secondDate.isSame(today, type)) {
+                                            secondDate = today
+                                        } else {
+                                            secondDate = moment(secondDate).endOf(type)
                                         }
                                         setActiveLineParams({
                                             ...activeLineParams,
@@ -1146,48 +1101,24 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                             setRiseHackValue(null)
                                         }
                                     }}
-                                    picker={riseLineParams.showType === "day" ? "date" : riseLineParams.showType}
+                                    picker={getPicker(riseLineParams.showType)}
                                     onCalendarChange={(val) => setRiseDates(val)}
                                     onChange={(time) => {
                                         const riseDates = time as [Moment, Moment] | null
                                         if (riseDates) {
                                             let firstDate = riseDates[0]
                                             let secondDate = riseDates[1]
-                                            if (riseLineParams.showType === "day") {
-                                                if (firstDate.isBefore(beginDate)) {
-                                                    firstDate = beginDate
-                                                } else {
-                                                    firstDate = moment(firstDate).startOf("day")
-                                                }
-                                                if (secondDate.isSame(today, "day")) {
-                                                    secondDate = today
-                                                } else {
-                                                    secondDate = moment(secondDate).endOf("day")
-                                                }
+                                            const type = getPicker(riseLineParams.showType)
+
+                                            if (firstDate.isBefore(beginDate)) {
+                                                firstDate = beginDate
+                                            } else {
+                                                firstDate = moment(firstDate).startOf(type)
                                             }
-                                            if (riseLineParams.showType === "month") {
-                                                if (firstDate.isBefore(beginDate)) {
-                                                    firstDate = beginDate
-                                                } else {
-                                                    firstDate = moment(firstDate).startOf("month")
-                                                }
-                                                if (secondDate.isSame(today, "month")) {
-                                                    secondDate = today
-                                                } else {
-                                                    secondDate = moment(secondDate).endOf("month")
-                                                }
-                                            }
-                                            if (riseLineParams.showType === "year") {
-                                                if (firstDate.isBefore(beginDate)) {
-                                                    firstDate = beginDate
-                                                } else {
-                                                    firstDate = moment(firstDate).startOf("year")
-                                                }
-                                                if (secondDate.isSame(today, "year")) {
-                                                    secondDate = today
-                                                } else {
-                                                    secondDate = moment(secondDate).endOf("year")
-                                                }
+                                            if (secondDate.isSame(today, type)) {
+                                                secondDate = today
+                                            } else {
+                                                secondDate = moment(secondDate).endOf(type)
                                             }
                                             setRiseLineParams({
                                                 ...riseLineParams,
