@@ -61,16 +61,18 @@ import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pag
 import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import useHoldGRPCStream, { convertCardInfo } from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import { HoldGRPCStreamProps, StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {WaterMark} from "@ant-design/pro-layout"
 import {AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import { v4 as uuidv4 } from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {
     logState: StreamResult.Log[]
+    cardState: HoldGRPCStreamProps.InfoCards[]
 }
 
 const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo((props) => {
@@ -783,18 +785,51 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [isExecuting, runtimeId])
 
         const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
+            cardState: [],
             logState: []
         })
 
         // logs
-        let messages = useRef<StreamResult.Log[]>([])
+        let messages = useRef<StreamResult.Message[]>([])
+
+        /** 放入日志队列 */
+        const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
+            messages.current.unshift({ ...log, content: { ...log.content, id: uuidv4() } })
+            // 只缓存 100 条结果（日志类型 + 数据类型）
+            if (messages.current.length > 100) {
+                messages.current.pop()
+            }
+        })
+        // card
+        let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+            new Map<string, HoldGRPCStreamProps.CacheCard>()
+        )
 
         useEffect(() => {
             let id = setInterval(() => {
-                setStreamInfo({logState: messages.current})
-            }, 500)
+                // logs
+                const logs: StreamResult.Log[] = messages.current
+                    .filter((i) => i.type === "log")
+                    .map((i) => i.content as StreamResult.Log)
+                    .filter((i) => i.data !== "null")
+                setStreamInfo({
+                    cardState: convertCardInfo(cardKVPair.current),
+                    logState: logs,
+                })
+            }, 200)
             return () => clearInterval(id)
         }, [])
+        // const cacheCard: HoldGRPCStreamProps.InfoCards[] = convertCardInfo(cardKVPair.current)
+        /** 判断是否为无效数据 */
+        const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
+            try {
+                const check = JSON.parse(stream.data)
+                if (check === "null" || !check || check === "undefined") return false
+                return check
+            } catch (e) {
+                return false
+            }
+        })
 
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
@@ -827,21 +862,40 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     if (data && data.IsMessage) {
                         try {
                             let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-                            if (obj.type === "log") {
-                                const log = obj.content as StreamResult.Log
-                                messages.current.unshift({
-                                    ...log,
-                                    id: res.TaskID
-                                })
-                                // 只缓存 100 条结果（日志类型 + 数据类型）
-                                if (messages.current.length > 100) {
-                                    messages.current.pop()
-                                }
-                            }
+
                             if (obj.type === "progress") {
                                 setProgressList([obj.content] as StreamResult.Progress[])
+                                return 
                             }
-                        } catch (error) {}
+
+                            // feature-status-card-data 卡片展示
+                            const logData = obj.content as StreamResult.Log
+                            // feature-status-card-data 卡片展示
+                            if (obj.type === "log" && logData.level === "feature-status-card-data") {
+                                try {
+                                    const checkInfo = checkStreamValidity(logData)
+                                    if (!checkInfo) return
+
+                                    const obj: StreamResult.Card = checkInfo
+                                    const { id, data, tags } = obj
+                                    const { timestamp } = logData
+                                    const originData = cardKVPair.current.get(id)
+                                    if (originData && originData.Timestamp > timestamp) {
+                                        return
+                                    }
+                                    cardKVPair.current.set(id, {
+                                        Id: id,
+                                        Data: data,
+                                        Timestamp: timestamp,
+                                        Tags: Array.isArray(tags) ? tags : []
+                                    })
+                                } catch (e) { }
+                                return
+                            }
+
+                            pushLogs(obj)
+
+                        } catch (error) { }
                     }
                 }
             })
@@ -856,7 +910,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
                 info("[SyntaxFlowScan] finished")
                 setTimeout(() => {
-                    messages.current = []
                     setPauseLoading(false)
                     setContinueLoading(false)
                 }, 200)
@@ -981,7 +1034,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         <PluginExecuteResult
                             streamInfo={{
                                 progressState: [],
-                                cardState: [],
+                                cardState: streamInfo.cardState,
                                 tabsState: [
                                     {tabName: "审计结果", type: "result"},
                                     {tabName: "漏洞与风险", type: "risk"},
