@@ -915,10 +915,10 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         onEnd: () => {
             debugPluginStreamEvent.stop()
             setTimeout(() => {
-                setShowRunAuditModal(false)
                 setIsExecuting(false)
             }, 300)
         },
+        onError: () => {},
         setRuntimeId: (rId) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
             setRuntimeId(rId)
@@ -1022,6 +1022,7 @@ interface AuditHistoryTableProps {
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
     const {setShowAuditList} = props
     const {projectName} = useStore()
+    const [loading, setLoading] = useState<boolean>(false)
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
     const [search, setSearch] = useState<string>()
     useEffect(() => {
@@ -1030,6 +1031,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
     const getAduitList = useMemoizedFn(async () => {
         try {
+            setLoading(true)
             const {res} = await grpcFetchAuditTree("/")
             if (res.Resources.length === 0) {
                 setShowAuditList(false)
@@ -1046,7 +1048,10 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             } else {
                 setAduitData(res)
             }
-        } catch (error) {}
+            setLoading(false)
+        } catch (error) {
+            setLoading(false)
+        }
     })
 
     const getAuditPath = useMemoizedFn((val: YakURLResource) => {
@@ -1081,6 +1086,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
     const onDelete = useMemoizedFn(async (path: string) => {
         try {
+            setLoading(true)
             await grpcFetchDeleteAudit(path)
             getAduitList()
 
@@ -1088,107 +1094,110 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 emiter.emit("onResetAuditStatus")
             }
         } catch (error) {
+            setLoading(false)
             failed(`删除失败${error}`)
         }
     })
 
     return (
-        <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
-            <div className={styles["header"]}>
-                <div className={styles["main"]}>
-                    <div className={styles["title"]}>已编译项目</div>
-                    <div className={styles["sub-title"]}>
-                        <div className={styles["text"]}>Total</div>
-                        <div className={styles["number"]}>{aduitData?.Total}</div>
-                    </div>
-                    {/* <Divider type={"vertical"} style={{margin: 0}} />
+        <YakitSpin spinning={loading}>
+            <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
+                <div className={styles["header"]}>
+                    <div className={styles["main"]}>
+                        <div className={styles["title"]}>已编译项目</div>
+                        <div className={styles["sub-title"]}>
+                            <div className={styles["text"]}>Total</div>
+                            <div className={styles["number"]}>{aduitData?.Total}</div>
+                        </div>
+                        {/* <Divider type={"vertical"} style={{margin: 0}} />
                     <div className={styles["sub-title"]}>
                         <div className={styles["text"]}>Selected</div>
                         <div className={styles["number"]}>{selected.length}</div>
                     </div> */}
+                    </div>
+                    <div className={styles["extra"]}>
+                        <YakitInput
+                            prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                            placeholder='请输入关键词搜索'
+                            size='small'
+                            value={search}
+                            onChange={(e) => {
+                                setSearch(e.target.value)
+                            }}
+                        />
+                        <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
+                            添加项目
+                        </YakitButton>
+                    </div>
                 </div>
-                <div className={styles["extra"]}>
-                    <YakitInput
-                        prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
-                        placeholder='请输入关键词搜索'
-                        size='small'
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value)
-                        }}
-                    />
-                    <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
-                        添加项目
-                    </YakitButton>
-                </div>
-            </div>
 
-            <div className={styles["table"]}>
-                <div className={styles["table-header"]}>
-                    <div className={styles["audit-name"]}>项目名称</div>
-                    <div className={styles["audit-path"]}>存储路径</div>
-                    <div className={styles["audit-time"]}>编译时间</div>
-                    <div className={styles["audit-opt"]}>操作</div>
-                </div>
-                <div className={styles["table-content"]}>
-                    {aduitData &&
-                        aduitData.Resources.map((item, index) => {
-                            const obj = getAuditPath(item)
-                            return (
-                                <div className={styles["table-item"]} key={`${item.ResourceName}-${index}`}>
-                                    <div className={styles["audit-name"]}>
-                                        {item.ResourceName}
-                                        {obj.description && (
-                                            <Tooltip title={obj.description}>
-                                                <QuestionMarkCircleIcon />
+                <div className={styles["table"]}>
+                    <div className={styles["table-header"]}>
+                        <div className={styles["audit-name"]}>项目名称</div>
+                        <div className={styles["audit-path"]}>存储路径</div>
+                        <div className={styles["audit-time"]}>编译时间</div>
+                        <div className={styles["audit-opt"]}>操作</div>
+                    </div>
+                    <div className={styles["table-content"]}>
+                        {aduitData &&
+                            aduitData.Resources.map((item, index) => {
+                                const obj = getAuditPath(item)
+                                return (
+                                    <div className={styles["table-item"]} key={`${item.ResourceName}-${index}`}>
+                                        <div className={styles["audit-name"]}>
+                                            {item.ResourceName}
+                                            {obj.description && (
+                                                <Tooltip title={obj.description}>
+                                                    <QuestionMarkCircleIcon />
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                        <div className={styles["audit-path"]}>{obj.path}</div>
+                                        <div className={styles["audit-time"]}>{obj.time}</div>
+                                        <div className={styles["audit-opt"]}>
+                                            <Tooltip title={"代码扫描"}>
+                                                <YakitButton
+                                                    type='text'
+                                                    icon={<OutlineScanIcon className={styles["to-icon"]} />}
+                                                    onClick={() => {
+                                                        // addToTab(YakitRoute.YakRunner_Code_Scan)
+                                                        emiter.emit(
+                                                            "openPage",
+                                                            JSON.stringify({
+                                                                route: YakitRoute.YakRunner_Code_Scan,
+                                                                params: {
+                                                                    projectName: item.ResourceName
+                                                                }
+                                                            })
+                                                        )
+                                                    }}
+                                                />
                                             </Tooltip>
-                                        )}
-                                    </div>
-                                    <div className={styles["audit-path"]}>{obj.path}</div>
-                                    <div className={styles["audit-time"]}>{obj.time}</div>
-                                    <div className={styles["audit-opt"]}>
-                                        <Tooltip title={"代码扫描"}>
-                                            <YakitButton
-                                                type='text'
-                                                icon={<OutlineScanIcon className={styles["to-icon"]} />}
-                                                onClick={() => {
-                                                    // addToTab(YakitRoute.YakRunner_Code_Scan)
-                                                    emiter.emit(
-                                                        "openPage",
-                                                        JSON.stringify({
-                                                            route: YakitRoute.YakRunner_Code_Scan,
-                                                            params: {
-                                                                projectName: item.ResourceName
-                                                            }
-                                                        })
-                                                    )
-                                                }}
-                                            />
-                                        </Tooltip>
 
-                                        {/* 此处的Tooltip会导致页面抖动(待处理) */}
-                                        <Tooltip title={"打开项目"}>
-                                            <YakitButton
-                                                type='text'
-                                                icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                                onClick={() => {
-                                                    emiter.emit("onCodeAuditOpenAuditTree", item.ResourceName)
-                                                }}
-                                            />
-                                        </Tooltip>
-                                        <Divider type={"vertical"} style={{margin: 0}} />
-                                        <YakitPopconfirm
-                                            title={`确定删除${item.ResourceName}`}
-                                            onConfirm={() => onDelete(item.Path)}
-                                        >
-                                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                                        </YakitPopconfirm>
+                                            {/* 此处的Tooltip会导致页面抖动(待处理) */}
+                                            <Tooltip title={"打开项目"}>
+                                                <YakitButton
+                                                    type='text'
+                                                    icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                                    onClick={() => {
+                                                        emiter.emit("onCodeAuditOpenAuditTree", item.ResourceName)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                            <Divider type={"vertical"} style={{margin: 0}} />
+                                            <YakitPopconfirm
+                                                title={`确定删除${item.ResourceName}`}
+                                                onConfirm={() => onDelete(item.Path)}
+                                            >
+                                                <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                                            </YakitPopconfirm>
+                                        </div>
                                     </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                    </div>
                 </div>
             </div>
-        </div>
+        </YakitSpin>
     )
 })
