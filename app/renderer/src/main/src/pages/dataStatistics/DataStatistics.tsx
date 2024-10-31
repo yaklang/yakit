@@ -716,10 +716,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
             }
             return current && (current < beginDate || current >= moment().endOf("day"))
-        } else if (activeLineParams.showType === "week") {
-            if (activeDates) {
-                const tooLate = (activeDates[0] && current.diff(activeDates[0], "weeks") > 60) || false
-                const tooEarly = (activeDates[1] && activeDates[1].diff(current, "weeks") > 60) || false
+        } else if (riseLineParams.showType === "week") {
+            if (riseDates) {
+                const tooLate = (riseDates[0] && current.diff(riseDates[0], "weeks") > 60) || false
+                const tooEarly = (riseDates[1] && riseDates[1].diff(current, "weeks") > 60) || false
                 return current && (current < beginDate || current >= moment().endOf("week") || tooLate || tooEarly)
             }
             return current && (current < beginDate || current >= moment().endOf("week"))
@@ -939,17 +939,30 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         if (riseDates) {
                                             let firstDate = riseDates[0]
                                             let secondDate = riseDates[1]
-                                            const type = getPicker(riseLineParams.showType)
 
-                                            if (firstDate.isBefore(beginDate)) {
-                                                firstDate = beginDate
-                                            } else {
-                                                firstDate = moment(firstDate).startOf(type)
-                                            }
-                                            if (secondDate.isSame(today, type)) {
-                                                secondDate = today
-                                            } else {
-                                                secondDate = moment(secondDate).endOf(type)
+                                            switch (riseLineParams.showType) {
+                                                case "week":
+                                                    if (firstDate.isBefore(beginDate)) {
+                                                        firstDate = beginDate.startOf("isoWeek")
+                                                    } else {
+                                                        firstDate = moment(firstDate).startOf("isoWeek")
+                                                    }
+                                                    // 获取第二个时间所在周的最后一天的时间
+                                                    secondDate = moment(secondDate).endOf("isoWeek")
+                                                    break
+
+                                                default:
+                                                    if (firstDate.isBefore(beginDate)) {
+                                                        firstDate = beginDate
+                                                    } else {
+                                                        firstDate = moment(firstDate).startOf(riseLineParams.showType)
+                                                    }
+                                                    if (secondDate.isSame(today, riseLineParams.showType)) {
+                                                        secondDate = today
+                                                    } else {
+                                                        secondDate = moment(secondDate).endOf(riseLineParams.showType)
+                                                    }
+                                                    break
                                             }
                                             setRiseLineParams({
                                                 ...riseLineParams,
@@ -1027,17 +1040,28 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     if (riseDates) {
                                         let firstDate = riseDates[0]
                                         let secondDate = riseDates[1]
-                                        const type = getPicker(activeLineParams.showType)
+                                        switch (activeLineParams.showType) {
+                                            case "week":
+                                                if (firstDate.isBefore(beginDate)) {
+                                                    firstDate = beginDate.startOf("isoWeek")
+                                                } else {
+                                                    firstDate = moment(firstDate).startOf("isoWeek")
+                                                }
+                                                secondDate = moment(secondDate).endOf("isoWeek")
+                                                break
 
-                                        if (firstDate.isBefore(beginDate)) {
-                                            firstDate = beginDate
-                                        } else {
-                                            firstDate = moment(firstDate).startOf(type)
-                                        }
-                                        if (secondDate.isSame(today, type)) {
-                                            secondDate = today
-                                        } else {
-                                            secondDate = moment(secondDate).endOf(type)
+                                            default:
+                                                if (firstDate.isBefore(beginDate)) {
+                                                    firstDate = beginDate
+                                                } else {
+                                                    firstDate = moment(firstDate).startOf(activeLineParams.showType)
+                                                }
+                                                if (secondDate.isSame(today, activeLineParams.showType)) {
+                                                    secondDate = today
+                                                } else {
+                                                    secondDate = moment(secondDate).endOf(activeLineParams.showType)
+                                                }
+                                                break
                                         }
                                         setActiveLineParams({
                                             ...activeLineParams,
