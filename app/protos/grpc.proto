@@ -287,6 +287,7 @@ service Yak {
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
+  rpc SaveLargePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   // update group/folder/payload
   rpc RenamePayloadFolder(RenameRequest) returns (Empty);
   rpc RenamePayloadGroup(RenameRequest) returns (Empty); // rename

@@ -188,19 +188,19 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     const messageWarnRef = useRef<boolean>(false)
 
     // 上传文件/手动输入
-    const [uploadType, setUploadType] = useState<"dragger" | "editor">("dragger")
+    const [uploadType, setUploadType] = useState<"dragger" | "editor" | "large-dragger">("dragger")
 
     // 存储类型
     const [storeType, setStoreType] = useState<"database" | "file">()
 
     const isDisabled = useMemo(() => {
-        if (isDictionaries && uploadType === "dragger") {
+        if (isDictionaries && ["dragger", "large-dragger"].includes(uploadType)) {
             return uploadList.length === 0 || dictionariesName.length === 0
         }
         if (isDictionaries && uploadType === "editor") {
             return editorValue.length === 0 || dictionariesName.length === 0
         }
-        return uploadType === "dragger" ? uploadList.length === 0 : editorValue.length === 0
+        return ["dragger", "large-dragger"].includes(uploadType) ? uploadList.length === 0 : editorValue.length === 0
     }, [uploadList, dictionariesName, isDictionaries, uploadType, editorValue])
 
     // 数据库存储
@@ -223,20 +223,34 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // 文件存储
     const onSavePayloadToFile = useMemoizedFn(() => {
         setStoreType("database")
-
-        // 两次stream
-        ipcRenderer.invoke(
-            "SavePayloadToFileStream",
-            {
-                IsFile: uploadType === "dragger",
-                IsNew: true,
-                Content: editorValue,
-                FileName: uploadList.map((item) => item.path),
-                Group: group || dictionariesName,
-                Folder: folder || ""
-            },
-            fileToken
-        )
+        if (uploadType === "large-dragger") {
+            ipcRenderer.invoke(
+                "SavePayloadToLargeFileStream",
+                {
+                    IsFile: true,
+                    IsNew: true,
+                    Content: editorValue,
+                    FileName: uploadList.map((item) => item.path),
+                    Group: group || dictionariesName,
+                    Folder: folder || ""
+                },
+                fileToken
+            )
+        } else {
+            // 两次stream
+            ipcRenderer.invoke(
+                "SavePayloadToFileStream",
+                {
+                    IsFile: uploadType === "dragger",
+                    IsNew: true,
+                    Content: editorValue,
+                    FileName: uploadList.map((item) => item.path),
+                    Group: group || dictionariesName,
+                    Folder: folder || ""
+                },
+                fileToken
+            )
+        }
     })
 
     // 取消数据库任务
@@ -247,6 +261,11 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
     // 取消文件存储任务
     const cancelSavePayloadFile = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-SavePayloadFile", fileToken)
+    })
+
+    // 取消大文件存储任务
+    const cancelSavePayloadLargeFile = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancel-SavePayloadLargeFile", fileToken)
     })
 
     // 监听数据库任务
@@ -351,7 +370,11 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                 name: string
             }[] = []
             fileList.forEach((f) => {
-                if (!FileType.includes(f.type)) {
+                if (uploadType === "large-dragger" && !"text/plain".includes(f.type) && f.size / 1024 / 1024 > 20) {
+                    failed("大文件存储仅支持txt文件类型")
+                    return false
+                }
+                if (uploadType === "dragger" && !FileType.includes(f.type)) {
                     failed(`${f.name}非txt、csv文件，请上传正确格式文件！`)
                     return false
                 }
@@ -404,6 +427,14 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                             <span className={styles["hight-text"]}>搜索更方便</span>
                                         </div>
                                     </div>
+                                    <div className={styles["item"]}>
+                                        <div className={styles["dot"]}>3</div>
+                                        <div className={styles["text"]}>
+                                            大文件存储：上传文件大于<span className={styles["hight-text"]}>20M</span>
+                                            时，支持采取大文件存储方式，仅支持txt，
+                                            <span className={styles["hight-text"]}>存储更便捷</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -431,12 +462,8 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                 <YakitRadioButtons
                                     value={uploadType}
                                     onChange={(e) => {
-                                        if (e.target.value === "dragger") {
-                                            setEditorValue("")
-                                        }
-                                        if (e.target.value === "editor") {
-                                            setUploadList([])
-                                        }
+                                        setEditorValue("")
+                                        setUploadList([])
                                         setUploadType(e.target.value)
                                     }}
                                     buttonStyle='solid'
@@ -448,13 +475,17 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                         {
                                             value: "editor",
                                             label: "手动输入"
+                                        },
+                                        {
+                                            value: "large-dragger",
+                                            label: "上传大文件"
                                         }
                                     ]}
                                     // size={"small"}
                                 />
                             </div>
                             <>
-                                {uploadType === "dragger" ? (
+                                {["dragger", "large-dragger"].includes(uploadType) && (
                                     <div className={styles["upload-dragger-box"]}>
                                         <Dragger
                                             className={styles["upload-dragger"]}
@@ -476,13 +507,16 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                                                         <span className={styles["hight-light"]}>点击此处导入</span>
                                                     </div>
                                                     <div className={styles["sub-title"]}>
-                                                        支持文件夹批量上传(支持文件类型txt/csv)
+                                                        {uploadType === "dragger"
+                                                            ? "支持文件夹批量上传(支持文件类型txt/csv)"
+                                                            : "支持大文件上传(支持文件类型txt)"}
                                                     </div>
                                                 </div>
                                             </div>
                                         </Dragger>
                                     </div>
-                                ) : (
+                                )}
+                                {uploadType === "editor" && (
                                     <div className={styles["upload-editor-box"]}>
                                         <YakEditor
                                             type='plaintext'
@@ -527,23 +561,36 @@ export const CreateDictionaries: React.FC<CreateDictionariesProps> = (props) => 
                     <div className={styles["submit-box"]}>
                         {isDictionaries ? (
                             <>
-                                <YakitButton
-                                    size='large'
-                                    disabled={isDisabled}
-                                    type='outline1'
-                                    icon={<SolidDatabaseIcon />}
-                                    onClick={onSavePayload}
-                                >
-                                    数据库存储
-                                </YakitButton>
-                                <YakitButton
-                                    size='large'
-                                    disabled={isDisabled}
-                                    icon={<SolidDocumenttextIcon />}
-                                    onClick={onSavePayloadToFile}
-                                >
-                                    文件存储
-                                </YakitButton>
+                                {uploadType !== "large-dragger" ? (
+                                    <>
+                                        <YakitButton
+                                            size='large'
+                                            disabled={isDisabled}
+                                            type='outline1'
+                                            icon={<SolidDatabaseIcon />}
+                                            onClick={onSavePayload}
+                                        >
+                                            数据库存储
+                                        </YakitButton>
+                                        <YakitButton
+                                            size='large'
+                                            disabled={isDisabled}
+                                            icon={<SolidDocumenttextIcon />}
+                                            onClick={onSavePayloadToFile}
+                                        >
+                                            文件存储
+                                        </YakitButton>
+                                    </>
+                                ) : (
+                                    <YakitButton
+                                        size='large'
+                                        disabled={isDisabled}
+                                        icon={<SolidDocumenttextIcon />}
+                                        onClick={onSavePayloadToFile}
+                                    >
+                                        大文件存储
+                                    </YakitButton>
+                                )}
                             </>
                         ) : (
                             <>
@@ -1254,7 +1301,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                                                 getContainer: document.getElementById("new-payload") || document.body,
                                                 title: null,
                                                 footer: null,
-                                                width: 520,
+                                                width: 566,
                                                 type: "white",
                                                 closable: false,
                                                 maskClosable: false,
@@ -1687,9 +1734,9 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                         <div style={{marginRight: 5}}>
                             <YakitCheckbox
                                 onChange={(e) => {
-                                    const index = folder.id.indexOf('-')
+                                    const index = folder.id.indexOf("-")
                                     // 使用 substring 方法获取第一个 "-" 后的所有内容
-                                    const str = folder.id.substring(index + 1);
+                                    const str = folder.id.substring(index + 1)
                                     if (e.target.checked) {
                                         const arr = [...floderChecked]
                                         arr.push(str)
@@ -1807,7 +1854,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                                             document.getElementById("new-payload") || document.body,
                                                         title: null,
                                                         footer: null,
-                                                        width: 520,
+                                                        width: 566,
                                                         type: "white",
                                                         closable: false,
                                                         maskClosable: false,
@@ -2405,9 +2452,9 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                         <div style={{marginRight: 5}}>
                             <YakitCheckbox
                                 onChange={(e) => {
-                                    const index = file.id.indexOf('-')
+                                    const index = file.id.indexOf("-")
                                     // 使用 substring 方法获取第一个 "-" 后的所有内容
-                                    const str = file.id.substring(index + 1);
+                                    const str = file.id.substring(index + 1)
                                     if (e.target.checked) {
                                         const arr = [...checkedItem]
                                         arr.push(str)
@@ -2482,7 +2529,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                             document.getElementById("new-payload") || document.body,
                                                         title: null,
                                                         footer: null,
-                                                        width: 520,
+                                                        width: 566,
                                                         type: "white",
                                                         closable: false,
                                                         maskClosable: false,
@@ -3037,7 +3084,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                     getContainer: document.getElementById("new-payload") || document.body,
                                     title: null,
                                     footer: null,
-                                    width: 520,
+                                    width: 566,
                                     type: "white",
                                     closable: false,
                                     maskClosable: false,
@@ -3561,7 +3608,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
                                         getContainer: document.getElementById("new-payload") || document.body,
                                         title: null,
                                         footer: null,
-                                        width: 520,
+                                        width: 566,
                                         type: "white",
                                         closable: false,
                                         maskClosable: false,
