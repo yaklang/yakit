@@ -418,7 +418,7 @@ const PieEcharts: React.FC<PieChartProps> = (props) => {
         title: {
             show: false,
             text: 0,
-            subtext: "总用户数",
+            subtext: "总IP数",
             top: "32%",
             left: "49%",
             // right: "50%",
@@ -887,6 +887,97 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 </div>
             </div>
             <div className={styles["right-box"]}>
+                <div className={styles["user-rise"]}>
+                    <div className={styles["header"]}>
+                        <div className={styles["title"]}>
+                            <div className={styles["text"]}>用户数量变化趋势</div>
+                            <div className={styles["radio-btn"]}>
+                                <YakitRadioButtons
+                                    value={riseLineParams.changeType}
+                                    onChange={(e) => {
+                                        setRiseLineParams({...riseLineParams, changeType: e.target.value})
+                                    }}
+                                    buttonStyle='solid'
+                                    options={[
+                                        {
+                                            value: "total",
+                                            label: "总数"
+                                        },
+                                        {
+                                            value: "incr",
+                                            label: "增长数"
+                                        }
+                                    ]}
+                                />
+                            </div>
+                        </div>
+                        <div className={styles["extra"]}>
+                            <div className={styles["range-picker"]}>
+                                <RangePicker
+                                    locale={locale}
+                                    value={
+                                        riseHackValue || [
+                                            moment.unix(riseLineParams.startTime),
+                                            moment.unix(riseLineParams.endTime)
+                                        ]
+                                    }
+                                    format={getDateFormat(riseLineParams.showType)}
+                                    allowClear={false}
+                                    disabledDate={disabledRiseLineDate}
+                                    onOpenChange={(open: boolean) => {
+                                        if (open) {
+                                            setRiseHackValue([null, null])
+                                            setRiseDates([null, null])
+                                        } else {
+                                            setRiseHackValue(null)
+                                        }
+                                    }}
+                                    picker={getPicker(riseLineParams.showType)}
+                                    onCalendarChange={(val) => setRiseDates(val)}
+                                    onChange={(time) => {
+                                        const riseDates = time as [Moment, Moment] | null
+                                        if (riseDates) {
+                                            let firstDate = riseDates[0]
+                                            let secondDate = riseDates[1]
+                                            const type = getPicker(riseLineParams.showType)
+
+                                            if (firstDate.isBefore(beginDate)) {
+                                                firstDate = beginDate
+                                            } else {
+                                                firstDate = moment(firstDate).startOf(type)
+                                            }
+                                            if (secondDate.isSame(today, type)) {
+                                                secondDate = today
+                                            } else {
+                                                secondDate = moment(secondDate).endOf(type)
+                                            }
+                                            setRiseLineParams({
+                                                ...riseLineParams,
+                                                startTime: moment(firstDate).unix(),
+                                                endTime: moment(secondDate).unix()
+                                            })
+                                        }
+                                    }}
+                                />
+                            </div>
+
+                            <YakitSegmented
+                                value={riseLineParams?.showType}
+                                onChange={(v) => {
+                                    const showType: showTypeValue = v as showTypeValue
+                                    setRiseLineParams({
+                                        ...riseLineParams,
+                                        showType
+                                    })
+                                }}
+                                options={getRiseShowType}
+                            />
+                        </div>
+                    </div>
+                    <div className={styles["user-rise-charts"]}>
+                        <RiseLineEcharts inViewport={inViewport} riseLineParams={riseLineParams} />
+                    </div>
+                </div>
                 <div className={styles["user-active-time"]}>
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>
@@ -1060,97 +1151,6 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             activeLineParams={activeLineParams}
                             activeOrTime={activeOrTime}
                         />
-                    </div>
-                </div>
-                <div className={styles["user-rise"]}>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>
-                            <div className={styles["text"]}>用户数量变化趋势</div>
-                            <div className={styles["radio-btn"]}>
-                                <YakitRadioButtons
-                                    value={riseLineParams.changeType}
-                                    onChange={(e) => {
-                                        setRiseLineParams({...riseLineParams, changeType: e.target.value})
-                                    }}
-                                    buttonStyle='solid'
-                                    options={[
-                                        {
-                                            value: "total",
-                                            label: "总数"
-                                        },
-                                        {
-                                            value: "incr",
-                                            label: "增长数"
-                                        }
-                                    ]}
-                                />
-                            </div>
-                        </div>
-                        <div className={styles["extra"]}>
-                            <div className={styles["range-picker"]}>
-                                <RangePicker
-                                    locale={locale}
-                                    value={
-                                        riseHackValue || [
-                                            moment.unix(riseLineParams.startTime),
-                                            moment.unix(riseLineParams.endTime)
-                                        ]
-                                    }
-                                    format={getDateFormat(riseLineParams.showType)}
-                                    allowClear={false}
-                                    disabledDate={disabledRiseLineDate}
-                                    onOpenChange={(open: boolean) => {
-                                        if (open) {
-                                            setRiseHackValue([null, null])
-                                            setRiseDates([null, null])
-                                        } else {
-                                            setRiseHackValue(null)
-                                        }
-                                    }}
-                                    picker={getPicker(riseLineParams.showType)}
-                                    onCalendarChange={(val) => setRiseDates(val)}
-                                    onChange={(time) => {
-                                        const riseDates = time as [Moment, Moment] | null
-                                        if (riseDates) {
-                                            let firstDate = riseDates[0]
-                                            let secondDate = riseDates[1]
-                                            const type = getPicker(riseLineParams.showType)
-
-                                            if (firstDate.isBefore(beginDate)) {
-                                                firstDate = beginDate
-                                            } else {
-                                                firstDate = moment(firstDate).startOf(type)
-                                            }
-                                            if (secondDate.isSame(today, type)) {
-                                                secondDate = today
-                                            } else {
-                                                secondDate = moment(secondDate).endOf(type)
-                                            }
-                                            setRiseLineParams({
-                                                ...riseLineParams,
-                                                startTime: moment(firstDate).unix(),
-                                                endTime: moment(secondDate).unix()
-                                            })
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            <YakitSegmented
-                                value={riseLineParams?.showType}
-                                onChange={(v) => {
-                                    const showType: showTypeValue = v as showTypeValue
-                                    setRiseLineParams({
-                                        ...riseLineParams,
-                                        showType
-                                    })
-                                }}
-                                options={getRiseShowType}
-                            />
-                        </div>
-                    </div>
-                    <div className={styles["user-rise-charts"]}>
-                        <RiseLineEcharts inViewport={inViewport} riseLineParams={riseLineParams} />
                     </div>
                 </div>
             </div>
