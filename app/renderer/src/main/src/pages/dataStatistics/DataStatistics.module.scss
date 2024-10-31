@@ -49,8 +49,10 @@
                         }
                     }
                 }
+                .institution-total,
                 .login-user {
                     padding-bottom: 8px;
+                    min-width: 40px;
                     .count {
                         font-size: 16px;
                         font-weight: 600;

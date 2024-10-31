@@ -28,7 +28,6 @@ const minutesToHours = (minutes: number) => {
     return (minutes / 60).toFixed(2)
 }
 
-
 interface RiseLineEchartsProps {
     riseLineParams: RiseLineProps
     inViewport?: boolean
@@ -159,7 +158,6 @@ const RiseLineEcharts: React.FC<RiseLineEchartsProps> = (props) => {
             params: {...riseLineParams}
         })
             .then((res: API.TouristActiveResponse) => {
-                // console.log("用户数量变化趋势-tourist/change", riseLineParams, res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -326,13 +324,6 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
             params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
-                // console.log(
-                //     "活跃度统计-tourist/active",
-                //     activeLineParams,
-                //     moment(activeLineParams.startTime).format("YYYY-MM-DD HH:mm:ss"),
-                //     moment(activeLineParams.endTime).format("YYYY-MM-DD HH:mm:ss"),
-                //     res
-                // )
                 if (res.data) {
                     let XData: string[] = []
                     let YData: number[] = []
@@ -362,7 +353,6 @@ const ActiveLineEcharts: React.FC<ActiveLineEchartsProps> = (props) => {
             params: {...activeLineParams}
         })
             .then((res: API.TouristIncrResponse) => {
-                // console.log("使用时长统计-tourist/used/time", activeLineParams, res)
                 if (res.data) {
                     let XData: string[] = []
                     let YData: string[] = []
@@ -705,7 +695,6 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get"
         })
             .then((data) => {
-                // console.log("统计-tourist", data)
                 setUserData(data)
             })
             .catch((err) => {})
@@ -825,8 +814,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                     <div className={styles["count"]}>
                                         {userData ? numeral(userData.touristTotal).format("0,0") : ""}
                                     </div>
-                                    <div className={styles["sub-title"]}>机构用户数</div>
+                                    <div className={styles["sub-title"]}>总用户数</div>
                                 </div>
+                            </div>
+                            <div className={styles["institution-total"]}>
+                                <div className={styles["count"]}>
+                                    {userData ? numeral(userData.institutionTotal).format("0,0") : ""}
+                                </div>
+                                <div className={styles["sub-title"]}>机构用户数</div>
                             </div>
                             <div className={styles["login-user"]}>
                                 <div className={styles["count"]}>
@@ -871,7 +866,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 <div className={styles["v-line"]} />
                 <div className={styles["pie-charts-box"]}>
                     <div className={styles["header"]}>
-                        <div className={styles["title"]}>用户地理位置分布 Top10</div>
+                        <div className={styles["title"]}>IP地理位置分布 Top10</div>
                         <div className={styles["extra"]}>
                             {cityDate && (
                                 <>
