@@ -143,17 +143,6 @@ export const DefaultStatusList: TypeSelectOpt[] = [
     {key: "3", ...aduitStatusToName["3"]}
 ]
 
-/** @name 公开状态对应展示信息 */
-export const publicStatusToInfo: Record<string, {name: string; icon: ReactNode}> = {
-    "1": {name: "公开", icon: <SolidCloudpluginIcon />},
-    "2": {name: "私密", icon: <SolidPrivatepluginIcon />}
-}
-/** @name 公开状态选择列表 */
-export const DefaultPublicStatusList: TypeSelectOpt[] = [
-    {key: "1", ...publicStatusToInfo["1"]},
-    {key: "2", ...publicStatusToInfo["2"]}
-]
-
 /** 搜索过滤条件对应展示名称 */
 export const filterToName: Record<string, string> = {
     type: "插件状态",

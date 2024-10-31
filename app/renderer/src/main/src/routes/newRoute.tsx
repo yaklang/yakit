@@ -40,7 +40,6 @@ import {
     PrivateOutlineMitmIcon,
     PrivateOutlinePayloadGeneraterIcon,
     PrivateOutlinePluginLocalIcon,
-    PrivateOutlinePluginOwnerIcon,
     PrivateOutlinePluginStoreIcon,
     PrivateOutlinePocIcon,
     PrivateOutlinePortsIcon,
@@ -71,7 +70,6 @@ import {
     PrivateSolidMitmIcon,
     PrivateSolidPayloadGeneraterIcon,
     PrivateSolidPluginLocalIcon,
-    PrivateSolidPluginOwnerIcon,
     PrivateSolidPluginStoreIcon,
     PrivateSolidPocIcon,
     PrivateSolidPortsIcon,
@@ -138,8 +136,8 @@ import {
 import {SimpleDetect} from "@/pages/simpleDetect/SimpleDetect"
 import {YakitRoute} from "../enums/yakitRoute"
 import {YakRunner} from "@/pages/yakRunner/YakRunner"
-import { YakRunnerCodeScan } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan";
-import { YakRunnerAuditCode } from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode";
+import {YakRunnerCodeScan} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan"
+import {YakRunnerAuditCode} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 
@@ -177,7 +175,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "plugin-op": {label: "插件"},
     brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
     "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
-    "plugin-owner": {label: "我的插件"},
     "plugin-local": {label: "本地插件"},
     "plugin-hub": {label: "插件仓库"},
     "plugin-groups": {label: "插件组管理"},
@@ -237,7 +234,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
     YakitRoute.Plugin_Store,
-    YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.DNSLog,
@@ -278,7 +274,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakScript,
     YakitRoute.HTTPHacker,
     YakitRoute.Plugin_Store,
-    YakitRoute.Plugin_Owner,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.ICMPSizeLog,
@@ -463,13 +458,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         //         <PluginsOnline />
         //     </OnlineJudgment>
         // )
-        case YakitRoute.Plugin_Owner:
-            return null
-        // return (
-        //     <OnlineJudgment isJudgingLogin={true}>
-        //         <PluginUser />
-        //     </OnlineJudgment>
-        // )
         case YakitRoute.Plugin_Local:
             return null
         // return <PluginsLocal />
@@ -559,9 +547,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Space_Engine:
             return <SpaceEnginePage pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Code_Scan:
-            return <YakRunnerCodeScan pageId={params?.id || ""}/>
+            return <YakRunnerCodeScan pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Code:
-            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo}/>
+            return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
         default:
             return <div />
     }
@@ -755,10 +743,6 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
             // },
             // {
-            //     page: YakitRoute.Plugin_Owner,
-            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
-            // },
-            // {
             //     page: YakitRoute.Plugin_Local,
             //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
             // },
@@ -812,8 +796,8 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
     },
     {
         page: undefined,
-        label:"代码审计",
-        children:[
+        label: "代码审计",
+        children: [
             {
                 page: YakitRoute.YakRunner_Audit_Code,
                 ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
@@ -969,12 +953,6 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidPluginStoreIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
     },
-    [YakitRoute.Plugin_Owner]: {
-        page: YakitRoute.Plugin_Owner,
-        icon: <PrivateOutlinePluginOwnerIcon />,
-        hoverIcon: <PrivateSolidPluginOwnerIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.Plugin_Owner]
-    },
     [YakitRoute.Plugin_Local]: {
         page: YakitRoute.Plugin_Local,
         icon: <PrivateOutlinePluginLocalIcon />,
@@ -1041,13 +1019,13 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidDataCompareIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DataCompare]
     },
-    [YakitRoute.YakRunner_Audit_Code]:{
+    [YakitRoute.YakRunner_Audit_Code]: {
         page: YakitRoute.YakRunner_Audit_Code,
         icon: <PrivateOutlineAuditCodeIcon />,
         hoverIcon: <PrivateSolidAuditCodeIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
     },
-    [YakitRoute.YakRunner_Code_Scan]:{
+    [YakitRoute.YakRunner_Code_Scan]: {
         page: YakitRoute.YakRunner_Code_Scan,
         icon: <PrivateOutlineCodeScanIcon />,
         hoverIcon: <PrivateSolidCodeScanIcon />,
@@ -1166,10 +1144,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "代码审计",
-        children: [
-            PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
-            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-        ]
+        children: [PrivateAllMenus[YakitRoute.YakRunner_Audit_Code], PrivateAllMenus[YakitRoute.YakRunner_Code_Scan]]
     },
     {
         page: undefined,
@@ -1209,7 +1184,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_HTTPHistory,
             YakitRoute.DB_CVE
         ])
-    },
+    }
 ]
 /**
  * @name private版扫描模式菜单配置数据

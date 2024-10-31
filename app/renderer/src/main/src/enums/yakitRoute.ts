@@ -15,7 +15,6 @@ export enum YakitRoute {
     Mod_Brute = "brute",
     /** 插件 */
     Plugin_Store = "plugin-store",
-    Plugin_Owner = "plugin-owner",
     Plugin_Local = "plugin-local",
     Plugin_Hub = "plugin-hub",
     Plugin_Groups = "plugin-groups",
