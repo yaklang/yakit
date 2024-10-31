@@ -4863,6 +4863,8 @@ message SetMITMFilterRequest {
   repeated string excludeContentTypes = 40;
   repeated string excludeUri = 43;
   repeated string includeUri = 44;
+
+  MITMFilterData FilterData = 1;
 }
 
 message SetMITMFilterResponse {
@@ -4894,6 +4896,7 @@ message MITMRequest {
   repeated string excludeContentTypes = 40;
   repeated string excludeUri = 43;
   repeated string includeUri = 44;
+  MITMFilterData FilterData = 63;
   bool updateFilter = 12;
 
   bool hijackResponse = 13;
@@ -4975,6 +4978,25 @@ message MITMRequest {
 
   // random JA3 fingerprint
   bool RandomJA3 = 62;
+}
+
+message FilterDataItem {
+  string MatcherType = 1;
+  repeated string Group = 2;
+}
+
+message MITMFilterData {
+  repeated FilterDataItem IncludeHostnames = 1;
+  repeated FilterDataItem ExcludeHostnames = 2;
+
+  repeated FilterDataItem  IncludeSuffix = 3;
+  repeated FilterDataItem  ExcludeSuffix = 4;
+
+  repeated FilterDataItem IncludeUri = 5;
+  repeated FilterDataItem ExcludeUri = 6;
+
+  repeated FilterDataItem ExcludeMethods = 7;
+  repeated FilterDataItem ExcludeMIME  = 8;
 }
 
 message Certificate {
@@ -5062,6 +5084,7 @@ message MITMResponse {
   repeated string excludeContentTypes = 113;
   repeated string excludeUri = 114;
   repeated string includeUri = 115;
+  MITMFilterData FilterData = 116;
 
   // 替代过滤器的内容
   bool justContentReplacer = 120;
