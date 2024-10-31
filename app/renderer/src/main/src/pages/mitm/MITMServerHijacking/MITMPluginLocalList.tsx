@@ -156,7 +156,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     }, [selectGroup])
     useUpdateEffect(() => {
         setRefresh(!refresh)
-    }, [/* tags, */ inViewport])
+    }, [tags, inViewport])
     useUpdateEffect(() => {
         setRefresh(!refresh)
     }, [isHasParams])
