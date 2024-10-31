@@ -73,6 +73,7 @@ interface MITMPluginLocalListProps {
     status: "idle" | "hijacked" | "hijacking"
     tags: string[]
     searchKeyword: string
+    fieldKeywords: string
     setTags: (s: string[]) => void
     triggerSearch: boolean
     isSelectAll: boolean
@@ -108,6 +109,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setNoParamsCheckList,
         tags,
         searchKeyword,
+        fieldKeywords,
         triggerSearch,
         selectGroup,
         setSelectGroup,
@@ -172,6 +174,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                 RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
             },
             Keyword: searchKeyword,
+            FieldKeywords: fieldKeywords,
             IncludedScriptNames: [],
             Type: isHasParams ? "mitm" : "mitm,port-scan",
             Tag: tags,
@@ -184,7 +187,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         })
     })
     const onRenderEmptyNode = useMemoizedFn(() => {
-        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || groupNames.length > 0)) {
+        if (Number(total) === 0 && (tags.length > 0 || searchKeyword || fieldKeywords || groupNames.length > 0)) {
             return (
                 <div className={style["mitm-plugin-empty"]}>
                     <YakitEmpty title={null} description='搜索结果“空”' />
@@ -244,6 +247,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                         Tag: tags,
                         Type: isHasParams ? "mitm" : "mitm,port-scan",
                         Keyword: searchKeyword,
+                        FieldKeywords: fieldKeywords,
                         Pagination: {
                             Limit: 20,
                             Order: "",
@@ -809,6 +813,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
 interface QueryValueProps {
     tag: string[]
     searchKeyword: string
+    fieldKeywords: string
 }
 interface PluginSearchProps {
     selectSize?: YakitSizeType
@@ -816,13 +821,27 @@ interface PluginSearchProps {
     selectModuleTypeSize?: YakitSizeType
     tag: string[]
     searchKeyword: string
+    fieldKeywords: string
     onSearch: (v: QueryValueProps) => void
     setTag: (s: string[]) => void
     setSearchKeyword: (s: string) => void
+    setFieldKeywords: (s: string) => void
 }
+type PluginSearchType = "Tags" | "Keyword" | "FieldKeywords"
 export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
-    const {onSearch, tag, searchKeyword, setTag, setSearchKeyword, selectSize, inputSize, selectModuleTypeSize} = props
-    const [searchType, setSearchType] = useState<"Tags" | "Keyword">("Keyword")
+    const {
+        onSearch,
+        tag,
+        searchKeyword,
+        fieldKeywords,
+        setTag,
+        setSearchKeyword,
+        setFieldKeywords,
+        selectSize,
+        inputSize,
+        selectModuleTypeSize
+    } = props
+    const [searchType, setSearchType] = useState<PluginSearchType>("FieldKeywords")
     const [afterModuleType, setAfterModuleType] = useState<"input" | "select">("input")
     const [allTag, setAllTag] = useState<TagValue[]>([])
 
@@ -840,25 +859,61 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
                 .finally(() => {})
         }
     }, [searchType])
+
+    // 搜索选项切换
+    const onSelectChange = useMemoizedFn((o: string) => {
+        if (o === "Keyword") {
+            setTag([])
+            setFieldKeywords("")
+            setAfterModuleType("input")
+        }
+        if (o === "FieldKeywords") {
+            setTag([])
+            setSearchKeyword("")
+            setAfterModuleType("input")
+        }
+        if (o === "Tags") {
+            setFieldKeywords("")
+            setSearchKeyword("")
+            setAfterModuleType("select")
+        }
+        setSearchType(o as PluginSearchType)
+    })
+
+    // 输入框内容更新
+    const onInputUpadte = useMemoizedFn((e: any) => {
+        if (searchType === "FieldKeywords") setFieldKeywords(e.target.value)
+        if (searchType === "Keyword") setSearchKeyword(e.target.value)
+        return
+    })
+    // 输入框内容
+    const searchValue = useMemo(() => {
+        if (searchType === "FieldKeywords") return fieldKeywords
+        if (searchType === "Keyword") return searchKeyword
+        return ""
+    }, [searchType, fieldKeywords, searchKeyword])
+
+    const handleSearch = useMemoizedFn(() => {
+        onSearch({
+            tag,
+            searchKeyword,
+            fieldKeywords
+        })
+    })
+
     return (
         <YakitCombinationSearch
             afterModuleType={afterModuleType}
             valueBeforeOption={searchType}
-            onSelectBeforeOption={(o) => {
-                if (o === "Keyword") {
-                    setTag([])
-                    setAfterModuleType("input")
-                }
-                if (o === "Tags") {
-                    setSearchKeyword("")
-                    setAfterModuleType("select")
-                }
-                setSearchType(o as "Tags" | "Keyword")
-            }}
-            beforeOptionWidth={80}
+            onSelectBeforeOption={onSelectChange}
+            beforeOptionWidth={92}
             addonBeforeOption={[
                 {
                     label: "关键字",
+                    value: "FieldKeywords"
+                },
+                {
+                    label: "全文搜索",
                     value: "Keyword"
                 },
                 {
@@ -868,13 +923,9 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
             ]}
             inputSearchModuleTypeProps={{
                 size: inputSize,
-                value: searchKeyword,
-                onChange: (e) => setSearchKeyword(e.target.value),
-                onSearch: () =>
-                    onSearch({
-                        tag,
-                        searchKeyword
-                    })
+                value: searchValue,
+                onChange: onInputUpadte,
+                onSearch: handleSearch
             }}
             selectModuleTypeProps={{
                 size: selectModuleTypeSize,

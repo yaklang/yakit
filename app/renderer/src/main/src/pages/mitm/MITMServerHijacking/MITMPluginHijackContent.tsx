@@ -58,8 +58,10 @@ interface MITMPluginHijackContentProps {
     setGroupNames: (s: string[]) => void
     tags: string[]
     searchKeyword: string
+    fieldKeywords: string
     setTags: (s: string[]) => void
     setSearchKeyword: (s: string) => void
+    setFieldKeywords: (s: string) => void
     onSetOpenTabsFlag: (s: boolean) => void
     onSetLoadedPluginLen: (s: number) => void
     showPluginHistoryList: string[]
@@ -106,8 +108,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setGroupNames,
         tags,
         searchKeyword,
+        fieldKeywords,
         setTags,
         setSearchKeyword,
+        setFieldKeywords,
         onSetOpenTabsFlag,
         onSetLoadedPluginLen,
         showPluginHistoryList,
@@ -421,6 +425,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 setTag={setTags}
                                 searchKeyword={searchKeyword}
                                 setSearchKeyword={setSearchKeyword}
+                                fieldKeywords={fieldKeywords}
+                                setFieldKeywords={setFieldKeywords}
                                 onSearch={onSearch}
                                 selectSize='small'
                                 inputSize='middle'
@@ -537,6 +543,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     Tag: tags,
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
+                                    FieldKeywords: fieldKeywords,
                                     Pagination: {
                                         Limit: 20,
                                         Order: "",
@@ -598,6 +605,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 tags={tags}
                                 setTags={setTags}
                                 searchKeyword={searchKeyword}
+                                fieldKeywords={fieldKeywords}
                                 triggerSearch={triggerSearch}
                                 setIsSelectAll={setIsSelectAll}
                                 isSelectAll={isSelectAll}

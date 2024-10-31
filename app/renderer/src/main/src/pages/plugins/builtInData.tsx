@@ -171,11 +171,13 @@ export const defaultFilter: PluginFilterParams = {
 export const defaultSearch: PluginSearchParams = {
     keyword: "",
     userName: "",
-    type: "keyword"
+    fieldKeywords: "",
+    type: "fieldKeywords"
 }
 export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
 
 export const funcSearchType: {value: string; label: string}[] = [
+    {value: "fieldKeywords", label: "关键字"},
     {value: "userName", label: "按作者"},
-    {value: "keyword", label: "关键字"}
+    {value: "keyword", label: "全文搜索"}
 ]

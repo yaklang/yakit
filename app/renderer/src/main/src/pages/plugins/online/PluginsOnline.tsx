@@ -332,6 +332,7 @@ const PluginsOnlineList: React.FC<PluginsOnlineListProps> = React.memo((props, r
             setSearch({
                 userName: "",
                 keyword: keyword,
+                fieldKeywords: "",
                 type: "keyword"
             })
             setTimeout(() => {

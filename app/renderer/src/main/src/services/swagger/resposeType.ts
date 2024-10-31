@@ -494,9 +494,9 @@ export declare namespace API {
         pluginGroup?: PluginsWherePluginGroup
         excludePluginTypes?: string[]
         /**
-         * 全文搜索
+         * scriptName/help 模糊搜索
          */
-        fullText?: string
+        fieldKeywords?: string
     }
     export interface PluginsWherePluginGroup {
         unSetGroup?: boolean
@@ -1103,6 +1103,9 @@ export declare namespace API {
          * 流程作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
          */
         handleUserRole?: string
+        /**
+         * 是否是作者
+         */
         isAuthor?: boolean
     }
     export interface GroupResponseDetail {

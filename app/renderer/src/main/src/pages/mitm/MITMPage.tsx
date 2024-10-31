@@ -241,7 +241,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             ForceDisableKeepAlive,
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
-        ) => { 
+        ) => {
             return ipcRenderer
                 .invoke(
                     "mitm-start-call",
@@ -495,6 +495,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [isSelectAll, setIsSelectAll] = useState<boolean>(false)
     const [tags, setTags] = useState<string[]>([])
     const [searchKeyword, setSearchKeyword] = useState<string>("")
+    const [fieldKeywords, setFieldKeywords] = useState<string>("")
     const [groupNames, setGroupNames] = useState<string[]>([]) // 存储的插件组里面的插件名称用于搜索
 
     const [total, setTotal] = useState<number>(0)
@@ -507,32 +508,31 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const [loadedPluginLen, setLoadedPluginLen] = useState<number>(0)
     const isFirst = useRef<boolean>(true)
-    useEffect(
-        () => {
-            if (status === "idle") {
-                getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
-                    getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
-                        if (!!data && !!is) {
-                            const cacheData: string[] = JSON.parse(data)
-                            if(isFirst.current){
-                                setNoParamsCheckList(cacheData)
-                                isFirst.current = false
-                            }
-                            if (cacheData.length) {
-                                onIsHasParams(false)
-                            } else {
-                                onIsHasParams(true)
-                            }
-                        } else {
-                            if (noParamsCheckList.length) {
-                                onIsHasParams(false)
-                            } else {
-                                onIsHasParams(true)
-                            }
+    useEffect(() => {
+        if (status === "idle") {
+            getRemoteValue(CHECK_CACHE_LIST_DATA).then((data: string) => {
+                getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((is) => {
+                    if (!!data && !!is) {
+                        const cacheData: string[] = JSON.parse(data)
+                        if (isFirst.current) {
+                            setNoParamsCheckList(cacheData)
+                            isFirst.current = false
                         }
-                    })
+                        if (cacheData.length) {
+                            onIsHasParams(false)
+                        } else {
+                            onIsHasParams(true)
+                        }
+                    } else {
+                        if (noParamsCheckList.length) {
+                            onIsHasParams(false)
+                        } else {
+                            onIsHasParams(true)
+                        }
+                    }
                 })
-            }
+            })
+        }
     }, [status, noParamsCheckList])
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
@@ -550,7 +550,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
-            if (props.onStartMITMServer){
+            if (props.onStartMITMServer) {
                 setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(enableInitialPlugin ? noParamsCheckList : []))
                 props.onStartMITMServer(
                     host,
@@ -657,6 +657,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
             },
             Keyword: searchKeyword,
+            FieldKeywords: fieldKeywords,
             Type: isHasParams ? "mitm" : "mitm,port-scan",
             Tag: tags,
             Group: {UnSetGroup: false, Group: groupNames},
@@ -682,6 +683,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                     Tag: tags,
                                     Type: "mitm,port-scan",
                                     Keyword: searchKeyword,
+                                    FieldKeywords: fieldKeywords,
                                     Pagination: {
                                         Limit: 20,
                                         Order: "",
@@ -702,8 +704,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             <PluginSearch
                                 tag={tags}
                                 searchKeyword={searchKeyword}
+                                fieldKeywords={fieldKeywords}
                                 setTag={setTags}
                                 setSearchKeyword={setSearchKeyword}
+                                setFieldKeywords={setFieldKeywords}
                                 onSearch={() => {
                                     setTriggerSearch(!triggerSearch)
                                 }}
@@ -747,6 +751,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                             tags={tags}
                             setTags={setTags}
                             searchKeyword={searchKeyword}
+                            fieldKeywords={fieldKeywords}
                             triggerSearch={triggerSearch}
                             selectGroup={selectGroup}
                             setSelectGroup={setSelectGroup}
@@ -775,6 +780,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         tags={tags}
                         searchKeyword={searchKeyword}
                         setSearchKeyword={setSearchKeyword}
+                        fieldKeywords={fieldKeywords}
+                        setFieldKeywords={setFieldKeywords}
                         onSubmitYakScriptId={onSubmitYakScriptId}
                         status={status}
                         hasParamsCheckList={hasParamsCheckList}

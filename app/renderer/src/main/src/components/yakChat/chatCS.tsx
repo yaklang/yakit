@@ -2052,6 +2052,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
             search: {
                 keyword: "",
                 userName: "",
+                fieldKeywords: "",
                 type: "keyword"
             }
         }

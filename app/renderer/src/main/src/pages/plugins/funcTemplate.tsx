@@ -266,7 +266,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     const onTypeChange = useMemoizedFn((value: string) => {
         setSearch({
             ...search,
-            type: value as "keyword" | "userName"
+            type: value as "keyword" | "userName" | "fieldKeywords"
         })
     })
     const onValueChange = useMemoizedFn((e) => {
@@ -278,13 +278,21 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
             setSearch({
                 ...keywordSearch
             })
-        } else {
+        } else if (search.type === "userName") {
             const userNameSearch: PluginSearchParams = {
                 ...search,
                 userName: e.target.value
             }
             setSearch({
                 ...userNameSearch
+            })
+        } else {
+            const fieldKeywordsSearch: PluginSearchParams = {
+                ...search,
+                fieldKeywords: e.target.value
+            }
+            setSearch({
+                ...fieldKeywordsSearch
             })
         }
     })
@@ -297,8 +305,10 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     const searchValue = useMemo(() => {
         if (search.type === "keyword") {
             return search.keyword
-        } else {
+        } else if (search.type === "userName") {
             return search.userName
+        } else {
+            return search.fieldKeywords
         }
     }, [search])
     return (
@@ -313,7 +323,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                     onChange: onValueChange,
                     onSearch: onSearch
                 }}
-                beforeOptionWidth={82}
+                beforeOptionWidth={92}
             />
             <YakitPopover
                 overlayClassName={styles["func-search-popver"]}
