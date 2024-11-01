@@ -18,8 +18,6 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
-import {useRef} from "react"
-import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -65,29 +63,6 @@ export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = 
             // console.log("文件树获取---", res)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve(data)
-        } catch (error) {
-            reject(error)
-        }
-    })
-}
-
-/**
- * @name 审计树获取
- */
-export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
-    path
-) => {
-    return new Promise(async (resolve, reject) => {
-        // ssadb path为/时 展示最近编译
-        const params = {
-            Method: "GET",
-            Url: {Schema: "ssadb", Query: [{Key: "op", Value: "list"}], Path: path}
-        }
-        try {
-            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("审计树获取---", params, res)
-            const data: FileNodeMapProps[] = initFileTreeData(res, path)
-            resolve({res, data})
         } catch (error) {
             reject(error)
         }
@@ -475,26 +450,6 @@ export const judgeAreaExistFilesPath = (areaInfo: AreaInfoProps[], pathArr: stri
 }
 
 /**
- * @name 判断分栏数据里是否存在审计代码框
- */
-export const judgeAreaExistAuditPath = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
-    return new Promise(async (resolve, reject) => {
-        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
-        let hasPath: string[] = []
-        newAreaInfo.forEach((item, index) => {
-            item.elements.forEach((itemIn, indexIn) => {
-                itemIn.files.forEach((file, fileIndex) => {
-                    if (file.fileSourceType === "audit") {
-                        hasPath.push(file.path)
-                    }
-                })
-            })
-        })
-        resolve(hasPath)
-    })
-}
-
-/**
  * @name 更新分栏数据里某个节点的file数据
  */
 // 根据path更新指定内容
@@ -833,7 +788,6 @@ export const getYakRunnerHistory = (): Promise<YakRunnerHistoryProps[]> => {
 }
 
 interface YakRunnerLastFolderExpandedProps {
-    loadTreeType: "file" | "audit"
     folderPath: string
     expandedKeys: string[]
 }
@@ -943,74 +897,25 @@ export const getRelativePath = (basePath: string, filePath: string): Promise<str
 /**
  * @name 用于用户操作过快时文件夹内数据还未来得及加载,提前加载
  */
-export const loadFolderDetail = (path, loadTreeType?: "file" | "audit") => {
+export const loadFolderDetail = (path) => {
     return new Promise(async (resolve, reject) => {
-        if (loadTreeType === "audit") {
-            grpcFetchAuditTree(path)
-                .then(({data}) => {
-                    if (data.length > 0) {
-                        let childArr: string[] = []
+        grpcFetchFileTree(path)
+            .then((res) => {
+                if (res.length > 0) {
+                    let childArr: string[] = []
+                    // 文件Map
+                    res.forEach((item) => {
+                        // 注入文件结构Map
+                        childArr.push(item.path)
                         // 文件Map
-                        data.forEach((item) => {
-                            // 注入文件结构Map
-                            childArr.push(item.path)
-                            // 文件Map
-                            setMapFileDetail(item.path, item)
-                        })
-                        setMapFolderDetail(path, childArr)
-                    }
-                    resolve(null)
-                })
-                .catch((error) => {
-                    resolve(null)
-                })
-        } else {
-            grpcFetchFileTree(path)
-                .then((res) => {
-                    if (res.length > 0) {
-                        let childArr: string[] = []
-                        // 文件Map
-                        res.forEach((item) => {
-                            // 注入文件结构Map
-                            childArr.push(item.path)
-                            // 文件Map
-                            setMapFileDetail(item.path, item)
-                        })
-                        setMapFolderDetail(path, childArr)
-                    }
-                    resolve(null)
-                })
-                .catch((error) => {
-                    resolve(null)
-                })
-        }
-    })
-}
-
-/**
- * @name 代码审计
- */
-export const loadAuditFromYakURLRaw = (
-    params: AuditYakUrlProps,
-    body: Buffer
-): Promise<RequestYakURLResponse | null> => {
-    // console.log("审计参数", {
-    //     Method: "GET",
-    //     Url: params,
-    //     Body: body
-    // })
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("RequestYakURL", {
-                Method: "GET",
-                Url: params,
-                Body: body
+                        setMapFileDetail(item.path, item)
+                    })
+                    setMapFolderDetail(path, childArr)
+                }
+                resolve(null)
             })
-            .then((rsp: RequestYakURLResponse) => {
-                resolve(rsp)
-            })
-            .catch((e) => {
-                reject(e)
+            .catch((error) => {
+                resolve(null)
             })
     })
 }

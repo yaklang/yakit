@@ -30,30 +30,18 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "@/pages/yakRunner/icon"
+import {
+    YakRunnerNewFileIcon,
+    YakRunnerOpenAuditIcon,
+    YakRunnerOpenFileIcon,
+    YakRunnerOpenFolderIcon
+} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerAuditCodeType"
 import {IMonacoEditor} from "@/utils/editors"
-import {
-    getDefaultActiveFile,
-    getOpenFileInfo,
-    getPathParent,
-    getYakRunnerHistory,
-    grpcFetchAuditTree,
-    grpcFetchCreateFile,
-    grpcFetchFileTree,
-    grpcFetchRenameFileTree,
-    grpcFetchSaveFile,
-    isResetActiveFile,
-    judgeAreaExistFilePath,
-    monacaLanguageType,
-    removeAreaFileInfo,
-    setYakRunnerHistory,
-    updateAreaFileInfo
-} from "@/pages/yakRunner/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {failed, info, warn, success} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
@@ -77,7 +65,23 @@ import {
     YaklangLanguageSuggestionRequest
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
-import { JumpToEditorProps } from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
+import {
+    getDefaultActiveFile,
+    getOpenFileInfo,
+    getPathParent,
+    getYakRunnerHistory,
+    grpcFetchAuditTree,
+    grpcFetchCreateFile,
+    grpcFetchRenameFileTree,
+    grpcFetchSaveFile,
+    isResetActiveFile,
+    judgeAreaExistFilePath,
+    monacaLanguageType,
+    removeAreaFileInfo,
+    setYakRunnerHistory,
+    updateAreaFileInfo
+} from "../utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -586,11 +590,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
 
     const extraDom = useMemoizedFn(() => {
-        return (
-            <div className={styles["extra-box"]}>
-                {onSplitTabBar()}
-            </div>
-        )
+        return <div className={styles["extra-box"]}>{onSplitTabBar()}</div>
     })
 
     return (
@@ -1014,7 +1014,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                         endColumn: Number(EndColumn)
                     }))
                     setHighLightFind(newFind)
-                }).catch((err)=>{
+                })
+                .catch((err) => {
                     setHighLightFind([])
                 })
         },
@@ -1302,9 +1303,12 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                                 isHistory: true,
                                                 isOutside: true
                                             }
-                                            emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                                            emiter.emit(
+                                                "onCodeAuditOpenFileByPath",
+                                                JSON.stringify(OpenFileByPathParams)
+                                            )
                                         } else {
-                                                emiter.emit("onCodeAuditOpenAuditTree", item.name)
+                                            emiter.emit("onCodeAuditOpenAuditTree", item.name)
                                         }
                                     }}
                                 >

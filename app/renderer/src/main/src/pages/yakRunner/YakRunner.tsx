@@ -2,44 +2,32 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useGetState, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
-import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
 import {
     addAreaFileInfo,
     getCodeByPath,
     getCodeSizeByPath,
-    getDefaultActiveFile,
     getNameByPath,
     getPathParent,
     getYakRunnerLastFolderExpanded,
-    grpcFetchAuditTree,
     grpcFetchCreateFile,
     grpcFetchFileTree,
-    judgeAreaExistAuditPath,
     judgeAreaExistFilePath,
     MAX_FILE_SIZE_BYTES,
     monacaLanguageType,
     removeAreaFileInfo,
-    removeAreaFilesInfo,
     setAreaFileActive,
     setYakRunnerHistory,
     setYakRunnerLastFolderExpanded,
-    updateAreaFileInfo,
-    updateFileTree
+    updateAreaFileInfo
 } from "./utils"
 import {
     AreaInfoProps,
     AuditCodeStatusInfoProps,
-    AuditCodeStreamData,
-    AuditEmiterYakUrlProps,
     OpenFileByPathProps,
-    TabFileProps,
-    ViewsInfoProps,
     YakRunnerHistoryProps,
     YakRunnerProps
 } from "./YakRunnerType"
-import {getRemoteValue} from "@/utils/kv"
-import {YakRunnerRemoteGV} from "@/enums/yakRunner"
 import {failed, success, yakitNotify} from "@/utils/notification"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {FileDefault, FileSuffix, FolderDefault} from "./FileTree/icon"
@@ -59,7 +47,6 @@ import {
 import classNames from "classnames"
 import styles from "./YakRunner.module.scss"
 import {SplitView} from "./SplitView/SplitView"
-import {HelpInfoList} from "./CollapseList/CollapseList"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {getKeyboard, clearKeyboard, setKeyboard} from "./keyDown/keyDown"
@@ -69,29 +56,13 @@ import {v4 as uuidv4} from "uuid"
 import moment from "moment"
 import {keySortHandle} from "@/components/yakitUI/YakitEditor/editorUtils"
 import emiter from "@/utils/eventBus/eventBus"
-import {
-    clearMapFileDetail,
-    getMapAllFileKey,
-    getMapAllFileValue,
-    getMapFileDetail,
-    setMapFileDetail
-} from "./FileTreeMap/FileMap"
+import {clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail} from "./FileTreeMap/FileMap"
 import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {sendDuplexConn} from "@/utils/duplex/duplex"
 import {StringToUint8Array} from "@/utils/str"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {AuditModalForm} from "./AuditCode/AuditCode"
-import {randomString} from "@/utils/randomUtil"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
-import {clearMapAuditChildDetail} from "./AuditCode/AuditTree/ChildMap"
-import {clearMapAuditDetail} from "./AuditCode/AuditTree/AuditMap"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
-import {isCommunityEdition} from "@/utils/envfile"
-import {WaterMark} from "@ant-design/pro-layout"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Progress} from "antd"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
@@ -118,45 +89,25 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     /** ---------- 审计树 ---------- */
     const [projectNmae, setProjectNmae] = useState<string>()
-    /** ---------- 当前渲染树（文件树/审计树） ---------- */
-    const [loadTreeType, setLoadTreeType, getLoadTreeType] = useGetState<"file" | "audit">("file")
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
     const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
-    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
-    const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
-    const [isInitDefault, setInitDefault] = useState<boolean>(false)
 
     const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
         if (getMapFileDetail(path).isCreate) {
             if (callback) callback([])
             return
         }
-        if (getLoadTreeType() === "file") {
-            grpcFetchFileTree(path)
-                .then((res) => {
-                    // console.log("文件树", res)
-                    if (callback) callback(res)
-                })
-                .catch((error) => {
-                    yakitNotify("error", `获取文件项目失败: ${error}`)
-                    if (callback) callback([])
-                })
-        } else {
-            grpcFetchAuditTree(path)
-                .then((res) => {
-                    if (callback) callback(res.data)
-                })
-                .catch((error) => {
-                    if (error.toString().includes("record not found")) {
-                        yakitNotify("error", `获取审计项目：该项目 ${path} 已被删除。`)
-                    } else {
-                        yakitNotify("error", `获取审计项目失败: ${error}`)
-                    }
-                    if (callback) callback([])
-                })
-        }
+        grpcFetchFileTree(path)
+            .then((res) => {
+                // console.log("文件树", res)
+                if (callback) callback(res)
+            })
+            .catch((error) => {
+                yakitNotify("error", `获取文件项目失败: ${error}`)
+                if (callback) callback([])
+            })
     })
 
     // 轮询下标
@@ -220,8 +171,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const clearMap = useMemoizedFn(() => {
         clearMapFileDetail()
         clearMapFolderDetail()
-        clearMapAuditDetail()
-        clearMapAuditChildDetail()
     })
 
     useEffect(() => {
@@ -241,7 +190,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         isFirst && emiter.emit("onResetFileTree")
     })
 
-    const startMonitorFolder = useMemoizedFn((absolutePath, treeType: "file" | "audit") => {
+    const startMonitorFolder = useMemoizedFn((absolutePath) => {
         // 先停止 再启用
         const stopData = StringToUint8Array(
             JSON.stringify({
@@ -253,8 +202,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             MessageType: "file_monitor",
             Timestamp: new Date().getTime()
         })
-        // 审计树时屏蔽文件监控
-        if (treeType === "audit") return
         const startData = StringToUint8Array(
             JSON.stringify({
                 operate: "new",
@@ -268,83 +215,66 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
     })
 
-    const onInitTreeFun = useMemoizedFn(
-        async (rootPath: string, treeType: "file" | "audit", isFirst: boolean = true) => {
-            onResetAuditStatusFun()
-            // 开启文件夹监听
-            startMonitorFolder(rootPath, treeType)
-            // console.log("onOpenFileTreeFun", rootPath)
-            const lastFolder = await getNameByPath(rootPath)
+    const onInitTreeFun = useMemoizedFn(async (rootPath: string, isFirst: boolean = true) => {
+        // 开启文件夹监听
+        startMonitorFolder(rootPath)
+        // console.log("onOpenFileTreeFun", rootPath)
+        const lastFolder = await getNameByPath(rootPath)
 
-            if (rootPath.length > 0 && lastFolder.length > 0) {
-                resetMap(isFirst)
-                const node: FileNodeMapProps = {
-                    parent: null,
-                    name: lastFolder,
-                    path: rootPath,
-                    isFolder: true,
-                    icon: FolderDefault
-                }
-
-                handleFetchFileList(rootPath, (list) => {
-                    // 如若打开空文件夹 则不可展开
-                    if (list.length === 0) {
-                        node.isLeaf = true
-                    }
-                    setMapFileDetail(rootPath, node)
-                    const children: FileTreeListProps[] = []
-
-                    let childArr: string[] = []
-                    list.forEach((item) => {
-                        // 注入文件结构Map
-                        childArr.push(item.path)
-                        // 文件Map
-                        setMapFileDetail(item.path, item)
-                        // 注入tree结构
-                        children.push({path: item.path})
-                    })
-                    // 文件结构Map
-                    setMapFolderDetail(rootPath, childArr)
-
-                    if (list) setFileTree([{path: rootPath}])
-                })
-
-                // 打开文件夹时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                    isFile: false,
-                    name: lastFolder,
-                    path: rootPath,
-                    loadTreeType: getLoadTreeType()
-                }
-                setYakRunnerHistory(history)
+        if (rootPath.length > 0 && lastFolder.length > 0) {
+            resetMap(isFirst)
+            const node: FileNodeMapProps = {
+                parent: null,
+                name: lastFolder,
+                path: rootPath,
+                isFolder: true,
+                icon: FolderDefault
             }
+
+            handleFetchFileList(rootPath, (list) => {
+                // 如若打开空文件夹 则不可展开
+                if (list.length === 0) {
+                    node.isLeaf = true
+                }
+                setMapFileDetail(rootPath, node)
+                const children: FileTreeListProps[] = []
+
+                let childArr: string[] = []
+                list.forEach((item) => {
+                    // 注入文件结构Map
+                    childArr.push(item.path)
+                    // 文件Map
+                    setMapFileDetail(item.path, item)
+                    // 注入tree结构
+                    children.push({path: item.path})
+                })
+                // 文件结构Map
+                setMapFolderDetail(rootPath, childArr)
+
+                if (list) setFileTree([{path: rootPath}])
+            })
+
+            // 打开文件夹时接入历史记录
+            const history: YakRunnerHistoryProps = {
+                isFile: false,
+                name: lastFolder,
+                path: rootPath
+            }
+            setYakRunnerHistory(history)
         }
-    )
+    })
 
     // 加载文件树(初次加载)
     const onOpenFileTreeFun = useMemoizedFn(async (absolutePath: string) => {
         // console.log("文件树---", absolutePath)
-        setLoadTreeType("file")
-        onInitTreeFun(absolutePath, "file")
-    })
-
-    // 加载审计树(初次加载)
-    const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
-        // console.log("审计树---", name)
-        setLoadTreeType("audit")
-        setProjectNmae(name)
-        onInitTreeFun(`/${name}`, "audit")
+        onInitTreeFun(absolutePath)
     })
 
     // 刷新文件/审计树
     const onRefreshTreeFun = useMemoizedFn(() => {
-        if (loadTreeType === "file") {
-            if (fileTree.length > 0) {
-                const ProjectPath = fileTree[0].path
-                onInitTreeFun(ProjectPath, "file", false)
-            }
-        } else {
-            projectNmae && onInitTreeFun(`/${projectNmae}`, "audit", false)
+        if (fileTree.length > 0) {
+            const ProjectPath = fileTree[0].path
+            onInitTreeFun(ProjectPath, false)
         }
     })
 
@@ -367,9 +297,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
             } else {
-                // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
-                const fileSourceType = isOutside ? "file" : loadTreeType
-                const {size, isPlainText} = await getCodeSizeByPath(path, fileSourceType)
+                const {size, isPlainText} = await getCodeSizeByPath(path)
                 if (size > MAX_FILE_SIZE_BYTES) {
                     setShowFileHint(true)
                     return
@@ -379,7 +307,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     ipcRenderer.invoke("cancel-ReadFile")
                 }
                 isReadingRef.current = true
-                const code = await getCodeByPath(path, loadTreeType)
+                const code = await getCodeByPath(path)
                 isReadingRef.current = false
                 const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
                 const scratchFile: FileDetailInfo = {
@@ -389,7 +317,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     isActive: true,
                     openTimestamp: moment().unix(),
                     isPlainText,
-                    fileSourceType,
                     // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                     path,
                     parent: parent || null,
@@ -420,15 +347,12 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     useEffect(() => {
         // 监听文件树打开
         emiter.on("onOpenFileTree", onOpenFileTreeFun)
-        // 监听审计树打开
-        emiter.on("onOpenAuditTree", onOpenAuditTreeFun)
         // 刷新树
         emiter.on("onRefreshTree", onRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onOpenFileByPath", onOpenFileByPathFun)
         return () => {
             emiter.off("onOpenFileTree", onOpenFileTreeFun)
-            emiter.off("onOpenAuditTree", onOpenAuditTreeFun)
             emiter.off("onRefreshTree", onRefreshTreeFun)
             emiter.off("onOpenFileByPath", onOpenFileByPathFun)
         }
@@ -466,24 +390,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     const [isUnShow, setUnShow] = useState<boolean>(true)
-    const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     // 根据历史读取上次打开的文件夹
     const onSetUnShowFun = useMemoizedFn(async () => {
         const historyData = await getYakRunnerLastFolderExpanded()
-        if (historyData?.loadTreeType === "audit") {
-            setLoadTreeType("audit")
-            if (historyData?.folderPath) {
-                const path = historyData.folderPath
-                const name = path.startsWith("/") ? path.slice(1) : path
-                onOpenAuditTreeFun(name)
-                setUnShow(false)
-            }
-        } else {
-            if (historyData?.folderPath) {
-                onOpenFileTreeFun(historyData.folderPath)
-                setUnShow(false)
-            }
+        if (historyData?.folderPath) {
+            onOpenFileTreeFun(historyData.folderPath)
+            setUnShow(false)
         }
         emiter.emit("onDefaultExpanded", JSON.stringify(historyData?.expandedKeys || []))
     })
@@ -493,7 +406,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         const folderPath = historyData?.folderPath || ""
         if (folderPath.length === 0) {
             setYakRunnerLastFolderExpanded({
-                loadTreeType,
                 folderPath: newPath,
                 expandedKeys: []
             })
@@ -501,7 +413,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
         if (folderPath.length > 0 && folderPath !== newPath) {
             setYakRunnerLastFolderExpanded({
-                loadTreeType,
                 folderPath: newPath,
                 expandedKeys: []
             })
@@ -516,7 +427,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             setUnShow(false)
         } else {
             setYakRunnerLastFolderExpanded({
-                loadTreeType: "file",
                 folderPath: "",
                 expandedKeys: []
             })
@@ -531,18 +441,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         return {
             fileTree: fileTree,
             projectNmae: projectNmae,
-            loadTreeType: loadTreeType,
             areaInfo: areaInfo,
             activeFile: activeFile,
             runnerTabsId: runnerTabsId
         }
-    }, [fileTree, projectNmae, loadTreeType, areaInfo, activeFile, runnerTabsId])
+    }, [fileTree, projectNmae, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setFileTree: setFileTree,
             setProjectNmae: setProjectNmae,
-            setLoadTreeType: setLoadTreeType,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
             setActiveFile: setActiveFile,
@@ -562,7 +470,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 icon: "_f_yak",
                 isActive: true,
                 openTimestamp: moment().unix(),
-                fileSourceType: "file",
                 isPlainText: true,
                 // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
                 path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
@@ -624,13 +531,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             // 如若保存路径为文件列表中则需要更新文件树
                             if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
                                 let arr: FileNodeMapProps[] = []
-                                if (loadTreeType === "file") {
-                                    arr = await grpcFetchFileTree(parentPath)
-                                }
-                                if (loadTreeType === "audit") {
-                                    const {data} = await grpcFetchAuditTree(parentPath)
-                                    arr = data
-                                }
+                                arr = await grpcFetchFileTree(parentPath)
                                 if (arr.length > 0) {
                                     let childArr: string[] = []
                                     // 文件Map
@@ -753,10 +654,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
             event.target?.className !== "xterm-helper-textarea"
         )
             return
-        // 审计模式时 终端对应快捷键需屏蔽
-        if (getLoadTreeType() === "audit" && newkey === "17-192") return
         // 文件树相关快捷键只在文件树控件展示时生效
-        if (fileTreeEvent.includes(newkey) && (getActive() !== "file-tree" || getLoadTreeType() === "audit")) return
+        if (fileTreeEvent.includes(newkey) && getActive() !== "file-tree") return
         // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
         if (event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
         arr.forEach((item) => {
@@ -914,7 +813,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return <YakRunnerWelcomePage addFileTab={addFileTab} setShowCompileModal={setShowCompileModal} />
+            return <YakRunnerWelcomePage addFileTab={addFileTab} />
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
@@ -974,324 +873,55 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [])
 
-    // initDefault是否加载表单默认值
-    const onOpenAuditModalFun = useMemoizedFn((initDefault?: string) => {
-        if (initDefault) {
-            setInitDefault(true)
-        }
-        setShowCompileModal(true)
-    })
-
-    useEffect(() => {
-        // 打开编译文件Modal
-        emiter.on("onOpenAuditModal", onOpenAuditModalFun)
-        return () => {
-            emiter.off("onOpenAuditModal", onOpenAuditModalFun)
-        }
-    }, [])
-
-    const onCloseCompileModal = useMemoizedFn(() => {
-        setInitDefault(false)
-        setShowCompileModal(false)
-    })
-
-    const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
-    const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
-        try {
-            const data: AuditEmiterYakUrlProps = JSON.parse(value)
-            setAuditRightParams(data)
-            setShowAuditDetail(true)
-            emiter.emit("onRefreshAuditDetail")
-        } catch (error) {}
-    })
-
-    useEffect(() => {
-        // 打开编译右侧详情
-        emiter.on("onOpenAuditRightDetail", onOpenAuditRightDetailFun)
-        return () => {
-            emiter.off("onOpenAuditRightDetail", onOpenAuditRightDetailFun)
-        }
-    }, [])
-
-    const tokenRef = useRef<string>(randomString(40))
-    /** 是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        taskName: "debug-plugin",
-        apiKey: "DebugPlugin",
-        token: tokenRef.current,
-        onEnd: () => {
-            debugPluginStreamEvent.stop()
-            setTimeout(() => {
-                setIsExecuting(false)
-            }, 300)
-        },
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-            setRuntimeId(rId)
-        }
-    })
-    // export-show
-    const [exportStreamData, setExportStreamData] = useState<AuditCodeStreamData>({
-        Progress: 0,
-        Message: "",
-        CostDurationVerbose: "",
-        RestDurationVerbose: "",
-        Speed: "0"
-    })
-    const logInfoRef = useRef<StreamResult.Log[]>([])
-    useEffect(() => {
-        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-        // 当任务结束时 跳转打开编译列表
-        if (progress === 1) {
-            setTimeout(() => {
-                logInfoRef.current = []
-                setShowRunAuditModal(false)
-                onOpenAuditTreeFun(`${projectNmae}`)
-                emiter.emit("onRefreshAduitHistory")
-            }, 300)
-        }
-
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
-
-        setExportStreamData({
-            ...exportStreamData,
-            Progress: progress
-        })
-    }, [streamInfo])
-    // 执行审计
-    const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
-        debugPluginStreamEvent.reset()
-        setRuntimeId("")
-        setProjectNmae(path)
-        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
-            setIsExecuting(true)
-            setShowCompileModal(false)
-            setShowRunAuditModal(true)
-            debugPluginStreamEvent.start()
-        })
-    })
-
-    const onCancelAudit = () => {
-        logInfoRef.current = []
-        setShowRunAuditModal(false)
-        debugPluginStreamEvent.cancel()
-        debugPluginStreamEvent.reset()
-    }
-
-    // 清除代码审计树残留数据
-    const onResetAuditStatusFun = useMemoizedFn(async () => {
-        clearMapAuditChildDetail()
-        clearMapAuditDetail()
-        setShowAuditDetail(false)
-        // 移除已显示的审计树代码
-        const auditPaths = await judgeAreaExistAuditPath(areaInfo)
-        const newAreaInfo = removeAreaFilesInfo(areaInfo, auditPaths)
-        setAreaInfo(newAreaInfo)
-    })
-
-    // 监听与初始重置审计树残留数据
-    useEffect(() => {
-        onResetAuditStatusFun()
-        // 监听新建文件
-        emiter.on("onResetAuditStatus", onResetAuditStatusFun)
-        return () => {
-            emiter.off("onResetAuditStatus", onResetAuditStatusFun)
-        }
-    }, [])
-
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition() && loadTreeType === "audit") {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [loadTreeType])
-
     return (
-        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
-            <YakRunnerContext.Provider value={{store, dispatcher}}>
-                <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
-                    <div className={styles["yak-runner-body"]}>
-                        <YakitResizeBox
-                            freeze={!isUnShow}
-                            firstRatio={isUnShow ? "25px" : "300px"}
-                            firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
-                            lineDirection='right'
-                            firstMinSize={isUnShow ? 25 : 200}
-                            lineStyle={{width: 4}}
-                            secondMinSize={480}
-                            firstNode={
-                                <LeftSideBar
-                                    addFileTab={addFileTab}
-                                    isUnShow={isUnShow}
-                                    setUnShow={setUnShow}
-                                    active={active}
-                                    setActive={setActive}
-                                />
-                            }
-                            secondNodeStyle={
-                                isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
-                            }
-                            secondNode={
-                                <YakitResizeBox
-                                    freeze={isShowAuditDetail}
-                                    secondRatio={!isShowAuditDetail ? "0px" : "300px"}
-                                    lineDirection='left'
-                                    firstMinSize={300}
-                                    lineStyle={{width: 4}}
-                                    firstNodeStyle={!isShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
-                                    secondNodeStyle={
-                                        !isShowAuditDetail
-                                            ? {padding: 0, maxWidth: 0, minWidth: 0}
-                                            : {overflow: "unset", padding: 0}
-                                    }
-                                    firstNode={
-                                        <div
-                                            className={classNames(styles["yak-runner-code"], {
-                                                [styles["yak-runner-code-offset"]]: !isUnShow
-                                            })}
-                                        >
-                                            <div className={styles["code-container"]}>
-                                                {onFixedEditorDetails(onChangeArea())}
-                                            </div>
-                                        </div>
-                                    }
-                                    secondNode={
-                                        <RightAuditDetail
-                                            auditRightParams={auditRightParams}
-                                            isShowAuditDetail={isShowAuditDetail}
-                                            setShowAuditDetail={setShowAuditDetail}
-                                        />
-                                    }
-                                />
-                            }
-                        />
-                    </div>
-
-                    <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
-                </div>
-                {/* 文件过大提示框 */}
-                <YakitHint
-                    visible={isShowFileHint}
-                    title='文件警告'
-                    content='文件过大，无法使用YakRunner进行操作'
-                    cancelButtonProps={{style: {display: "none"}}}
-                    onOk={() => {
-                        setShowFileHint(false)
-                    }}
-                    okButtonText={"知道了"}
-                />
-                {/* 编译项目弹窗 */}
-                {isShowCompileModal && (
-                    <YakitModal
-                        visible={isShowCompileModal}
-                        bodyStyle={{padding: 0}}
-                        title={"编译项目"}
-                        footer={null}
-                        onCancel={onCloseCompileModal}
-                        maskClosable={false}
-                    >
-                        <AuditModalForm
-                            isInitDefault={isInitDefault}
-                            onCancle={onCloseCompileModal}
-                            isExecuting={isExecuting}
-                            onStartAudit={onStartAudit}
-                        />
-                    </YakitModal>
-                )}
-                {/* 编译项目进度条弹窗 */}
-                <YakitModal
-                    centered
-                    getContainer={document.body}
-                    visible={isShowRunAuditModal}
-                    title={null}
-                    footer={null}
-                    width={520}
-                    type='white'
-                    closable={false}
-                    hiddenHeader={true}
-                    bodyStyle={{padding: 0}}
-                >
-                    <AuditCodeStatusInfo
-                        title={"项目编译中..."}
-                        streamData={exportStreamData}
-                        cancelRun={() => {
-                            onCancelAudit()
-                        }}
-                        logInfo={logInfoRef.current}
-                        showDownloadDetail={false}
+        <YakRunnerContext.Provider value={{store, dispatcher}}>
+            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
+                <div className={styles["yak-runner-body"]}>
+                    <YakitResizeBox
+                        freeze={!isUnShow}
+                        firstRatio={isUnShow ? "25px" : "300px"}
+                        firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
+                        lineDirection='right'
+                        firstMinSize={isUnShow ? 25 : 200}
+                        lineStyle={{width: 4}}
+                        secondMinSize={480}
+                        firstNode={
+                            <LeftSideBar
+                                addFileTab={addFileTab}
+                                isUnShow={isUnShow}
+                                setUnShow={setUnShow}
+                                active={active}
+                                setActive={setActive}
+                            />
+                        }
+                        secondNodeStyle={
+                            isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                        }
+                        secondNode={
+                            <div
+                                className={classNames(styles["yak-runner-code"], {
+                                    [styles["yak-runner-code-offset"]]: !isUnShow
+                                })}
+                            >
+                                <div className={styles["code-container"]}>{onFixedEditorDetails(onChangeArea())}</div>
+                            </div>
+                        }
                     />
-                </YakitModal>
-            </YakRunnerContext.Provider>
-        </WaterMark>
-    )
-}
-
-// 代码审计进度信息
-export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) => {
-    const {title, streamData, logInfo, cancelRun, onClose, showDownloadDetail = true, autoClose} = props
-    useEffect(() => {
-        if (autoClose && streamData.Progress === 1) {
-            onClose && onClose()
-        }
-    }, [autoClose, streamData.Progress])
-
-    return (
-        <div className={styles["audit-code-status-info"]}>
-            <div className={styles["hint-left-wrapper"]}>
-                <div className={styles["hint-icon"]}>
-                    <SolidDocumentdownloadIcon />
                 </div>
-            </div>
 
-            <div className={styles["hint-right-wrapper"]}>
-                <div className={styles["hint-right-download"]}>
-                    <div className={styles["hint-right-title"]}>{title}</div>
-                    <div className={styles["download-progress"]}>
-                        <Progress
-                            strokeColor='#F28B44'
-                            trailColor='#F0F2F5'
-                            percent={Math.floor((streamData.Progress || 0) * 100)}
-                            showInfo={false}
-                        />
-                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
-                    </div>
-                    {showDownloadDetail && (
-                        <div className={styles["download-info-wrapper"]}>
-                            <div>耗时 : {streamData.CostDurationVerbose}</div>
-                        </div>
-                    )}
-                    <div className={styles["log-info"]}>
-                        {logInfo.map((item) => {
-                            if (item.level === "error") {
-                                return (
-                                    <div key={item.data} className={styles["log-item-error"]}>
-                                        {item.data}
-                                    </div>
-                                )
-                            }
-                            if (item.level === "text") {
-                                return (
-                                    <div key={item.data} className={styles["log-item-text"]}>
-                                        {item.data}
-                                    </div>
-                                )
-                            }
-                            return (
-                                <div key={item.data} className={styles["log-item"]}>
-                                    {item.data}
-                                </div>
-                            )
-                        })}
-                    </div>
-                    <div className={styles["download-btn"]}>
-                        <YakitButton loading={false} size='large' type='outline2' onClick={cancelRun}>
-                            取消
-                        </YakitButton>
-                    </div>
-                </div>
+                <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
             </div>
-        </div>
+            {/* 文件过大提示框 */}
+            <YakitHint
+                visible={isShowFileHint}
+                title='文件警告'
+                content='文件过大，无法使用YakRunner进行操作'
+                cancelButtonProps={{style: {display: "none"}}}
+                onOk={() => {
+                    setShowFileHint(false)
+                }}
+                okButtonText={"知道了"}
+            />
+        </YakRunnerContext.Provider>
     )
 }

@@ -51,7 +51,7 @@ const {ipcRenderer} = window.require("electron")
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
 
-    const {activeFile, fileTree, loadTreeType} = useStore()
+    const {activeFile, fileTree} = useStore()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
 
@@ -114,12 +114,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
             setShowItem(type)
         } catch (error) {}
     })
-
-    useEffect(() => {
-        if (loadTreeType === "audit") {
-            setShowItem("output")
-        }
-    }, [loadTreeType])
 
     const terminalRef = useRef<any>(null)
     const terminalFocusRef = useRef<boolean>(false)
@@ -191,7 +185,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 }
             }
         })
-        ipcRenderer.on("client-yak-error", async (e: any,data) => {
+        ipcRenderer.on("client-yak-error", async (e: any, data) => {
             failed(`${data}`)
         })
         return () => {
@@ -515,17 +509,15 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         <div className={styles["title"]}>语法检查</div>
                         {activeFile && <div className={styles["count"]}>{syntaxCheckData.length}</div>}
                     </div>
-                    {loadTreeType === "file" && (
-                        <div
-                            className={classNames(styles["item"], {
-                                [styles["active-item"]]: showItem === "terminal",
-                                [styles["no-active-item"]]: showItem !== "terminal"
-                            })}
-                            onClick={() => setShowItem("terminal")}
-                        >
-                            <div className={styles["title"]}>终端</div>
-                        </div>
-                    )}
+                    <div
+                        className={classNames(styles["item"], {
+                            [styles["active-item"]]: showItem === "terminal",
+                            [styles["no-active-item"]]: showItem !== "terminal"
+                        })}
+                        onClick={() => setShowItem("terminal")}
+                    >
+                        <div className={styles["title"]}>终端</div>
+                    </div>
                     <div
                         className={classNames(styles["item"], {
                             [styles["active-item"]]: showItem === "helpInfo",
