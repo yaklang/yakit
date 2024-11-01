@@ -267,6 +267,10 @@ export declare namespace API {
          * up 增 down 减
          */
         monthTimesGainUpOrDown: string
+        /**
+         * 机构总数
+         */
+        institutionTotal: number
     }
     export interface TouristActiveResponse {
         data: TouristActiveDetail[]
