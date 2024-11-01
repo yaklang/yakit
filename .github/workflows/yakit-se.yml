@@ -126,6 +126,11 @@ jobs:
               working-directory: ./
               name: "Install Legacy Electron"
 
+            - name: "Download Yak Legacy Engine via wget(Windows)"
+              if: ${{ env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy' }}
+              id: download-windows-leagacy-engine
+              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
             - name: Build SE Yakit Legacy (MultiPlatform)
               if: ${{ env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
@@ -145,10 +150,6 @@ jobs:
               working-directory: ./
               run: yarn pack-linux-se-legacy
 
-            - name: "Download Yak Legacy Engine via wget(Windows)"
-              if: ${{ env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win' }}
-              id: download-windows-leagacy-engine
-              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
             - name: Build SE Yakit Legacy (WIN)
               if: ${{ env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
