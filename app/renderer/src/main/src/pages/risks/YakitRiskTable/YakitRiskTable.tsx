@@ -1935,16 +1935,12 @@ export interface AuditResultDescribeProps {
 export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.memo((props) => {
     const {info, columnSize} = props
 
-    const descriptionsRef = useRef<HTMLDivElement>(null)
-    const descriptionsDivWidth = useListenWidth(descriptionsRef)
-
     const column = useCreation(() => {
         if (columnSize) return columnSize
-        if (descriptionsDivWidth > 600) return 3
         return 1
-    }, [descriptionsDivWidth])
+    }, [])
     return (
-        <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+        <div className={styles["content-resize-second"]}>
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                 <Descriptions.Item label='类型'>
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
@@ -1968,14 +1964,10 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
 export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.memo((props) => {
     const {info, columnSize} = props
 
-    const descriptionsRef = useRef<HTMLDivElement>(null)
-    const descriptionsDivWidth = useListenWidth(descriptionsRef)
-
     const column = useCreation(() => {
         if (columnSize) return columnSize
-        if (descriptionsDivWidth > 600) return 3
         return 1
-    }, [descriptionsDivWidth])
+    }, [])
 
     const severityInfo = useCreation(() => {
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
@@ -2042,7 +2034,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     </div>
                 </div>
             </div>
-            <div className={styles["content-resize-second"]} ref={descriptionsRef}>
+            <div className={styles["content-resize-second"]}>
                 <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                     <Descriptions.Item label='类型'>
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}

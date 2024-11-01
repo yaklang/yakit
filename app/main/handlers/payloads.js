@@ -169,6 +169,14 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamPayloadFileMap, token)
     })
 
+    // 大文件存储
+    const streamPayloadLargeFileMap = new Map()
+    ipcMain.handle("cancel-SavePayloadLargeFile", handlerHelper.cancelHandler(streamPayloadLargeFileMap))
+    ipcMain.handle("SavePayloadToLargeFileStream", (e, params, token) => {
+        let stream = getClient().SaveLargePayloadToFileStream(params)
+        handlerHelper.registerHandler(win, stream, streamPayloadLargeFileMap, token)
+    })
+
     // 用于导出
     const streamPayloadFromFileMap = new Map()
     ipcMain.handle("cancel-ExportAllPayloadFromFile", handlerHelper.cancelHandler(streamPayloadFromFileMap))

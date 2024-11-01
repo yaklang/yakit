@@ -592,8 +592,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     >
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                     </Modal>
-                    {isCommunityEdition() && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
-                    {isCommunityEdition() && !chatShow && (
+                    {(isCommunityEdition()||isEnpriTrace()) && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
+                    {(isCommunityEdition()||isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
