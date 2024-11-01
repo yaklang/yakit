@@ -407,9 +407,6 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                                     await onUpdatePrivate(online)
                                     m.destroy()
                                 }
-                                //  else {
-                                //     m.destroy()
-                                // }
                             }}
                         />
                     ),

@@ -1600,7 +1600,11 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         successHint = "（表现良好，开始上传插件中...）",
         failedHint = "（上传失败，请修复后再上传）",
         callback,
-        hiddenScoreHint
+        hiddenScoreHint,
+        specialHint = "(无法判断，是否需要转人工审核)",
+        specialBtnText = "转人工审核",
+        specialExtraBtn = null,
+        hiddenSpecialBtn = false
     } = props
 
     const [loading, setLoading] = useState<boolean>(true)
@@ -1609,6 +1613,12 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
     const fetchStartState = useMemoizedFn(() => {
         return isStart
     })
+
+    /**
+     * 特殊处理，验证中处在一种情况，如果出现则需要人工点击通过
+     * 情况描述：验证结果只有一条错误信息，并且错误信息是 <请检查插件是否正常发起请求>
+     */
+    const [isSpecial, setIsSpecial] = useState<boolean>(false)
 
     // 开始评分
     const onTest = useMemoizedFn(() => {
@@ -1622,12 +1632,14 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                     Score: rsp.Score,
                     Results: newResults
                 })
+
+                const specialFlag = newResults.length === 1 && newResults[0]?.Item === "逻辑测试失败[logic Test]"
                 if (+rsp?.Score >= 60) {
                     setTimeout(() => {
                         callback(true)
                     }, successWait)
                 } else {
-                    callback(false)
+                    specialFlag ? setIsSpecial(true) : callback(false)
                 }
             })
             .catch((e) => {
@@ -1647,8 +1659,14 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
         return () => {
             setLoading(false)
             setResponse(undefined)
+            setIsSpecial(false)
         }
     }, [isStart])
+
+    // 转人工审核按钮
+    const onManualReview = useMemoizedFn(() => {
+        callback(true)
+    })
 
     return (
         <div className={styles["code-score-modal"]}>
@@ -1724,7 +1742,7 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {response && (+response?.Score || 0) < 60 && (
                             <div className={styles["opt-results"]}>
                                 <SolidExclamationIcon />
-                                <div className={styles["content-style"]}>{failedHint}</div>
+                                <div className={styles["content-style"]}>{isSpecial ? specialHint : failedHint}</div>
                             </div>
                         )}
                         {response && (+response?.Score || 0) >= 60 && (
@@ -1739,6 +1757,13 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                         {!response && (
                             <div className={styles["opt-results"]}>
                                 <div className={styles["content-style"]}>检查错误，请关闭后再次尝试!</div>
+                            </div>
+                        )}
+
+                        {!hiddenSpecialBtn && response && isSpecial && (
+                            <div className={styles["footer-btn"]}>
+                                {specialExtraBtn}
+                                <YakitButton onClick={onManualReview}>{specialBtnText}</YakitButton>
                             </div>
                         )}
                     </div>
