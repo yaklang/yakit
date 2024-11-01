@@ -93,6 +93,14 @@ async function getAvailableOSSDomain() {
 /**获取校验url */
 const getCheckTextUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
+    let system_mode = ""
+    try {
+        system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
+    } catch (error) {
+        console.log("error", error)
+    }
+    const suffix = system_mode === "legacy"
+
     let url = ""
     switch (process.platform) {
         case "darwin":
@@ -103,7 +111,7 @@ const getCheckTextUrl = async (version) => {
             }
             break
         case "win32":
-            url = `https://${domain}/yak/${version}/yak_windows_amd64.exe.sha256.txt`
+            url = `https://${domain}/yak/${version}/yak_windows_${suffix ? "leagacy_" : ""}amd64.exe.sha256.txt`
             break
         case "linux":
             if (process.arch === "arm64") {
