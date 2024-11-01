@@ -128,6 +128,11 @@ jobs:
               working-directory: ./
               name: "Install Legacy Electron"
 
+            - name: "Download Yak Legacy Engine via wget(Windows)"
+              if: ${{ env.IS_TAG_RELEASE == 'tag/v' || env.COMPATIBILITY_MODE == 'legacy' }}
+              id: download-windows-leagacy-engine
+              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
             - name: Build EE Yakit Legacy (MultiPlatform)
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy') }}
               env:
@@ -146,6 +151,7 @@ jobs:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn pack-linux-ee-legacy
+
             - name: Build EE Yakit Legacy (WIN)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
