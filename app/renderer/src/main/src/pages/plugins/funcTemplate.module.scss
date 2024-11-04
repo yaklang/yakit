@@ -889,7 +889,7 @@
         margin-left: 4px;
     }
 }
-// -------------------- OnlineExtraOperate ↓↓↓ --------------------
+// --------------------
 %operate-base {
     display: flex;
     align-items: center;
@@ -899,49 +899,6 @@
     cursor: pointer;
     &:hover {
         background-color: var(--yakit-background-color);
-    }
-}
-.online-extra-operate-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--yakit-header-color);
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 400;
-    line-height: 16px;
-
-    svg {
-        width: 16px;
-        height: 16px;
-        color: var(--yakit-body-text-color);
-    }
-    path {
-        stroke-width: 1.5;
-    }
-    .plugin-loading {
-        @extend %operate-base;
-
-        svg {
-            color: var(--yakit-primary-5);
-        }
-        &:hover {
-            background-color: initial;
-        }
-    }
-    .like-operate {
-        @extend %operate-base;
-    }
-    .like-operate-active {
-        svg {
-            color: var(--yakit-primary-5);
-        }
-    }
-    .comment-operate {
-        @extend %operate-base;
-    }
-    .download-operate {
-        @extend %operate-base;
     }
 }
 // --------------------

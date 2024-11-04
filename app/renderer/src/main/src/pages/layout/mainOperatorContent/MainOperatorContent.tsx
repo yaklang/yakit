@@ -465,9 +465,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Plugin_Local:
                 pluginLocal(params)
                 break
-            case YakitRoute.Plugin_Store:
-                pluginStore(params)
-                break
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
                 break
@@ -782,41 +779,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         emiter.emit("onRefreshLocalPluginList")
         openMenuPage({route: YakitRoute.Plugin_Local})
     })
-    /**
-     * @name 插件商店
-     * @description 首页的统计模块，点击需要携带搜索参数跳转插件商店页面
-     * @param {string} keyword 携带的关键字搜索条件
-     * @param {string} plugin_type 携带的插件类型搜索条件
-     */
-    const pluginStore = useMemoizedFn((data: {keyword: string; plugin_type: string}) => {
-        const {keyword, plugin_type} = data || {}
-
-        if (keyword || plugin_type) {
-            // 缓存搜索条件
-            const newPageNode: PageNodeItemProps = {
-                id: `${randomString(8)}`,
-                routeKey: YakitRoute.Plugin_Store,
-                pageGroupId: "0",
-                pageId: YakitRoute.Plugin_Store, // 用路由key作为页面id
-                pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Store]?.label || "",
-                pageParamsInfo: {
-                    pluginOnlinePageInfo: {
-                        keyword: keyword || "",
-                        plugin_type: plugin_type || ""
-                    }
-                },
-                sortFieId: 0
-            }
-            const pages: PageProps = {
-                ...cloneDeep(defPage),
-                routeKey: YakitRoute.Plugin_Store,
-                singleNode: true,
-                pageList: [newPageNode]
-            }
-            setPagesData(YakitRoute.Plugin_Store, pages)
-        }
-        openMenuPage({route: YakitRoute.Plugin_Store})
-    })
 
     /** @name 渲染端通信-关闭一个指定页面 */
     useEffect(() => {
@@ -867,7 +829,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
-            if (type === "plugin-store") addYakRunning(data)
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
@@ -882,16 +843,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**webshell-manager") openMenuPage({route: YakitRoute.Beta_WebShellManager})
             if (type === "**webshell-opt") addWebShellOpt(data)
 
-            if (type === "open-plugin-store") {
-                const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
-                if (flag === 0) {
-                    openMenuPage({route: YakitRoute.Plugin_Store})
-                } else {
-                    // 该方法在能保证route不是YakitRoute.Plugin_OP时,menuName可以传空字符
-                    removeMenuPage({route: YakitRoute.AddYakitScript, menuName: ""})
-                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
-                }
-            }
             if (type === YakitRoute.HTTPHacker) {
                 openMenuPage({route: YakitRoute.HTTPHacker})
             }

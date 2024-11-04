@@ -174,7 +174,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     poc: {label: "专项漏洞检测", describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"},
     "plugin-op": {label: "插件"},
     brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
-    "plugin-store": {label: "插件商店", describe: "目前插件为6大类型，可根据需要灵活编写插件，支持从插件商店下载插件"},
     "plugin-local": {label: "本地插件"},
     "plugin-hub": {label: "插件仓库"},
     "plugin-groups": {label: "插件组管理"},
@@ -233,7 +232,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
 export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
-    YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.DNSLog,
@@ -273,7 +271,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DataCompare,
     YakitRoute.YakScript,
     YakitRoute.HTTPHacker,
-    YakitRoute.Plugin_Store,
     YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.ICMPSizeLog,
@@ -450,14 +447,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
             return <NewBrute id={params?.id || ""} />
-        case YakitRoute.Plugin_Store:
-            return null
-        // 社区版的插件商店不用判断登录,企业版/简易版的插件商店登录后才可查看
-        // return (
-        //     <OnlineJudgment isJudgingLogin={!isCommunityEdition()}>
-        //         <PluginsOnline />
-        //     </OnlineJudgment>
-        // )
         case YakitRoute.Plugin_Local:
             return null
         // return <PluginsLocal />
@@ -739,10 +728,6 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
             },
             // {
-            //     page: YakitRoute.Plugin_Store,
-            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
-            // },
-            // {
             //     page: YakitRoute.Plugin_Local,
             //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
             // },
@@ -946,12 +931,6 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlinePocIcon />,
         hoverIcon: <PrivateSolidPocIcon />,
         ...YakitRouteToPageInfo[YakitRoute.PoC]
-    },
-    [YakitRoute.Plugin_Store]: {
-        page: YakitRoute.Plugin_Store,
-        icon: <PrivateOutlinePluginStoreIcon />,
-        hoverIcon: <PrivateSolidPluginStoreIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.Plugin_Store]
     },
     [YakitRoute.Plugin_Local]: {
         page: YakitRoute.Plugin_Local,

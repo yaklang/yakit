@@ -28,7 +28,8 @@ import {
     HubListFilter,
     OnlineOptFooterExtra,
     HubDetailList,
-    HubDetailListOpt
+    HubDetailListOpt,
+    PluginsUploadHint
 } from "./funcTemplate"
 import {useStore} from "@/store"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
@@ -45,7 +46,6 @@ import {
     YakitGetOnlinePlugin
 } from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {isCommunityEdition} from "@/utils/envfile"
-import {PluginsUploadAll} from "@/pages/plugins/online/PluginsOnline"
 import {FilterPopoverBtn} from "@/pages/plugins/funcTemplate"
 import {Tooltip} from "antd"
 import useGetSetState from "../hooks/useGetSetState"
@@ -756,7 +756,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 <YakitGetOnlinePlugin visible={allDownloadHint} setVisible={() => setAllDownloadHint(false)} />
             )}
             {/* 一键上传 */}
-            {uploadModal && <PluginsUploadAll visible={uploadModal} setVisible={setUploadModal} />}
+            {uploadModal && <PluginsUploadHint visible={uploadModal} setVisible={setUploadModal} />}
 
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint

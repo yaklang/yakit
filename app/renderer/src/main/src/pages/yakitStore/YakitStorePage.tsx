@@ -1,6 +1,5 @@
 import React, {useEffect, useState, useRef, ReactNode} from "react"
-import {Tooltip, Spin} from "antd"
-import {GithubOutlined} from "@ant-design/icons"
+import {Spin} from "antd"
 import {QueryYakScriptRequest, QueryYakScriptsResponse, YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
 import {useStore} from "@/store"
@@ -205,11 +204,6 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     )
 }
 
-export interface YakFilterModuleSelectProps {
-    selectedTags: string[]
-    setSelectedTags: (v: string[]) => void
-}
-
 export interface TagValue {
     Name: string
     Total: number
@@ -233,14 +227,6 @@ export const PluginListLocalItem: React.FC<PluginListLocalProps> = (props) => {
         return props.onYakScriptRender(plugin, maxWidth)
     }
     return <></>
-}
-export const PluginType = {
-    yak: "YAK 插件",
-    mitm: "MITM 插件",
-    "packet-hack": "数据包扫描",
-    "port-scan": "端口扫描插件",
-    codec: "CODEC插件",
-    nuclei: "YAML POC"
 }
 
 export const loadNucleiPoCFromLocal = `yakit.AutoInitYakit();
@@ -348,15 +334,4 @@ yakit.Output("Update Finished...")
 export interface DownloadOnlinePluginAllResProps {
     Progress: number
     Log: string
-}
-
-export const gitUrlIcon = (url: string | undefined) => {
-    if (!url) {
-        return <></>
-    }
-    return (
-        <Tooltip title={url}>
-            <GithubOutlined className='github-icon' />
-        </Tooltip>
-    )
 }

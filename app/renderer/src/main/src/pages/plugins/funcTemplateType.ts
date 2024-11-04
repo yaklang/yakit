@@ -257,33 +257,6 @@ export interface AuthorImgProps {
     /** wrapper 样式类 */
     wrapperClassName?: string
 }
-/**
- * @description 插件商店列表的额外操作
- * @property data
- * @property isLogin 登录状态
- * @property likeProps 点赞的props,包括激活状态和数量
- * @property commentProps 评论的props,包括激活状态和数量
- * @property downloadProps 下载的props,包括激活状态和数量
- * @property dispatch 用于列表操作的
- */
-export interface OnlineExtraOperateProps {
-    data: YakitPluginOnlineDetail
-    isLogin: boolean
-    dispatch: React.Dispatch<OnlinePluginAppAction>
-    likeProps: {
-        active: boolean
-        likeNumber: string
-        onLikeClick?: (data: YakitPluginOnlineDetail) => void
-    }
-    commentProps: {
-        commentNumber: string
-        // onCommentClick: () => void
-    }
-    downloadProps: {
-        downloadNumber: string
-        onDownloadClick?: (data: YakitPluginOnlineDetail) => void
-    }
-}
 
 export interface TagShowOpt {
     /** 组的标识符 */

@@ -1050,39 +1050,6 @@ export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) =
     })
 }
 
-/**
- * @description 插件商店/我的插件详情点击去使用，跳转本地详情
- */
-export const onlineUseToLocalDetail = (uuid: string, listType: "online" | "mine") => {
-    const query: QueryYakScriptRequest = {
-        Pagination: {
-            Page: 1,
-            Limit: 1,
-            Order: "",
-            OrderBy: ""
-        },
-        UUID: uuid
-    }
-    apiQueryYakScript(query).then((res) => {
-        if (+res.Total > 0) {
-            emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-        } else {
-            let downloadParams: DownloadOnlinePluginsRequest = {
-                UUID: [uuid]
-            }
-            if (listType === "online") {
-                apiDownloadPluginOnline(downloadParams).then(() => {
-                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-                })
-            } else if (listType === "mine") {
-                apiDownloadPluginMine(downloadParams).then(() => {
-                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-                })
-            }
-        }
-    })
-}
-
 interface QueryYakScriptByYakScriptNameRequest {
     pluginName: string
 }

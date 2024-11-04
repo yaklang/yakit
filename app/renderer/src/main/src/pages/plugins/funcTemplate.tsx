@@ -13,7 +13,6 @@ import {
     ListLayoutOptProps,
     ListListProps,
     ListShowContainerProps,
-    OnlineExtraOperateProps,
     OnlineRecycleExtraOperateProps,
     PluginDiffEditorModalProps,
     PluginEditorModalProps,
@@ -1291,103 +1290,6 @@ export const TagsListShow: React.FC<TagsListShowProps> = memo((props) => {
                       )
                   })
                 : "..."}
-        </div>
-    )
-})
-
-/** @name 线上插件额外操作 */
-export const OnlineExtraOperate: React.FC<OnlineExtraOperateProps> = memo((props) => {
-    const {data, isLogin, dispatch, likeProps, commentProps, downloadProps} = props
-    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-    const [starsLoading, setStarsLoading] = useState<boolean>(false)
-    const onLikeClick = useMemoizedFn((e) => {
-        e.stopPropagation()
-        if (!isLogin) {
-            yakitNotify("error", "登录才可以进行点赞")
-            return
-        }
-        const pluginStarsRequest: PluginStarsRequest = {
-            uuid: data.uuid,
-            operation: data.is_stars ? "remove" : "add"
-        }
-        setStarsLoading(true)
-        apiPluginStars(pluginStarsRequest)
-            .then(() => {
-                dispatch({
-                    type: "unLikeAndLike",
-                    payload: {
-                        item: {
-                            ...data
-                        }
-                    }
-                })
-                if (likeProps.onLikeClick) likeProps.onLikeClick(data)
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setStarsLoading(false)
-                }, 200)
-            )
-    })
-    const onCommentClick = useMemoizedFn((e) => {
-        e.stopPropagation()
-        yakitNotify("success", "评论~~~")
-        // commentProps.onCommentClick()
-    })
-    const onDownloadClick = useMemoizedFn((e) => {
-        e.stopPropagation()
-        const download: DownloadOnlinePluginsRequest = {
-            UUID: [data.uuid]
-        }
-        setDownloadLoading(true)
-        apiDownloadPluginOnline(download)
-            .then(() => {
-                dispatch({
-                    type: "download",
-                    payload: {
-                        item: {
-                            ...data
-                        }
-                    }
-                })
-                if (downloadProps.onDownloadClick) downloadProps.onDownloadClick(data)
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setDownloadLoading(false)
-                }, 200)
-            )
-    })
-    return (
-        <div className={styles["online-extra-operate-wrapper"]}>
-            {starsLoading ? (
-                <LoadingOutlined className={styles["plugin-loading"]} />
-            ) : (
-                <div
-                    className={classNames(styles["like-operate"], {
-                        [styles["like-operate-active"]]: likeProps.active
-                    })}
-                    onClick={onLikeClick}
-                >
-                    {likeProps.active ? <SolidThumbupIcon /> : <OutlineThumbupIcon />}
-                    <span>{likeProps.likeNumber}</span>
-                </div>
-            )}
-            {/* 功能开发中,暂时注释 */}
-            {/* <div className='divider-style' />
-            <div className={styles["comment-operate"]} onClick={onCommentClick}>
-                <OutlineChatIcon />
-                <span>{commentProps.commentNumber}</span>
-            </div> */}
-            <div className='divider-style' />
-            {downloadLoading ? (
-                <LoadingOutlined className={styles["plugin-loading"]} />
-            ) : (
-                <div className={styles["download-operate"]} onClick={onDownloadClick}>
-                    <OutlineClouddownloadIcon />
-                    <span>{downloadProps.downloadNumber}</span>
-                </div>
-            )}
         </div>
     )
 })

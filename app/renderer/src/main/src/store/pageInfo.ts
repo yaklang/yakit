@@ -46,8 +46,6 @@ interface PageParamsInfoProps {
     pluginInfoEditor?: {source: YakitRoute}
     /** YakitRoute.Plugin_Local 本地插件页面缓存数据 */
     pluginLocalPageInfo?: PluginLocalPageInfoProps
-    /**YakitRoute.Plugin_Store 插件商店页面 */
-    pluginOnlinePageInfo?: PluginOnlinePageInfoProps
     /**批量执行页面 */
     pluginBatchExecutorPageInfo?: PluginBatchExecutorPageInfoProps
     /**专项漏洞页面 */
@@ -105,10 +103,6 @@ export interface PluginBatchExecutorPageInfoProps {
     request: Uint8Array
     /**执行任务的状态 */
     hybridScanMode: HybridScanModeType
-}
-export interface PluginOnlinePageInfoProps {
-    keyword: string
-    plugin_type: string
 }
 export interface PluginLocalPageInfoProps {
     uuid: string
