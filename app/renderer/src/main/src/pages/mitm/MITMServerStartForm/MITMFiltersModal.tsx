@@ -82,7 +82,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 FilterData: filter
             })
             .then(() => {
-                setMITMFilter(baseFilter)
                 // 是否配置过过滤器白名单文案
                 const flag =
                     !!baseFilter?.includeHostname?.length ||
