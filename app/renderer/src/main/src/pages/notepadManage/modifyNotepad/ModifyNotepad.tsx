@@ -3,35 +3,39 @@ import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import styles from "./ModifyNotepad.module.scss"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
-import {ProsemirrorAdapterProvider, usePluginViewContext} from "@prosemirror-adapter/react"
-import {MilkdownProvider} from "@milkdown/react"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps, OnlineUsersProps} from "./ModifyNotepadType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {Avatar, Badge, Divider, Tooltip, Tree} from "antd"
+import {Divider, Tooltip, Tree} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
     OutlineCloseIcon,
     OutlineClouddownloadIcon,
     OutlineDotshorizontalIcon,
     OutlineOpenIcon,
-    OutlineShareIcon
+    OutlineShareIcon,
+    OutlineTrashIcon
 } from "@/assets/icon/outline"
 import classNames from "classnames"
-import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {buildTOCTree} from "./utils"
-import {DataNode} from "antd/lib/tree"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {useMenuHeight} from "@/store/menuHeight"
 import {shallow} from "zustand/shallow"
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
-import {AuthorIcon, AuthorImg} from "@/pages/plugins/funcTemplate"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {AuthorIcon, AuthorImg, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import {getMarkdown} from "@milkdown/kit/utils"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {useStore} from "@/store"
+import {judgeAvatar} from "@/pages/MainOperator"
+import {randomAvatarColor} from "@/components/layout/FuncDomain"
+import {cloneDeep} from "lodash"
+import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
+import {API} from "@/services/swagger/resposeType"
+import {apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -58,9 +62,11 @@ const onlineUserList: OnlineUsersProps[] = [
 const notepadMixWidth = 1200
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const {pageId} = props
-    const {queryPagesDataById} = usePageInfo(
+    const userInfo = useStore((s) => s.userInfo)
+    const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
-            queryPagesDataById: s.queryPagesDataById
+            queryPagesDataById: s.queryPagesDataById,
+            updatePagesDataCacheById: s.updatePagesDataCacheById
         }),
         shallow
     )
@@ -70,13 +76,22 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         }),
         shallow
     )
-    const initPageInfo = useMemoizedFn(() => {
+    const initTabName = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
         return YakitRouteToPageInfo[YakitRoute.Modify_Notepad].label || "未命名文档"
     })
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
+        if (currentItem && currentItem.pageParamsInfo.modifyNotepadPageInfo) {
+            return currentItem.pageParamsInfo.modifyNotepadPageInfo
+        }
+        return cloneDeep(defaultModifyNotepadPageInfo)
+    })
+
+    const [loading, setLoading] = useState<boolean>(false)
     const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [expand, setExpand] = useState<boolean>(true)
@@ -85,14 +100,38 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     const [shareVisible, setShareVisible] = useState<boolean>(false)
 
+    const [tabName, setTabName] = useState<string>(initTabName())
+    const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
+    const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>()
+
     const notepadRef = useRef<HTMLDivElement>(null)
     const treeKeysRef = useRef<string[]>([])
 
     const notepadWidth = useListenWidth(notepadRef)
     const clientWidthRef = useRef(document.body.clientWidth)
     const clientHeightRef = useRef(document.body.clientHeight)
+    const avatarColor = useRef<string>(randomAvatarColor())
 
-    const [tabName, setTabName] = useState<string>(initPageInfo())
+    useEffect(() => {
+        if (pageInfo.notepadHash) {
+            // 查询该笔记本详情
+            apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
+                setNotepadDetail(res)
+            })
+        } else {
+            // 新建笔记本并保存
+            const params: API.PostNotepadRequest = {
+                title: initTabName(),
+                content: initTabName()
+            }
+            setLoading(true)
+            apiSaveNotepadList(params).finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
+        }
+    }, [pageInfo])
 
     useEffect(() => {
         clientWidthRef.current = document.body.clientWidth
@@ -128,6 +167,24 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             treeKeysRef.current = tocTree.keys
             setCatalogue(tocTree.treeData)
         },
+        {wait: 200, leading: true}
+    ).run
+
+    const onSetTabName = useMemoizedFn((title) => {
+        setTabName(title)
+        onSetPageTabName(title)
+    })
+
+    const onSetPageTabName = useDebounceFn(
+        useMemoizedFn((tabName: string) => {
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
+            if (!currentItem) return
+            const newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageName: tabName
+            }
+            updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
+        }),
         {wait: 200, leading: true}
     ).run
     const onCatalogueClick = useMemoizedFn((info: MilkdownCatalogueProps) => {
@@ -184,17 +241,18 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         <div className={styles["modify-notepad-heard-extra-online-user"]}>
                             {onlineUsers.map((item) => (
                                 <Tooltip key={item.id} title={item.name}>
-                                    <AuthorImg
-                                        key={item.id}
-                                        src={item.img}
-                                        icon={
-                                            <div
-                                                className={styles["online-user-dot"]}
-                                                style={{backgroundColor: item.onlineStatus}}
-                                            />
-                                        }
-                                        iconClassName={styles["online-user-icon"]}
-                                    />
+                                    <div key={item.id}>
+                                        <AuthorImg
+                                            src={item.img}
+                                            icon={
+                                                <div
+                                                    className={styles["online-user-dot"]}
+                                                    style={{backgroundColor: item.onlineStatus}}
+                                                />
+                                            }
+                                            iconClassName={styles["online-user-icon"]}
+                                        />
+                                    </div>
                                 </Tooltip>
                             ))}
                         </div>
@@ -216,9 +274,12 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         <YakitButton type='primary' icon={<OutlineClouddownloadIcon />} size='large'>
                             下载
                         </YakitButton>
-                        <YakitDropdownMenu
+                        <FuncFilterPopover
+                            icon={<OutlineDotshorizontalIcon />}
+                            button={{type: "text2", size: "large"}}
                             menu={{
-                                data: [{key: "remove", label: "删除", type: "danger"}],
+                                type: "primary",
+                                data: [{key: "remove", label: "删除", type: "danger", itemIcon: <OutlineTrashIcon />}],
                                 onClick: ({key}) => {
                                     switch (key) {
                                         default:
@@ -226,11 +287,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     }
                                 }
                             }}
-                        >
-                            <YakitButton type='text2' icon={<OutlineDotshorizontalIcon />} size='large' />
-                        </YakitDropdownMenu>
+                            placement='bottomRight'
+                        />
                         <Divider type='vertical' style={{margin: 0}} />
-                        <AuthorImg />
+
+                        <Tooltip title={userInfo.companyName}>{judgeAvatar(userInfo, 28, avatarColor.current)}</Tooltip>
                     </div>
                 </div>
                 <div className={classNames(styles["notepad"])} ref={notepadRef}>
@@ -261,24 +322,23 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 treeData={catalogue}
                                 expandedKeys={expandedKeys}
                                 switcherIcon={<></>}
-                                showIcon={false}
+                                showIcon={true}
                                 className={classNames(styles["notepad-catalogue-tree"], {
                                     [styles["notepad-catalogue-tree-hidden"]]: !expand || notepadWidth < notepadMixWidth
                                 })}
                                 style={{
                                     maxHeight: expand ? treeMaxHeight - 24 : 0
                                 }}
-                                titleRender={(nodeData) => {
-                                    return (
-                                        <React.Fragment key={nodeData.key}>
-                                            <CatalogueTreeNode
-                                                info={nodeData}
-                                                onClick={onCatalogueClick}
-                                                onExpand={onExpand}
-                                            />
-                                        </React.Fragment>
-                                    )
-                                }}
+                                titleRender={(nodeData) => (
+                                    <React.Fragment key={nodeData.key}>
+                                        <CatalogueTreeNode
+                                            info={nodeData}
+                                            isExpanded={expandedKeys.includes(nodeData.key)}
+                                            onClick={onCatalogueClick}
+                                            onExpand={onExpand}
+                                        />
+                                    </React.Fragment>
+                                )}
                             />
                         </div>
                     </div>
@@ -290,7 +350,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 bordered={false}
                                 className={styles["notepad-input"]}
                                 value={tabName}
-                                onChange={(e) => setTabName(e.target.value)}
+                                onChange={(e) => onSetTabName(e.target.value)}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
                                 <AuthorImg />
@@ -323,11 +383,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 export default ModifyNotepad
 
 const CatalogueTreeNode: React.FC<CatalogueTreeNodeProps> = React.memo((props) => {
-    const {info, onClick, onExpand} = props
+    const {info, onClick, isExpanded, onExpand} = props
     return (
         <div className={styles["catalogue-tree-node"]}>
             {(info.children?.length || 0) > 0 && (
-                <OutlineChevrondownIcon className={styles["icon"]} onClick={() => onExpand(info)} />
+                <div className={styles["tree-expand-icon"]} onClick={() => onExpand(info)}>
+                    {isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
+                </div>
             )}
             <div
                 className={classNames(styles["tree-node-title"], {
