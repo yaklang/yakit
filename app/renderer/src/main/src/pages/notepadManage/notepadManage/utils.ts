@@ -72,9 +72,9 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
  * @param hiddenError
  * @returns
  */
-export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, API.GetNotepadResponse> = (params, hiddenError) => {
+export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        NetWorkApi<API.PostNotepadRequest, API.GetNotepadResponse>({
+        NetWorkApi<API.PostNotepadRequest, string>({
             method: "post",
             url: "notepad",
             data: params
@@ -90,18 +90,39 @@ export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, API.GetNotepadR
 interface NotepadDetailRequest {
     hash: string
 }
+/**
+ * @description 获取记事本详情
+ * @param hash
+ * @param hiddenError
+ * @returns
+ */
 export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, hiddenError) => {
     return new Promise((resolve, reject) => {
         NetWorkApi<NotepadDetailRequest, API.GetNotepadList>({
             method: "get",
             url: "notepad/detail",
-            params: {
+            data: {
                 hash
             }
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "保存/新建记事本失败:" + err)
+                if (!hiddenError) yakitNotify("error", "获取记事本详情失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.GetNotepadList> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        NetWorkApi<API.DeleteNotepadRequest, API.GetNotepadList>({
+            method: "delete",
+            url: "notepad",
+            data: params
+        })
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "删除记事本失败:" + err)
                 reject(err)
             })
     })
