@@ -476,11 +476,7 @@ export declare namespace API {
         uuid?: string[]
     }
     export interface PluginsWhere {
-        /** 这个其实是一个boolean类型的数组，
-         * 但是后端没法表达boolean数组，
-         * 所以每次更新时，需要将后端的转换定义名改成《boolean》
-         */
-        is_private?: boolean[]
+        is_private?: PluginsWhereIsPrivate[]
         keywords?: string
         plugin_type?: string[]
         tags?: string[]

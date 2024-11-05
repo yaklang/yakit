@@ -84,6 +84,7 @@ import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
 import { YakitSegmented } from "../yakitUI/YakitSegmented/YakitSegmented"
 import { MessageCenter } from "../MessageCenter/MessageCenter"
+import { apiFetchMessageRead, apiFetchQueryMessage } from "../MessageCenter/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -470,6 +471,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onYakEngineVersionList={onYakEngineVersionList}
+                            onLogin={()=>setLoginShow(true)}
                         />
                     )}
                     {!showProjectManage && (
@@ -1517,6 +1519,7 @@ interface UIOpNoticeProp {
     isEngineLink: boolean
     isRemoteMode: boolean
     onYakEngineVersionList: (versionList: string[]) => void
+    onLogin: ()=>void
 }
 
 export interface UpdateContentProp {
@@ -1541,7 +1544,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
-    const {isEngineLink, isRemoteMode, onYakEngineVersionList} = props
+    const {isEngineLink, isRemoteMode, onYakEngineVersionList, onLogin} = props
 
     const {userInfo} = useStore()
 
@@ -1807,18 +1810,23 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             })
     })
 
+    const [messageList,setMessageList] = useState<API.MessageLogDetail[]>([])
     const isUpdate = useMemo(() => {
+        const unRead = messageList.filter((item)=>!item.isRead).length > 0
         return (
             (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-            lowerYaklangLastVersion
+            lowerYaklangLastVersion ||
+            unRead
         )
-    }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion])
+    }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
     const [noticeType,setNoticeType] = useState<"message"|"update">("message")
     useEffect(()=>{
-        // console.log("userInfo.isLogin---",userInfo.isLogin);
+        if(userInfo.isLogin){
+            setNoticeType("message")
+        }
         // 未登录时 仅允许查看
-        if(!userInfo.isLogin){
+        else{
             setNoticeType("update")
         }
     },[userInfo.isLogin])
@@ -1826,6 +1834,53 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const getAllMessage = useMemoizedFn(()=>{
         setShow(false)
         emiter.emit("openAllMessageNotification")
+    })
+
+    const onFetchMessage = useMemoizedFn(()=>{
+        apiFetchQueryMessage({
+            page: 1,
+            limit: 20
+        }).then((res)=>{
+            setMessageList(res.data||[])
+        })
+    })
+
+    // 初始化获取消息中心
+    useEffect(()=>{
+        if(userInfo.isLogin){
+            onFetchMessage()   
+        }
+    },[userInfo.isLogin,show])
+
+    const onRefreshMessageSocketFun = useMemoizedFn((data:string)=>{
+        try {
+            const obj:API.MessageLogDetail = JSON.parse(data)
+            setMessageList((prev)=>{
+                return [obj,...prev]
+            })
+        } catch (error) {}
+    })
+
+    useEffect(()=>{
+        emiter.on("onRefreshMessageSocket", onRefreshMessageSocketFun)
+        return () => {
+            emiter.off("onRefreshMessageSocket", onRefreshMessageSocketFun)
+        }
+    },[])
+
+    const onRedAllMessage = useMemoizedFn(()=>{
+        apiFetchMessageRead({
+            isAll: true,
+            hash: ""
+        }).then((ok)=>{
+            if(ok){
+                setMessageList((prev)=>{
+                    return prev.map((item)=>{
+                        return {...item,isRead:true}
+                    })
+                })
+            }
+        })
     })
 
     const notice = useMemo(() => {
@@ -1843,7 +1898,6 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     {
                                         label: "消息中心",
                                         value: "message",
-                                        disabled: !userInfo.isLogin
                                     },
                                     {
                                         label: "更新通知",
@@ -1867,14 +1921,19 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             />
                         </div>:
                         <div className={styles['message-title']}>
+                            {userInfo.isLogin&&<>
+                            {messageList.length>0&&
+                            <>
                             <YakitButton
                                 type='text'
                                 style={{fontWeight: 400}}
-                                onClick={(e) => e.preventDefault()}
+                                onClick={onRedAllMessage}
                             >
                                 全部已读
                             </YakitButton>
                             <Divider type={"vertical"} style={{margin: "0px 8px 0px"}} />
+                            </>
+                            }
                             <YakitButton
                                 type='text'
                                 style={{fontWeight: 400,color:"#85899E"}}
@@ -1882,6 +1941,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             >
                                 查看全部
                             </YakitButton>
+                            </>}
+                            
                         </div>
                         }
                     </div>
@@ -1922,7 +1983,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             </div>
                         </div>:
                         <div className={styles['notice-info-wrapper']}>
-                            <MessageCenter getAllMessage={getAllMessage}/>
+                            <MessageCenter messageList={messageList} getAllMessage={getAllMessage} onLogin={()=>{
+                                setShow(false)
+                                onLogin()
+                            }} onClose={()=>setShow(false)}/>
                         </div>
                     }
                     
@@ -1945,7 +2009,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         lowerYaklangLastVersion,
         isRemoteMode,
         communityYaklang,
-        noticeType
+        noticeType,
+        messageList
     ])
 
     return (
@@ -1992,8 +2057,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     ></YakitInput.TextArea>
                 </div>
             </YakitModal>
-        </YakitPopover>
-    )
+        </YakitPopover>)
 })
 
 interface UIOpRiskProp {

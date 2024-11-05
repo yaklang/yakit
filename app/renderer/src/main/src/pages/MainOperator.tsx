@@ -617,7 +617,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                         </div>
                     )}
                     
-                    <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow}/>
+                    {messageCenterShow&&<MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow}/>}
                 </Layout>
             </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}
