@@ -13,7 +13,6 @@ export enum YakitRoute {
     PoC = "poc",
     Plugin_OP = "plugin-op",
     Mod_Brute = "brute",
-    Plugin_Local = "plugin-local",
     Plugin_Hub = "plugin-hub",
     Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",

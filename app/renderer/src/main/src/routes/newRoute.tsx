@@ -39,7 +39,6 @@ import {
     PrivateOutlineICMPSizeLogIcon,
     PrivateOutlineMitmIcon,
     PrivateOutlinePayloadGeneraterIcon,
-    PrivateOutlinePluginLocalIcon,
     PrivateOutlinePluginStoreIcon,
     PrivateOutlinePocIcon,
     PrivateOutlinePortsIcon,
@@ -69,7 +68,6 @@ import {
     PrivateSolidICMPSizeLogIcon,
     PrivateSolidMitmIcon,
     PrivateSolidPayloadGeneraterIcon,
-    PrivateSolidPluginLocalIcon,
     PrivateSolidPluginStoreIcon,
     PrivateSolidPocIcon,
     PrivateSolidPortsIcon,
@@ -174,7 +172,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     poc: {label: "专项漏洞检测", describe: "通过预制漏洞源码，对特定目标进行专项漏洞检测，可以自定义新增 POC 种类"},
     "plugin-op": {label: "插件"},
     brute: {label: "弱口令检测", describe: "对目标的登录账号、密码等进行爆破，在爆破前会进行未授权检测"},
-    "plugin-local": {label: "本地插件"},
     "plugin-hub": {label: "插件仓库"},
     "plugin-groups": {label: "插件组管理"},
     "batch-executor-page-ex": {label: "批量执行", describe: "自由选择需要的 POC 进行批量漏洞检测"},
@@ -232,7 +229,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
 export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
-    YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
@@ -271,7 +267,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DataCompare,
     YakitRoute.YakScript,
     YakitRoute.HTTPHacker,
-    YakitRoute.Plugin_Local,
     YakitRoute.Plugin_Hub,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
@@ -447,9 +442,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <SinglePluginExecution yakScriptId={yakScriptId || 0} />
         case YakitRoute.Mod_Brute:
             return <NewBrute id={params?.id || ""} />
-        case YakitRoute.Plugin_Local:
-            return null
-        // return <PluginsLocal />
         case YakitRoute.Plugin_Hub:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -727,10 +719,6 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
                 page: YakitRoute.Plugin_Hub,
                 ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub]
             },
-            // {
-            //     page: YakitRoute.Plugin_Local,
-            //     ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
-            // },
             {
                 page: YakitRoute.BatchExecutorPage,
                 ...YakitRouteToPageInfo[YakitRoute.BatchExecutorPage]
@@ -931,12 +919,6 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlinePocIcon />,
         hoverIcon: <PrivateSolidPocIcon />,
         ...YakitRouteToPageInfo[YakitRoute.PoC]
-    },
-    [YakitRoute.Plugin_Local]: {
-        page: YakitRoute.Plugin_Local,
-        icon: <PrivateOutlinePluginLocalIcon />,
-        hoverIcon: <PrivateSolidPluginLocalIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.Plugin_Local]
     },
     [YakitRoute.Plugin_Hub]: {
         page: YakitRoute.Plugin_Hub,

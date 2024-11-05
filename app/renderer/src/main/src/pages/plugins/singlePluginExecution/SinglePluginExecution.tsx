@@ -5,11 +5,7 @@ import {PluginDetailsTab} from "../local/PluginsLocalDetail"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinePencilaltIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
-import {
-    apiGetYakScriptByOnlineID,
-    convertLocalPluginsRequestParams,
-    onToEditPlugin
-} from "../utils"
+import {apiGetYakScriptByOnlineID, convertLocalPluginsRequestParams} from "../utils"
 import {PluginFilterParams, PluginSearchParams} from "../baseTemplateType"
 import cloneDeep from "lodash/cloneDeep"
 import "../plugins.scss"
@@ -20,6 +16,8 @@ import {PluginLocalListDetails} from "../operator/PluginLocalListDetails/PluginL
 import {defaultFilter, defaultSearch, pluginTypeToName} from "../builtInData"
 import emiter from "@/utils/eventBus/eventBus"
 import {grpcFetchLocalPluginDetailByID} from "@/pages/pluginHub/utils/grpc"
+import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
+import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -65,13 +63,14 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         }
     }, [inViewport])
 
+    // 下载线上插件后更新本地插件 ID
     const getYakScriptByOnlineID = useMemoizedFn((uuid) => {
         if (!uuid) return
         apiGetYakScriptByOnlineID({UUID: uuid}).then((info) => {
             setYakScriptId(info.Id)
         })
     })
-
+    // 本地刷新
     const onRefresh = useMemoizedFn((e) => {
         e.stopPropagation()
         getPluginById()
@@ -120,11 +119,35 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         if (plugin.Type !== "yak") return true
         return !plugin.EnablePluginSelector
     }, [plugin])
-    const onEdit = useMemoizedFn((e) => {
+
+    const [editHint, setEditHint] = useState<boolean>(false)
+    const handleOpenEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!plugin) return
-        onToEditPlugin(plugin)
+        if (editHint) return
+        setEditHint(true)
     })
+    const handleEditCallback = useMemoizedFn(async (isSuccess: boolean, data?: ModifyPluginCallback) => {
+        if (isSuccess && data) {
+            const {opType, info} = data
+
+            if (["save", "saveAndExit", "upload", "submit"].includes(opType)) {
+                if (yakScriptId === info.id) getPluginById()
+                else setYakScriptId(info.id)
+            }
+
+            if (opType === "copy") {
+            }
+
+            // 关闭编辑插件弹窗
+            if (opType !== "save") {
+                setEditHint(false)
+            }
+        } else {
+            setEditHint(false)
+        }
+    })
+
     const headExtraNode = useCreation(() => {
         return (
             <>
@@ -133,7 +156,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                 </Tooltip>
                 <div className='divider-style' />
                 <Tooltip title='编辑'>
-                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEdit} />
+                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={handleOpenEdit} />
                 </Tooltip>
             </>
         )
@@ -145,8 +168,7 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
     }, [filters])
     if (!plugin) return null
     return (
-        <>
-            <div ref={singlePluginExecutionRef} />
+        <div ref={singlePluginExecutionRef} style={{height: "100%", overflowY: "auto"}}>
             <PluginLocalListDetails
                 hidden={hidden}
                 selectList={selectList}
@@ -163,10 +185,18 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
                     executorShow={!pluginLoading}
                     plugin={plugin}
                     headExtraNode={headExtraNode}
-                    hiddenLogIssue={true}
                     linkPluginConfig={linkPluginConfig}
                 />
             </PluginLocalListDetails>
-        </>
+
+            {editHint && plugin && (
+                <ModifyYakitPlugin
+                    getContainer={singlePluginExecutionRef.current || undefined}
+                    plugin={plugin}
+                    visible={editHint}
+                    onCallback={handleEditCallback}
+                />
+            )}
+        </div>
     )
 })

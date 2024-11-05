@@ -462,9 +462,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Plugin_Hub:
                 pluginHub(params)
                 break
-            case YakitRoute.Plugin_Local:
-                pluginLocal(params)
-                break
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
                 break
@@ -744,40 +741,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         setPagesData(YakitRoute.Plugin_Hub, pageNodeInfo)
         openMenuPage({route: YakitRoute.Plugin_Hub})
-    })
-    /**
-     * @name 本地插件
-     * @description 插件商店和我的插件详情中点击去使用,传线上的UUID,传入本地详情进行使用
-     * @param uuid 用于本地插件定位uuid对应的插件详情位置
-     */
-    const pluginLocal = useMemoizedFn((data: {uuid: string}) => {
-        const {uuid} = data || {}
-
-        if (uuid) {
-            // uuid存在的，先将数据缓存至数据中心,后再打开页面
-            const newPageNode: PageNodeItemProps = {
-                id: `${randomString(8)}`,
-                routeKey: YakitRoute.Plugin_Local,
-                pageGroupId: "0",
-                pageId: YakitRoute.Plugin_Local, // 用路由key作为页面id
-                pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Local]?.label || "",
-                pageParamsInfo: {
-                    pluginLocalPageInfo: {
-                        uuid
-                    }
-                },
-                sortFieId: 0
-            }
-            const pages: PageProps = {
-                ...cloneDeep(defPage),
-                routeKey: YakitRoute.Plugin_Local,
-                singleNode: true,
-                pageList: [newPageNode]
-            }
-            setPagesData(YakitRoute.Plugin_Local, pages)
-        }
-        emiter.emit("onRefreshLocalPluginList")
-        openMenuPage({route: YakitRoute.Plugin_Local})
     })
 
     /** @name 渲染端通信-关闭一个指定页面 */

@@ -1,14 +1,7 @@
 export type PluginsEventProps = {
     /** 触发编辑插件功能的插件ID */
     sendEditPluginId: string
-    /**
-     * 新建|编辑插件成功后的发送信号(包含本地和线上保存, 传递数据的定义[SavePluginInfoSignalProps])
-     * 该通信已无用，注明废弃，下版删除该通信
-     */
-    savePluginInfoSignal: string
 
-    /** 刷新本地插件详情页面的选中的插件数据 */
-    onRefLocalDetailSelectPlugin: string
     /** 修改私有域成功后发送的信号 */
     onSwitchPrivateDomain: string
     /**刷新单个执行页面中的插件数据 */

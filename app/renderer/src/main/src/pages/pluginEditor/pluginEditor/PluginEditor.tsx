@@ -532,7 +532,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         yakitNotify("success", "保存插件成功")
 
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(res.Id) || 0,
+                            id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: res.ScriptName,
                             uuid: res.UUID || ""
                         }
@@ -572,7 +572,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     yakitNotify("success", "保存插件成功")
 
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -624,7 +624,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then((res) => {
                     savedPluginInfo.current = cloneDeep(res)
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -691,7 +691,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then((res) => {
                     savedPluginInfo.current = cloneDeep(res)
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -731,7 +731,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 if (uploadType.current === "upload" && result) {
                     if (plugin) {
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(plugin.Id) || 0,
+                            id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: plugin.ScriptName,
                             uuid: plugin.UUID || ""
                         }
@@ -754,7 +754,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
                     if (plugin) {
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(plugin.Id) || 0,
+                            id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: plugin.ScriptName,
                             uuid: plugin.UUID || ""
                         }
@@ -768,7 +768,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             handleEditSuccessCallback({
                                 opType: "submit",
                                 info: {
-                                    id: Number(uploadPlugin.current?.Id || 0) || 0,
+                                    id: Number(uploadPlugin.current?.Id) || 0,
                                     name: onlinePlugin.script_name,
                                     uuid: onlinePlugin.uuid
                                 }
@@ -789,7 +789,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         /** ---------- 上传/提交插件弹框 End ---------- */
 
         /** ---------- 复制弹窗 Start ---------- */
-        // 同步|复制|提交的插件信息
+        // 复制的插件信息
         const onlineOPPlugin = useRef<API.PluginsRequest>()
         const [copyHint, setCopyHint] = useState<boolean>(false)
         const handleResetCopyHint = useMemoizedFn(() => {
@@ -831,7 +831,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 // 刷新我的列表
                                 emiter.emit("onRefreshOwnPluginList")
                                 const info: KeyParamsFetchPluginDetail = {
-                                    id: Number(localRes.Id) || 0,
+                                    id: Number(localRes.Id) || Number(savedPluginInfo.current?.Id) || 0,
                                     name: localRes.ScriptName,
                                     uuid: localRes.UUID || ""
                                 }

@@ -112,15 +112,3 @@
     }
 }
 
-.plugin-local-upload-single {
-    @extend %display-align-justify-center;
-    flex-direction: column;
-}
-
-.plugin-private-select-single {
-    padding: 0 16px 24px;
-    @extend %display-align-justify-center;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-}

@@ -1033,7 +1033,6 @@ export const PluginEditDetails: React.FC<PluginEditDetailsProps> = (props) => {
                 isOnline: !!isOnline,
                 pluginName: info.ScriptName || ""
             }
-            emiter.emit("savePluginInfoSignal", JSON.stringify(param))
         }
     })
     // 保存插件信息后-刷新商店|我的|本地列表数据
