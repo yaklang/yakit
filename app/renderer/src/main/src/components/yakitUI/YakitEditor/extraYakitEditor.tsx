@@ -92,6 +92,17 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         const originValueBytes = StringToUint8Array(originValue)
         let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
+            copyUrl: {
+                menu: [
+                    {
+                        key: "copyUrl",
+                        label: "复制 URL"
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    callCopyToClipboard(url || "")
+                }
+            },
             copyCSRF: {
                 menu: [
                     {
@@ -374,20 +385,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
         if (url) {
             menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "copyCSRF") {
-                    ac["copyUrl"] = {
-                        menu: [
-                            {
-                                key: "copyUrl",
-                                label: "复制 URL"
-                            }
-                        ],
-                        onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            callCopyToClipboard(url || "")
-                        }
-                    }
-                }
-
                 if (a === "openBrowser") {
                     ac["openURLBrowser"] = {
                         menu: [
