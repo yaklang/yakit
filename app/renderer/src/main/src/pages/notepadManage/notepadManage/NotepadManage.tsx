@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {NotepadManageProps} from "./NotepadManageType"
 import styles from "./NotepadManage.module.scss"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
@@ -18,90 +18,111 @@ import {Avatar, Divider, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {VirtualColumns, VirtualTable} from "@/pages/dynamicControl/VirtualTable"
 import {API} from "@/services/swagger/resposeType"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {PaginationSchema} from "@/pages/invoker/schema"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import moment from "moment"
 import {ListSelectFilterPopover, YakitVirtualList} from "../YakitVirtualList/YakitVirtualList"
 import {ListSelectOptionProps, VirtualListColumns} from "../YakitVirtualList/YakitVirtualListType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {AuthorImg} from "@/pages/plugins/funcTemplate"
+import {AuthorImg, FuncSearch} from "@/pages/plugins/funcTemplate"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {
+    GetNotepadRequestProps,
+    NotepadQuery,
+    SearchParamsProps,
+    apiGetNotepadList,
+    convertGetNotepadRequest
+} from "./utils"
+import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
+import {useStore} from "@/store"
+import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitRoute} from "@/enums/yakitRoute"
+import emiter from "@/utils/eventBus/eventBus"
+import SearchResultEmpty from "@/assets/search_result_empty.png"
 
 const timeMap = {
     created_at: "最近创建时间",
     updated_at: "最近更新时间"
 }
 
-interface NotepadQuery {
-    keyWords: string
-    authorList: string[]
-}
 const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
+    const userInfo = useStore((s) => s.userInfo)
+
     const [loading, setLoading] = useState<boolean>(true)
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
-    const [data, setData] = useState<any[]>([])
+
     const [sorterKey, setSorterKey] = useState<string>("updated_at")
+
+    const [response, setResponse] = useState<API.GetNotepadResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
 
     const [refresh, setRefresh] = useState<boolean>(true)
 
-    const [authors, setAuthors] = useState<ListSelectOptionProps[]>([])
+    // 搜索条件
+    const [search, setSearch] = useState<SearchParamsProps>({keyword: "", userName: "", type: "keyword"})
 
-    const [query, setQuery] = useState<NotepadQuery>({
-        keyWords: "",
-        authorList: []
-    })
+    const totalRef = useRef<number>(0)
+    const notepadRef = useRef<HTMLDivElement>(null)
 
-    const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 20,
-        Order: "desc",
-        OrderBy: "updated_at",
-        Page: 1
-    })
-    const columns: VirtualListColumns[] = [
+    const [inViewPort = true] = useInViewport(notepadRef)
+
+    const columns: VirtualListColumns<API.GetNotepadList>[] = [
         {
             title: "文件名称",
-            dataIndex: "name"
+            dataIndex: "title"
         },
         {
             title: "作者",
             dataIndex: "author",
             render: (text, record) => (
                 <div className={styles["author-cell"]}>
-                    <AuthorImg src={record.authorImg} />
-                    <span className='content-ellipsis'>{record.author}</span>
+                    <AuthorImg src={record.headImg} />
+                    <span className='content-ellipsis'>{record.userName}</span>
                 </div>
-            ),
-            filterProps: {
-                filterRender: () => (
-                    <ListSelectFilterPopover
-                        option={authors}
-                        selectKeys={query.authorList}
-                        onSetValue={onSetAuthor}
-                        filterOption={true}
-                    >
-                        <YakitButton type='text2'>
-                            <span style={{lineHeight: "16px"}}>作者</span>
-                            <OutlineSearchIcon className={styles["search-icon"]} />
-                        </YakitButton>
-                    </ListSelectFilterPopover>
-                )
-            }
+            )
         },
         {
             title: "协作人",
-            dataIndex: "collaborators",
-            render: (text, record) => (
-                <Avatar.Group maxCount={2} maxStyle={{color: "#B4BBCA", backgroundColor: "#f0f1f3"}}>
-                    {record.collaborators.map((ele) => (
-                        <Tooltip key={ele.id} title={ele.name} placement='top'>
-                            <Avatar src={ele.img} />
-                        </Tooltip>
-                    ))}
-                </Avatar.Group>
-            )
+            dataIndex: "collaborator",
+            render: (text, record) =>
+                (!!record.collaborator?.length && (
+                    <YakitPopover
+                        content={
+                            <div className={styles["collaborators-popover-content"]}>
+                                {(record.collaborator || []).map((ele) => (
+                                    <Tooltip
+                                        destroyTooltipOnHide={true}
+                                        key={ele.user_id}
+                                        title={ele.user_name}
+                                        placement='top'
+                                    >
+                                        <Avatar src={ele.head_img} />
+                                    </Tooltip>
+                                ))}
+                            </div>
+                        }
+                        destroyTooltipOnHide={true}
+                        overlayClassName={styles["collaborators-popover"]}
+                    >
+                        <span className='content-ellipsis'>
+                            {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
+                        </span>
+                    </YakitPopover>
+                )) ||
+                "-"
         },
         {
             title: "最近更新时间",
@@ -145,7 +166,11 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             width: 180,
             render: (text, record) => (
                 <div>
-                    <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={() => {}} />
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlinePencilaltIcon />}
+                        onClick={() => toModifyNotepad(record.hash)}
+                    />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
                     <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => {}} />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
@@ -157,80 +182,76 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         }
     ]
     useEffect(() => {
-        console.log("query", query)
         getList()
-    }, [refresh])
-    useEffect(() => {
-        getList()
-    }, [])
-    const onSetAuthor = useMemoizedFn((value: string[]) => {
-        setQuery((v) => ({...v, authorList: value}))
-        setRefresh(!refresh)
+        fetchInitTotal()
+    }, [inViewPort, refresh])
+    const fetchInitTotal = useMemoizedFn(() => {
+        apiGetNotepadList({
+            page: 1,
+            limit: 1
+        })
+            .then((res) => {
+                totalRef.current = +res.pagemeta.total
+            })
+            .catch(() => {})
     })
-    const getList = useMemoizedFn(() => {
-        const arr = Array.from({length: 200}).map((_, index) => ({
-            id: index,
-            authorId: index,
-            author: `作者-${index}`,
-            authorImg: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
-            name: `记事本-${index}`,
-            collaborators: [
-                {
-                    id: index,
-                    name: "张三",
-                    img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
-                },
-                {
-                    id: index + 1,
-                    name: "张三",
-                    img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
-                },
-                {
-                    id: index + 2,
-                    name: "张三",
-                    img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
-                },
-                {
-                    id: index + 3,
-                    name: "张三",
-                    img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
-                },
-                {
-                    id: index + 4,
-                    name: "张三",
-                    img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
+    const getList = useDebounceFn(
+        useMemoizedFn(async (page?: number) => {
+            setLoading(true)
+            const params: PluginListPageMeta = !page
+                ? {page: 1, limit: 20, order_by: sorterKey, order: "desc"}
+                : {
+                      page: +response.pagemeta.page + 1,
+                      limit: +response.pagemeta.limit || 20,
+                      order: "desc",
+                      order_by: sorterKey
+                  }
+            const newQuery: GetNotepadRequestProps = convertGetNotepadRequest(search, params)
+            try {
+                const res = await apiGetNotepadList(newQuery)
+                if (!res.data) res.data = []
+                const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
+                setHasMore(length < +res.pagemeta.total)
+                let newRes: API.GetNotepadResponse = {
+                    data: +res?.pagemeta.page === 1 ? res?.data : [...response.data, ...(res?.data || [])],
+                    pagemeta: res?.pagemeta || {
+                        limit: 20,
+                        page: 1,
+                        total: 0,
+                        total_page: 1
+                    }
                 }
-            ],
-            updated_at: moment().valueOf(),
-            created_at: moment().valueOf()
-        }))
-        const authorArr: ListSelectOptionProps[] = Array.from({length: 200}).map((_, index) => ({
-            value: `${index}`,
-            label: `作者${index}`,
-            heardImgSrc: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500"
-        }))
-        setData(arr)
-        setAuthors(authorArr)
-    })
-    const updateLoadMore = useDebounceFn(
-        (page: number) => {
-            // if (page > Math.ceil(total / pagination.Limit)) {
-            //     setHasMore(false)
-            //     return
-            // }
-            // setLoading(true)
-            // setHasMore(true)
-            // const paginationProps = {
-            //     page: page || 1,
-            //     limit: pagination.Limit
-            // }
+                setResponse(newRes)
+                if (+res.pagemeta.page === 1) {
+                    onSelectAll([], [], false)
+                }
+            } catch (error) {}
+            setTimeout(() => {
+                setLoading(false)
+            }, 300)
+        }),
+        {wait: 200, leading: true}
+    ).run
+    /** 搜索内容 */
+    const onSearch = useDebounceFn(
+        useMemoizedFn((val: SearchParamsProps) => {
+            setSearch(val)
+            setRefresh(!refresh)
+        }),
+        {wait: 200, leading: true}
+    ).run
+    const loadMoreData = useDebounceFn(
+        () => {
+            getList(+response.pagemeta.page + 1)
         },
-        {wait: 200}
+        {wait: 200, leading: true}
+    ).run
+    const onSelectAll = useMemoizedFn(
+        (newSelectedRowKeys: string[], select: API.GetNotepadList[], checked: boolean) => {
+            setIsAllSelect(checked)
+            setSelectedRowKeys(newSelectedRowKeys)
+        }
     )
-    const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], select, checked: boolean) => {
-        setIsAllSelect(checked)
-        setSelectedRowKeys(newSelectedRowKeys)
-    })
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows) => {
         if (c) {
             setSelectedRowKeys([...selectedRowKeys, keys])
@@ -240,47 +261,77 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             setSelectedRowKeys(newSelectedRowKeys)
         }
     })
+    const toModifyNotepad = useMemoizedFn((notepadHash?: string) => {
+        const info = {
+            route: YakitRoute.Modify_Notepad,
+            params: {
+                notepadHash
+            }
+        }
+        emiter.emit("openPage", JSON.stringify(info))
+    })
     return (
-        <div className={styles["notepad-manage"]}>
+        <div className={styles["notepad-manage"]} ref={notepadRef}>
             <div className={styles["notepad-manage-heard"]}>
                 <div className={styles["heard-title"]}>
                     <span>记事本管理</span>
-                    <TableTotalAndSelectNumber total={10} selectNum={0} />
+                    <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectedRowKeys.length} />
                 </div>
                 <div className={styles["heard-extra"]}>
-                    <YakitInput.Search
-                        placeholder='请输入关键词搜索'
-                        value={query.keyWords}
-                        onChange={(e) => setQuery({...query, keyWords: e.target.value})}
+                    <FuncSearch
+                        yakitCombinationSearchProps={{
+                            selectProps: {size: "small"},
+                            inputSearchModuleTypeProps: {size: "middle"},
+                            beforeOptionWidth: 78
+                        }}
+                        value={search}
+                        onChange={setSearch}
+                        onSearch={onSearch}
                     />
-                    <YakitButton type='outline2' danger icon={<OutlineTrashIcon />}>
+                    <YakitButton type='outline2' danger icon={<OutlineTrashIcon />} disabled={totalRef.current === 0}>
                         删除
                     </YakitButton>
-                    <YakitButton type='outline2' icon={<OutlineClouddownloadIcon />}>
+                    <YakitButton type='outline2' icon={<OutlineClouddownloadIcon />} disabled={totalRef.current === 0}>
                         批量下载
                     </YakitButton>
                     <Divider type='vertical' style={{margin: 0}} />
-                    <YakitButton type='primary' icon={<OutlinePlusIcon />}>
+                    <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toModifyNotepad()}>
                         新建
                     </YakitButton>
                 </div>
             </div>
-            <YakitVirtualList
-                columns={columns}
-                data={data}
-                rowSelection={{
-                    isAll: isAllSelect,
-                    type: "checkbox",
-                    selectedRowKeys,
-                    onSelectAll: onSelectAll,
-                    onChangeCheckboxSingle: onSelectChange,
-                    getCheckboxProps: (record) => {
-                        return {
-                            disabled: record.authorId % 2 === 0
+            {totalRef.current === 0 || +response.pagemeta.total === 0 ? (
+                totalRef.current === 0 ? (
+                    <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                ) : (
+                    <YakitEmpty
+                        image={SearchResultEmpty}
+                        imageStyle={{margin: "96px auto 12px", height: 200}}
+                        title='搜索结果“空”'
+                    />
+                )
+            ) : (
+                <YakitVirtualList<API.GetNotepadList>
+                    loading={loading}
+                    hasMore={hasMore}
+                    columns={columns}
+                    data={response.data}
+                    page={+(response.pagemeta.page || 1)}
+                    loadMoreData={loadMoreData}
+                    rowSelection={{
+                        isAll: isAllSelect,
+                        type: "checkbox",
+                        selectedRowKeys,
+                        onSelectAll: onSelectAll,
+                        onChangeCheckboxSingle: onSelectChange,
+                        getCheckboxProps: (record) => {
+                            return {
+                                disabled: record.userName !== userInfo.companyName
+                            }
                         }
-                    }
-                }}
-            />
+                    }}
+                />
+            )}
         </div>
     )
 })

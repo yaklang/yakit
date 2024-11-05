@@ -6,7 +6,7 @@ export interface ModifyNotepadProps {
 }
 
 export interface MilkdownCatalogueProps {
-    id:string
+    id: string
     /**标题级别 */
     level: string
     key: string
@@ -26,4 +26,5 @@ export interface CatalogueTreeNodeProps {
     info: MilkdownCatalogueProps
     onClick: (info: MilkdownCatalogueProps) => void
     onExpand: (info: MilkdownCatalogueProps) => void
+    isExpanded?: boolean
 }

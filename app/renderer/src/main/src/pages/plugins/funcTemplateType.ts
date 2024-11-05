@@ -6,6 +6,7 @@ import {PluginFilterParams, PluginSearchParams} from "./baseTemplateType"
 import {YakitPluginOnlineDetail} from "./online/PluginsOnlineType"
 import {OnlinePluginAppAction} from "./pluginReducer"
 import {API} from "@/services/swagger/resposeType"
+import {YakitCombinationSearchProps} from "@/components/YakitCombinationSearch/YakitCombinationSearchType"
 
 export interface TypeSelectOpt {
     /** 唯一标识符 */
@@ -40,6 +41,8 @@ export interface FuncSearchProps {
     onChange: (v: PluginSearchParams) => void
     /** 搜索回调 */
     onSearch: (value: PluginSearchParams) => any
+
+    yakitCombinationSearchProps?: YakitCombinationSearchProps
 }
 
 export interface FuncFilterPopoverProps {
@@ -257,7 +260,7 @@ export interface AuthorImgProps {
     /** wrapper 样式类 */
     wrapperClassName?: string
     /** 右下角icon ClassName */
-    iconClassName?:string
+    iconClassName?: string
 }
 
 export interface TagShowOpt {
