@@ -239,7 +239,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 
 /** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
-    const {maxWidth, onSearch: onsearch} = props
+    const {maxWidth, onSearch: onsearch, yakitCombinationSearchProps = {}} = props
 
     const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
     const mediaHandle = useMemoizedFn((e) => {
@@ -313,30 +313,34 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     return (
         <div className={isIcon ? styles["func-search-icon-wrapper"] : styles["func-search-wrapper"]}>
             <YakitCombinationSearch
-                wrapperClassName={styles["search-body"]}
+                beforeOptionWidth={82}
+                {...yakitCombinationSearchProps}
+                wrapperClassName={classNames(styles["search-body"], yakitCombinationSearchProps.wrapperClassName || "")}
                 valueBeforeOption={search.type}
                 addonBeforeOption={funcSearchType}
                 onSelectBeforeOption={onTypeChange}
                 inputSearchModuleTypeProps={{
                     value: searchValue,
                     onChange: onValueChange,
-                    onSearch: onSearch
+                    onSearch: onSearch,
+                    ...(yakitCombinationSearchProps?.inputSearchModuleTypeProps || {})
                 }}
-                beforeOptionWidth={92}
             />
             <YakitPopover
                 overlayClassName={styles["func-search-popver"]}
                 content={
                     <YakitCombinationSearch
+                        beforeOptionWidth={82}
+                        {...yakitCombinationSearchProps}
                         valueBeforeOption={search.type}
                         addonBeforeOption={funcSearchType}
                         onSelectBeforeOption={onTypeChange}
                         inputSearchModuleTypeProps={{
                             value: searchValue,
                             onChange: onValueChange,
-                            onSearch: onSearch
+                            onSearch: onSearch,
+                            ...(yakitCombinationSearchProps?.inputSearchModuleTypeProps || {})
                         }}
-                        beforeOptionWidth={82}
                     />
                 }
                 trigger='click'
@@ -1184,7 +1188,7 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
 
 /** @name 用户头像(头像右下角带小icon) */
 export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
-    const {size = "middle", src, builtInIcon, icon, wrapperClassName,iconClassName=''} = props
+    const {size = "middle", src, builtInIcon, icon, wrapperClassName, iconClassName = ""} = props
     const [isError, setIsError] = useState<boolean>(false)
     const srcUrl = useMemo(() => {
         if (isError) return UnLogin
@@ -1241,7 +1245,7 @@ export const AuthorImg: React.FC<AuthorImgProps> = memo((props) => {
     return (
         <div className={classNames(imgBodyClass, wrapperClassName)}>
             <img className={imgClass} src={srcUrl} alt='' onError={onErrorImg} />
-            {iconNode && <div className={classNames(styles["author-img-mask"],iconClassName)}>{iconNode}</div>}
+            {iconNode && <div className={classNames(styles["author-img-mask"], iconClassName)}>{iconNode}</div>}
         </div>
     )
 })
