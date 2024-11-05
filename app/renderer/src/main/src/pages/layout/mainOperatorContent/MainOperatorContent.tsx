@@ -380,20 +380,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- 新逻辑 start ---------- */
     /**切换一级菜单选中key */
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("switchMenuItem", onSwitchMenuItem)
         return () => {
             emiter.off("switchMenuItem", onSwitchMenuItem)
         }
-    },[])
-    const onSwitchMenuItem=useMemoizedFn((data)=>{
+    }, [])
+    const onSwitchMenuItem = useMemoizedFn((data) => {
         try {
-            const value=JSON.parse(data)
-            if(value?.route){
+            const value = JSON.parse(data)
+            if (value?.route) {
                 setCurrentTabKey(value.route)
             }
         } catch (error) {
-            yakitNotify('error',`切换一级菜单选中key失败:${error}`)
+            yakitNotify("error", `切换一级菜单选中key失败:${error}`)
         }
     })
     /**
@@ -517,7 +517,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Audit_Code:
                 addYakRunnerAuditCodePage(params)
                 break
-            case YakitRoute.YakRunner_Code_Scan: 
+            case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
                 break
             case YakitRoute.Modify_Notepad:
@@ -2829,8 +2829,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((resVal) => {
         try {
-            const res:SwitchSubMenuItemProps = JSON.parse(resVal)
-            if (res.forceRefresh!==true&&!inViewport) return
+            const res: SwitchSubMenuItemProps = JSON.parse(resVal)
+            if (res.forceRefresh !== true && !inViewport) return
             const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
             if (index === -1) return
             const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
