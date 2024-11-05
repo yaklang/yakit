@@ -14,4 +14,6 @@ export type GlobalEventProps = {
     onRefConfigSystemProxy: string
     /**消息通知查看全部 */
     openAllMessageNotification?: string
+    /**切换一级菜单的选中key */
+    switchMenuItem:string
 }

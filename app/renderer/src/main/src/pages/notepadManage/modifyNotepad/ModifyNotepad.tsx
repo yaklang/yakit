@@ -35,7 +35,8 @@ import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {cloneDeep} from "lodash"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {API} from "@/services/swagger/resposeType"
-import {apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
+import {apiDeleteNotepadDetail, apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
+import moment from "moment"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -102,7 +103,17 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     const [tabName, setTabName] = useState<string>(initTabName())
     const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
-    const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>()
+    const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
+        id: 0,
+        created_at: moment().valueOf(),
+        updated_at: moment().valueOf(),
+        title: initTabName(),
+        content: "",
+        userName: userInfo.companyName || "-",
+        headImg: userInfo.companyHeadImg || "",
+        collaborator: [],
+        hash: ""
+    })
 
     const notepadRef = useRef<HTMLDivElement>(null)
     const treeKeysRef = useRef<string[]>([])
@@ -121,15 +132,22 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         } else {
             // 新建笔记本并保存
             const params: API.PostNotepadRequest = {
-                title: initTabName(),
+                title: initTabName() + moment().format("YYYY-MM-DD HH:mm:ss"),
                 content: initTabName()
             }
             setLoading(true)
-            apiSaveNotepadList(params).finally(() =>
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            )
+            apiSaveNotepadList(params)
+                .then((hash) => {
+                    setNotepadDetail({...(notepadDetail || {}), hash})
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
+        }
+        return () => {
+            onRemoveEmptyNotepad()
         }
     }, [pageInfo])
 
@@ -144,6 +162,12 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         // editor?.use(cataloguePlugin(getCatalogue)).create()
         // editor?.use(cataloguePlugin(getCatalogue))
     }, [editor])
+    const onRemoveEmptyNotepad = useMemoizedFn(() => {
+        const markdownContent = editor?.action(getMarkdown())
+        if (!pageInfo.notepadHash && !markdownContent && notepadDetail.hash) {
+            apiDeleteNotepadDetail({hash: notepadDetail.hash})
+        }
+    })
     const getCatalogue = useDebounceFn(
         (view) => {
             const headings: MilkdownCatalogueProps[] = []
@@ -353,11 +377,14 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 onChange={(e) => onSetTabName(e.target.value)}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
-                                <AuthorImg />
-                                <span>白日爱做梦</span>
+                                <AuthorImg src={notepadDetail?.headImg} />
+                                <span>{notepadDetail?.userName}</span>
                                 <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
-                                <span>创建时间:2024-05-27 15:32</span>
+                                <span>
+                                    创建时间:
+                                    {moment(notepadDetail?.updated_at).format("YYYY-MM-DD HH:mm")}
+                                </span>
                                 <YakitButton
                                     onClick={() => {
                                         if (editor) {

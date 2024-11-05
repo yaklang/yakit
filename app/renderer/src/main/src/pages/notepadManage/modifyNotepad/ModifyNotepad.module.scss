@@ -7,10 +7,14 @@
     flex-direction: column;
     justify-content: center;
 }
-.icon {
+.tree-expand-icon {
     width: 16px;
     height: 16px;
     color: var(--yakit-body-text-color);
+
+    display: flex;
+    padding: 2px 0;
+    align-items: center;
     svg {
         width: 16px;
         height: 16px;
@@ -90,13 +94,8 @@
                 width: 0;
             }
             .ant-tree-treenode {
-                padding: 3px 4px;
-                border-radius: 4px;
-                height: 26px;
+                padding: 0;
                 width: 100%;
-                &:hover {
-                    background-color: #f8f8f8;
-                }
             }
             .ant-tree {
                 background-color: transparent;
@@ -125,6 +124,16 @@
             .catalogue-tree-node {
                 @extend %display-flex-center;
                 gap: 4px;
+                padding: 3px 4px;
+                border-radius: 4px;
+                height: 26px;
+                width: 100%;
+                &:hover {
+                    background-color: #f8f8f8;
+                    svg {
+                        color: var(--yakit-primary-5);
+                    }
+                }
             }
             .tree-node-title {
                 color: var(--yakit-body-text-color);

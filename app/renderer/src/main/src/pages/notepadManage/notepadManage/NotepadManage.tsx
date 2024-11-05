@@ -7,40 +7,29 @@ import {
     OutlineChevrondownIcon,
     OutlineChevronupIcon,
     OutlineClouddownloadIcon,
-    OutlinePencilIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
-    OutlineSearchIcon,
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {Avatar, Divider, Tooltip} from "antd"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {VirtualColumns, VirtualTable} from "@/pages/dynamicControl/VirtualTable"
 import {API} from "@/services/swagger/resposeType"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {PaginationSchema} from "@/pages/invoker/schema"
-import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import moment from "moment"
-import {ListSelectFilterPopover, YakitVirtualList} from "../YakitVirtualList/YakitVirtualList"
-import {ListSelectOptionProps, VirtualListColumns} from "../YakitVirtualList/YakitVirtualListType"
+import {YakitVirtualList} from "../YakitVirtualList/YakitVirtualList"
+import {VirtualListColumns} from "../YakitVirtualList/YakitVirtualListType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {AuthorImg, FuncSearch} from "@/pages/plugins/funcTemplate"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {
-    GetNotepadRequestProps,
-    NotepadQuery,
-    SearchParamsProps,
-    apiGetNotepadList,
-    convertGetNotepadRequest
-} from "./utils"
+import {GetNotepadRequestProps, SearchParamsProps, apiGetNotepadList, convertGetNotepadRequest} from "./utils"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {useStore} from "@/store"
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 
 const timeMap = {
     created_at: "最近创建时间",
@@ -49,6 +38,12 @@ const timeMap = {
 
 const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
+    const {notepadPageList} = usePageInfo(
+        (s) => ({
+            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
+        }),
+        shallow
+    )
 
     const [loading, setLoading] = useState<boolean>(true)
     const [hasMore, setHasMore] = useState<boolean>(true)
@@ -262,13 +257,21 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         }
     })
     const toModifyNotepad = useMemoizedFn((notepadHash?: string) => {
-        const info = {
-            route: YakitRoute.Modify_Notepad,
-            params: {
-                notepadHash
+        const current =
+            notepadHash &&
+            notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
+        if (current) {
+            emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId, forceRefresh: true}))
+            emiter.emit("switchMenuItem", JSON.stringify({route: YakitRoute.Modify_Notepad}))
+        } else {
+            const info = {
+                route: YakitRoute.Modify_Notepad,
+                params: {
+                    notepadHash
+                }
             }
+            emiter.emit("openPage", JSON.stringify(info))
         }
-        emiter.emit("openPage", JSON.stringify(info))
     })
     return (
         <div className={styles["notepad-manage"]} ref={notepadRef}>
