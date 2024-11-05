@@ -97,7 +97,7 @@ export enum RemoteGV {
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
     /**@name WebFuzzer最大响应数量限制 */
-    FuzzerResMaxNumLimit = "fuzzer_res_max_limit",
+    FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
     /**@name 漏洞风险导出字段缓存 */
     RiskExportFields = "risk-export-fields",
     /**@name RiskPage页面中,高级查询内容的显/隐 */

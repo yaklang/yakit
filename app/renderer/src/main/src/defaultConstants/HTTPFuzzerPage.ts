@@ -23,7 +23,7 @@ export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
 export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
 // WebFuzzer表格默认显示数量
-export const DefFuzzerTableMaxData = 20000
+export const DefFuzzerTableMaxData = 2000
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: true,
