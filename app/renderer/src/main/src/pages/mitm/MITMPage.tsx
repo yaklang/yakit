@@ -1,4 +1,4 @@
-import React, {Profiler, useEffect, useRef, useState} from "react"
+import React, {Profiler, ReactElement, useEffect, useRef, useState} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -39,9 +39,16 @@ import {apiDownloadPluginOther, apiQueryYakScript} from "../plugins/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "./MITMConsts"
 import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
-import {CacheDropDownGV} from "@/yakitGV"
+import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
+import classNames from "classnames"
 const {ipcRenderer} = window.require("electron")
 
+type idleTabKeys = "plugin"
+interface IdleTabsItem {
+    key: idleTabKeys
+    label: ReactElement | string
+    contShow: boolean
+}
 export interface MITMPageProp {}
 
 export interface TraceInfo {
@@ -405,7 +412,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             <div
                 className={style["mitm-page"]}
                 ref={mitmPageRef}
-                style={status === "idle" ? {padding: "0px 16px"} : {padding: "8px 16px 0px 0px"}}
+                style={status === "idle" ? {padding: 0} : {padding: "8px 16px 0px 0px"}}
             >
                 {onRenderMITM()}
             </div>
@@ -480,7 +487,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         setTempShowPluginHistory
     } = props
 
-    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
 
     /**
      * @description 插件勾选
@@ -668,109 +675,189 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             setListNames(data.map((i) => i.ScriptName))
         })
     })
+
+    const idleTabsRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(idleTabsRef)
+    const [curIdleTabKey, setCurIdleTabKey] = useState<idleTabKeys>("plugin")
+    const [idleTabs, setIdleTabs] = useState<Array<IdleTabsItem>>([
+        {
+            key: "plugin",
+            label: <>插件</>,
+            contShow: true // 初始为true
+        }
+    ])
+    const handleTabClick = (item: IdleTabsItem) => {
+        const contShow = !item.contShow
+        idleTabs.forEach((i) => {
+            if (i.key === item.key) {
+                i.contShow = contShow
+            } else {
+                i.contShow = false
+            }
+        })
+        setRemoteValue(RemoteGV.MitmIdleLeftTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
+        setIdleTabs([...idleTabs])
+        setOpenTabsFlag(idleTabs.some((item) => item.contShow))
+        setCurIdleTabKey(item.key)
+    }
+    useEffect(() => {
+        if (inViewport) {
+            getRemoteValue(RemoteGV.MitmIdleLeftTabs).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const tabs = JSON.parse(setting)
+                        idleTabs.forEach((i) => {
+                            if (i.key === tabs.curTabKey) {
+                                i.contShow = tabs.contShow
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setIdleTabs([...idleTabs])
+                        setCurIdleTabKey(tabs.curTabKey)
+                    } catch (error) {
+                        idleTabs.forEach((i) => {
+                            if (i.key === "plugin") {
+                                i.contShow = true
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setIdleTabs([...idleTabs])
+                        setCurIdleTabKey("plugin")
+                    }
+                }
+                setOpenTabsFlag(idleTabs.some((item) => item.contShow))
+            })
+        }
+    }, [inViewport])
+
     const onRenderFirstNode = useMemoizedFn(() => {
         switch (status) {
             case "idle":
                 return (
-                    <>
-                        <PluginGroup
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                            excludeType={["yak", "codec", "lua", "nuclei"]}
-                            isMITMParamPlugins={2}
-                            pluginListQuery={() => {
-                                return {
-                                    Tag: tags,
-                                    Type: "mitm,port-scan",
-                                    Keyword: searchKeyword,
-                                    FieldKeywords: fieldKeywords,
-                                    Pagination: {
-                                        Limit: 20,
-                                        Order: "",
-                                        Page: 1,
-                                        OrderBy: "",
-                                        RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
-                                    },
-                                    Group: {UnSetGroup: false, Group: groupNames},
-                                    IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
-                                    IsMITMParamPlugins: 2
-                                }
+                    <div className={style["mitm-idle-tab-wrap"]} ref={idleTabsRef}>
+                        <div className={style["mitm-idle-tab"]}>
+                            {idleTabs.map((item) => (
+                                <div
+                                    className={classNames(style["mitm-idle-tab-item"], {
+                                        [style["mitm-idle-tab-item-active"]]: curIdleTabKey === item.key,
+                                        [style["mitm-idle-tab-item-unshowCont"]]:
+                                            curIdleTabKey === item.key && !item.contShow
+                                    })}
+                                    key={item.key}
+                                    onClick={() => {
+                                        handleTabClick(item)
+                                    }}
+                                >
+                                    {item.label}
+                                </div>
+                            ))}
+                        </div>
+                        <div
+                            className={style["mitm-idle-tab-cont-item"]}
+                            style={{
+                                overflowY: "hidden"
                             }}
-                            total={total}
-                            allChecked={isSelectAll}
-                            checkedPlugin={isSelectAll ? [] : noParamsCheckList}
-                        />
-                        <div style={{paddingRight: 9}}>
-                            <PluginSearch
-                                tag={tags}
+                        >
+                            <PluginGroup
+                                selectGroup={selectGroup}
+                                setSelectGroup={setSelectGroup}
+                                excludeType={["yak", "codec", "lua", "nuclei"]}
+                                isMITMParamPlugins={2}
+                                pluginListQuery={() => {
+                                    return {
+                                        Tag: tags,
+                                        Type: "mitm,port-scan",
+                                        Keyword: searchKeyword,
+                                        FieldKeywords: fieldKeywords,
+                                        Pagination: {
+                                            Limit: 20,
+                                            Order: "",
+                                            Page: 1,
+                                            OrderBy: "",
+                                            RawOrder: "is_core_plugin desc,online_official desc,updated_at desc"
+                                        },
+                                        Group: {UnSetGroup: false, Group: groupNames},
+                                        IncludedScriptNames: isSelectAll ? [] : noParamsCheckList,
+                                        IsMITMParamPlugins: 2
+                                    }
+                                }}
+                                total={total}
+                                allChecked={isSelectAll}
+                                checkedPlugin={isSelectAll ? [] : noParamsCheckList}
+                            />
+                            <div style={{paddingRight: 9}}>
+                                <PluginSearch
+                                    tag={tags}
+                                    searchKeyword={searchKeyword}
+                                    fieldKeywords={fieldKeywords}
+                                    setTag={setTags}
+                                    setSearchKeyword={setSearchKeyword}
+                                    setFieldKeywords={setFieldKeywords}
+                                    onSearch={() => {
+                                        setTriggerSearch(!triggerSearch)
+                                    }}
+                                />
+                            </div>
+                            <div style={{display: "flex", justifyContent: "space-between", paddingRight: 10}}>
+                                <YakModuleListHeard
+                                    onSelectAll={onSelectAll}
+                                    setIsSelectAll={setIsSelectAll}
+                                    isSelectAll={isSelectAll}
+                                    total={total}
+                                    length={noParamsCheckList.length}
+                                    isHasParams={false}
+                                />
+                                <YakitButton
+                                    type='text'
+                                    colors='danger'
+                                    onClick={() => {
+                                        if (noParamsCheckList.length > 0) onSelectAll(false)
+                                    }}
+                                    disabled={noParamsCheckList.length === 0}
+                                    className={style["empty-button"]}
+                                >
+                                    清空
+                                </YakitButton>
+                            </div>
+                            <MITMPluginLocalList
+                                isHasParams={false}
+                                onSubmitYakScriptId={onSubmitYakScriptId}
+                                status={status}
+                                hasParamsCheckList={hasParamsCheckList}
+                                noParamsCheckList={noParamsCheckList}
+                                setNoParamsCheckList={(list) => {
+                                    if (list.length === 0) {
+                                        setEnableInitialPlugin(false)
+                                    } else {
+                                        setEnableInitialPlugin(true)
+                                    }
+                                    setNoParamsCheckList(list)
+                                }}
+                                tags={tags}
+                                setTags={setTags}
                                 searchKeyword={searchKeyword}
                                 fieldKeywords={fieldKeywords}
-                                setTag={setTags}
-                                setSearchKeyword={setSearchKeyword}
-                                setFieldKeywords={setFieldKeywords}
-                                onSearch={() => {
-                                    setTriggerSearch(!triggerSearch)
-                                }}
-                            />
-                        </div>
-                        <div style={{display: "flex", justifyContent: "space-between", paddingRight: 10}}>
-                            <YakModuleListHeard
-                                onSelectAll={onSelectAll}
+                                triggerSearch={triggerSearch}
+                                selectGroup={selectGroup}
+                                setSelectGroup={setSelectGroup}
                                 setIsSelectAll={setIsSelectAll}
                                 isSelectAll={isSelectAll}
                                 total={total}
-                                length={noParamsCheckList.length}
-                                isHasParams={false}
-                            />
-                            <YakitButton
-                                type='text'
-                                colors='danger'
-                                onClick={() => {
-                                    if (noParamsCheckList.length > 0) onSelectAll(false)
+                                setTotal={(t) => {
+                                    setTotal(t)
+                                    getAllSatisfyScript(t)
                                 }}
-                                disabled={noParamsCheckList.length === 0}
-                                className={style["empty-button"]}
-                            >
-                                清空
-                            </YakitButton>
+                                hooks={new Map<string, boolean>()}
+                                hooksID={new Map<string, boolean>()}
+                                onSelectAll={onSelectAll}
+                                groupNames={groupNames}
+                                setGroupNames={setGroupNames}
+                            />
                         </div>
-                        <MITMPluginLocalList
-                            isHasParams={false}
-                            onSubmitYakScriptId={onSubmitYakScriptId}
-                            status={status}
-                            hasParamsCheckList={hasParamsCheckList}
-                            noParamsCheckList={noParamsCheckList}
-                            setNoParamsCheckList={(list) => {
-                                if (list.length === 0) {
-                                    setEnableInitialPlugin(false)
-                                } else {
-                                    setEnableInitialPlugin(true)
-                                }
-                                setNoParamsCheckList(list)
-                            }}
-                            tags={tags}
-                            setTags={setTags}
-                            searchKeyword={searchKeyword}
-                            fieldKeywords={fieldKeywords}
-                            triggerSearch={triggerSearch}
-                            selectGroup={selectGroup}
-                            setSelectGroup={setSelectGroup}
-                            setIsSelectAll={setIsSelectAll}
-                            isSelectAll={isSelectAll}
-                            total={total}
-                            setTotal={(t) => {
-                                setTotal(t)
-                                getAllSatisfyScript(t)
-                            }}
-                            hooks={new Map<string, boolean>()}
-                            hooksID={new Map<string, boolean>()}
-                            onSelectAll={onSelectAll}
-                            groupNames={groupNames}
-                            setGroupNames={setGroupNames}
-                        />
-                    </>
+                    </div>
                 )
-
             default:
                 return (
                     <MITMPluginHijackContent
@@ -880,7 +967,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
-                    style={{display: isFullScreenSecondNode ? "none" : "", marginTop: status === "idle" ? 12 : 0}}
+                    style={{display: isFullScreenSecondNode ? "none" : ""}}
                 >
                     {onRenderFirstNode()}
                 </div>

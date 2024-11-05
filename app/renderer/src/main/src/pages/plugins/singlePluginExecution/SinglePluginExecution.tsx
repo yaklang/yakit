@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import {SinglePluginExecutionProps} from "./SinglePluginExecutionType"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {PluginDetailsTab} from "../local/PluginsLocalDetail"
@@ -18,6 +18,17 @@ import emiter from "@/utils/eventBus/eventBus"
 import {grpcFetchLocalPluginDetailByID} from "@/pages/pluginHub/utils/grpc"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import classNames from "classnames"
+import styles from "./SinglePluginExecution.module.scss"
+
+type PluginTabKeys = "plugin"
+interface PluginTabsItem {
+    key: PluginTabKeys
+    label: ReactElement | string
+    contShow: boolean
+}
 
 export const getLinkPluginConfig = (selectList, pluginListSearchInfo, allCheck?: boolean) => {
     // allCheck只有为false的时候才走该判断，undefined和true不走
@@ -166,11 +177,86 @@ export const SinglePluginExecution: React.FC<SinglePluginExecutionProps> = React
         const allPluginTypes = Object.keys(pluginTypeToName)
         return allPluginTypes.filter((type) => !typeArr.includes(type))
     }, [filters])
+
+    const [openTab, setOpenTab] = useState<boolean>(false)
+    const [curPluginTabKey, setCurPluginTabKey] = useState<PluginTabKeys>("plugin")
+    const [pluginTabs, setPluginTabs] = useState<Array<PluginTabsItem>>([
+        {
+            key: "plugin",
+            label: <>插件</>,
+            contShow: true // 初始为true
+        }
+    ])
+    const handleTabClick = (item: PluginTabsItem) => {
+        const contShow = !item.contShow
+        pluginTabs.forEach((i) => {
+            if (i.key === item.key) {
+                i.contShow = contShow
+            } else {
+                i.contShow = false
+            }
+        })
+        setRemoteValue(RemoteGV.SinglePluginExecTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
+        setPluginTabs([...pluginTabs])
+        setOpenTab(pluginTabs.some((item) => item.contShow))
+        setCurPluginTabKey(item.key)
+    }
+    useEffect(() => {
+        getRemoteValue(RemoteGV.SinglePluginExecTabs).then((setting: string) => {
+            if (setting) {
+                try {
+                    const tabs = JSON.parse(setting)
+                    pluginTabs.forEach((i) => {
+                        if (i.key === tabs.curTabKey) {
+                            i.contShow = tabs.contShow
+                        } else {
+                            i.contShow = false
+                        }
+                    })
+                    setPluginTabs([...pluginTabs])
+                    setCurPluginTabKey(tabs.curTabKey)
+                } catch (error) {
+                    pluginTabs.forEach((i) => {
+                        if (i.key === "plugin") {
+                            i.contShow = true
+                        } else {
+                            i.contShow = false
+                        }
+                    })
+                    setPluginTabs([...pluginTabs])
+                    setCurPluginTabKey("plugin")
+                }
+            }
+            setOpenTab(pluginTabs.some((item) => item.contShow))
+        })
+    }, [])
+
     if (!plugin) return null
     return (
-        <div ref={singlePluginExecutionRef} style={{height: "100%", overflowY: "auto"}}>
+        <div ref={singlePluginExecutionRef} className={styles["single-plugin-wrapper"]}>
+            {!hidden && (
+                <div className={styles["plugin-tab-wrap"]}>
+                    <div className={styles["plugin-tab"]}>
+                        {pluginTabs.map((item) => (
+                            <div
+                                className={classNames(styles["plugin-tab-item"], {
+                                    [styles["plugin-tab-item-active"]]: curPluginTabKey === item.key,
+                                    [styles["plugin-tab-item-unshowCont"]]:
+                                        curPluginTabKey === item.key && !item.contShow
+                                })}
+                                key={item.key}
+                                onClick={() => {
+                                    handleTabClick(item)
+                                }}
+                            >
+                                {item.label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             <PluginLocalListDetails
-                hidden={hidden}
+                hidden={hidden ? true : !openTab}
                 selectList={selectList}
                 setSelectList={setSelectList}
                 search={search}

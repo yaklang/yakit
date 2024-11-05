@@ -1,4 +1,4 @@
-import React, {useEffect, useReducer, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useReducer, useRef, useState} from "react"
 import {
     PluginExecuteLogProps,
     PluginGroupByKeyWordItemProps,
@@ -57,7 +57,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {apiFetchQueryYakScriptGroupLocalByPoc} from "./utils"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {initialLocalState, pluginLocalReducer} from "@/pages/plugins/pluginReducer"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {PluginDetailsListItem} from "@/pages/plugins/baseTemplate"
 import moment from "moment"
@@ -78,10 +78,18 @@ export const onToManageGroup = () => {
         "openPage",
         JSON.stringify({
             route: YakitRoute.Plugin_Hub,
-            params: {tabActive: "local"}
+            params: {tabActive: "local", openGroupDrawer: true}
         })
     )
 }
+
+type PocTabKeys = "keyword" | "group"
+interface PocTabsItem {
+    key: PocTabKeys
+    label: ReactElement | string
+    contShow: boolean
+}
+
 /**专项漏洞检测 */
 export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const {pageId} = props
@@ -103,7 +111,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
     const [responseToSelect, setResponseToSelect] = useState<GroupCount[]>([])
 
     // 隐藏插件列表
-    const [hidden, setHidden] = useState<boolean>(false)
+    const [hidden, setHidden] = useState<boolean>(true)
     const [type, setType] = useState<"keyword" | "group">(
         pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
     )
@@ -185,9 +193,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         setDeletedGroup([])
         setHidden(false)
     })
-    const onClose = useMemoizedFn(() => {
-        setHidden(true)
-    })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
         try {
@@ -198,8 +203,98 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             setInitSelectGroupAll(group)
         } catch (error) {}
     })
+
+    const [pocTabs, setPocTabs] = useState<Array<PocTabsItem>>([
+        {
+            key: "keyword",
+            label: <>按关键词</>,
+            contShow: true // 初始为true
+        },
+        {
+            key: "group",
+            label: <>按组选</>,
+            contShow: false
+        }
+    ])
+    const handleTabClick = (item: PocTabsItem) => {
+        const contShow = !item.contShow
+        pocTabs.forEach((i) => {
+            if (i.key === item.key) {
+                i.contShow = contShow
+            } else {
+                i.contShow = false
+            }
+        })
+        setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
+        setPocTabs([...pocTabs])
+        setHidden(!pocTabs.some((item) => item.contShow))
+        setType(item.key)
+    }
+    useEffect(() => {
+        if (pageInfo.selectGroup?.length) {
+            const t = pageInfo.selectGroup && pageInfo.selectGroup?.length > 0 ? "group" : "keyword"
+            pocTabs.forEach((i) => {
+                if (i.key === t) {
+                    i.contShow = true
+                } else {
+                    i.contShow = false
+                }
+            })
+            setPocTabs([...pocTabs])
+            setType(t)
+            setHidden(!pocTabs.some((item) => item.contShow))
+            setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: true, curTabKey: t}))
+        } else {
+            getRemoteValue(RemoteGV.YakPocTabs).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const tabs = JSON.parse(setting)
+                        pocTabs.forEach((i) => {
+                            if (i.key === tabs.curTabKey) {
+                                i.contShow = tabs.contShow
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setPocTabs([...pocTabs])
+                        setType(tabs.curTabKey)
+                    } catch (error) {
+                        pocTabs.forEach((i) => {
+                            if (i.key === "keyword") {
+                                i.contShow = true
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setPocTabs([...pocTabs])
+                        setType("keyword")
+                    }
+                }
+                setHidden(!pocTabs.some((item) => item.contShow))
+            })
+        }
+    }, [])
+
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
+            <div className={styles["yakpoc-tab-wrap"]}>
+                <div className={styles["yakpoc-tab"]}>
+                    {pocTabs.map((item) => (
+                        <div
+                            className={classNames(styles["yakpoc-tab-item"], {
+                                [styles["yakpoc-tab-item-active"]]: type === item.key,
+                                [styles["yakpoc-tab-item-unshowCont"]]: type === item.key && !item.contShow
+                            })}
+                            key={item.key}
+                            onClick={() => {
+                                handleTabClick(item)
+                            }}
+                        >
+                            {item.label}
+                        </div>
+                    ))}
+                </div>
+            </div>
             <div
                 className={classNames(styles["left-wrapper"], {
                     [styles["left-wrapper-hidden"]]: hidden
@@ -208,31 +303,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 <div className={styles["left-header-search"]}>
                     <div className={styles["header-type-wrapper"]}>
                         <span className={styles["header-text"]}>选择插件</span>
-                        <YakitRadioButtons
-                            value={type}
-                            onChange={(e) => {
-                                setType(e.target.value)
-                            }}
-                            buttonStyle='solid'
-                            options={[
-                                {
-                                    value: "keyword",
-                                    label: "按关键词"
-                                },
-                                {
-                                    value: "group",
-                                    label: "按组选"
-                                }
-                            ]}
-                        />
                     </div>
-                    <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
-                        <YakitButton
-                            type='text2'
-                            onClick={onClose}
-                            icon={<OutlineCloseIcon className={styles["header-icon"]} />}
-                        ></YakitButton>
-                    </Tooltip>
                 </div>
                 <PluginGroupByKeyWord
                     pageId={pageId}
@@ -1006,15 +1077,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             {isShowPluginAndLog && (
                 <div className={styles["midden-wrapper"]}>
                     <div className={styles["midden-heard"]}>
-                        {hidden && (
-                            <Tooltip title='展开' placement='top' overlayClassName='plugins-tooltip'>
-                                <YakitButton
-                                    type='text2'
-                                    onClick={() => setHidden(false)}
-                                    icon={<OutlineOpenIcon className={styles["header-icon"]} />}
-                                ></YakitButton>
-                            </Tooltip>
-                        )}
                         <YakitRadioButtons
                             size='small'
                             value={showType}
@@ -1109,14 +1171,6 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                                       <div className={styles["divider-style"]}></div>
                                   </>
                               )}
-                        <YakitButton
-                            type='text2'
-                            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setHidden(!hidden)
-                            }}
-                        />
                     </div>
                 </ExpandAndRetract>
                 <div className={styles["yak-poc-executor-body"]}>

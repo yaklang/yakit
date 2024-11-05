@@ -1,6 +1,44 @@
 @use "../../securityTool/securityTool.scss" as securityTool;
 @use "../plugins.scss";
 
+.plugin-batch-wrapper {
+    height: 100%;
+    display: flex;
+    .plugin-tab-wrap {
+        height: 100%;
+        .plugin-tab {
+            width: 24px;
+            height: 100%;
+            background: #f0f1f3;
+            &-item {
+                padding: 12px 4px;
+                cursor: pointer;
+                transform: rotate(180deg);
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+
+                text-orientation: sideways-right;
+                writing-mode: vertical-rl;
+                border-top: 1px solid #fff;
+                &:hover {
+                    background: rgba(204, 210, 222, 0.5);
+                }
+                &-active {
+                    color: #ffffff;
+                    background-color: var(--yakit-primary-5);
+                    &:hover {
+                        background-color: var(--yakit-primary-4);
+                    }
+                }
+                &-unshowCont {
+                    background-color: var(--yakit-primary-3);
+                }
+            }
+        }
+    }
+}
+
 %display-align-start {
     display: flex;
     align-items: flex-start;

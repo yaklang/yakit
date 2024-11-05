@@ -149,6 +149,8 @@ export interface PluginHubPageInfoProps {
     detailInfo?: KeyParamsFetchPluginDetail
     /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
     refeshList?: boolean
+    /**是否打开管理分组抽屉 */
+    openGroupDrawer?: boolean
 }
 
 export interface RiskPageInfoProps {

@@ -10,8 +10,8 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMap, useMemoizedFn} from "ahooks"
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
+import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
@@ -34,7 +34,7 @@ const {ipcRenderer} = window.require("electron")
 type tabKeys = "all" | "loaded" | "hot-patch"
 interface TabsItem {
     key: tabKeys
-    label: string
+    label: ReactElement | string
     contShow: boolean
 }
 
@@ -630,34 +630,56 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         }
     })
 
+    const hijackTabsRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(hijackTabsRef)
     useEffect(() => {
-        getRemoteValue(RemoteGV.MitmHijackedLeftTabs).then((setting: string) => {
-            if (setting) {
-                const tabs = JSON.parse(setting)
-                setMitmTabs(tabs.mitmTabs)
-                setCurTabKey(tabs.curTabKey)
-            }
-        })
-    }, [])
+        if (inViewport) {
+            getRemoteValue(RemoteGV.NewMitmHijackedLeftTabs).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const tabs = JSON.parse(setting)
+                        mitmTabs.forEach((i) => {
+                            if (i.key === tabs.curTabKey) {
+                                i.contShow = tabs.contShow
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setMitmTabs([...mitmTabs])
+                        setCurTabKey(tabs.curTabKey)
+                    } catch (error) {
+                        mitmTabs.forEach((i) => {
+                            if (i.key === "all") {
+                                i.contShow = true
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setMitmTabs([...mitmTabs])
+                        setCurTabKey("all")
+                    }
+                }
+                onSetOpenTabsFlag(mitmTabs.some((item) => item.contShow))
+            })
+        }
+    }, [inViewport])
     const handleTabClick = (item: TabsItem) => {
-        const copyMitmTabs = structuredClone(mitmTabs)
-        copyMitmTabs.forEach((i) => {
+        const contShow = !item.contShow
+        mitmTabs.forEach((i) => {
             if (i.key === item.key) {
                 i.contShow = !item.contShow
             } else {
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.MitmHijackedLeftTabs, JSON.stringify({mitmTabs: copyMitmTabs, curTabKey: item.key}))
-        setMitmTabs(copyMitmTabs)
+        setRemoteValue(RemoteGV.NewMitmHijackedLeftTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
+        setMitmTabs([...mitmTabs])
+        onSetOpenTabsFlag(mitmTabs.some((item) => item.contShow))
         setCurTabKey(item.key)
     }
-    useEffect(() => {
-        onSetOpenTabsFlag(mitmTabs.some((item) => item.contShow))
-    }, [mitmTabs])
 
     return (
-        <div className={styles["mitm-plugin-hijack-content"]}>
+        <div className={styles["mitm-plugin-hijack-content"]} ref={hijackTabsRef}>
             <div className={styles["mitm-hijack-tab-wrap"]}>
                 <div className={styles["mitm-hijack-tab"]}>
                     {mitmTabs.map((item) => (

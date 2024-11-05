@@ -75,7 +75,9 @@ export enum RemoteGV {
     /** @name 插件列表插件组删除是否记住不给提示 */
     PluginListGroupDelNoPrompt = "plugin_list_group_del_no_prompt",
     /** @name mitm劫持左侧tabs */
-    MitmHijackedLeftTabs = "mitm_hijacked_left_tabs",
+    NewMitmHijackedLeftTabs = "new_mitm_hijacked_left_tabs",
+    /** @name mitm idel 左侧tabs */
+    MitmIdleLeftTabs = "mitm_idle_left_tabs",
     /** @name history编辑器响应美化&渲染 */
     HistoryResponseEditorBeautify = "history_response_editor_beautify",
     /** @name history编辑器请求美化&渲染 */
@@ -115,7 +117,13 @@ export enum RemoteGV {
     /**@name 缓存一级菜单选择的tab的key值 */
     SelectFirstMenuTabKey = "select-first-menu-tab-key",
     /**@name 缓存谷歌免配置更多参数 */
-    ChromeLauncherParams = "chrome-launcher-params"
+    ChromeLauncherParams = "chrome-launcher-params",
+    /**@name 批量执行左侧tabs */
+    PluginBatchExecTabs = "plugin-batch-exec-tabs",
+    /**@name 基础爬虫左侧tabs */
+    SinglePluginExecTabs = "single-plugin-exec-tabs",
+    /**@name 专项漏洞左侧tabs */
+    YakPocTabs = "yakpoc-tabs",
 }
 
 /** 项目逻辑全局变量 */

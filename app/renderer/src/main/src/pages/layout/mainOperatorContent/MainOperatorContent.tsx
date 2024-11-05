@@ -2094,7 +2094,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             bugList.length === 0 && (
                                 <span className={styles["bug-test-help"]}>
                                     点击管理新建分组
-                                    <span className={styles["bug-test-help-active"]} onClick={onToManageGroup}>
+                                    <span
+                                        className={styles["bug-test-help-active"]}
+                                        onClick={() => {
+                                            setBugTestShow(false)
+                                            onToManageGroup()
+                                        }}
+                                    >
                                         管理
                                     </span>
                                 </span>
