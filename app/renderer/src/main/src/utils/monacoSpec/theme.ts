@@ -143,7 +143,7 @@ monaco.editor.defineTheme("kurior", {
             "token": "support"
         },
         {
-            "foreground": "#009acd",
+            "foreground": "#883b3b",
             "token": "variable"
         },
         {

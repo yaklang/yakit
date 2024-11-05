@@ -23,10 +23,11 @@ export interface SuggestionDescription {
     JustAppend: boolean
     DefinitionVerbose: string
     Kind: string
+    Command:string 
 }
 export interface YaklangLanguageSuggestionRequest {
     InspectType: "completion" | "hover" | "signature" | "definition" | "reference"
-    YakScriptType: "yak" | "mitm" | "port-scan" | "codec"
+    YakScriptType: "yak" | "mitm" | "port-scan" | "codec"  | 'syntaxflow'
     YakScriptCode: string
     Range: Range
 }
@@ -70,7 +71,7 @@ export interface CompletionTotal {
     libToFieldCompletions: { [index: string]: FieldsCompletion[] }
 }
 
-const getSortTextByKindAndLabel = (kind: string, label: string): string => {
+export const getSortTextByKindAndLabel = (kind: string, label: string): string => {
     let sortText = "";
     switch (getCompletionItemKindByName(kind)) {
         case languages.CompletionItemKind.Variable:
