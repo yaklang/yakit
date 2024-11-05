@@ -9,4 +9,7 @@ export type RefreshDataEventProps = {
     onRefreshYakRunnerFileTree: string
     // 通知CodeScan轮询更新
     onRefreshCodeScanResult: string
+
+    // WebSocket通知
+    onRefreshMessageSocket: string
 }

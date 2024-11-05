@@ -246,7 +246,7 @@ module.exports = {
         require("./handlers/communication")(win, getClient)
 
         // WebSocket
-        require("./utils/socket")(win, getClient)
+        require("./handlers/socket")(win, getClient)
 
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient)

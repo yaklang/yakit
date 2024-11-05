@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
+import {useGetState, useInterval, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./MessageCenter.module.scss"
@@ -13,47 +13,189 @@ import YakitTabs from "../yakitUI/YakitTabs/YakitTabs"
 import ReactResizeDetector from "react-resize-detector"
 import {formatTimestampJudge} from "@/utils/timeUtil"
 import {RemoveIcon} from "@/assets/newIcon"
+import {useStore} from "@/store"
+import {IconNoLoginMessageIcon} from "./icon"
+import {AuthorImg} from "@/pages/plugins/funcTemplate"
+import {
+    apiFetchMessageClear,
+    apiFetchMessageRead,
+    apiFetchQueryMessage,
+    MessageQueryDataProps,
+    MessageQueryParamsProps
+} from "./utils"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
+    onClose: () => void
+    data: API.MessageLogDetail
     isEllipsis?: boolean
 }
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
-    const {isEllipsis} = props
+    const {onClose, data, isEllipsis} = props
+
+    const getDescription = useMemo(() => {
+        switch (data.upPluginType) {
+            case "delete":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["delete"])}>删除</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}
+                        </span>
+                    </>
+                )
+            case "update":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["update"])}>修改</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}
+                        </span>
+                    </>
+                )
+            case "check":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["check"])}>审核通过</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}
+                        </span>
+                    </>
+                )
+            case "applyMerge":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["apply_merge"])}>申请修改</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}
+                        </span>
+                    </>
+                )
+            case "comment":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["comment"])}>评论</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}
+                        </span>
+                    </>
+                )
+            case "merge":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["merge"])}>合并</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            了你的插件：{data.scriptName}，等待官方审核
+                        </span>
+                    </>
+                )
+            case "replyComment":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["reply_comment"])}>回复了</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            你的评论
+                        </span>
+                    </>
+                )
+            case "deleteComment":
+                return (
+                    <>
+                        <span className={classNames(styles["tag"], styles["delete_comment"])}>删除了</span>
+                        <span
+                            className={classNames(styles["text"], {
+                                "yakit-single-line-ellipsis": isEllipsis
+                            })}
+                        >
+                            您的评论：{data.description}
+                        </span>
+                    </>
+                )
+            default:
+                return <></>
+        }
+    }, [data, isEllipsis])
+
+    const onItemClick = useMemoizedFn(() => {
+        apiFetchMessageRead({
+            isAll: false,
+            hash: data.hash
+        })
+            .then((ok) => {
+                if (ok) {
+                    switch (data.upPluginType) {
+                        // 跳转到插件仓库回收站
+                        case "delete":
+                            break
+
+                        default:
+                            break
+                    }
+                    onClose()
+                }
+            })
+            .catch((err) => {
+                failed(err)
+            })
+    })
+
     return (
-        <div className={styles["message-item"]}>
+        <div className={styles["message-item"]} onClick={onItemClick}>
             <div className={styles["message-item-author"]}>
-                <img src={""} className={styles["author-img"]} />
-                <div className={styles["dot"]}>
-                    <div className={styles["circle"]}></div>
-                </div>
+                <AuthorImg src={data.handlerHeadImag} />
+                {!data.isRead && (
+                    <div className={styles["dot"]}>
+                        <div className={styles["circle"]}></div>
+                    </div>
+                )}
             </div>
             <div className={styles["message-item-main"]}>
                 <div className={styles["header"]}>
-                    <div className={styles["user-name"]}>桔子爱吃橘子</div>
-                    <div className={styles["role"]}>管理员</div>
+                    <div className={styles["user-name"]}>{data.handlerUserName}</div>
+                    {data.handlerRole === "admin" && <div className={styles["role"]}>管理员</div>}
+                    {data.handlerRole === "auditor" && <div className={styles["role"]}>审核员</div>}
+                    {data.handlerRole === "trusted" && <div className={styles["role"]}>信任用户</div>}
                     <div className={styles["split"]}>·</div>
-                    <div className={styles["time"]}>
-                        {
-                            // formatTimestampJudge()
-                        }
-                        2022-10-08 15:46:21
-                    </div>
+                    <div className={styles["time"]}>{formatTimestampJudge(data.updated_at * 1000)}</div>
                 </div>
                 <div
                     className={classNames(styles["content"], {
                         [styles["content-ellipsis"]]: isEllipsis
                     })}
                 >
-                    <span className={classNames(styles["tag"], styles["pass"])}>审核通过</span>
-                    <span
-                        className={classNames(styles["text"], {
-                            "yakit-single-line-ellipsis": isEllipsis
-                        })}
-                    >
-                        了你的插件：领空技术WIFISKY7层流控路由器存在弱口令漏洞
-                    </span>
+                    {getDescription}
                 </div>
             </div>
         </div>
@@ -61,100 +203,48 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
 }
 
 export interface MessageCenterProps {
+    messageList: API.MessageLogDetail[]
     getAllMessage: () => void
+    onLogin: () => void
+    onClose: () => void
 }
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
-    const {getAllMessage} = props
-    return (
-        <div className={styles["message-center"]}>
-            <MessageItem />
-
-            <div className={styles["footer-btn"]}>
-                <YakitButton type='text2' onClick={getAllMessage}>
-                    查看全部
-                </YakitButton>
-            </div>
-        </div>
-    )
-}
-
-export interface MessageCenterVirtualListProps {}
-
-export const MessageCenterVirtualList: React.FC<MessageCenterVirtualListProps> = (props) => {
-    const containerRef = useRef<HTMLDivElement>(null)
-    const wrapperRef = useRef<HTMLDivElement>(null)
-    const [vlistHeigth, setVListHeight] = useState(600)
-    const originalList = useMemo(() => Array.from(Array(20).keys()), [])
-
-    const [list, scrollTo] = useVirtualList(originalList, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: 66,
-        overscan: 10
-    })
-
-    const isVerticalScrollRef = useRef<boolean>(false)
-    const size = useSize(wrapperRef)
-
-    const handleScroll = useThrottleFn(
-        () => {
-            if (containerRef.current) {
-                const {scrollTop, scrollHeight, clientHeight} = containerRef.current
-                const isVerticalScroll = scrollHeight > clientHeight
-                // 校验是否有垂直滚动条
-                isVerticalScrollRef.current = isVerticalScroll
-                const bottom = scrollHeight - clientHeight - scrollTop
-                if (isVerticalScroll && bottom <= 20) {
-                    console.log("滚轮到底")
-                }
-                if (isVerticalScroll && scrollTop < 10) {
-                    // 注：滚轮到顶部时 监听是否有新增缓存数据(此数据socket通知) 有则拼接上
-                    console.log("滚轮到顶")
-                }
-            }
-        },
-        {wait: 200, leading: false}
-    ).run
-
-    useEffect(() => {
-        const container = containerRef.current
-        if (container) {
-            container.addEventListener("scroll", handleScroll)
-        }
-        return () => {
-            if (container) {
-                container.removeEventListener("scroll", handleScroll)
-            }
-        }
-    }, [originalList])
-
-    useEffect(() => {
-        handleScroll()
-    }, [size?.width])
-
-    // 如果没有滚轮 新数据进来时直接头部插入
-
+    const {messageList, getAllMessage, onLogin, onClose} = props
+    const {userInfo} = useStore()
     return (
         <>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) {
-                        return
-                    }
-                    setVListHeight(height)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <div ref={containerRef} style={{height: vlistHeigth, overflow: "auto"}}>
-                <div ref={wrapperRef}>
-                    {list.map((ele) => (
-                        <MessageItem key={ele.index} isEllipsis={true} />
-                    ))}
+            {userInfo.isLogin ? (
+                <>
+                    {messageList.length > 0 ? (
+                        <div className={styles["message-center"]}>
+                            {messageList.map((item) => (
+                                <MessageItem data={item} key={item.hash} onClose={onClose} />
+                            ))}
+
+                            <div className={styles["footer-btn"]}>
+                                <YakitButton type='text2' onClick={getAllMessage}>
+                                    查看全部
+                                </YakitButton>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={styles["meeage-no-data"]}>
+                            <IconNoLoginMessageIcon />
+                            <div className={styles["text"]}>暂无消息</div>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className={styles["meeage-no-login"]}>
+                    <IconNoLoginMessageIcon />
+                    <div className={styles["text"]}>登录后才可查看消息</div>
+                    <div>
+                        <YakitButton type='primary' onClick={onLogin}>
+                            立即登录
+                        </YakitButton>
+                    </div>
                 </div>
-            </div>
+            )}
         </>
     )
 }
@@ -165,15 +255,151 @@ export interface MessageCenterModalProps {
 }
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {
     const {visible, setVisible} = props
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(true)
     const [width, setWidth] = useState<number>(481)
-
+    const [activeKey, setActiveKey] = useState<"unread" | "all">("unread")
+    const [dataSorce, setDataSorce] = useState<API.MessageLogDetail[]>([])
+    const [noRedDataTotal, setNoRedDataTotal] = useState<number>()
     const onSetWidth = useThrottleFn(
         (value) => {
             setWidth(value)
         },
         {wait: 50, leading: false}
     ).run
-    
+
+    const update = useMemoizedFn((data?: MessageQueryDataProps, isAdd?: boolean) => {
+        setLoading(true)
+        if (!isAdd) {
+            setDataSorce([])
+        }
+        const newQueryData: MessageQueryDataProps = {
+            isRead: activeKey === "unread" ? "false" : undefined,
+            ...data
+        }
+        apiFetchQueryMessage(
+            {
+                page: 1,
+                limit: 20
+            },
+            {
+                ...newQueryData
+            }
+        )
+            .then((res) => {
+                if (newQueryData?.isRead === "false") {
+                    setNoRedDataTotal(res.pagemeta.total)
+                }
+
+                if (!res.data) {
+                    setHasMore(false)
+                    return
+                }
+
+                const newData = isAdd ? [...dataSorce, ...(res.data || [])] : res.data
+                setDataSorce(newData)
+                if (res.pagemeta.total !== newData.length) {
+                    setHasMore(true)
+                } else {
+                    setHasMore(false)
+                }
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    useEffect(() => {
+        // 初次加载数据
+        update()
+    }, [activeKey])
+
+    const loadMore = useMemoizedFn(() => {
+        update(
+            {
+                beforeId: dataSorce[dataSorce.length - 1].id
+            },
+            true
+        )
+    })
+
+    const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
+        try {
+            const obj: API.MessageLogDetail = JSON.parse(data)
+            if (obj.isRead === false) {
+                setNoRedDataTotal((prev) => {
+                    return (prev || 0) + 1
+                })
+            }
+            if (activeKey === "all") {
+                setDataSorce((prev) => {
+                    return [obj, ...prev]
+                })
+            }
+            if (activeKey === "unread" && obj.isRead === false) {
+                setDataSorce((prev) => {
+                    return [obj, ...prev]
+                })
+            }
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onRefreshMessageSocket", onRefreshMessageSocketFun)
+        return () => {
+            emiter.off("onRefreshMessageSocket", onRefreshMessageSocketFun)
+        }
+    }, [])
+
+    const virtualList = useMemoizedFn(() => {
+        return (
+            <div className={styles["tab-item-box"]}>
+                <RollingLoadList<API.MessageLogDetail>
+                    data={dataSorce}
+                    loadMoreData={loadMore}
+                    renderRow={(rowData: API.MessageLogDetail, index: number) => {
+                        return (
+                            <MessageItem
+                                data={rowData}
+                                key={rowData.hash}
+                                isEllipsis={true}
+                                onClose={() => setVisible(false)}
+                            />
+                        )
+                    }}
+                    page={1}
+                    hasMore={hasMore}
+                    loading={loading}
+                    defItemHeight={66}
+                    rowKey='hash'
+                />
+            </div>
+        )
+    })
+
+    const onRedAllMessage = useMemoizedFn(() => {
+        apiFetchMessageRead({
+            isAll: true,
+            hash: ""
+        }).then((ok) => {
+            if (ok) {
+                update()
+                setNoRedDataTotal(0)
+            }
+        })
+    })
+
+    const onClearAllMessage = useMemoizedFn(() => {
+        apiFetchMessageClear({
+            isAll: true,
+            hash: ""
+        }).then((ok) => {
+            if (ok) {
+                update()
+            }
+        })
+    })
+
     return (
         <Resizable
             style={{position: "absolute"}}
@@ -201,6 +427,16 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 <div className={styles["message-header"]}>
                     <div className={styles["title"]}>消息中心</div>
                     <div className={styles["extra"]}>
+                        {activeKey === "unread" && dataSorce.length > 0 && (
+                            <YakitButton size='small' type='outline2' onClick={onRedAllMessage}>
+                                全部已读
+                            </YakitButton>
+                        )}
+                        {activeKey === "all" && dataSorce.length > 0 && (
+                            <YakitButton size='small' type='outline2' onClick={onClearAllMessage}>
+                                全部清空
+                            </YakitButton>
+                        )}
                         <YakitButton
                             size='small'
                             type='text2'
@@ -210,8 +446,8 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     </div>
                 </div>
                 <YakitTabs
-                    // activeKey={activeKey}
-                    // onChange={(v) => setActiveKey(v)}
+                    activeKey={activeKey}
+                    onChange={(v: any) => setActiveKey(v)}
                     tabBarStyle={{marginBottom: 5}}
                     className={styles["message-center-tab"]}
                 >
@@ -219,19 +455,17 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                         tab={
                             <div className={styles["info-tab"]}>
                                 未读
-                                <div className={styles["info-tab-dot"]}>8</div>
+                                {typeof noRedDataTotal === "number" && (
+                                    <div className={styles["info-tab-dot"]}>{noRedDataTotal}</div>
+                                )}
                             </div>
                         }
                         key={"unread"}
                     >
-                        <div className={styles["tab-item-box"]}>
-                            <MessageItem isEllipsis={true} />
-                        </div>
+                        {virtualList()}
                     </YakitTabs.YakitTabPane>
                     <YakitTabs.YakitTabPane tab={"全部"} key={"all"}>
-                        <div className={styles["tab-item-box"]}>
-                            <MessageCenterVirtualList />
-                        </div>
+                        {virtualList()}
                     </YakitTabs.YakitTabPane>
                 </YakitTabs>
             </div>

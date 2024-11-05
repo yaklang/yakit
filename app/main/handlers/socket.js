@@ -30,7 +30,7 @@ module.exports = (win, getClient) => {
     }
 
     // 连接 WebSocket 服务器，并在请求头中添加 Authorization
-    ipcMain.handle("socket-start", async (e, path) => {
+    ipcMain.handle("socket-start", (e) => {
         // 用户未登录时则拦截
         if (!USER_INFO.isLogin) return
         // 如若已经启动 则关闭后重启
@@ -38,7 +38,7 @@ module.exports = (win, getClient) => {
             onCloseSocket()
         }
         const {token} = USER_INFO
-        const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/ws`
+        const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/message/ws`
         // console.log("USER_INFO--------------------", socketUrl, token)
         ws = new WebSocket(socketUrl, {
             headers: {
@@ -55,7 +55,6 @@ module.exports = (win, getClient) => {
 
         // 处理接收到的消息
         ws.on("message", (data) => {
-            console.log("Message from server------------------:", data)
             // 在渲染端根据type区分 将其发往不同的页面
             win.webContents.send("client-socket-message", data)
         })
@@ -73,14 +72,14 @@ module.exports = (win, getClient) => {
     })
 
     // 关闭 WebSocket 服务器
-    ipcMain.handle("socket-send", async (e, data) => {
+    ipcMain.handle("socket-send", (e) => {
         if(ws){
             ws.send(data)
         }
     })
 
-    // 关闭 WebSocket 服务器
-    ipcMain.handle("socket-close", async (e, path) => {
+    // // 关闭 WebSocket 服务器
+    ipcMain.handle("socket-close", (e) => {
         onCloseSocket()
     })
 }

@@ -23,7 +23,13 @@ export const formatTimestampJudge = (i: number) => {
     const time = moment(i)
     // 计算时间差
     const duration = moment.duration(now.diff(time))
-    if (duration.asHours() < 24) {
+    if (duration.asSeconds() < 60) {
+        // 一分钟内
+        return `${Math.floor(duration.asSeconds())} 秒前`
+    } else if (duration.asMinutes() < 60) {
+        // 一小时内
+        return `${Math.floor(duration.asMinutes())} 分钟前`
+    } else if (duration.asHours() < 24) {
         // 在24小时内
         return `${Math.floor(duration.asHours())} 小时前`
     } else if (duration.asDays() < 3) {

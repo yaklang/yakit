@@ -1,5 +1,6 @@
 import emiter from "../eventBus/eventBus"
 import {failed} from "@/utils/notification"
+import { Uint8ArrayToString } from "../str"
 const {ipcRenderer} = window.require("electron")
 
 
@@ -7,12 +8,14 @@ const {ipcRenderer} = window.require("electron")
 export let webSocketStatus = false
 
 export const startWebSocket = () => {
-    ipcRenderer.on("client-socket-message", (e, data:any) => {
-        console.log("client-socket-message---",data);
+    ipcRenderer.on("client-socket-message", (e, data:Uint8Array) => {
+        try {
+           emiter.emit("onRefreshMessageSocket", Uint8ArrayToString(data))
+        } catch (error) {}
     })
 
     ipcRenderer.on("client-socket-open", (e) => {
-        console.log("webSocket启动成功");
+        // console.log("webSocket启动成功");
         webSocketStatus = true
     })
 
@@ -21,7 +24,7 @@ export const startWebSocket = () => {
     })
 
     ipcRenderer.on("client-socket-error", (e, error:any) => {
-        failed(`webSocket错误${error}`)
+        // console.log("webSocket错误",error);
     })
 }
 

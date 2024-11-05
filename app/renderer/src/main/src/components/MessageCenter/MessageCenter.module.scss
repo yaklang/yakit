@@ -6,6 +6,21 @@
     }
 }
 
+.meeage-no-login,.meeage-no-data {
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .text {
+        color: #b4bbca;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 16px;
+        margin: 10px 0px 16px;
+    }
+}
+
 .message-item {
     padding: 12px 8px;
     display: flex;
@@ -17,11 +32,6 @@
         width: 28px;
         height: 28px;
         position: relative;
-        .author-img {
-            border-radius: 50%;
-            height: 28px;
-            width: 28px;
-        }
         .dot {
             position: absolute;
             left: 0px;
@@ -86,10 +96,16 @@
             line-height: 20px;
             .tag {
                 white-space: nowrap;
-            }
-            .pass {
                 font-weight: 600;
-                color: var(--color-secondary-Green, #56c991);
+                color: #85899E;
+            }
+            
+            .delete{
+                color: #F6544A;
+            }
+            
+            .check {
+                color: #56c991;
             }
             .text {
                 padding-left: 4px;
@@ -140,6 +156,11 @@
             font-weight: 600;
             line-height: 20px;
         }
+        .extra {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+        }
     }
     .message-center-tab {
         flex: 1;
@@ -147,7 +168,7 @@
             .ant-tabs-nav {
                 padding: 0px 16px 0px;
             }
-            .ant-tabs-tab-btn{
+            .ant-tabs-tab-btn {
                 line-height: 16px;
             }
         }
