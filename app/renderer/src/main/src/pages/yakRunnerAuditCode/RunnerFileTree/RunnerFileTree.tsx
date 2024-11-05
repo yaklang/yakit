@@ -18,7 +18,7 @@ import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {grpcFetchAuditTree} from "../utils"
+import {getDefaultActiveFile, grpcFetchAuditTree, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "../utils"
 
 import emiter from "@/utils/eventBus/eventBus"
 import {
@@ -43,17 +43,16 @@ import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
 import {Tooltip} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AuditHistoryTable} from "../AuditCode/AuditCode"
-import {FileDetailInfo} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
-import {getDefaultActiveFile, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "@/pages/yakRunner/utils"
 
 import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
-import {FileNodeProps, FileTreeListProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {FileTree} from "../FileTree/FileTree"
 import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { FileDetailInfo } from "../RunnerTabs/RunnerTabsType"
+import { FileNodeProps, FileTreeListProps } from "../FileTree/FileTreeType"
 
 const {ipcRenderer} = window.require("electron")
 

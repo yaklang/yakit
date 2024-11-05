@@ -6,7 +6,6 @@ import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 export interface YakRunnerContextStore {
     fileTree: FileTreeListProps[]
     projectNmae: string | undefined
-    loadTreeType: "file" | "audit"
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
     runnerTabsId: string | undefined
@@ -15,7 +14,6 @@ export interface YakRunnerContextStore {
 export interface YakRunnerContextDispatcher {
     setFileTree?: Dispatch<SetStateAction<FileTreeListProps[]>>
     setProjectNmae?: Dispatch<SetStateAction<string | undefined>>
-    setLoadTreeType?: Dispatch<SetStateAction<"file" | "audit">>
     handleFileLoadData?: (path: string) => Promise<any>
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
@@ -31,7 +29,6 @@ export default createContext<YakRunnerContextValue>({
     store: {
         fileTree: [],
         projectNmae: undefined,
-        loadTreeType: "file",
         areaInfo: [],
         activeFile: undefined,
         runnerTabsId: undefined
@@ -39,7 +36,6 @@ export default createContext<YakRunnerContextValue>({
     dispatcher: {
         setFileTree: undefined,
         setProjectNmae: undefined,
-        setLoadTreeType: undefined,
         handleFileLoadData: undefined,
         setAreaInfo: undefined,
         setActiveFile: undefined,

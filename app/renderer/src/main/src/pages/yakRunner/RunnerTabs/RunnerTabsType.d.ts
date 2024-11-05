@@ -30,8 +30,6 @@ export interface FileDetailInfo {
     openTimestamp: number
     /** 文件是否为文本文件 */
     isPlainText: boolean
-    /** 文件归属((单独打开/文件树打开)/审计树打开) */
-    fileSourceType: "file" | "audit"
     /** 文件是否有未保存的更改 */
     isDirty?: boolean
     /** 文件是否是当前活动的文件 */
@@ -94,7 +92,6 @@ export interface RunnerTabPaneProps {
 
 export interface YakRunnerWelcomePageProps {
     addFileTab: () => void
-    setShowCompileModal: (v: boolean) => void
 }
 
 export interface YakitRunnerSaveModalProps {

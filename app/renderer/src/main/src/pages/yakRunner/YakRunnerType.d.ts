@@ -29,8 +29,6 @@ export interface YakRunnerHistoryProps {
     name: string
     // 路径
     path: string
-    // 加载的树类型
-    loadTreeType?: "file" | "audit"
 }
 
 export interface TabFileProps {

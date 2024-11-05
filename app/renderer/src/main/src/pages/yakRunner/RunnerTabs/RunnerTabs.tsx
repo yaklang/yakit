@@ -42,7 +42,6 @@ import {
     getOpenFileInfo,
     getPathParent,
     getYakRunnerHistory,
-    grpcFetchAuditTree,
     grpcFetchCreateFile,
     grpcFetchFileTree,
     grpcFetchRenameFileTree,
@@ -871,7 +870,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
             if (info.path !== activeFile?.path) {
                 const newActiveFile = await getDefaultActiveFile(info)
                 setActiveFile && setActiveFile(newActiveFile)
-                if (info.parent || info.fileSourceType === "audit") {
+                if (info.parent) {
                     emiter.emit("onScrollToFileTree", info.path)
                 }
             }
@@ -1008,7 +1007,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         if (editorInfo) {
             const newEditorInfo = {...editorInfo, code: content}
             // 未保存文件不用自动保存 审计树文件不用自动保存
-            if (!editorInfo?.isUnSave && editorInfo.fileSourceType === "file") {
+            if (!editorInfo?.isUnSave) {
                 autoSaveCurrentFile.run(newEditorInfo)
             }
             setEditorInfo(newEditorInfo)
@@ -1044,49 +1043,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
     ).run
 
-    const [highLightFind, setHighLightFind] = useState<Selection[]>([])
-    // 获取编辑器中关联字符
-    const getOtherRangeByPosition = useDebounceFn(
-        async (position: Position) => {
-            const model = reqEditor?.getModel()
-            if (!model || !editorInfo || editorInfo.fileSourceType === "file") return
-            const iWord = getWordWithPointAtPosition(model, position)
-            const type = getModelContext(model, "plugin") || "yak"
-            if (iWord.word.length === 0) return
-
-            await ipcRenderer
-                .invoke("YaklangLanguageFind", {
-                    InspectType: "reference",
-                    YakScriptType: type,
-                    YakScriptCode: "",
-                    ModelID: model.id,
-                    Range: {
-                        Code: iWord.word,
-                        StartLine: position.lineNumber,
-                        StartColumn: iWord.startColumn,
-                        EndLine: position.lineNumber,
-                        EndColumn: iWord.endColumn
-                    },
-                    ProgramName: projectNmae,
-                    FileName: editorInfo.path
-                } as YaklangLanguageSuggestionRequest)
-                .then((r: YaklangLanguageFindResponse) => {
-                    const newFind = r.Ranges.map(({StartColumn, StartLine, EndColumn, EndLine}) => ({
-                        startLineNumber: Number(StartLine),
-                        startColumn: Number(StartColumn),
-                        endLineNumber: Number(EndLine),
-                        endColumn: Number(EndColumn)
-                    }))
-                    setHighLightFind(newFind)
-                }).catch((err)=>{
-                    setHighLightFind([])
-                })
-        },
-        {
-            wait: 200
-        }
-    ).run
-
     // 聚焦时校验是否更新活跃文件
     const onSetActiveFileByFocus = useMemoizedFn(() => {
         if (activeFile?.path !== editorInfo?.path) {
@@ -1104,7 +1060,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             if (!isFocus) return
             const {position} = e
             // console.log("当前光标位置：", position)
-            getOtherRangeByPosition(position)
             positionRef.current = position
             updateBottomEditorDetails()
         })
@@ -1227,7 +1182,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 </div>
             ) : (
                 <YakitEditor
-                    readOnly={editorInfo?.fileSourceType === "audit"}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
                         setReqEditor(editor)
@@ -1239,7 +1193,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
-                    highLightFind={highLightFind}
                 />
             )}
         </div>
@@ -1247,7 +1200,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 })
 
 export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
-    const {addFileTab, setShowCompileModal} = props
+    const {addFileTab} = props
     const ref = useRef<HTMLDivElement>(null)
     const size = useSize(ref)
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
@@ -1294,11 +1247,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
             })
     })
 
-    // 打开编译项目
-    const openCompileProject = useMemoizedFn(() => {
-        setShowCompileModal(true)
-    })
-
     return (
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
@@ -1335,16 +1283,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                             </div>
                             <OutlineImportIcon className={styles["icon-style"]} />
                         </div>
-                        <div
-                            className={classNames(styles["btn-style"], styles["btn-open-compile"])}
-                            onClick={openCompileProject}
-                        >
-                            <div className={styles["btn-title"]}>
-                                <YakRunnerOpenAuditIcon />
-                                编译项目
-                            </div>
-                            <OutlinCompileIcon className={styles["icon-style"]} />
-                        </div>
                     </div>
                 </div>
 
@@ -1368,17 +1306,13 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                             }
                                             emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                                         } else {
-                                            if (item.loadTreeType === "audit") {
-                                                emiter.emit("onOpenAuditTree", item.name)
-                                            } else {
-                                                emiter.emit("onOpenFileTree", item.path)
-                                            }
+                                            emiter.emit("onOpenFileTree", item.path)
                                         }
                                     }}
                                 >
                                     <div className={styles["file-name"]}>{item.name}</div>
                                     <div className={classNames(styles["file-path"], "yakit-single-line-ellipsis")}>
-                                        {item.loadTreeType === "audit" ? "（已编译项目）" : item.path}
+                                        {item.path}
                                     </div>
                                 </div>
                             )
@@ -1402,7 +1336,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         setWaitRemoveAll
     } = props
     const {setActiveFile, setAreaInfo} = useDispatcher()
-    const {fileTree, areaInfo, loadTreeType} = useStore()
+    const {fileTree, areaInfo} = useStore()
 
     const [codePath, setCodePath] = useState<string>("")
 
@@ -1462,15 +1396,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                 )
                 // 如若保存路径为文件列表中则需要更新文件树
                 if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-                    let arr: FileNodeMapProps[] = []
-                    if (loadTreeType === "file") {
-                        arr = await grpcFetchFileTree(parentPath)
-                    }
-                    if (loadTreeType === "audit") {
-                        const {data} = await grpcFetchAuditTree(parentPath)
-                        arr = data
-                    }
-
+                    let arr: FileNodeMapProps[] = await grpcFetchFileTree(parentPath)
                     if (arr.length > 0) {
                         let childArr: string[] = []
                         // 文件Map

@@ -1,16 +1,18 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
+    AreaInfoProps,
     AuditCodeStatusInfoProps,
     AuditCodeStreamData,
     AuditEmiterYakUrlProps,
     OpenFileByPathProps,
-    YakRunnerAuditCodeProps
+    YakRunnerAuditCodeProps,
+    YakRunnerHistoryProps
 } from "./YakRunnerAuditCodeType"
 import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {AuditHistoryTable, AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
-import {getNameByPath, grpcFetchAuditTree, setYakRunnerHistory} from "./utils"
+import {addAreaFileInfo, getCodeByPath, getCodeSizeByPath, getNameByPath, grpcFetchAuditTree, judgeAreaExistAuditPath, judgeAreaExistFilePath, monacaLanguageType, removeAreaFilesInfo, setAreaFileActive, setYakRunnerHistory, updateAreaFileInfo} from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -24,23 +26,8 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
-import {AreaInfoProps, YakRunnerHistoryProps} from "../yakRunner/YakRunnerType"
-import {FileDetailInfo} from "../yakRunner/RunnerTabs/RunnerTabsType"
-import {FileNodeMapProps, FileTreeListProps} from "../yakRunner/FileTree/FileTreeType"
 import {clearMapAuditChildDetail} from "./AuditCode/AuditTree/ChildMap"
 import {clearMapAuditDetail} from "./AuditCode/AuditTree/AuditMap"
-import {
-    addAreaFileInfo,
-    getCodeByPath,
-    getCodeSizeByPath,
-    judgeAreaExistAuditPath,
-    judgeAreaExistFilePath,
-    MAX_FILE_SIZE_BYTES,
-    monacaLanguageType,
-    removeAreaFilesInfo,
-    setAreaFileActive,
-    updateAreaFileInfo
-} from "../yakRunner/utils"
 import {clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail} from "./FileTreeMap/FileMap"
 import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
@@ -63,6 +50,8 @@ import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {RightBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
+import { FileDetailInfo } from "./RunnerTabs/RunnerTabsType"
+import { FileNodeMapProps, FileTreeListProps } from "./FileTree/FileTreeType"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props

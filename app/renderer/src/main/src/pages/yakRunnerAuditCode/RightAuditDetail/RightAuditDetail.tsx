@@ -19,10 +19,10 @@ import {failed} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
 import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} from "./GraphInfoMap"
-import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {v4 as uuidv4} from "uuid"
+import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void

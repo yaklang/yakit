@@ -18,7 +18,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
-    const {activeFile, loadTreeType} = useStore()
+    const {activeFile} = useStore()
     const showSyntaxInfo = useMemo(() => {
         let data = {
             hint: 0,
@@ -109,17 +109,15 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         {showSyntaxInfo.hint}
                     </div>
                 </div>
-                {loadTreeType === "file" && (
-                    <div
-                        className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
-                        onClick={() => {
-                            onOpenEditorDetails("terminal")
-                        }}
-                    >
-                        <OutlineCodeIcon />
-                        终端
-                    </div>
-                )}
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        onOpenEditorDetails("terminal")
+                    }}
+                >
+                    <OutlineCodeIcon />
+                    终端
+                </div>
                 <div
                     className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
                     onClick={() => {

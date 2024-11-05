@@ -1,5 +1,6 @@
-import { FileNodeMapProps } from "@/pages/yakRunner/FileTree/FileTreeType"
+
 import {v4 as uuidv4} from "uuid"
+import { FileNodeMapProps } from "../FileTree/FileTreeType"
 export const filesMap: Map<string, FileNodeMapProps> = new Map()
 
 export const setMapFileDetail = (path: string, info: FileNodeMapProps) => {
