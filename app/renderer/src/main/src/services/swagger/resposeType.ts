@@ -267,6 +267,10 @@ export declare namespace API {
          * up 增 down 减
          */
         monthTimesGainUpOrDown: string
+        /**
+         * 机构总数
+         */
+        institutionTotal: number
     }
     export interface TouristActiveResponse {
         data: TouristActiveDetail[]
@@ -421,6 +425,19 @@ export declare namespace API {
     export interface PostPluginsResponse extends PluginsDetail {
         isUpdate?: boolean
     }
+    export interface PostNotepadRequest {
+        hash?: string
+        title: string
+        content: string
+    }
+    export interface PostNotepadPermissionRequest {
+        notepadHash: string
+        userId: number
+        /**
+         *  'view', 'edit' 读写权限 '' 默认移除
+         */
+        permissionType: string
+    }
     export interface PluginTypeListResponse {
         data: PluginTypeList[]
     }
@@ -494,9 +511,9 @@ export declare namespace API {
         pluginGroup?: PluginsWherePluginGroup
         excludePluginTypes?: string[]
         /**
-         * 全文搜索
+         * scriptName/help 模糊搜索
          */
-        fullText?: string
+        fieldKeywords?: string
     }
     export interface PluginsWherePluginGroup {
         unSetGroup?: boolean
@@ -869,6 +886,25 @@ export declare namespace API {
         data: Operation[]
     }
     export interface Operation extends GormBaseModel, NewOperation {}
+    export interface NotepadDownloadWhere {
+        hash?: string
+        downloadUrl: string
+    }
+    export interface NotepadDownloadResponse {
+        /**
+         * Percentage of the download completed
+         */
+        progress?: number
+        /**
+         * Direct URL to download if available
+         */
+        downloadUrl?: string
+        /**
+         * Status message regarding the download
+         */
+        message?: string
+    }
+    export interface NotepadDownloadRequest extends GetNotepadRequest, NotepadDownloadWhere {}
     export interface NewUrmResponse {
         user_name: string
         password: string
@@ -1103,6 +1139,9 @@ export declare namespace API {
          * 流程作者权限 admin:管理员 trusted:信任用户 ordinary:普通用户 auditor:审核员
          */
         handleUserRole?: string
+        /**
+         * 是否是作者
+         */
         isAuthor?: boolean
     }
     export interface GroupResponseDetail {
@@ -1135,6 +1174,32 @@ export declare namespace API {
         start_time?: number
         end_time?: number
         status?: string
+    }
+    export interface GetNotepadResponse extends Paging {
+        data: GetNotepadList[]
+    }
+    export interface GetNotepadRequest {
+        keywords?: string
+        /**
+         * 作者名称
+         */
+        user?: string
+        /**
+         * 协作者名称
+         */
+        collaborator?: string
+    }
+    export interface GetNotepadList extends GormBaseModel, GetNotepadDetail {}
+    export interface GetNotepadDetail {
+        title: string
+        content: string
+        userName: string
+        headImg: string
+        /**
+         * 协作者
+         */
+        collaborator: CollaboratorInfo[]
+        hash: string
     }
     export interface FuzzableParam {
         position?: string
@@ -1188,6 +1253,10 @@ export declare namespace API {
     export interface DeleteOssResource {
         file_name: string[]
     }
+    export interface DeleteNotepadWhere {
+        hash?: string
+    }
+    export interface DeleteNotepadRequest extends GetNotepadRequest, DeleteNotepadWhere {}
     export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
     export interface CopyPlugins {
         /**

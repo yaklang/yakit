@@ -137,8 +137,9 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "./utils"
-import { defaultCodeScanPageInfo } from "@/defaultConstants/CodeScan"
+import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
+import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -635,15 +636,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addModifyNotepad = useMemoizedFn((data) => {
-        openMenuPage(
-            {route: YakitRoute.Modify_Notepad},
-            {
-                pageParams: {
-                    modifyNotepadPageInfo: {...data}
-                }
+    const addModifyNotepad = useMemoizedFn(async (data) => {
+        try {
+            let verbose = ""
+            if (!!data?.notepadHash) {
+                const res = await apiGetNotepadDetail(data.notepadHash)
+                verbose = res?.title || ""
             }
-        )
+            openMenuPage(
+                {route: YakitRoute.Modify_Notepad},
+                {
+                    verbose,
+                    pageParams: {
+                        modifyNotepadPageInfo: {...data}
+                    }
+                }
+            )
+        } catch (error) {
+            yakitNotify("error", `GetNotepadDetail详情失败:${error}`)
+        }
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(
