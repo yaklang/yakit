@@ -188,8 +188,9 @@ export interface CodeScanPageInfoProps {
     selectGroupListByKeyWord?: string[]
 }
 
-export interface ModifyNotepadPageInfoProps{
-    
+export interface ModifyNotepadPageInfoProps {
+    /**笔记本 hash */
+    notepadHash?: string
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

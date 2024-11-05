@@ -348,7 +348,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // listItem
                 .use($view(listItemSchema.node, () => nodeViewFactory({component: ListItem})))
                 // code
-                // .use(codeBlockComponent)
                 .use(
                     $view(codeBlockSchema.node, () => {
                         return nodeViewFactory({
