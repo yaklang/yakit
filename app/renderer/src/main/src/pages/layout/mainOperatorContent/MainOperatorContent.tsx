@@ -16,7 +16,8 @@ import {
     GroupRightClickShowContentProps,
     OperateGroup,
     DroppableCloneProps,
-    SubTabsProps
+    SubTabsProps,
+    SwitchSubMenuItemProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {
@@ -380,7 +381,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
 
     /** ---------- 新逻辑 start ---------- */
-
+    /**切换一级菜单选中key */
+    useEffect(()=>{
+        emiter.on("switchMenuItem", onSwitchMenuItem)
+        return () => {
+            emiter.off("switchMenuItem", onSwitchMenuItem)
+        }
+    },[])
+    const onSwitchMenuItem=useMemoizedFn((data)=>{
+        try {
+            const value=JSON.parse(data)
+            if(value?.route){
+                setCurrentTabKey(value.route)
+            }
+        } catch (error) {
+            yakitNotify('error',`切换一级菜单选中key失败:${error}`)
+        }
+    })
     /**
      * @name 渲染端通信-从顶部菜单里打开一个指定页面
      * @description 本通信方法 替换 老方法"open-route-page-callback"(ipc通信)
@@ -2677,8 +2694,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((resVal) => {
         try {
-            const res = JSON.parse(resVal)
-            if (!inViewport) return
+            const res:SwitchSubMenuItemProps = JSON.parse(resVal)
+            if (res.forceRefresh!==true&&!inViewport) return
             const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
             if (index === -1) return
             const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}

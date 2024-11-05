@@ -244,3 +244,10 @@ export interface DroppableCloneProps {
     subPage: MultipleNodeInfo[]
     selectSubMenu: MultipleNodeInfo
 }
+
+export interface SwitchSubMenuItemProps {
+    /**强制刷新耳机菜单选中项目 不管inViewport */
+    forceRefresh?: boolean
+    /**二级菜单页面id */
+    pageId: string
+}
