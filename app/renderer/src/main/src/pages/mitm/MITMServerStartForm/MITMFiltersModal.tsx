@@ -37,6 +37,10 @@ interface SaveObjProps {
 type FilterSettingType = "base-setting" | "advanced-setting"
 const MitmSaveFilter = "MitmSaveFilter"
 
+/**判断mitm 过滤器高级配置中是否选择了 IncludeHostname/IncludeUri */
+export const getAdvancedFlag = (advancedFilters: MITMAdvancedFilter[]): boolean => {
+    return !!advancedFilters.filter((ele) => ["IncludeHostnames", "IncludeUri"].includes(ele.Field || "")).length
+}
 const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => {
     const {visible, setVisible, isStartMITM} = props
     const filtersRef = useRef<any>()
@@ -74,7 +78,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     }, [visible])
     const onSetFilter = useMemoizedFn(() => {
         const params = getMITMFilterData()
-        const {baseFilter} = params
+        const {baseFilter, advancedFilters} = params
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
         ipcRenderer
@@ -86,7 +90,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 const flag =
                     !!baseFilter?.includeHostname?.length ||
                     !!baseFilter?.includeUri?.length ||
-                    !!baseFilter?.includeSuffix?.length
+                    !!baseFilter?.includeSuffix?.length ||
+                    getAdvancedFlag(advancedFilters)
                 emiter.emit("onSetFilterWhiteListEvent", flag + "")
                 setVisible(false)
                 info("更新 MITM 过滤器状态")
@@ -109,7 +114,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     })
     const onClearFilters = () => {
         filtersRef.current.clearFormValue()
-        setFilterData([cloneDeep(defaultMITMAdvancedFilter)])
+        setFilterData([])
     }
 
     // 判断对象内的属性是否为空

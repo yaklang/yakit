@@ -17,6 +17,7 @@ import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType
 import {defaultMITMBaseFilter, defaultMITMAdvancedFilter} from "@/defaultConstants/mitm"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -225,57 +226,67 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     添加高级配置
                 </YakitButton>
             </div>
-            <YakitCollapse
-                activeKey={activeKey}
-                onChange={(key) => setActiveKey(key as string)}
-                accordion
-                className={styles["filter-collapse"]}
-            >
-                {filterData!.map((filterItem, index) => {
-                    const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
-                    return (
-                        <YakitPanel
-                            header={
-                                <div className={styles["collapse-panel-header"]}>
-                                    <span className={classNames(styles["header-id"])}>
-                                        <span>{`规则_${index}`}</span>
-                                    </span>
-                                    <span>[{name}]</span>
-                                    {filterItem.Group.length > 0 ? (
-                                        <span className={classNames("content-ellipsis", styles["header-number"])}>
-                                            {filterItem.Group.length}
+            {!!filterData.length ? (
+                <YakitCollapse
+                    activeKey={activeKey}
+                    onChange={(key) => setActiveKey(key as string)}
+                    accordion
+                    className={styles["filter-collapse"]}
+                >
+                    {filterData!.map((filterItem, index) => {
+                        const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
+                        return (
+                            <YakitPanel
+                                header={
+                                    <div className={styles["collapse-panel-header"]}>
+                                        <span className={classNames(styles["header-id"])}>
+                                            <span>{`规则_${index}`}</span>
                                         </span>
-                                    ) : (
-                                        <YakitTag color='danger' size='small'>
-                                            暂未设置条件
-                                        </YakitTag>
-                                    )}
-                                </div>
-                            }
-                            extra={
-                                <OutlineTrashIcon
-                                    className={styles["trash-icon"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setFilterData(filterData.filter((_, n) => n !== index))
-                                        if (index === 0) {
-                                            setActiveKey(`ID:${index + 1}`)
-                                        } else {
-                                            setActiveKey(`ID:${index - 1}`)
-                                        }
-                                    }}
+                                        <span>[{name}]</span>
+                                        {filterItem.Group.length > 0 ? (
+                                            <span className={classNames("content-ellipsis", styles["header-number"])}>
+                                                {filterItem.Group.length}
+                                            </span>
+                                        ) : (
+                                            <YakitTag color='danger' size='small'>
+                                                暂未设置条件
+                                            </YakitTag>
+                                        )}
+                                    </div>
+                                }
+                                extra={
+                                    <OutlineTrashIcon
+                                        className={styles["trash-icon"]}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setFilterData(filterData.filter((_, n) => n !== index))
+                                            if (index === 0) {
+                                                setActiveKey(`ID:${index + 1}`)
+                                            } else {
+                                                setActiveKey(`ID:${index - 1}`)
+                                            }
+                                        }}
+                                    />
+                                }
+                                key={`ID:${index}`}
+                            >
+                                <MITMAdvancedFiltersItem
+                                    item={filterItem}
+                                    onEdit={(field, value) => onEdit(field, value, index)}
                                 />
-                            }
-                            key={`ID:${index}`}
-                        >
-                            <MITMAdvancedFiltersItem
-                                item={filterItem}
-                                onEdit={(field, value) => onEdit(field, value, index)}
-                            />
-                        </YakitPanel>
-                    )
-                })}
-            </YakitCollapse>
+                            </YakitPanel>
+                        )
+                    })}
+                </YakitCollapse>
+            ) : (
+                <YakitEmpty
+                    description={
+                        <YakitButton type='primary' onClick={onAddAdvancedSetting} style={{marginTop: 12}}>
+                            添加高级配置
+                        </YakitButton>
+                    }
+                />
+            )}
         </div>
     )
 })
