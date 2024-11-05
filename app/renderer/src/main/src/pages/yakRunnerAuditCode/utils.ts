@@ -13,6 +13,8 @@ import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsTyp
 import {v4 as uuidv4} from "uuid"
 import { ConvertYakStaticAnalyzeErrorToMarker, IMonacoEditorMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
 import { FileNodeMapProps, FileNodeProps } from "./FileTree/FileTreeType"
+import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
+import { YaklangMonacoSpec } from "@/utils/monacoSpec/yakEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -715,7 +717,9 @@ export const grpcFetchCreateFile: (
 export const monacaLanguageType = (suffix?: string) => {
     switch (suffix) {
         case "yak":
-            return "yak"
+            return YaklangMonacoSpec
+            case "sf": 
+            return SyntaxFlowMonacoSpec
         default:
             return undefined
     }

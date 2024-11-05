@@ -18,6 +18,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setMapFileDetail} from "./FileTreeMap/FileMap"
 import {setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {randomString} from "@/utils/randomUtil"
+import { YaklangMonacoSpec } from "@/utils/monacoSpec/yakEditor"
+import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -926,7 +928,9 @@ export const loadFolderDetail = (path) => {
 export const monacaLanguageType = (suffix?: string) => {
     switch (suffix) {
         case "yak":
-            return "yak"
+            return YaklangMonacoSpec
+        case "sf": 
+            return SyntaxFlowMonacoSpec
         default:
             return undefined
     }

@@ -151,7 +151,11 @@ const JavaScriptLanguage = {
     tokenizer: TsLanguage.tokenizer
 };
 
-monaco.languages.register({id: "javascript"})
-monaco.languages.register({id: "js"})
-monaco.languages.setMonarchTokensProvider("js", JavaScriptLanguage as any)
-monaco.languages.setMonarchTokensProvider("javascript", JavaScriptLanguage as any)
+export const JavaScriptMonacoSpec = "javascript";
+monaco.languages.register({
+    id: JavaScriptMonacoSpec,
+    extensions: [".js"],
+    aliases: ['js', 'JavaScript'],
+});
+
+monaco.languages.setMonarchTokensProvider(JavaScriptMonacoSpec, JavaScriptLanguage as any);

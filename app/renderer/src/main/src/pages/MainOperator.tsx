@@ -47,6 +47,7 @@ import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 import "./main.scss"
 import "./GlobalClass.scss"
+import { setUpSyntaxFlowMonaco } from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -345,6 +346,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 const total = JSON.parse(completionJson) as CompletionTotal
                 setYaklangCompletions(total)
                 setUpYaklangMonaco()
+                setUpSyntaxFlowMonaco()
             } catch (e) {
                 console.info(e)
             }
