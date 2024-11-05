@@ -27,7 +27,6 @@ import {RemoteGV} from "@/yakitGV"
 import {useStore} from "@/store"
 import {HubDetailHeader} from "../hubExtraOperate/funcTemplate"
 import {FooterExtraBtn} from "../pluginHubList/funcTemplate"
-import {PluginComment} from "@/pages/plugins/baseComment"
 import {LocalPluginExecute} from "@/pages/plugins/local/LocalPluginExecute"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
@@ -783,33 +782,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 )}
                             </TabPane>
-                            {/* <TabPane tab='评论' key='comment' disabled={!hasOnline}>
-                                <div className={styles["tab-pane-wrapper"]}>
-                                    <HubDetailHeader
-                                        pluginName={onlinePlugin?.script_name || "-"}
-                                        help={onlinePlugin?.help || "-"}
-                                        type={onlinePlugin?.type || "yak"}
-                                        tags={onlinePlugin?.tags || ""}
-                                        extraNode={extraNode}
-                                        img={onlinePlugin?.head_img || ""}
-                                        user={onlinePlugin?.authors || "-"}
-                                        prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
-                                            headImg: ele.head_img,
-                                            userName: ele.user_name
-                                        }))}
-                                        updated_at={onlinePlugin?.updated_at || 0}
-                                        basePluginName={copySourcePlugin}
-                                        infoExtra={infoExtraNode}
-                                    />
-                                    {!!onlinePlugin ? (
-                                        <PluginComment isLogin={isLogin} plugin={{...onlinePlugin}} />
-                                    ) : (
-                                        <div className={styles["tab-pane-empty"]}>
-                                            <YakitEmpty title='暂无插件信息' />
-                                        </div>
-                                    )}
-                                </div>
-                            </TabPane> */}
+
                             <TabPane tab='日志' key='log' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
