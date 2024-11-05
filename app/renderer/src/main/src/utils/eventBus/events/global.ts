@@ -12,4 +12,6 @@ export type GlobalEventProps = {
     onRefRisksRead: string
     /**系统代理已刷新 */
     onRefConfigSystemProxy: string
+    /**切换一级菜单的选中key */
+    switchMenuItem:string
 }
