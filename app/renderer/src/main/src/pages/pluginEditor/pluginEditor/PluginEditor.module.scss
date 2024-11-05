@@ -76,3 +76,27 @@
 .old-data-hint-wrapper {
     top: 25%;
 }
+
+// ---------- PluginCopyModal ----------
+.plugin-copy-body {
+    width: 100%;
+    .copy-header {
+        width: 100%;
+        padding: 8px 24px;
+        background: rgba(86, 201, 145, 0.1);
+        color: var(--color-secondary-green, #56c991);
+        font-size: 12px;
+        line-height: 16px;
+    }
+    .copy-wrapper {
+        padding: 16px 24px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        .title-style {
+            color: #31343f;
+            font-size: 14px;
+            line-height: 24px;
+        }
+    }
+}

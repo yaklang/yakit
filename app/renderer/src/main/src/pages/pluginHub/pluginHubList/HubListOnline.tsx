@@ -54,6 +54,7 @@ import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -464,7 +465,10 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
             "openPage",
-            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
+            JSON.stringify({
+                route: YakitRoute.AddYakitScript,
+                params: {...defaultAddYakitScriptPageInfo, source: YakitRoute.Plugin_Hub}
+            })
         )
     })
 

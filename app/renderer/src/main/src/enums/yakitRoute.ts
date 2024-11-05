@@ -51,8 +51,6 @@ export enum YakitRoute {
     PacketScanPage = "packet-scan-page",
     // 新建插件页面
     AddYakitScript = "add-yakit-script",
-    // 编辑插件页面
-    ModifyYakitScript = "modify-yakit-script",
     /** 简易版专属 */
     SimpleDetect = "simple-detect",
     // 录屏管理器

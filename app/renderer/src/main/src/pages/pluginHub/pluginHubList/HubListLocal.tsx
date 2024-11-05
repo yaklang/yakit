@@ -71,6 +71,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {UpdateGroupList, UpdateGroupListItem} from "../group/UpdateGroupList"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ListDelGroupConfirmPop} from "../group/PluginOperationGroupList"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -603,7 +604,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
             "openPage",
-            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
+            JSON.stringify({
+                route: YakitRoute.AddYakitScript,
+                params: {...defaultAddYakitScriptPageInfo, source: YakitRoute.Plugin_Hub}
+            })
         )
     })
 

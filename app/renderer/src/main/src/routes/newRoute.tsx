@@ -98,7 +98,6 @@ import {
 } from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
-import {PluginEditDetails} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
@@ -208,7 +207,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "batch-executor-recover": {label: "继续任务：批量执行插件"},
     "packet-scan-page": {label: "数据包扫描"},
     "add-yakit-script": {label: "新建插件"},
-    "modify-yakit-script": {label: "编辑插件"},
     "simple-detect": {label: "安全检测"},
     "screen-recorder-page": {label: "录屏管理"},
     "db-chaosmaker": {label: "BAS实验室"},
@@ -247,7 +245,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.LicenseAdminPage,
     YakitRoute.TrustListPage,
     YakitRoute.AddYakitScript,
-    YakitRoute.ModifyYakitScript,
     YakitRoute.DB_ChaosMaker,
     YakitRoute.ScreenRecorderPage,
     YakitRoute.ControlAdminPage,
@@ -278,7 +275,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_HTTPHistory,
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
-    YakitRoute.ModifyYakitScript,
     YakitRoute.PayloadManager,
     YakitRoute.Data_Statistics,
     YakitRoute.BatchExecutorPage,
@@ -492,9 +488,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ControlAdminPage />
         case YakitRoute.AddYakitScript:
             return <AddYakitPlugin />
-        // return <PluginEditDetails />
-        case YakitRoute.ModifyYakitScript:
-            return <PluginEditDetails id={params?.editPluginId} />
         case YakitRoute.SimpleDetect:
             return <SimpleDetect pageId={params?.id || ""} />
         case YakitRoute.ScreenRecorderPage:

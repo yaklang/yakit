@@ -137,7 +137,7 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "./utils"
-import { defaultCodeScanPageInfo } from "@/defaultConstants/CodeScan"
+import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -403,36 +403,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         extraOpenMenuPage(data)
     })
 
-    // (创建|更新)-(新建|编辑)-插件编辑器页面的缓存信息
-    /**
-     * @param source 触发打开页面的父路由
-     * @param isUpdate 是否更新缓存数据(不更新则为创建缓存)
-     * @param isModify 新建插件还是编辑插件页面
-     */
-    const cuPluginEditorStorage = useMemoizedFn((source: YakitRoute, isModify?: boolean) => {
-        const route: YakitRoute = isModify ? YakitRoute.ModifyYakitScript : YakitRoute.AddYakitScript
-
-        const pageNodeInfo: PageProps = {
-            ...cloneDeep(defPage),
-            pageList: [
-                {
-                    id: randomString(8),
-                    routeKey: route,
-                    pageGroupId: "0",
-                    pageId: "0",
-                    pageName: YakitRouteToPageInfo[route]?.label || "",
-                    pageParamsInfo: {
-                        pluginInfoEditor: {source: source}
-                    },
-                    sortFieId: 0
-                }
-            ],
-            routeKey: route,
-            singleNode: true
-        }
-        setPagesData(route, pageNodeInfo)
-    })
-
     /**
      * @name 渲染端通信-打开一个指定页面
      * @description 本通信方法 替换 老方法"fetch-send-to-tab"(ipc通信)
@@ -455,9 +425,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         switch (route) {
             case YakitRoute.AddYakitScript:
                 addYakScript(params)
-                break
-            case YakitRoute.ModifyYakitScript:
-                modifyYakScript(params)
                 break
             case YakitRoute.Plugin_Hub:
                 pluginHub(params)
@@ -492,7 +459,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Audit_Code:
                 addYakRunnerAuditCodePage(params)
                 break
-            case YakitRoute.YakRunner_Code_Scan: 
+            case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
                 break
             default:
@@ -658,8 +625,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @name 新建插件
      * @param source 触发打开页面的父页面路由
      */
-    const addYakScript = useMemoizedFn((data: {source: YakitRoute} & AddYakitScriptPageInfoProps) => {
-        const {source} = data || {}
+    const addYakScript = useMemoizedFn((data: AddYakitScriptPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
         if (isExist) {
             const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
@@ -672,9 +638,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     () => {}
                 )
             }
-            cuPluginEditorStorage(source, false)
-        } else {
-            cuPluginEditorStorage(source, false)
         }
         openMenuPage(
             {route: YakitRoute.AddYakitScript},
@@ -687,31 +650,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
         )
-    })
-    /**
-     * @name 编辑插件
-     * @param source 触发打开页面的父页面路由
-     */
-    const modifyYakScript = useMemoizedFn((data: {source: YakitRoute; id: number}) => {
-        const {source, id} = data || {}
-        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyYakitScript).length
-        if (isExist) {
-            emiter.emit("sendEditPluginId", `${id}`)
-            const modalProps = getSubscribeClose(YakitRoute.ModifyYakitScript)
-            if (modalProps) {
-                judgeDataIsFuncOrSettingForConfirm(
-                    modalProps["reset"],
-                    (setting) => {
-                        onModalSecondaryConfirm(setting, isModalVisibleRef)
-                    },
-                    () => {}
-                )
-            }
-            cuPluginEditorStorage(source, true)
-        } else {
-            cuPluginEditorStorage(source, true)
-        }
-        openMenuPage({route: YakitRoute.ModifyYakitScript}, {pageParams: {editPluginId: id}})
     })
     /**
      * @name 插件仓库
@@ -767,15 +705,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     addNext = addTargetCache.pageParamsInfo.addYakitScriptPageInfo?.source
                 }
                 removeMenuPage({route: route, menuName: ""}, addNext ? {route: addNext, menuName: ""} : undefined)
-                break
-            case YakitRoute.ModifyYakitScript:
-                // 判断页面是由谁触发打开的
-                const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
-                let next: YakitRoute | undefined = undefined
-                if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
-                    next = targetCache.pageParamsInfo.pluginInfoEditor?.source
-                }
-                removeMenuPage({route: route, menuName: ""}, next ? {route: next, menuName: ""} : undefined)
                 break
             default:
                 removeMenuPage({route: route, menuName: ""})
@@ -1451,7 +1380,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
             case YakitRoute.AddYakitScript:
-            case YakitRoute.ModifyYakitScript:
             case YakitRoute.HTTPFuzzer:
                 const modalProps = getSubscribeClose(data.route)
                 if (modalProps) {

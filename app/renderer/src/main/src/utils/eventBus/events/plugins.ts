@@ -1,7 +1,4 @@
 export type PluginsEventProps = {
-    /** 触发编辑插件功能的插件ID */
-    sendEditPluginId: string
-
     /** 修改私有域成功后发送的信号 */
     onSwitchPrivateDomain: string
     /**刷新单个执行页面中的插件数据 */

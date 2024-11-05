@@ -20,7 +20,6 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {defaultFilter, defaultSearch, pluginTypeToName} from "./builtInData"
-import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {
     HybridScanControlAfterRequest,

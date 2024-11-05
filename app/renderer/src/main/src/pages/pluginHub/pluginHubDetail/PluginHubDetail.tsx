@@ -34,6 +34,7 @@ import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYa
 import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {PluginLog} from "../pluginLog/PluginLog"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -68,7 +69,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const onNewPlugin = useMemoizedFn(() => {
             emiter.emit(
                 "openPage",
-                JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
+                JSON.stringify({
+                    route: YakitRoute.AddYakitScript,
+                    params: {...defaultAddYakitScriptPageInfo, source: YakitRoute.Plugin_Hub}
+                })
             )
         })
 
