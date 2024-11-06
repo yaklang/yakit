@@ -101,6 +101,13 @@
             border-top-color: var(--yakit-primary-5);
             border-bottom-color: var(--yakit-primary-5);
         }
+
+        .ant-picker-ranges .ant-picker-preset > .ant-tag-blue {
+            color: #f28b44;
+            background: rgba(242, 139, 68, 0.06);
+            border: 1px solid rgba(242, 139, 68, 0.3);
+            cursor: pointer;
+        }
     }
 }
 

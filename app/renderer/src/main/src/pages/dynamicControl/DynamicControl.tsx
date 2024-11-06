@@ -621,7 +621,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
                         <YakitInput.Search
                             placeholder={"请输入用户名"}
                             enterButton={true}
-                            size='middle'
+                            size='large'
                             style={{width: 200}}
                             value={params.user_name}
                             onChange={(e) => {

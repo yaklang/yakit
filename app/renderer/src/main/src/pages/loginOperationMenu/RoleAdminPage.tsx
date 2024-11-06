@@ -434,7 +434,9 @@ const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
                             title: item.script_name,
                             isLeaf: true
                         }))
-                        setTreeData([...treeData, ...AddTreeData])
+                        setTreeData(
+                            Array.from(new Map([...treeData, ...AddTreeData].map((item) => [item.id, item])).values())
+                        )
                     }
                 })
                 .catch((err) => {
