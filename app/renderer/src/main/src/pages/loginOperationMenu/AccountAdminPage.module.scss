@@ -121,12 +121,3 @@
         }
     }
 }
-
-.select-role {
-    :global {
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 26px !important;
-            line-height: 26px !important;
-        }
-    }
-}

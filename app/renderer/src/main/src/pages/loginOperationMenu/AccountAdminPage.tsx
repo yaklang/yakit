@@ -1519,7 +1519,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             </Form.Item>
             <Form.Item name='role_id' label='角色' rules={[{required: true, message: "该项为必填"}]}>
                 <YakitSelect
-                    wrapperClassName={styles['select-role']}
                     showSearch
                     placeholder='请选择角色'
                     optionFilterProp='children'
