@@ -1847,7 +1847,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
     // 初始化获取消息中心
     useEffect(()=>{
-        if(userInfo.isLogin){
+        if(userInfo.isLogin && show){
             onFetchMessage()   
         }
     },[userInfo.isLogin,show])
