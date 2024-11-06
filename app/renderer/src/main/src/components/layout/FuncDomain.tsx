@@ -32,7 +32,7 @@ import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/Yakit
 import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {CodeGV, LocalGV, RemoteGV} from "@/yakitGV"
+import {LocalGV, RemoteGV} from "@/yakitGV"
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {showPcapPermission} from "@/utils/ConfigPcapPermission"
 import {GithubSvgIcon, TerminalIcon} from "@/assets/newIcon"
@@ -76,6 +76,7 @@ import {
     grpcFetchLocalYakitVersion,
     grpcFetchLocalYakVersion
 } from "@/apiUtils/grpc"
+import {WebsiteGV} from "@/enums/website"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import yakitImg from "../../assets/yakit.jpg"
@@ -1862,7 +1863,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             <div className={styles["history-version"]}>
                                 <div
                                     className={styles["content-style"]}
-                                    onClick={() => ipcRenderer.invoke("open-url", CodeGV.HistoricalVersion)}
+                                    onClick={() => ipcRenderer.invoke("open-url", WebsiteGV.YakitHistoryVersionAddress)}
                                 >
                                     <GithubSvgIcon className={styles["icon-style"]} /> 历史版本
                                 </div>

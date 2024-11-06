@@ -500,7 +500,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         const value = JSON.stringify(checked)
         setIsExpand(checked)
         setRemoteValue(CodeGV.MenuExpand, value)
-        emiter.emit("menuExpandSwitch", value)
         if (!menuId && routeMenu.length > 0) {
             setSubMenuData(routeMenu[0]?.children || [])
             setMenuId(routeMenu[0]?.label || "")

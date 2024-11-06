@@ -9,7 +9,6 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineClouddownloadIcon, OutlineRefreshIcon, OutlineReplyIcon, OutlineThumbupIcon} from "@/assets/icon/outline"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {PluginLogs} from "@/pages/plugins/log/PluginLog"
 import {yakitNotify} from "@/utils/notification"
 import {Tooltip} from "antd"
 import {SolidPluscircleIcon, SolidThumbupIcon} from "@/assets/icon/solid"
@@ -27,13 +26,13 @@ import {RemoteGV} from "@/yakitGV"
 import {useStore} from "@/store"
 import {HubDetailHeader} from "../hubExtraOperate/funcTemplate"
 import {FooterExtraBtn} from "../pluginHubList/funcTemplate"
-import {PluginComment} from "@/pages/plugins/baseComment"
 import {LocalPluginExecute} from "@/pages/plugins/local/LocalPluginExecute"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {PluginLog} from "../pluginLog/PluginLog"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -68,7 +67,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const onNewPlugin = useMemoizedFn(() => {
             emiter.emit(
                 "openPage",
-                JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
+                JSON.stringify({
+                    route: YakitRoute.AddYakitScript,
+                    params: {...defaultAddYakitScriptPageInfo, source: YakitRoute.Plugin_Hub}
+                })
             )
         })
 
@@ -779,33 +781,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 )}
                             </TabPane>
-                            {/* <TabPane tab='评论' key='comment' disabled={!hasOnline}>
-                                <div className={styles["tab-pane-wrapper"]}>
-                                    <HubDetailHeader
-                                        pluginName={onlinePlugin?.script_name || "-"}
-                                        help={onlinePlugin?.help || "-"}
-                                        type={onlinePlugin?.type || "yak"}
-                                        tags={onlinePlugin?.tags || ""}
-                                        extraNode={extraNode}
-                                        img={onlinePlugin?.head_img || ""}
-                                        user={onlinePlugin?.authors || "-"}
-                                        prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
-                                            headImg: ele.head_img,
-                                            userName: ele.user_name
-                                        }))}
-                                        updated_at={onlinePlugin?.updated_at || 0}
-                                        basePluginName={copySourcePlugin}
-                                        infoExtra={infoExtraNode}
-                                    />
-                                    {!!onlinePlugin ? (
-                                        <PluginComment isLogin={isLogin} plugin={{...onlinePlugin}} />
-                                    ) : (
-                                        <div className={styles["tab-pane-empty"]}>
-                                            <YakitEmpty title='暂无插件信息' />
-                                        </div>
-                                    )}
-                                </div>
-                            </TabPane> */}
+
                             <TabPane tab='日志' key='log' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
@@ -824,7 +800,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         basePluginName={copySourcePlugin}
                                         infoExtra={infoExtraNode}
                                     />
-                                    {/* <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} /> */}
                                     {onlinePlugin ? (
                                         <PluginLog getContainer={wrapperId} plugin={onlinePlugin} />
                                     ) : (

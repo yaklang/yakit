@@ -53,11 +53,6 @@ module.exports = (win, getClient) => {
         win.webContents.send("open-route-page-callback", params)
     })
 
-    // tab 新建插件后，刷新插件仓库的本地插件列表
-    ipcMain.handle("send-local-script-list", async (e, params) => {
-        win.webContents.send("ref-local-script-list", params)
-    })
-
     /** 方向日志的打开通信 */
     ipcMain.handle("direction-console-log", async (e, params) => {
         win.webContents.send("callback-direction-console-log", params)

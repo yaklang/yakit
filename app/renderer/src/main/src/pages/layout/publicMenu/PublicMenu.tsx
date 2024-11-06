@@ -111,7 +111,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
         const value = JSON.stringify(checked)
         setIsExpand(checked)
         setRemoteValue(CodeGV.MenuExpand, value)
-        emiter.emit("menuExpandSwitch", value)
     })
 
     // 获取 基础工具菜单下的4个插件 是否存在于本地库内

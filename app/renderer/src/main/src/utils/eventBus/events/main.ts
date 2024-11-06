@@ -6,8 +6,6 @@ export type MainOperatorEventProps = {
     /** 从顶部菜单打开一个页面 */
     menuOpenPage: string
 
-    /** 菜单展开收起状态切换 */
-    menuExpandSwitch: string
     /**二级路由Tab数据变化 */
     secondMenuTabDataChange: string
 }

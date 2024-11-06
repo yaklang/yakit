@@ -35,6 +35,8 @@ const DefaultItemHeight = 44
  *
  * 因为不定高虚拟列表自身无法计算传入数据的数量由多变少时的逻辑,
  * 所以需要使用者手动清空虚拟列表的位置状态信息(参考方法：onClear)
+ * 
+ * @description 虽然是不定高虚拟列表，其实对于性能的优化并不一定高，因为在实时滚动计算每一项的高度和范围内的展示数量
  */
 export const YakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any = memo(
     forwardRef((props, ref) => {

@@ -50,6 +50,7 @@ import {SolidPrivatepluginIcon} from "@/assets/icon/colors"
 import {statusTag} from "@/pages/plugins/baseTemplate"
 import {DefaultOnlinePlugin, PluginOperateHint} from "../defaultConstant"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -593,7 +594,10 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const onNewPlugin = useMemoizedFn(() => {
         emiter.emit(
             "openPage",
-            JSON.stringify({route: YakitRoute.AddYakitScript, params: {source: YakitRoute.Plugin_Hub}})
+            JSON.stringify({
+                route: YakitRoute.AddYakitScript,
+                params: {...defaultAddYakitScriptPageInfo, source: YakitRoute.Plugin_Hub}
+            })
         )
     })
 

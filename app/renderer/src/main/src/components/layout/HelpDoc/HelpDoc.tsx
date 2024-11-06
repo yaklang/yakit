@@ -6,6 +6,7 @@ import {ReportBug, FeatureRequest, LocalInfoProps} from "@/utils/template/issues
 import {useMemoizedFn} from "ahooks"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
+import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./HelpDoc.module.scss"
@@ -89,7 +90,7 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
                 )
                 return
             case "official_website":
-                ipcRenderer.invoke("open-url", "https://www.yaklang.com/docs/intro/")
+                ipcRenderer.invoke("open-url", WebsiteGV.YakHelpDocAddress)
                 return
             default:
                 return

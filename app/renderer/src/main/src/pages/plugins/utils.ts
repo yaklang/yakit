@@ -20,7 +20,6 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {toolDelInvalidKV} from "@/utils/tool"
 import {defaultFilter, defaultSearch, pluginTypeToName} from "./builtInData"
-import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {
     HybridScanControlAfterRequest,
@@ -978,51 +977,6 @@ export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API
     })
 }
 
-export interface PluginLogsRequest extends HTTPRequestParameters, API.LogsRequest {}
-/**
- * @name 获取插件的日志
- */
-export const apiFetchPluginLogs: (query: {
-    uuid: string
-    Page: number
-    Limit?: number
-}) => Promise<API.PluginsLogsResponse> = (query) => {
-    return new Promise(async (resolve, reject) => {
-        const params: HTTPRequestParameters = {
-            page: query.Page,
-            limit: query.Limit || 20,
-            order_by: "created_at",
-            order: "desc"
-        }
-        const data: API.LogsRequest = {
-            uuid: query.uuid
-        }
-        try {
-            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
-            if (userInfo.isLogin) {
-                data.token = userInfo.token || undefined
-            }
-        } catch (error) {}
-
-        try {
-            NetWorkApi<PluginLogsRequest, API.PluginsLogsResponse>({
-                method: "get",
-                url: "plugins/logs",
-                params: {...params} as any,
-                data: {...data}
-            })
-                .then(resolve)
-                .catch((err) => {
-                    yakitNotify("error", "获取日志失败:" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "获取日志失败:" + error)
-            reject(error)
-        }
-    })
-}
-
 interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }
@@ -1046,39 +1000,6 @@ export const apiGetYakScriptByOnlineID: (query: GetYakScriptByOnlineIDRequest) =
         } catch (error) {
             yakitNotify("error", "查询本地插件错误:" + error)
             reject(error)
-        }
-    })
-}
-
-/**
- * @description 插件商店/我的插件详情点击去使用，跳转本地详情
- */
-export const onlineUseToLocalDetail = (uuid: string, listType: "online" | "mine") => {
-    const query: QueryYakScriptRequest = {
-        Pagination: {
-            Page: 1,
-            Limit: 1,
-            Order: "",
-            OrderBy: ""
-        },
-        UUID: uuid
-    }
-    apiQueryYakScript(query).then((res) => {
-        if (+res.Total > 0) {
-            emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-        } else {
-            let downloadParams: DownloadOnlinePluginsRequest = {
-                UUID: [uuid]
-            }
-            if (listType === "online") {
-                apiDownloadPluginOnline(downloadParams).then(() => {
-                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-                })
-            } else if (listType === "mine") {
-                apiDownloadPluginMine(downloadParams).then(() => {
-                    emiter.emit("openPage", JSON.stringify({route: YakitRoute.Plugin_Local, params: {uuid: uuid}}))
-                })
-            }
         }
     })
 }
@@ -1456,34 +1377,6 @@ export const apiHybridScanByMode: (
                 reject(error)
             })
     })
-}
-/**
- * @description 去插件编辑页面
- * @param plugin
- * @returns
- */
-export const onToEditPlugin = (plugin: YakScript, route?: YakitRoute) => {
-    if (plugin.IsCorePlugin) {
-        yakitNotify("error", "内置插件无法编辑，建议复制源码新建插件进行编辑。")
-        return
-    }
-    if (plugin.Type === "packet-hack") {
-        yakitNotify("error", "该类型已下架，不可编辑")
-        return
-    }
-    if (plugin.Id && +plugin.Id) {
-        // if (plugin.ScriptName === "综合目录扫描与爆破") {
-        //     yakitNotify("warning", "暂不可编辑")
-        //     return
-        // }
-        emiter.emit(
-            "openPage",
-            JSON.stringify({
-                route: YakitRoute.ModifyYakitScript,
-                params: {source: route || YakitRoute.Plugin_Local, id: +plugin.Id}
-            })
-        )
-    }
 }
 
 /**本地获取插件组数据 */

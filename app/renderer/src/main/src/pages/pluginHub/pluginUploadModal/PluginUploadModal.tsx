@@ -151,6 +151,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
                                 callback(true, plugin)
                             })
                     } else {
+                        // 编辑插件操作
                         if (onlineRes.isAuthor) {
                             // 自己插件刷新我的插件列表
                             emiter.emit("onRefreshOwnPluginList")

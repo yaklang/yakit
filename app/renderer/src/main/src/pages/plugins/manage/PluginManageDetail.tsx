@@ -47,7 +47,6 @@ import {httpAuditPluginOperate, httpFetchAuditPluginDetail} from "@/pages/plugin
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {HubButton} from "@/pages/pluginHub/hubExtraOperate/funcTemplate"
 import useAdmin from "@/hook/useAdmin"
-import {PluginLogs} from "../log/PluginLog"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitPluginSupplement} from "@/pages/pluginEditor/base"
@@ -1092,7 +1091,6 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     wrapperClassName={styles["plugin-info-header"]}
                                 />
                                 <PluginLog getContainer={pageWrapId} plugin={plugin} />
-                                {/* <PluginLogs uuid={plugin?.uuid || ""} getContainer={pageWrapId} /> */}
                             </div>
                         </TabPane>
                     </PluginTabs>

@@ -49,9 +49,11 @@ import {useStore} from "@/store"
 import {RollingLoadList, RollingLoadListProps} from "@/components/RollingLoadList/RollingLoadList"
 import {YakEditor} from "@/utils/editors"
 import {CheckboxChangeEvent} from "antd/lib/checkbox"
-import {SolidThumbupIcon} from "@/assets/icon/solid"
+import {SolidClouduploadIcon, SolidThumbupIcon} from "@/assets/icon/solid"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {PluginUpload} from "@/pages/plugins/local/PluginLocalUpload"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"
@@ -1401,5 +1403,37 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
                 placement='bottomRight'
             />
         </div>
+    )
+})
+
+interface PluginsUploadHintProps {
+    visible: boolean
+    setVisible: (value: boolean) => void
+}
+/** @name 本地插件批量上传 */
+export const PluginsUploadHint: React.FC<PluginsUploadHintProps> = React.memo((props) => {
+    const {visible, setVisible} = props
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
+    })
+    return (
+        <YakitHint
+            visible={visible}
+            title='一键上传'
+            heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            footer={null}
+            isDrag={true}
+            mask={false}
+        >
+            <PluginUpload
+                isUploadAll={true}
+                isPrivate={false}
+                onSave={onCancel}
+                onCancel={onCancel}
+                pluginNames={[]}
+                show={visible}
+                footerClassName={styles["plugins-upload-hint-footer"]}
+            />
+        </YakitHint>
     )
 })

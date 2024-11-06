@@ -137,7 +137,7 @@ import {
     apiQueryFuzzerConfig,
     apiSaveFuzzerConfig
 } from "./utils"
-import { defaultCodeScanPageInfo } from "@/defaultConstants/CodeScan"
+import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -403,36 +403,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         extraOpenMenuPage(data)
     })
 
-    // (创建|更新)-(新建|编辑)-插件编辑器页面的缓存信息
-    /**
-     * @param source 触发打开页面的父路由
-     * @param isUpdate 是否更新缓存数据(不更新则为创建缓存)
-     * @param isModify 新建插件还是编辑插件页面
-     */
-    const cuPluginEditorStorage = useMemoizedFn((source: YakitRoute, isModify?: boolean) => {
-        const route: YakitRoute = isModify ? YakitRoute.ModifyYakitScript : YakitRoute.AddYakitScript
-
-        const pageNodeInfo: PageProps = {
-            ...cloneDeep(defPage),
-            pageList: [
-                {
-                    id: randomString(8),
-                    routeKey: route,
-                    pageGroupId: "0",
-                    pageId: "0",
-                    pageName: YakitRouteToPageInfo[route]?.label || "",
-                    pageParamsInfo: {
-                        pluginInfoEditor: {source: source}
-                    },
-                    sortFieId: 0
-                }
-            ],
-            routeKey: route,
-            singleNode: true
-        }
-        setPagesData(route, pageNodeInfo)
-    })
-
     /**
      * @name 渲染端通信-打开一个指定页面
      * @description 本通信方法 替换 老方法"fetch-send-to-tab"(ipc通信)
@@ -456,17 +426,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.AddYakitScript:
                 addYakScript(params)
                 break
-            case YakitRoute.ModifyYakitScript:
-                modifyYakScript(params)
-                break
             case YakitRoute.Plugin_Hub:
                 pluginHub(params)
-                break
-            case YakitRoute.Plugin_Local:
-                pluginLocal(params)
-                break
-            case YakitRoute.Plugin_Store:
-                pluginStore(params)
                 break
             case YakitRoute.BatchExecutorPage:
                 addBatchExecutorPage(params)
@@ -498,7 +459,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Audit_Code:
                 addYakRunnerAuditCodePage(params)
                 break
-            case YakitRoute.YakRunner_Code_Scan: 
+            case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
                 break
             default:
@@ -664,8 +625,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
      * @name 新建插件
      * @param source 触发打开页面的父页面路由
      */
-    const addYakScript = useMemoizedFn((data: {source: YakitRoute} & AddYakitScriptPageInfoProps) => {
-        const {source} = data || {}
+    const addYakScript = useMemoizedFn((data: AddYakitScriptPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.AddYakitScript).length
         if (isExist) {
             const modalProps = getSubscribeClose(YakitRoute.AddYakitScript)
@@ -678,9 +638,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     () => {}
                 )
             }
-            cuPluginEditorStorage(source, false)
-        } else {
-            cuPluginEditorStorage(source, false)
         }
         openMenuPage(
             {route: YakitRoute.AddYakitScript},
@@ -693,31 +650,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
         )
-    })
-    /**
-     * @name 编辑插件
-     * @param source 触发打开页面的父页面路由
-     */
-    const modifyYakScript = useMemoizedFn((data: {source: YakitRoute; id: number}) => {
-        const {source, id} = data || {}
-        const isExist = pageCache.filter((item) => item.route === YakitRoute.ModifyYakitScript).length
-        if (isExist) {
-            emiter.emit("sendEditPluginId", `${id}`)
-            const modalProps = getSubscribeClose(YakitRoute.ModifyYakitScript)
-            if (modalProps) {
-                judgeDataIsFuncOrSettingForConfirm(
-                    modalProps["reset"],
-                    (setting) => {
-                        onModalSecondaryConfirm(setting, isModalVisibleRef)
-                    },
-                    () => {}
-                )
-            }
-            cuPluginEditorStorage(source, true)
-        } else {
-            cuPluginEditorStorage(source, true)
-        }
-        openMenuPage({route: YakitRoute.ModifyYakitScript}, {pageParams: {editPluginId: id}})
     })
     /**
      * @name 插件仓库
@@ -748,75 +680,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         setPagesData(YakitRoute.Plugin_Hub, pageNodeInfo)
         openMenuPage({route: YakitRoute.Plugin_Hub})
     })
-    /**
-     * @name 本地插件
-     * @description 插件商店和我的插件详情中点击去使用,传线上的UUID,传入本地详情进行使用
-     * @param uuid 用于本地插件定位uuid对应的插件详情位置
-     */
-    const pluginLocal = useMemoizedFn((data: {uuid: string}) => {
-        const {uuid} = data || {}
-
-        if (uuid) {
-            // uuid存在的，先将数据缓存至数据中心,后再打开页面
-            const newPageNode: PageNodeItemProps = {
-                id: `${randomString(8)}`,
-                routeKey: YakitRoute.Plugin_Local,
-                pageGroupId: "0",
-                pageId: YakitRoute.Plugin_Local, // 用路由key作为页面id
-                pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Local]?.label || "",
-                pageParamsInfo: {
-                    pluginLocalPageInfo: {
-                        uuid
-                    }
-                },
-                sortFieId: 0
-            }
-            const pages: PageProps = {
-                ...cloneDeep(defPage),
-                routeKey: YakitRoute.Plugin_Local,
-                singleNode: true,
-                pageList: [newPageNode]
-            }
-            setPagesData(YakitRoute.Plugin_Local, pages)
-        }
-        emiter.emit("onRefreshLocalPluginList")
-        openMenuPage({route: YakitRoute.Plugin_Local})
-    })
-    /**
-     * @name 插件商店
-     * @description 首页的统计模块，点击需要携带搜索参数跳转插件商店页面
-     * @param {string} keyword 携带的关键字搜索条件
-     * @param {string} plugin_type 携带的插件类型搜索条件
-     */
-    const pluginStore = useMemoizedFn((data: {keyword: string; plugin_type: string}) => {
-        const {keyword, plugin_type} = data || {}
-
-        if (keyword || plugin_type) {
-            // 缓存搜索条件
-            const newPageNode: PageNodeItemProps = {
-                id: `${randomString(8)}`,
-                routeKey: YakitRoute.Plugin_Store,
-                pageGroupId: "0",
-                pageId: YakitRoute.Plugin_Store, // 用路由key作为页面id
-                pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Store]?.label || "",
-                pageParamsInfo: {
-                    pluginOnlinePageInfo: {
-                        keyword: keyword || "",
-                        plugin_type: plugin_type || ""
-                    }
-                },
-                sortFieId: 0
-            }
-            const pages: PageProps = {
-                ...cloneDeep(defPage),
-                routeKey: YakitRoute.Plugin_Store,
-                singleNode: true,
-                pageList: [newPageNode]
-            }
-            setPagesData(YakitRoute.Plugin_Store, pages)
-        }
-        openMenuPage({route: YakitRoute.Plugin_Store})
-    })
 
     /** @name 渲染端通信-关闭一个指定页面 */
     useEffect(() => {
@@ -843,15 +706,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
                 removeMenuPage({route: route, menuName: ""}, addNext ? {route: addNext, menuName: ""} : undefined)
                 break
-            case YakitRoute.ModifyYakitScript:
-                // 判断页面是由谁触发打开的
-                const targetCache: PageNodeItemProps = (pages.get(route)?.pageList || [])[0]
-                let next: YakitRoute | undefined = undefined
-                if (targetCache?.pageParamsInfo && targetCache.pageParamsInfo?.pluginInfoEditor) {
-                    next = targetCache.pageParamsInfo.pluginInfoEditor?.source
-                }
-                removeMenuPage({route: route, menuName: ""}, next ? {route: next, menuName: ""} : undefined)
-                break
             default:
                 removeMenuPage({route: route, menuName: ""})
                 break
@@ -867,7 +721,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             const {type, data = {}} = res
             if (type === "fuzzer") addFuzzer(data)
             if (type === "websocket-fuzzer") addWebsocketFuzzer(data)
-            if (type === "plugin-store") addYakRunning(data)
             if (type === "add-yakit-script") addYakScript(data)
             if (type === "facade-server") addFacadeServer(data)
             if (type === "add-yak-running") addYakRunning(data)
@@ -882,16 +735,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === "**webshell-manager") openMenuPage({route: YakitRoute.Beta_WebShellManager})
             if (type === "**webshell-opt") addWebShellOpt(data)
 
-            if (type === "open-plugin-store") {
-                const flag = getPageCache().filter((item) => item.route === YakitRoute.Plugin_Store).length
-                if (flag === 0) {
-                    openMenuPage({route: YakitRoute.Plugin_Store})
-                } else {
-                    // 该方法在能保证route不是YakitRoute.Plugin_OP时,menuName可以传空字符
-                    removeMenuPage({route: YakitRoute.AddYakitScript, menuName: ""})
-                    setTimeout(() => ipcRenderer.invoke("send-local-script-list"), 50)
-                }
-            }
             if (type === YakitRoute.HTTPHacker) {
                 openMenuPage({route: YakitRoute.HTTPHacker})
             }
@@ -1537,7 +1380,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const onBeforeRemovePage = useMemoizedFn((data: OnlyPageCache) => {
         switch (data.route) {
             case YakitRoute.AddYakitScript:
-            case YakitRoute.ModifyYakitScript:
             case YakitRoute.HTTPFuzzer:
                 const modalProps = getSubscribeClose(data.route)
                 if (modalProps) {

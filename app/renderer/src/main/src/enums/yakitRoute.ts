@@ -13,10 +13,6 @@ export enum YakitRoute {
     PoC = "poc",
     Plugin_OP = "plugin-op",
     Mod_Brute = "brute",
-    /** 插件 */
-    Plugin_Store = "plugin-store",
-    Plugin_Owner = "plugin-owner",
-    Plugin_Local = "plugin-local",
     Plugin_Hub = "plugin-hub",
     Plugin_Groups = "plugin-groups",
     BatchExecutorPage = "batch-executor-page-ex",
@@ -55,8 +51,6 @@ export enum YakitRoute {
     PacketScanPage = "packet-scan-page",
     // 新建插件页面
     AddYakitScript = "add-yakit-script",
-    // 编辑插件页面
-    ModifyYakitScript = "modify-yakit-script",
     /** 简易版专属 */
     SimpleDetect = "simple-detect",
     // 录屏管理器

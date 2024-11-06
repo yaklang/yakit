@@ -43,18 +43,6 @@
     padding: 12px 12px 0;
 }
 
-.plugin-info-extra-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    path {
-        stroke-width: 1.5;
-    }
-    .loading-icon {
-        color: var(--yakit-primary-5);
-    }
-}
-
 // 详情-审核完的编辑器样式
 .details-editor-wrapper {
     width: 100%;
@@ -63,55 +51,5 @@
     margin-top: 12px;
 }
 
-.remove-menu-item {
-    color: var(--yakit-danger-5);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
 
-.plugin-local-extra-node-icon {
-    svg {
-        width: 16px;
-        height: 16px;
-    }
-    path {
-        stroke-width: 1.5;
-    }
-}
 
-.remove-menu-body {
-    padding: 24px;
-    gap: 8px;
-    display: flex;
-    flex-wrap: wrap;
-}
-.plugin-comment-upload-local {
-    .header {
-        padding: 16px 24px 0px;
-        display: flex;
-        justify-content: space-between;
-        .title {
-            color: #31343f;
-            font-size: 14px;
-            font-weight: 600;
-            line-height: 20px;
-        }
-        .opt {
-            color: #b4bbca;
-            cursor: pointer;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-            &:hover {
-                svg {
-                    color: var(--yakit-primary-4);
-                }
-            }
-        }
-    }
-    .main-content {
-        padding: 16px 24px 24px;
-    }
-}

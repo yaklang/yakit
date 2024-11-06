@@ -102,6 +102,7 @@ import {
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE
 } from "@/defaultConstants/HTTPFuzzerPage"
+import {WebsiteGV} from "@/enums/website"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1025,10 +1026,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                             <div
                                                 className={styles["subtitle-help-wrapper"]}
                                                 onClick={() =>
-                                                    ipcRenderer.invoke(
-                                                        "open-url",
-                                                        "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence"
-                                                    )
+                                                    ipcRenderer.invoke("open-url", WebsiteGV.WebFuzzerAddress)
                                                 }
                                             >
                                                 <span className={styles["text-style"]}>官方帮助文档</span>

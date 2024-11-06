@@ -42,7 +42,6 @@ import {onCodeToInfo} from "@/pages/plugins/editDetails/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useStore} from "@/store"
-import {PluginSyncAndCopyModal} from "@/pages/plugins/editDetails/PluginEditDetails"
 import {API} from "@/services/swagger/resposeType"
 import {httpCopyPluginToOnline} from "@/pages/pluginHub/utils/http"
 import {localYakInfo} from "@/pages/plugins/pluginsType"
@@ -56,6 +55,8 @@ import {useSubscribeClose} from "@/store/tabSubscribe"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {APIFunc} from "@/apiUtils/type"
 import {PluginUploadModal} from "@/pages/pluginHub/pluginUploadModal/PluginUploadModal"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -532,7 +533,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                         yakitNotify("success", "保存插件成功")
 
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(res.Id) || 0,
+                            id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: res.ScriptName,
                             uuid: res.UUID || ""
                         }
@@ -572,7 +573,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     yakitNotify("success", "保存插件成功")
 
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -624,7 +625,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then((res) => {
                     savedPluginInfo.current = cloneDeep(res)
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -691,7 +692,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then((res) => {
                     savedPluginInfo.current = cloneDeep(res)
                     const info: KeyParamsFetchPluginDetail = {
-                        id: Number(res.Id) || 0,
+                        id: Number(res.Id) || Number(savedPluginInfo.current?.Id) || 0,
                         name: res.ScriptName,
                         uuid: res.UUID || ""
                     }
@@ -731,7 +732,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 if (uploadType.current === "upload" && result) {
                     if (plugin) {
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(plugin.Id) || 0,
+                            id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: plugin.ScriptName,
                             uuid: plugin.UUID || ""
                         }
@@ -754,7 +755,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
                     if (plugin) {
                         const info: KeyParamsFetchPluginDetail = {
-                            id: Number(plugin.Id) || 0,
+                            id: Number(plugin.Id) || Number(savedPluginInfo.current?.Id) || 0,
                             name: plugin.ScriptName,
                             uuid: plugin.UUID || ""
                         }
@@ -768,7 +769,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             handleEditSuccessCallback({
                                 opType: "submit",
                                 info: {
-                                    id: Number(uploadPlugin.current?.Id || 0) || 0,
+                                    id: Number(uploadPlugin.current?.Id) || 0,
                                     name: onlinePlugin.script_name,
                                     uuid: onlinePlugin.uuid
                                 }
@@ -789,13 +790,13 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         /** ---------- 上传/提交插件弹框 End ---------- */
 
         /** ---------- 复制弹窗 Start ---------- */
-        // 同步|复制|提交的插件信息
+        // 复制的插件信息
         const onlineOPPlugin = useRef<API.PluginsRequest>()
         const [copyHint, setCopyHint] = useState<boolean>(false)
         const handleResetCopyHint = useMemoizedFn(() => {
             setCopyHint(false)
         })
-        const onCopyHintCallback = useMemoizedFn((isCallback: boolean, param?: {type: string; name: string}) => {
+        const onCopyHintCallback = useMemoizedFn((isCallback: boolean, name?: string) => {
             // 手动关闭弹窗|没有获取到进行修改的插件信息
             if (!isCallback || !onlineOPPlugin.current) {
                 handleResetCopyHint()
@@ -809,14 +810,14 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             }, 100)
 
             // 复制插件
-            if (!param?.name) {
+            if (!name) {
                 yakitNotify("error", "未获取到复制的新插件名")
                 handleTimeLoadingToFalse(setOnlineLoading)
                 return
             }
             const request: API.CopyPluginsRequest = {
                 ...onlineOPPlugin.current,
-                script_name: param.name,
+                script_name: name,
                 is_private: true,
                 base_plugin_id: +(initOnlinePlugin.current?.id || 0)
             }
@@ -831,7 +832,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 // 刷新我的列表
                                 emiter.emit("onRefreshOwnPluginList")
                                 const info: KeyParamsFetchPluginDetail = {
-                                    id: Number(localRes.Id) || 0,
+                                    id: Number(localRes.Id) || Number(savedPluginInfo.current?.Id) || 0,
                                     name: localRes.ScriptName,
                                     uuid: localRes.UUID || ""
                                 }
@@ -1013,7 +1014,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                             </div>
                         </div>
 
-                        <PluginSyncAndCopyModal isCopy={true} visible={copyHint} setVisible={onCopyHintCallback} />
+                        <PluginCopyModal visible={copyHint} setVisible={onCopyHintCallback} />
 
                         <YakitHint
                             getContainer={wrapperRef.current || undefined}
@@ -1041,3 +1042,54 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         )
     })
 )
+
+interface PluginCopyModalProps {
+    visible: boolean
+    setVisible: (isCallback: boolean, name?: string) => any
+}
+/** @name 插件复制云端 */
+const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
+    const {visible, setVisible} = props
+
+    const [name, setName] = useState<string>("")
+
+    const onSubmit = useMemoizedFn(() => {
+        if (!name) {
+            yakitNotify("error", "请输入复制插件的名称")
+            return
+        }
+        if (name.length > 100) {
+            yakitNotify("error", "插件名最长100位")
+            return
+        }
+        setVisible(true, name)
+    })
+    const onCancel = useMemoizedFn(() => {
+        setVisible(false)
+    })
+
+    return (
+        <YakitModal
+            title='复制至云端'
+            type='white'
+            width={506}
+            centered={true}
+            maskClosable={false}
+            closable={true}
+            visible={visible}
+            onCancel={onCancel}
+            onOk={onSubmit}
+            bodyStyle={{padding: 0}}
+        >
+            <div className={styles["plugin-copy-body"]}>
+                <div className={styles["copy-header"]}>
+                    复制插件并同步到自己的私密插件，无需作者同意，即可保存修改内容至云端
+                </div>
+                <div className={styles["copy-wrapper"]}>
+                    <div className={styles["title-style"]}>插件名称 : </div>
+                    <YakitInput placeholder='请输入...' value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+            </div>
+        </YakitModal>
+    )
+})

@@ -54,8 +54,6 @@ export const LocalPluginExecute: React.FC<LocalPluginExecuteProps> = React.memo(
             UUID: [plugin.UUID]
         })
             .then(() => {
-                // 刷新本地插件页面
-                emiter.emit("onRefLocalDetailSelectPlugin", plugin.UUID)
                 // 刷新单个执行页面中的插件数据
                 emiter.emit("onRefSinglePluginExecution", plugin.UUID)
                 yakitNotify("success", "下载完成")

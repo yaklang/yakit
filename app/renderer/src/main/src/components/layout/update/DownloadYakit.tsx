@@ -2,7 +2,6 @@ import React, {useState, useRef, useEffect} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace} from "@/utils/envfile"
 import {success, failed} from "@/utils/notification"
-import {CodeGV} from "@/yakitGV"
 import {YakitSystem, DownloadingState} from "@/yakitGVDefine"
 import Draggable from "react-draggable"
 import type {DraggableEvent, DraggableData} from "react-draggable"
@@ -14,6 +13,7 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
 import {safeFormatDownloadProcessState} from "../utils"
 import {grpcFetchLatestYakitVersion} from "@/apiUtils/grpc"
+import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
@@ -304,8 +304,11 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                             <div className={styles["yakit-update-link"]}>
                                 官网地址
                                 <div className={styles["link-wrapper"]}>
-                                    {CodeGV.HomeWebsite}
-                                    <CopyComponents className={styles["copy-icon"]} copyText={CodeGV.HomeWebsite} />
+                                    {WebsiteGV.OfficialWebsite}
+                                    <CopyComponents
+                                        className={styles["copy-icon"]}
+                                        copyText={WebsiteGV.OfficialWebsite}
+                                    />
                                 </div>
                             </div>
                         </div>
