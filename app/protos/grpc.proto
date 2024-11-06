@@ -1203,6 +1203,7 @@ message GlobalNetworkConfig {
 
   uint64 MinTlsVersion = 21;
   uint64 MaxTlsVersion = 22;
+  uint64 MaxContentLength = 23;
 }
 
 message AuthInfo {

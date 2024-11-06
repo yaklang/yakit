@@ -81,6 +81,7 @@ export interface GlobalNetworkConfig {
 
     MinTlsVersion: number
     MaxTlsVersion: number
+    MaxContentLength: number | string
 }
 
 export interface ThirdPartyApplicationConfig {
@@ -146,8 +147,9 @@ export const defaultParams: GlobalNetworkConfig = {
     IncludePluginScanURIs: [],
     DbSaveSync: false,
     CallPluginTimeout: 60,
-    MinTlsVersion:0x300,
-    MaxTlsVersion:0x304
+    MinTlsVersion: 0x300,
+    MaxTlsVersion: 0x304,
+    MaxContentLength: 10
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
@@ -207,7 +209,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 setCertificateParams(newArr)
                 currentIndex.current = ClientCertificates.length
             }
-            setParams((v) => ({...v, ...rsp, DisallowDomain: rsp.DisallowDomain.filter((item) => item)}))
+            setParams((v) => ({
+                ...v,
+                ...rsp,
+                DisallowDomain: rsp.DisallowDomain.filter((item) => item),
+                MaxContentLength: +rsp.MaxContentLength / (1024 * 1024) || 10
+            }))
             setLoading(false)
         })
     })
@@ -261,8 +268,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     })
 
     const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
-        console.log("SetGlobalNetworkConfig", params)
-        ipcRenderer.invoke("SetGlobalNetworkConfig", params).then(() => {
+        const realParams: GlobalNetworkConfig = {
+            ...params,
+            MaxContentLength: +params.MaxContentLength * 1024 * 1024
+        }
+        console.log("SetGlobalNetworkConfig", realParams)
+        ipcRenderer.invoke("SetGlobalNetworkConfig", realParams).then(() => {
             yakitInfo("更新配置成功")
             update()
             if (isNtml) setVisible(false)
@@ -569,7 +580,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 showUploadList={false}
                                                 beforeUpload={(file) => onCertificate(file)}
                                             >
-                                                <YakitButton type={"outline2"}>添加 TLS 客户端证书（双向认证）</YakitButton>
+                                                <YakitButton type={"outline2"}>
+                                                    添加 TLS 客户端证书（双向认证）
+                                                </YakitButton>
                                             </Upload>
                                             {certificateList}
                                         </Form.Item>
@@ -587,37 +600,36 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 )}
                                 <Form.Item label={"客户端tls版本支持"}>
                                     <Slider
-                                        style={{width:'33%'}}
+                                        style={{width: "33%"}}
                                         range
                                         dots
                                         value={[params.MinTlsVersion, params.MaxTlsVersion]}
-                                        onChange={(value)=>{
-                                            if (value.length==2) {
-                                                setParams({...params, MinTlsVersion:value[0],MaxTlsVersion: value[1]})
+                                        onChange={(value) => {
+                                            if (value.length == 2) {
+                                                setParams({...params, MinTlsVersion: value[0], MaxTlsVersion: value[1]})
                                             }
                                         }}
                                         min={0x300}
                                         max={0x304}
-                                        tipFormatter={(value)=>{
-                                            switch(value){
+                                        tipFormatter={(value) => {
+                                            switch (value) {
                                                 case 0x300:
                                                     return "SSLv3"
-                                                case 0x301 :
+                                                case 0x301:
                                                     return "TLS 1.0"
                                                 case 0x302:
                                                     return "TLS 1.1"
                                                 case 0x303:
                                                     return "TLS 1.2"
                                                 case 0x304:
-                                                    return "TLS 1.3" 
+                                                    return "TLS 1.3"
                                                 default:
-                                                    return value    
+                                                    return value
                                             }
                                         }}
-
                                     />
                                 </Form.Item>
-                                
+
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     第三方应用配置
                                 </Divider>
@@ -808,7 +820,6 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         onChange={(e) => {
                                             setParams({...params, CallPluginTimeout: e as number})
                                         }}
-                                    
                                     />
                                 </Form.Item>
                                 <Form.Item label={"免配置启动路径"}>
@@ -856,6 +867,34 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                     <YakitSwitch
                                         checked={params.DbSaveSync}
                                         onChange={(val) => setParams({...params, DbSaveSync: val})}
+                                    />
+                                </Form.Item>
+                                <Form.Item
+                                    label={"转储数据包大小"}
+                                    tooltip='超过设置大小的数据包会转储为文件，不会直接入库'
+                                    labelCol={{span: 5}}
+                                    wrapperCol={{span: 2}}
+                                >
+                                    <YakitInput
+                                        suffix='M'
+                                        size='small'
+                                        value={params.MaxContentLength}
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, "")
+                                            if (value.length > 1 && value.startsWith("0")) {
+                                                value = value.replace(/^0+/, "")
+                                            }
+                                            setParams({...params, MaxContentLength: value})
+                                        }}
+                                        onBlur={() => {
+                                            let value = parseInt(params.MaxContentLength + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 10
+                                            } else if (value > 50) {
+                                                value = 50
+                                            }
+                                            setParams({...params, MaxContentLength: value})
+                                        }}
                                     />
                                 </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
