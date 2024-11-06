@@ -47,11 +47,8 @@ import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 import "./main.scss"
 import "./GlobalClass.scss"
-<<<<<<< HEAD
 import { setUpSyntaxFlowMonaco } from "@/utils/monacoSpec/syntaxflowEditor"
-=======
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
->>>>>>> 3e5eafa74 (feat: 旧组件替换)
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 
 const {ipcRenderer} = window.require("electron")
 
