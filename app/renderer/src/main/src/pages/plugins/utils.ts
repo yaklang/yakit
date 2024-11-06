@@ -977,51 +977,6 @@ export const apiFetchOnlinePluginInfo: APIFunc<FetchOnlinePluginInfoRequest, API
     })
 }
 
-export interface PluginLogsRequest extends HTTPRequestParameters, API.LogsRequest {}
-/**
- * @name 获取插件的日志
- */
-export const apiFetchPluginLogs: (query: {
-    uuid: string
-    Page: number
-    Limit?: number
-}) => Promise<API.PluginsLogsResponse> = (query) => {
-    return new Promise(async (resolve, reject) => {
-        const params: HTTPRequestParameters = {
-            page: query.Page,
-            limit: query.Limit || 20,
-            order_by: "created_at",
-            order: "desc"
-        }
-        const data: API.LogsRequest = {
-            uuid: query.uuid
-        }
-        try {
-            const userInfo = await ipcRenderer.invoke("get-login-user-info", {})
-            if (userInfo.isLogin) {
-                data.token = userInfo.token || undefined
-            }
-        } catch (error) {}
-
-        try {
-            NetWorkApi<PluginLogsRequest, API.PluginsLogsResponse>({
-                method: "get",
-                url: "plugins/logs",
-                params: {...params} as any,
-                data: {...data}
-            })
-                .then(resolve)
-                .catch((err) => {
-                    yakitNotify("error", "获取日志失败:" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            yakitNotify("error", "获取日志失败:" + error)
-            reject(error)
-        }
-    })
-}
-
 interface GetYakScriptByOnlineIDRequest {
     UUID: string
 }

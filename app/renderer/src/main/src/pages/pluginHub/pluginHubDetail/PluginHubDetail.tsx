@@ -9,7 +9,6 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineClouddownloadIcon, OutlineRefreshIcon, OutlineReplyIcon, OutlineThumbupIcon} from "@/assets/icon/outline"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {PluginLogs} from "@/pages/plugins/log/PluginLog"
 import {yakitNotify} from "@/utils/notification"
 import {Tooltip} from "antd"
 import {SolidPluscircleIcon, SolidThumbupIcon} from "@/assets/icon/solid"
@@ -801,7 +800,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         basePluginName={copySourcePlugin}
                                         infoExtra={infoExtraNode}
                                     />
-                                    {/* <PluginLogs uuid={onlinePlugin?.uuid || ""} getContainer={wrapperId} /> */}
                                     {onlinePlugin ? (
                                         <PluginLog getContainer={wrapperId} plugin={onlinePlugin} />
                                     ) : (
