@@ -863,7 +863,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
     )
 })
 
-const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
+export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueListProps> = React.memo((props) => {
     const {showRegex, group, notEditable, onEditGroup, onAddGroup, httpResponse} = props
     const onChangeGroupItemValue = useMemoizedFn((v: string, number: number) => {
         group[number] = v

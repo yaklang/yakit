@@ -20,6 +20,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
+import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
+import cloneDeep from "lodash/cloneDeep"
+import {defaultMITMFilterData} from "@/defaultConstants/mitm"
+import {getAdvancedFlag} from "../MITMServerStartForm/MITMFiltersModal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -110,11 +114,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
             .invoke("mitm-get-filter")
-            .then((val: MITMFilterSchema) => {
+            .then((res: MITMFilterSchema) => {
+                const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
+                const val = data.baseFilter
                 const includeHostnameFlag = val?.includeHostname ? !!val?.includeHostname.length : false
                 const includeUriFlag = val?.includeUri ? !!val?.includeUri.length : false
                 const includeSuffixFlag = val?.includeSuffix ? !!val?.includeSuffix.length : false
-                const flag = includeHostnameFlag || includeUriFlag || includeSuffixFlag
+                const flag =
+                    includeHostnameFlag || includeUriFlag || includeSuffixFlag || getAdvancedFlag(data.advancedFilters)
                 setWhiteListFlag(flag)
                 if (flag) {
                     setAlertVisible(true)

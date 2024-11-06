@@ -152,12 +152,11 @@
             height: 16px;
         }
     }
-    .trash-icon {
-        color: var(--yakit-danger-5);
-        @include HTTPFuzzerPageShare.base-icon-card;
-    }
 }
-
+.trash-icon {
+    color: var(--yakit-danger-5);
+    @include HTTPFuzzerPageShare.base-icon-card;
+}
 .collapse-panel-condition {
     background-color: var(--yakit-card-background-color);
     padding: 12px 8px;
@@ -200,8 +199,8 @@
         }
         .resizer-icon {
             position: absolute;
-            bottom: 0px;
-            right: 0px;
+            bottom: 6px;
+            right: 4px;
             color: var(--yakit-body-text-color);
             z-index: 0;
             pointer-events: none;

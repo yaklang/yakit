@@ -1,3 +1,15 @@
+@use "../../fuzzer/HTTPFuzzerPageShare.module.scss" as HTTPFuzzerPageShare;
+
+.flex-space-between-and-center {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
 .mitm-server-start-form {
     height: 100%;
     width: 100%;
@@ -85,7 +97,7 @@
     .stateSecretHijacking-btns {
         :global {
             .ant-radio-button-wrapper {
-                font-weight: normal
+                font-weight: normal;
             }
         }
     }
@@ -198,6 +210,11 @@
             min-height: 28px;
         }
     }
+    .mitm-filters-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
     .mitm-filters-subTitle {
         width: 100%;
         display: flex;
@@ -214,6 +231,9 @@
                 height: auto;
             }
         }
+    }
+    .mitm-filters-form-hidden {
+        display: none;
     }
 }
 
@@ -254,56 +274,56 @@
     .list-item-border {
         border-bottom: 1px solid var(--yakit-border-color);
     }
-    .list-item-border-top{
+    .list-item-border-top {
         border-top: 1px solid var(--yakit-border-color);
     }
-    .list{
+    .list {
         max-height: 280px;
         overflow: auto;
-       .list-item {
-        padding: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        border-radius: 4px;
-        &:hover {
-            background-color: rgb(248, 248, 248);
-            border-bottom: 1px solid transparent;
-        }
-        &:hover::after {
-            content: "";
-            position: absolute;
-            top: -1px;
-            left: 0px;
-            width: 100%;
-            height: 1px;
-            background-color: #ffffff;
-        }
-        .name {
-            font-size: 13px;
-            flex: 1;
-            padding-right: 6px;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-        .opt {
-            cursor: pointer;
-            svg {
-                height: 16px;
-                width: 16px;
-                color: #b4bbca;
-            }
+        .list-item {
+            padding: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            border-radius: 4px;
             &:hover {
+                background-color: rgb(248, 248, 248);
+                border-bottom: 1px solid transparent;
+            }
+            &:hover::after {
+                content: "";
+                position: absolute;
+                top: -1px;
+                left: 0px;
+                width: 100%;
+                height: 1px;
+                background-color: #ffffff;
+            }
+            .name {
+                font-size: 13px;
+                flex: 1;
+                padding-right: 6px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .opt {
+                cursor: pointer;
                 svg {
-                    color: #f6544a;
+                    height: 16px;
+                    width: 16px;
+                    color: #b4bbca;
+                }
+                &:hover {
+                    svg {
+                        color: #f6544a;
+                    }
                 }
             }
         }
-    } 
     }
-    
+
     .no-data {
         font-style: normal;
         font-weight: 400;
@@ -320,4 +340,84 @@
     background: rgba(86, 201, 145, 0.1);
     color: rgba(133, 137, 158, 1);
     padding: 8px 16px;
+}
+
+.filter-content {
+    position: relative;
+    overflow-y: auto;
+    padding: 0 24px 24px;
+    min-height: 460px;
+    max-height: 80vh;
+    :global {
+        .ant-collapse-item > .ant-collapse-header {
+            border-top: 0;
+        }
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+            background: var(--yakit-card-background-color);
+            border-radius: 4px 4px 0px 0px;
+            border-bottom: 1px solid transparent;
+        }
+        .ant-collapse-item-active .ant-collapse-header {
+            border-bottom-color: var(--yakit-border-color) !important;
+        }
+        .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-content > .ant-collapse-content-box {
+            padding: 0;
+        }
+        .ant-collapse-item {
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px !important;
+        }
+        .ant-collapse-item + .ant-collapse-item {
+            margin-top: 8px;
+        }
+        .ant-collapse-ghost > .ant-collapse-item:last-child {
+            border-bottom: 1px solid var(--yakit-border-color);
+        }
+    }
+
+    .filter-condition {
+        @extend .flex-space-between-and-center;
+        padding: 12px 12px 8px;
+        background-color: #fff;
+        border-radius: 8px;
+        flex-wrap: wrap;
+        gap: 8px 0;
+    }
+    .filter-collapse {
+        padding: 0px 12px 12px;
+        .collapse-panel-header {
+            @extend .flex-center;
+            gap: 4px;
+            .header-id {
+                color: var(--yakit-helper-text-color);
+                @extend .flex-center;
+                gap: 4px;
+                margin-right: 8px;
+            }
+            .header-number {
+                @include HTTPFuzzerPageShare.circle-number;
+                max-width: 100px;
+            }
+        }
+        .trash-icon {
+            color: var(--yakit-danger-5);
+            @include HTTPFuzzerPageShare.base-icon-card;
+        }
+    }
+}
+
+.filter-operation {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 12px 0;
+}
+
+.filter-content-hidden {
+    display: none;
+}
+
+.collapse-panel-condition {
+    background-color: var(--yakit-card-background-color);
+    padding: 12px 8px;
 }

@@ -1,4 +1,5 @@
 import {ChromeLauncherParams} from "@/pages/mitm/MITMChromeLauncher"
+import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
 import {v4 as uuidv4} from "uuid"
 
 export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
@@ -363,3 +364,31 @@ export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
         default: true
     }
 ]
+
+export const defaultMITMAdvancedFilter: MITMAdvancedFilter = {
+    Field: "ExcludeHostnames",
+    MatcherType: "regexp",
+    Group: [""]
+}
+
+export const defaultMITMBaseFilter: MITMFilterSchema = {
+    includeHostname: [],
+    excludeHostname: [],
+    includeSuffix: [],
+    excludeSuffix: [],
+    excludeMethod: [],
+    excludeContentTypes: [],
+    excludeUri: [],
+    includeUri: []
+}
+
+export const defaultMITMFilterData: MITMFilterData = {
+    IncludeHostnames: [],
+    ExcludeHostnames: [],
+    IncludeSuffix: [],
+    ExcludeSuffix: [],
+    IncludeUri: [],
+    ExcludeUri: [],
+    ExcludeMethods: [],
+    ExcludeMIME: []
+}
