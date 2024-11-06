@@ -189,7 +189,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                     Data: d
                 })
                 if (isInit) {
-                    setIsRefresh(!isRefresh)
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
                     setSelectList([])
                     setAllCheck(false)
                 } else {

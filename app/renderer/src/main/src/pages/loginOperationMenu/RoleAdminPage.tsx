@@ -1,49 +1,326 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Form, Tag, Switch, Row, Col, TreeSelect, Checkbox} from "antd"
-import {} from "@ant-design/icons"
-import "./RoleAdminPage.scss"
-import {NetWorkApi} from "@/services/fetch"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {API} from "@/services/swagger/resposeType"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import moment from "moment"
-import {failed, success, warn} from "@/utils/notification"
-import {PaginationSchema} from "../invoker/schema"
-import type {ColumnsType} from "antd/es/table"
-import type {TreeSelectProps} from "antd"
-import type {DefaultOptionType} from "antd/es/select"
+import {Form, Space, TreeSelectProps} from "antd"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {NetWorkApi} from "@/services/fetch"
+import {yakitNotify} from "@/utils/notification"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {PencilAltIcon, TrashIcon} from "@/assets/newIcon"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {DefaultOptionType} from "antd/es/select"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitTreeSelect} from "@/components/yakitUI/YakitTreeSelect/YakitTreeSelect"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import styles from "./RoleAdminPage.module.scss"
+interface RoleListRequest {
+    limit: number
+    page: number
+    orderBy: string
+    order: string
+}
+interface RemoveProps {
+    rid: number[]
+}
+export interface RoleAdminPageProp {}
+export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [allCheck, setAllCheck] = useState<boolean>(false)
+    const [selectList, setSelectList] = useState<API.RoleList[]>([])
+    const isInitRequestRef = useRef<boolean>(true)
+    const [query, setQuery] = useState<RoleListRequest>({
+        page: 1,
+        limit: 20,
+        orderBy: "updated_at",
+        order: "desc"
+    })
+    const [loading, setLoading] = useState(false)
+    const [response, setResponse] = useState<API.RoleListResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+    const [roleFormShow, setRoleFormShow] = useState<boolean>(false)
+    const roleInfoRef = useRef<API.RoleList>()
 
-export interface CreateUserFormProps {
-    editInfo: API.RoleList | undefined
-    onCancel: () => void
-    refresh: () => void
-}
+    useEffect(() => {
+        update(1)
+    }, [])
 
-const layout = {
-    labelCol: {span: 5},
-    wrapperCol: {span: 16}
-}
-const itemLayout = {
-    labelCol: {span: 9},
-    wrapperCol: {span: 12}
-}
-export interface CreateProps {
-    user_name: string
+    const columns: ColumnsTypeProps[] = [
+        {
+            title: "角色名",
+            dataKey: "name"
+        },
+        {
+            title: "操作权限",
+            dataKey: "role",
+            render: (text, record) => {
+                return <span>{["审核员"].includes(record.name) ? "审核插件" : "-"}</span>
+            }
+        },
+        {
+            title: "创建时间",
+            dataKey: "created_at",
+            ellipsis: true,
+            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
+        },
+        {
+            title: "操作",
+            dataKey: "action",
+            fixed: "right",
+            width: 65,
+            render: (_, record: API.RoleList) =>
+                ["审核员"].includes(record.name) ? (
+                    <></>
+                ) : (
+                    <Space>
+                        <PencilAltIcon
+                            className={styles["edit-icon"]}
+                            onClick={(e) => {
+                                roleInfoRef.current = record
+                                setRoleFormShow(true)
+                            }}
+                        />
+                        <YakitPopconfirm
+                            title={"确定删除该角色吗？"}
+                            onConfirm={() => {
+                                onRemoveSingle(record.id)
+                            }}
+                            placement='right'
+                        >
+                            <TrashIcon className={styles["del-icon"]} />
+                        </YakitPopconfirm>
+                    </Space>
+                )
+        }
+    ]
+
+    const compareSelectList = useCampare(selectList)
+    const selectedRowKeys = useCreation(() => {
+        return selectList.map((item) => item.id)
+    }, [compareSelectList])
+    const selectNum = useMemo(() => {
+        if (allCheck) return response.pagemeta.total
+        else return selectList.length
+    }, [allCheck, compareSelectList, response.pagemeta.total])
+    const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: API.RoleList[], checked: boolean) => {
+        if (checked) {
+            setAllCheck(true)
+            setSelectList(response.data)
+        } else {
+            setAllCheck(false)
+            setSelectList([])
+        }
+    })
+    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: API.RoleList) => {
+        if (c) {
+            setSelectList((s) => [...s, selectedRows])
+        } else {
+            setAllCheck(false)
+            setSelectList((s) => s.filter((ele) => ele.id !== selectedRows.id))
+        }
+    })
+
+    const queyChangeUpdateData = useDebounceFn(
+        () => {
+            // 初次不通过此处请求数据
+            if (!isInitRequestRef.current) {
+                update(1)
+            }
+        },
+        {wait: 300}
+    ).run
+
+    useUpdateEffect(() => {
+        queyChangeUpdateData()
+    }, [query])
+
+    const update = useMemoizedFn((page: number) => {
+        const params: RoleListRequest = {
+            ...query,
+            page
+        }
+        const isInit = page === 1
+        isInitRequestRef.current = false
+        setLoading(true)
+        NetWorkApi<RoleListRequest, API.RoleListResponse>({
+            method: "get",
+            url: "roles",
+            params: params
+        })
+            .then((res) => {
+                const d = isInit ? res.data : response.data.concat(res.data)
+                setResponse({
+                    ...res,
+                    data: d
+                })
+                if (isInit) {
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
+                    setSelectList([])
+                    setAllCheck(false)
+                } else {
+                    if (allCheck) {
+                        setSelectList(d)
+                    }
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取角色列表失败：" + e)
+            })
+            .finally(() => {
+                setLoading(false)
+            })
+    })
+
+    const onRemoveSingle = (rid: number) => {
+        NetWorkApi<RemoveProps, API.NewUrmResponse>({
+            method: "delete",
+            url: "roles",
+            data: {
+                rid: [rid]
+            }
+        })
+            .then((res) => {
+                yakitNotify("success", "删除角色成功")
+                setSelectList((s) => s.filter((ele) => ele.id !== rid))
+                setResponse({
+                    data: response.data.filter((item) => item.id !== rid),
+                    pagemeta: {
+                        ...response.pagemeta,
+                        total: response.pagemeta.total - 1 > 0 ? response.pagemeta.total - 1 : 0
+                    }
+                })
+            })
+            .catch((err) => {
+                yakitNotify("error", "删除角色失败：" + err)
+            })
+    }
+
+    const onRemoveMultiple = () => {
+        setLoading(true)
+        NetWorkApi<RemoveProps, API.NewUrmResponse>({
+            method: "delete",
+            url: "roles",
+            data: {
+                rid: selectedRowKeys
+            }
+        })
+            .then((res) => {
+                yakitNotify("success", "删除角色成功")
+                setQuery((prevQuery) => ({
+                    ...prevQuery,
+                    page: 1
+                }))
+                setSelectList([])
+                setAllCheck(false)
+            })
+            .catch((err) => {
+                yakitNotify("error", "删除角色失败：" + err)
+            })
+            .finally(() => setTimeout(() => setLoading(false), 300))
+    }
+
+    return (
+        <div className={styles["roleAdminPage"]}>
+            <TableVirtualResize<API.RoleList>
+                loading={loading}
+                query={query}
+                isRefresh={isRefresh}
+                isShowTotal={true}
+                extra={
+                    <Space>
+                        <YakitPopconfirm
+                            title={"确认删除选择的角色吗？不可恢复"}
+                            onConfirm={(e) => {
+                                e?.stopPropagation()
+                                onRemoveMultiple()
+                            }}
+                            placement='bottomRight'
+                            disabled={selectNum === 0}
+                        >
+                            <YakitButton size='small' disabled={selectNum === 0}>
+                                批量删除
+                            </YakitButton>
+                        </YakitPopconfirm>
+                        <YakitButton size='small' onClick={() => setRoleFormShow(true)}>
+                            创建角色
+                        </YakitButton>
+                    </Space>
+                }
+                data={response.data}
+                enableDrag={false}
+                renderKey='id'
+                columns={columns}
+                useUpAndDown
+                pagination={{
+                    total: response.pagemeta.total,
+                    limit: response.pagemeta.limit,
+                    page: response.pagemeta.page,
+                    onChange: (page) => {
+                        update(page)
+                    }
+                }}
+                rowSelection={{
+                    isAll: allCheck,
+                    type: "checkbox",
+                    selectedRowKeys,
+                    onSelectAll,
+                    onChangeCheckboxSingle
+                }}
+            ></TableVirtualResize>
+            <YakitModal
+                visible={roleFormShow}
+                title='创建角色'
+                destroyOnClose={true}
+                maskClosable={false}
+                width={600}
+                footer={null}
+                onCancel={() => {
+                    setRoleFormShow(false)
+                    roleInfoRef.current = undefined
+                }}
+            >
+                <RoleOperationForm
+                    onCancel={() => {
+                        setRoleFormShow(false)
+                        roleInfoRef.current = undefined
+                    }}
+                    refresh={() => {
+                        update(1)
+                    }}
+                    roleInfo={roleInfoRef.current}
+                ></RoleOperationForm>
+            </YakitModal>
+        </div>
+    )
 }
 
 interface LoadDataProps {
     type: string
 }
-
 interface RolesDetailRequest {
     id: number
 }
-
-const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
-    const {onCancel, refresh, editInfo} = props
+interface RoleOperationFormProp {
+    onCancel: () => void
+    refresh: () => void
+    roleInfo?: API.RoleList
+}
+const RoleOperationForm: React.FC<RoleOperationFormProp> = (props) => {
+    const {onCancel, refresh, roleInfo} = props
     const [form] = Form.useForm()
     const [loading, setLoading] = useState<boolean>(false)
-    const [treeLoadedKeys,setTreeLoadedKeys] = useState<any>([])
+    const [treeLoadedKeys, setTreeLoadedKeys] = useState<any>([])
     const PluginType = {
         yak: "YAK 插件",
         mitm: "MITM 插件",
@@ -65,17 +342,16 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     ]
 
     const [selectedAll, setSelectedAll] = useState<boolean>(false)
-     // 受控模式控制浮层
-     const [open, setOpen] = useState(false)
+    // 受控模式控制浮层
+    const [open, setOpen] = useState(false)
 
     useEffect(() => {
-        if (editInfo) {
-            setLoading(true)
+        if (roleInfo) {
             NetWorkApi<RolesDetailRequest, API.NewRoleRequest>({
                 method: "get",
                 url: "roles/detail",
                 params: {
-                    id: editInfo.id
+                    id: roleInfo.id
                 }
             })
                 .then((res: API.NewRoleRequest) => {
@@ -88,7 +364,8 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                     }
                     if (
                         pluginTypeArr.length === PluginTypeKeyArr.length &&
-                        pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
+                        pluginTypeArr.filter((item) => PluginTypeKeyArr.includes(item)).length ===
+                            PluginTypeKeyArr.length
                     ) {
                         setSelectedAll(true)
                     }
@@ -97,22 +374,15 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                     })
                 })
                 .catch((err) => {
-                    failed("失败：" + err)
-                })
-                .finally(() => {
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
+                    yakitNotify("error", "失败：" + err)
                 })
         }
-    }, [])
+    }, [roleInfo])
 
     // 保留数组中重复元素
     const filterUnique = (arr) => arr.filter((i) => arr.indexOf(i) !== arr.lastIndexOf(i))
     const onFinish = useMemoizedFn((values) => {
-        const {name, 
-            // deletePlugin, 
-             treeSelect} = values
+        const {name, treeSelect} = values
         setLoading(true)
         let pluginTypeArr: string[] = Array.from(new Set(filterUnique([...treeSelect, ...PluginTypeKeyArr])))
         let pluginIdsArr: string[] = treeSelect.filter((item) => !pluginTypeArr.includes(item))
@@ -121,8 +391,8 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             pluginType: pluginTypeArr.join(","),
             pluginIds: pluginIdsArr.join(",")
         }
-        if (editInfo) {
-            params.id = editInfo.id
+        if (roleInfo) {
+            params.id = roleInfo.id
         }
         NetWorkApi<API.NewRoleRequest, API.ActionSucceeded>({
             method: "post",
@@ -136,14 +406,13 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                 }
             })
             .catch((err) => {
-                failed("失败：" + err)
+                yakitNotify("error", "失败：" + err)
             })
             .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
+                setLoading(false)
             })
     })
+
     const [treeData, setTreeData] = useState<Omit<DefaultOptionType, "label">[]>([...TreePluginType])
 
     const onLoadData: TreeSelectProps["loadData"] = ({id}) => {
@@ -165,11 +434,13 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                             title: item.script_name,
                             isLeaf: true
                         }))
-                        setTreeData([...treeData, ...AddTreeData])
+                        setTreeData(
+                            Array.from(new Map([...treeData, ...AddTreeData].map((item) => [item.id, item])).values())
+                        )
                     }
                 })
                 .catch((err) => {
-                    failed("失败：" + err)
+                    yakitNotify("error", "失败：" + err)
                 })
                 .finally(() => {
                     resolve(undefined)
@@ -183,9 +454,8 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
             newValue.filter((item) => PluginTypeKeyArr.includes(item)).length === PluginTypeKeyArr.length
         ) {
             setSelectedAll(true)
-            const treeSelect = PluginTypeKeyArr.map((key) => key)
             form.setFieldsValue({
-                treeSelect
+                treeSelect: PluginTypeKeyArr
             })
         } else {
             setSelectedAll(false)
@@ -195,16 +465,15 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
     const selectDropdown = useMemoizedFn((originNode: React.ReactNode) => {
         return (
             <>
-                <Checkbox
+                <YakitCheckbox
                     checked={selectedAll}
-                    style={{padding: "0 0px 4px 24px", width: "100%"}}
+                    style={{padding: "0 0px 4px 24px", width: "100%", marginTop: 8}}
                     onChange={(e) => {
                         const {checked} = e.target
                         setSelectedAll(checked)
                         if (checked) {
-                            const treeSelect = PluginTypeKeyArr.map((key) => key)
                             form.setFieldsValue({
-                                treeSelect
+                                treeSelect: PluginTypeKeyArr
                             })
                         } else {
                             form.setFieldsValue({
@@ -214,7 +483,7 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                     }}
                 >
                     全部
-                </Checkbox>
+                </YakitCheckbox>
                 {originNode}
             </>
         )
@@ -222,16 +491,12 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
 
     return (
         <div style={{marginTop: 24}}>
-            <Form {...layout} form={form} onFinish={onFinish}>
+            <Form labelCol={{span: 5}} wrapperCol={{span: 16}} form={form} onFinish={onFinish}>
                 <Form.Item name='name' label='角色名' rules={[{required: true, message: "该项为必填"}]}>
-                    <Input placeholder='请输入角色名' allowClear />
+                    <YakitInput placeholder='请输入角色名' allowClear />
                 </Form.Item>
-                <Form.Item
-                    name='treeSelect'
-                    label='插件权限'
-                    rules={[{required: true, message: "该项为必填"}]}
-                >
-                    <TreeSelect
+                <Form.Item name='treeSelect' label='插件权限' rules={[{required: true, message: "该项为必填"}]}>
+                    <YakitTreeSelect
                         showSearch={false}
                         treeDataSimpleMode
                         style={{width: "100%"}}
@@ -243,249 +508,41 @@ const RoleOperationForm: React.FC<CreateUserFormProps> = (props) => {
                         treeData={treeData}
                         allowClear
                         showCheckedStrategy='SHOW_PARENT'
-                        maxTagCount={selectedAll ? 0 : 10}
-                        maxTagPlaceholder={(omittedValues)=>selectedAll ? "全部" : <>+ {omittedValues.length} ...</>}
+                        maxTagCount={selectedAll ? 0 : 3}
+                        maxTagPlaceholder={(omittedValues) =>
+                            selectedAll ? "全部" : <>+ {omittedValues.length} ...</>
+                        }
                         dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                         open={open}
                         onDropdownVisibleChange={(visible) => setOpen(visible)}
                         treeLoadedKeys={treeLoadedKeys}
                         treeExpandedKeys={treeLoadedKeys}
-                        onTreeExpand={(expandedKeys)=>{
+                        onTreeExpand={(expandedKeys) => {
                             setTreeLoadedKeys(expandedKeys)
                         }}
+                        tagRender={(props) => (
+                            <YakitTag
+                                closable
+                                onClose={() => {
+                                    const treeSelect = form.getFieldValue("treeSelect")
+                                    const newTreeSelect = treeSelect.filter((item) => item !== props.value)
+                                    form.setFieldsValue({
+                                        treeSelect: newTreeSelect
+                                    })
+                                }}
+                            >
+                                {props.label}
+                            </YakitTag>
+                        )}
                     />
                 </Form.Item>
-                
+
                 <div style={{textAlign: "center"}}>
-                    <Button style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
+                    <YakitButton style={{width: 200}} type='primary' htmlType='submit' loading={loading}>
                         确认
-                    </Button>
+                    </YakitButton>
                 </div>
             </Form>
         </div>
     )
 }
-
-export interface QueryRoleAdminParams {}
-
-interface QueryProps {}
-interface RemoveProps {
-    rid: number[]
-}
-export interface RoleAdminPageProps {}
-
-const RoleAdminPage: React.FC<RoleAdminPageProps> = (props) => {
-    const [loading, setLoading] = useState<boolean>(false)
-    const [roleFormShow, setRoleFormShow] = useState<boolean>(false)
-    const [params, setParams, getParams] = useGetState<QueryRoleAdminParams>({})
-    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
-    const [pagination, setPagination] = useState<PaginationSchema>({
-        Limit: 20,
-        Order: "desc",
-        OrderBy: "updated_at",
-        Page: 1
-    })
-    const [data, setData] = useState<API.RoleList[]>([])
-    const [total, setTotal] = useState<number>(0)
-    // 编辑项信息
-    const [editInfo, setEditInfo] = useState<API.RoleList>()
-    const update = (page?: number, limit?: number, order?: string, orderBy?: string) => {
-        setLoading(true)
-        const paginationProps = {
-            page: page || 1,
-            limit: limit || pagination.Limit
-        }
-
-        NetWorkApi<QueryProps, API.RoleListResponse>({
-            method: "get",
-            url: "roles",
-            params: {
-                ...params,
-                ...paginationProps
-            }
-        })
-            .then((res) => {
-                if (Array.isArray(res.data)) {
-                    const newData = res.data.map((item) => ({...item}))
-                    setData(newData)
-                    setPagination({...pagination, Limit: res.pagemeta.limit})
-                    setTotal(res.pagemeta.total)
-                }
-            })
-            .catch((err) => {
-                failed("获取角色列表失败：" + err)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
-    }
-
-    useEffect(() => {
-        update()
-    }, [])
-
-    const rowSelection = {
-        onChange: (selectedRowKeys, selectedRows: API.RoleList[]) => {
-            setSelectedRowKeys(selectedRowKeys)
-        }
-    }
-
-    const onRemove = (rid: number[]) => {
-        NetWorkApi<RemoveProps, API.NewUrmResponse>({
-            method: "delete",
-            url: "roles",
-            data: {
-                rid
-            }
-        })
-            .then((res) => {
-                success("删除角色成功")
-                update()
-            })
-            .catch((err) => {
-                failed("删除角色失败：" + err)
-            })
-            .finally(() => {})
-    }
-
-    const columns: ColumnsType<API.RoleList> = [
-        {
-            title: "角色名",
-            dataIndex: "name",
-            render: (text: string, record) => (
-                <div>
-                    <span style={{marginRight: 10}}>{text}</span>
-                </div>
-            )
-        },
-        {
-            title: "操作权限",
-            render: (text: string, record) => (
-                <div>
-                    {
-                        ["审核员"].includes(record.name)? <span style={{marginRight: 10}}>审核插件</span>:"-"
-                    }
-                </div>
-            )
-        },
-        {
-            title: "创建时间",
-            dataIndex: "createdAt",
-            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
-        },
-        {
-            title: "操作",
-            render: (i,record) => (
-                ["审核员"].includes(record.name)?<></>:
-                <Space>
-                    <Button
-                        size='small'
-                        type="link"
-                        onClick={() => {
-                            setEditInfo(i)
-                            setRoleFormShow(true)
-                        }}
-                    >
-                        编辑
-                    </Button>
-                    <YakitPopconfirm
-                        title={"确定删除该角色吗？"}
-                        onConfirm={() => {
-                            onRemove([i.id])
-                        }}
-                        placement="right"
-                    >
-                        <Button size={"small"} danger={true} type="link">
-                            删除
-                        </Button>
-                    </YakitPopconfirm>
-                </Space>
-            )
-        }
-    ]
-    return (
-        <div className='role-admin-page'>
-            <Table
-                loading={loading}
-                pagination={{
-                    size: "small",
-                    defaultCurrent: 1,
-                    pageSize: pagination?.Limit || 10,
-                    showSizeChanger: true,
-                    total,
-                    showTotal: (i) => <Tag>{`Total ${i}`}</Tag>,
-                    onChange: (page: number, limit?: number) => {
-                        update(page, limit)
-                    }
-                }}
-                rowKey={(row) => row.id}
-                title={(e) => {
-                    return (
-                        <div className='table-title'>
-                            <div className='tab-title'>角色管理</div>
-                            <div className='operation'>
-                                <Space>
-                                    {!!selectedRowKeys.length ? (
-                                        <YakitPopconfirm
-                                            title={"确定删除选择的角色吗？不可恢复"}
-                                            onConfirm={() => {
-                                                onRemove(selectedRowKeys)
-                                            }}
-                                        >
-                                            <Button type='primary' htmlType='submit' size='small'>
-                                                批量删除
-                                            </Button>
-                                        </YakitPopconfirm>
-                                    ) : (
-                                        <Button type='primary' size='small' disabled={true}>
-                                            批量删除
-                                        </Button>
-                                    )}
-                                    <Button
-                                        type='primary'
-                                        htmlType='submit'
-                                        size='small'
-                                        onClick={() => {
-                                            setEditInfo(undefined)
-                                            setRoleFormShow(true)
-                                        }}
-                                    >
-                                        创建角色
-                                    </Button>
-                                </Space>
-                            </div>
-                        </div>
-                    )
-                }}
-                rowSelection={{
-                    type: "checkbox",
-                    ...rowSelection
-                }}
-                columns={columns}
-                size={"small"}
-                bordered={true}
-                dataSource={data}
-            />
-            <Modal
-                visible={roleFormShow}
-                title={editInfo ? "编辑角色" : "创建角色"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={600}
-                onCancel={() => setRoleFormShow(false)}
-                footer={null}
-            >
-                <RoleOperationForm
-                    editInfo={editInfo}
-                    onCancel={() => setRoleFormShow(false)}
-                    refresh={() => update()}
-                />
-            </Modal>
-        </div>
-    )
-}
-
-export default RoleAdminPage

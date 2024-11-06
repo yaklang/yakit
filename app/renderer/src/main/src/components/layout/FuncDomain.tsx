@@ -608,7 +608,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             </div>
 
             {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
-            <Modal
+            <YakitModal
                 visible={passwordShow}
                 closable={passwordClose}
                 title={"修改密码"}
@@ -620,9 +620,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-            </Modal>
+            </YakitModal>
 
-            <Modal
+            <YakitModal
                 visible={uploadModalShow}
                 title={"上传数据"}
                 destroyOnClose={true}
@@ -633,7 +633,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SelectUpload onCancel={() => setUploadModalShow(false)} />
-            </Modal>
+            </YakitModal>
 
             <DynamicControl
                 mainTitle={"远程控制"}

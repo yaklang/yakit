@@ -15,6 +15,14 @@
         }
     }
     :global {
+        .ant-tree-switcher-loading-icon {
+            color: var(--yakit-primary-5);
+        }
+        .ant-tree-list-scrollbar-thumb {
+            background: #c1c1c1 !important;
+            width: 6px !important;
+            transition: top 0.35s ease;
+        }
         .ant-tree-checkbox-inner {
             border-color: var(--checkbox-border-color);
             border-radius: 4px;
@@ -119,6 +127,14 @@
             }
             .ant-tree-checkbox-inner {
                 background-color: var(--checkbox-border-color) !important;
+            }
+        }
+
+        .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+            color: #ffffff;
+            background-color: var(--yakit-primary-5);
+            &:hover {
+                background-color: var(--yakit-primary-4);
             }
         }
     }

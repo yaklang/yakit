@@ -7,3 +7,35 @@
         }
     }
 }
+
+.yakit-cascader {
+    :global {
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            height: 28px;
+        }
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+            height: 26px;
+        }
+        .ant-select-single .ant-select-selector .ant-select-selection-item,
+        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+            line-height: 26px;
+            font-size: 12px;
+        }
+        .ant-select-single.ant-select-sm:not(.ant-select-customize-input) .ant-select-selector::after,
+        .ant-select-single.ant-select-sm:not(.ant-select-customize-input)
+            .ant-select-selector
+            .ant-select-selection-item,
+        .ant-select-single.ant-select-sm:not(.ant-select-customize-input)
+            .ant-select-selector
+            .ant-select-selection-placeholder {
+            line-height: 26px;
+        }
+        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+            border-radius: 4px;
+            border: 1px solid var(--yakit-border-color);
+        }
+        .ant-select-selection-item {
+            font-size: 12px;
+        }
+    }
+}

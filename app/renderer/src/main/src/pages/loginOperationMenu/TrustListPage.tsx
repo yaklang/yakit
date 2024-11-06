@@ -22,8 +22,8 @@ interface UserListRequest {
     keywords: string
     limit: number
     page: number
-    OrderBy: string
-    Order: string
+    orderBy: string
+    order: string
 }
 export interface TrustListPageProp {}
 export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
@@ -35,8 +35,8 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
         keywords: "",
         page: 1,
         limit: 20,
-        OrderBy: "updated_at",
-        Order: "desc"
+        orderBy: "updated_at",
+        order: "desc"
     })
     const [loading, setLoading] = useState(false)
     const [response, setResponse] = useState<API.UserListResponse>({
@@ -204,7 +204,9 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
         }
         const isInit = page === 1
         isInitRequestRef.current = false
-        setLoading(true)
+        if (isInit) {
+            setLoading(true)
+        }
         NetWorkApi<UserListRequest, API.UserListResponse>({
             method: "get",
             url: "user",
@@ -217,7 +219,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                     data: d
                 })
                 if (isInit) {
-                    setIsRefresh(!isRefresh)
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
                     setSelectList([])
                     setAllCheck(false)
                 } else {
@@ -313,7 +315,6 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                         <YakitInput.Search
                             placeholder={"请输入用户名进行搜索"}
                             enterButton={true}
-                            size={"small"}
                             style={{width: 200}}
                             onSearch={(value) => {
                                 setQuery((prevQuery) => ({...prevQuery, keywords: value}))

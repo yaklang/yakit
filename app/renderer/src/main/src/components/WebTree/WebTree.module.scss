@@ -53,16 +53,6 @@
             display: none;
         }
 
-        .ant-tree-switcher-loading-icon {
-            color: var(--yakit-primary-5);
-        }
-
-        .ant-tree-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
-            width: 6px !important;
-            transition: top 0.35s ease;
-        }
-
         .ant-tree .ant-tree-treenode {
             padding: 0;
         }
@@ -100,13 +90,8 @@
         }
 
         .ant-tree-node-content-wrapper.ant-tree-node-selected {
-            color: #ffffff;
-            background-color: var(--yakit-primary-5);
             .ant-tree-iconEle .anticon {
                 color: #fff;
-            }
-            &:hover {
-                background-color: var(--yakit-primary-4);
             }
         }
 
