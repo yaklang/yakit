@@ -1510,6 +1510,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         return (
             <NewHTTPPacketEditor
                 defaultHttps={isHttps}
+                url={info.Url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
                 showDefaultExtra={true}

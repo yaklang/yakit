@@ -227,6 +227,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
     )
 })
 interface MITMManualEditorProps {
+    urlInfo: string
     isHttp: boolean
     currentIsWebsocket: boolean
     currentPacket: string
@@ -245,6 +246,7 @@ interface MITMManualEditorProps {
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
+        urlInfo,
         isHttp,
         currentIsWebsocket,
         currentPacket,
@@ -385,6 +387,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     return (
         <NewHTTPPacketEditor
             defaultHttps={isHttp}
+            url={urlInfo === "监听中..." ? "" : urlInfo}
             originValue={currentPacket}
             noHeader={true}
             isResponse={currentPacket.substring(0, 5).startsWith("HTTP/")}
