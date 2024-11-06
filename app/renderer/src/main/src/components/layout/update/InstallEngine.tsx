@@ -17,6 +17,7 @@ import {safeFormatDownloadProcessState} from "../utils"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
 import emiter from "@/utils/eventBus/eventBus"
+import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
@@ -598,7 +599,10 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                                 <br />
                                 3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
                                 <br />
-                                4. 如果您需要使用Yakit<span className={styles["sign-bold-content"]}>用于商业化目的</span>，请确保你们已经<span className={styles["sign-bold-content"]}>获得官方授权</span>，否则我们将追究您的相关责任。
+                                4. 如果您需要使用Yakit
+                                <span className={styles["sign-bold-content"]}>用于商业化目的</span>，请确保你们已经
+                                <span className={styles["sign-bold-content"]}>获得官方授权</span>
+                                ，否则我们将追究您的相关责任。
                                 <br />
                                 <span className={styles["sign-bold-content"]}>
                                     如果发现上述禁止行为，我们将保留追究您法律责任的权利。
@@ -638,15 +642,13 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
         let link: string = ""
         switch (type) {
             case "Darwin":
-                link = `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${latestVersion || "latest"}/yak_darwin_amd64`
+                link = `https://${WebsiteGV.OSSSourceAddress}/yak/${latestVersion || "latest"}/yak_darwin_amd64`
                 break
             case "Linux":
-                link = `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${latestVersion || "latest"}/yak_linux_amd64`
+                link = `https://${WebsiteGV.OSSSourceAddress}/yak/${latestVersion || "latest"}/yak_linux_amd64`
                 break
             case "Windows_NT":
-                link = `https://yaklang.oss-cn-beijing.aliyuncs.com/yak/${
-                    latestVersion || "latest"
-                }/yak_windows_amd64.exe`
+                link = `https://${WebsiteGV.OSSSourceAddress}/yak/${latestVersion || "latest"}/yak_windows_amd64.exe`
                 break
         }
         ipcRenderer.invoke("set-copy-clipboard", link)
@@ -740,7 +742,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         Windows(x64)下载
                                     </div>
                                     <div className={styles["link-style"]}>
-                                        https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
+                                        https://{WebsiteGV.OSSSourceAddress}/yak/{latestVersion || "latest"}
                                         /yak_windows_amd64.exe
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Windows_NT")}>
                                             <YakitCopySvgIcon />
@@ -752,7 +754,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         MacOS(intel/m1)下载
                                     </div>
                                     <div className={styles["link-style"]}>
-                                        https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
+                                        https://{WebsiteGV.OSSSourceAddress}/yak/{latestVersion || "latest"}
                                         /yak_darwin_amd64
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Darwin")}>
                                             <YakitCopySvgIcon />
@@ -764,7 +766,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         Linux(x64)下载
                                     </div>
                                     <div className={styles["link-style"]}>
-                                        https://yaklang.oss-cn-beijing.aliyuncs.com/yak/{latestVersion || "latest"}
+                                        https://{WebsiteGV.OSSSourceAddress}/yak/{latestVersion || "latest"}
                                         /yak_linux_amd64
                                         <div className={styles["copy-icon"]} onClick={() => copyCommand("Linux")}>
                                             <YakitCopySvgIcon />

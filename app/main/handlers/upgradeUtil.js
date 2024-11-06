@@ -21,7 +21,6 @@ const {
     yakitInstallDir
 } = require("../filePath")
 const {
-    fetchLatestYakitVersion,
     downloadYakitEE,
     downloadYakitCommunity,
     getYakitEEDownloadUrl,
@@ -176,22 +175,6 @@ module.exports = {
         })
 
         // asyncQueryLatestYakEngineVersion wrapper
-        const asyncQueryLatestYakEngineVersion = (params) => {
-            return new Promise((resolve, reject) => {
-                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/version.txt")
-                rsp.on("response", rsp => {
-                    rsp.on("data", data => {
-                        resolve(`v${Buffer.from(data).toString("utf8")}`.trim())
-                    }).on("error", err => reject(err))
-                })
-                rsp.on("error", reject)
-            })
-        }
-        ipcMain.handle("query-latest-yak-version", async (e, params) => {
-            return await asyncQueryLatestYakEngineVersion(params)
-        });
-
-        // asyncQueryLatestYakEngineVersion wrapper
         const asyncQueryLatestNotification = (params) => {
             return new Promise((resolve, reject) => {
                 let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/notification.md")
@@ -212,21 +195,6 @@ module.exports = {
         ipcMain.handle("query-latest-notification", async (e, params) => {
             return await asyncQueryLatestNotification(params)
         })
-
-        // asyncQueryLatestYakEngineVersion wrapper
-        const asyncQueryLatestYakitEngineVersion = (params) => {
-            return new Promise((resolve, reject) => {
-                fetchLatestYakitVersion().then(version => {
-                    resolve(version)
-                }).catch(e => {
-                    reject(e)
-                })
-            })
-        }
-        ipcMain.handle("query-latest-yakit-version", async (e, params) => {
-            return await asyncQueryLatestYakitEngineVersion(params)
-        })
-
 
         class YakVersionEmitter extends EventEmitter {
         }

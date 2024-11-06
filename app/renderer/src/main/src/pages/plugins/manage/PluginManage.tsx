@@ -63,7 +63,7 @@ import {isEnpriTraceAgent} from "@/utils/envfile"
 import {NetWorkApi} from "@/services/fetch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {DefaultStatusList, PluginGV, defaultPagemeta, defaultSearch} from "../builtInData"
+import {DefaultStatusList, defaultSearch} from "../builtInData"
 import {useStore} from "@/store"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginGroupList} from "../local/PluginsLocalType"
@@ -122,13 +122,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [showFilter, setShowFilter] = useState<boolean>(true)
     // 获取筛选栏展示状态
     useEffect(() => {
-        getRemoteValue(PluginGV.AuditFilterCloseStatus).then((value: string) => {
+        getRemoteValue(RemotePluginGV.AuditFilterCloseStatus).then((value: string) => {
             if (value === "true") setShowFilter(true)
             if (value === "false") setShowFilter(false)
         })
     }, [])
     const onSetShowFilter = useMemoizedFn((v) => {
-        setRemoteValue(PluginGV.AuditFilterCloseStatus, `${v}`)
+        setRemoteValue(RemotePluginGV.AuditFilterCloseStatus, `${v}`)
         setShowFilter(v)
     })
 
@@ -169,7 +169,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
 
             setLoading(true)
             const params: PluginListPageMeta = !!reset
-                ? {...defaultPagemeta}
+                ? {page: 1, limit: 20}
                 : {
                       page: response.pagemeta.page + 1,
                       limit: response.pagemeta.limit || 20

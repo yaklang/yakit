@@ -86,6 +86,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {SolidBorderDocumentTextIcon} from "@/assets/icon/colors"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../mitm/MITMPage"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
+import {WebsiteGV} from "@/enums/website"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -527,12 +528,7 @@ const Home: React.FC<HomeProp> = (props) => {
                     WebFuzzer 序列动画演示
                     <div
                         className={styles["subtitle-help-wrapper"]}
-                        onClick={() =>
-                            ipcRenderer.invoke(
-                                "open-url",
-                                "https://www.yaklang.com/products/Web%20Fuzzer/fuzz-sequence"
-                            )
-                        }
+                        onClick={() => ipcRenderer.invoke("open-url", WebsiteGV.WebFuzzerAddress)}
                     >
                         <span className={styles["text-style"]}>官方帮助文档</span>
                         <OutlineQuestionmarkcircleIcon />
@@ -598,9 +594,7 @@ const Home: React.FC<HomeProp> = (props) => {
         if (curProjectInfo?.ProjectName === "[temporary]") {
             return "临时项目"
         } else {
-            return curProjectInfo?.ProjectName
-                ? curProjectInfo?.ProjectName
-                : getReleaseEditionName()
+            return curProjectInfo?.ProjectName ? curProjectInfo?.ProjectName : getReleaseEditionName()
         }
     }, [curProjectInfo])
 

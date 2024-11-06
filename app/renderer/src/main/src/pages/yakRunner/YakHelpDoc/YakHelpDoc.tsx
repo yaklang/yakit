@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {DataProps, YakHelpDocItemLoadProps, YakHelpDocProps} from "./YakHelpDocType"
 
-import classNames from "classnames"
 import styles from "./YakHelpDoc.module.scss"
 import {loadFromYakURLRaw, requestYakURLList} from "@/pages/yakURLTree/netif"
 import {yakitFailed} from "@/utils/notification"
@@ -14,6 +13,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Tooltip} from "antd"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
+import {WebsiteGV} from "@/enums/website"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -93,7 +93,7 @@ export const YakHelpDocItemLoad: React.FC<YakHelpDocItemLoadProps> = (props) => 
 export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
     const [data, setData] = useState<DataProps[]>([])
     const searchRef = useRef<string>("")
-    const [activeKey,setActiveKey] = useState<string|string[]>()
+    const [activeKey, setActiveKey] = useState<string | string[]>()
 
     useEffect(() => {
         update()
@@ -134,7 +134,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
                         <YakitButton
                             icon={<OutlineGlobealtIcon />}
                             type='text2'
-                            onClick={() => openExternalWebsite("https://www.yaklang.com/docs/intro/")}
+                            onClick={() => openExternalWebsite(WebsiteGV.YakHelpDocAddress)}
                         />
                     </Tooltip>
                 </div>
@@ -156,7 +156,9 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
                     isShowBottom={true}
                     collapseProps={{
                         activeKey,
-                        onChange:(v)=>{setActiveKey(v)}
+                        onChange: (v) => {
+                            setActiveKey(v)
+                        }
                     }}
                 />
             </div>

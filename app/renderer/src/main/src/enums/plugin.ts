@@ -15,5 +15,13 @@ export enum RemotePluginGV {
     SingleDownloadPluginSameNameOverlay = "single_download_plugin_same_name_overlay",
 
     /** mitm 类型插件新增 cli 自定义参数，需要在用户端提示用户更新一遍本地插件(一次性提示) */
-    UpdateLocalPluginForMITMCLI = "update_local_plugin_for_mitm_cli"
+    UpdateLocalPluginForMITMCLI = "update_local_plugin_for_mitm_cli",
+
+    /** @name 插件审核页左侧筛选条件栏是否关闭 */
+    AuditFilterCloseStatus = "audit-filter-close-status",
+
+    /**@name 本地插件执行模块,额外参数中,[请求路径]的缓存字段 */
+    LocalExecuteExtraPath = "local-execute-extra-path",
+    /**@name 插件批量执行模块,额外参数中,[proxy]的缓存字段 */
+    LocalBatchExecuteExtraProxy = "local-batch-execute-extra-proxy"
 }

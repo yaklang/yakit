@@ -41,30 +41,6 @@ module.exports = (win, getClient) => {
             }
         })
     })
-    ipcMain.handle("auto-update-yak-module", (e) => {
-        let stream = getClient().AutoUpdateYakModule({})
-        stream.on("data", (data) => {
-            if (!win) {
-                return
-            }
-
-            win.webContents.send("client-auto-update-yak-module-data", data)
-        })
-        stream.on("end", (data) => {
-            if (!win) {
-                return
-            }
-
-            win.webContents.send("client-auto-update-yak-module-end")
-        })
-        stream.on("error", (error) => {
-            if (!win) {
-                return
-            }
-
-            win.webContents.send("client-auto-update-yak-module-error", error?.details)
-        })
-    })
 
     // asyncSaveYakScript wrapper
     const asyncSaveYakScript = (params) => {

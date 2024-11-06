@@ -1,38 +1,33 @@
-import httpQueryStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss";
-import matcherStyles from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss";
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
-import {
-    HollowLightningBoltIcon,
-    QuestionMarkCircleIcon,
-    RemoveIcon,
-    TerminalIcon,
-    TrashIcon
-} from "@/assets/newIcon";
-import React, {ReactNode, useContext, useEffect, useMemo, useState} from "react";
-import {Form, Tooltip} from "antd";
-import classNames from "classnames";
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer";
+import httpQueryStyles from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfig.module.scss"
+import matcherStyles from "@/pages/fuzzer/MatcherAndExtractionCard/MatcherAndExtraction.module.scss"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {HollowLightningBoltIcon, QuestionMarkCircleIcon, RemoveIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
+import React, {ReactNode, useEffect, useMemo, useState} from "react"
+import {Form, Tooltip} from "antd"
+import classNames from "classnames"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
-import {YakEditor} from "@/utils/editors";
-import mitmStyles from "@/pages/mitm/MITMRule/MITMRule.module.scss";
-import {openExternalWebsite} from "@/utils/openWebsite";
-import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule";
-import {useDebounceEffect, useGetState, useMemoizedFn} from "ahooks";
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect";
-import {InputItem, ManyMultiSelectForString, SelectOne} from "@/utils/inputUtil";
-import {YakScript} from "@/pages/invoker/schema";
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakEditor} from "@/utils/editors"
+import mitmStyles from "@/pages/mitm/MITMRule/MITMRule.module.scss"
+import {openExternalWebsite} from "@/utils/openWebsite"
+import {RuleExportAndImportButton} from "@/pages/mitm/MITMRule/MITMRule"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {InputItem, ManyMultiSelectForString} from "@/utils/inputUtil"
+import {YakScript} from "@/pages/invoker/schema"
 
-import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss";
-import {OutlineAdjustmentsIcon, OutlineCodeIcon, OutlineCollectionIcon, OutlineQrcodeIcon} from "@/assets/icon/outline";
+import webFuzzerStyles from "@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage.module.scss"
+import {OutlineCodeIcon, OutlineQrcodeIcon} from "@/assets/icon/outline"
 
-import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor";
-import style from "@/pages/customizeMenu/CustomizeMenu.module.scss";
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover";
-import {failed, info, success, warn} from "@/utils/notification";
-import {ShellScript} from "@/pages/webShell/models";
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import style from "@/pages/customizeMenu/CustomizeMenu.module.scss"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {failed, success, warn} from "@/utils/notification"
+import {ShellScript} from "@/pages/webShell/models"
 import {shallow} from "zustand/shallow"
-import {useMenuHeight} from "@/store/menuHeight";
+import {useMenuHeight} from "@/store/menuHeight"
+import {WebsiteGV} from "@/enums/website"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -52,21 +47,18 @@ export const CustomCodecList: React.FC<CustomCodecListProps> = React.memo((props
                     <div className={httpQueryStyles["matchersList-item"]} key={`${item}-${index}`}>
                         <div className={httpQueryStyles["matchersList-item-heard"]}>
                             <span className={httpQueryStyles["item-number"]}>{index}</span>
-                            <span style={{"color": "#f69c5d"}}>{item.ScriptName}</span>
+                            <span style={{color: "#f69c5d"}}>{item.ScriptName}</span>
                             <span className={httpQueryStyles["item-number"]}>
-                                {
-
-                                    (item.Tags||"").split(",").filter((i) => i !== "webshell-packet-codec" && i !== "webshell-payload-codec").join(",")
-                                }
+                                {(item.Tags || "")
+                                    .split(",")
+                                    .filter((i) => i !== "webshell-packet-codec" && i !== "webshell-payload-codec")
+                                    .join(",")}
                             </span>
-
                         </div>
                         <CustomCodecListItemOperate
                             onRemove={() => onRemove(index)}
                             onEdit={() => onEdit(index)}
-                            popoverContent={
-                                <YakitEditor type={"yak"} value={item.Content} readOnly={true}/>
-                            }
+                            popoverContent={<YakitEditor type={"yak"} value={item.Content} readOnly={true} />}
                         />
                     </div>
                 ))}
@@ -94,42 +86,36 @@ interface CustomCodecListItemOperateProps {
     popoverContent: ReactNode
 }
 
-const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = React.memo(
-    (props) => {
-        const {onRemove, onEdit, popoverContent} = props
-        const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
-        return (
-            <div
-                className={classNames(httpQueryStyles["matchersList-item-operate"], {
-                    [httpQueryStyles["matchersList-item-operate-hover"]]: visiblePopover
-                })}
-            >
-                <TrashIcon className={httpQueryStyles["trash-icon"]} onClick={() => onRemove()}/>
+const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = React.memo((props) => {
+    const {onRemove, onEdit, popoverContent} = props
+    const [visiblePopover, setVisiblePopover] = useState<boolean>(false)
+    return (
+        <div
+            className={classNames(httpQueryStyles["matchersList-item-operate"], {
+                [httpQueryStyles["matchersList-item-operate-hover"]]: visiblePopover
+            })}
+        >
+            <TrashIcon className={httpQueryStyles["trash-icon"]} onClick={() => onRemove()} />
 
-                <Tooltip title='调试'>
-                    <HollowLightningBoltIcon
-                        className={httpQueryStyles["hollow-lightningBolt-icon"]}
-                        onClick={() => {
-                            onEdit()
-                        }}
-                    />
-                </Tooltip>
-                {/*<TerminalPopover*/}
-                {/*    popoverContent={popoverContent}*/}
-                {/*    visiblePopover={visiblePopover}*/}
-                {/*    setVisiblePopover={setVisiblePopover}*/}
-                {/*/>*/}
-                <YakitPopover
-                    placement='topRight'
-                    overlayClassName={style["terminal-popover"]}
-                    content={popoverContent}
-                >
-                    <TerminalIcon className={style["plugin-local-icon"]}/>
-                </YakitPopover>
-            </div>
-        )
-    }
-)
+            <Tooltip title='调试'>
+                <HollowLightningBoltIcon
+                    className={httpQueryStyles["hollow-lightningBolt-icon"]}
+                    onClick={() => {
+                        onEdit()
+                    }}
+                />
+            </Tooltip>
+            {/*<TerminalPopover*/}
+            {/*    popoverContent={popoverContent}*/}
+            {/*    visiblePopover={visiblePopover}*/}
+            {/*    setVisiblePopover={setVisiblePopover}*/}
+            {/*/>*/}
+            <YakitPopover placement='topRight' overlayClassName={style["terminal-popover"]} content={popoverContent}>
+                <TerminalIcon className={style["plugin-local-icon"]} />
+            </YakitPopover>
+        </div>
+    )
+})
 
 interface CustomCodecEditorProps {
     currCodec: YakScript
@@ -168,20 +154,18 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 40
     }, [menuBodyHeight.firstTabMenuBodyHeight])
-    const onOkImport = useMemoizedFn(() => {
-    })
+    const onOkImport = useMemoizedFn(() => {})
     const onSaveToDataBase = useMemoizedFn(() => {
         if (!currCodec.ScriptName) {
             warn("请输入插件模块名!")
             return
         }
-        if (!currCodec.Content || (currCodec.Tags||"").split(",").length != 2) {
-
+        if (!currCodec.Content || (currCodec.Tags || "").split(",").length != 2) {
             warn("请输入插件内容/选择类型!")
             return
         }
         ipcRenderer
-            .invoke("SaveYakScript", { ...currCodec, Type: "codec" })
+            .invoke("SaveYakScript", {...currCodec, Type: "codec"})
             .then((data) => {
                 success(`创建 / 保存 ${title} 脚本成功`)
                 setCurrCodec(data)
@@ -197,8 +181,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
                 }, 200)
             })
     })
-    const onExecute = useMemoizedFn(() => {
-    })
+    const onExecute = useMemoizedFn(() => {})
 
     const [modified, setModified] = useState<YakScript | undefined>()
 
@@ -216,7 +199,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
             title={<div className={mitmStyles["heard-title"]}>{title}</div>}
             extra={
                 <div className={mitmStyles["heard-right-operation"]}>
-                    <RuleExportAndImportButton onOkImport={onOkImport}/>
+                    <RuleExportAndImportButton onOkImport={onOkImport} />
                     <YakitButton
                         type='outline1'
                         onClick={() => onExecute()}
@@ -236,13 +219,12 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
                         <YakitButton
                             type='outline2'
                             className={mitmStyles["button-question"]}
-                            onClick={() => openExternalWebsite("https://www.yaklang.com/")}
-                            icon={<QuestionMarkCircleIcon/>}
-                        >
-                        </YakitButton>
+                            onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
+                            icon={<QuestionMarkCircleIcon />}
+                        ></YakitButton>
                     </Tooltip>
                     <div onClick={() => onClose()} className={mitmStyles["icon-remove"]}>
-                        <RemoveIcon/>
+                        <RemoveIcon />
                     </div>
                 </div>
             }
@@ -259,7 +241,6 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
         </YakitDrawer>
     )
 })
-
 
 const defPacketEncoder = `
 wsmPacketEncoder = func(reqBody) {
@@ -316,12 +297,12 @@ const webFuzzerTabs = [
     {
         key: "enCoder",
         label: "编码器",
-        icon: <OutlineCodeIcon/>
+        icon: <OutlineCodeIcon />
     },
     {
         key: "deCoder",
         label: "解码器",
-        icon: <OutlineQrcodeIcon/>
+        icon: <OutlineQrcodeIcon />
     }
 ]
 
@@ -345,7 +326,6 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
 
     const [enPayloadValue, setEnPayloadValue] = useState<string>("")
     const [dePayloadValue, setDePayloadValue] = useState<string>("")
-
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
     useEffect(() => {
@@ -373,42 +353,45 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
             setParams({
                 ...params,
                 Content: [enPacketValue, dePacketValue].join("\n##############################################")
-            });
+            })
         } else {
             setParams({
                 ...params,
                 Content: [enPayloadValue, dePayloadValue].join("\n##############################################")
-            });
+            })
         }
-    }, [enPacketValue, dePacketValue, enPayloadValue, dePayloadValue]);
+    }, [enPacketValue, dePacketValue, enPayloadValue, dePayloadValue])
     const [shellScript, setShellScript] = useState<string>("")
 
     useEffect(() => {
-        let ss =( params.Tags|| "").split(",").filter((item) => item !== "webshell-packet-codec" && item !== "webshell-payload-codec").join(",");
+        let ss = (params.Tags || "")
+            .split(",")
+            .filter((item) => item !== "webshell-packet-codec" && item !== "webshell-payload-codec")
+            .join(",")
         if (ss) {
-            setShellScript(ss);
+            setShellScript(ss)
         }
-    }, [shellScript]);
+    }, [shellScript])
 
     // 定义一个状态变量和一个设置这个状态变量的函数
-    const [selectedTab, setSelectedTab] = useState("enCoder");
-    const [disabled, setDisabled] = useState(false);
-// 定义一个处理点击事件的函数
+    const [selectedTab, setSelectedTab] = useState("enCoder")
+    const [disabled, setDisabled] = useState(false)
+    // 定义一个处理点击事件的函数
     const handleTabClick = (key: string) => {
-        setSelectedTab(key);
-    };
+        setSelectedTab(key)
+    }
 
     useEffect(() => {
         // setShellScript("")
     }, [])
 
     return (
-        <div className={matcherStyles["matching-extraction-resize-box"]} style={{display: 'flex'}}>
+        <div className={matcherStyles["matching-extraction-resize-box"]} style={{display: "flex"}}>
             <YakitResizeBox
                 freeze={false}
                 firstNode={
                     <>
-                        <div className={webFuzzerStyles["web-fuzzer"]} style={{"height": "100%"}}>
+                        <div className={webFuzzerStyles["web-fuzzer"]} style={{height: "100%"}}>
                             <div className={webFuzzerStyles["web-fuzzer-tab"]}>
                                 {webFuzzerTabs.map((item) => (
                                     <div
@@ -425,33 +408,28 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                     </div>
                                 ))}
                             </div>
-                            <div
-                                className={classNames(webFuzzerStyles["web-fuzzer-tab-content"])}>
-                                {
-                                    selectedTab === "enCoder" ? (
-                                        <YakEditor
-                                            key={selectedTab}
-                                            type={"yak"} value={packetMode ? enPacketValue : enPayloadValue}
-                                            setValue={packetMode ? setEnPacketValue : setEnPayloadValue}
-                                        />
-                                    ) : (
-                                        <YakEditor
-                                            key={selectedTab}
-                                            type={"yak"} value={packetMode ? dePacketValue : dePayloadValue}
-                                            setValue={packetMode ? setDePacketValue : setDePayloadValue}
-                                        />
-                                    )
-                                }
+                            <div className={classNames(webFuzzerStyles["web-fuzzer-tab-content"])}>
+                                {selectedTab === "enCoder" ? (
+                                    <YakEditor
+                                        key={selectedTab}
+                                        type={"yak"}
+                                        value={packetMode ? enPacketValue : enPayloadValue}
+                                        setValue={packetMode ? setEnPacketValue : setEnPayloadValue}
+                                    />
+                                ) : (
+                                    <YakEditor
+                                        key={selectedTab}
+                                        type={"yak"}
+                                        value={packetMode ? dePacketValue : dePayloadValue}
+                                        setValue={packetMode ? setDePacketValue : setDePayloadValue}
+                                    />
+                                )}
                             </div>
                         </div>
                     </>
-
                 }
                 secondNode={
-                    <Form
-                        labelCol={{span: 5}}
-                        wrapperCol={{span: 14}}
-                    >
+                    <Form labelCol={{span: 5}} wrapperCol={{span: 14}}>
                         <InputItem
                             label={"名称"}
                             required={true}
@@ -464,9 +442,9 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                                 value={shellScript}
                                 onSelect={(val) => {
                                     setShellScript(val)
-                                    packetMode ?
-                                        setParams({...params, Tags: [val, "webshell-packet-codec"].join(",")}) :
-                                        setParams({...params, Tags: [val, "webshell-payload-codec"].join(",")})
+                                    packetMode
+                                        ? setParams({...params, Tags: [val, "webshell-packet-codec"].join(",")})
+                                        : setParams({...params, Tags: [val, "webshell-payload-codec"].join(",")})
                                 }}
                             >
                                 <YakitSelect.Option value={ShellScript.JSP}>JSP</YakitSelect.Option>
@@ -498,8 +476,6 @@ const CustomEditor: React.FC<CustomEditorProps> = React.memo((props) => {
                             value={params.Tags && params.Tags !== "null" ? params.Tags : ""}
                             disabled={disabled}
                         />
-
-
                     </Form>
                 }
                 secondNodeStyle={{paddingLeft: 5, paddingTop: 15}}

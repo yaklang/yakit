@@ -10,12 +10,12 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {PluginBatchExecuteExtraFormValue} from "./pluginBatchExecutor"
 import {FixExtraParamsNode} from "../operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import cloneDeep from "lodash/cloneDeep"
-import {PluginGV} from "../builtInData"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {defPluginExecuteTaskValue} from "@/defaultConstants/PluginBatchExecutor"
 import {defPluginExecuteFormValue} from "../operator/localPluginExecuteDetailHeard/constants"
+import {RemotePluginGV} from "@/enums/plugin"
 
 const {YakitPanel} = YakitCollapse
 
@@ -137,7 +137,7 @@ const PluginBatchExecuteExtraParams: React.FC<PluginBatchExecuteExtraParamsProps
                         ref={proxyRef}
                         allowClear
                         placeholder='请输入...'
-                        cacheHistoryDataKey={PluginGV.LocalBatchExecuteExtraProxy}
+                        cacheHistoryDataKey={RemotePluginGV.LocalBatchExecuteExtraProxy}
                         size='small'
                         isCacheDefaultValue={false}
                     />

@@ -4,9 +4,7 @@ import {
     SolidPluginProtScanIcon,
     SolidSparklesPluginIcon,
     SolidDocumentSearchPluginIcon,
-    SolidCollectionPluginIcon,
-    SolidCloudpluginIcon,
-    SolidPrivatepluginIcon
+    SolidCollectionPluginIcon
 } from "@/assets/icon/colors"
 import {ReactNode} from "react"
 import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
@@ -96,38 +94,6 @@ export const DefaultTypeList: {icon: ReactNode; name: string; description: strin
     {...pluginTypeToName["nuclei"], key: "nuclei"}
 ]
 
-/** @name 插件功能相关-本地缓存数据-键值变量 */
-export enum PluginGV {
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:我的插件
-     */
-    UserPluginRemoveCheck = "user_plugin_remove_check",
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:回收站
-     */
-    RecyclePluginRemoveCheck = "recycle_plugin_remove_check",
-    /**
-     * @name 插件删除是否需要不再提醒的选中状态
-     * @description 适用页面:本地插件
-     */
-    LocalPluginRemoveCheck = "local_plugin_remove_check",
-
-    /** @name 审核页左侧筛选条件栏是否关闭 */
-    AuditFilterCloseStatus = "audit-filter-close-status",
-    /** @name 商店页左侧筛选条件栏是否关闭 */
-    StoreFilterCloseStatus = "store-filter-close-status",
-    /** @name 我的页左侧筛选条件栏是否关闭 */
-    OwnerFilterCloseStatus = "owner-filter-close-status",
-    /** @name 本地页左侧筛选条件栏是否关闭 */
-    LocalFilterCloseStatus = "local-filter-close-status",
-    /**@name 本地插件执行模块,额外参数中,[请求路径]的缓存字段 */
-    LocalExecuteExtraPath = "local-execute-extra-path",
-    /**@name 插件批量执行模块,额外参数中,[proxy]的缓存字段 */
-    LocalBatchExecuteExtraProxy = "local-batch-execute-extra-proxy"
-}
-
 /** @name 审核状态对应展示名称 */
 export const aduitStatusToName: Record<string, {name: string; icon: ReactNode}> = {
     "0": {name: "待审核", icon: <SolidSolidCircle className='aduit-status-solid-circle-color' />},
@@ -143,15 +109,6 @@ export const DefaultStatusList: TypeSelectOpt[] = [
     {key: "3", ...aduitStatusToName["3"]}
 ]
 
-/** 搜索过滤条件对应展示名称 */
-export const filterToName: Record<string, string> = {
-    type: "插件状态",
-    tags: "TAG",
-    plugin_type: "插件类型",
-    status: "审核状态",
-    group: "插件分组"
-}
-
 export const defaultFilter: PluginFilterParams = {
     plugin_type: [],
     tags: [],
@@ -163,7 +120,6 @@ export const defaultSearch: PluginSearchParams = {
     fieldKeywords: "",
     type: "fieldKeywords"
 }
-export const defaultPagemeta: PluginListPageMeta = {page: 1, limit: 20}
 
 export const funcSearchType: {value: string; label: string}[] = [
     {value: "fieldKeywords", label: "关键字"},

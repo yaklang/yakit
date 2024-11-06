@@ -17,11 +17,11 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {VariableList} from "@/pages/httpRequestBuilder/HTTPRequestBuilder"
 import {SolidPlusIcon} from "@/assets/icon/solid"
 import {KVPair} from "@/models/kv"
-import {PluginGV} from "../../builtInData"
 import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakParamProps} from "../../pluginsType"
 import {defPluginExecuteFormValue} from "./constants"
 import {splitPluginParamsData} from "@/pages/pluginEditor/utils/convert"
+import {RemotePluginGV} from "@/enums/plugin"
 
 const {YakitPanel} = YakitCollapse
 
@@ -287,7 +287,7 @@ export const FixExtraParamsNode: React.FC<FixExtraParamsNodeProps> = React.memo(
                         defaultOptions={["/", "/admin"].map((item) => ({value: item, label: item}))}
                         mode='tags'
                         placeholder='请输入...'
-                        cacheHistoryDataKey={PluginGV.LocalExecuteExtraPath}
+                        cacheHistoryDataKey={RemotePluginGV.LocalExecuteExtraPath}
                         isCacheDefaultValue={false}
                         size='small'
                     />

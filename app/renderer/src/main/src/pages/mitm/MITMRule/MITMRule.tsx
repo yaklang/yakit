@@ -1,11 +1,9 @@
-import {Divider, Modal, Tag, Tooltip} from "antd"
-import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import {Divider, Modal, Tooltip} from "antd"
+import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
     MITMContentReplacerRule,
     MITMRuleProp,
     RuleExportAndImportButtonProps,
-    YakitCheckboxProps,
-    YakitSelectMemoProps,
     YakitSwitchMemoProps
 } from "./MITMRuleType"
 import styles from "./MITMRule.module.scss"
@@ -21,7 +19,7 @@ import {
     TrashIcon
 } from "@/assets/newIcon"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {useCreation, useDebounceFn, useMemoizedFn, useGetState} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import classNames from "classnames"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
@@ -30,7 +28,6 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -41,13 +38,12 @@ import {failed, success} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {CheckableTagProps} from "antd/lib/tag"
 import {YakitProtoSwitch} from "@/components/TableVirtualResize/YakitProtoSwitch/YakitProtoSwitch"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import emiter from "@/utils/eventBus/eventBus"
-import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
+import {WebsiteGV} from "@/enums/website"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -753,7 +749,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             <YakitButton
                                 type='outline2'
                                 className={styles["button-question"]}
-                                onClick={() => openExternalWebsite("https://www.yaklang.com/")}
+                                onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
                                 icon={<QuestionMarkCircleIcon />}
                             ></YakitButton>
                         </Tooltip>
