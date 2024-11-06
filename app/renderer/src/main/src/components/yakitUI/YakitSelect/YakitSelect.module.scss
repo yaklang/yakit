@@ -175,16 +175,16 @@
         }
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             padding: 0px 12px;
+            .ant-select-selection-search-input {
+                height: 30px;
+                line-height: 30px;
+            }
         }
         .ant-select-multiple .ant-select-selector {
             padding: 1px 4px;
         }
         .ant-select-single .ant-select-selector .ant-select-selection-item {
             line-height: 30px;
-        }
-
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 30px;
         }
 
         .ant-select-single .ant-select-selector .ant-select-selection-item,
@@ -221,12 +221,12 @@
             // padding: 0px 12px 0 4px;
         }
 
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 26px;
-        }
-
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             padding: 0px 12px;
+            .ant-select-selection-search-input {
+                height: 26px;
+                line-height: 26px;
+            }
         }
 
         .ant-select-multiple .ant-select-selector {
@@ -248,7 +248,9 @@
             line-height: 20px;
             margin: 0;
         }
-        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
+        .ant-select-multiple.ant-select:not(.ant-select-customize-input)
+            .ant-select-selector
+            .ant-select-selection-search-input {
             height: 20px;
             line-height: 20px;
         }
@@ -265,6 +267,15 @@
             // padding: 0px 12px 0 4px;
             line-height: 16px;
         }
+
+        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+            padding: 0px 12px 0 8px;
+            .ant-select-selection-search-input {
+                height: 22px;
+                line-height: 22px;
+            }
+        }
+
         .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
             padding: 0px 12px 0 8px;
         }
@@ -275,9 +286,6 @@
 
         .ant-select-single .ant-select-selector .ant-select-selection-item {
             line-height: 22px;
-        }
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 22px;
         }
         .ant-select-selection-overflow {
             min-height: 16px;
@@ -299,8 +307,9 @@
             margin: 0;
             border-radius: 2px;
         }
-        .ant-select-show-search.ant-select:not(.ant-select-customize-input) .ant-select-selector input {
-            margin-top: 1px;
+        .ant-select-multiple.ant-select:not(.ant-select-customize-input)
+            .ant-select-selector
+            .ant-select-selection-search-input {
             height: 16px;
             line-height: 16px;
         }
