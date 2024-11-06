@@ -6,7 +6,8 @@
     }
 }
 
-.meeage-no-login,.meeage-no-data {
+.meeage-no-login,
+.meeage-no-data {
     padding: 12px 8px;
     display: flex;
     flex-direction: column;
@@ -97,13 +98,14 @@
             .tag {
                 white-space: nowrap;
                 font-weight: 600;
-                color: #85899E;
+                color: #85899e;
             }
-            
-            .delete{
-                color: #F6544A;
+
+            .delete,
+            .delete_comment {
+                color: #f6544a;
             }
-            
+
             .check {
                 color: #56c991;
             }
