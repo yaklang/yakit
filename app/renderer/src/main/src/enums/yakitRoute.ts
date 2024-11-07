@@ -79,5 +79,7 @@ export enum YakitRoute {
     // YakRunner代码扫描
     YakRunner_Code_Scan = "yakrunner-code-scan",
     // YakRunner代码审计
-    YakRunner_Audit_Code = "yakrunner-audit-code"
+    YakRunner_Audit_Code = "yakrunner-audit-code",
+    // YakRunner项目管理
+    YakRunner_Project_Manager = "yakrunner-project-manager"
 }

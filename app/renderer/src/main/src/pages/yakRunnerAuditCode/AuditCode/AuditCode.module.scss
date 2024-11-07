@@ -293,81 +293,18 @@
         padding: 12px 16px;
         flex: 1;
         overflow: hidden;
-        .table-header {
+        .audit-virtual-list {
+            height: 100%;
+        }
+        .audit-text {
+           overflow: hidden;
+        }
+
+        .audit-opt {
             display: flex;
             flex-direction: row;
-            gap: 16px;
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            line-height: 16px;
-            position: fixed;
-            width: calc(100% - 32px);
-            background: #ffffff;
-            z-index: 1;
-            border-bottom: 1px solid #eaecf3;
-            .audit-name {
-                flex: 1;
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
-                align-items: center;
-            }
-            .audit-path {
-                flex: 2;
-            }
-            .audit-time {
-                width: 200px;
-            }
-            .audit-opt {
-                width: 120px;
-            }
-        }
-        .table-content {
-            padding-top: 32px;
-            overflow: auto;
-            height: 100%;
-            .table-item {
-                display: flex;
-                flex-direction: row;
-                border-bottom: 1px solid #eaecf3;
-                gap: 16px;
-                padding: 8px 12px;
-                .audit-name {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: row;
-                    gap: 4px;
-                    align-items: center;
-                }
-                .audit-path {
-                    display: flex;
-                    align-items: center;
-                    flex: 2;
-                }
-                .audit-time {
-                    display: flex;
-                    align-items: center;
-                    width: 200px;
-                }
-                .audit-opt {
-                    width: 120px;
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    gap: 12px;
-                    .to-icon {
-                        svg {
-                            color: #85899e;
-                        }
-                        &:hover {
-                            svg {
-                                color: #f28b44;
-                            }
-                        }
-                    }
-                }
-            }
+            align-items: center;
+            gap: 12px;
         }
     }
 }
