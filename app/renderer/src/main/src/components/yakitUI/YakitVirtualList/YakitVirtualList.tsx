@@ -5,7 +5,6 @@ import {
     useControllableValue,
     useCreation,
     useDebounceEffect,
-    useInfiniteScroll,
     useMemoizedFn,
     useThrottleFn,
     useVirtualList
@@ -13,7 +12,6 @@ import {
 import {useRef, useState} from "react"
 import ReactResizeDetector from "react-resize-detector"
 import {LoadingOutlined} from "@ant-design/icons"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {
     YakitProtoCheckbox,
     YakitProtoCheckboxProps
@@ -26,9 +24,21 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>) => {
-    const {className, columns, data, loading, hasMore = true, refresh, renderKey = "id", rowSelection} = props
+    const {
+        className,
+        columns,
+        data,
+        loading,
+        hasMore = true,
+        refresh,
+        renderKey = "id",
+        rowSelection,
+        page = 0,
+        loadMoreData
+    } = props
 
     const [vlistHeigth, setVListHeight] = useState(600)
     const [scroll, setScroll] = useState<boolean>(false)
@@ -52,13 +62,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
             const wrapperHeight = wrapperRef.current?.clientHeight
             // console.log("wrapperHeight", wrapperHeight, containerHeight)
             if (wrapperHeight && wrapperHeight <= containerHeight) {
-                getLoadMoreList()
+                loadMoreData()
                 setScroll(false)
             } else {
                 setScroll(true)
             }
         },
-        [wrapperRef.current?.clientHeight, refresh, hasMore],
+        [vlistHeigth, wrapperRef.current?.clientHeight, refresh, hasMore],
         {wait: 200}
     )
 
@@ -75,16 +85,12 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                 const scrollHeight = dom.scrollHeight //滚动条内容的总高度
                 const scrollBottom = scrollHeight - contentScrollTop - clientHeight
                 if (scrollBottom <= 500) {
-                    // console.log("dd")
-                    // loadMoreData() // 获取数据的方法
+                    loadMoreData() // 获取数据的方法
                 }
             }
         },
         {wait: 200, leading: false}
     ).run
-    const getLoadMoreList = useMemoizedFn(() => {
-        console.log("22")
-    })
     const onChangeCheckboxSingle = useMemoizedFn((checked: boolean, key: string, row: T) => {
         if (!rowSelection) return
         if (!rowSelection.onChangeCheckboxSingle) return
@@ -117,113 +123,126 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
     }, [rowSelection?.isAll, list.length, data.length, rowSelection?.selectedRowKeys?.length])
     return (
         <div className={classNames(styles["virtual-list"], className)}>
-            <div
-                className={classNames(styles["virtual-list-columns"], {
-                    [styles["virtual-list-columns-scroll"]]: scroll
-                })}
-            >
-                {columns.map((columnsItem, columnsIndex) => {
-                    return (
-                        <div
-                            key={columnsItem.dataIndex}
-                            className={classNames(
-                                styles["columns-item"],
-                                {
-                                    [styles["columns-item-flex"]]: !columnsItem.width
-                                },
-                                columnsItem.columnsClassName
-                            )}
-                            style={columnsItem?.width ? {width: columnsItem.width} : {}}
-                        >
-                            {columnsIndex === 0 && rowSelection && (
-                                <YakitProtoCheckbox
-                                    checked={isAll}
-                                    indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
-                                    onChange={(e) => {
-                                        onChangeCheckbox(e.target.checked)
-                                    }}
-                                />
-                            )}
-                            {columnsItem.filterProps?.filterRender ? (
-                                columnsItem.filterProps?.filterRender()
-                            ) : (
-                                <div className='content-ellipsis'>{columnsItem.title}</div>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-            <div className={styles["virtual-list-content"]}>
-                <ReactResizeDetector
-                    onResize={(width, height) => {
-                        if (!height) {
-                            return
-                        }
-                        setVListHeight(height)
-                    }}
-                    handleWidth={true}
-                    handleHeight={true}
-                    refreshMode={"debounce"}
-                    refreshRate={50}
-                />
+            <YakitSpin spinning={loading && page <= 1}>
                 <div
-                    ref={containerRef}
-                    className={styles["virtual-list-container"]}
-                    style={{height: vlistHeigth}}
-                    onScroll={onScrollCapture}
+                    className={classNames(styles["virtual-list-columns"], {
+                        [styles["virtual-list-columns-scroll"]]: scroll
+                    })}
                 >
-                    <div ref={wrapperRef} className={styles["virtual-list-wrapper"]}>
-                        {list.map((ele) => (
-                            <div className={styles["virtual-list-item"]} key={ele.data[renderKey] || ele.index}>
-                                {columns.map((item, index) => {
-                                    return (
-                                        <div
-                                            key={`${ele.index}-${item.title}`}
-                                            style={item?.width ? {width: item.width} : {}}
-                                            className={classNames(styles["virtual-list-cell"], {
-                                                [styles["virtual-list-cell-flex"]]: !item.width
-                                            })}
-                                        >
-                                            {index === 0 && rowSelection && (
-                                                <YakitProtoCheckbox
-                                                    onChange={(e) => {
-                                                        onChangeCheckboxSingle(
-                                                            e.target.checked,
-                                                            renderKey ? ele.data[renderKey] : ele.index,
-                                                            ele.data
-                                                        )
-                                                    }}
-                                                    checked={
-                                                        rowSelection?.selectedRowKeys?.findIndex(
-                                                            (c) => c === (renderKey ? ele.data[renderKey] : ele.index)
-                                                        ) !== -1
-                                                    }
-                                                    {...(checkboxPropsMap.get(ele.data[renderKey]) || {})}
-                                                />
-                                            )}
-                                            {item?.render ? (
-                                                item.render(ele.data[item.dataIndex], ele.data, ele.index)
-                                            ) : (
-                                                <div className='content-ellipsis'>{ele.data[item.dataIndex]}</div>
-                                            )}
-                                        </div>
-                                    )
-                                })}
+                    {columns.map((columnsItem, columnsIndex) => {
+                        return (
+                            <div
+                                key={columnsItem.dataIndex}
+                                className={classNames(
+                                    styles["columns-item"],
+                                    {
+                                        [styles["columns-item-flex"]]: !columnsItem.width
+                                    },
+                                    columnsItem.columnsClassName
+                                )}
+                                style={columnsItem?.width ? {width: columnsItem.width} : {}}
+                            >
+                                {columnsIndex === 0 && rowSelection && (
+                                    <YakitProtoCheckbox
+                                        checked={isAll}
+                                        indeterminate={!isAll && (rowSelection?.selectedRowKeys?.length || 0) > 0}
+                                        onChange={(e) => {
+                                            onChangeCheckbox(e.target.checked)
+                                        }}
+                                    />
+                                )}
+                                {columnsItem.filterProps?.filterRender ? (
+                                    columnsItem.filterProps?.filterRender()
+                                ) : (
+                                    <div className='content-ellipsis'>{columnsItem.title}</div>
+                                )}
                             </div>
-                        ))}
-                        {loading && hasMore && (
-                            <div className={styles["text-center"]}>
-                                <LoadingOutlined />
-                            </div>
-                        )}
-                        {!loading && !hasMore && <div className={styles["no-more-text"]}>暂无更多数据</div>}
+                        )
+                    })}
+                </div>
+                <div className={styles["virtual-list-content"]}>
+                    <ReactResizeDetector
+                        onResize={(width, height) => {
+                            if (!height) {
+                                return
+                            }
+                            setVListHeight(height)
+                        }}
+                        handleWidth={true}
+                        handleHeight={true}
+                        refreshMode={"debounce"}
+                        refreshRate={50}
+                    />
+                    <div
+                        ref={containerRef}
+                        className={styles["virtual-list-container"]}
+                        style={{height: vlistHeigth}}
+                        onScroll={onScrollCapture}
+                    >
+                        <div ref={wrapperRef} className={styles["virtual-list-wrapper"]}>
+                            {list.map((ele) => (
+                                <div className={styles["virtual-list-item"]} key={ele.data[renderKey] || ele.index}>
+                                    {columns.map((item, index) => {
+                                        return (
+                                            <div
+                                                key={`${ele.index}-${item.title}`}
+                                                style={item?.width ? {width: item.width} : {}}
+                                                className={classNames(styles["virtual-list-cell"], {
+                                                    [styles["virtual-list-cell-flex"]]: !item.width
+                                                })}
+                                            >
+                                                {index === 0 && rowSelection && (
+                                                    <YakitProtoCheckbox
+                                                        onChange={(e) => {
+                                                            onChangeCheckboxSingle(
+                                                                e.target.checked,
+                                                                renderKey ? ele.data[renderKey] : ele.index,
+                                                                ele.data
+                                                            )
+                                                        }}
+                                                        checked={
+                                                            rowSelection?.selectedRowKeys?.findIndex(
+                                                                (c) =>
+                                                                    c === (renderKey ? ele.data[renderKey] : ele.index)
+                                                            ) !== -1
+                                                        }
+                                                        {...(checkboxPropsMap.get(ele.data[renderKey]) || {})}
+                                                    />
+                                                )}
+                                                {item?.render ? (
+                                                    item.render(ele.data[item.dataIndex], ele.data, ele.index)
+                                                ) : (
+                                                    <div className='content-ellipsis'>{ele.data[item.dataIndex]}</div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ))}
+                            {loading && hasMore && (
+                                <div className={styles["text-center"]}>
+                                    <LoadingOutlined />
+                                </div>
+                            )}
+                            {!loading && !hasMore && <div className={styles["no-more-text"]}>暂无更多数据</div>}
+                        </div>
                     </div>
                 </div>
-            </div>
+            </YakitSpin>
         </div>
     )
 }
 
+/**
+ * @description 未经过测试
+ * EG:
+ <ListSelectFilterPopover option={authors} selectKeys={query.authorList} onSetValue={onSetAuthor} filterOption={true}>
+    <YakitButton type='text2'>
+        <span style={{lineHeight: "16px"}}>作者</span>
+        <OutlineSearchIcon className={styles["search-icon"]} />
+    </YakitButton>
+</ListSelectFilterPopover>
+ */
 export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = React.memo((props) => {
     const {children, option = [], placement, filterOption, onSetValue} = props
     const [selectKeys, setSelectKeys] = useControllableValue<string[]>(props, {
@@ -313,18 +332,6 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                     )}
                     {option.length === 0 && <YakitEmpty imageStyle={{margin: "24px auto 12px", width: 160}} />}
                     <div className={styles["option-list-content"]}>
-                        {/* <ReactResizeDetector
-                            onResize={(width, height) => {
-                                if (!height) {
-                                    return
-                                }
-                                setVListHeight(height)
-                            }}
-                            handleWidth={true}
-                            handleHeight={true}
-                            refreshMode={"debounce"}
-                            refreshRate={50}
-                        /> */}
                         <div
                             ref={containerRef}
                             // style={{height: vlistHeigth}}
