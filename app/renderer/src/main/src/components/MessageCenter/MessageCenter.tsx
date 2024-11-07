@@ -161,7 +161,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                         // 跳转到插件仓库回收站
                         case "delete":
                             emiter.emit(
-                                "menuOpenPage",
+                                "openPage",
                                 JSON.stringify({
                                     route: YakitRoute.Plugin_Hub,
                                     params: {tabActive: "recycle"} as PluginHubPageInfoProps
@@ -170,26 +170,56 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             break
                         // 跳转到插件日志-审核
                         case "check":
+                            emiter.emit(
+                                "openPage",
+                                JSON.stringify({
+                                    route: YakitRoute.Plugin_Hub,
+                                    params: {
+                                        tabActive: "online",
+                                        detailInfo: {uuid: data.uuid, name: data.scriptName, tabActive: "log/check"}
+                                    } as PluginHubPageInfoProps
+                                })
+                            )
                             break
                         // 跳转到插件日志-修改
                         case "update":
                         case "applyMerge":
                         case "merge":
+                            emiter.emit(
+                                "openPage",
+                                JSON.stringify({
+                                    route: YakitRoute.Plugin_Hub,
+                                    params: {
+                                        tabActive: "online",
+                                        detailInfo: {uuid: data.uuid, name: data.scriptName, tabActive: "log/update"}
+                                    } as PluginHubPageInfoProps
+                                })
+                            )
                             break
                         // 跳转到插件日志-评论
                         case "comment":
                         case "replyComment":
                         case "deleteComment":
-                            break
-                        // 其余跳转到插件日志
-                        default:
                             emiter.emit(
-                                "menuOpenPage",
+                                "openPage",
                                 JSON.stringify({
                                     route: YakitRoute.Plugin_Hub,
                                     params: {
                                         tabActive: "online",
-                                        detailInfo: {id: 0, uuid: data.uuid, name: data.scriptName}
+                                        detailInfo: {uuid: data.uuid, name: data.scriptName, tabActive: "log/comment"}
+                                    } as PluginHubPageInfoProps
+                                })
+                            )
+                            break
+                        // 其余跳转到插件日志
+                        default:
+                            emiter.emit(
+                                "openPage",
+                                JSON.stringify({
+                                    route: YakitRoute.Plugin_Hub,
+                                    params: {
+                                        tabActive: "online",
+                                        detailInfo: {uuid: data.uuid, name: data.scriptName}
                                     } as PluginHubPageInfoProps
                                 })
                             )
