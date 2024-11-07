@@ -614,6 +614,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const [droppedCount, setDroppedCount] = useState(0)
     // state
     const [loading, setLoading] = useState(false)
+    const [loadingText, setLoadingText] = useState<string>("sending packets")
 
     /*
      * 内容
@@ -985,6 +986,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             matchRef.current = false
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
+            setLoadingText("匹配中")
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
         } else {
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
@@ -1034,6 +1036,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const isbuttonIsSendReqStatus = useMemo(() => {
         return !loading && isPause
     }, [loading, isPause])
+    useEffect(() => {
+        if (isbuttonIsSendReqStatus) {
+            setLoadingText("sending packets")
+        }
+    }, [isbuttonIsSendReqStatus])
 
     const cancelCurrentHTTPFuzzer = useMemoizedFn(() => {
         ipcRenderer.invoke("cancel-HTTPFuzzer", tokenRef.current)
@@ -1817,7 +1824,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             {loading && (
                                 <div className={classNames(styles["spinning-text"], styles["display-flex"])}>
                                     <YakitSpin size={"small"} style={{width: "auto"}} />
-                                    sending packets
+                                    {loadingText}
                                 </div>
                             )}
 
