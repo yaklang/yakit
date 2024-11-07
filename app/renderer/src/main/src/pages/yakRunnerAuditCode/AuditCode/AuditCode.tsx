@@ -64,7 +64,7 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {QuestionMarkCircleIcon} from "@/assets/newIcon"
+import {QuestionMarkCircleIcon, TrashIcon} from "@/assets/newIcon"
 import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
@@ -73,7 +73,9 @@ import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunner
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
+import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1025,6 +1027,23 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const [loading, setLoading] = useState<boolean>(false)
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
     const [search, setSearch] = useState<string>()
+
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const onSelectAll = useMemoizedFn(() => {
+        setIsAllSelect(true)
+        setSelectedRowKeys(aduitData?.Resources.map((item) => item.Path) || [])
+    })
+    const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: YakURLResource) => {
+        if (c) {
+            setSelectedRowKeys([...selectedRowKeys, rows.Path])
+        } else {
+            setIsAllSelect(false)
+            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== rows.Path)
+            setSelectedRowKeys(newSelectedRowKeys)
+        }
+    })
+
     useEffect(() => {
         getAduitList()
     }, [search])
@@ -1099,6 +1118,96 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         }
     })
 
+    const onRemoveMultiple = useMemoizedFn(() => {
+        console.log(selectedRowKeys)
+    })
+
+    const columns: VirtualListColumns<YakURLResource>[] = [
+        {
+            title: "项目名称",
+            dataIndex: "ResourceName",
+            render: (text, record) => {
+                const obj = getAuditPath(record)
+                return (
+                    <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
+                        {record.ResourceName}
+                        {obj.description && (
+                            <Tooltip title={obj.description}>
+                                <QuestionMarkCircleIcon />
+                            </Tooltip>
+                        )}
+                    </div>
+                )
+            }
+        },
+        {
+            title: "存储路径",
+            dataIndex: "Path",
+            render: (text, record) => {
+                const obj = getAuditPath(record)
+                return (
+                    <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{obj.path}</div>
+                )
+            }
+        },
+        {
+            title: "编译时间",
+            dataIndex: "time",
+            render: (text, record) => {
+                const obj = getAuditPath(record)
+                return <div className={styles["audit-time"]}>{obj.time}</div>
+            }
+        },
+        {
+            title: "操作",
+            dataIndex: "action",
+            width: 130,
+            render: (text, record) => {
+                const obj = getAuditPath(record)
+                return (
+                    <div className={styles["audit-opt"]}>
+                        <Tooltip title={"代码扫描"}>
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineScanIcon className={styles["to-icon"]} />}
+                                onClick={() => {
+                                    // addToTab(YakitRoute.YakRunner_Code_Scan)
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.YakRunner_Code_Scan,
+                                            params: {
+                                                projectName: record.ResourceName
+                                            }
+                                        })
+                                    )
+                                }}
+                            />
+                        </Tooltip>
+
+                        {/* 此处的Tooltip会导致页面抖动(待处理) */}
+                        <Tooltip title={"打开项目"}>
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
+                                onClick={() => {
+                                    emiter.emit("onCodeAuditOpenAuditTree", record.ResourceName)
+                                }}
+                            />
+                        </Tooltip>
+                        <Divider type={"vertical"} style={{margin: 0}} />
+                        <YakitPopconfirm
+                            title={`确定删除${record.ResourceName}`}
+                            onConfirm={() => onDelete(record.Path)}
+                        >
+                            <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
+                        </YakitPopconfirm>
+                    </div>
+                )
+            }
+        }
+    ]
+
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
@@ -1109,11 +1218,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                             <div className={styles["text"]}>Total</div>
                             <div className={styles["number"]}>{aduitData?.Total}</div>
                         </div>
-                        {/* <Divider type={"vertical"} style={{margin: 0}} />
-                    <div className={styles["sub-title"]}>
-                        <div className={styles["text"]}>Selected</div>
-                        <div className={styles["number"]}>{selected.length}</div>
-                    </div> */}
+                        <Divider type={"vertical"} style={{margin: 0}} />
+                        <div className={styles["sub-title"]}>
+                            <div className={styles["text"]}>Selected</div>
+                            <div className={styles["number"]}>{selectedRowKeys.length}</div>
+                        </div>
                     </div>
                     <div className={styles["extra"]}>
                         <YakitInput
@@ -1125,6 +1234,17 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 setSearch(e.target.value)
                             }}
                         />
+                        <YakitPopconfirm
+                            title={selectedRowKeys.length > 0  ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                            onConfirm={() => {
+                                onRemoveMultiple()
+                            }}
+                            placement='bottomRight'
+                        >
+                        <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
+                            {selectedRowKeys.length > 0 ? "删除" : "清空"}
+                        </YakitButton>
+                        </YakitPopconfirm>
                         <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
                             添加项目
                         </YakitButton>
@@ -1132,70 +1252,23 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 </div>
 
                 <div className={styles["table"]}>
-                    <div className={styles["table-header"]}>
-                        <div className={styles["audit-name"]}>项目名称</div>
-                        <div className={styles["audit-path"]}>存储路径</div>
-                        <div className={styles["audit-time"]}>编译时间</div>
-                        <div className={styles["audit-opt"]}>操作</div>
-                    </div>
-                    <div className={styles["table-content"]}>
-                        {aduitData &&
-                            aduitData.Resources.map((item, index) => {
-                                const obj = getAuditPath(item)
-                                return (
-                                    <div className={styles["table-item"]} key={`${item.ResourceName}-${index}`}>
-                                        <div className={styles["audit-name"]}>
-                                            {item.ResourceName}
-                                            {obj.description && (
-                                                <Tooltip title={obj.description}>
-                                                    <QuestionMarkCircleIcon />
-                                                </Tooltip>
-                                            )}
-                                        </div>
-                                        <div className={styles["audit-path"]}>{obj.path}</div>
-                                        <div className={styles["audit-time"]}>{obj.time}</div>
-                                        <div className={styles["audit-opt"]}>
-                                            <Tooltip title={"代码扫描"}>
-                                                <YakitButton
-                                                    type='text'
-                                                    icon={<OutlineScanIcon className={styles["to-icon"]} />}
-                                                    onClick={() => {
-                                                        // addToTab(YakitRoute.YakRunner_Code_Scan)
-                                                        emiter.emit(
-                                                            "openPage",
-                                                            JSON.stringify({
-                                                                route: YakitRoute.YakRunner_Code_Scan,
-                                                                params: {
-                                                                    projectName: item.ResourceName
-                                                                }
-                                                            })
-                                                        )
-                                                    }}
-                                                />
-                                            </Tooltip>
-
-                                            {/* 此处的Tooltip会导致页面抖动(待处理) */}
-                                            <Tooltip title={"打开项目"}>
-                                                <YakitButton
-                                                    type='text'
-                                                    icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
-                                                    onClick={() => {
-                                                        emiter.emit("onCodeAuditOpenAuditTree", item.ResourceName)
-                                                    }}
-                                                />
-                                            </Tooltip>
-                                            <Divider type={"vertical"} style={{margin: 0}} />
-                                            <YakitPopconfirm
-                                                title={`确定删除${item.ResourceName}`}
-                                                onConfirm={() => onDelete(item.Path)}
-                                            >
-                                                <YakitButton type='text' danger icon={<OutlineTrashIcon />} />
-                                            </YakitPopconfirm>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                    </div>
+                    <YakitVirtualList<YakURLResource>
+                        className={styles["audit-virtual-list"]}
+                        loading={loading}
+                        hasMore={false}
+                        columns={columns}
+                        data={aduitData?.Resources || []}
+                        page={1}
+                        loadMoreData={() => {}}
+                        renderKey="Path"
+                        rowSelection={{
+                            isAll: isAllSelect,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll: onSelectAll,
+                            onChangeCheckboxSingle: onSelectChange
+                        }}
+                    />
                 </div>
             </div>
         </YakitSpin>
