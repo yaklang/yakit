@@ -24,10 +24,12 @@ interface PluginHubListProps {
     toPluginDetail: (info: PluginToDetailInfo) => void
     /** 是否隐藏详情页面 */
     setHiddenDetailPage: (v: boolean) => any
+
+    setAutoOpenDetailTab?: (tab?: string) => void
 }
 /** @name 插件中心 */
 export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
-    const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage} = props
+    const {rootElementId, isDetail, toPluginDetail, setHiddenDetailPage, setAutoOpenDetailTab} = props
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -55,6 +57,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         const {tabActive, detailInfo, refeshList} = data
         onSetActive(tabActive || "online", false)
         if (detailInfo) {
+            setAutoOpenDetailTab && setAutoOpenDetailTab(detailInfo.tabActive || undefined)
             setTimeout(() => {
                 onClickPlugin({type: tabActive, ...detailInfo})
             }, 200)

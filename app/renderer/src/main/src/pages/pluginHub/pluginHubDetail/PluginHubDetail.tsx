@@ -33,6 +33,7 @@ import {RemotePluginGV} from "@/enums/plugin"
 import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {PluginLog} from "../pluginLog/PluginLog"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {PluginLogRefProps} from "../pluginLog/PluginLogType"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -53,11 +54,15 @@ interface PluginHubDetailProps {
     ref?: ForwardedRef<PluginHubDetailRefProps>
     rootElementId?: string
     onBack: () => void
+
+    // 主动打开插件详情页时，是否需要主动跳到指定 tab 页面
+    autoOpenDetailTab?: string
+    setAutoOpenDetailTab?: (tab?: string) => void
 }
 
 export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
     forwardRef((props, ref) => {
-        const {rootElementId, onBack} = props
+        const {rootElementId, onBack, autoOpenDetailTab, setAutoOpenDetailTab} = props
 
         const userinfo = useStore((s) => s.userInfo)
         const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -299,7 +304,25 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     if (onlineTab || localTab) {
                         if (!banUpdateActiveTab) {
                             let tab = localTab ? "exectue" : onlineTab ? "online" : ""
-                            setActiveKey(tab)
+
+                            // 获取主动跳转路由数组
+                            const multiTab = autoOpenDetailTab ? autoOpenDetailTab.split("/") : []
+                            // 判断是否为 跳转到某个 tab 下的子 tab 的操作
+                            const isMultiTab = multiTab.length > 1
+
+                            // 可以打开的 tab 页面
+                            let validTab: string[] = []
+                            if (onlineTab) validTab = validTab.concat(["online", "log"])
+                            if (localTab) validTab = validTab.concat(["exectue", "local"])
+
+                            // 主动跳到指定 tab 页面
+                            if (autoOpenDetailTab && validTab.includes(multiTab[0])) {
+                                setActiveKey(multiTab[0])
+                                if (isMultiTab) handleAutoActiveLogTab(multiTab[1])
+                            } else {
+                                setActiveKey(tab)
+                            }
+                            setAutoOpenDetailTab && setAutoOpenDetailTab(undefined)
                         } else {
                             if (["exectue", "local"].includes(activeKey) && onlineTab && !localTab) {
                                 setActiveKey("online")
@@ -582,6 +605,16 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         })
         /** ---------- 编辑插件 End ---------- */
 
+        /** ---------- 主动功能-log Start ---------- */
+        const pluginLogRef = useRef<PluginLogRefProps>(null)
+        // 主动跳转 log 页面里的 tab
+        const handleAutoActiveLogTab = useMemoizedFn((key: string) => {
+            if (!key) return
+            if (!pluginLogRef || !pluginLogRef.current) return
+            pluginLogRef.current.handleActiveTab(key)
+        })
+        /** ---------- 主动功能-log End ---------- */
+
         const bar = (props: any, TabBarDefault: any) => {
             return (
                 <TabBarDefault
@@ -801,7 +834,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         infoExtra={infoExtraNode}
                                     />
                                     {onlinePlugin ? (
-                                        <PluginLog getContainer={wrapperId} plugin={onlinePlugin} />
+                                        <PluginLog ref={pluginLogRef} getContainer={wrapperId} plugin={onlinePlugin} />
                                     ) : (
                                         <div className={styles["tab-pane-empty"]}>
                                             <YakitEmpty title='暂无日志信息' />
