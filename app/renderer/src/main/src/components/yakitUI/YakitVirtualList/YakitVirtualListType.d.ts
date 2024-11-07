@@ -1,10 +1,10 @@
 import {ReactNode} from "react"
-import {FiltersItemProps, RowSelectionProps} from "../../../components/TableVirtualResize/TableVirtualResizeType"
+import {FiltersItemProps, RowSelectionProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {YakitPopoverProp} from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 export interface YakitVirtualListProps<T> {
-    columns: VirtualListColumns[]
+    columns: VirtualListColumns<T>[]
     data: T[]
     className?: string
     hasMore?: boolean
@@ -13,13 +13,17 @@ export interface YakitVirtualListProps<T> {
     refresh?: boolean
     renderKey?: string
     rowSelection?: RowSelectionProps<T>
+    /**当前页数，如果小于等于1，会显示大的包裹loading */
+    page?: number
+    /**加载下一页 */
+    loadMoreData: () => void
 }
 
-export interface VirtualListColumns {
+export interface VirtualListColumns<T> {
     title: ReactNode
     dataIndex: string
     width?: number
-    render?: (text, record, index) => ReactNode
+    render?: (text, record: T, index) => ReactNode
     filterProps?: VirtualListFilterProps
     /** 表头Columns单个数据样式 */
     columnsClassName?: string
