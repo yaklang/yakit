@@ -1,0 +1,159 @@
+.text-center {
+    text-align: center;
+}
+
+%display-flex-space-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+.no-more-text {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.virtual-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    .virtual-list-columns {
+        @extend %display-flex-space-between;
+        height: 32px;
+        padding-left: 8px;
+
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        gap: 8px;
+
+        border-bottom: 1px solid var(--yakit-border-color);
+        .columns-item {
+            align-items: center;
+            display: flex;
+            gap: 8px;
+            overflow: hidden;
+        }
+        .columns-item-flex {
+            flex: 1;
+        }
+    }
+    .virtual-list-columns-scroll {
+        padding-right: 8px; //占滚动条位置
+    }
+    .virtual-list-content {
+        flex: 1;
+        .virtual-list-container {
+            overflow-y: overlay;
+            overflow-anchor: none;
+        }
+        .virtual-list-wrapper {
+            .virtual-list-item {
+                @extend %display-flex-space-between;
+                padding-left: 8px;
+                height: 48px;
+                border-top: 1px solid var(--yakit-border-color);
+
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                gap: 8px;
+                cursor: pointer;
+
+                &:hover {
+                    border-top-color: transparent;
+                    background: var(--yakit-card-background-color);
+                    border-radius: 8px;
+                }
+                &:first-child {
+                    border-top-width: 0;
+                }
+                .virtual-list-cell {
+                    align-items: center;
+                    display: flex;
+                    gap: 8px;
+                    overflow: hidden;
+                }
+                .virtual-list-cell-flex {
+                    flex: 1;
+                }
+            }
+            .virtual-list-item:hover + .virtual-list-item {
+                border-top-color: transparent;
+            }
+        }
+    }
+}
+
+.author-filter-popover {
+    padding-top: 0;
+    :global {
+        .ant-popover-arrow {
+            display: none;
+        }
+        .ant-popover-inner-content {
+            padding: 8px 0;
+        }
+    }
+}
+
+.filter-popover-content {
+    display: flex;
+    flex-direction: column;
+    width: 216px;
+    .search-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+            color: var(--yakit-body-text-color);
+        }
+    }
+    .search-wrapper {
+        padding: 6px 12px 8px;
+    }
+    .option-list-content {
+        flex: 1;
+        .option-list-container {
+            min-height: 28px;
+            max-height: 50vh;
+            overflow-y: overlay;
+        }
+        .option-list-wrapper {
+            display: flex;
+            flex-direction: column;
+            padding: 0 4px;
+            .option-item {
+                @extend %display-flex-center;
+                gap: 12px;
+                overflow: hidden;
+                cursor: pointer;
+                padding: 0 8px;
+                border-radius: 4px;
+                height: 28px;
+                &:hover {
+                    background-color: #eef0f3;
+                }
+                .item-label {
+                    @extend %display-flex-center;
+                    gap: 4px;
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+    .option-list-footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px 0 4px;
+        border-top: 1px solid var(--yakit-border-color);
+    }
+}
