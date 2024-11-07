@@ -11,7 +11,6 @@ import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
-import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 
 /**
  * @description 页面暂存数据
@@ -145,8 +144,13 @@ export interface ScanPortPageInfoProps {
 export interface PluginHubPageInfoProps {
     /**切换到插件仓库指定tab */
     tabActive: PluginSourceType
-    /**打开插件的id、uuid和name */
-    detailInfo?: KeyParamsFetchPluginDetail
+    /**
+     * @param uuid 打开插件的uuid
+     * @param name 打开插件的name
+     * @param tabActive 主动跳到详情里的指定 tab 上
+     * @description tabActive-如果想打开指定 tab 页面里的指定子 tab，可以使用'/'进行分割，例如：'log/check'，log是主tab，check是子tab
+     */
+    detailInfo?: {uuid: string; name: string; tabActive?: string}
     /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
     refeshList?: boolean
     /**是否打开管理分组抽屉 */
