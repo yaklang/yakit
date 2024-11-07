@@ -51,6 +51,7 @@
     }
     .virtual-list-content {
         flex: 1;
+        overflow: hidden;
         .virtual-list-container {
             overflow-y: overlay;
             overflow-anchor: none;
