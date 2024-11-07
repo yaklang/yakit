@@ -69,7 +69,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                 setScroll(true)
             }
         },
-        [vlistHeigth, wrapperRef.current?.clientHeight, hasMore],
+        [vlistHeigth, wrapperRef.current?.clientHeight, refresh, hasMore],
         {wait: 200}
     )
 
