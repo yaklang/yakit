@@ -12,7 +12,7 @@ import {
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
-import {apiGetUserOrdinary} from "./utils"
+import {apiGetUserOrdinary, apiSetNotepadPermission} from "./utils"
 import {API} from "@/services/swagger/resposeType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -20,9 +20,10 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import classNames from "classnames"
+import {useStore} from "@/store"
 
 interface NotepadShareModalProps {
-    documentName: string
+    notepadInfo: API.GetNotepadList
     onClose: () => void
 }
 
@@ -111,9 +112,11 @@ const Collaborators = [
     }
 ]
 const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) => {
-    const {documentName, onClose} = props
+    const {notepadInfo, onClose} = props
+    const userInfo = useStore((s) => s.userInfo)
     const [selectAuth, setSelectAuth] = useState<string>("read")
     const [searchValue, setSearchValue] = useState<string>("")
+    const [confirmLoading, setConfirmLoading] = useState<boolean>(false)
 
     const [manageVisible, setManageVisible] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -146,29 +149,45 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const onChange = useMemoizedFn((value) => {
         const users = value.map((ele) => ({id: ele.value, name: ele.title}))
         setSelectUserList(users)
-        setShareText(`${users.map((ele) => `@${ele.name}`)} 邀请你加入共享文档 ${documentName}`)
-    })
-    const onRemove = useMemoizedFn((value) => {
-        setSelectUserList((pre) => pre.filter((item) => item === value))
+        setSearchValue("")
+        setShareText(`${users.map((ele) => `@${ele.name}`)} 邀请你加入共享文档 ${notepadInfo.title}`)
     })
     const onSend = useMemoizedFn(() => {
         if (!shareText) return
         if (!selectUserList.length) return
-        yakitNotify("success", "发送成功")
+
+        const param: API.PostNotepadPermissionRequest = {
+            notepadHash: notepadInfo.hash,
+            userId: selectUserList.map((ele) => ele.id),
+            permissionType: selectAuth
+        }
+        setConfirmLoading(true)
+        apiSetNotepadPermission(param)
+            .then(() => {
+                yakitNotify("success", "发送成功")
+                onClose()
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setConfirmLoading(false)
+                }, 200)
+            )
     })
 
     const options = useCreation(() => {
-        return userList.map((ele) => ({
-            value: ele.id,
-            title: ele.name,
-            label: (
-                <div className={styles["user-item"]}>
-                    <img src={ele.head_img} alt={ele.name} className={styles["user-img"]} />
-                    <span className={styles["user-name"]}>{ele.name}</span>
-                </div>
-            )
-        }))
-    }, [userList])
+        return userList
+            .map((ele) => ({
+                value: ele.id,
+                title: ele.name,
+                label: (
+                    <div className={styles["user-item"]}>
+                        <img src={ele.head_img} alt={ele.name} className={styles["user-img"]} />
+                        <span className={styles["user-name"]}>{ele.name}</span>
+                    </div>
+                )
+            }))
+            .filter((e) => e.value !== userInfo.user_id)
+    }, [userList, userInfo.user_id])
 
     const onSetAuth = useMemoizedFn((key, index) => {
         switch (key) {
@@ -211,7 +230,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                             alt='作者'
                                             className={styles["user-img"]}
                                         />
-                                        <span className={styles["user-name"]}>桔子爱吃橘子</span>
+                                        <span className={styles["user-name"]}>{userInfo.companyName || "-"}</span>
                                         <YakitTag>作者</YakitTag>
                                     </div>
                                     <div className={styles["author-permission"]}>可管理</div>
@@ -264,7 +283,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                     <YakitTag
                                         className={styles["user-tag-render"]}
                                         closable={true}
-                                        onClose={() => onRemove(props.value)}
+                                        onClose={props.onClose}
                                     >
                                         {props.label}
                                     </YakitTag>
@@ -296,7 +315,13 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                         <YakitButton type='outline2' size='large' onClick={onClose}>
                             取消
                         </YakitButton>
-                        <YakitButton type='primary' size='large' disabled={!selectUserList.length} onClick={onSend}>
+                        <YakitButton
+                            type='primary'
+                            size='large'
+                            loading={confirmLoading}
+                            disabled={!selectUserList.length}
+                            onClick={onSend}
+                        >
                             发送邀请
                         </YakitButton>
                     </div>
