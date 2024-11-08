@@ -774,10 +774,8 @@ const PluginGroupGrid: React.FC<PluginGroupGridProps> = React.memo((props) => {
                     }
                 }
                 setResponseToSelect(res)
-                if (response.length === 0) {
-                    setResponse(res)
-                    setIsRef(!isRef)
-                }
+                setResponse(res)
+                setIsRef(!isRef)
             })
             .finally(() =>
                 setTimeout(() => {
