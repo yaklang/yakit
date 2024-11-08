@@ -432,7 +432,7 @@ export declare namespace API {
     }
     export interface PostNotepadPermissionRequest {
         notepadHash: string
-        userId: number
+        userId: number[]
         /**
          *  'view', 'edit' 读写权限 '' 默认移除
          */

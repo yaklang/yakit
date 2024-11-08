@@ -8,7 +8,7 @@
         background: var(--yakit-card-background-color);
         border-bottom: 1px solid var(--yakit-border-color);
         border-radius: 8px 8px 0 0;
-        width: 400px;
+        min-width: 400px;
     }
     .notepad-content {
         display: flex;

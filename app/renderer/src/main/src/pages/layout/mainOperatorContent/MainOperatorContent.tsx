@@ -670,7 +670,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             )
         } catch (error) {
-            yakitNotify("error", `GetNotepadDetail详情失败:${error}`)
         }
     })
     const addScanPort = useMemoizedFn((data) => {
