@@ -1390,7 +1390,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const arr = httpResponse?.Headers || []
         for (let index = 0; index < arr.length; index++) {
             const element = arr[index]
-            if (element.Header === "Location") {
+            if (element.Header.toLocaleLowerCase() === "Location".toLocaleLowerCase()) {
                 return true
             }
         }
