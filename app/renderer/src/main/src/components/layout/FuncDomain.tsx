@@ -9,7 +9,7 @@ import {
     YakitWhiteSvgIcon
 } from "./icons"
 import {YakitEllipsis} from "../basics/YakitEllipsis"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {showModal} from "@/utils/showModal"
 import {failed, info, success, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {ConfigPrivateDomain} from "../ConfigPrivateDomain/ConfigPrivateDomain"
@@ -82,9 +82,9 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
-import { YakitSegmented } from "../yakitUI/YakitSegmented/YakitSegmented"
 import { MessageCenter } from "../MessageCenter/MessageCenter"
 import { apiFetchMessageRead, apiFetchQueryMessage } from "../MessageCenter/utils"
+import { YakitRadioButtons } from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1820,12 +1820,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         )
     }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
-    const [noticeType,setNoticeType] = useState<"message"|"update">("message")
-    useEffect(()=>{
+    const [noticeType,setNoticeType] = useState<"message"|"update">("update")
+    useUpdateEffect(()=>{
         if(userInfo.isLogin){
             setNoticeType("message")
         }
-        // 未登录时 仅允许查看
         else{
             setNoticeType("update")
         }
@@ -1888,24 +1887,24 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-notice-body"]}>
                     <div className={styles["notice-version-header"]}>
-                        <YakitSegmented
-                                value={noticeType}
-                                onChange={(v) => {
-                                    const value = v as "message"|"update"
-                                    setNoticeType(value)
-                                }}
-                                options={[
-                                    {
-                                        label: "消息中心",
-                                        value: "message",
-                                    },
-                                    {
-                                        label: "更新通知",
-                                        value: "update",
-                                    },
-                                ]}
+                        <YakitRadioButtons
+                            value={noticeType}
+                            onChange={(e) => {
+                                const value = e.target.value
+                                setNoticeType(value as "message"|"update")
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    label: "消息中心",
+                                    value: "message",
+                                },
+                                {
+                                    label: "更新通知",
+                                    value: "update",
+                                },
+                            ]}
                             />
-                        
                         {noticeType==="update" ?
                         <div className={styles["switch-title"]}>
                             启动检测更新
@@ -2010,7 +2009,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         isRemoteMode,
         communityYaklang,
         noticeType,
-        messageList
+        messageList,
     ])
 
     return (

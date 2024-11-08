@@ -948,6 +948,7 @@ export declare namespace API {
         isRead: boolean
         hash: string
         description: string
+        status: number
     }
     export interface LogsRequest {
         uuid: string
