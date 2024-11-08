@@ -323,6 +323,10 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     }}
                 />
             ),
+            onCancel: () => {
+                m.destroy()
+                setRefresh(!refresh)
+            },
             footer: null
         })
     })
@@ -485,6 +489,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     data={response.data}
                     page={+(response.pagemeta.page || 1)}
                     loadMoreData={loadMoreData}
+                    renderKey='hash'
                     rowSelection={{
                         isAll: isAllSelect,
                         type: "checkbox",
