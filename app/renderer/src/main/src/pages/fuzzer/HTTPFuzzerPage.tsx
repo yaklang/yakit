@@ -1108,7 +1108,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}`
                     : ""
             } as FuzzerResponse
-
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
