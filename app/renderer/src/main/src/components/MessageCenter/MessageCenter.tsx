@@ -68,18 +68,48 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                     </>
                 )
             case "check":
-                return (
-                    <>
-                        <span className={classNames(styles["tag"], styles["check"])}>审核通过</span>
-                        <span
-                            className={classNames(styles["text"], {
-                                "yakit-single-line-ellipsis": isEllipsis
-                            })}
-                        >
-                            了您的插件：{data.scriptName}
-                        </span>
-                    </>
-                )
+                if(data.status === 0){
+                    return (
+                        <>
+                            <span className={classNames(styles["tag"], styles["check"])}>申请修改</span>
+                            <span
+                                className={classNames(styles["text"], {
+                                    "yakit-single-line-ellipsis": isEllipsis
+                                })}
+                            >
+                                了您的插件：{data.scriptName}
+                            </span>
+                        </>
+                    )
+                }
+                else if (data.status === 1) {
+                    return (
+                        <>
+                            <span className={classNames(styles["tag"], styles["check"])}>审核通过</span>
+                            <span
+                                className={classNames(styles["text"], {
+                                    "yakit-single-line-ellipsis": isEllipsis
+                                })}
+                            >
+                                了您的插件：{data.scriptName}
+                            </span>
+                        </>
+                    )
+                } else {
+                    return (
+                        <>
+                            <span className={classNames(styles["tag"], styles["check"])}>审核不通过</span>
+                            <span
+                                className={classNames(styles["text"], {
+                                    "yakit-single-line-ellipsis": isEllipsis
+                                })}
+                            >
+                                了您的插件：{data.scriptName}
+                            </span>
+                        </>
+                    )
+                }
+
             case "applyMerge":
                 return (
                     <>
@@ -273,6 +303,8 @@ export interface MessageCenterProps {
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
     const {messageList, getAllMessage, onLogin, onClose} = props
     const {userInfo} = useStore()
+    console.log("messageList---",messageList);
+    
     return (
         <>
             {userInfo.isLogin ? (
