@@ -163,6 +163,8 @@ export interface HTTPFlow {
     ResponseString: string
 
     HiddenIndex?:string
+
+    FromPlugin: string
 }
 /**获取请求包Request和响应包Response  string */
 export const getHTTPFlowReqAndResToString = (flow: HTTPFlow) => {
@@ -669,7 +671,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         SourceType: props.params?.SourceType || "mitm",
         WithPayload: toWebFuzzer,
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
+        RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+        FromPlugin: "",
+        Full: true
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
@@ -1666,17 +1670,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
             }
         }
-        const HtmlTitle: ColumnsTypeProps = {
-            title: "Title",
-            dataKey: "HtmlTitle",
-            width: 200
-        }
         const WebPayloads: ColumnsTypeProps = {
             title: "Payloads",
             dataKey: "Payloads",
             width: 300,
             render: (v) => {
                 return v ? v.join(",") : "-"
+            }
+        }
+        const FromPlugin: ColumnsTypeProps = {
+            title: "相关插件",
+            dataKey: "FromPlugin",
+            width: 200,
+            filterProps: {
+                filterKey: "FromPlugin",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
             }
         }
         const Tags: ColumnsTypeProps = {
@@ -1825,6 +1834,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     </>
                 )
             }
+        }
+        const HtmlTitle: ColumnsTypeProps = {
+            title: "Title",
+            dataKey: "HtmlTitle",
+            width: 200
         }
         const GetParamsTotal: ColumnsTypeProps = {
             title: "参数",
@@ -1975,12 +1989,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 Method,
                 StatusCode,
                 Url,
-                HtmlTitle,
                 WebPayloads,
+                FromPlugin,
                 Tags,
                 IPAddress,
                 DurationMs,
                 BodyLength,
+                HtmlTitle,
                 GetParamsTotal,
                 ContentType,
                 UpdatedAt,
@@ -1994,11 +2009,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             Method,
             StatusCode,
             Url,
-            HtmlTitle,
+            FromPlugin,
             Tags,
             IPAddress,
             DurationMs,
             BodyLength,
+            HtmlTitle,
             GetParamsTotal,
             ContentType,
             UpdatedAt,
@@ -2308,12 +2324,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     key: "url"
                 },
                 {
-                    title: "Title",
-                    key: "response"
-                },
-                {
                     title: "Payloads",
                     key: "payloads"
+                },
+                {
+                    title: "相关插件",
+                    key: "from_plugin"
                 },
                 {
                     title: "Tags",
@@ -2326,6 +2342,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     title: "响应长度",
                     key: "body_length"
+                },
+                {
+                    title: "Title",
+                    key: "response"
                 },
                 {
                     title: "参数",
