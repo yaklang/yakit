@@ -75,6 +75,9 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             failedFuzzer
         }
     }, [responseMap])
+
+    const [statusCodeInputVal, setStatusCodeInputVal] = useState<string>("")
+
     return isShow ? (
         <div className={styles["all-sequence-response-list"]} style={{display: showAllResponse ? "" : "none"}}>
             <div className={styles["all-sequence-response-heard"]}>
@@ -113,7 +116,10 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         failedFuzzer={fuzzerData.failedFuzzer}
                         secondNodeSize={secondNodeSize}
                         query={query}
-                        setQuery={(q) => setQuery({...q})}
+                        setQuery={(q) => {
+                            setQuery({...q})
+                        }}
+                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         sendPayloadsType='allSequenceList'
                         size='middle'
                         setShowExtra={() => {}}
@@ -145,6 +151,8 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         data={fuzzerData.successFuzzer}
                         query={query}
                         setQuery={setQuery}
+                        statusCodeInputVal={statusCodeInputVal}
+                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         extractedMap={extractedMap}
                         isEnd={true}
                         isShowDebug={false}
@@ -157,6 +165,8 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         data={fuzzerData.failedFuzzer}
                         query={query}
                         setQuery={setQuery}
+                        statusCodeInputVal={statusCodeInputVal}
+                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         isEnd={true}
                         extractedMap={extractedMap}
                     />

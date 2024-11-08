@@ -36,6 +36,7 @@ import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {CodingPopover} from "@/components/HTTPFlowDetail"
+import {OutlineSearchIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -61,6 +62,8 @@ interface HTTPFuzzerPageTableProps {
     moreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
     fuzzerTableMaxData?: number
+    statusCodeInputVal: string
+    onSetStatusCodeInputVal: (s: string) => void
 }
 
 /**
@@ -89,7 +92,7 @@ export interface HTTPFuzzerPageTableQuery {
     beforeBodyLength?: number
     afterDurationMs?: number
     beforeDurationMs?: number
-    StatusCode?: string[]
+    StatusCode?: string
     Color?: string[]
     // bodyLengthUnit: "B" | "k" | "M"
 }
@@ -129,6 +132,29 @@ export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
     return newList
 }
 
+export const parseStatusCodes = (statusCode: string) => {
+    const result = new Set<number>()
+    statusCode.split(",").forEach((part) => {
+        // 检查是否是一个范围
+        if (part.includes("-")) {
+            const [start, end] = part.split("-").map((str) => (str.trim() !== "" ? Number(str) : NaN))
+            // 确保 start 和 end 都是有效数字
+            if (!isNaN(start) && !isNaN(end) && start <= end && start >= 100 && end <= 599) {
+                for (let i = start; i <= end; i++) {
+                    result.add(i)
+                }
+            }
+        } else {
+            const code = part.trim() !== "" ? Number(part) : NaN
+            // 确保 code 是有效数字
+            if (!isNaN(code) && code >= 100 && code <= 599) {
+                result.add(code)
+            }
+        }
+    })
+    return Array.from(result).sort((a, b) => a - b)
+}
+
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {
@@ -145,7 +171,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             pageId,
             moreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
-            fuzzerTableMaxData = DefFuzzerTableMaxData
+            fuzzerTableMaxData = DefFuzzerTableMaxData,
+            statusCodeInputVal,
+            onSetStatusCodeInputVal,
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const listTableRef = useRef<FuzzerResponse[]>([])
@@ -254,30 +282,27 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               sorter: true
                           },
                           filterProps: {
-                              filterMultiple: true,
-                              filtersType: "select",
-                              filters: [
-                                  {
-                                      value: "100-200",
-                                      label: "100-200"
-                                  },
-                                  {
-                                      value: "200-300",
-                                      label: "200-300"
-                                  },
-                                  {
-                                      value: "300-400",
-                                      label: "300-400"
-                                  },
-                                  {
-                                      value: "400-500",
-                                      label: "400-500"
-                                  },
-                                  {
-                                      value: "500-600",
-                                      label: "500-600"
+                              filterKey: "StatusCode",
+                              filtersType: "input",
+                              filterIcon: (
+                                  <OutlineSearchIcon
+                                      className={classNames(styles["search-icon"], styles["filter-icon"], {
+                                          [styles["active-icon"]]: !!query?.StatusCode?.length
+                                      })}
+                                  />
+                              ),
+                              filterInputProps: {
+                                  placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                                  wrapperStyle: {width: 270},
+                                  value: statusCodeInputVal,
+                                  onChangeVal: (value) => {
+                                      let val = value
+                                      // 只允许输入数字、逗号和连字符，去掉所有其他字符
+                                      val = val.replace(/[^0-9,-]/g, "")
+                                      onSetStatusCodeInputVal(val)
+                                      return val
                                   }
-                              ]
+                              }
                           }
                       },
                       {
@@ -546,7 +571,18 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           }
                       }
                   ]
-        }, [success, query?.afterBodyLength, query?.beforeBodyLength, query?.afterDurationMs, query?.beforeDurationMs, extractedMap, isHaveData, isShowDebug])
+        }, [
+            success,
+            query?.StatusCode,
+            statusCodeInputVal,
+            query?.afterBodyLength,
+            query?.beforeBodyLength,
+            query?.afterDurationMs,
+            query?.beforeDurationMs,
+            extractedMap,
+            isHaveData,
+            isShowDebug
+        ])
 
         // 背景颜色是否标注为红色
         const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -591,6 +627,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
                 const l = bodyLengthRef?.current?.getValue() || {}
                 const d = durationMsRef?.current?.getValue() || {}
+                // 由于当正在执行，会导致表格不断重复渲染，由于query初始是空，导致表格里面的filters会被重置为空，当执行这个函数时，会拿不到正确值
+                if (filters["StatusCode"] === undefined && statusCodeInputVal) {
+                    filters["StatusCode"] = statusCodeInputVal
+                }
                 setQuery({
                     ...query,
                     ...filters,
@@ -680,12 +720,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
-                            const cLength = query.StatusCode
+                            const statusCodes = parseStatusCodes(query.StatusCode)
                             const codeIsPushArr: boolean[] = []
-                            for (let index = 0; index < cLength.length; index++) {
-                                const element = query.StatusCode[index]
-                                const codeArr = element.split("-")
-                                if (record.StatusCode >= codeArr[0] && record.StatusCode <= codeArr[1]) {
+                            for (let index = 0; index < statusCodes.length; index++) {
+                                const element = statusCodes[index]
+                                if (record.StatusCode === element) {
                                     codeIsPushArr.push(true)
                                 } else {
                                     codeIsPushArr.push(false)

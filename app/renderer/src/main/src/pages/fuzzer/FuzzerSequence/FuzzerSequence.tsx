@@ -1892,6 +1892,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             </>
         )
 
+        const [statusCodeInputVal, setStatusCodeInputVal] = useState<string>("")
         const secondNodeExtra = () => (
             <>
                 <SecondNodeExtra
@@ -1914,7 +1915,10 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                     failedFuzzer={failedFuzzer}
                     secondNodeSize={secondNodeSize}
                     query={query}
-                    setQuery={(q) => setQuery({...q})}
+                    setQuery={(q) => {
+                        setQuery({...q})
+                    }}
+                    onSetStatusCodeInputVal={setStatusCodeInputVal}
                     sendPayloadsType='fuzzerSequence'
                     setShowExtra={setShowExtra}
                     showResponseInfoSecondEditor={showResponseInfoSecondEditor}
@@ -2029,6 +2033,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         data={successFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
+                                                        statusCodeInputVal={statusCodeInputVal}
+                                                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         onDebug={onDebug}
@@ -2058,6 +2064,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
+                                                        statusCodeInputVal={statusCodeInputVal}
+                                                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                                                         isEnd={loading}
                                                         extractedMap={extractedMap}
                                                     />

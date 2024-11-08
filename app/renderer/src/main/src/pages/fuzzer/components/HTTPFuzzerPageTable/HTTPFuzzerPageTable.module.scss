@@ -87,6 +87,12 @@
     color: var(--yakit-helper-text-color);
     @extend .display-flex-center;
 }
+.search-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
 .active-icon {
     color: var(--yakit-primary-5);
 }

@@ -157,6 +157,10 @@ export interface SorterProps {
  * @property {ReactNode}  filterIcon  自定义 filter 图标
  * @property {YakitInputProps}  filterInputProps  input的props属性
  */
+
+interface FilterInputProps extends YakitInputProps {
+    onChangeVal?: (value: string) => string
+}
 export interface FilterProps {
     filterRender?: (closePopover: () => void) => ReactNode
     filterOptionRender?: (d: any) => ReactNode
@@ -169,7 +173,7 @@ export interface FilterProps {
     filterMultipleProps?: FilterSearchMultipleProps // input的props属性
     filterMultiple?: boolean // 是否多选 filtersType 为select才有效
     filterIcon?: ReactNode // 自定义 filter 图标
-    filterInputProps?: YakitInputProps // input的props属性
+    filterInputProps?: FilterInputProps // input的props属性
 }
 /**
  *  @property {boolean} isAll 是否全选

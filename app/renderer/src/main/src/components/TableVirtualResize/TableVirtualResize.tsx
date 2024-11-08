@@ -829,17 +829,36 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
      * @description 输入框搜索
      */
     const renderInput = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
+        const value = filters[filterKey] || columnsItem.filterProps?.filterInputProps?.value
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
                     allowClear={true}
                     {...columnsItem.filterProps?.filterInputProps}
-                    value={filters[filterKey]}
+                    value={value}
                     onChange={(e) => {
+                        let val = e.target.value
+                        if (
+                            columnsItem.filterProps &&
+                            columnsItem.filterProps.filterInputProps &&
+                            columnsItem.filterProps.filterInputProps.onChangeVal
+                        ) {
+                            val = columnsItem.filterProps?.filterInputProps?.onChangeVal(val)
+                        }
                         setFilters({
                             ...filters,
-                            [filterKey]: e.target.value
+                            [filterKey]: val
                         })
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.stopPropagation()
+                            setOpensPopover({
+                                ...opensPopover,
+                                [filterKey]: false
+                            })
+                            if (onChangTable) onChangTable()
+                        }
                     }}
                 />
             </div>
@@ -1435,7 +1454,10 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             )) || (
                                 <CellRender
                                     colIndex={colIndex}
-                                    key={`${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` || number}
+                                    key={
+                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` ||
+                                        number
+                                    }
                                     item={item}
                                     columnsItem={columnsItem}
                                     number={item.index}
