@@ -1441,6 +1441,52 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         return () => clearInterval(id)
     }, [])
 
+    // 由不可见变成可见时，判断堆积数据是否过多，过多时，直接刷新整个列表
+    const handleShowIsInit = useMemoizedFn((callbakc?: () => void) => {
+        if (pageType === "MITM") {
+            callbakc && callbakc()
+            return
+        }
+        if (sortRef.current.order === "asc") {
+            callbakc && callbakc()
+            return
+        }
+        if (isGrpcRef.current) return
+        const scrollTop = tableRef.current?.containerRef?.scrollTop
+
+        if (scrollTop < 10 && maxIdRef.current && !getOffsetData().length) {
+            const paginationProps = {
+                Page: 1,
+                Limit: 500,
+                Order: sortRef.current.order,
+                OrderBy: sortRef.current.orderBy || "id"
+            }
+            const query = {
+                ...params,
+                Pagination: {...paginationProps},
+                AfterId: maxIdRef.current
+            }
+
+            // 真正需要传给后端的查询数据
+            const realQuery = cloneDeep(query)
+            ipcRenderer
+                .invoke("QueryHTTPFlows", realQuery)
+                .then((rsp: YakQueryHTTPFlowResponse) => {
+                    const {Total} = rsp
+                    if (Number(Total) > 200) {
+                        updateData()
+                    } else {
+                        callbakc && callbakc()
+                    }
+                })
+                .catch(() => {
+                    callbakc && callbakc()
+                })
+        } else {
+            callbakc && callbakc()
+        }
+    })
+
     // 设置是否自动刷新
     const idRef = useRef<any>()
     useEffect(() => {
@@ -1450,16 +1496,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
     useEffect(() => {
         if (inViewport) {
-            scrollUpdate()
-            if (isLoop) {
-                if (idRef.current) {
-                    clearInterval(idRef.current)
+            handleShowIsInit(() => {
+                scrollUpdate()
+                if (isLoop) {
+                    if (idRef.current) {
+                        clearInterval(idRef.current)
+                    }
+                    idRef.current = setInterval(scrollUpdate, 1000)
                 }
-                idRef.current = setInterval(scrollUpdate, 1000)
-            }
+            })
         }
         return () => clearInterval(idRef.current)
-    }, [inViewport, isLoop, scrollUpdate])
+    }, [inViewport, isLoop])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))

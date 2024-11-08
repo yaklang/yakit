@@ -39,6 +39,7 @@ import {YakitCopyText} from "./yakitUI/YakitCopyText/YakitCopyText"
 import YakitCollapse from "./yakitUI/YakitCollapse/YakitCollapse"
 import PluginTabs from "./businessUI/PluginTabs/PluginTabs"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
+import {asynSettingState} from "@/utils/optimizeRender"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -232,7 +233,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     }
 
     return (
-        <YakitSpin spinning={loading} style={{width: "100%", marginBottom: 24}} tip="正在分析详细参数">
+        <YakitSpin spinning={loading} style={{width: "100%", marginBottom: 24}} tip='正在分析详细参数'>
             {flow ? (
                 <>
                     {props.noHeader ? undefined : (
@@ -983,7 +984,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         setResType("current")
         setRspType("current")
         setOriginResValue(fetchSsafeHTTPRequest())
-        setOriginRspValue(flow?.ResponseString || "")
+        // id 比 flow 先更新，导致可能设置的内容是上一条数据的内容
+        if (id == flow?.Id) setOriginRspValue(flow?.ResponseString || "")
         // 编辑器滚轮回到顶部
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
@@ -1006,11 +1008,20 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             setOriginResValue(fetchSsafeHTTPRequest())
         }
     }, [resType, flow?.Request])
+
+    // 定时赋值的计时器
+    const setValueTimer = useRef<any>(null)
     useEffect(() => {
         if (rspType === "response") {
             setOriginRspValue(beforeRspValue)
         } else {
-            setOriginRspValue(flow?.ResponseString || "")
+            if (setValueTimer.current) {
+                clearInterval(setValueTimer.current)
+                setValueTimer.current = null
+            }
+            if (!flow?.ResponseString) setOriginRspValue(flow?.ResponseString || "")
+            // 超大数据分片赋值
+            else setValueTimer.current = asynSettingState(flow?.ResponseString || "", setOriginRspValue)
         }
     }, [rspType, flow?.Response])
 
