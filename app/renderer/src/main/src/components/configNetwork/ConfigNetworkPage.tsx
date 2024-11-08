@@ -268,12 +268,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     })
 
     const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
-        console.log(111, params.MaxContentLength);
         const realParams: GlobalNetworkConfig = {
             ...params,
             MaxContentLength: +params.MaxContentLength * 1024 * 1024
         }
-        console.log("SetGlobalNetworkConfig", realParams)
         ipcRenderer.invoke("SetGlobalNetworkConfig", realParams).then(() => {
             yakitInfo("更新配置成功")
             update()
