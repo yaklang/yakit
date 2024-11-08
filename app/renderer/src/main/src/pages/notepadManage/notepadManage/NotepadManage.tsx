@@ -12,16 +12,21 @@ import {
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {Avatar, Divider, Tooltip} from "antd"
+import {Divider, Tooltip} from "antd"
 import {API} from "@/services/swagger/resposeType"
-import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import moment from "moment"
-import {YakitVirtualList} from "../YakitVirtualList/YakitVirtualList"
-import {VirtualListColumns} from "../YakitVirtualList/YakitVirtualListType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {AuthorImg, FuncSearch} from "@/pages/plugins/funcTemplate"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {GetNotepadRequestProps, SearchParamsProps, apiGetNotepadList, convertGetNotepadRequest} from "./utils"
+import {
+    GetNotepadRequestProps,
+    SearchParamsProps,
+    apiDeleteNotepadDetail,
+    apiDownloadNotepad,
+    apiGetNotepadList,
+    convertGetNotepadRequest
+} from "./utils"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {useStore} from "@/store"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
@@ -30,6 +35,16 @@ import emiter from "@/utils/eventBus/eventBus"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
+import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
+import {judgeAvatar} from "@/pages/MainOperator"
+import {randomAvatarColor} from "@/components/layout/FuncDomain"
+import {openDirectory} from "../NotepadShareModal/utils"
+import {yakitNotify} from "@/utils/notification"
+import {APIFunc} from "@/apiUtils/type"
+
+const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
 const timeMap = {
     created_at: "最近创建时间",
@@ -46,6 +61,9 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     )
 
     const [loading, setLoading] = useState<boolean>(true)
+    const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
+    const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
+
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
 
@@ -71,6 +89,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 
     const totalRef = useRef<number>(0)
     const notepadRef = useRef<HTMLDivElement>(null)
+    const actionItemRef = useRef<API.GetNotepadList>()
 
     const [inViewPort = true] = useInViewport(notepadRef)
 
@@ -84,7 +103,11 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             dataIndex: "author",
             render: (text, record) => (
                 <div className={styles["author-cell"]}>
-                    <AuthorImg src={record.headImg} />
+                    {judgeAvatar(
+                        {companyHeadImg: record.headImg, companyName: record.userName},
+                        28,
+                        randomAvatarColor()
+                    )}
                     <span className='content-ellipsis'>{record.userName}</span>
                 </div>
             )
@@ -104,7 +127,11 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                                         title={ele.user_name}
                                         placement='top'
                                     >
-                                        <Avatar src={ele.head_img} />
+                                        {judgeAvatar(
+                                            {companyHeadImg: ele.head_img, companyName: ele.user_name},
+                                            28,
+                                            randomAvatarColor()
+                                        )}
                                     </Tooltip>
                                 ))}
                             </div>
@@ -167,11 +194,22 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                         onClick={() => toModifyNotepad(record.hash)}
                     />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => {}} />
+                    <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => onShare(record)} />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton type='text2' icon={<OutlineClouddownloadIcon />} onClick={() => {}} />
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineClouddownloadIcon />}
+                        onClick={() => onSingleDown(record)}
+                        loading={actionItemRef.current === record && downItemLoading}
+                    />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton danger type='text' icon={<OutlineTrashIcon />} onClick={() => {}} />
+                    <YakitButton
+                        danger
+                        type='text'
+                        icon={<OutlineTrashIcon />}
+                        onClick={() => onSingleRemove(record)}
+                        loading={actionItemRef.current === record && removeItemLoading}
+                    />
                 </div>
             )
         }
@@ -273,12 +311,127 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             emiter.emit("openPage", JSON.stringify(info))
         }
     })
+    const onShare = useMemoizedFn((record: API.GetNotepadList) => {
+        const m = showYakitModal({
+            hiddenHeader: true,
+            content: (
+                <NotepadShareModal
+                    notepadInfo={record}
+                    onClose={() => {
+                        m.destroy()
+                        setRefresh(!refresh)
+                    }}
+                />
+            ),
+            footer: null
+        })
+    })
+    const onSingleRemove = useMemoizedFn((record: API.GetNotepadList) => {
+        actionItemRef.current = record
+        setRemoveItemLoading(true)
+        apiDeleteNotepadDetail({hash: record.hash})
+            .then(() => {
+                setResponse((prev) => ({
+                    ...prev,
+                    data: prev.data.filter((ele) => ele.hash !== record.hash)
+                }))
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setRemoveItemLoading(false)
+                    actionItemRef.current = undefined
+                }, 200)
+            })
+    })
+    const onBatchRemove = useMemoizedFn(() => {
+        const filter = isAllSelect ? convertGetNotepadRequest(search) : {}
+        const removeParams: API.DeleteNotepadRequest = {
+            ...filter,
+            hash: isAllSelect ? "" : selectedRowKeys?.join(",")
+        }
+        setLoading(true)
+        apiDeleteNotepadDetail(removeParams)
+            .then(() => {
+                setRefresh(!refresh)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
+    })
+
+    const onSingleDown = useMemoizedFn((record: API.GetNotepadList) => {
+        actionItemRef.current = record
+        setDownItemLoading(true)
+        const downParams: API.NotepadDownloadRequest = {
+            hash: record.hash,
+            downloadUrl: ""
+        }
+        onBaseDown(downParams)
+            .then(() => {
+                yakitNotify("success", "下载成功")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setDownItemLoading(false)
+                    actionItemRef.current = undefined
+                }, 200)
+            )
+    })
+
+    const onBatchDown = useMemoizedFn(() => {
+        const filter = isAllSelect ? convertGetNotepadRequest(search) : {}
+        const downParams: API.NotepadDownloadRequest = {
+            ...filter,
+            hash: isAllSelect ? "" : selectedRowKeys?.join(","),
+            downloadUrl: ""
+        }
+        setLoading(true)
+        onBaseDown(downParams)
+            .then((res) => {
+                yakitNotify("success", "下载成功")
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+            )
+    })
+    const onBaseDown: APIFunc<API.NotepadDownloadRequest, API.NotepadDownloadResponse> = useMemoizedFn((value) => {
+        return new Promise((resolve, reject) => {
+            openDirectory()
+                .then((data) => {
+                    const filesLength = data.filePaths.length
+                    if (filesLength === 1) {
+                        const path: string = data.filePaths[0].replace(/\\/g, "\\")
+                        const params: API.NotepadDownloadRequest = {
+                            ...value,
+                            downloadUrl: path
+                        }
+                        apiDownloadNotepad(params)
+                            .then((res) => {
+                                resolve(res)
+                            })
+                            .catch(reject)
+                    }
+                })
+                .catch(reject)
+        })
+    })
+    const selectNumber = useCreation(() => {
+        if (isAllSelect) {
+            return +response.pagemeta.total
+        } else {
+            return selectedRowKeys.length
+        }
+    }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
     return (
         <div className={styles["notepad-manage"]} ref={notepadRef}>
             <div className={styles["notepad-manage-heard"]}>
                 <div className={styles["heard-title"]}>
                     <span>记事本管理</span>
-                    <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectedRowKeys.length} />
+                    <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectNumber} />
                 </div>
                 <div className={styles["heard-extra"]}>
                     <FuncSearch
@@ -291,10 +444,21 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                         onChange={setSearch}
                         onSearch={onSearch}
                     />
-                    <YakitButton type='outline2' danger icon={<OutlineTrashIcon />} disabled={totalRef.current === 0}>
+                    <YakitButton
+                        type='outline2'
+                        danger
+                        icon={<OutlineTrashIcon />}
+                        disabled={totalRef.current === 0}
+                        onClick={() => onBatchRemove()}
+                    >
                         删除
                     </YakitButton>
-                    <YakitButton type='outline2' icon={<OutlineClouddownloadIcon />} disabled={totalRef.current === 0}>
+                    <YakitButton
+                        type='outline2'
+                        icon={<OutlineClouddownloadIcon />}
+                        disabled={totalRef.current === 0}
+                        onClick={() => onBatchDown()}
+                    >
                         批量下载
                     </YakitButton>
                     <Divider type='vertical' style={{margin: 0}} />
