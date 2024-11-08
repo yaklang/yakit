@@ -101,7 +101,7 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
         NetWorkApi<NotepadDetailRequest, API.GetNotepadList>({
             method: "get",
             url: "notepad/detail",
-            data: {
+            params: {
                 hash
             }
         })
@@ -113,6 +113,12 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
     })
 }
 
+/**
+ * @description 删除记事本
+ * @param params
+ * @param hiddenError
+ * @returns
+ */
 export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.GetNotepadList> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         NetWorkApi<API.DeleteNotepadRequest, API.GetNotepadList>({
@@ -123,6 +129,29 @@ export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.GetNo
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "删除记事本失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, API.NotepadDownloadResponse> = (
+    params,
+    hiddenError
+) => {
+    return new Promise((resolve, reject) => {
+        NetWorkApi<API.NotepadDownloadRequest, API.NotepadDownloadResponse>({
+            method: "post",
+            url: "notepad/download",
+            data: params
+            // onDownloadProgress:(progress)=>{
+            //     console.log('onDownloadProgress',progress)
+            // }
+        })
+            .then((res) => {
+                resolve(res)
+            })
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "下载记事本失败:" + err)
                 reject(err)
             })
     })
