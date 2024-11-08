@@ -268,6 +268,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     })
 
     const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
+        console.log(111, params.MaxContentLength);
         const realParams: GlobalNetworkConfig = {
             ...params,
             MaxContentLength: +params.MaxContentLength * 1024 * 1024
@@ -885,6 +886,17 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 value = value.replace(/^0+/, "")
                                             }
                                             setParams({...params, MaxContentLength: value})
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                let value = parseInt(params.MaxContentLength + "" || "0", 10)
+                                                if (!value || value === 0) {
+                                                    value = 10
+                                                } else if (value > 50) {
+                                                    value = 50
+                                                }
+                                                setParams({...params, MaxContentLength: value})                            
+                                            }
                                         }}
                                         onBlur={() => {
                                             let value = parseInt(params.MaxContentLength + "" || "0", 10)
