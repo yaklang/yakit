@@ -21,6 +21,8 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import classNames from "classnames"
 import {useStore} from "@/store"
+import {judgeAvatar} from "@/pages/MainOperator"
+import {randomAvatarColor} from "@/components/layout/FuncDomain"
 
 interface NotepadShareModalProps {
     notepadInfo: API.GetNotepadList
@@ -31,92 +33,17 @@ interface SelectUserProps {
     id: number
     name: string
 }
-const Collaborators = [
-    {
-        id: -1,
-        name: "桔子爱吃橘子",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "edit"
-    },
-    {
-        id: 1,
-        name: "张三",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "edit"
-    },
-    {
-        id: 2,
-        name: "李四",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 3,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 4,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 5,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 6,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 7,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 8,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 9,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 10,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 11,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    },
-    {
-        id: 12,
-        name: "王五",
-        head_img: "'https://avatars.githubusercontent.com/u/102901986?v=4'",
-        auth: "read"
-    }
-]
+interface NotepadCollaboratorInfoProps extends API.CollaboratorInfo {
+    imgNode?: ReactNode
+}
+type NotepadPermissionType = "view" | "edit" | ""
 const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) => {
     const {notepadInfo, onClose} = props
     const userInfo = useStore((s) => s.userInfo)
-    const [selectAuth, setSelectAuth] = useState<string>("read")
+    const [selectAuth, setSelectAuth] = useState<NotepadPermissionType>("view")
     const [searchValue, setSearchValue] = useState<string>("")
     const [confirmLoading, setConfirmLoading] = useState<boolean>(false)
+    const [collaboratorLoading, setCollaboratorLoading] = useState<boolean>(false)
 
     const [manageVisible, setManageVisible] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
@@ -124,7 +51,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const [userList, setUserList] = useState<API.UserList[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
 
-    const [collaborators, setCollaborators] = useState(Collaborators)
+    const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo.collaborator || [])
 
     const onClear = useMemoizedFn(() => {
         setUserList([])
@@ -173,7 +100,34 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                 }, 200)
             )
     })
+    const onSetAuth = useMemoizedFn((key, item) => {
+        const param: API.PostNotepadPermissionRequest = {
+            notepadHash: notepadInfo.hash,
+            userId: [item.user_id],
+            permissionType: key === "remove" ? "" : key
+        }
+        setCollaboratorLoading(true)
+        apiSetNotepadPermission(param)
+            .then(() => {
+                switch (key) {
+                    case "remove":
+                        setCollaborators(collaborators.filter((ele) => ele.user_id !== item.user_id))
+                        break
 
+                    default:
+                        const newList: NotepadCollaboratorInfoProps[] = collaborators.map((ele) =>
+                            ele.user_id === item.user_id ? {...ele, role: key} : ele
+                        )
+                        setCollaborators(newList)
+                        break
+                }
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setCollaboratorLoading(false)
+                }, 200)
+            )
+    })
     const options = useCreation(() => {
         return userList
             .map((ele) => ({
@@ -189,19 +143,31 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
             .filter((e) => e.value !== userInfo.user_id)
     }, [userList, userInfo.user_id])
 
-    const onSetAuth = useMemoizedFn((key, index) => {
-        switch (key) {
-            case "remove":
-                const newList = collaborators.filter((_, number) => number !== index)
-                setCollaborators(newList)
-                break
-
-            default:
-                collaborators[index].auth = key
-                setCollaborators([...collaborators])
-                break
-        }
-    })
+    const collaboratorList: NotepadCollaboratorInfoProps[] = useCreation(() => {
+        const newCollaborator: NotepadCollaboratorInfoProps[] =
+            collaborators.map((ele) => ({
+                ...ele,
+                imgNode: judgeAvatar(
+                    {companyHeadImg: ele.head_img, companyName: ele.user_name},
+                    28,
+                    randomAvatarColor()
+                )
+            })) || []
+        const userRole: NotepadCollaboratorInfoProps[] = [
+            {
+                user_id: userInfo.user_id || 0,
+                head_img: userInfo.companyHeadImg || "",
+                user_name: userInfo.companyName || "",
+                imgNode: judgeAvatar(
+                    {companyHeadImg: userInfo.companyHeadImg, companyName: userInfo.companyName},
+                    28,
+                    randomAvatarColor()
+                ),
+                role: ""
+            }
+        ]
+        return userRole.concat(newCollaborator)
+    }, [collaborators, userInfo.user_id, userInfo.companyName, userInfo.companyHeadImg])
     return manageVisible ? (
         <NotepadPopoverModal
             title={
@@ -217,39 +183,37 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
             content={
                 <>
                     <div className={styles["manage-tip"]}>所有可访问此文档的用户</div>
-                    <div className={styles["collaborator-list"]}>
-                        {collaborators.map((item, index) =>
-                            item.id === -1 ? (
-                                <div
-                                    key={item.id}
-                                    className={classNames(styles["manage-item"], styles["manage-item-author"])}
-                                >
-                                    <div className={styles["user-item"]}>
-                                        <img
-                                            src='https://avatars.githubusercontent.com/u/102901986?v=4'
-                                            alt='作者'
-                                            className={styles["user-img"]}
+                    <YakitSpin spinning={collaboratorLoading}>
+                        <div className={styles["collaborator-list"]}>
+                            {collaboratorList?.map((item, index) =>
+                                item.user_id === userInfo.user_id ? (
+                                    <div
+                                        key={item.user_id}
+                                        className={classNames(styles["manage-item"], styles["manage-item-author"])}
+                                    >
+                                        <div className={styles["user-item"]}>
+                                            {item.imgNode}
+                                            <span className={styles["user-name"]}>{item.user_name || "-"}</span>
+                                            <YakitTag>作者</YakitTag>
+                                        </div>
+                                        <div className={styles["author-permission"]}>可管理</div>
+                                    </div>
+                                ) : (
+                                    <div key={item.user_id} className={styles["manage-item"]}>
+                                        <div className={styles["user-item"]}>
+                                            <img src={item.head_img} alt='作者' className={styles["user-img"]} />
+                                            <span className={styles["user-name"]}>{item.user_name}</span>
+                                        </div>
+                                        <AuthPopover
+                                            enableRemove={true}
+                                            currentRole={item.role as NotepadPermissionType}
+                                            onSelect={(key) => onSetAuth(key, item)}
                                         />
-                                        <span className={styles["user-name"]}>{userInfo.companyName || "-"}</span>
-                                        <YakitTag>作者</YakitTag>
                                     </div>
-                                    <div className={styles["author-permission"]}>可管理</div>
-                                </div>
-                            ) : (
-                                <div key={item.id} className={styles["manage-item"]}>
-                                    <div className={styles["user-item"]}>
-                                        <img src={item.head_img} alt='作者' className={styles["user-img"]} />
-                                        <span className={styles["user-name"]}>{item.name}</span>
-                                    </div>
-                                    <AuthPopover
-                                        enableRemove={true}
-                                        currentAuth={item.auth}
-                                        onSelect={(key) => onSetAuth(key, index)}
-                                    />
-                                </div>
-                            )
-                        )}
-                    </div>
+                                )
+                            )}
+                        </div>
+                    </YakitSpin>
                 </>
             }
         />
@@ -293,7 +257,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                             optionFilterProp='title'
                         />
                         <AuthPopover
-                            currentAuth={selectAuth}
+                            currentRole={selectAuth}
                             onSelect={setSelectAuth}
                             className={styles["user-authority"]}
                         />
@@ -332,17 +296,17 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
 })
 
 interface AuthPopoverProps {
-    currentAuth?: string
+    currentRole?: NotepadPermissionType
     enableRemove?: boolean
-    onSelect?: (key: string) => void
     className?: string
+    onSelect?: (key: NotepadPermissionType) => void
 }
 const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
-    const {currentAuth, enableRemove, onSelect, className = ""} = props
+    const {currentRole, enableRemove, onSelect, className = ""} = props
     const [authVisibleMenu, setAuthVisibleMenu] = useState<boolean>(false)
     const menuList: YakitMenuItemType[] = useCreation(() => {
         let menu: YakitMenuItemType[] = [
-            {key: "read", label: "可阅读"},
+            {key: "view", label: "可阅读"},
             {key: "edit", label: "可编辑"}
         ]
         if (enableRemove) {
@@ -351,17 +315,15 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
         return menu
     }, [enableRemove])
     const text = useCreation(() => {
-        switch (currentAuth) {
-            case "read":
+        switch (currentRole) {
+            case "view":
                 return "可阅读"
             case "edit":
                 return "可编辑"
-            case "remove":
-                return "移除"
             default:
-                return ""
+                return "移除"
         }
-    }, [currentAuth])
+    }, [currentRole])
     return (
         <YakitPopover
             visible={authVisibleMenu}
@@ -377,10 +339,13 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
                                 className={classNames(styles["menu-item"], {
                                     [styles["menu-item-danger"]]: ele.type === "danger"
                                 })}
-                                onClick={() => onSelect && onSelect(ele.key)}
+                                onClick={() => {
+                                    onSelect && onSelect(ele.key as NotepadPermissionType)
+                                    setAuthVisibleMenu(false)
+                                }}
                             >
                                 {ele.label}
-                                {currentAuth === ele.key && <OutlineCheckIcon className={styles["check-icon"]} />}
+                                {currentRole === ele.key && <OutlineCheckIcon className={styles["check-icon"]} />}
                             </div>
                         )
                     )}
