@@ -1317,6 +1317,7 @@ export declare namespace API {
         user_id: number
         head_img: string
         user_name: string
+        role: string
     }
     export interface ActionSucceeded {
         /**

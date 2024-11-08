@@ -283,7 +283,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         <YakitPopover
                             content={
                                 <React.Suspense fallback={"loading"}>
-                                    <NotepadShareModal notepadInfo={notepadDetail} onClose={() => setShareVisible(false)} />
+                                    <NotepadShareModal
+                                        notepadInfo={notepadDetail}
+                                        onClose={() => setShareVisible(false)}
+                                    />
                                 </React.Suspense>
                             }
                             visible={shareVisible}
