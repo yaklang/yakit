@@ -79,10 +79,12 @@ import styles from "./PluginHubList.module.scss"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
+    openGroupDrawer: boolean
+    onSetOpenGroupDrawer: (openGroupDrawer: boolean) => void
 }
 /** @name 本地插件 */
 export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
-    const {rootElementId, hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+    const {rootElementId, hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail, openGroupDrawer, onSetOpenGroupDrawer} = props
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
@@ -620,10 +622,14 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
     const onPluginGroupMagDrawerClose = useMemoizedFn((changeGroupListFlag: boolean) => {
         setPluginGroupMagDrawer(false)
+        onSetOpenGroupDrawer(false)
         if (changeGroupListFlag) {
             fetchFilterGroup()
         }
     })
+    useEffect(() => {
+        openGroupDrawer && setPluginGroupMagDrawer(true)
+    }, [openGroupDrawer])
 
     // 本地获取插件所在插件组和其他插件组
     const scriptNameRef = useRef<string[]>([])

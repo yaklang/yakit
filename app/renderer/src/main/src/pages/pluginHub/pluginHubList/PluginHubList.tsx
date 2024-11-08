@@ -52,8 +52,9 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
 
     // 处理指定页面和详情类型功能
     const handleSpecifiedPageAndDetail = useMemoizedFn((data: PluginHubPageInfoProps) => {
-        const {tabActive, detailInfo, refeshList} = data
+        const {tabActive, detailInfo, refeshList, openGroupDrawer} = data
         onSetActive(tabActive || "online", false)
+        setOpenGroupDrawer(openGroupDrawer || false)
         if (detailInfo) {
             setTimeout(() => {
                 onClickPlugin({type: tabActive, ...detailInfo})
@@ -77,11 +78,13 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
         }
     })
 
+    const [openGroupDrawer, setOpenGroupDrawer] = useState<boolean>(false)
     useEffect(() => {
         const data = initPageInfo()
         if (data) {
             removePagesDataCacheById(YakitRoute.Plugin_Hub, YakitRoute.Plugin_Hub)
             handleSpecifiedPageAndDetail(data)
+            setOpenGroupDrawer(data.openGroupDrawer || false)
         } else {
             onSetActive("online")
         }
@@ -265,6 +268,8 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                             isDetailList={isDetail}
                             hiddenDetailList={hiddenDetail}
                             onPluginDetail={onClickPlugin}
+                            openGroupDrawer={openGroupDrawer}
+                            onSetOpenGroupDrawer={setOpenGroupDrawer}
                         />
                     </div>
                 )}
