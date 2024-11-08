@@ -7,10 +7,10 @@ import {
     RunnerTabBarProps,
     RunnerTabPaneProps,
     RunnerTabsProps,
-    YakRunnerWelcomePageProps,
     SplitDirectionProps,
     YakitRunnerSaveModalProps,
-    RunYakParamsProps
+    RunYakParamsProps,
+    AuditCodeWelcomePageProps
 } from "./RunnerTabsType"
 import {Droppable, Draggable} from "@hello-pangea/dnd"
 
@@ -29,7 +29,7 @@ import {
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import {RuleManagementAuditIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {
     YakRunnerNewFileIcon,
     YakRunnerOpenAuditIcon,
@@ -1183,8 +1183,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     )
 })
 
-export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
-    const {addFileTab, setShowCompileModal} = props
+export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((props) => {
+    const {setShowCompileModal} = props
     const ref = useRef<HTMLDivElement>(null)
     const size = useSize(ref)
     const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
@@ -1216,21 +1216,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
         } catch (error) {}
     })
 
-    // 打开文件夹
-    const openFolder = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFileTree", absolutePath)
-                }
-            })
-    })
-
     // 打开编译项目
     const openCompileProject = useMemoizedFn(() => {
         setShowCompileModal(true)
@@ -1240,38 +1225,14 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
-                    <SolidYakCattleNoBackColorIcon />
+                    <RuleManagementAuditIcon />
                 </div>
-                <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
+                <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>
             <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {}}>
                 <div className={styles["operate"]}>
                     <div className={styles["title-style"]}>快捷创建</div>
                     <div className={styles["operate-btn-group"]}>
-                        <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
-                            <div className={styles["btn-title"]}>
-                                <YakRunnerNewFileIcon />
-                                新建文件
-                            </div>
-                            <OutlinePlusIcon className={styles["icon-style"]} />
-                        </div>
-                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
-                            <div className={styles["btn-title"]}>
-                                <YakRunnerOpenFileIcon />
-                                打开文件
-                            </div>
-                            <OutlineImportIcon className={styles["icon-style"]} />
-                        </div>
-                        <div
-                            className={classNames(styles["btn-style"], styles["btn-open-folder"])}
-                            onClick={openFolder}
-                        >
-                            <div className={styles["btn-title"]}>
-                                <YakRunnerOpenFolderIcon />
-                                打开文件夹
-                            </div>
-                            <OutlineImportIcon className={styles["icon-style"]} />
-                        </div>
                         <div
                             className={classNames(styles["btn-style"], styles["btn-open-compile"])}
                             onClick={openCompileProject}
@@ -1281,6 +1242,13 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                                 编译项目
                             </div>
                             <OutlinCompileIcon className={styles["icon-style"]} />
+                        </div>
+                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
+                            <div className={styles["btn-title"]}>
+                                <YakRunnerOpenFileIcon />
+                                打开已有项目
+                            </div>
+                            <OutlineImportIcon className={styles["icon-style"]} />
                         </div>
                     </div>
                 </div>

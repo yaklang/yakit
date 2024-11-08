@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {} from "antd"
 import {} from "@ant-design/icons"
 import {YakRunnerProjectManagerProps} from "./YakRunnerProjectManagerType"
@@ -12,13 +12,24 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
-import { AuditHistoryTable } from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import {AuditHistoryTable} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import {isCommunityEdition} from "@/utils/envfile"
+import {WaterMark} from "@ant-design/pro-layout"
 const {ipcRenderer} = window.require("electron")
 
-
 export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (props) => {
-    return <div className={styles["yakrunner-project-manager"]}>
+    const waterMarkStr = useMemo(() => {
+        if (isCommunityEdition()) {
+            return "Yakit技术浏览版仅供技术交流使用"
+        }
+        return " "
+    }, [])
 
-        <AuditHistoryTable setShowAuditList={() => {}} />
-    </div>
+    return (
+        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
+            <div className={styles["yakrunner-project-manager"]}>
+                <AuditHistoryTable setShowAuditList={() => {}} />
+            </div>
+        </WaterMark>
+    )
 }
