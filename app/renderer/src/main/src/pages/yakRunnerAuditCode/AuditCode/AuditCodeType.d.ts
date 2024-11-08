@@ -6,7 +6,9 @@ export interface YakURLKVPair {
     Value: string
 }
 
-export interface AuditCodeProps {}
+export interface AuditCodeProps {
+    setOnlyFileTree: (v: boolean) => void
+}
 
 export interface AuditTreeProps {
     data: AuditNodeProps[]

@@ -12,7 +12,20 @@ import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
 import {AuditHistoryTable, AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
-import {addAreaFileInfo, getCodeByPath, getCodeSizeByPath, getNameByPath, grpcFetchAuditTree, judgeAreaExistAuditPath, judgeAreaExistFilePath, monacaLanguageType, removeAreaFilesInfo, setAreaFileActive, setYakRunnerHistory, updateAreaFileInfo} from "./utils"
+import {
+    addAreaFileInfo,
+    getCodeByPath,
+    getCodeSizeByPath,
+    getNameByPath,
+    grpcFetchAuditTree,
+    judgeAreaExistAuditPath,
+    judgeAreaExistFilePath,
+    monacaLanguageType,
+    removeAreaFilesInfo,
+    setAreaFileActive,
+    setYakRunnerHistory,
+    updateAreaFileInfo
+} from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -44,28 +57,26 @@ import {SplitView} from "../yakRunner/SplitView/SplitView"
 import {LeftAudit} from "./LeftAudit/LeftAudit"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {RunnerTabs} from "./RunnerTabs/RunnerTabs"
+import {AuditCodeWelcomePage, RunnerTabs} from "./RunnerTabs/RunnerTabs"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {RightBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
-import { FileDetailInfo } from "./RunnerTabs/RunnerTabsType"
-import { FileNodeMapProps, FileTreeListProps } from "./FileTree/FileTreeType"
+import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
     // 页面数据
     const [pageInfo, setPageInfo] = useState<AuditCodePageInfoProps | undefined>(auditCodePageInfo)
-    const [loading, setLoading] = useState<boolean>(false)
-    // 是否展示已编译项目列表
-    const [isShowAuditList, setShowAuditList] = useState<boolean>(false)
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
     /** ---------- 审计树 ---------- */
     const [projectName, setProjectName] = useState<string | undefined>(auditCodePageInfo?.Location)
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
+    /** ---------- 审计规则 ---------- */
+    const [auditRule, setAuditRule] = useState<string>("")
 
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
 
@@ -342,6 +353,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         setProjectName(undefined)
         setAreaInfo([])
         setActiveFile(undefined)
+        setAuditRule("")
     })
 
     useEffect(() => {
@@ -363,7 +375,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
     // 当前展示项
-    const [showItem, setShowItem] = useState<ShowItemType>("syntaxCheck")
+    const [showItem, setShowItem] = useState<ShowItemType>("ruleEditor")
     // 最后焦点聚集编辑器输出
     const onFixedEditorDetails = useMemoizedFn((element: React.ReactNode): React.ReactNode => {
         // 后续此处还需要传入焦点代码/路径等信息
@@ -500,11 +512,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     // 布局处理
     const onChangeArea = useMemoizedFn(() => {
         if (areaInfo.length === 0) {
-            return (
-                <div className={styles["no-audit"]}>
-                    <YakitEmpty title='暂无数据' description='请选中左边文件' />
-                </div>
-            )
+            return <AuditCodeWelcomePage setShowCompileModal={setShowCompileModal} />
         }
         return (
             <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
@@ -567,25 +575,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     }, [])
 
-    const getAduitList = useMemoizedFn(async () => {
-        try {
-            setLoading(true)
-            const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length > 0) {
-                setShowAuditList(true)
-            }
-            setLoading(false)
-        } catch (error) {
-            setLoading(false)
-        }
-    })
-
-    useEffect(() => {
-        if(!projectName){
-            getAduitList()
-        }
-    }, [projectName])
-
     // 加载下一层
     const handleFileLoadData = useMemoizedFn((path: string) => {
         return new Promise((resolve, reject) => {
@@ -623,9 +612,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             fileTree: fileTree,
             projectName: projectName,
             areaInfo: areaInfo,
-            activeFile: activeFile
+            activeFile: activeFile,
+            auditRule: auditRule
         }
-    }, [pageInfo, fileTree, projectName, areaInfo, activeFile])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
@@ -634,14 +624,15 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             setProjectName: setProjectName,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
-            setActiveFile: setActiveFile
+            setActiveFile: setActiveFile,
+            setAuditRule: setAuditRule
         }
     }, [])
 
     const [bugHash, setBugHash] = useState<string>()
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
 
-    const onOpenAuditRightBugDetailFun = useMemoizedFn((hash: string) => {
+    const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
         setBugHash(hash)
         setAuditRightParams(undefined)
         setShowAuditDetail(true)
@@ -650,7 +641,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
-            setBugHash(undefined)
             setAuditRightParams(data)
             setShowAuditDetail(true)
             emiter.emit("onCodeAuditRefreshAuditDetail")
@@ -660,11 +650,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     useEffect(() => {
         // 正常打开编译右侧详情
         emiter.on("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
-        // 打开编译右侧BUG详情
-        emiter.on("onCodeAuditOpenRightBugDetail", onOpenAuditRightBugDetailFun)
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
-            emiter.off("onCodeAuditOpenRightBugDetail", onOpenAuditRightBugDetailFun)
         }
     }, [])
 
@@ -686,8 +673,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakRunnerContext.Provider value={{store, dispatcher}}>
-                <div className={styles['audit-code']} id="audit-code" >
-                {projectName ? (
+                <div className={styles["audit-code"]} id='audit-code'>
                     <div className={styles["audit-code-page"]}>
                         <div className={styles["audit-code-body"]}>
                             <YakitResizeBox
@@ -723,17 +709,11 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                             </div>
                                         }
                                         secondNode={
-                                            <>
-                                                {bugHash ? (
-                                                    <RightBugDetail bugHash={bugHash} />
-                                                ) : (
-                                                    <RightAuditDetail
-                                                        auditRightParams={auditRightParams}
-                                                        isShowAuditDetail={isShowAuditDetail}
-                                                        setShowAuditDetail={setShowAuditDetail}
-                                                    />
-                                                )}
-                                            </>
+                                            <RightAuditDetail
+                                                auditRightParams={auditRightParams}
+                                                isShowAuditDetail={isShowAuditDetail}
+                                                setShowAuditDetail={setShowAuditDetail}
+                                            />
                                         }
                                     />
                                 }
@@ -741,46 +721,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                         </div>
                         <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
                     </div>
-                ) : (
-                    <>
-                        {isShowAuditList ? (
-                            <AuditHistoryTable setShowAuditList={setShowAuditList} />
-                        ) : (
-                            <YakitSpin spinning={loading}>
-                                <div className={styles["no-audit"]}>
-                                    <YakitEmpty
-                                        title='暂无数据'
-                                        description='请选择项目进行编译'
-                                        children={
-                                            <div className={styles["footer"]}>
-                                                <YakitButton
-                                                    icon={<OutlinCompileIcon />}
-                                                    onClick={() => onOpenAuditModalFun()}
-                                                >
-                                                    编译项目
-                                                </YakitButton>
-                                                <YakitButton
-                                                    type='outline1'
-                                                    icon={<OutlinCompileIcon />}
-                                                    onClick={getAduitList}
-                                                >
-                                                    刷新
-                                                </YakitButton>
-                                            </div>
-                                        }
-                                    />
-                                </div>
-                            </YakitSpin>
-                        )}
-                    </>
-                )}
 
-                {isShowCompileModal && (
-                    <AuditModalFormModal
-                        onCancel={onCloseCompileModal}
-                        onSuccee={onSuccee}
-                    />
-                )}
+                    {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
                 </div>
             </YakRunnerContext.Provider>
         </WaterMark>

@@ -46,7 +46,6 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitTextArea} from "@/components/yakitUI/YakitTextArea/YakitTextArea"
 import {LoadingOutlined} from "@ant-design/icons"
 import {StringToUint8Array} from "@/utils/str"
 import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./AuditTree/AuditMap"
@@ -360,16 +359,14 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
-    const {projectName, pageInfo} = useStore()
+    const {setOnlyFileTree} = props
+    const {projectName, pageInfo, auditRule} = useStore()
 
-    const [value, setValue] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
-
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
-    const [disabled, setDisabled] = useState<boolean>(true)
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
         return ids.map((id) => {
@@ -442,7 +439,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     }
                 }
                 // 如若已输入代码审计框
-                if (!disabled && (params?.Query || []).length > 0) {
+                if (auditRule && (params?.Query || []).length > 0) {
                     params.Query = []
                 }
                 const result = await loadAuditFromYakURLRaw(params, body)
@@ -494,25 +491,24 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     })
 
     useUpdateEffect(() => {
-        setValue("")
-        setDisabled(true)
         resetMap()
         setRefreshTree(!refreshTree)
     }, [projectName])
 
-    const onSubmit = useMemoizedFn(async () => {
+    const onAuditRuleSubmitFun = useMemoizedFn(async (textArea: string = "") => {
         try {
             resetMap()
             setLoading(true)
             setShowEmpty(false)
+            setOnlyFileTree(false)
             const path: string = "/"
             let params: AuditYakUrlProps = {
                 Schema: "syntaxflow",
                 Location: projectName || "",
                 Path: path
             }
-            const body: Buffer = StringToUint8Array(value)
-            lastValue.current = value
+            const body: Buffer = StringToUint8Array(textArea)
+            lastValue.current = textArea
             if (pageInfo) {
                 const {Variable, Value, ...rest} = pageInfo
                 // 此处请求Path固定为/ 因为不用拼接Variable、Value
@@ -523,7 +519,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
             }
             // 如若已输入代码审计框
-            if (!disabled && (params?.Query || []).length > 0) {
+            if (auditRule && (params?.Query || []).length > 0) {
                 params.Query = []
             }
             const result = await loadAuditFromYakURLRaw(params, body)
@@ -589,49 +585,17 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
-    // 获取文本域输入框
-    const onGrpcSetTextArea = useMemoizedFn((arr: {Key: string; Value: number}[]) => {
-        let resultId: number | null = null
-        arr.forEach((item) => {
-            if (item.Key === "result_id") {
-                resultId = item.Value
-            }
-        })
-        if (resultId) {
-            const Pagination = {
-                Page: 1,
-                Limit: 10,
-                Order: "desc",
-                OrderBy: "Id"
-            }
-            apiFetchQuerySyntaxFlowResult({
-                Pagination,
-                Filter: {
-                    TaskIDs: [],
-                    ResultIDs: [resultId],
-                    RuleNames: [],
-                    ProgramNames: [],
-                    Keyword: "",
-                    OnlyRisk: false
-                }
-            })
-                .then((rsp: QuerySyntaxFlowResultResponse) => {
-                    const resData = rsp?.Results || []
-                    if (resData.length > 0) {
-                        setValue(resData[0].RuleContent)
-                    }
-                })
-                .catch(() => {})
+    useEffect(() => {
+        emiter.on("onAuditRuleSubmit", onAuditRuleSubmitFun)
+        return () => {
+            emiter.off("onAuditRuleSubmit", onAuditRuleSubmitFun)
         }
-    })
+    }, [])
 
     useEffect(() => {
-        setDisabled(true)
         if (pageInfo) {
-            onGrpcSetTextArea(pageInfo.Query)
-            onSubmit()
+            onAuditRuleSubmitFun()
         } else {
-            setValue("")
             resetMap()
             setRefreshTree(!refreshTree)
         }
@@ -646,7 +610,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 if (arr.length > 0) {
                     const hash = arr[0].Value
                     setBugId(node.id)
-                    emiter.emit("onCodeAuditOpenRightBugDetail", hash)
+                    emiter.emit("onCodeAuditOpenBugDetail", hash)
+                    emiter.emit("onCodeAuditOpenBottomDetail", JSON.stringify({type: "holeDetail"}))
                 }
             } catch (error) {
                 failed(`打开错误${error}`)
@@ -658,7 +623,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 Schema: "syntaxflow",
                 Location: projectName || "",
                 Path: node.id,
-                Body: value
+                Body: auditRule
             }
             if (pageInfo) {
                 const {...rest} = pageInfo
@@ -671,32 +636,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
-    const setTextArea = useMemoizedFn((value: string) => {
-        setDisabled(false)
-        setValue(value)
-    })
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["audit-code"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title"]}>代码审计</div>
                 </div>
-
-                <div className={styles["textarea-box"]}>
-                    <YakitTextArea
-                        textAreaSize='small'
-                        value={value}
-                        setValue={setTextArea}
-                        isLimit={false}
-                        onSubmit={onSubmit}
-                        submitTxt={"开始审计"}
-                        rows={1}
-                        isAlwaysShow={true}
-                        placeholder='请输入审计规则...'
-                        noSubmit={disabled}
-                    />
-                </div>
-
                 {isShowEmpty ? (
                     <div className={styles["no-data"]}>暂无数据</div>
                 ) : (
@@ -1209,68 +1154,66 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     ]
 
     return (
-        <YakitSpin spinning={loading}>
-            <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
-                <div className={styles["header"]}>
-                    <div className={styles["main"]}>
-                        <div className={styles["title"]}>已编译项目</div>
-                        <div className={styles["sub-title"]}>
-                            <div className={styles["text"]}>Total</div>
-                            <div className={styles["number"]}>{aduitData?.Total}</div>
-                        </div>
-                        <Divider type={"vertical"} style={{margin: 0}} />
-                        <div className={styles["sub-title"]}>
-                            <div className={styles["text"]}>Selected</div>
-                            <div className={styles["number"]}>{selectedRowKeys.length}</div>
-                        </div>
+        <div className={styles["audit-history-table"]} onKeyDown={(event) => event.stopPropagation()}>
+            <div className={styles["header"]}>
+                <div className={styles["main"]}>
+                    <div className={styles["title"]}>已编译项目</div>
+                    <div className={styles["sub-title"]}>
+                        <div className={styles["text"]}>Total</div>
+                        <div className={styles["number"]}>{aduitData?.Total}</div>
                     </div>
-                    <div className={styles["extra"]}>
-                        <YakitInput
-                            prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
-                            placeholder='请输入关键词搜索'
-                            size='small'
-                            value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value)
-                            }}
-                        />
-                        <YakitPopconfirm
-                            title={selectedRowKeys.length > 0  ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
-                            onConfirm={() => {
-                                onRemoveMultiple()
-                            }}
-                            placement='bottomRight'
-                        >
+                    <Divider type={"vertical"} style={{margin: 0}} />
+                    <div className={styles["sub-title"]}>
+                        <div className={styles["text"]}>Selected</div>
+                        <div className={styles["number"]}>{selectedRowKeys.length}</div>
+                    </div>
+                </div>
+                <div className={styles["extra"]}>
+                    <YakitInput
+                        prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                        placeholder='请输入关键词搜索'
+                        size='small'
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value)
+                        }}
+                    />
+                    <YakitPopconfirm
+                        title={selectedRowKeys.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                        onConfirm={() => {
+                            onRemoveMultiple()
+                        }}
+                        placement='bottomRight'
+                    >
                         <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
                             {selectedRowKeys.length > 0 ? "删除" : "清空"}
                         </YakitButton>
-                        </YakitPopconfirm>
-                        <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
-                            添加项目
-                        </YakitButton>
-                    </div>
-                </div>
-
-                <div className={styles["table"]}>
-                    <YakitVirtualList<YakURLResource>
-                        className={styles["audit-virtual-list"]}
-                        loading={loading}
-                        hasMore={false}
-                        columns={columns}
-                        data={aduitData?.Resources || []}
-                        page={1}
-                        loadMoreData={() => {}}
-                        renderKey="Path"
-                        rowSelection={{
-                            isAll: isAllSelect,
-                            type: "checkbox",
-                            selectedRowKeys,
-                            onSelectAll: onSelectAll,
-                            onChangeCheckboxSingle: onSelectChange
-                        }}
-                    />
+                    </YakitPopconfirm>
+                    <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
+                        添加项目
+                    </YakitButton>
                 </div>
             </div>
-        </YakitSpin>
+
+            <div className={styles["table"]}>
+                <YakitVirtualList<YakURLResource>
+                    className={styles["audit-virtual-list"]}
+                    loading={loading}
+                    hasMore={false}
+                    columns={columns}
+                    data={aduitData?.Resources || []}
+                    page={1}
+                    loadMoreData={() => {}}
+                    renderKey='Path'
+                    rowSelection={{
+                        isAll: isAllSelect,
+                        type: "checkbox",
+                        selectedRowKeys,
+                        onSelectAll: onSelectAll,
+                        onChangeCheckboxSingle: onSelectChange
+                    }}
+                />
+            </div>
+        </div>
     )
 })

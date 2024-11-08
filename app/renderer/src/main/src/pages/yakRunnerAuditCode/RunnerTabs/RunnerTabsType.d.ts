@@ -92,8 +92,7 @@ export interface RunnerTabPaneProps {
     tabsId: string
 }
 
-export interface YakRunnerWelcomePageProps {
-    addFileTab: () => void
+export interface AuditCodeWelcomePageProps {
     setShowCompileModal: (v: boolean) => void
 }
 

@@ -373,7 +373,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                             {isShowAuditDetail ? (
                                 <>
                                     {bugId && bugHash ? (
-                                        <RightBugDetail bugHash={bugHash} />
+                                        <HoleBugDetail bugHash={bugHash} />
                                     ) : (
                                         <RightAuditDetail
                                             auditRightParams={auditRightParams}
@@ -395,11 +395,11 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     )
 }
 
-interface RightBugDetailProps {
+interface HoleBugDetailProps {
     bugHash: string
 }
 
-export const RightBugDetail: React.FC<RightBugDetailProps> = React.memo((props) => {
+export const HoleBugDetail: React.FC<HoleBugDetailProps> = React.memo((props) => {
     const {bugHash} = props
     const [info, setInfo] = useState<Risk>()
     useEffect(() => {
