@@ -42,6 +42,8 @@ import {fileCustomSchema, uploadCustomPlugin} from "./utils/uploadPlugin"
 import {CustomFile} from "./CustomFile/CustomFile"
 import {insertImageBlockCommand} from "./utils/imageBlock"
 
+import {collab, CollabService, collabServiceCtx} from "@milkdown/plugin-collab"
+
 const markdown = `
 
 :u[This text will be underlined]
@@ -156,7 +158,7 @@ fsdfsdf
 `
 
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {setEditor, customPlugin = []} = props
+    const {setEditor, customPlugin = [], value = ""} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
@@ -256,7 +258,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         </svg>
                     `,
                     onUpload: async (file: File) => {
-                        console.log("imageBlockConfig-file", file)
+                        // console.log("imageBlockConfig-file", file)
                         const url = "https://milkdown.dev/polar.jpeg"
                         return url
                     }
@@ -303,7 +305,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     removeButton: () => "❌",
                     confirmButton: () => "✔️",
                     onCopyLink: (link: string) => {
-                        console.log("Link copied:", link)
                         yakitInfo("Link copied")
                     }
                 }))
@@ -316,7 +317,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, markdown1)
+                    ctx.set(defaultValueCtx, value)
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
@@ -331,6 +332,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(clipboard)
                 // trailing
                 .use(trailing)
+                // collab
+                .use(collab)
                 // Add a custom node view
                 .use(
                     $view(blockquoteSchema.node, () =>
