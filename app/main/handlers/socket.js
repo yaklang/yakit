@@ -21,11 +21,30 @@ const getSocketUrl = (inputUrl) => {
 module.exports = (win, getClient) => {
     let ws = null
     let isConnect = false
+    let reconnectCount = 0 // 添加重连计数器
+    const MAX_RECONNECT_ATTEMPTS = 3 // 最大重连次数
 
     const onCloseSocket = () => {
         if (ws) {
             // 1000 是正常关闭的状态码
             ws.close(1000, "Normal closure")
+        }
+    }
+
+    // 添加重连函数
+    const reconnect = () => {
+        if (reconnectCount < MAX_RECONNECT_ATTEMPTS) {
+            reconnectCount++
+            // console.log(`Attempting to reconnect... (${reconnectCount}/${MAX_RECONNECT_ATTEMPTS})`)
+            // 延迟2秒后重连
+            setTimeout(() => {
+                ipcMain.emit("handle", null, "socket-start")
+            }, 2000)
+        } else {
+            // console.log("Max reconnection attempts reached")
+            win.webContents.send("client-socket-error", "Maximum reconnection attempts reached")
+            reconnectCount = 0 // 重置重连计数
+            onCloseSocket()
         }
     }
 
@@ -38,7 +57,7 @@ module.exports = (win, getClient) => {
             onCloseSocket()
         }
         const {token} = USER_INFO
-        const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/message/ws`
+        const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/ws`
         // console.log("USER_INFO--------------------", socketUrl, token)
         ws = new WebSocket(socketUrl, {
             headers: {
@@ -49,7 +68,7 @@ module.exports = (win, getClient) => {
         // 处理 WebSocket 连接打开事件
         ws.on("open", () => {
             isConnect = true
-            
+            reconnectCount = 0  // 连接成功时重置重连计数
             win.webContents.send("client-socket-open")
         })
 
@@ -67,13 +86,14 @@ module.exports = (win, getClient) => {
 
         // 处理连接错误事件
         ws.on("error", (error) => {
-            win.webContents.send("client-socket-error",error)
+            // 错误时 三次重连失败后关闭
+            reconnect()
         })
     })
 
     // 关闭 WebSocket 服务器
     ipcMain.handle("socket-send", (e) => {
-        if(ws){
+        if (ws) {
             ws.send(data)
         }
     })

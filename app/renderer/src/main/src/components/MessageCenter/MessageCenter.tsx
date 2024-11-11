@@ -28,6 +28,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
+import { pluginSupplementJSONConvertToData } from "@/pages/pluginEditor/utils/convert"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -57,7 +58,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "update":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["update"])}>修改</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>修改</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
@@ -71,7 +72,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 if(data.status === 0){
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["check"])}>申请修改</span>
+                            <span className={classNames(styles["tag"], styles["merge"])}>申请修改</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
@@ -98,7 +99,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 } else {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["check"])}>审核不通过</span>
+                            <span className={classNames(styles["tag"], styles["delete"])}>审核不通过</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
@@ -113,7 +114,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "applyMerge":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["apply_merge"])}>申请修改</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>申请修改</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
@@ -126,7 +127,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "comment":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["comment"])}>评论</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>评论</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
@@ -152,7 +153,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "replyComment":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["reply_comment"])}>回复了</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>回复了</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
@@ -163,15 +164,16 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                     </>
                 )
             case "deleteComment":
+                const {text, imgs} = pluginSupplementJSONConvertToData(data.description) || {}
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["delete_comment"])}>删除了</span>
+                        <span className={classNames(styles["tag"], styles["delete"])}>删除了</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            您的评论：{data.description}
+                            您的评论：{text}{imgs && imgs.length > 0 && `[图片] * ${imgs.length}`}
                         </span>
                     </>
                 )
@@ -303,8 +305,7 @@ export interface MessageCenterProps {
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
     const {messageList, getAllMessage, onLogin, onClose} = props
     const {userInfo} = useStore()
-    console.log("messageList---",messageList);
-    
+
     return (
         <>
             {userInfo.isLogin ? (
