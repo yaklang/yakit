@@ -27,7 +27,7 @@ import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/stor
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {AuthorIcon, AuthorImg, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
-import {getMarkdown} from "@milkdown/kit/utils"
+import {replaceAll, getMarkdown} from "@milkdown/kit/utils"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
@@ -159,9 +159,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     useEffect(() => {
         if (!editor) return
-        // editor?.use(cataloguePlugin(getCatalogue)).create()
-        // editor?.use(cataloguePlugin(getCatalogue))
-    }, [editor])
+        if (notepadDetail.content) {
+            // 更新笔记本的值
+            editor.action(replaceAll(notepadDetail.content))
+        }
+    }, [notepadDetail.content, editor])
     const onRemoveEmptyNotepad = useMemoizedFn(() => {
         const markdownContent = editor?.action(getMarkdown())
         if (!pageInfo.notepadHash && !markdownContent && notepadDetail.hash) {

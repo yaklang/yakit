@@ -3,6 +3,8 @@ import {MilkdownPlugin} from "@milkdown/kit/ctx"
 
 export interface EditorMilkdownProps extends Editor {}
 export interface CustomMilkdownProps {
+    /**编辑器值, 目前当默认值*/
+    value?: string
     editor?: MilkdownEditor
     setEditor?: MilkdownEditor
     customPlugin?: MilkdownPlugin | MilkdownPlugin[]
