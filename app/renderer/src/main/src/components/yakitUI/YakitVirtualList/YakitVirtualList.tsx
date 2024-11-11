@@ -53,6 +53,12 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
         overscan: 5
     })
 
+    useEffect(() => {
+        if (page === 1) {
+            scrollTo(0)
+        }
+    }, [page])
+
     useDebounceEffect(
         () => {
             if (!hasMore) return
