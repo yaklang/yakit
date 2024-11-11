@@ -1542,6 +1542,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                         />
                     </div>
                 }
+                downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: currentSelectShowType === "request"}}
                 {...extraParams}
             />
         )

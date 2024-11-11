@@ -4610,6 +4610,8 @@ message GetHTTPFlowBodyByIdRequest {
   int64 Id = 1;
   bool IsRequest = 2;
   int64 BufSize = 3;
+  string RuntimeId = 4;
+  bool IsRisk = 5;
 }
 
 message QueryHTTPFlowRequest {

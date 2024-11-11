@@ -239,8 +239,12 @@ module.exports = (win, getClient) => {
     let activeRequests = new Map()
     ipcMain.handle("GetHTTPFlowBodyById", (e, params) => {
         return new Promise((resolve, reject) => {
+            const query = {
+                ...params
+            }
+            delete query.uuid
             const context = {
-                getHTTPFlowBodyByIdResponseStream: getClient().GetHTTPFlowBodyById({ Id: params.Id, IsRequest: params.IsRequest }),
+                getHTTPFlowBodyByIdResponseStream: getClient().GetHTTPFlowBodyById(query),
                 fileStream: null,
                 dataChunks: [],
                 streamEnded: false

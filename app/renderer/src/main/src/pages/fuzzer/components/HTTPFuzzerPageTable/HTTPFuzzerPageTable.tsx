@@ -1091,6 +1091,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                 }
                             }}
                             url={url}
+                            downbodyParams={{RuntimeId: currentSelectItem?.RuntimeID, IsRequest: currentSelectShowType === "request"}}
                         />
                     }
                     {...ResizeBoxProps}

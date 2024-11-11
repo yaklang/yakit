@@ -3197,6 +3197,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                 }
                             }}
                             url={url}
+                            downbodyParams={{RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false}}
                             {...otherEditorProps}
                         />
                     }
