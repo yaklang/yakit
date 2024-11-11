@@ -22,6 +22,10 @@ export declare namespace API {
         extra_setting?: string
         method_type?: string
     }
+    export interface WsRequest {
+        messageType: string
+        params: object
+    }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
     }
