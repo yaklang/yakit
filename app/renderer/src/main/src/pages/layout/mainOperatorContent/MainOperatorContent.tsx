@@ -28,7 +28,7 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition} from "@/utils/envfile"
 import {
     useCreation,
     useDebounceFn,
@@ -640,8 +640,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     }
                 }
             )
-        } catch (error) {
-        }
+        } catch (error) {}
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(
@@ -1615,6 +1614,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
+        if (isEnterpriseEdition()) {
+            // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
+            clearAllData()
+            clearFuzzerSequence()
+        }
         getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
             .then((cacheTabKey) => {
                 /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
@@ -2021,7 +2025,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.Modify_Notepad, newPageNode)
     })
-    
+
     /**
      * @description 设置专项漏洞
      */
