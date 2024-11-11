@@ -86,7 +86,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
                 handleReset()
             }
         },
-        [inViewport],
+        [inViewport, plugin],
         {wait: 300, leading: true}
     )
 
