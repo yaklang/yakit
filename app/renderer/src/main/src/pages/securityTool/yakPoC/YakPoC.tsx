@@ -21,7 +21,7 @@ import {
     HybridScanExecuteContent,
     HybridScanExecuteContentRefProps
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     ExpandAndRetract,
@@ -192,6 +192,16 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
         setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setDeletedGroup([])
         setHidden(false)
+        pocTabs.forEach((i) => {
+            if (i.key === type) {
+                i.contShow = true
+            } else {
+                i.contShow = false
+            }
+        })
+        console.log({contShow: true, curTabKey: type});
+        setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: true, curTabKey: type}))
+        setPocTabs([...pocTabs])
     })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
     const onInitInputValueAfter = useMemoizedFn((value: HybridScanControlAfterRequest) => {
@@ -274,6 +284,20 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             })
         }
     }, [])
+    
+    // 当其他地方直接设置setHidden(true)时，tab相关状态也需要更新
+    const handleHidden = useMemoizedFn(() => {
+        if (hidden) {
+            pocTabs.forEach((i) => {
+                i.contShow = false
+            })
+            setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: false, curTabKey: type}))
+            setPocTabs([...pocTabs])
+        }
+    })
+    useUpdateEffect(() => {
+        handleHidden()
+    }, [hidden])
 
     return (
         <div className={styles["yak-poc-wrapper"]} ref={pluginGroupRef}>
