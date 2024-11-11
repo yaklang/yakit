@@ -318,7 +318,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             // 主动跳到指定 tab 页面
                             if (autoOpenDetailTab && validTab.includes(multiTab[0])) {
                                 setActiveKey(multiTab[0])
-                                if (isMultiTab) handleAutoActiveLogTab(multiTab[1])
+                                if (isMultiTab)
+                                    setTimeout(() => {
+                                        handleAutoActiveLogTab(multiTab[1])
+                                    }, 100)
                             } else {
                                 setActiveKey(tab)
                             }
