@@ -5,14 +5,14 @@ import {findWrapping} from "@milkdown/kit/prose/transform"
 export const clearContentAndSetBlockType = (nodeType: NodeType, attrs: Attrs | null = null): Command => {
     return (state, dispatch) => {
         if (dispatch) {
-            const tr = setBlockType(clearRange(state.tr), nodeType, attrs)
+            const tr = setBlockTypeCustom(clearRange(state.tr), nodeType, attrs)
             dispatch(tr.scrollIntoView())
         }
         return true
     }
 }
 
-const setBlockType = (tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) => {
+const setBlockTypeCustom = (tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) => {
     const {from, to} = tr.selection
     return tr.setBlockType(from, to, nodeType, attrs)
 }
@@ -36,7 +36,7 @@ export const clearContentAndAddBlockType = (nodeType: NodeType, attrs: Attrs | n
     }
 }
 
-const addBlockType = (tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) => {
+export const addBlockType = (tr: Transaction, nodeType: NodeType, attrs: Attrs | null = null) => {
     const node = nodeType.createAndFill(attrs)
     if (!node) return null
 
