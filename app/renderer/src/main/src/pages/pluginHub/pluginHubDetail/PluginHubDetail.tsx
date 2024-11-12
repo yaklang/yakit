@@ -112,7 +112,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             setOnlinePlugin({
                                 ...res,
                                 starsCountString: thousandthConversion(res.stars),
-                                commentCountString: thousandthConversion(res.comment_num),
                                 downloadedTotalString: thousandthConversion(res.downloaded_total)
                             })
                         })
@@ -276,7 +275,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         setOnlinePlugin({
                             ...online.value,
                             starsCountString: thousandthConversion(online.value.stars),
-                            commentCountString: thousandthConversion(online.value.comment_num),
                             downloadedTotalString: thousandthConversion(online.value.downloaded_total)
                         })
                     }
@@ -465,7 +463,6 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         setOnlinePlugin({
                             ...res,
                             starsCountString: thousandthConversion(res.stars),
-                            commentCountString: thousandthConversion(res.comment_num),
                             downloadedTotalString: thousandthConversion(res.downloaded_total)
                         })
                     })

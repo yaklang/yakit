@@ -658,7 +658,6 @@ export declare namespace API {
         enable_plugin_selector?: boolean
         plugin_selector_types?: string
         is_general_module?: boolean
-        comment_num: number
         contributors?: string
         uuid: string
         is_private: boolean

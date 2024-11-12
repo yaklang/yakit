@@ -54,7 +54,6 @@ export const pluginOnlineReducer = (
                         (response?.data || []).map((ele) => ({
                             ...ele,
                             starsCountString: thousandthConversion(ele.stars),
-                            commentCountString: thousandthConversion(ele.comment_num),
                             downloadedTotalString: thousandthConversion(ele.downloaded_total)
                         })) || [],
                     pagemeta: response?.pagemeta || {
@@ -71,7 +70,6 @@ export const pluginOnlineReducer = (
                         ...(response?.data || []).map((ele) => ({
                             ...ele,
                             starsCountString: thousandthConversion(ele.stars),
-                            commentCountString: thousandthConversion(ele.comment_num),
                             downloadedTotalString: thousandthConversion(ele.downloaded_total)
                         }))
                     ],

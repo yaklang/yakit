@@ -84,7 +84,6 @@ export const DefaultOnlinePlugin: YakitPluginOnlineDetail = {
     status: 0,
     official: false,
     is_stars: false,
-    comment_num: 0,
     uuid: "",
     is_private: false
 }
