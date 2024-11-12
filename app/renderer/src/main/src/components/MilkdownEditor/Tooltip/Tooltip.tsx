@@ -2,7 +2,6 @@ import {Ctx} from "@milkdown/kit/ctx"
 import {tooltipFactory, TooltipProvider} from "@milkdown/kit/plugin/tooltip"
 import {
     createCodeBlockCommand,
-    listItemSchema,
     paragraphSchema,
     toggleEmphasisCommand,
     toggleInlineCodeCommand,
@@ -32,8 +31,9 @@ import {Tooltip} from "antd"
 import {MilkdownBaseUtilProps, TooltipListProps} from "../MilkdownEditorType"
 import {cloneDeep} from "lodash"
 import {defaultTooltipList} from "../constants"
-import {listToParagraphCommand} from "../utils/listPlugin"
+import {convertToListBullet, listToParagraphCommand} from "../utils/listPlugin"
 import {listToHeadingCommand} from "../utils/headingPlugin"
+import {listToCodeCommand} from "../utils/codePlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -129,7 +129,6 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         action(callCommand(commentCommand.key, "111"))
     })
     const onText = useMemoizedFn(({label}) => {
-        const {dispatch, state} = view
         switch (label) {
             case "正文":
                 convertToParagraph()
@@ -150,13 +149,10 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 action(callCommand(wrapInBulletListCommand.key))
                 break
             case "任务":
-                action((ctx) => {
-                    const command = setWrapInBlockType(listItemSchema.type(ctx), {checked: false})
-                    command(state, dispatch)
-                })
+                action(callCommand(convertToListBullet.key))
                 break
             case "代码块":
-                action(callCommand(createCodeBlockCommand.key))
+                convertToCode()
                 break
             case "引用":
                 action(callCommand(wrapInBlockquoteCommand.key))
@@ -192,7 +188,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         }
     })
     /**
-     * 转为正文,目前除了常见的，只支持list
+     * 转为正文,目前除了常见的，还支持选中内容类型为list
      */
     const convertToParagraph = useMemoizedFn(() => {
         try {
@@ -208,7 +204,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         } catch (error) {}
     })
     /**
-     * 转为标题,目前除了常见的，只支持list
+     * 转为标题,目前除了常见的，还支持选中内容类型为list
      * @param level 标题级别
      */
     const convertToHeading = useMemoizedFn((level: number) => {
@@ -217,6 +213,18 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 action(callCommand(listToHeadingCommand.key, level))
             } else {
                 action(callCommand(wrapInHeadingCommand.key, level))
+            }
+        } catch (error) {}
+    })
+    /**
+     * 转为代码块,目前除了常见的，还支持选中内容类型为list
+     */
+    const convertToCode = useMemoizedFn(() => {
+        try {
+            if (isListTypeSelection()) {
+                action(callCommand(listToCodeCommand.key))
+            } else {
+                action(callCommand(createCodeBlockCommand.key))
             }
         } catch (error) {}
     })
