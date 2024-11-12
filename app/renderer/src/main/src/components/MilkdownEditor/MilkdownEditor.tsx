@@ -45,6 +45,7 @@ import {insertImageBlockCommand} from "./utils/imageBlock"
 import {collab, CollabService, collabServiceCtx} from "@milkdown/plugin-collab"
 import {listCustomPlugin} from "./utils/listPlugin"
 import {headingCustomPlugin} from "./utils/headingPlugin"
+import {codeCustomPlugin} from "./utils/codePlugin"
 
 const markdown = `
 
@@ -333,6 +334,18 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         return [...headingCustomPlugin()].flat()
     }, [])
 
+    const codePlugin = useCreation(() => {
+        return [
+            ...codeCustomPlugin(),
+            $view(codeBlockSchema.node, () => {
+                return nodeViewFactory({
+                    component: CustomCodeComponent,
+                    stopEvent: (e) => true
+                })
+            })
+        ].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -373,14 +386,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(listPlugin)
                 .use(headingPlugin)
                 // code
-                .use(
-                    $view(codeBlockSchema.node, () => {
-                        return nodeViewFactory({
-                            component: CustomCodeComponent,
-                            stopEvent: (e) => true
-                        })
-                    })
-                )
+                .use(codePlugin)
                 // linkTooltip
                 .use(linkTooltip)
                 // placeholder
