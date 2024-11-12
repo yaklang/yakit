@@ -14,7 +14,6 @@ import ReactResizeDetector from "react-resize-detector"
 import {formatTimestampJudge} from "@/utils/timeUtil"
 import {RemoveIcon} from "@/assets/newIcon"
 import {useStore} from "@/store"
-import {IconNoLoginMessageIcon} from "./icon"
 import {AuthorImg} from "@/pages/plugins/funcTemplate"
 import {
     apiFetchMessageClear,
@@ -29,6 +28,8 @@ import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
+import IconNoLoginMessage from "@/assets/no_login_message.png"
+import LoginMessage from "@/assets/login_message.png"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -339,14 +340,14 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                         </div>
                     ) : (
                         <div className={styles["meeage-no-data"]}>
-                            <IconNoLoginMessageIcon />
+                            <img src={LoginMessage} alt="" />
                             <div className={styles["text"]}>暂无消息</div>
                         </div>
                     )}
                 </>
             ) : (
                 <div className={styles["meeage-no-login"]}>
-                    <IconNoLoginMessageIcon />
+                    <img src={IconNoLoginMessage} alt="" />
                     <div className={styles["text"]}>登录后才可查看消息</div>
                     <div>
                         <YakitButton type='primary' onClick={onLogin}>

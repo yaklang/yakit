@@ -12,6 +12,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    img{
+        height: 100px;
+        width: 100px;
+    }
     .text {
         color: #b4bbca;
         font-size: 12px;
