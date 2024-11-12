@@ -1,5 +1,4 @@
 import {$command} from "@milkdown/utils"
-import {yakitNotify} from "@/utils/notification"
 import {convertSelectionByNode} from "./utils"
 
 export const listToHeadingCommand = $command(
