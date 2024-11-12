@@ -17,107 +17,24 @@ import {usePluginViewContext} from "@prosemirror-adapter/react"
 import {ReactNode, useCallback, useEffect, useRef, useState} from "react"
 import {callCommand} from "@milkdown/kit/utils"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {
-    IconBold,
-    IconCheckSquare,
-    IconCode2,
-    IconCurlyBraces,
-    IconHeading1,
-    IconHeading2,
-    IconHeading3,
-    IconItalic,
-    IconList,
-    IconListOrdered,
-    IconQuote,
-    IconStrikethrough,
-    IconType,
-    IconUnderline
-} from "../icon/icon"
+import {IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline} from "../icon/icon"
 import styles from "./Tooltip.module.scss"
 import React from "react"
-import {
-    OutlineChevrondownIcon,
-    OutlineChevronupIcon,
-    OutlineLightbulbIcon
-} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineChevronupIcon, OutlineLightbulbIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {toggleStrikethroughCommand} from "@milkdown/kit/preset/gfm"
 import classNames from "classnames"
 import {alterCommand, alterToParagraphCommand} from "../utils/alertPlugin"
 import {underlineCommand} from "../utils/underline"
 import {commentCommand} from "../utils/commentPlugin"
-import {
-    clearContentAndWrapInBlockType,
-    setWrapInBlockType
-} from "../utils/utils"
+import {setWrapInBlockType} from "../utils/utils"
 import {Tooltip} from "antd"
+import {MilkdownBaseUtilProps, TooltipListProps} from "../MilkdownEditorType"
+import {cloneDeep} from "lodash"
+import {defaultTooltipList} from "../constants"
+import {listToParagraphCommand} from "../utils/listPlugin"
 
 export const tooltip = tooltipFactory("Text")
-
-const tooltipTextList = [
-    {
-        id: 1,
-        icon: <IconType />,
-        label: "正文",
-        description: "正文"
-    },
-    {
-        id: 2,
-        icon: <IconHeading1 />,
-        label: "一级标题",
-        description: "一级标题: #空格"
-    },
-    {
-        id: 3,
-        icon: <IconHeading2 />,
-        label: "二级标题",
-        description: "二级标题: ##空格"
-    },
-    {
-        id: 4,
-        icon: <IconHeading3 />,
-        label: "三级标题",
-        description: "二级标题: ###空格"
-    },
-    {
-        id: 5,
-        label: "divider"
-    },
-    {
-        id: 6,
-        icon: <IconListOrdered />,
-        label: "有序列表",
-        description: "有序列表: 1.空格"
-    },
-    {
-        id: 7,
-        icon: <IconList />,
-        label: "无序列表",
-        description: "无序列表: -空格或*空格"
-    },
-    {
-        id: 8,
-        icon: <IconCheckSquare />,
-        label: "任务",
-        description: "任务"
-    },
-    {
-        id: 9,
-        label: "divider"
-    },
-    {
-        id: 10,
-        icon: <IconCurlyBraces />,
-        label: "代码块",
-        description: "代码块:```空格"
-    },
-    {
-        id: 11,
-        icon: <IconQuote />,
-        label: "引用",
-        description: "引用: >空格"
-    }
-]
 
 const highlight = [
     {
@@ -146,6 +63,8 @@ interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
     const [visibleText, setVisibleText] = useState<boolean>(false)
     const [visibleLight, setVisibleLight] = useState<boolean>(false)
+    const [tooltipTextList, setTooltipTextList] = useState<TooltipListProps[]>(cloneDeep(defaultTooltipList))
+
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<TooltipProvider>()
 
@@ -212,10 +131,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         const {dispatch, state} = view
         switch (label) {
             case "正文":
-                action((ctx) => {
-                    const command = clearContentAndWrapInBlockType(paragraphSchema.type(ctx))
-                    command(state, dispatch)
-                })
+                convertToParagraph()
                 break
             case "一级标题":
                 action(callCommand(wrapInHeadingCommand.key, 1))
@@ -250,6 +166,25 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         tooltipProvider.current?.hide()
         setVisibleText(false)
     })
+    /**
+     * 转为正文,目前除了常见了，只支持list
+     */
+    const convertToParagraph = useMemoizedFn(() => {
+        const {dispatch, state} = view
+        const {selection} = state
+        const {$from} = selection
+        // 获取父节点类型
+        const parentNode = $from.node(-1) // 使用 -1 获取上一级节点
+
+        if (parentNode && parentNode.type.name === "list_item") {
+            action(callCommand(listToParagraphCommand.key))
+        } else {
+            action((ctx) => {
+                const command = setWrapInBlockType(paragraphSchema.type(ctx))
+                command(state, dispatch)
+            })
+        }
+    })
     const onLight = useMemoizedFn((type: string) => {
         switch (type) {
             case "remove":
@@ -270,10 +205,12 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 onVisibleChange={setVisibleText}
                 content={
                     <div className={styles["tooltip-popover-content"]}>
-                        {tooltipTextList.map((item) => {
-                            return item.label === "divider" ? (
-                                <div key={item.id} className={styles["tooltip-divider-horizontal"]} />
-                            ) : (
+                        {tooltipTextList.map((ele) => {
+                            if (ele.label === "divider") {
+                                return <div key={ele.id} className={styles["tooltip-divider-horizontal"]} />
+                            }
+                            const item = ele as MilkdownBaseUtilProps
+                            return (
                                 <Tooltip key={item.id} title={item.description} placement='right'>
                                     <div
                                         key={item.id}
