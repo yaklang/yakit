@@ -2,6 +2,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {Form} from "antd"
 import React, {useEffect, useState} from "react"
 import {InputInteger} from "../../../utils/inputUtil"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 
 export interface RandStrWithLenProp {
     origin: string
@@ -103,6 +104,27 @@ export const RandInt: React.FC<RandIntProp> = (props) => {
             </Form.Item>
             <Form.Item label={"重复次数"}>
                 <YakitInputNumber value={count} min={1} onChange={(v) => setCount(v as number)} />
+            </Form.Item>
+        </>
+    )
+}
+
+interface IntFreeProp {
+    setOrigin: (o: string) => void
+}
+export const IntFree: React.FC<IntFreeProp> = (props) => {
+    const {setOrigin} = props
+    useEffect(() => {
+        setOrigin("{{int()}}")
+    }, [])
+    return (
+        <>
+            <Form.Item label={"输入范围"} key="整数(自由范围) - 也可用于端口">
+                    <YakitInput
+                        onChange={(v) => {
+                            setOrigin(`{{int(${v.target.value})}}`)
+                        }}
+                    />
             </Form.Item>
         </>
     )
