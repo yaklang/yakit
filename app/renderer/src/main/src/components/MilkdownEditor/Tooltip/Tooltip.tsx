@@ -33,6 +33,7 @@ import {MilkdownBaseUtilProps, TooltipListProps} from "../MilkdownEditorType"
 import {cloneDeep} from "lodash"
 import {defaultTooltipList} from "../constants"
 import {listToParagraphCommand} from "../utils/listPlugin"
+import {listToHeadingCommand} from "../utils/headingPlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -134,13 +135,13 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 convertToParagraph()
                 break
             case "一级标题":
-                action(callCommand(wrapInHeadingCommand.key, 1))
+                convertToHeading(1)
                 break
             case "二级标题":
-                action(callCommand(wrapInHeadingCommand.key, 2))
+                convertToHeading(2)
                 break
             case "三级标题":
-                action(callCommand(wrapInHeadingCommand.key, 3))
+                convertToHeading(3)
                 break
             case "有序列表":
                 action(callCommand(wrapInOrderedListCommand.key))
@@ -167,24 +168,59 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         setVisibleText(false)
     })
     /**
-     * 转为正文,目前除了常见了，只支持list
+     * 获取选中内容的父节点类型
      */
-    const convertToParagraph = useMemoizedFn(() => {
-        const {dispatch, state} = view
-        const {selection} = state
-        const {$from} = selection
-        // 获取父节点类型
-        const parentNode = $from.node(-1) // 使用 -1 获取上一级节点
-
-        if (parentNode && parentNode.type.name === "list_item") {
-            action(callCommand(listToParagraphCommand.key))
-        } else {
-            action((ctx) => {
-                const command = setWrapInBlockType(paragraphSchema.type(ctx))
-                command(state, dispatch)
-            })
+    const getParentNodeTypeBySelection = useMemoizedFn(() => {
+        try {
+            const {state} = view
+            const {selection} = state
+            const {$from} = selection
+            // 获取父节点类型
+            const parentNode = $from.node(-1) // 使用 -1 获取上一级节点
+            return parentNode.type.name
+        } catch (error) {
+            return ""
         }
     })
+    /**选中的内容是否是list */
+    const isListTypeSelection = useMemoizedFn(() => {
+        try {
+            const {state} = view
+            return getParentNodeTypeBySelection() === state.schema.nodes.list_item.name
+        } catch (error) {
+            return false
+        }
+    })
+    /**
+     * 转为正文,目前除了常见的，只支持list
+     */
+    const convertToParagraph = useMemoizedFn(() => {
+        try {
+            const {dispatch, state} = view
+            if (isListTypeSelection()) {
+                action(callCommand(listToParagraphCommand.key))
+            } else {
+                action((ctx) => {
+                    const command = setWrapInBlockType(paragraphSchema.type(ctx))
+                    command(state, dispatch)
+                })
+            }
+        } catch (error) {}
+    })
+    /**
+     * 转为标题,目前除了常见的，只支持list
+     * @param level 标题级别
+     */
+    const convertToHeading = useMemoizedFn((level: number) => {
+        try {
+            if (isListTypeSelection()) {
+                action(callCommand(listToHeadingCommand.key, level))
+            } else {
+                action(callCommand(wrapInHeadingCommand.key, level))
+            }
+        } catch (error) {}
+    })
+    /**高亮操作 */
     const onLight = useMemoizedFn((type: string) => {
         switch (type) {
             case "remove":

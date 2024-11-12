@@ -21,7 +21,7 @@ export const listToParagraphCommand = $command(`listToParagraphCommand`, (ctx) =
                 )
 
                 // 使用 transaction 将列表项替换为段落
-                let tr = state.tr.replaceRangeWith($from.before(-1), $from.after(-1), paragraphNode)
+                const tr = state.tr.replaceRangeWith($from.before(-1), $from.after(-1), paragraphNode)
 
                 if (dispatch) dispatch(tr)
                 return true // 命令成功执行
