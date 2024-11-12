@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-
+    const {projectName} = useStore()
     const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -94,7 +94,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
                 <div className={styles["extra"]}>
                     {showItem === "ruleEditor" && (
-                        <YakitButton icon={<PaperAirplaneIcon />} onClick={onAuditRuleSubmit} disabled={false}>
+                        <YakitButton icon={<PaperAirplaneIcon />} onClick={onAuditRuleSubmit} disabled={!projectName}>
                             开始审计
                         </YakitButton>
                     )}

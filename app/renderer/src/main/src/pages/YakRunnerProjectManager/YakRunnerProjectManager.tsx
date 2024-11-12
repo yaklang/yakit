@@ -28,7 +28,7 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <div className={styles["yakrunner-project-manager"]}>
-                <AuditHistoryTable setShowAuditList={() => {}} />
+                <AuditHistoryTable />
             </div>
         </WaterMark>
     )
