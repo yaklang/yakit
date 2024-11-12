@@ -199,7 +199,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 i.contShow = false
             }
         })
-        console.log({contShow: true, curTabKey: type});
         setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: true, curTabKey: type}))
         setPocTabs([...pocTabs])
     })
