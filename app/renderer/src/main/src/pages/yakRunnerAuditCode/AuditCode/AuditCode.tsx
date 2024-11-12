@@ -963,11 +963,11 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 }
 
 interface AuditHistoryTableProps {
-    setShowAuditList: (v: boolean) => void
+    onClose?: () => void
 }
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
-    const {setShowAuditList} = props
+    const {onClose} = props
     const {projectName} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
@@ -997,10 +997,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         try {
             setLoading(true)
             const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length === 0) {
-                setShowAuditList(false)
-                return
-            }
+            // if (res.Resources.length === 0) {
+            //     return
+            // }
             if (search && search.length > 0) {
                 const newResources = res.Resources.filter((item) => JSON.stringify(item).includes(search))
                 const obj: RequestYakURLResponse = {
@@ -1136,6 +1135,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 type='text'
                                 icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
                                 onClick={() => {
+                                    onClose && onClose()
                                     emiter.emit("onCodeAuditOpenAuditTree", record.ResourceName)
                                 }}
                             />
@@ -1192,6 +1192,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     <YakitButton icon={<SolidPluscircleIcon />} onClick={() => emiter.emit("onExecuteAuditModal")}>
                         添加项目
                     </YakitButton>
+                    {onClose&&<YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />}
                 </div>
             </div>
 

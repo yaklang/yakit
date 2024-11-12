@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState, WheelEvent} from "react"
 import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
@@ -22,7 +22,7 @@ import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} f
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {v4 as uuidv4} from "uuid"
-import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void
@@ -366,6 +366,15 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         {wait: 200}
     ).run
 
+    const handleWheel = useMemoizedFn((event: WheelEvent<HTMLDivElement>) => {
+        if (event.deltaY > 0) {
+            // 最小缩放比例为0.2
+            setScale((prevScale) => Math.max(0.2, prevScale - 0.2)) 
+        } else if (event.deltaY < 0) {
+            setScale((prevScale) => prevScale + 0.2)
+        }
+    })
+
     return (
         <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
             <div className={styles["header"]}>
@@ -399,6 +408,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
                 ref={svgBoxRef}
             />
             {nodeId && (

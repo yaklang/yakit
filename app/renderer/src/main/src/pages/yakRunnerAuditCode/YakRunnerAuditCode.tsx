@@ -10,7 +10,7 @@ import {
 } from "./YakRunnerAuditCodeType"
 import {Divider, Progress, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {AuditHistoryTable, AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
+import {AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
 import {
     addAreaFileInfo,
@@ -363,7 +363,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         emiter.on("onCodeAuditRefreshTree", onCodeAuditRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onCodeAuditOpenFileByPath", onOpenFileByPathFun)
-        // 重置整个页面
+        // 重置整个页面（暂时弃用）
         emiter.on("onInitAuditCodePage", onInitAuditCodePageFun)
         return () => {
             emiter.off("onCodeAuditOpenAuditTree", onOpenAuditTreeFun)
