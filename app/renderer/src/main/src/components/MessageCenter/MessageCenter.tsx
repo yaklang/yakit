@@ -28,7 +28,7 @@ import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
-import { pluginSupplementJSONConvertToData } from "@/pages/pluginEditor/utils/convert"
+import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -69,7 +69,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                     </>
                 )
             case "check":
-                if(data.status === 0){
+                if (data.status === 0) {
                     return (
                         <>
                             <span className={classNames(styles["tag"], styles["merge"])}>申请修改</span>
@@ -82,8 +82,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             </span>
                         </>
                     )
-                }
-                else if (data.status === 1) {
+                } else if (data.status === 1) {
                     return (
                         <>
                             <span className={classNames(styles["tag"], styles["check"])}>审核通过</span>
@@ -138,18 +137,33 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                     </>
                 )
             case "merge":
-                return (
-                    <>
-                        <span className={classNames(styles["tag"], styles["merge"])}>合并</span>
-                        <span
-                            className={classNames(styles["text"], {
-                                "yakit-single-line-ellipsis": isEllipsis
-                            })}
-                        >
-                            了您的插件：{data.scriptName}
-                        </span>
-                    </>
-                )
+                if (data.status === 1) {
+                    return (
+                        <>
+                            <span className={classNames(styles["tag"], styles["check"])}>通过合并</span>
+                            <span
+                                className={classNames(styles["text"], {
+                                    "yakit-single-line-ellipsis": isEllipsis
+                                })}
+                            >
+                                了您的插件：{data.scriptName}
+                            </span>
+                        </>
+                    )
+                } else {
+                    return (
+                        <>
+                            <span className={classNames(styles["tag"], styles["delete"])}>拒绝合并</span>
+                            <span
+                                className={classNames(styles["text"], {
+                                    "yakit-single-line-ellipsis": isEllipsis
+                                })}
+                            >
+                                了您的插件：{data.scriptName}
+                            </span>
+                        </>
+                    )
+                }
             case "replyComment":
                 return (
                     <>
@@ -173,7 +187,8 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            您的评论：{text}{imgs && imgs.length > 0 && `[图片] * ${imgs.length}`}
+                            您的评论：{text}
+                            {imgs && imgs.length > 0 && `[图片] * ${imgs.length}`}
                         </span>
                     </>
                 )
