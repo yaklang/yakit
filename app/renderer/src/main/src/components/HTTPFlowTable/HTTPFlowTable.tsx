@@ -162,7 +162,7 @@ export interface HTTPFlow {
     RequestString: string
     ResponseString: string
 
-    HiddenIndex?:string
+    HiddenIndex?: string
 
     FromPlugin: string
 }
@@ -1049,7 +1049,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     // 方法请求
-    const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
+    const getDataByGrpc = useMemoizedFn(async (query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
         if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
@@ -1074,6 +1074,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
 
+        // history 页面时，判断倒序情况，并且未加载的数据超过200条时刷新页面(这里的数据是减去了缓存数据[offsetdata]数量后的数据)
+        // start
+        let isInitRefresh: boolean = false
+        if (pageType === "History" && type === "top" && sortRef.current.order !== "asc" && maxIdRef.current) {
+            const paginationProps = {
+                Page: 1,
+                Limit: 300,
+                Order: "desc",
+                OrderBy: sortRef.current.orderBy || "id"
+            }
+            const query = {
+                ...params,
+                Pagination: {...paginationProps},
+                AfterId: maxIdRef.current
+            }
+            // 真正需要传给后端的查询数据
+            const realQuery = cloneDeep(query)
+            try {
+                let res = (await ipcRenderer.invoke("QueryHTTPFlows", realQuery)) as YakQueryHTTPFlowResponse
+                isInitRefresh = Number(res.Total) > 200
+            } catch (error) {}
+        }
+        if (isInitRefresh) {
+            updateData()
+            return
+        }
+        // end
+
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         updateQueryParams(query)
@@ -1088,6 +1116,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 realQuery.Pagination.Order = "asc"
             }
         }
+
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1459,7 +1488,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         return () => clearInterval(idRef.current)
-    }, [inViewport, isLoop, scrollUpdate])
+    }, [inViewport, isLoop])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
