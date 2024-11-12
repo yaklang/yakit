@@ -86,6 +86,6 @@ export const commentCommand = $command(`command-${commentCustomId}`, (ctx) => (i
     return true
 })
 
-export const commentPlugin = () => {
+export const commentCustomPlugin = () => {
     return [commentCustomAttr, commentCustomSchema.node, commentCustomSchema.ctx, commentCommand]
 }
