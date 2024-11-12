@@ -43,6 +43,7 @@ import {CustomFile} from "./CustomFile/CustomFile"
 import {insertImageBlockCommand} from "./utils/imageBlock"
 
 import {collab, CollabService, collabServiceCtx} from "@milkdown/plugin-collab"
+import {listCustomPlugin} from "./utils/listPlugin"
 
 const markdown = `
 
@@ -142,6 +143,10 @@ Editor
 
 `
 const markdown1 = `
+
+1. 5565
+2. 665fdsf
+
 #ggg
 
 :file[]{fileId="111"}
@@ -312,12 +317,23 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ].flat()
     }, [])
 
+    const listPlugin = useCreation(() => {
+        return [
+            ...listCustomPlugin(),
+            $view(listItemSchema.node, () =>
+                nodeViewFactory({
+                    component: ListItem
+                })
+            )
+        ].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, value)
+                    ctx.set(defaultValueCtx, markdown1)
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
@@ -349,7 +365,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // image
                 .use(imagePlugin)
                 // listItem
-                .use($view(listItemSchema.node, () => nodeViewFactory({component: ListItem})))
+                .use(listPlugin)
                 // code
                 .use(
                     $view(codeBlockSchema.node, () => {
