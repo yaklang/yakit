@@ -3,8 +3,6 @@ import {API} from "@/services/swagger/resposeType"
 export interface YakitPluginOnlineDetail extends API.PluginsDetail {
     /**1.2k */
     starsCountString?: string
-    /**1.2k */
-    commentCountString?: string
     /**1.2K */
     downloadedTotalString?: string
 }
