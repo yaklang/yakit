@@ -92,9 +92,10 @@ export const convertSelectionByNode = (nodeType: NodeType, attrs: Attrs | null =
             }
             // 获取父节点类型
             const parentNode = $from.node(-1) // 使用 -1 获取上一级节点
+
             if (parentNode && parentNode.type.name === state.schema.nodes.list_item.name) {
                 let textNode = state.schema.text(parentNode.textContent)
-                if (parentNode.attrs?.listType === "listType" && nodeType.name === state.schema.nodes.heading.name) {
+                if (parentNode.attrs?.listType === "ordered" && nodeType.name === state.schema.nodes.heading.name) {
                     // 有序列表转为标题的时候需要把序号带上
                     textNode = state.schema.text(`${parentNode.attrs.label || ""}${parentNode.textContent}`)
                 }

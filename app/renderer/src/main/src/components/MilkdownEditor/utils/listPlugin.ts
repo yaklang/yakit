@@ -1,5 +1,4 @@
 import {$command} from "@milkdown/utils"
-import {yakitNotify} from "@/utils/notification"
 import {convertSelectionByNode, setWrapInBlockType} from "./utils"
 import {listItemSchema} from "@milkdown/kit/preset/commonmark"
 
