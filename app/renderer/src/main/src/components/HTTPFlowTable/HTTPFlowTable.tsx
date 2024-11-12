@@ -162,7 +162,7 @@ export interface HTTPFlow {
     RequestString: string
     ResponseString: string
 
-    HiddenIndex?:string
+    HiddenIndex?: string
 
     FromPlugin: string
 }
@@ -1049,7 +1049,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     // 方法请求
-    const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
+    const getDataByGrpc = useMemoizedFn(async (query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行中流量数据必有runTimeId
         if ((toPlugin || toWebFuzzer) && !runTimeId) {
             setTimeout(() => {
@@ -1074,6 +1074,34 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
 
+        // history 页面时，判断倒序情况，并且未加载的数据超过200条时刷新页面(这里的数据是减去了缓存数据[offsetdata]数量后的数据)
+        // start
+        let isInitRefresh: boolean = false
+        if (pageType === "History" && type === "top" && sortRef.current.order !== "asc" && maxIdRef.current) {
+            const paginationProps = {
+                Page: 1,
+                Limit: 300,
+                Order: "desc",
+                OrderBy: sortRef.current.orderBy || "id"
+            }
+            const query = {
+                ...params,
+                Pagination: {...paginationProps},
+                AfterId: maxIdRef.current
+            }
+            // 真正需要传给后端的查询数据
+            const realQuery = cloneDeep(query)
+            try {
+                let res = (await ipcRenderer.invoke("QueryHTTPFlows", realQuery)) as YakQueryHTTPFlowResponse
+                isInitRefresh = Number(res.Total) > 200
+            } catch (error) {}
+        }
+        if (isInitRefresh) {
+            updateData()
+            return
+        }
+        // end
+
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         updateQueryParams(query)
@@ -1088,6 +1116,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 realQuery.Pagination.Order = "asc"
             }
         }
+
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1441,52 +1470,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         return () => clearInterval(id)
     }, [])
 
-    // 由不可见变成可见时，判断堆积数据是否过多，过多时，直接刷新整个列表
-    const handleShowIsInit = useMemoizedFn((callbakc?: () => void) => {
-        if (pageType === "MITM") {
-            callbakc && callbakc()
-            return
-        }
-        if (sortRef.current.order === "asc") {
-            callbakc && callbakc()
-            return
-        }
-        if (isGrpcRef.current) return
-        const scrollTop = tableRef.current?.containerRef?.scrollTop
-
-        if (scrollTop < 10 && maxIdRef.current && !getOffsetData().length) {
-            const paginationProps = {
-                Page: 1,
-                Limit: 500,
-                Order: sortRef.current.order,
-                OrderBy: sortRef.current.orderBy || "id"
-            }
-            const query = {
-                ...params,
-                Pagination: {...paginationProps},
-                AfterId: maxIdRef.current
-            }
-
-            // 真正需要传给后端的查询数据
-            const realQuery = cloneDeep(query)
-            ipcRenderer
-                .invoke("QueryHTTPFlows", realQuery)
-                .then((rsp: YakQueryHTTPFlowResponse) => {
-                    const {Total} = rsp
-                    if (Number(Total) > 200) {
-                        updateData()
-                    } else {
-                        callbakc && callbakc()
-                    }
-                })
-                .catch(() => {
-                    callbakc && callbakc()
-                })
-        } else {
-            callbakc && callbakc()
-        }
-    })
-
     // 设置是否自动刷新
     const idRef = useRef<any>()
     useEffect(() => {
@@ -1496,15 +1479,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
     useEffect(() => {
         if (inViewport) {
-            handleShowIsInit(() => {
-                scrollUpdate()
-                if (isLoop) {
-                    if (idRef.current) {
-                        clearInterval(idRef.current)
-                    }
-                    idRef.current = setInterval(scrollUpdate, 1000)
+            scrollUpdate()
+            if (isLoop) {
+                if (idRef.current) {
+                    clearInterval(idRef.current)
                 }
-            })
+                idRef.current = setInterval(scrollUpdate, 1000)
+            }
         }
         return () => clearInterval(idRef.current)
     }, [inViewport, isLoop])
