@@ -10,3 +10,12 @@ export interface CustomMilkdownProps {
     customPlugin?: MilkdownPlugin | MilkdownPlugin[]
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
+
+export interface MilkdownBaseUtilProps {
+    id: number
+    icon: ReactNode
+    label: string
+    description: string
+}
+export interface BlockListProps extends MilkdownBaseUtilProps {}
+export type TooltipListProps = MilkdownBaseUtilProps | {id: number; label: string}
