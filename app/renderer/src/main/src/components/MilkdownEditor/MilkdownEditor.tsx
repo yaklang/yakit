@@ -44,6 +44,7 @@ import {insertImageBlockCommand} from "./utils/imageBlock"
 
 import {collab, CollabService, collabServiceCtx} from "@milkdown/plugin-collab"
 import {listCustomPlugin} from "./utils/listPlugin"
+import {headingCustomPlugin} from "./utils/headingPlugin"
 
 const markdown = `
 
@@ -328,6 +329,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ].flat()
     }, [])
 
+    const headingPlugin = useCreation(() => {
+        return [...headingCustomPlugin()].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -366,6 +371,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(imagePlugin)
                 // listItem
                 .use(listPlugin)
+                .use(headingPlugin)
                 // code
                 .use(
                     $view(codeBlockSchema.node, () => {
