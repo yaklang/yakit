@@ -22,6 +22,13 @@ export declare namespace API {
         extra_setting?: string
         method_type?: string
     }
+    export interface WsRequest {
+        /**
+         * 类型必传, messageLog 消息通知, notepad 共享记事本
+         */
+        messageType: string
+        params: object
+    }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
     }
@@ -894,14 +901,6 @@ export declare namespace API {
         operation_plugin_id: string
         extra?: string
     }
-    export interface NewComments {
-        uuid: string
-        by_user_id?: number
-        message_img?: string[]
-        parent_id?: number
-        root_id?: number
-        message?: string
-    }
     export interface NavigationBarsResponse {
         data: NavigationBarsListResponse[]
     }
@@ -921,6 +920,37 @@ export declare namespace API {
         regexp: string
         ruleName: string
         data: string
+    }
+    export interface MessageLogWhereRequest {
+        isAll: boolean
+        hash: string
+    }
+    export interface MessageLogResponse extends Paging {
+        data: MessageLogDetail[]
+    }
+    export interface MessageLogRequest {
+        afterId?: number
+        beforeId?: number
+        isRead?: string
+    }
+    export interface MessageLogDetail extends GormBaseModel {
+        handlerUserName: string
+        handlerHeadImag: string
+        handlerRole: string
+        upPluginType: string
+        scriptName: string
+        /**
+         * 插件uuid
+         */
+        uuid: string
+        /**
+         * 日志id
+         */
+        upPluginLogId: number
+        isRead: boolean
+        hash: string
+        description: string
+        status: number
     }
     export interface LogsRequest {
         uuid: string
@@ -1217,28 +1247,6 @@ export declare namespace API {
         uuid: string
         logId?: number
         description?: string
-    }
-    export interface CommentListResponse extends Paging {
-        data: CommentListData[]
-    }
-    export interface CommentListData {
-        id: number
-        created_at: number
-        updated_at: number
-        plugin_id: number
-        root_id: number
-        parent_id: number
-        user_id: number
-        user_name: string
-        head_img: string
-        message: string
-        message_img: string
-        like_num: number
-        by_user_id: number
-        by_user_name: string
-        by_head_img: string
-        reply_num: number
-        is_stars?: boolean
     }
     export interface CollaboratorInfo {
         user_id: number
