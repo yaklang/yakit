@@ -24,11 +24,11 @@ import {CustomCodeComponent} from "./CodeBlock"
 import {Blockquote} from "./Blockquote"
 import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
 import {alterCustomPlugin} from "./utils/alertPlugin"
-import {commentPlugin} from "./utils/commentPlugin"
+import {commentCustomPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
 import {useCreation, useMemoizedFn} from "ahooks"
-import {underlinePlugin} from "./utils/underline"
+import {underlineCustomPlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
 import {trailing} from "@milkdown/kit/plugin/trailing"
@@ -346,6 +346,28 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ].flat()
     }, [])
 
+    const blockquotePlugin = useCreation(() => {
+        return [
+            $view(blockquoteSchema.node, () =>
+                nodeViewFactory({
+                    component: Blockquote
+                })
+            )
+        ].flat()
+    }, [])
+
+    const alterPlugin = useCreation(() => {
+        return [...alterCustomPlugin()].flat()
+    }, [])
+
+    const underlinePlugin = useCreation(() => {
+        return [...underlineCustomPlugin()].flat()
+    }, [])
+
+    const commentPlugin = useCreation(() => {
+        return [...commentCustomPlugin()].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -368,14 +390,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(trailing)
                 // collab
                 .use(collab)
-                // Add a custom node view
-                .use(
-                    $view(blockquoteSchema.node, () =>
-                        nodeViewFactory({
-                            component: Blockquote
-                        })
-                    )
-                )
+                // blockquote
+                .use(blockquotePlugin)
                 // block
                 .use(blockPlugins)
                 // upload
@@ -394,11 +410,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // table
                 // .use(tableBlock)
                 // alterCustomPlugin
-                .use([...alterCustomPlugin()])
+                .use(alterPlugin)
                 // underlinePlugin
-                .use([...underlinePlugin()])
+                .use(underlinePlugin)
                 // commentPlugin
-                .use([...commentPlugin()])
+                .use(commentPlugin)
                 .use(customPlugin)
         )
     }, [])
