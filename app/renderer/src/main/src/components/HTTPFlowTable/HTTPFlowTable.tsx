@@ -1319,7 +1319,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const updateMITMPageQuery = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
         getRemoteValue(MITMConsts.MITMStartTimeStamp).then((time: string) => {
             if (!data) return
-            console.log(123, time);
             query.AfterUpdatedAt = parseInt(time)
             getDataByGrpc(query, type)
         })
