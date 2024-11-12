@@ -537,16 +537,6 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                 <div className={styles["message-header"]}>
                     <div className={styles["title"]}>消息中心</div>
                     <div className={styles["extra"]}>
-                        {activeKey === "unread" && dataSorce.length > 0 && (
-                            <YakitButton size='small' type='outline2' onClick={onRedAllMessage}>
-                                全部已读
-                            </YakitButton>
-                        )}
-                        {activeKey === "all" && dataSorce.length > 0 && (
-                            <YakitButton size='small' type='outline2' onClick={onClearAllMessage}>
-                                全部清空
-                            </YakitButton>
-                        )}
                         <YakitButton
                             size='small'
                             type='text2'
@@ -560,6 +550,20 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     onChange={(v: any) => setActiveKey(v)}
                     tabBarStyle={{marginBottom: 5}}
                     className={styles["message-center-tab"]}
+                    tabBarExtraContent={
+                        <>
+                            {activeKey === "unread" && dataSorce.length > 0 && (
+                                <YakitButton type='outline2' onClick={onRedAllMessage}>
+                                    全部已读
+                                </YakitButton>
+                            )}
+                            {activeKey === "all" && dataSorce.length > 0 && (
+                                <YakitButton type='outline1' colors='danger' onClick={onClearAllMessage}>
+                                    全部清空
+                                </YakitButton>
+                            )}
+                        </>
+                    }
                 >
                     <YakitTabs.YakitTabPane
                         tab={
