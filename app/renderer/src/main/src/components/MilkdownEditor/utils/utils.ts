@@ -1,3 +1,4 @@
+import {yakitNotify} from "@/utils/notification"
 import {NodeType, Attrs} from "@milkdown/kit/prose/model"
 import {Command, Transaction} from "@milkdown/kit/prose/state"
 import {findWrapping} from "@milkdown/kit/prose/transform"
@@ -72,5 +73,49 @@ export const clearContentAndWrapInBlockType = (nodeType: NodeType, attrs: Attrs 
         if (dispatch) dispatch(tr.scrollIntoView())
 
         return true
+    }
+}
+
+/**
+ * @description 将选区转换为指定节点类型
+ * @param nodeType
+ * @param attrs
+ * @returns {boolean}
+ */
+export const convertSelectionByNode = (nodeType: NodeType, attrs: Attrs | null = null): Command => {
+    return (state, dispatch) => {
+        try {
+            const {$from, from, to} = state.selection
+            // 检查选区是否有效
+            if (from === to) {
+                return false // 没有选中任何内容
+            }
+            // 获取父节点类型
+            const parentNode = $from.node(-1) // 使用 -1 获取上一级节点
+            if (parentNode && parentNode.type.name === state.schema.nodes.list_item.name) {
+                let textNode = state.schema.text(parentNode.textContent)
+                if (parentNode.attrs?.listType === "listType" && nodeType.name === state.schema.nodes.heading.name) {
+                    // 有序列表转为标题的时候需要把序号带上
+                    textNode = state.schema.text(`${parentNode.attrs.label || ""}${parentNode.textContent}`)
+                }
+
+                // 创建新的节点，并用它替换列表项
+                const node = state.schema.nodes[nodeType.name].create(
+                    attrs, // attrs属性
+                    textNode // 使用列表项的内容填充
+                )
+
+                // 使用 transaction 将列表项替换为
+                const tr = state.tr.replaceRangeWith($from.before(-1), $from.after(-1), node)
+
+                if (dispatch) dispatch(tr)
+
+                return true
+            }
+            return false
+        } catch (error) {
+            yakitNotify("error", `[${nodeType.name}]convertSelectionByNode执行失败:${error}`)
+            return false
+        }
     }
 }
