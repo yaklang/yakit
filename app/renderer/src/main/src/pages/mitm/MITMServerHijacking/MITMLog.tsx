@@ -7,6 +7,8 @@ import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {setRemoteValue} from "@/utils/kv"
+import {MITMConsts} from "../MITMConsts"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -35,20 +37,6 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
 
     const cancleFilter = useMemoizedFn((value) => {
         emiter.emit("cancleMitmFilterEvent", JSON.stringify(value))
-    })
-
-    const cleanMitmLogTableData = useMemoizedFn((params: {DeleteAll: boolean; Filter?: {}}) => {
-        ipcRenderer
-            .invoke("DeleteHTTPFlows", params)
-            .then(() => {
-                emiter.emit("cleanMitmLogEvent")
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `历史记录删除失败: ${e}`)
-            })
-            .finally(() => {
-                emiter.emit("onDeleteToUpdate", JSON.stringify({sourcePage: "MITM"}))
-            })
     })
 
     const onHistorySourceTypeToMitm = useMemoizedFn((sourceType: string) => {
@@ -85,40 +73,18 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 ))}
             </div>
             <div className={styles["mitm-log-heard-right"]}>
-                <YakitDropdownMenu
-                    menu={{
-                        data: [
-                            {
-                                key: "resetId",
-                                label: "重置请求 ID"
-                            },
-                            {
-                                key: "noResetId",
-                                label: "不重置请求 ID"
-                            }
-                        ],
-                        onClick: ({key}) => {
-                            switch (key) {
-                                case "resetId":
-                                    cleanMitmLogTableData({DeleteAll: true})
-                                    break
-                                case "noResetId":
-                                    cleanMitmLogTableData({Filter: {}, DeleteAll: false})
-                                    break
-                                default:
-                                    break
-                            }
-                        }
-                    }}
-                    dropdown={{
-                        trigger: ["click"],
-                        placement: "bottom"
+                <YakitButton
+                    type='outline1'
+                    colors='danger'
+                    onClick={() => {
+                        // 记录时间戳
+                        const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
+                        setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
+                        emiter.emit("cleanMitmLogEvent")
                     }}
                 >
-                    <YakitButton type='outline1' colors='danger'>
-                        清空
-                    </YakitButton>
-                </YakitDropdownMenu>
+                    重置
+                </YakitButton>
                 <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
             </div>
         </div>

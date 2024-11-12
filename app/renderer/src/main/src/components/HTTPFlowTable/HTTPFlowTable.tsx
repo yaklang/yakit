@@ -1484,7 +1484,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
          */
         const cleanLogTableData = () => {
             setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-            updateData()
+            setData([])
+            setParams({...params, AfterUpdatedAt: undefined, BeforeUpdatedAt: undefined})
+            setTimeout(() => {
+                updateData()
+            }, 100)
         }
         pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
         pageType === "MITM" && emiter.on("cleanMitmLogEvent", cleanLogTableData)
