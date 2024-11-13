@@ -239,6 +239,12 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
+        console.log("xxx",{
+            params: executeParams,
+            token: token,
+            pluginCustomParams: plugin.Params
+        });
+        
         apiDebugPlugin({
             params: executeParams,
             token: token,
