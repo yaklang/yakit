@@ -75,6 +75,8 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
             failedFuzzer
         }
     }, [responseMap])
+
+
     return isShow ? (
         <div className={styles["all-sequence-response-list"]} style={{display: showAllResponse ? "" : "none"}}>
             <div className={styles["all-sequence-response-heard"]}>
@@ -113,7 +115,9 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         failedFuzzer={fuzzerData.failedFuzzer}
                         secondNodeSize={secondNodeSize}
                         query={query}
-                        setQuery={(q) => setQuery({...q})}
+                        setQuery={(q) => {
+                            setQuery({...q})
+                        }}
                         sendPayloadsType='allSequenceList'
                         size='middle'
                         setShowExtra={() => {}}

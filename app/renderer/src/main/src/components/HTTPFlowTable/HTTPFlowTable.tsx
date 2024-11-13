@@ -78,6 +78,7 @@ import {onSetRemoteValuesBase} from "../yakitUI/utils"
 import {CacheDropDownGV} from "@/yakitGV"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import cloneDeep from "lodash/cloneDeep"
+import {parseStatusCodes} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 const {ipcRenderer} = window.require("electron")
 
 const {Option} = Select
@@ -1037,7 +1038,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         delete copyQuery.RuntimeIDs
         delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
-        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode.join(",") : ""
+        copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode : ""
         setQueryParams(JSON.stringify(copyQuery))
     }
 
@@ -1647,39 +1648,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             dataKey: "StatusCode",
             width: 100,
             filterProps: {
-                filterMultiple: true,
-                filtersType: "select",
-                filterSearchInputProps: {
-                    size: "small"
-                },
-                filterOptionRender: (item: FiltersItemProps) => (
-                    <div>
-                        <span>{item.value}</span>
-                        <span>{item.total}</span>
-                    </div>
-                ),
-                filters: [
-                    {
-                        value: "100-199",
-                        label: "[100,200)"
-                    },
-                    {
-                        value: "200-299",
-                        label: "[200-300)"
-                    },
-                    {
-                        value: "300-399",
-                        label: "[300-400)"
-                    },
-                    {
-                        value: "400-499",
-                        label: "[400-500)"
-                    },
-                    {
-                        value: "500-600",
-                        label: "[500-600]"
+                filterKey: "StatusCode",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
+                filterInputProps: {
+                    placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                    wrapperStyle: {width: 270},
+                    onRegular: (value) => {
+                        // 只允许输入数字、逗号和连字符，去掉所有其他字符
+                        return value.replace(/[^0-9,-]/g, '')
                     }
-                ]
+                }
             },
             render: (text, rowData) => {
                 return (

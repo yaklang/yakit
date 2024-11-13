@@ -1588,7 +1588,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedFuzzer={failedFuzzer}
                 secondNodeSize={secondNodeSize}
                 query={query}
-                setQuery={(q) => setQuery({...q})}
+                setQuery={(q) => {
+                    setQuery({...q})
+                }}
                 sendPayloadsType='fuzzer'
                 setShowExtra={setShowExtra}
                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
@@ -2220,12 +2222,12 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         noPopconfirm = true,
         retryNoPopconfirm = true,
         cancelCurrentHTTPFuzzer,
-        resumeAndPause
+        resumeAndPause,
     } = props
 
     const [color, setColor] = useState<string[]>()
     const [keyWord, setKeyWord] = useState<string>()
-    const [statusCode, setStatusCode] = useState<string[]>()
+    const [statusCode, setStatusCode] = useState<string>()
     const [bodyLength, setBodyLength] = useState<HTTPFuzzerPageTableQuery>({
         afterBodyLength: undefined,
         beforeBodyLength: undefined
@@ -2478,35 +2480,16 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                             </div>
                             <div className={styles["second-node-search-item"]}>
                                 <span>状态码</span>
-                                <YakitSelect
+                                <YakitInput
                                     value={statusCode}
-                                    onChange={setStatusCode}
-                                    size='small'
-                                    mode='tags'
-                                    allowClear
-                                    options={[
-                                        {
-                                            value: "100-200",
-                                            label: "100-200"
-                                        },
-                                        {
-                                            value: "200-300",
-                                            label: "200-300"
-                                        },
-                                        {
-                                            value: "300-400",
-                                            label: "300-400"
-                                        },
-                                        {
-                                            value: "400-500",
-                                            label: "400-500"
-                                        },
-                                        {
-                                            value: "500-600",
-                                            label: "500-600"
-                                        }
-                                    ]}
-                                />
+                                    onChange={(e) => {
+                                        let val = e.target.value
+                                        // 只允许输入数字、逗号和连字符，去掉所有其他字符
+                                        val = val.replace(/[^0-9,-]/g, "")
+                                        setStatusCode(val)
+                                    }}
+                                    placeholder='支持输入200,200-204格式，多个用逗号分隔'
+                                ></YakitInput>
                             </div>
                             <div className={styles["second-node-search-item"]}>
                                 <span>响应大小</span>

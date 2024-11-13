@@ -836,10 +836,28 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     {...columnsItem.filterProps?.filterInputProps}
                     value={filters[filterKey]}
                     onChange={(e) => {
+                        let val = e.target.value
+                        if (
+                            columnsItem.filterProps &&
+                            columnsItem.filterProps.filterInputProps &&
+                            columnsItem.filterProps.filterInputProps.onRegular
+                        ) {
+                            val = columnsItem.filterProps?.filterInputProps?.onRegular(val)
+                        }
                         setFilters({
                             ...filters,
-                            [filterKey]: e.target.value
+                            [filterKey]: val
                         })
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.stopPropagation()
+                            setOpensPopover({
+                                ...opensPopover,
+                                [filterKey]: false
+                            })
+                            if (onChangTable) onChangTable()
+                        }
                     }}
                 />
             </div>
@@ -1435,7 +1453,10 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             )) || (
                                 <CellRender
                                     colIndex={colIndex}
-                                    key={`${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` || number}
+                                    key={
+                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` ||
+                                        number
+                                    }
                                     item={item}
                                     columnsItem={columnsItem}
                                     number={item.index}

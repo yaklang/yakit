@@ -1914,7 +1914,9 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                     failedFuzzer={failedFuzzer}
                     secondNodeSize={secondNodeSize}
                     query={query}
-                    setQuery={(q) => setQuery({...q})}
+                    setQuery={(q) => {
+                        setQuery({...q})
+                    }}
                     sendPayloadsType='fuzzerSequence'
                     setShowExtra={setShowExtra}
                     showResponseInfoSecondEditor={showResponseInfoSecondEditor}
