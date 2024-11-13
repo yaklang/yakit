@@ -35,7 +35,7 @@ import {
 } from "@/assets/newIcon"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Descriptions} from "antd"
+import {Alert, Descriptions} from "antd"
 import classNames from "classnames"
 import {useCreation, useMap, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
@@ -654,6 +654,13 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
                     [styles["matching-extraction-content-hidden"]]: type !== "matchers"
                 })}
             >
+                <Alert
+                    message={
+                        "多个匹配器是为了同时达到多个功能效果，比如染不同颜色或丢包的同时染色，如需要转成yaml只能配置一个匹配器"
+                    }
+                    type='warning'
+                    style={{marginBottom: 8}}
+                />
                 {/* key值待优化 */}
                 {matcher.matchersList.map((item, number) => (
                     <div className={styles["matching-list-item"]} key={number}>
