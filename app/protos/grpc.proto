@@ -5419,7 +5419,7 @@ message CPE {
 message FingerprintRule {
   int64 Id = 1;
   string RuleName = 2;
-  CPE cpe = 3;
+  CPE CPE = 3;
   string WebPath = 4;
   string ExtInfo = 5;
   string MatchExpression = 6;
