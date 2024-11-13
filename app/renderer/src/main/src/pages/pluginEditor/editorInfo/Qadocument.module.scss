@@ -1,0 +1,27 @@
+.document-help-body {
+    height: 100%;
+    overflow: auto;
+    max-height: 70vh;
+    h1 {
+        color: var(--yakit-header-color);
+        font-weight: 600;
+    }
+    h2 {
+        color: var(--yakit-header-color);
+        font-weight: 600;
+    }
+    .numbered-list {
+        list-style-type: none; /* 去除默认的无序列表样式 */
+        counter-reset: list-counter; /* 初始化计数器 */
+    }
+    .numbered-list li {
+        counter-increment: list-counter; /* 每个 li 增加计数器 */
+        position: relative;
+        padding-left: 1.5em; /* 为数字腾出空间 */
+    }
+    .numbered-list li::before {
+        content: counter(list-counter) ". "; /* 使用计数器生成数字 */
+        position: absolute;
+        left: 0; /* 数字的位置 */
+    }
+}
