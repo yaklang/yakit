@@ -355,7 +355,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 className={classNames(styles["audit-history-drawer"])}
                 onClose={onCloseDrawer}
             >
-                <AuditHistoryTable onClose={()=>setVisible(false)}/>
+                <AuditHistoryTable onClose={()=>setVisible(false)} />
             </YakitDrawer>
         </div>
     )
