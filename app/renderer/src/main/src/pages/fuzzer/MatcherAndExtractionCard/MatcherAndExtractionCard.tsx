@@ -92,6 +92,7 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                 firstNode={
                     <div className={styles["matching-extraction-editor"]}>
                         <NewHTTPPacketEditor
+                            showDownBodyMenu={false}
                             refreshTrigger={refreshTrigger}
                             bordered={false}
                             noHeader={true}

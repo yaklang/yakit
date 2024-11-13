@@ -226,6 +226,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                                             readOnly={true}
                                             noMinimap={true}
                                             noHeader={true}
+                                            showDownBodyMenu={false}
                                         />
                                     </div>
                                 }

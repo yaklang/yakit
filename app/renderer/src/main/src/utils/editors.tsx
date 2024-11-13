@@ -11,7 +11,7 @@ import {Card, Form, Input, Popover, Tag, Tooltip, Row, Col} from "antd"
 import {SelectOne} from "./inputUtil"
 import {EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled} from "@ant-design/icons"
 import {showDrawer} from "./showModal"
-import {HTTPPacketFuzzable} from "../components/HTTPHistory"
+import {HTTPFlowBodyByIdRequest, HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
 import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -568,8 +568,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     codingBtn?: ReactElement
     url?: string
     pageId?: string
-    historyId?: number
-    isRequestFlag?: boolean
+    downbodyParams?: HTTPFlowBodyByIdRequest
+    showDownBodyMenu?: boolean
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1190,8 +1190,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             highLightText={type === undefined ? highLightText : []}
                             downstreamProxyStr={downstreamProxyStr}
                             url={props.url}
-                            historyId={props.historyId}
-                            isRequestFlag={props.isRequestFlag}
+                            downbodyParams={props.downbodyParams}
+                            showDownBodyMenu={props.showDownBodyMenu}
                             {...props.extraEditorProps}
                         />
                     )}

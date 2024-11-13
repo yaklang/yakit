@@ -29,6 +29,7 @@ import {generateGroupId} from "@/pages/layout/mainOperatorContent/MainOperatorCo
 import {MultipleNodeInfo} from "@/pages/layout/mainOperatorContent/MainOperatorContentType"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -417,12 +418,7 @@ const MultimodeImportYaml: React.FC<MultimodeImportYamlProp> = React.memo(({read
 
     return (
         <div className={styles.multimodeImportYaml} ref={multimodeImportYamlRef}>
-            <NewHTTPPacketEditor
-                key={yamlContent}
-                originValue={yamlContent}
-                noHeader={true}
-                onChange={editorContChange}
-            ></NewHTTPPacketEditor>
+            <YakitEditor key={yamlContent} value={yamlContent} setValue={editorContChange}></YakitEditor>
         </div>
     )
 })

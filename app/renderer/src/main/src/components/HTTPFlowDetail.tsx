@@ -383,8 +383,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 }}
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
-                                                historyId={flow.Id}
-                                                isRequestFlag={true}
+                                                downbodyParams={{Id: flow.Id, IsRequest: true}}
                                             />
                                         )}
                                     </div>
@@ -413,8 +412,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 }}
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
-                                                historyId={flow.Id}
-                                                isRequestFlag={false}
+                                                downbodyParams={{Id: flow.Id, IsRequest: false}}
                                             />
                                         )}
                                     </div>
@@ -783,6 +781,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             })()}
                             editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
                             isShowBeautifyRender={false}
+                            showDownBodyMenu={false}
                         />
                     </Col>
                 )}
@@ -1285,8 +1284,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
                         url={flow.Url}
-                        historyId={flow.Id}
-                        isRequestFlag={true}
+                        downbodyParams={{Id: flow.Id, IsRequest: true}}
                     />
                 )
             }}
@@ -1398,8 +1396,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
                         }
                         url={flow.Url}
-                        historyId={flow.Id}
-                        isRequestFlag={false}
+                        downbodyParams={{Id: flow.Id, IsRequest: false}}
                     />
                 )
             }}

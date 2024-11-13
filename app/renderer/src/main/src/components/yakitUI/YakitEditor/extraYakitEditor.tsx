@@ -25,6 +25,7 @@ import {v4 as uuidv4} from "uuid"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import { HTTPFlowBodyByIdRequest } from "@/components/HTTPHistory"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -40,8 +41,8 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     downstreamProxyStr?: string
     url?: string
     pageId?: string
-    historyId?: number
-    isRequestFlag?: boolean
+    downbodyParams?: HTTPFlowBodyByIdRequest
+    showDownBodyMenu?: boolean
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -60,8 +61,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         downstreamProxyStr = "",
         url,
         pageId,
-        historyId,
-        isRequestFlag = false,
+        downbodyParams,
+        showDownBodyMenu = true,
         ...restProps
     } = props
 
@@ -146,43 +147,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         showResponseViaResponseRaw(originValueBytes)
                     } catch (e) {
                         failed("editor exec show in browser failed")
-                    }
-                }
-            },
-            downloadBody: {
-                menu: [
-                    {
-                        key: "download-body",
-                        label: "下载 Body"
-                    }
-                ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    try {
-                        if (readOnly && historyId) {
-                            ipcRenderer
-                                .invoke("GetHTTPFlowBodyById", {
-                                    Id: historyId,
-                                    IsRequest: isRequestFlag,
-                                    uuid: uuidv4()
-                                })
-                                .then(() => {
-                                    yakitNotify("success", "下载成功")
-                                })
-                                .catch((e) => {
-                                    yakitNotify("error", `下载body：${e}`)
-                                })
-                            return
-                        }
-                        const text = editor.getModel()?.getValue()
-                        if (!text) {
-                            yakitNotify("info", "无数据包-无法下载 Body")
-                            return
-                        }
-                        ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
-                            saveABSFileToOpen("packet-body.txt", bytes.Raw)
-                        })
-                    } catch (e) {
-                        failed("editor exec download body failed")
                     }
                 }
             },
@@ -403,6 +367,51 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }, {}) as OtherMenuListProps
         }
 
+        if (showDownBodyMenu) {
+            menuItems = Object.keys(menuItems).reduce((ac, a) => {
+                if (a === "autoDecode") {
+                    ac["downloadBody"] = {
+                        menu: [
+                            {
+                                key: "download-body",
+                                label: "下载 Body"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            try {
+                                if (readOnly && downbodyParams) {
+                                    ipcRenderer
+                                        .invoke("GetHTTPFlowBodyById", {
+                                            ...downbodyParams,
+                                            uuid: uuidv4(),
+                                        })
+                                        .then(() => {
+                                            yakitNotify("success", "下载成功")
+                                        })
+                                        .catch((e) => {
+                                            yakitNotify("error", `下载body：${e}`)
+                                        })
+                                    return
+                                }
+                                const text = editor.getModel()?.getValue()
+                                if (!text) {
+                                    yakitNotify("info", "无数据包-无法下载 Body")
+                                    return
+                                }
+                                ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
+                                    saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                })
+                            } catch (e) {
+                                failed("editor exec download body failed")
+                            }
+                        }
+                    }
+                }
+                ac[a] = menuItems[a]
+                return ac
+            }, {}) as OtherMenuListProps
+        }
+
         return menuItems
     }, [
         defaultHttps,
@@ -416,8 +425,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerValue,
         webSocketToServer,
         downstreamProxyStr,
-        historyId,
-        isRequestFlag
+        downbodyParams
     ])
 
     return (

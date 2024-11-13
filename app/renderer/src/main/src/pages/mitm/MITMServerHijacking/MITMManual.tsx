@@ -405,6 +405,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
             extraEditorProps={{
                 isShowSelectRangeMenu: true
             }}
+            showDownBodyMenu={false}
         />
     )
 })

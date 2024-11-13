@@ -39,6 +39,14 @@ interface HTTPHistoryTabsItem {
     contShow: boolean
 }
 
+export interface HTTPFlowBodyByIdRequest {
+    Id?: number
+    IsRequest: boolean
+    BufSize?: number
+    RuntimeId?: string
+    IsRisk?: boolean
+}
+
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {pageType, downstreamProxyStr, params} = props
     const ref = useRef(null)
