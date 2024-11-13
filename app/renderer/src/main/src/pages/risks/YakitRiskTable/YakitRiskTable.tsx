@@ -614,7 +614,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         route: YakitRoute.Plugin_Hub,
                         params: {
                             tabActive: "local",
-                            detailInfo: {id: yakScript.Id, uuid: yakScript.UUID, name: yakScript.ScriptName}
+                            detailInfo: {uuid: yakScript.UUID, name: yakScript.ScriptName}
                         } as PluginHubPageInfoProps
                     }
                     emiter.emit("openPage", JSON.stringify(info))

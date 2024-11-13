@@ -1,4 +1,4 @@
-import React, {ReactNode} from "react"
+import React, {ForwardedRef, ReactNode} from "react"
 import {CustomIconComponentProps} from "@ant-design/icons/lib/components/Icon"
 import {API} from "@/services/swagger/resposeType"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
@@ -24,13 +24,20 @@ export interface PluginLogTypeToInfoProps {
 }
 
 /** ---------- PluginLog ----------  */
+export interface PluginLogRefProps {
+    /** 主动跳转到指定 tab 页面 */
+    handleActiveTab: (key: string) => void
+}
+
 export interface PluginLogProps {
+    ref?: ForwardedRef<PluginLogRefProps>
+
     getContainer?: string
     plugin: YakitPluginOnlineDetail
 }
 
 /** ---------- PluginLogList ----------  */
-export interface PluginLogListProps extends PluginLogProps {
+export interface PluginLogListProps extends Omit<PluginLogProps, "ref"> {
     /** 是否手动触发重置刷新 */
     triggerRefresh: boolean
     type: PluginLogType

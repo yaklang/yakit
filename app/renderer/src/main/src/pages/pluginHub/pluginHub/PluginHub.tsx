@@ -40,6 +40,9 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
         setUpdateLocalHint(false)
     })
 
+    // 主动打开插件详情页时，是否需要主动跳到指定 tab 页面
+    const [autoOpenDetailTab, setAutoOpenDetailTab] = useState<string>()
+
     const [isDetail, setIsDetail] = useState<boolean>(false)
     const handlePluginDetail = useMemoizedFn((info: PluginToDetailInfo) => {
         if (!isDetail) {
@@ -73,12 +76,19 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
                     isDetail={isDetail}
                     toPluginDetail={handlePluginDetail}
                     setHiddenDetailPage={setHiddenDetail}
+                    setAutoOpenDetailTab={setAutoOpenDetailTab}
                 />
             </div>
 
             {isDetail && (
                 <div className={classNames(styles["detail"], {[styles["hidden"]]: hiddenDetail})}>
-                    <PluginHubDetail ref={detailRef} rootElementId={wrapperId} onBack={onBack} />
+                    <PluginHubDetail
+                        ref={detailRef}
+                        rootElementId={wrapperId}
+                        onBack={onBack}
+                        autoOpenDetailTab={autoOpenDetailTab}
+                        setAutoOpenDetailTab={setAutoOpenDetailTab}
+                    />
                 </div>
             )}
 
