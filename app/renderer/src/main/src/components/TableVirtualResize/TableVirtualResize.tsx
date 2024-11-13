@@ -829,21 +829,20 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
      * @description 输入框搜索
      */
     const renderInput = useMemoizedFn((columnsItem: ColumnsTypeProps, filterKey: string) => {
-        const value = filters[filterKey] || columnsItem.filterProps?.filterInputProps?.value
         return (
             <div className={styles["input-search"]}>
                 <YakitInput
                     allowClear={true}
                     {...columnsItem.filterProps?.filterInputProps}
-                    value={value}
+                    value={filters[filterKey]}
                     onChange={(e) => {
                         let val = e.target.value
                         if (
                             columnsItem.filterProps &&
                             columnsItem.filterProps.filterInputProps &&
-                            columnsItem.filterProps.filterInputProps.onChangeVal
+                            columnsItem.filterProps.filterInputProps.onRegular
                         ) {
-                            val = columnsItem.filterProps?.filterInputProps?.onChangeVal(val)
+                            val = columnsItem.filterProps?.filterInputProps?.onRegular(val)
                         }
                         setFilters({
                             ...filters,

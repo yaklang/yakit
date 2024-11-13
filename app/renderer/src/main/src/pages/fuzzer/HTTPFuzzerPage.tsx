@@ -1566,7 +1566,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         getNewCurrentPage()
     })
 
-    const [statusCodeInputVal, setStatusCodeInputVal] = useState<string>("")
     const secondNodeExtra = () => (
         <>
             <SecondNodeExtra
@@ -1592,7 +1591,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 setQuery={(q) => {
                     setQuery({...q})
                 }}
-                onSetStatusCodeInputVal={setStatusCodeInputVal}
                 sendPayloadsType='fuzzer'
                 setShowExtra={setShowExtra}
                 showResponseInfoSecondEditor={showResponseInfoSecondEditor}
@@ -1996,8 +1994,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         setExportData={setExportData}
                                                         query={query}
                                                         setQuery={setQuery}
-                                                        statusCodeInputVal={statusCodeInputVal}
-                                                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                                                         extractedMap={extractedMap}
                                                         isEnd={loading}
                                                         pageId={props.id}
@@ -2027,8 +2023,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
-                                                        statusCodeInputVal={statusCodeInputVal}
-                                                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                                                         isEnd={loading}
                                                         extractedMap={extractedMap}
                                                         pageId={props.id}
@@ -2194,7 +2188,6 @@ interface SecondNodeExtraProps {
     resumeAndPause?: () => void
     isHttps?: boolean
     request?: string
-    onSetStatusCodeInputVal: (s: string) => void
 }
 
 /**
@@ -2230,7 +2223,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         retryNoPopconfirm = true,
         cancelCurrentHTTPFuzzer,
         resumeAndPause,
-        onSetStatusCodeInputVal
     } = props
 
     const [color, setColor] = useState<string[]>()
@@ -2495,7 +2487,6 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         // 只允许输入数字、逗号和连字符，去掉所有其他字符
                                         val = val.replace(/[^0-9,-]/g, "")
                                         setStatusCode(val)
-                                        onSetStatusCodeInputVal(val)
                                     }}
                                     placeholder='支持输入200,200-204格式，多个用逗号分隔'
                                 ></YakitInput>

@@ -159,7 +159,7 @@ export interface SorterProps {
  */
 
 interface FilterInputProps extends YakitInputProps {
-    onChangeVal?: (value: string) => string
+    onRegular?: (value: string) => string
 }
 export interface FilterProps {
     filterRender?: (closePopover: () => void) => ReactNode

@@ -76,7 +76,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
         }
     }, [responseMap])
 
-    const [statusCodeInputVal, setStatusCodeInputVal] = useState<string>("")
 
     return isShow ? (
         <div className={styles["all-sequence-response-list"]} style={{display: showAllResponse ? "" : "none"}}>
@@ -119,7 +118,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         setQuery={(q) => {
                             setQuery({...q})
                         }}
-                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         sendPayloadsType='allSequenceList'
                         size='middle'
                         setShowExtra={() => {}}
@@ -151,8 +149,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         data={fuzzerData.successFuzzer}
                         query={query}
                         setQuery={setQuery}
-                        statusCodeInputVal={statusCodeInputVal}
-                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         extractedMap={extractedMap}
                         isEnd={true}
                         isShowDebug={false}
@@ -165,8 +161,6 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         data={fuzzerData.failedFuzzer}
                         query={query}
                         setQuery={setQuery}
-                        statusCodeInputVal={statusCodeInputVal}
-                        onSetStatusCodeInputVal={setStatusCodeInputVal}
                         isEnd={true}
                         extractedMap={extractedMap}
                     />

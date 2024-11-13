@@ -62,8 +62,6 @@ interface HTTPFuzzerPageTableProps {
     moreLimtAlertMsg?: React.ReactNode
     tableKeyUpDownEnabled?: boolean
     fuzzerTableMaxData?: number
-    statusCodeInputVal: string
-    onSetStatusCodeInputVal: (s: string) => void
 }
 
 /**
@@ -160,7 +158,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const {
             data,
             success,
-            query = {},
+            query,
             setQuery,
             isRefresh,
             extractedMap,
@@ -172,8 +170,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             moreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
             fuzzerTableMaxData = DefFuzzerTableMaxData,
-            statusCodeInputVal,
-            onSetStatusCodeInputVal,
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const listTableRef = useRef<FuzzerResponse[]>([])
@@ -294,13 +290,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               filterInputProps: {
                                   placeholder: "支持输入200,200-204格式，多个用逗号分隔",
                                   wrapperStyle: {width: 270},
-                                  value: statusCodeInputVal,
-                                  onChangeVal: (value) => {
-                                      let val = value
+                                  onRegular: (value) => {
                                       // 只允许输入数字、逗号和连字符，去掉所有其他字符
-                                      val = val.replace(/[^0-9,-]/g, "")
-                                      onSetStatusCodeInputVal(val)
-                                      return val
+                                      return value.replace(/[^0-9,-]/g, "")
                                   }
                               }
                           }
@@ -574,7 +566,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [
             success,
             query?.StatusCode,
-            statusCodeInputVal,
             query?.afterBodyLength,
             query?.beforeBodyLength,
             query?.afterDurationMs,
@@ -627,10 +618,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
                 const l = bodyLengthRef?.current?.getValue() || {}
                 const d = durationMsRef?.current?.getValue() || {}
-                // 由于当正在执行，会导致表格不断重复渲染，由于query初始是空，导致表格里面的filters会被重置为空，当执行这个函数时，会拿不到正确值
-                if (filters["StatusCode"] === undefined && statusCodeInputVal) {
-                    filters["StatusCode"] = statusCodeInputVal
-                }
                 setQuery({
                     ...query,
                     ...filters,

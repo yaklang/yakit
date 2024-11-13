@@ -738,7 +738,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const boxHeightRef = useRef<number>()
 
     const ref = useRef(null)
-    const [statusCodeInputVal, setStatusCodeInputVal] = useState<string>("")
 
     useHotkeys(
         "ctrl+r",
@@ -969,9 +968,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
             if (filter["ContentType"]) {
                 filter["SearchContentType"] = filter["ContentType"].join(",")
-            }
-            if (filter['StatusCode'] === undefined && statusCodeInputVal) {
-                filter['StatusCode'] = statusCodeInputVal
             }
             setParams({
                 ...params,
@@ -1658,13 +1654,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 filterInputProps: {
                     placeholder: "支持输入200,200-204格式，多个用逗号分隔",
                     wrapperStyle: {width: 270},
-                    value: statusCodeInputVal,
-                    onChangeVal: (value) => {
-                        let val = value
+                    onRegular: (value) => {
                         // 只允许输入数字、逗号和连字符，去掉所有其他字符
-                        val = val.replace(/[^0-9,-]/g, '');
-                        setStatusCodeInputVal(val)
-                        return val
+                        return value.replace(/[^0-9,-]/g, '')
                     }
                 }
             },
@@ -2041,7 +2033,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RequestSizeVerbose,
             action
         ]
-    }, [tags, tagsFilter, tagSearchVal, checkBodyLength, toWebFuzzer, downstreamProxyStr, pageType, statusCodeInputVal])
+    }, [tags, tagsFilter, tagSearchVal, checkBodyLength, toWebFuzzer, downstreamProxyStr, pageType])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
