@@ -152,6 +152,7 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     divider: {type: "divider"},
     singOut: {key: "sign-out", label: "退出登录", type: "danger"},
     pluginAudit: {key: "plugin-audit", label: "插件管理"},
+    riskMisstatement: {key: "risk-misstatement", label: "误报记录"},
     // CE
     trustList: {key: "trust-list", label: "用户管理"},
     licenseAdmin: {key: "license-admin", label: "License管理"},
@@ -275,7 +276,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             // CE-非权限人员
             if (!isNew) {
-                setUserMenu([UserMenusMap["singOut"]])
+                setUserMenu([UserMenusMap["riskMisstatement"], UserMenusMap["singOut"]])
             }
         } else {
             // EE|SE 版本
@@ -590,6 +591,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 }
                                                 if (key === "close-dynamic-control") {
                                                     ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
+                                                }
+                                                if (key === "risk-misstatement") {
+                                                    onOpenPage({route: YakitRoute.DB_RiskMisstatement})
                                                 }
                                             }
                                         }}

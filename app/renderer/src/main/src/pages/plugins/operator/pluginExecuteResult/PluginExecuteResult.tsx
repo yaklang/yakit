@@ -460,7 +460,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
                         rowSelection: undefined
                     }}
                     yakitRiskDetailsBorder={false}
-                    excludeColumnsKey={["action"]}
+                    excludeColumnsKey={["action", "提交时间"]}
                     allTotal={allTotal}
                     setAllTotal={setAllTotal}
                 />
