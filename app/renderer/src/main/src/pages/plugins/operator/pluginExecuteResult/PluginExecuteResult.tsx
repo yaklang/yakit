@@ -468,7 +468,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
                         rowSelection: undefined
                     }}
                     yakitRiskDetailsBorder={false}
-                    excludeColumnsKey={["action"]}
+                    excludeColumnsKey={["action", "提交时间"]}
                     allTotal={allTotal}
                     setAllTotal={setAllTotal}
                 />
@@ -507,6 +507,7 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
                     </div>
                 }
                 riskWrapperClassName={styles["risks-table-wrapper"]}
+                excludeColumnsKey={["提交时间"]}
             />
         </div>
     )

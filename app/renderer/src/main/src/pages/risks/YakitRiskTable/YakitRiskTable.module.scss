@@ -52,6 +52,16 @@ $keyColor: map-keys($tagColor);
             height: 16px;
         }
     }
+    .misstatement-icon {
+        color: var(--yakit-body-text-color);
+        svg {
+            width: 16px;
+            height: 16px
+        }
+        &:hover {
+            color: var(--yakit-primary-5)
+        }
+    }
     .yakit-risk-details {
         @extend %display-column-center;
         border-radius: 0 0 4px 4px;

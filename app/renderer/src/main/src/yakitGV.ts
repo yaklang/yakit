@@ -108,6 +108,8 @@ export enum RemoteGV {
     MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
     /**@name 漏洞管理页面中,高级查询内容的显/隐 */
     AuditHoleShow = "audit-hole-show",
+    /**@name 专项漏洞左侧tabs */
+    YakPocTabs = "yakpoc-tabs"
 }
 
 /** 项目逻辑全局变量 */

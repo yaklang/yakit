@@ -69,6 +69,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                         setRiskLoading={setRiskLoading}
                         query={query}
                         setQuery={setQuery}
+                        excludeColumnsKey={["提交时间"]}
                     />
                 </div>
             </YakitSpin>
