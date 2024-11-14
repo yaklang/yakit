@@ -20,13 +20,12 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TempExampleHelp, TempExampleInfo, tempExampleList} from "./TempExampleHelp"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {Qadocument, qaDocumentLableList} from "./Qadocument"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {Qadocument, QaDocumentInfo, qaDocumentList} from "./Qadocument"
-
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
 }
@@ -300,12 +299,12 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         const [searchQaDocumentVal, setSearchQaDocumentVal] = useState<string>("")
         const renderQaDocumentList = useMemo(() => {
             return searchQaDocumentVal
-                ? qaDocumentList.filter((v) =>
-                      v.label.toLocaleLowerCase().includes(searchQaDocumentVal.toLocaleLowerCase())
+                ? qaDocumentLableList.filter((label) =>
+                      label.toLocaleLowerCase().includes(searchQaDocumentVal.toLocaleLowerCase())
                   )
-                : qaDocumentList
-        }, [searchQaDocumentVal, qaDocumentList])
-        const onOpenQaDocModal = (qaDocumentItem: QaDocumentInfo) => {
+                : qaDocumentLableList
+        }, [searchQaDocumentVal, qaDocumentLableList])
+        const onOpenQaDocModal = (label: string) => {
             const m = showYakitModal({
                 title: "常见问题",
                 type: "white",
@@ -315,7 +314,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 onOkText: "我知道了",
                 onOk: () => m.destroy(),
                 bodyStyle: {padding: "8px 24px"},
-                content: <Qadocument qaDocumentItem={qaDocumentItem} />
+                content: <Qadocument label={label} />
             })
         }
         /** ---------- 案例文档 End ---------- */
@@ -556,15 +555,15 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             <div className={styles["document-list-wrapper"]}>
                                 {renderQaDocumentList.length ? (
                                     <>
-                                        {renderQaDocumentList.map((item) => (
+                                        {renderQaDocumentList.map((label) => (
                                             <div
                                                 className={styles["document-list-item"]}
-                                                key={item.label}
-                                                onClick={() => onOpenQaDocModal(item)}
+                                                key={label}
+                                                onClick={() => onOpenQaDocModal(label)}
                                             >
                                                 <div className={styles["document-item-left-wrapper"]}>
-                                                    <div className={styles["document-item-label"]} title={item.label}>
-                                                        {item.label}
+                                                    <div className={styles["document-item-label"]} title={label}>
+                                                        {label}
                                                     </div>
                                                 </div>
                                             </div>

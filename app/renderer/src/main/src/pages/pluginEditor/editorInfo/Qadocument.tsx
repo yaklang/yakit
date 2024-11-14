@@ -1,4 +1,4 @@
-import React, {ReactElement} from "react"
+import React, {ReactElement, useMemo} from "react"
 import image_1 from "@/assets/qa/image_1.png"
 import image_2 from "@/assets/qa/image_2.png"
 import image_3 from "@/assets/qa/image_3.png"
@@ -25,7 +25,7 @@ export interface QaDocumentInfo {
     label: string
     renderCont?: ReactElement
 }
-export const qaDocumentList: QaDocumentInfo[] = [
+const qaDocumentList: QaDocumentInfo[] = [
     {
         label: "请检查插件是否正常发起请求",
         renderCont: (
@@ -337,15 +337,22 @@ export const qaDocumentList: QaDocumentInfo[] = [
     }
 ]
 
+export const qaDocumentLableList: string[] = qaDocumentList.map((item) => item.label)
+
 interface QadocumentProps {
-    qaDocumentItem: QaDocumentInfo
+    label: string
 }
 export const Qadocument: React.FC<QadocumentProps> = React.memo((props) => {
-    const {qaDocumentItem} = props
+    const {label} = props
+
+    const renderCont = useMemo(() => {
+        return qaDocumentList.find((item) => item.label === label)?.renderCont
+    }, [label])
+
     return (
         <div className={styles["document-help-body"]}>
-            <h1>{qaDocumentItem.label}</h1>
-            {qaDocumentItem.renderCont}
+            <h1>{label}</h1>
+            {renderCont}
         </div>
     )
 })
