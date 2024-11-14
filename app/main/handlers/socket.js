@@ -28,6 +28,7 @@ module.exports = (win, getClient) => {
         if (ws) {
             // 1000 是正常关闭的状态码
             ws.close(1000, "Normal closure")
+            ws = null
         }
     }
 
@@ -86,19 +87,22 @@ module.exports = (win, getClient) => {
 
         // 处理连接错误事件
         ws.on("error", (error) => {
+            isConnect = false
             // 错误时 三次重连失败后关闭
             reconnect()
         })
     })
 
-    // 关闭 WebSocket 服务器
-    ipcMain.handle("socket-send", (e) => {
+    // 发送 WebSocket 信息
+    ipcMain.handle("socket-send", (e, data) => {
         if (ws) {
-            ws.send(data)
+            // 将对象转换为 JSON 字符串
+            const dataString = JSON.stringify(data)
+            ws.send(dataString)
         }
     })
 
-    // // 关闭 WebSocket 服务器
+    // 关闭 WebSocket 服务器
     ipcMain.handle("socket-close", (e) => {
         onCloseSocket()
     })
