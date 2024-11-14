@@ -140,6 +140,7 @@ import {YakRunnerAuditCode} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import { YakRunnerProjectManager } from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
+import { RiskMisstatement } from "@/pages/risks/RiskMisstatement"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -192,6 +193,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-http-request": {label: "History"},
     "db-reports-results": {label: "报告"},
     "db-risks": {label: "漏洞"},
+    "db-risks-misstatement": {label: "误报记录"},
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
     cve: {label: "CVE 管理"},
@@ -238,6 +240,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DB_HTTPHistory,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
+    YakitRoute.DB_RiskMisstatement,
     YakitRoute.DB_Ports,
     YakitRoute.DB_Domain,
     YakitRoute.DB_CVE,
@@ -291,6 +294,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.SimpleDetect,
     YakitRoute.DB_Risk,
+    YakitRoute.DB_RiskMisstatement,
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
@@ -470,6 +474,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:
             return <RiskPage />
+        case YakitRoute.DB_RiskMisstatement:
+            return <RiskMisstatement />
         case YakitRoute.DB_Ports:
             return <PortAssetTable />
         case YakitRoute.DB_Domain:

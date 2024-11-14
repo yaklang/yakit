@@ -106,6 +106,12 @@ export enum RemoteGV {
     SinglePluginExecTabs = "single-plugin-exec-tabs",
     /**@name 启用webSocket压缩 */
     MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
+    /**@name 专项漏洞左侧tabs */
+    YakPocTabs = "yakpoc-tabs",
+    /**@name 误报上传是否提示 */
+    MisstatementNoPrompt = "misstatement-no-prompt",
+    /**@name MisstatementPage页面中,高级查询内容的显/隐 */
+    MisstatementQueryShow = "misstatement-query-show",
 }
 
 /** 项目逻辑全局变量 */
