@@ -315,8 +315,8 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
     )
 })
 /** 基础插件信息 / 日志 */
-const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
-    const {loading, messageList} = props
+export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
+    const {loading, messageList,wrapperClassName} = props
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
 
     const list: StreamResult.Log[] = useCreation(() => {
@@ -385,7 +385,7 @@ const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => 
                 activeKey={activeKey}
                 onChange={onTabChange}
                 type='line'
-                wrapperClassName={styles["plugin-execute-log"]}
+                wrapperClassName={classNames(styles["plugin-execute-log"],wrapperClassName)}
             >
                 {logTabs.map((ele) => (
                     <TabPane

@@ -10,7 +10,8 @@ export interface YakRunnerContextStore {
     projectName: string | undefined
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
-    auditRule: string
+    auditRule: string,
+    auditExecuting: boolean
 }
 
 export interface YakRunnerContextDispatcher {
@@ -21,6 +22,7 @@ export interface YakRunnerContextDispatcher {
     setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
     setAuditRule?: Dispatch<SetStateAction<string>>
+    setAuditExecuting?: Dispatch<SetStateAction<boolean>>
 }
 
 export interface YakRunnerContextValue {
@@ -35,7 +37,8 @@ export default createContext<YakRunnerContextValue>({
         projectName: undefined,
         areaInfo: [],
         activeFile: undefined,
-        auditRule: ""
+        auditRule: "",
+        auditExecuting: false
     },
     dispatcher: {
         setPageInfo: undefined,
@@ -44,6 +47,7 @@ export default createContext<YakRunnerContextValue>({
         handleFileLoadData: undefined,
         setAreaInfo: undefined,
         setActiveFile: undefined,
-        setAuditRule: undefined
+        setAuditRule: undefined,
+        setAuditExecuting: undefined
     }
 })

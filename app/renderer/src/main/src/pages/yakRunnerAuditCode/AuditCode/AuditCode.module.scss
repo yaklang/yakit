@@ -10,11 +10,16 @@
         height: 32px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 8px;
         .title {
             color: #85899e;
             font-size: 12px;
             font-weight: 500;
             line-height: 16px;
+        }
+        .extra {
+            flex: 1;
         }
     }
     .textarea-box {
@@ -35,6 +40,18 @@
     .audit-tree {
         flex: 1;
         overflow: hidden;
+    }
+    .audit-log{
+        flex: 1;
+        overflow: auto;
+        .audit-log-wrapper{
+            overflow: auto;
+            :global{
+                .ant-tabs-nav{
+                    display: none;
+                }
+            }
+        }
     }
 }
 

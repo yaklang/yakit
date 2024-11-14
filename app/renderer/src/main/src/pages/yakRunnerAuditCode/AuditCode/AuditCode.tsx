@@ -10,7 +10,7 @@ import {
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {YakScript} from "@/pages/invoker/schema"
-import {Divider, Form, FormInstance, Tooltip, Tree} from "antd"
+import {Divider, Form, FormInstance, Progress, Tooltip, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -21,7 +21,15 @@ import {
     onCodeToInfo,
     ParamsToGroupByGroupName
 } from "@/pages/plugins/editDetails/utils"
-import {useDebounceFn, useInViewport, useMemoizedFn, useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {
+    useDebounceFn,
+    useInterval,
+    useInViewport,
+    useMemoizedFn,
+    useSize,
+    useThrottleEffect,
+    useUpdateEffect
+} from "ahooks"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
@@ -77,6 +85,8 @@ import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtu
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {PluginExecuteLog} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import useDispatcher from "../hooks/useDispatcher"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -362,7 +372,8 @@ const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const {setOnlyFileTree} = props
-    const {projectName, pageInfo, auditRule} = useStore()
+    const {projectName, pageInfo, auditRule, auditExecuting} = useStore()
+    const {setAuditExecuting} = useDispatcher()
 
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
@@ -426,6 +437,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 setRefreshTree(!refreshTree)
                 resolve("")
             } else {
+                console.log("childArr---",childArr);
+                
                 const path = id
                 let params: AuditYakUrlProps = {
                     Schema: "syntaxflow",
@@ -444,6 +457,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 if (auditRule && (params?.Query || []).length > 0) {
                     params.Query = []
                 }
+                console.log("loadmore---", params, body)
+
                 const result = await loadAuditFromYakURLRaw(params, body)
 
                 if (result) {
@@ -521,13 +536,15 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         setExpandedKeys([`${pageInfo.Path}${Variable}`])
                     }
                 }
-                if (Query) {
-                    params.Query = Query
-                }
                 // 如若已输入代码审计框
                 if (auditRule && (params?.Query || []).length > 0) {
                     params.Query = []
                 }
+                if (Query) {
+                    params.Query = Query
+                }
+                console.log("loadAuditFromYakURLRaw", params, textArea)
+
                 const result = await loadAuditFromYakURLRaw(params, body)
                 if (result && result.Resources.length > 0) {
                     let messageIds: string[] = []
@@ -594,20 +611,21 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
     const tokenRef = useRef<string>(randomString(40))
     /** 是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
     const [runtimeId, setRuntimeId] = useState<string>("")
-    const [streamProgress, setStreamProgress] = useState<number>(0)
-    const pathCacheRef = useRef<string>("")
     const logInfoRef = useRef<StreamResult.Log[]>([])
+    const progressRef = useRef<number>(0)
+    const [resultInfo, setResultInfo] = useState<{progress: number; logState: StreamResult.Log[]}>()
+    const [interval, setInterval] = useState<number | undefined>()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
         token: tokenRef.current,
         onEnd: () => {
             debugPluginStreamEvent.stop()
+            setAuditExecuting && setAuditExecuting(false)
             setTimeout(() => {
-                setIsExecuting(false)
-            }, 300)
+                setInterval(undefined)
+            }, 500)
         },
         onError: () => {},
         setRuntimeId: (rId) => {
@@ -618,15 +636,28 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 
     useEffect(() => {
         const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+        progressRef.current = progress
+        logInfoRef.current = streamInfo.logState.slice(0, 8)
         // 当任务结束时
         if (streamInfo.logState[0]?.level === "json") {
             onCancelAuditStream()
             onAuditRuleSubmitFun("", [{Key: "result_id", Value: streamInfo.logState[0].data}])
             return
         }
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
-        setStreamProgress(progress)
     }, [streamInfo])
+
+    useInterval(
+        () => {
+            setResultInfo({
+                progress: progressRef.current,
+                logState: logInfoRef.current
+            })
+        },
+        interval,
+        {
+            immediate: true
+        }
+    )
 
     // 流式审计 PS:流式审计成功后，根据result_id走正常结构查询
     const onAuditStreamRuleSubmitFun = useMemoizedFn(async (textArea: string = "") => {
@@ -634,9 +665,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             warn("请输入规则")
             return
         }
-        // SyntaxFlow 规则执行
-        // bb
-        // this as $a
+        logInfoRef.current = []
+        progressRef.current = 0
         debugPluginStreamEvent.reset()
         setRuntimeId("")
         const requestParams: DebugPluginRequest = {
@@ -656,10 +686,14 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             ],
             PluginName: "SyntaxFlow 规则执行"
         }
+        console.log("requestParams---", requestParams)
+
         apiDebugPlugin({params: requestParams, token: tokenRef.current})
             .then(() => {
-                setIsExecuting(true)
+                setAuditExecuting && setAuditExecuting(true)
+                setOnlyFileTree(false)
                 debugPluginStreamEvent.start()
+                setInterval(500)
             })
             .catch(() => {
                 onAuditRuleSubmitFun(textArea)
@@ -667,20 +701,26 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     })
 
     const onCancelAuditStream = () => {
-        logInfoRef.current = []
         debugPluginStreamEvent.cancel()
         debugPluginStreamEvent.reset()
     }
 
+    // 停止
+    const onStopAuditRuleFun = useMemoizedFn(() => {
+        onCancelAuditStream()
+    })
+
     useEffect(() => {
         emiter.on("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
+        emiter.on("onStopAuditRule", onStopAuditRuleFun)
         return () => {
             emiter.off("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
+            emiter.off("onStopAuditRule", onStopAuditRuleFun)
         }
     }, [])
 
     useEffect(() => {
-        if (pageInfo) {
+        if (pageInfo?.Query) {
             // 页面跳转时，自动执行 无需流式审计
             onAuditRuleSubmitFun()
         } else {
@@ -729,20 +769,41 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
             <div className={styles["audit-code"]}>
                 <div className={styles["header"]}>
                     <div className={styles["title"]}>代码审计</div>
+                    {auditExecuting && (
+                        <div className={styles["extra"]}>
+                            <Progress
+                                strokeColor='#F28B44'
+                                trailColor='#F0F2F5'
+                                percent={Math.floor((resultInfo?.progress || 0) * 100)}
+                            />
+                        </div>
+                    )}
                 </div>
                 {isShowEmpty ? (
                     <div className={styles["no-data"]}>暂无数据</div>
                 ) : (
-                    <AuditTree
-                        data={auditDetailTree}
-                        expandedKeys={expandedKeys}
-                        setExpandedKeys={setExpandedKeys}
-                        onLoadData={onLoadData}
-                        foucsedKey={foucsedKey}
-                        setFoucsedKey={setFoucsedKey}
-                        onJump={onJump}
-                        bugId={bugId}
-                    />
+                    <>
+                        {auditExecuting ? (
+                            <div className={styles["audit-log"]}>
+                                <PluginExecuteLog
+                                    loading={auditExecuting}
+                                    messageList={resultInfo?.logState || []}
+                                    wrapperClassName={styles["audit-log-wrapper"]}
+                                />
+                            </div>
+                        ) : (
+                            <AuditTree
+                                data={auditDetailTree}
+                                expandedKeys={expandedKeys}
+                                setExpandedKeys={setExpandedKeys}
+                                onLoadData={onLoadData}
+                                foucsedKey={foucsedKey}
+                                setFoucsedKey={setFoucsedKey}
+                                onJump={onJump}
+                                bugId={bugId}
+                            />
+                        )}
+                    </>
                 )}
             </div>
         </YakitSpin>
@@ -1123,13 +1184,14 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
 }
 
 interface AuditHistoryTableProps {
+    pageType: "aucitCode" | "projectManager"
     onClose?: () => void
     onExecuteAudit?: () => void
     refresh?: boolean
 }
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
-    const {onClose, onExecuteAudit, refresh} = props
+    const {pageType, onClose, onExecuteAudit, refresh} = props
     const {projectName} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
     const [aduitData, setAduitData] = useState<RequestYakURLResponse>()
@@ -1297,8 +1359,24 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 type='text'
                                 icon={<OutlineArrowcirclerightIcon className={styles["to-icon"]} />}
                                 onClick={() => {
-                                    onClose && onClose()
-                                    emiter.emit("onCodeAuditOpenAuditTree", record.ResourceName)
+                                    if (pageType === "projectManager") {
+                                        // 跳转到审计页面的参数
+                                        const params: AuditCodePageInfoProps = {
+                                            Schema: "syntaxflow",
+                                            Location: record.ResourceName,
+                                            Path: `/`,
+                                        }
+                                        emiter.emit(
+                                            "openPage",
+                                            JSON.stringify({
+                                                route: YakitRoute.YakRunner_Audit_Code,
+                                                params
+                                            })
+                                        )
+                                    } else {
+                                        onClose && onClose()
+                                        emiter.emit("onCodeAuditOpenAuditTree", record.ResourceName)
+                                    }
                                 }}
                             />
                         </Tooltip>
@@ -1358,6 +1436,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 onExecuteAudit()
                                 return
                             }
+                            onClose && onClose()
                             emiter.emit("onExecuteAuditModal")
                         }}
                     >

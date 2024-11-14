@@ -14,14 +14,13 @@ import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 const {ipcRenderer} = window.require("electron")
 export interface RuleEditorBoxProps {
-    ruleEditor:string
-    setRuleEditor:(value:string)=>void
+    ruleEditor: string
+    setRuleEditor: (value: string) => void
+    disabled?: boolean
 }
 export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
-    const {ruleEditor, setRuleEditor} = props
-    const {projectName,pageInfo} = useStore()
-    
-    const [disabled, setDisabled] = useState<boolean>(false)
+    const {ruleEditor, setRuleEditor, disabled} = props
+    const {projectName, pageInfo} = useStore()
 
     // 获取文本域输入框
     const onGrpcSetTextArea = useMemoizedFn((arr: {Key: string; Value: number}[]) => {
@@ -55,21 +54,23 @@ export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
                         setRuleEditor(resData[0].RuleContent)
                     }
                 })
-                .catch(() => {})
+                .catch(() => {
+                    setRuleEditor("")
+                })
         }
     })
 
     useEffect(() => {
-        if (pageInfo) {
+        if (pageInfo && pageInfo.Query) {
             onGrpcSetTextArea(pageInfo.Query)
-        }else{
+        } else {
             setRuleEditor("")
         }
-    }, [pageInfo])
+    }, [pageInfo?.Query])
 
-    useUpdateEffect(()=>{
+    useUpdateEffect(() => {
         setRuleEditor("")
-    },[projectName])
+    }, [projectName])
 
     return (
         <YakitEditor

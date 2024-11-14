@@ -178,7 +178,7 @@ export interface AuditCodePageInfoProps {
     Value?: string
     // 正常操作查询
     Location: string
-    Query: {Key: string; Value: number}[]
+    Query?: {Key: string; Value: number}[]
 }
 
 export interface CodeScanPageInfoProps {

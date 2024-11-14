@@ -5542,3 +5542,32 @@ const PositionIcon = () => (
 export const OutlinePositionIcon = (props: Partial<IconProps>) => {
     return <Icon component={PositionIcon} {...props} />
 }
+
+const ReloadScanIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M3 6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M8 10L6.35355 11.6464C6.15829 11.8417 6.15829 12.1583 6.35355 12.3536L8 14'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path
+            d='M16 10L17.6464 11.6464C17.8417 11.8417 17.8417 12.1583 17.6464 12.3536L16 14'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+        />
+        <path d='M13 9L11 15' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+    </svg>
+)
+
+export const OutlineReloadScanIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ReloadScanIcon} {...props} />
+}

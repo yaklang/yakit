@@ -20,6 +20,7 @@ export interface VulnerabilitiesRisksTableProps {
 export interface PluginExecuteLogProps {
     loading: boolean
     messageList: StreamResult.Log[]
+    wrapperClassName?: string
 }
 
 export interface PluginExecuteResultTabContentProps {
