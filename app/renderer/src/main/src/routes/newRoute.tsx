@@ -146,7 +146,8 @@ import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {YakRunnerProjectManager} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
 import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
-import { YakRunnerAuditHole } from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
+import {YakRunnerAuditHole} from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
+import {Misstatement} from "@/pages/misstatement/Misstatement"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -201,6 +202,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-http-request": {label: "History"},
     "db-reports-results": {label: "报告"},
     "db-risks": {label: "漏洞"},
+    "misstatement": {label: "误报记录"},
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
     cve: {label: "CVE 管理"},
@@ -238,7 +240,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "rule-management": {label: "规则管理"},
     "notepad-manage": {label: "记事本"},
     "modify-notepad": {label: "编辑记事本"},
-    "yakrunner-audit-hole" : {label:"审计漏洞"}
+    "yakrunner-audit-hole": {label: "审计漏洞"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -251,6 +253,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.DB_HTTPHistory,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
+    YakitRoute.Misstatement,
     YakitRoute.DB_Ports,
     YakitRoute.DB_Domain,
     YakitRoute.DB_CVE,
@@ -307,6 +310,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Mod_Brute,
     YakitRoute.SimpleDetect,
     YakitRoute.DB_Risk,
+    YakitRoute.Misstatement,
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
@@ -493,6 +497,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:
             return <RiskPage />
+        case YakitRoute.Misstatement:
+            return <Misstatement />
         case YakitRoute.DB_Ports:
             return <PortAssetTable />
         case YakitRoute.DB_Domain:
