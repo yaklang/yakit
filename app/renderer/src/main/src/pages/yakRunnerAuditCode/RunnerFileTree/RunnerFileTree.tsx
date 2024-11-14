@@ -7,6 +7,7 @@ import {
     OutlinePluscircleIcon,
     OutlinePositionIcon,
     OutlineRefreshIcon,
+    OutlineReloadScanIcon,
     OutlineScanIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -63,7 +64,7 @@ import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
-    const {fileTreeLoad} = props
+    const {fileTreeLoad,boxHeight} = props
     const {fileTree, activeFile, projectName} = useStore()
     const {handleFileLoadData} = useDispatcher()
     const [visible, setVisible] = useState<boolean>(false)
@@ -260,12 +261,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
     })
 
-    const ref = useRef(null)
-    const getContainerSize = useSize(ref)
-    // 抽屉展示高度
-    const showHeight = useMemo(() => {
-        return getContainerSize?.height || 400
-    }, [getContainerSize])
+    
 
     // 关闭抽屉
     const onCloseDrawer = useMemoizedFn(() => {
@@ -273,7 +269,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     })
 
     return (
-        <div className={styles["runner-file-tree"]} ref={ref}>
+        <div className={styles["runner-file-tree"]} >
             <div className={styles["container"]}>
                 <OpenedFile />
 
@@ -297,7 +293,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                     <YakitButton
                                         disabled={fileTree.length === 0}
                                         type='text2'
-                                        icon={<OutlineScanIcon />}
+                                        icon={<OutlineReloadScanIcon />}
                                         onClick={() => {}}
                                     />
                                 </Tooltip>
@@ -344,18 +340,18 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 </div>
             </div>
             <YakitDrawer
-                getContainer={ref.current || undefined}
+                getContainer={undefined}
                 placement='bottom'
                 mask={false}
                 closable={false}
                 keyboard={false}
-                height={showHeight + 26}
+                height={boxHeight + 26}
                 visible={visible}
                 bodyStyle={{padding: 0}}
                 className={classNames(styles["audit-history-drawer"])}
                 onClose={onCloseDrawer}
             >
-                <AuditHistoryTable onClose={()=>setVisible(false)} />
+                <AuditHistoryTable pageType="aucitCode" onClose={()=>setVisible(false)} />
             </YakitDrawer>
         </div>
     )

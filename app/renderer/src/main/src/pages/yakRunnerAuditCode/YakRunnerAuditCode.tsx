@@ -64,6 +64,8 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -77,13 +79,21 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     /** ---------- 审计规则 ---------- */
     const [auditRule, setAuditRule] = useState<string>("")
+    /** ---------- 审计运行状态 ---------- */
+    const [auditExecuting, setAuditExecuting] = useState<boolean>(false)
 
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
 
+    const [isShowModal, setShowModal] = useState<boolean>(false)
     const setAuditCodePageInfo = useMemoizedFn((auditCodePageInfo: string) => {
         try {
+            if (auditExecuting) {
+                setShowModal(true)
+                return
+            }
             const newPageInfo: AuditCodePageInfoProps = JSON.parse(auditCodePageInfo)
             setPageInfo(newPageInfo)
+            setAuditRule("")
             const {Location} = newPageInfo
             setProjectName(Location)
             onInitTreeFun(`/${Location}`)
@@ -613,9 +623,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             projectName: projectName,
             areaInfo: areaInfo,
             activeFile: activeFile,
-            auditRule: auditRule
+            auditRule: auditRule,
+            auditExecuting: auditExecuting
         }
-    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
@@ -625,7 +636,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
             setActiveFile: setActiveFile,
-            setAuditRule: setAuditRule
+            setAuditRule: setAuditRule,
+            setAuditExecuting: setAuditExecuting
         }
     }, [])
 
@@ -723,6 +735,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                     </div>
 
                     {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
+                    <YakitHint
+                        visible={isShowModal}
+                        title={"代码审计执行中"}
+                        content={"请等待执行完成后重试"}
+                        okButtonProps={{style: {display: "none"}}}
+                        onCancel={() => setShowModal(false)}
+                    />
                 </div>
             </YakRunnerContext.Provider>
         </WaterMark>

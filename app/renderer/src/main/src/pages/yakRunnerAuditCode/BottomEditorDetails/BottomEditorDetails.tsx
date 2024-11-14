@@ -23,7 +23,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-    const {projectName} = useStore()
+    const {projectName, auditExecuting} = useStore()
     const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -69,6 +69,10 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         emiter.emit("onAuditRuleSubmit", ruleEditor)
     })
 
+    const onStopAuditRule = useMemoizedFn(() => {
+        emiter.emit("onStopAuditRule")
+    })
+
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -94,9 +98,25 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
                 <div className={styles["extra"]}>
                     {showItem === "ruleEditor" && (
-                        <YakitButton icon={<PaperAirplaneIcon />} onClick={onAuditRuleSubmit} disabled={!projectName}>
-                            开始审计
-                        </YakitButton>
+                        <>
+                            {auditExecuting ? (
+                                <YakitButton
+                                    danger
+                                    icon={<PaperAirplaneIcon />}
+                                    onClick={onStopAuditRule}
+                                >
+                                    暂停执行
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    icon={<PaperAirplaneIcon />}
+                                    onClick={onAuditRuleSubmit}
+                                    disabled={!projectName || ruleEditor.length === 0}
+                                >
+                                    开始审计
+                                </YakitButton>
+                            )}
+                        </>
                     )}
                     <YakitButton
                         type='text2'
@@ -114,7 +134,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "ruleEditor"
                         })}
                     >
-                        <RuleEditorBox ruleEditor={ruleEditor} setRuleEditor={setRuleEditor} />
+                        <RuleEditorBox ruleEditor={ruleEditor} setRuleEditor={setRuleEditor} disabled={auditExecuting}/>
                     </div>
                 )}
                 {showType.includes("holeDetail") && (

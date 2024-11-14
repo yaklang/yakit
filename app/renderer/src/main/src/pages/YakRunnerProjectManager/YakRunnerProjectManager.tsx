@@ -40,6 +40,7 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <div className={styles["yakrunner-project-manager"]} id='yakrunner-project-manager'>
                 <AuditHistoryTable
+                pageType="projectManager"
                     onExecuteAudit={() => {
                         setShowCompileModal(true)
                     }}

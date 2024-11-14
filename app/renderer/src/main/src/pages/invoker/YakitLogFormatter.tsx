@@ -165,7 +165,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                     <div className={styles["log-info"]}>
                         {showTime && <span className={styles["log-time"]}>{formatTime(timestamp)}</span>}
                         <span style={{margin: "0 4px"}}>·</span>
-                        <span>{data}</span>
+                        <span style={{whiteSpace:"pre-wrap"}}>{data}</span>
                     </div>
                 )
         }

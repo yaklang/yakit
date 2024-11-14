@@ -62,7 +62,6 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
         }
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            console.log("审计树获取---", params, res)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve({res, data})
         } catch (error) {
