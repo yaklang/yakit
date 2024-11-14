@@ -1,5 +1,5 @@
 import {IMonacoCodeEditor, IMonacoEditor} from "../../utils/editors"
-import {RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand"
+import {IntFree, RandInt, RandStrWithLen, RandStrWithMax, RandStrWIthRepeat} from "./templates/Rand"
 import {FuzzWithRange, RangeChar} from "./templates/Range"
 import {EncodeTag, SingleTag} from "./templates/SingleTag"
 import {IRange} from "monaco-editor"
@@ -67,6 +67,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return (
                 <SingleTag
+                    key={"生成一个字符"}
                     help={"生成一个字符，例如 {{char(a-z)}}，使用 - 作为分割，解析前后 char 并生成此间范围"}
                     origin={origin}
                     setOrigin={setOrigin}
@@ -87,6 +88,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return (
                 <SingleTag
+                    key={"重复一个空字符串"}
                     help={"控制重复执行次数的 Tag，一般 {{repeat(10)}} 指的是整体重复生成 10 次数据"}
                     origin={origin}
                     setOrigin={setOrigin}
@@ -107,6 +109,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return (
                 <SingleTag
+                    key={"重复生成字符串"}
                     help={"控制重复渲染一定次数的数据，以 |n 来输入次数，一般 {{repeatstr(abc|3)}} 渲染为 abcabcabc"}
                     origin={origin}
                     setOrigin={setOrigin}
@@ -127,6 +130,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return (
                 <SingleTag
+                    key={"构造数组（列表）"}
                     origin={origin}
                     setOrigin={setOrigin}
                     enableInput={true}
@@ -145,7 +149,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
             monacoEditorWrite(editor, "{{rs(6)}}")
         },
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
-            return <RandStrWithLen setOrigin={setOrigin} origin={origin} />
+            return <RandStrWithLen key={"随机字符串(固定长度)"} setOrigin={setOrigin} origin={origin} />
         }
     },
     {
@@ -154,7 +158,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
             monacoEditorWrite(editor, "{{rs(6)}}")
         },
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
-            return <RandStrWithMax setOrigin={setOrigin} origin={origin} />
+            return <RandStrWithMax key={"随机字符串(指定长度)"} setOrigin={setOrigin} origin={origin} />
         }
     },
     {
@@ -163,21 +167,17 @@ export const fuzzOperators: FuzzOperatorItem[] = [
             monacoEditorWrite(editor, "{{rs(6)}}")
         },
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
-            return <RandStrWIthRepeat setOrigin={setOrigin} origin={origin} />
+            return <RandStrWIthRepeat key={"随机字符串(多次渲染)"} setOrigin={setOrigin} origin={origin} />
         }
     },
     {
         name: "整数(自由范围) - 也可用于端口",
-        callback: (editor) => {},
+        callback: (editor) => {
+            monacoEditorWrite(editor, "{{int()}}")
+        },
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
             return (
-                <Form.Item label={"输入范围"}>
-                    <YakitInput
-                        onChange={(v) => {
-                            setOrigin(`{{int(${v.target.value})}}`)
-                        }}
-                    />
-                </Form.Item>
+                <IntFree key="整数(自由范围) - 也可用于端口" setOrigin={setOrigin} />
             )
         }
     },
@@ -185,7 +185,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         name: "随机整数(范围)",
         callback: (editor) => {},
         optionsRender: (origin: string, setOrigin: (s: string) => any) => {
-            return <RandInt {...{origin, setOrigin}} />
+            return <RandInt {...{origin, setOrigin}} key="随机整数(范围)" />
         }
     },
     {
@@ -193,6 +193,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => (
             <FuzzWithRange
+                key="IP/IP段/网络/域名(多个，逗号分隔)"
                 label={"IP/网段/域名组"}
                 origin={origin}
                 setOrigin={setOrigin}
@@ -206,7 +207,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => {
             return (
-                <SingleTag {...{origin, setOrigin}} help={"生成一个 .ico 文件的文件头，一般用于上传文件"} tag={"ico"} />
+                <SingleTag key="生成 .ico 文件头" {...{origin, setOrigin}} help={"生成一个 .ico 文件的文件头，一般用于上传文件"} tag={"ico"} />
             )
         },
         tag: "ico"
@@ -216,7 +217,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => {
             return (
-                <SingleTag {...{origin, setOrigin}} help={"生成一个 .png 文件的文件头，一般用于上传文件"} tag={"png"} />
+                <SingleTag key="生成 .png 文件头" {...{origin, setOrigin}} help={"生成一个 .png 文件的文件头，一般用于上传文件"} tag={"png"} />
             )
         },
         tag: "png"
@@ -226,7 +227,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => {
             return (
-                <SingleTag {...{origin, setOrigin}} help={"生成一个 .gif 文件的文件头，一般用于上传文件"} tag={"gif"} />
+                <SingleTag key="生成 .gif 文件头" {...{origin, setOrigin}} help={"生成一个 .gif 文件的文件头，一般用于上传文件"} tag={"gif"} />
             )
         },
         tag: "gif"
@@ -237,6 +238,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin, setOrigin) => {
             return (
                 <SingleTag
+                    key="生成 .tiff 文件头"
                     {...{origin, setOrigin}}
                     help={"生成一个 .tiff 文件的文件头，一般用于上传文件"}
                     tag={"tiff"}
@@ -251,6 +253,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin, setOrigin) => {
             return (
                 <SingleTag
+                    key="生成 .jpeg(jpg) 文件头"
                     {...{origin, setOrigin}}
                     help={"生成一个 .jpeg/jpg 文件的文件头，一般用于上传文件"}
                     tag={"jpegstart"}
@@ -265,6 +268,7 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         optionsRender: (origin, setOrigin) => {
             return (
                 <SingleTag
+                    key="生成 .jpeg(jpg) 文件尾"
                     {...{origin, setOrigin}}
                     help={"生成一个 .jpeg/jpg 文件的文件尾，一般用于上传文件"}
                     tag={"jpegend"}
@@ -277,14 +281,14 @@ export const fuzzOperators: FuzzOperatorItem[] = [
         name: "任意字符（ASCII码范围）",
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => {
-            return <RangeChar {...{origin, setOrigin}} />
+            return <RangeChar key="任意字符（ASCII码范围）" {...{origin, setOrigin}} />
         }
     },
     {
         name: "生成所有特殊字符",
         callback: (editor) => {},
         optionsRender: (origin, setOrigin) => {
-            return <SingleTag {...{origin, setOrigin}} help={"生成所有特殊字符，一般用于模糊测试"} tag={"punc"} />
+            return <SingleTag key="生成所有特殊字符" {...{origin, setOrigin}} help={"生成所有特殊字符，一般用于模糊测试"} tag={"punc"} />
         },
         tag: "punc"
     }

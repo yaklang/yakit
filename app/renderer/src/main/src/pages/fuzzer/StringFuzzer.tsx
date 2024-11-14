@@ -18,6 +18,7 @@ import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
+import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {Text} = Typography
 const {ipcRenderer} = window.require("electron")
@@ -210,7 +211,7 @@ export const StringFuzzer: React.FC<StringFuzzerProp> = (props) => {
         <Spin spinning={loading}>
             <Space direction={"vertical"} style={{width: "100%"}} size={24}>
                 <div style={{height: 120}}>
-                    <YakEditor type={"http"} value={template} readOnly={false} setValue={setTemplate} />
+                    <YakitEditor type={"http"} value={template} readOnly={false} setValue={setTemplate} />
                 </div>
                 <Form
                     layout={"horizontal"}
