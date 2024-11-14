@@ -20,11 +20,12 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {TempExampleHelp, TempExampleInfo, tempExampleList} from "./TempExampleHelp"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {Qadocument, qaDocumentLableList} from "./Qadocument"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
-
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
 }
@@ -271,7 +272,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         })
         /** ---------- 插件配置逻辑 End ---------- */
 
-        /** ---------- 模板案例 Start ---------- */
+        /** ---------- 案例文档 Start ---------- */
+        const [documentType, setDocumentType] = useState<number>(1)
         const [searchTempExampleVal, setSearchTempExampleVal] = useState<string>("")
         const renderTempExampleList = useMemo(() => {
             return searchTempExampleVal
@@ -293,7 +295,29 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 content: <TempExampleHelp tempExampleItem={tempExampleItem} />
             })
         }
-        /** ---------- 模板案例 End ---------- */
+
+        const [searchQaDocumentVal, setSearchQaDocumentVal] = useState<string>("")
+        const renderQaDocumentList = useMemo(() => {
+            return searchQaDocumentVal
+                ? qaDocumentLableList.filter((label) =>
+                      label.toLocaleLowerCase().includes(searchQaDocumentVal.toLocaleLowerCase())
+                  )
+                : qaDocumentLableList
+        }, [searchQaDocumentVal, qaDocumentLableList])
+        const onOpenQaDocModal = (label: string) => {
+            const m = showYakitModal({
+                title: "常见问题",
+                type: "white",
+                width: "60vw",
+                centered: true,
+                cancelButtonProps: {style: {display: "none"}},
+                onOkText: "我知道了",
+                onOk: () => m.destroy(),
+                bodyStyle: {padding: "8px 24px"},
+                content: <Qadocument label={label} />
+            })
+        }
+        /** ---------- 案例文档 End ---------- */
 
         return (
             <div className={styles["editor-info-form"]}>
@@ -464,36 +488,93 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     )}
                 </Form>
 
-                {/* 模板案例 */}
+                {/* 案例文档 */}
                 <div className={styles["temp-example-wrapper"]}>
                     <div className={styles["temp-example-title-wrapper"]}>
-                        <span className={styles["temp-example-title-text"]}>模板案例 :</span>
+                        <YakitRadioButtons
+                            size='small'
+                            value={documentType}
+                            onChange={(e) => {
+                                setDocumentType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: 1,
+                                    label: "模板案例"
+                                },
+                                {
+                                    value: 2,
+                                    label: "常见问题"
+                                }
+                            ]}
+                        />
                     </div>
-                    <div className={styles["temp-example-search-wrapper"]}>
-                        <YakitInput.Search allowClear={true} onSearch={(value) => setSearchTempExampleVal(value)} />
-                    </div>
-                    <div className={styles["temp-example-list-wrapper"]}>
-                        {renderTempExampleList.length ? (
-                            <>
-                                {renderTempExampleList.map((item) => (
-                                    <div
-                                        className={styles["temp-example-list-item"]}
-                                        key={item.label}
-                                        onClick={() => onOpenHelpModal(item)}
-                                    >
-                                        <div className={styles["temp-example-item-left-wrapper"]}>
-                                            <div className={styles["temp-example-item-label"]} title={item.label}>
-                                                {item.label}
+                    {documentType === 1 ? (
+                        <>
+                            <div className={styles["temp-example-search-wrapper"]}>
+                                <YakitInput.Search
+                                    allowClear={true}
+                                    onSearch={(value) => setSearchTempExampleVal(value)}
+                                />
+                            </div>
+                            <div className={styles["temp-example-list-wrapper"]}>
+                                {renderTempExampleList.length ? (
+                                    <>
+                                        {renderTempExampleList.map((item) => (
+                                            <div
+                                                className={styles["temp-example-list-item"]}
+                                                key={item.label}
+                                                onClick={() => onOpenHelpModal(item)}
+                                            >
+                                                <div className={styles["temp-example-item-left-wrapper"]}>
+                                                    <div
+                                                        className={styles["temp-example-item-label"]}
+                                                        title={item.label}
+                                                    >
+                                                        {item.label}
+                                                    </div>
+                                                </div>
+                                                <div className={styles["temp-example-item-desc"]}>{item.desc}</div>
                                             </div>
-                                        </div>
-                                        <div className={styles["temp-example-item-desc"]}>{item.desc}</div>
-                                    </div>
-                                ))}
-                            </>
-                        ) : (
-                            <YakitEmpty></YakitEmpty>
-                        )}
-                    </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <YakitEmpty></YakitEmpty>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className={styles["temp-example-search-wrapper"]}>
+                                <YakitInput.Search
+                                    allowClear={true}
+                                    onSearch={(value) => setSearchQaDocumentVal(value)}
+                                />
+                            </div>
+                            <div className={styles["document-list-wrapper"]}>
+                                {renderQaDocumentList.length ? (
+                                    <>
+                                        {renderQaDocumentList.map((label) => (
+                                            <div
+                                                className={styles["document-list-item"]}
+                                                key={label}
+                                                onClick={() => onOpenQaDocModal(label)}
+                                            >
+                                                <div className={styles["document-item-left-wrapper"]}>
+                                                    <div className={styles["document-item-label"]} title={label}>
+                                                        {label}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <YakitEmpty></YakitEmpty>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
                 <YakitHint
                     visible={typeSwitchPopShow}

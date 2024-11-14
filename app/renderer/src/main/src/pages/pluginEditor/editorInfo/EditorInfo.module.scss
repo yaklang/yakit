@@ -242,6 +242,48 @@
             }
         }
     }
+    .document-list-wrapper {
+        overflow-y: overlay;
+        flex: 1;
+        .document-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            cursor: pointer;
+            &:not(:first-child) {
+                border-top: 1px solid var(--yakit-border-color);
+            }
+            &:last-child {
+                border-bottom: 1px solid var(--yakit-border-color);
+            }
+            .document-item-left-wrapper {
+                width: 100%;
+                display: flex;
+                align-items: center;
+
+                gap: 4px;
+                .document-item-label {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-size: 14px;
+                }
+            }
+            &:hover {
+                border-color: transparent;
+                border-radius: 8px;
+                background-color: #f8f8f8;
+                & + .document-list-item {
+                    border-top-color: transparent;
+                }
+                .document-item-desc {
+                    visibility: visible;
+                }
+            }
+        }
+    }
 }
 .temp-example-help-body {
     height: 100%;
