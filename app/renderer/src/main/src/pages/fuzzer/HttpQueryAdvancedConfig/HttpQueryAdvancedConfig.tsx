@@ -49,7 +49,6 @@ import {YakitFormDraggerContent} from "@/components/yakitUI/YakitForm/YakitForm"
 import {OutlineBadgecheckIcon} from "@/assets/icon/outline"
 import {CacheDropDownGV} from "@/yakitGV"
 import {ExtractorsPanel, MatchersPanel, MatchersPanelEditProps, VariablePanel} from "./FuzzerConfigPanels"
-import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     matcherTypeList,
     extractorTypeList,
@@ -489,7 +488,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     type='horizontal'
                                     size='small'
                                     min={1}
-                                    max={DefFuzzerTableMaxData}
+                                    max={20000}
                                     disabled={!isbuttonIsSendReqStatus}
                                 />
                             </Form.Item>

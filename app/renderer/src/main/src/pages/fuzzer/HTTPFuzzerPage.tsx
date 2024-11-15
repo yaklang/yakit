@@ -849,7 +849,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setSuccessCount(0)
         setFailedCount(0)
         setRuntimeId("")
-        setFuzzerTableMaxData(DefFuzzerTableMaxData)
     })
 
     const retryRef = useRef<boolean>(false)
