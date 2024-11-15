@@ -392,11 +392,11 @@ export const updateFileTree: (
 /**
  * @name 语法检查
  */
-export const onSyntaxCheck = (code: string) => {
+export const onSyntaxCheck = (code: string, type :string) => {
     return new Promise(async (resolve, reject) => {
         // StaticAnalyzeError
         ipcRenderer
-            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
+            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: type})
             .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
                 if (e && e.Result.length > 0) {
                     const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
@@ -702,8 +702,8 @@ export const addAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailInfo,
 export const getDefaultActiveFile = async (info: FileDetailInfo) => {
     let newActiveFile = info
     // 注入语法检查结果
-    if (newActiveFile.language === "yak") {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
+    if (newActiveFile.language === YaklangMonacoSpec || newActiveFile.language === SyntaxFlowMonacoSpec) {
+        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code, newActiveFile.language)) as IMonacoEditorMarker[]
         if (syntaxCheck) {
             newActiveFile = {...newActiveFile, syntaxCheck}
         }

@@ -61,7 +61,7 @@ import {openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 import {createRoot} from "react-dom/client"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {setEditorContext, YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -70,6 +70,7 @@ import {useStore} from "@/store/editorState"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
+import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
 
 export interface CodecTypeProps {
     key?: string
@@ -1095,7 +1096,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     /** Yak语言 代码错误检查并显示提示标记 */
     const yakStaticAnalyze = useDebounceFn(
         useMemoizedFn((editor: YakitIMonacoEditor, model: YakitITextModel) => {
-            if (language === "yak") {
+            if (language === YaklangMonacoSpec || language === SyntaxFlowMonacoSpec) {
                 const allContent = model.getValue()
                 ipcRenderer
                     .invoke("StaticAnalyzeError", {Code: StringToUint8Array(allContent), PluginType: type})
