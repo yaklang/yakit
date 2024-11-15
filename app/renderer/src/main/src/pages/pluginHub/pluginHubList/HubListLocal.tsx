@@ -2,6 +2,7 @@ import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "rea
 import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useDebounceEffect} from "ahooks"
 import {
     OutlineClouduploadIcon,
+    OutlineExclamationcircleIcon,
     OutlinePluscircleIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
@@ -72,6 +73,7 @@ import {UpdateGroupList, UpdateGroupListItem} from "../group/UpdateGroupList"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ListDelGroupConfirmPop} from "../group/PluginOperationGroupList"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -1079,6 +1081,13 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             }
                             listHeaderRightExtra={
                                 <div className={styles["hub-list-header-right-extra"]}>
+                                    <YakitCheckbox>
+                                        不下载{" "}
+                                        <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
+                                            <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                                        </Tooltip>
+                                    </YakitCheckbox>
+                                    <div className={styles["divider-style"]}></div>
                                     {showGroupList.length > 0 && (
                                         <div className={styles["header-filter-tag"]}>
                                             {showGroupList.length <= 2 ? (
