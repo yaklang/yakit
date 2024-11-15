@@ -488,7 +488,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     type='horizontal'
                                     size='small'
                                     min={1}
-                                    max={20000}
+                                    max={50000}
                                     disabled={!isbuttonIsSendReqStatus}
                                 />
                             </Form.Item>
