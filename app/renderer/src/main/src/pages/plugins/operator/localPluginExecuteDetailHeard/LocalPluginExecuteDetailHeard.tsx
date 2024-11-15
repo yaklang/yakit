@@ -723,6 +723,9 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     <YakitEditor type={language} readOnly={disabled} />
                 </Form.Item>
             )
+        case "json":
+            console.log("item: ", item );
+            return <></>
         default:
             return <></>
     }

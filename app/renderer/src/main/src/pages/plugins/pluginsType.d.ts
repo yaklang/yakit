@@ -73,6 +73,7 @@ export interface YakParamProps {
     Group?: string
     /** 后端自定义内容 */
     MethodType?: string
+    JsonSchema?:string
     /** 值 */
     Value?: any
 
