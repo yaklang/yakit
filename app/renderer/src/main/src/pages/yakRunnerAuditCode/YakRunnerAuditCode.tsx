@@ -641,14 +641,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     }, [])
 
-    const [bugHash, setBugHash] = useState<string>()
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
-
-    const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
-        setBugHash(hash)
-        setAuditRightParams(undefined)
-        setShowAuditDetail(true)
-    })
 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {

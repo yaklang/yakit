@@ -462,7 +462,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const unTitleCountRef = useRef<number>(1)
 
     const addFileTab = useThrottleFn(
-        (e, params?: {name: string; code: string}) => {
+        (e?: any, params?: {name: string; code: string}) => {
             // 新建临时文件
             const scratchFile: FileDetailInfo = {
                 name: `Untitle-${unTitleCountRef.current}.yak`,
