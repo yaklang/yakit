@@ -724,6 +724,12 @@ service Yak {
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   // query result 
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
+
+  rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
+  rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
+  rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
+  rpc SetPluginEnv(PluginEnvData) returns (Empty); // create or update
+  rpc DeletePluginEnv(DeletePluginEnvRequest) returns (Empty);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -5617,4 +5623,17 @@ message SyntaxFlowResult {
   uint64 RiskCount = 11; 
 
   string RuleContent = 12;
+}
+
+message QueryPluginEnvRequest {
+  repeated string Key = 1;
+}
+
+message PluginEnvData {
+  repeated KVPair Env = 1;
+}
+
+message DeletePluginEnvRequest {
+  string key = 1;
+  bool All = 2;
 }
