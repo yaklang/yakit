@@ -1,7 +1,8 @@
 const {ipcMain} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 const {USER_INFO} = require("../state")
-const fs = require('fs');
+const fs = require("fs")
+
 module.exports = (win, getClient) => {
     // get plugins risk list
     const asyncGetRiskList = (params) => {
@@ -71,8 +72,8 @@ module.exports = (win, getClient) => {
     let importYakScriptStream
     ipcMain.handle("ImportYakScriptStream", async (e, params) => {
         try {
-            const data = fs.readFileSync(params.Filename, null);
-            const uint8Array = new Uint8Array(data);
+            const data = fs.readFileSync(params.Filename, null)
+            const uint8Array = new Uint8Array(data)
             params.Data = uint8Array
             importYakScriptStream = getClient().ImportYakScriptStream(params)
             importYakScriptStream.on("data", (e) => {
@@ -85,7 +86,7 @@ module.exports = (win, getClient) => {
                 if (!win) {
                     return
                 }
-                win.webContents.send("import-yak-script-error", { message: e.message })
+                win.webContents.send("import-yak-script-error", {message: e.message})
             })
             importYakScriptStream.on("end", () => {
                 importYakScriptStream.cancel()
@@ -99,7 +100,7 @@ module.exports = (win, getClient) => {
             if (!win) {
                 return
             }
-            win.webContents.send("import-yak-script-error", { message: error.message })
+            win.webContents.send("import-yak-script-error", {message: error.message})
             win.webContents.send("import-yak-script-end")
         }
     })
@@ -182,5 +183,85 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("DownloadOnlinePluginByUUID", async (e, params) => {
         return await asyncDownloadOnlinePluginByUUID(params)
+    })
+
+    // 查询全部插件环境变量
+    const asyncGetAllPluginEnv = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllPluginEnv(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllPluginEnv", async (e) => {
+        return await asyncGetAllPluginEnv()
+    })
+
+    // 查询传入的插件环境变量名对应的值
+    const asyncQueryPluginEnv = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryPluginEnv(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryPluginEnv", async (e, params) => {
+        return await asyncQueryPluginEnv(params)
+    })
+
+    // 批量创建插件环境变量
+    const asyncCreatePluginEnv = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreatePluginEnv(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("CreatePluginEnv", async (e, params) => {
+        return await asyncCreatePluginEnv(params)
+    })
+
+    // 批量设置插件环境变量
+    const asyncSetPluginEnv = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetPluginEnv(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetPluginEnv", async (e, params) => {
+        return await asyncSetPluginEnv(params)
+    })
+
+    // 删除插件环境变量
+    const asyncDeletePluginEnv = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeletePluginEnv(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeletePluginEnv", async (e, params) => {
+        return await asyncDeletePluginEnv(params)
     })
 }
