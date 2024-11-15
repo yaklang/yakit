@@ -42,6 +42,7 @@ import {
     PrivateOutlinePluginStoreIcon,
     PrivateOutlinePocIcon,
     PrivateOutlinePortsIcon,
+    PrivateOutlineProjectManagerIcon,
     PrivateOutlineReportIcon,
     PrivateOutlineReverseServerIcon,
     PrivateOutlineRiskIcon,
@@ -71,6 +72,7 @@ import {
     PrivateSolidPluginStoreIcon,
     PrivateSolidPocIcon,
     PrivateSolidPortsIcon,
+    PrivateSolidProjectManagerIcon,
     PrivateSolidReportIcon,
     PrivateSolidReverseServerIcon,
     PrivateSolidRiskIcon,
@@ -989,8 +991,8 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     },
     [YakitRoute.YakRunner_Project_Manager]: {
         page: YakitRoute.YakRunner_Project_Manager,
-        icon: <PrivateOutlineAuditCodeIcon />,
-        hoverIcon: <PrivateSolidAuditCodeIcon />,
+        icon: <PrivateOutlineProjectManagerIcon />,
+        hoverIcon: <PrivateSolidProjectManagerIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Project_Manager]
     },
     [YakitRoute.YakRunner_Code_Scan]: {

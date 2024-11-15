@@ -380,6 +380,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    // 已审计的参数Query用于加载更多时使用
+    const runQueryRef = useRef<{
+        Key: string;
+        Value: number;
+    }[]>()
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
         return ids.map((id) => {
@@ -453,10 +458,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         Path: path
                     }
                 }
-                // 如若已输入代码审计框
-                if (auditRule && (params?.Query || []).length > 0) {
-                    params.Query = []
-                }
+                // 沿用审计时的Query值
+                params.Query = runQueryRef.current
                 console.log("loadmore---", params, body)
 
                 const result = await loadAuditFromYakURLRaw(params, body)
@@ -543,8 +546,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 if (Query) {
                     params.Query = Query
                 }
+                runQueryRef.current = params.Query
                 console.log("loadAuditFromYakURLRaw", params, textArea)
-
                 const result = await loadAuditFromYakURLRaw(params, body)
                 if (result && result.Resources.length > 0) {
                     let messageIds: string[] = []
