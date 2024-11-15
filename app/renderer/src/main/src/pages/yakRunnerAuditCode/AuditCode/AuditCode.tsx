@@ -381,15 +381,17 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
     // 已审计的参数Query用于加载更多时使用
-    const runQueryRef = useRef<{
-        Key: string;
-        Value: number;
-    }[]>()
+    const runQueryRef = useRef<
+        {
+            Key: string
+            Value: number
+        }[]
+    >()
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
         return ids.map((id) => {
             const itemDetail = getMapAuditDetail(id)
-            let obj: AuditNodeProps = {...itemDetail, depth}
+            let obj: AuditNodeProps = {...itemDetail, depth, query: runQueryRef.current}
             const childArr = getMapAuditChildDetail(id)
 
             if (itemDetail.ResourceType === "variable" || itemDetail.ResourceType === TopId) {
@@ -442,8 +444,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 setRefreshTree(!refreshTree)
                 resolve("")
             } else {
-                console.log("childArr---",childArr);
-                
                 const path = id
                 let params: AuditYakUrlProps = {
                     Schema: "syntaxflow",
@@ -762,6 +762,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     ...rest,
                     Path: node.id
                 }
+            }
+            if(node.query){
+                rightParams.Query = node.query
             }
             emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
         }
@@ -1367,7 +1370,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         const params: AuditCodePageInfoProps = {
                                             Schema: "syntaxflow",
                                             Location: record.ResourceName,
-                                            Path: `/`,
+                                            Path: `/`
                                         }
                                         emiter.emit(
                                             "openPage",

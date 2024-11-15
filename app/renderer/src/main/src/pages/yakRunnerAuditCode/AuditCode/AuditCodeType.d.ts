@@ -73,6 +73,12 @@ export interface AuditNodeProps {
     ResourceType: string
     VerboseType: string
     Size: number
+
+    // 请求Query
+    query?:{
+        Key: string;
+        Value: number;
+    }[]
 }
 
 export interface AuditYakUrlProps {
