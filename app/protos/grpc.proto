@@ -2093,6 +2093,7 @@ message YaklangInspectInformationResponse {
   repeated YakRiskInfo RiskInfo = 3;
   repeated YakUIInfo UIInfo = 4;
   repeated string Tags = 5;
+  repeated string PluginEnvKey = 6;
 }
 
 message YakUIInfo {
@@ -3974,6 +3975,7 @@ message YakScript {
   repeated Collaborator CollaboratorInfo = 35;
   repeated YakRiskInfo RiskInfo = 36;
   bool IsUpdate = 37;
+  repeated string PluginEnvKey =38;
 }
 
 message Collaborator {
@@ -4004,6 +4006,7 @@ message SaveNewYakScriptRequest {
   string RiskAnnotation = 19;
   int64 Id = 20;
   repeated YakRiskInfo RiskInfo = 21;
+  repeated string PluginEnvKey = 22;
 }
 
 message SaveYakScriptToOnlineRequest {
