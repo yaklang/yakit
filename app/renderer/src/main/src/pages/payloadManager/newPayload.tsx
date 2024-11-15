@@ -2536,7 +2536,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                                         hiddenHeader: true,
                                                         content: (
                                                             <CreateDictionaries
-                                                                title='扩充到护网专用工具'
+                                                                title={`扩充到 ${inputName}`}
                                                                 type='payload'
                                                                 onQueryGroup={onQueryGroup}
                                                                 folder={folder}
@@ -3091,7 +3091,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                     hiddenHeader: true,
                                     content: (
                                         <CreateDictionaries
-                                            title='扩充到护网专用工具'
+                                            title={`扩充到 ${group}`}
                                             type='payload'
                                             onQueryGroup={() => emiter.emit("refreshListEvent")}
                                             group={group}
