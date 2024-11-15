@@ -5,12 +5,7 @@ import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
 import {
     OutlineAnnotationIcon,
-    OutlineCodeIcon,
-    OutlineDeprecatedIcon,
-    OutlineExclamationIcon,
-    OutlineInformationcircleIcon,
-    OutlineStethoscopeIcon,
-    OutlineXcircleIcon
+    OutlineScanRuleEditIcon,
 } from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
 
@@ -42,7 +37,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         onOpenEditorDetails("ruleEditor")
                     }}
                 >
-                    <OutlineAnnotationIcon />
+                    <OutlineScanRuleEditIcon />
                     规则编写
                 </div>
                 <div

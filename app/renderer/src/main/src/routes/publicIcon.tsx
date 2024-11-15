@@ -2682,3 +2682,30 @@ const PublicCodeScan = () => (
 export const PublicCodeScanIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicCodeScan} {...props} />
 }
+
+const PublicProjectManager = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='44' height='44' viewBox='0 0 44 44' fill='none'>
+        <rect
+            x='27.4539'
+            y='7.83624'
+            width='8'
+            height='30'
+            rx='2'
+            transform='rotate(-6 27.4539 7.83624)'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeLinecap='round'
+        />
+        <rect x='6' y='7.33624' width='8' height='30' rx='2' stroke='#31343F' strokeLinecap='round' />
+        <rect x='8' y='13.8362' width='4' height='3' rx='1.5' fill='#F28B44' stroke='#31343F' strokeLinecap='round' />
+        <rect x='8' y='20.8362' width='4' height='3' rx='1.5' fill='#F28B44' stroke='#31343F' strokeLinecap='round' />
+        <rect x='8' y='27.8362' width='4' height='3' rx='1.5' stroke='#31343F' strokeLinecap='round' />
+        <rect x='17' y='7.33624' width='8' height='30' rx='2' stroke='#31343F' strokeLinecap='round' />
+        <rect x='19' y='13.8362' width='4' height='3' rx='1.5' stroke='#F28B44' strokeLinecap='round' />
+        <rect x='19' y='20.8362' width='4' height='3' rx='1.5' stroke='#31343F' strokeLinecap='round' />
+    </svg>
+)
+
+export const PublicProjectManagerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicProjectManager} {...props} />
+}

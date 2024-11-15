@@ -18,6 +18,7 @@ import {
     PublicPluginStoreIcon,
     PublicPocIcon,
     PublicPortsIcon,
+    PublicProjectManagerIcon,
     PublicReportIcon,
     PublicReverseServerIcon,
     PublicRiskIcon,
@@ -348,7 +349,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     >
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
-                                <PublicAuditCodeIcon />
+                                <PublicProjectManagerIcon />
                             </div>
                         </div>
                         <div className={styles["title-style"]}>项目管理</div>
