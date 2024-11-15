@@ -3932,6 +3932,7 @@ message YakScriptParam {
   string ExtraSetting = 8;
 
   string MethodType = 9;
+  string JsonSchema = 10;
 
   string SuggestionDataExpression = 11;
 }
