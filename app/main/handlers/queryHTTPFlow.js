@@ -36,6 +36,21 @@ module.exports = (win, getClient) => {
         })
     })
 
+    const asyncQueryHTTPFlowsProcessNames = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHTTPFlowsProcessNames(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHTTPFlowsProcessNames", async (e, params) => {
+        return await asyncQueryHTTPFlowsProcessNames(params)
+    })
+
     // asyncQueryHTTPFlows wrapper
     const asyncQueryHTTPFlows = (params) => {
         return new Promise((resolve, reject) => {

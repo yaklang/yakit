@@ -202,6 +202,7 @@ service Yak {
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
   rpc GetHTTPFlowBodyById(GetHTTPFlowBodyByIdRequest) returns (stream GetHTTPFlowBodyByIdResponse);
   rpc GetHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
+  rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
@@ -4671,6 +4672,7 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeHash = 41;
   repeated string HiddenIndex = 42;
+  repeated string ProcessName = 43;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -4797,6 +4799,10 @@ message GetHTTPFlowBodyByIdResponse {
    bytes Data = 1;
    string Filename = 2; // 第一个响应里才有，应该保存的文件名
    bool EOF = 3; // 是否是最后一个包
+}
+
+message QueryHTTPFlowsProcessNamesResponse {
+  repeated string ProcessNames = 1;
 }
 
 message QueryHTTPFlowResponse {

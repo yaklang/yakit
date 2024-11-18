@@ -35,6 +35,7 @@ export interface YakQueryHTTPFlowRequest {
     WithPayload?: boolean
     RuntimeIDs?: string[]
     Full?: boolean
+    ProcessName?: string[]
 }
 
 export interface Paging {

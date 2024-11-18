@@ -2,13 +2,20 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
 import {HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {useMemoizedFn} from "ahooks"
+import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
+import classNames from "classnames"
+import {SolidCheckIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -49,9 +56,74 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         }
     }, [])
 
+    const [processVisible, setProcessVisible] = useState<boolean>(false)
+    const [searchProcessVal, setSearchProcessVal] = useState<string>("")
+    const [processLoading, setProcessLoading] = useState<boolean>(false)
+    const [processList, setProcessList] = useState<ProcessItem[]>([])
+    const [curProcess, setCurProcess] = useState<string[]>([])
+    const [queryparamsStr, setQueryparamsStr] = useState<string>("")
+    const renderProcessList = useMemo(() => {
+        return searchProcessVal
+            ? processList.filter((item) =>
+                  item.process.toLocaleLowerCase().includes(searchProcessVal.toLocaleLowerCase())
+              )
+            : processList
+    }, [searchProcessVal, processList])
+    const onProcessItemClick = (processItem: ProcessItem) => {
+        if (curProcess.includes(processItem.process)) {
+            setCurProcess((prev) => prev.filter((process) => process !== processItem.process))
+        } else {
+            setCurProcess([...curProcess, processItem.process])
+        }
+        sendFun()
+    }
+    const sendFun = useDebounce(
+        () => {
+            emiter.emit("onMitmCurProcess", curProcess + "")
+        },
+        {wait: 300}
+    )
+    const onMITMLogProcessQuery = useMemoizedFn((queryStr: string) => {
+        setQueryparamsStr(queryStr)
+    })
+    useEffect(() => {
+        emiter.on("onMITMLogProcessQuery", onMITMLogProcessQuery)
+        return () => {
+            emiter.off("onMITMLogProcessQuery", onMITMLogProcessQuery)
+        }
+    }, [])
+    useEffect(() => {
+        if (processVisible) {
+            setProcessLoading(true)
+            try {
+                const query = JSON.parse(queryparamsStr)
+                ipcRenderer
+                    .invoke("QueryHTTPFlowsProcessNames", query)
+                    .then((res) => {
+                        const processArr = (res.ProcessNames || [])
+                            .filter((name: string) => name)
+                            .map((name: string) => {
+                                const lowerName = name.toLocaleLowerCase()
+                                const icon = Object.keys(iconProcessMap).find((key) => lowerName.startsWith(key))
+                                return {process: name, icon: icon ? iconProcessMap[icon] : undefined}
+                            })
+                        setProcessList(processArr)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", error + "")
+                    })
+                    .finally(() => {
+                        setProcessLoading(false)
+                    })
+            } catch (error) {
+                setProcessLoading(false)
+            }
+        }
+    }, [processVisible])
+
     return (
         <div className={styles["mitm-log-heard"]}>
-            <div>
+            <div style={{whiteSpace: "nowrap"}}>
                 {SourceType.map((tag) => (
                     <YakitCheckableTag
                         key={tag.value}
@@ -73,6 +145,86 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 ))}
             </div>
             <div className={styles["mitm-log-heard-right"]}>
+                <YakitPopover
+                    placement='bottom'
+                    trigger='click'
+                    content={
+                        <div className={styles["process-cont-wrapper"]}>
+                            <div>
+                                <YakitInput
+                                    allowClear
+                                    prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                                    onChange={(e) => setSearchProcessVal(e.target.value)}
+                                ></YakitInput>
+                            </div>
+                            <div className={styles["process-list-wrapper"]}>
+                                {processLoading ? (
+                                    <YakitSpin style={{display: "block"}}></YakitSpin>
+                                ) : (
+                                    <>
+                                        {renderProcessList.length ? (
+                                            <>
+                                                {renderProcessList.map((item) => (
+                                                    <div
+                                                        className={classNames(styles["process-list-item"], {
+                                                            [styles["process-list-item-active"]]: curProcess.includes(
+                                                                item.process
+                                                            )
+                                                        })}
+                                                        key={item.process}
+                                                        onClick={() => onProcessItemClick(item)}
+                                                    >
+                                                        <div className={styles["process-item-left-wrapper"]}>
+                                                            {item.icon ? (
+                                                                <div className={styles["process-icon"]}>
+                                                                    {item.icon}
+                                                                </div>
+                                                            ) : (
+                                                                <OutlineTerminalIcon
+                                                                    className={styles["process-icon"]}
+                                                                />
+                                                            )}
+                                                            <div
+                                                                className={styles["process-item-label"]}
+                                                                title={item.process}
+                                                            >
+                                                                {item.process}
+                                                            </div>
+                                                            {curProcess.includes(item.process) && (
+                                                                <SolidCheckIcon className={styles["check-icon"]} />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </>
+                                        ) : (
+                                            <div style={{textAlign: "center"}}>暂无数据</div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    }
+                    overlayClassName={styles["http-mitm-table-process-popover"]}
+                    onVisibleChange={setProcessVisible}
+                    visible={processVisible}
+                >
+                    {curProcess.length >= 1 ? (
+                        <YakitButton type='primary'>进程筛选（{curProcess.length}）</YakitButton>
+                    ) : (
+                        <YakitButton type='outline1'>进程筛选</YakitButton>
+                    )}
+                </YakitPopover>
+                <YakitInput.Search
+                    className={styles["http-history-table-right-search"]}
+                    placeholder='请输入关键词搜索'
+                    onSearch={(value) => {
+                        emiter.emit("onMitmSearchInputVal", value)
+                    }}
+                    onBlur={(e) => {
+                        emiter.emit("onMitmSearchInputVal", e.target.value)
+                    }}
+                />
                 <YakitButton
                     type='outline1'
                     colors='danger'
