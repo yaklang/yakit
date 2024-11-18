@@ -316,17 +316,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                         className={classNames(styles["upload-box"], {
                                             [styles["upload-box-hidden"]]: size && size.width <= 300
                                         })}
-                                        accept={"text/plain"}
                                         multiple={false}
                                         maxCount={1}
                                         showUploadList={false}
                                         beforeUpload={(f) => {
-                                            const file_name = f.name
-                                            const suffix = suffixFun(file_name)
-                                            if (![".txt"].includes(suffix)) {
-                                                warn("导入文件格式错误，请重新导入")
-                                                return false
-                                            }
                                             // @ts-ignore
                                             const path: string = f?.path || ""
                                             if (path.length > 0) {
