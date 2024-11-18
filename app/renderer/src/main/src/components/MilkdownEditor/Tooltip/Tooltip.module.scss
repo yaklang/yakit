@@ -45,19 +45,6 @@
         }
     }
 
-    .tooltip-icon {
-        display: flex;
-        padding: 4px;
-        align-items: center;
-        gap: 4px;
-        border-radius: 4px;
-        height: 28px;
-        width: 28px;
-        cursor: pointer;
-        &:hover {
-            background-color: var(--yakit-background-color);
-        }
-    }
     .tooltip-tool {
         display: flex;
         align-items: center;
@@ -153,5 +140,25 @@
         .item-warning {
             background-color: var(--yakit-warning-5);
         }
+    }
+}
+
+
+.tooltip-icon {
+    display: flex;
+    padding: 4px;
+    align-items: center;
+    gap: 4px;
+    border-radius: 4px;
+    height: 28px;
+    width: 28px;
+    cursor: pointer;
+    svg {
+        width: 20px;
+        height: 20px;
+        color: var(--yakit-header-color);
+    }
+    &:hover {
+        background-color: var(--yakit-background-color);
     }
 }
