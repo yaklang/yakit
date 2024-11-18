@@ -15,7 +15,7 @@ import {useInstance} from "@milkdown/react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
 import {ReactNode, useCallback, useEffect, useRef, useState} from "react"
 import {callCommand} from "@milkdown/kit/utils"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
 import {IconBold, IconCode2, IconItalic, IconStrikethrough, IconType, IconUnderline} from "../icon/icon"
 import styles from "./Tooltip.module.scss"
 import React from "react"
@@ -28,12 +28,13 @@ import {underlineCommand} from "../utils/underline"
 import {commentCommand} from "../utils/commentPlugin"
 import {setWrapInBlockType} from "../utils/utils"
 import {Tooltip} from "antd"
-import {MilkdownBaseUtilProps, TooltipListProps} from "../MilkdownEditorType"
+import {MilkdownBaseUtilProps} from "../MilkdownEditorType"
 import {cloneDeep} from "lodash"
 import {defaultTooltipList} from "../constants"
 import {convertToListBullet, listToParagraphCommand} from "../utils/listPlugin"
 import {listToHeadingCommand} from "../utils/headingPlugin"
 import {listToCodeCommand} from "../utils/codePlugin"
+import {fileCustomSchema} from "../utils/uploadPlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -64,7 +65,6 @@ interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
     const [visibleText, setVisibleText] = useState<boolean>(false)
     const [visibleLight, setVisibleLight] = useState<boolean>(false)
-    const [tooltipTextList, setTooltipTextList] = useState<TooltipListProps[]>(cloneDeep(defaultTooltipList))
 
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<TooltipProvider>()
@@ -79,17 +79,22 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         [loading]
     )
 
+    const tooltipTextList = useCreation(() => {
+        return cloneDeep(defaultTooltipList)
+    }, [])
+
     useEffect(() => {
-        const div = ref.current
-        if (loading || !div) {
+        if (loading) {
             return
         }
-        tooltipProvider.current = new TooltipProvider({
-            content: div,
-            offset: {
-                crossAxis: 100
-            }
-        })
+        if (ref.current) {
+            tooltipProvider.current = new TooltipProvider({
+                content: ref.current,
+                offset: {
+                    crossAxis: 100
+                }
+            })
+        }
 
         return () => {
             tooltipProvider.current?.destroy()
@@ -98,11 +103,30 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
 
     useDebounceEffect(
         () => {
+            tooltipProvider.current?.hide()
+            if (isSelectFile()) {
+                return
+            }
             tooltipProvider.current?.update(view, prevState)
         },
         [view, prevState],
         {wait: 200, leading: true}
     )
+    /**判断选中节点是否为文件 */
+    const isSelectFile = useMemoizedFn(() => {
+        const selectedNode = getSelectNode()
+        const firstChild = selectedNode.firstChild
+        return firstChild?.type.name === fileCustomSchema.node.id
+    })
+    /**
+     * 获取选中的节点
+     */
+    const getSelectNode = useMemoizedFn(() => {
+        const {$from} = view.state.selection
+        const selectedNode = $from.node()
+        return selectedNode
+    })
+
     const onBold = useMemoizedFn((e) => {
         e.preventDefault()
         action(callCommand(toggleStrongCommand.key))
@@ -330,7 +354,7 @@ interface TooltipIconProps {
     icon: ReactNode
     onClick: React.MouseEventHandler<HTMLDivElement>
 }
-const TooltipIcon: React.FC<TooltipIconProps> = React.memo((props) => {
+export const TooltipIcon: React.FC<TooltipIconProps> = React.memo((props) => {
     const {icon, onClick, title} = props
     const node = (
         <div className={styles["tooltip-icon"]} onClick={onClick}>
