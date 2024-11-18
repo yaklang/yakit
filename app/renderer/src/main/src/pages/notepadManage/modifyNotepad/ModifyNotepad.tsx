@@ -124,31 +124,32 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const avatarColor = useRef<string>(randomAvatarColor())
 
     useEffect(() => {
+        console.log('userInfo',userInfo)
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
                 setNotepadDetail(res)
             })
         } else {
-            // 新建笔记本并保存
-            const params: API.PostNotepadRequest = {
-                title: initTabName() + moment().format("YYYY-MM-DD HH:mm:ss"),
-                content: initTabName()
-            }
-            setLoading(true)
-            apiSaveNotepadList(params)
-                .then((hash) => {
-                    setNotepadDetail({...(notepadDetail || {}), hash})
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                )
+            // // 新建笔记本并保存
+            // const params: API.PostNotepadRequest = {
+            //     title: initTabName() + moment().format("YYYY-MM-DD HH:mm:ss"),
+            //     content: initTabName()
+            // }
+            // setLoading(true)
+            // apiSaveNotepadList(params)
+            //     .then((hash) => {
+            //         setNotepadDetail({...(notepadDetail || {}), hash})
+            //     })
+            //     .finally(() =>
+            //         setTimeout(() => {
+            //             setLoading(false)
+            //         }, 200)
+            //     )
         }
-        return () => {
-            onRemoveEmptyNotepad()
-        }
+        // return () => {
+        //     onRemoveEmptyNotepad()
+        // }
     }, [pageInfo])
 
     useEffect(() => {
@@ -160,6 +161,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     useEffect(() => {
         if (!editor) return
         if (notepadDetail.content) {
+            console.log('notepadDetail.content',notepadDetail.content)
             // 更新笔记本的值
             editor.action(replaceAll(notepadDetail.content))
         }
