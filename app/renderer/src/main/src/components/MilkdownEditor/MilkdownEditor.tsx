@@ -2,7 +2,7 @@ import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
 import React, {useEffect} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
-import {blockquoteSchema, codeBlockSchema, commonmark, listItemSchema} from "@milkdown/kit/preset/commonmark"
+import {blockquoteSchema, codeBlockSchema, commonmark, hrSchema, listItemSchema} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
@@ -20,7 +20,7 @@ import "./css/index.scss"
 import {yakitInfo} from "@/utils/notification"
 import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
-import {CustomCodeComponent} from "./CodeBlock"
+import {CustomCodeComponent} from "./CodeBlock/CodeBlock"
 import {Blockquote} from "./Blockquote"
 import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
 import {alterCustomPlugin} from "./utils/alertPlugin"
@@ -42,10 +42,13 @@ import {fileCustomSchema, uploadCustomPlugin} from "./utils/uploadPlugin"
 import {CustomFile} from "./CustomFile/CustomFile"
 import {insertImageBlockCommand} from "./utils/imageBlock"
 
-import {collab, CollabService, collabServiceCtx} from "@milkdown/plugin-collab"
+import {collab} from "@milkdown/plugin-collab"
 import {listCustomPlugin} from "./utils/listPlugin"
 import {headingCustomPlugin} from "./utils/headingPlugin"
 import {codeCustomPlugin} from "./utils/codePlugin"
+import {MilkdownHr} from "./MilkdownHr/MilkdownHr"
+
+import {tableBlock} from "@milkdown/kit/component/table-block"
 
 const markdown = `
 
@@ -165,10 +168,9 @@ fsdfsdf
 `
 
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {setEditor, customPlugin = [], value = ""} = props
+    const {setEditor, customPlugin = []} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
-
     const blockPlugins: MilkdownPlugin[] = useCreation(() => {
         return [
             block,
@@ -242,7 +244,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [])
+    }, [nodeViewFactory])
 
     const imagePlugin = useCreation(() => {
         return [
@@ -368,6 +370,16 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         return [...commentCustomPlugin()].flat()
     }, [])
 
+    const hrPlugin = useCreation(() => {
+        return [
+            $view(hrSchema.node, () =>
+                nodeViewFactory({
+                    component: MilkdownHr
+                })
+            )
+        ].flat()
+    }, [])
+
     const {get} = useEditor((root) => {
         return (
             Editor.make()
@@ -408,13 +420,15 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // placeholder
                 .use(placeholder)
                 // table
-                // .use(tableBlock)
+                .use(tableBlock)
                 // alterCustomPlugin
                 .use(alterPlugin)
                 // underlinePlugin
                 .use(underlinePlugin)
                 // commentPlugin
                 .use(commentPlugin)
+                // hrPlugin
+                .use(hrPlugin)
                 .use(customPlugin)
         )
     }, [])
