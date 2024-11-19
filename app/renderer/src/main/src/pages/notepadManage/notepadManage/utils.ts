@@ -1,5 +1,5 @@
 import {APIFunc} from "@/apiUtils/type"
-import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
+import {PluginListPageMeta, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
@@ -7,14 +7,7 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
-export interface SearchParamsProps {
-    /** 关键词 */
-    keyword: string
-    /** 用户名 */
-    userName: string
-    /** 搜索类型 */
-    type: "keyword" | "userName"
-}
+export interface SearchParamsProps extends PluginSearchParams {}
 export interface NotepadQuery {
     keyWords: string
     user: string

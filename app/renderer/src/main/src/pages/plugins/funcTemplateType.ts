@@ -43,6 +43,8 @@ export interface FuncSearchProps {
     onSearch: (value: PluginSearchParams) => any
 
     yakitCombinationSearchProps?: YakitCombinationSearchProps
+    /**下拉包含的类型 */
+    includeSearchType?: PluginSearchParams['type'][]
 }
 
 export interface FuncFilterPopoverProps {
