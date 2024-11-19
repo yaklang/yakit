@@ -303,13 +303,6 @@ $keyColor: map-keys($tagColor);
                 }
             }
         }
-        .ir-code-box {
-            padding: 8px;
-            border-radius: 4px;
-            background: #f0f1f3;
-            white-space: pre;
-            overflow: auto;
-        }
         :global {
             .ant-collapse-item > .ant-collapse-header {
                 padding: 3px 0px 3px 0px !important;

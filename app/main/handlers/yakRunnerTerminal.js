@@ -54,6 +54,9 @@ module.exports = (win, getClient) => {
         // 如果有问题，重置
         stream.on("error", (e) => {
             removeStreamRunner(id)
+            if(win){
+                win.webContents.send("client-listening-terminal-error", {id, path})
+            }
         })
 
         // 发送回数据

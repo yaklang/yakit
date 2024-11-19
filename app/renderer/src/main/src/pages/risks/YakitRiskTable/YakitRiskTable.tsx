@@ -94,6 +94,7 @@ import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
 import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
+import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -1734,7 +1735,6 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
             const {Body, ...auditYakUrl} = params
             const body = Body ? StringToUint8Array(Body) : undefined
             const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
-
             if (result && result.Resources.length > 0) {
                 let arr: YakURLDataItemProps[] = []
                 result.Resources.filter((item) => item.ResourceType === "value").forEach((item) => {
@@ -2098,7 +2098,20 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
     }
 
     const renderItem = (info: YakURLDataItemProps) => {
-        return <div className={styles["ir-code-box"]}>{info.source}</div>
+        const filename = info.code_range.url.split("/").pop()
+        const {start_line,end_line,source_code_line,start_column,end_column} = info.code_range
+        return (
+            <YakCodemirror
+                readOnly={true}
+                fileName={filename}
+                value={info.source}
+                firstLineNumber={source_code_line}
+                highLight={{
+                    from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
+                    to: {line: end_line - source_code_line, ch: end_column} // 结束位置
+                }}
+            />
+        )
     }
     return (
         <div className={styles["audit-result-collapse"]}>
