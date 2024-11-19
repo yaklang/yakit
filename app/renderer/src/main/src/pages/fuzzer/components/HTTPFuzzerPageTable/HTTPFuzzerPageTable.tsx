@@ -14,13 +14,13 @@ import {
     RenderTypeOptionVal
 } from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {failed, yakitFailed} from "@/utils/notification"
+import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
+import {analyzeFuzzerResponse, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
 import styles from "./HTTPFuzzerPageTable.module.scss"
 import {HollowLightningBoltIcon} from "@/assets/newIcon"
 import {Alert, Divider, Tooltip} from "antd"
@@ -30,7 +30,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import {RemoteGV} from "@/yakitGV"
 import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
@@ -169,7 +169,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             pageId,
             moreLimtAlertMsg,
             tableKeyUpDownEnabled = true,
-            fuzzerTableMaxData = DefFuzzerTableMaxData,
+            fuzzerTableMaxData = DefFuzzerTableMaxData
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
         const listTableRef = useRef<FuzzerResponse[]>([])
@@ -883,25 +883,29 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             return (value && Uint8ArrayToString(value)) || ""
         }, [currentSelectShowType, currentSelectItem])
 
-        const [url, setUrl] = useState<string>("")
-        useDebounceEffect(
-            () => {
-                if (currentSelectItem?.RequestRaw) {
-                    ipcRenderer
-                        .invoke("ExtractUrl", {
-                            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
-                            IsHTTPS: currentSelectItem?.IsHTTPS
-                        })
-                        .then((data: {Url: string}) => {
-                            setUrl(data.Url)
-                        })
-                } else {
-                    setUrl("")
-                }
-            },
-            [currentSelectItem?.RequestRaw, currentSelectItem?.IsHTTPS],
-            {wait: 300}
-        )
+        const copyUrl = useMemoizedFn(() => {
+            if (currentSelectItem?.RequestRaw) {
+                copyAsUrl({
+                    Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+                    IsHTTPS: !!currentSelectItem?.IsHTTPS
+                })
+            }
+        })
+        const onClickOpenBrowserMenu = useMemoizedFn(() => {
+            if (currentSelectItem?.RequestRaw) {
+                ipcRenderer
+                    .invoke("ExtractUrl", {
+                        Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+                        IsHTTPS: !!currentSelectItem?.IsHTTPS
+                    })
+                    .then((data: {Url: string}) => {
+                        openExternalWebsite(data.Url)
+                    })
+                    .catch((e) => {
+                        yakitNotify("error", "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+                    })
+            }
+        })
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
@@ -1116,8 +1120,12 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, "")
                                 }
                             }}
-                            url={url}
-                            downbodyParams={{RuntimeId: currentSelectItem?.RuntimeID, IsRequest: currentSelectShowType === "request"}}
+                            onClickUrlMenu={copyUrl}
+                            onClickOpenBrowserMenu={onClickOpenBrowserMenu}
+                            downbodyParams={{
+                                RuntimeId: currentSelectItem?.RuntimeID,
+                                IsRequest: currentSelectShowType === "request"
+                            }}
                         />
                     }
                     {...ResizeBoxProps}
