@@ -17,15 +17,17 @@ import {API} from "@/services/swagger/resposeType"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import moment from "moment"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {AuthorImg, FuncSearch} from "@/pages/plugins/funcTemplate"
+import {FuncSearch} from "@/pages/plugins/funcTemplate"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {
     GetNotepadRequestProps,
+    SaveDialogResponse,
     SearchParamsProps,
     apiDeleteNotepadDetail,
     apiDownloadNotepad,
     apiGetNotepadList,
-    convertGetNotepadRequest
+    convertGetNotepadRequest,
+    saveDialogAndGetLocalFileInfo
 } from "./utils"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {useStore} from "@/store"
@@ -40,9 +42,9 @@ import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtu
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {judgeAvatar} from "@/pages/MainOperator"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
-import {openDirectory} from "../NotepadShareModal/utils"
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc} from "@/apiUtils/type"
+import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -83,6 +85,8 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
 
     const [refresh, setRefresh] = useState<boolean>(true)
+
+    const [batchDownInfo, setBatchDownInfo] = useState<SaveDialogResponse>()
 
     // 搜索条件
     const [search, setSearch] = useState<SearchParamsProps>({keyword: "", userName: "", type: "keyword"})
@@ -373,8 +377,9 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             downloadUrl: ""
         }
         onBaseDown(downParams)
-            .then(() => {
-                yakitNotify("success", "下载成功")
+            .then((res) => {
+                setBatchDownInfo(res)
+                yakitNotify("success", "获取下载链接成功")
             })
             .finally(() =>
                 setTimeout(() => {
@@ -394,6 +399,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         setLoading(true)
         onBaseDown(downParams)
             .then((res) => {
+                setBatchDownInfo(res)
                 yakitNotify("success", "下载成功")
             })
             .finally(() =>
@@ -402,26 +408,24 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                 }, 200)
             )
     })
-    const onBaseDown: APIFunc<API.NotepadDownloadRequest, API.NotepadDownloadResponse> = useMemoizedFn((value) => {
+    const onBaseDown: APIFunc<API.NotepadDownloadRequest, SaveDialogResponse> = useMemoizedFn((value) => {
         return new Promise((resolve, reject) => {
-            openDirectory()
-                .then((data) => {
-                    const filesLength = data.filePaths.length
-                    if (filesLength === 1) {
-                        const path: string = data.filePaths[0].replace(/\\/g, "\\")
-                        const params: API.NotepadDownloadRequest = {
-                            ...value,
-                            downloadUrl: path
-                        }
-                        apiDownloadNotepad(params)
-                            .then((res) => {
-                                resolve(res)
-                            })
-                            .catch(reject)
-                    }
+            const params: API.NotepadDownloadRequest = {
+                ...value
+            }
+            apiDownloadNotepad(params)
+                .then((res) => {
+                    //TODO - 等待后端给最新的接口文档
+                    console.log("apiDownloadNotepad", res)
+                    saveDialogAndGetLocalFileInfo((res as string) || "")
+                        .then(resolve)
+                        .catch(reject)
                 })
                 .catch(reject)
         })
+    })
+    const onCancelDownload = useMemoizedFn(() => {
+        setBatchDownInfo(undefined)
     })
     const selectNumber = useCreation(() => {
         if (isAllSelect) {
@@ -502,6 +506,15 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             }
                         }
                     }}
+                />
+            )}
+            {batchDownInfo && (
+                <DownFilesModal
+                    url={batchDownInfo.url}
+                    path={batchDownInfo.path}
+                    visible={!!batchDownInfo.url}
+                    setVisible={onCancelDownload}
+                    onCancelDownload={onCancelDownload}
                 />
             )}
         </div>
