@@ -29,8 +29,9 @@ import {SolidXcircleIcon} from "@/assets/icon/solid"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import React from "react"
 import {SolidCloudDownloadIcon} from "@/assets/newIcon"
-import {openABSFileLocated} from "@/utils/openWebsite"
-import useDownloadUrlToLocalHooks from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
+import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
+import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
+import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -46,17 +47,12 @@ interface DownFileInfoProps {
     path: string
     fileName: string
 }
-const getFileName = (filePath) => {
-    const match = filePath.match(/[^\\/]+$/) // 匹配最后的文件名
-    return match ? match[0] : ""
-}
 const getTypeAndNameByPath = (path) => {
     const index = path.lastIndexOf(".")
     const fileType = path.substring(index, path.length)
     const fileName = path.split("\\").pop()
     return {fileType, fileName}
 }
-const urlTest = "https://yakit-online.oss-cn-hongkong.aliyuncs.com/notepade/418b8580-1731654345422-app.zip"
 export const CustomFile = () => {
     const {node, contentRef, selected, setAttrs, view} = useNodeViewContext()
     const {attrs} = node
@@ -77,11 +73,10 @@ export const CustomFile = () => {
         const path = initPath.replace(/\\/g, "\\")
 
         if (fileId !== "0") {
-            //TODO - 通过fileId(文件链接获取文件信息)
             ipcRenderer
-                .invoke("get-http-file-link-info", urlTest)
+                .invoke("get-http-file-link-info", fileId)
                 .then((res) => {
-                    const {fileType} = getTypeAndNameByPath(urlTest)
+                    const {fileType} = getTypeAndNameByPath(fileId)
                     const item = {
                         name: res.fileName,
                         size: res.size,
@@ -115,7 +110,7 @@ export const CustomFile = () => {
                     failed(`获取文件信息失败:${err}`)
                 })
         }
-    }, [attrs])
+    }, [])
     useEffect(() => {
         ipcRenderer.on(`oos-split-upload-${uploadTokenRef.current}-data`, async (e, resData) => {
             console.log("split-upload", resData)
@@ -186,21 +181,11 @@ export const CustomFile = () => {
     const onDown = (e) => {
         e.stopPropagation()
         e.preventDefault()
-        const url = urlTest
-        const fileName = getFileName(url)
-        ipcRenderer.invoke("show-save-dialog", fileName).then((res) => {
-            const {filePath, name} = res
-            console.log("res", res, fileName)
-            if (filePath) {
-                const v = {
-                    url: url,
-                    path: filePath,
-                    fileName: name
-                }
-                setDownFileInfo(v)
-                if (fileInfo) setFileInfo({...fileInfo, path: filePath, name})
-                setVisibleDownFiles(true)
-            }
+        const {fileId} = attrs
+        saveDialogAndGetLocalFileInfo(fileId).then((v) => {
+            setDownFileInfo(v)
+            if (fileInfo) setFileInfo({...fileInfo, path: v.path, name: v.fileName})
+            setVisibleDownFiles(true)
         })
     }
     const onCopyLink = useMemoizedFn((e) => {
@@ -246,17 +231,11 @@ export const CustomFile = () => {
     const onOpenFile = useMemoizedFn(() => {
         if (!fileInfo) return
         console.log("fileInfo?.path", fileInfo?.path)
-        ipcRenderer
-            .invoke("is-file-exists", fileInfo?.path)
-            .then((flag: boolean) => {
-                if (flag) {
-                    openABSFileLocated(fileInfo?.path)
-                } else {
-                    setFileInfo({...fileInfo, path: ""})
-                    yakitNotify("error", `目标文件已不存在`)
-                }
-            })
-            .catch(() => {})
+        onOpenLocalFileByPath(fileInfo?.path).then((flag) => {
+            if (!flag) {
+                setFileInfo({...fileInfo, path: ""})
+            }
+        })
     })
     const onCancelDownload = useMemoizedFn(() => {
         if (fileInfo) setFileInfo({...fileInfo, path: ""})
@@ -371,12 +350,13 @@ interface DownFilesModalProps {
     visible: boolean
     setVisible: (b: boolean) => void
     url: string
-    fileName: string
+    fileName?: string
     path: string
     onCancelDownload: () => void
+    yakitHintProps?: Omit<YakitHintProps, "visible" | "onCancel">
 }
-const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
-    const {visible, setVisible, fileName, path, url, onCancelDownload} = props
+export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
+    const {visible, setVisible, fileName, path, url, onCancelDownload, yakitHintProps} = props
 
     const [percent, setPercent] = useState<number>(0)
 
@@ -401,13 +381,16 @@ const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
         }
     })
     useEffect(() => {
-        setPercent(0)
-        if (!visible) return
-        const value = {
-            url,
-            path
+        if (visible) {
+            const value: DownloadUrlToLocal = {
+                onlineUrl: url,
+                localPath: path
+            }
+            onStart(value)
+        } else {
+            onNotepadDownCancel()
+            setPercent(0)
         }
-        onStart(value)
     }, [visible])
     const onCancel = useMemoizedFn(() => {
         onNotepadDownCancel().then(() => {
@@ -416,13 +399,14 @@ const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
     })
     return (
         <YakitHint
-            visible={visible}
-            title={<span className='content-ellipsis'>{`${fileName}下载中...`}</span>}
             heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
-            onCancel={onCancel}
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
+            title={fileName ? <span className='content-ellipsis'>{`${fileName}下载中...`}</span> : "下载中"}
+            {...(yakitHintProps || {})}
+            onCancel={onCancel}
+            visible={visible}
         >
             <div className={styles["download-progress"]}>
                 <Progress

@@ -16,11 +16,11 @@ interface DownloadUrlToLocalHooks {
     onUploadError?: () => void
 }
 
-interface DownloadUrlToLocal {
+export interface DownloadUrlToLocal {
     /**下载的链接 */
-    url: string
+    onlineUrl: string
     /**保存到本地的地址 */
-    path: string
+    localPath: string
 }
 
 export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHooks) {
@@ -32,12 +32,14 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
             const {state} = data
             const newState = safeFormatDownloadProcessState(state)
             isSuccess = true
+            console.log("download-url-to-path-progress", newState)
             onUploadData(newState)
         })
 
         ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
             isSuccess = false
             onUploadError && onUploadError()
+            console.log("download-url-to-path-progress-error", error)
             yakitNotify("error", `下载失败:${error}`)
         })
 
@@ -46,6 +48,7 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
                 onUploadSuccess && onUploadSuccess()
             }
             onUploadEnd && onUploadEnd()
+            console.log("download-url-to-path-progress-finished")
         })
 
         return () => {
@@ -54,10 +57,11 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
             ipcRenderer.removeAllListeners(`download-url-to-path-progress-finished`)
         }
     }, [])
-    const onStart = (uploadParams) => {
+    const onStart = (uploadParams: DownloadUrlToLocal) => {
         console.log("download-url-to-path", uploadParams)
-        const params: DownloadUrlToLocal = {
-            ...uploadParams
+        const params = {
+            url: uploadParams.onlineUrl,
+            path: uploadParams.localPath
         }
         ipcRenderer.invoke("download-url-to-path", params)
     }

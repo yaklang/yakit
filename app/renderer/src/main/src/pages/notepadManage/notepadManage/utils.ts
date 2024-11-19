@@ -3,6 +3,9 @@ import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
+import {openABSFileLocated} from "@/utils/openWebsite"
+
+const {ipcRenderer} = window.require("electron")
 
 export interface SearchParamsProps {
     /** 关键词 */
@@ -143,16 +146,84 @@ export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, API.Notepad
             method: "post",
             url: "notepad/download",
             data: params
-            // onDownloadProgress:(progress)=>{
-            //     console.log('onDownloadProgress',progress)
-            // }
         })
             .then((res) => {
+                console.log("notepad/download", params, res)
                 resolve(res)
             })
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "下载记事本失败:" + err)
                 reject(err)
+            })
+    })
+}
+
+export interface SaveDialogResponse {
+    /**线上链接 */
+    url: string
+    /**本地保存地址 */
+    path: string
+    /** 文件名 */
+    fileName: string
+}
+/**获取文件名称 */
+const getFileName = (filePath) => {
+    const match = filePath.match(/[^\\/]+$/) // 匹配最后的文件名
+    return match ? match[0] : ""
+}
+/**
+ * @description 打开保存文件框，返回保存信息(路径和文件名)
+ * @param url
+ * @param hiddenError
+ * @returns {url:线上链接;filePath:保存的本地路径;fileName:保存后的最新文件名}
+ */
+export const saveDialogAndGetLocalFileInfo: APIFunc<string, SaveDialogResponse> = (url, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        if (!url) {
+            if (!hiddenError) yakitNotify("error", "下载链接为空")
+            reject("下载链接为空")
+            return
+        }
+        const fileName = getFileName(url)
+        ipcRenderer
+            .invoke("show-save-dialog", fileName)
+            .then((res) => {
+                const {filePath, name} = res
+                if (filePath) {
+                    const v = {
+                        url: url,
+                        path: filePath,
+                        fileName: name
+                    }
+                    resolve(v)
+                } else {
+                    if (!hiddenError) yakitNotify("error", "获取保存文件路径错误")
+                    reject("获取保存文件路径错误")
+                }
+            })
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
+                reject(err)
+            })
+    })
+}
+
+export const onOpenLocalFileByPath: APIFunc<string, boolean> = (path, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("is-file-exists", path)
+            .then((flag: boolean) => {
+                if (flag) {
+                    openABSFileLocated(path)
+                } else {
+                    if (!hiddenError) yakitNotify("error", `目标文件已不存在`)
+                    reject()
+                }
+                resolve(flag)
+            })
+            .catch((error) => {
+                if (!hiddenError) yakitNotify("error", `目标文件已不存在${error}`)
+                reject(error)
             })
     })
 }
