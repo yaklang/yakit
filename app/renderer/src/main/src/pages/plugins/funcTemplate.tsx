@@ -30,7 +30,8 @@ import {
     useMemoizedFn,
     useSize,
     useThrottleFn,
-    useVirtualList
+    useVirtualList,
+    useCreation
 } from "ahooks"
 import {
     OutlineArrowscollapseIcon,
@@ -239,7 +240,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 
 /** @name 带屏幕宽度自适应的搜索内容组件 */
 export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
-    const {maxWidth, onSearch: onsearch, yakitCombinationSearchProps = {}} = props
+    const {maxWidth, onSearch: onsearch, yakitCombinationSearchProps = {}, includeSearchType} = props
 
     const [isIcon, setIsIcon, getIsIcon] = useGetState<boolean>(false)
     const mediaHandle = useMemoizedFn((e) => {
@@ -265,35 +266,29 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
     const onTypeChange = useMemoizedFn((value: string) => {
         setSearch({
             ...search,
-            type: value as "keyword" | "userName" | "fieldKeywords"
+            type: value as PluginSearchParams["type"]
         })
     })
     const onValueChange = useMemoizedFn((e) => {
-        if (search.type === "keyword") {
-            const keywordSearch: PluginSearchParams = {
-                ...search,
-                keyword: e.target.value
-            }
-            setSearch({
-                ...keywordSearch
-            })
-        } else if (search.type === "userName") {
-            const userNameSearch: PluginSearchParams = {
-                ...search,
-                userName: e.target.value
-            }
-            setSearch({
-                ...userNameSearch
-            })
-        } else {
-            const fieldKeywordsSearch: PluginSearchParams = {
-                ...search,
-                fieldKeywords: e.target.value
-            }
-            setSearch({
-                ...fieldKeywordsSearch
-            })
+        let newSearch: PluginSearchParams = {
+            ...search
         }
+        switch (search.type) {
+            case "keyword":
+                newSearch.keyword = e.target.value
+                break
+            case "userName":
+                newSearch.userName = e.target.value
+                break
+            case "fieldKeywords":
+                newSearch.fieldKeywords = e.target.value
+                break
+            default:
+                break
+        }
+        setSearch({
+            ...newSearch
+        })
     })
     const onSearch = useDebounceFn(
         useMemoizedFn(() => {
@@ -302,22 +297,31 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         {wait: 0}
     ).run
     const searchValue = useMemo(() => {
-        if (search.type === "keyword") {
-            return search.keyword
-        } else if (search.type === "userName") {
-            return search.userName
-        } else {
-            return search.fieldKeywords
+        switch (search.type) {
+            case "keyword":
+                return search.keyword
+            case "userName":
+                return search.userName
+            case "fieldKeywords":
+                return search.fieldKeywords
+            default:
+                return ""
         }
     }, [search])
+    const funcSearchTypeList = useCreation(() => {
+        if (includeSearchType && includeSearchType?.length) {
+            return funcSearchType.filter((item) => includeSearchType.includes(item.value as PluginSearchParams["type"]))
+        }
+        return funcSearchType
+    }, [includeSearchType])
     return (
         <div className={isIcon ? styles["func-search-icon-wrapper"] : styles["func-search-wrapper"]}>
             <YakitCombinationSearch
-                beforeOptionWidth={82}
+                beforeOptionWidth={92}
                 {...yakitCombinationSearchProps}
                 wrapperClassName={classNames(styles["search-body"], yakitCombinationSearchProps.wrapperClassName || "")}
                 valueBeforeOption={search.type}
-                addonBeforeOption={funcSearchType}
+                addonBeforeOption={funcSearchTypeList}
                 onSelectBeforeOption={onTypeChange}
                 inputSearchModuleTypeProps={{
                     value: searchValue,
@@ -330,10 +334,10 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
                 overlayClassName={styles["func-search-popver"]}
                 content={
                     <YakitCombinationSearch
-                        beforeOptionWidth={82}
+                        beforeOptionWidth={92}
                         {...yakitCombinationSearchProps}
                         valueBeforeOption={search.type}
-                        addonBeforeOption={funcSearchType}
+                        addonBeforeOption={funcSearchTypeList}
                         onSelectBeforeOption={onTypeChange}
                         inputSearchModuleTypeProps={{
                             value: searchValue,
