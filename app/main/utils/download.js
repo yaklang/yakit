@@ -33,12 +33,12 @@ module.exports = {
 
             return requestWithProgress(url, dest, undefined, (state) => {
                 if (!!state) {
-                    win.webContents.send("download-url-to-path-progress", { state, openPath: dest })
+                    win.webContents.send(`download-url-to-path-progress`, { state, openPath: dest })
                 }
             }, () => {
-                win.webContents.send("download-url-to-path-progress-finished")
+                win.webContents.send(`download-url-to-path-progress-finished`)
             }, (error) => {
-                win.webContents.send("download-url-to-path-progress-error", error)
+                win.webContents.send(`download-url-to-path-progress-error`, error)
             })
         })
         /**
