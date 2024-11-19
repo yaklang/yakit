@@ -26,12 +26,11 @@ import {TooltipIcon} from "../Tooltip/Tooltip"
 import {useMemoizedFn} from "ahooks"
 import {callCopyToClipboard} from "@/utils/basic"
 import {SolidXcircleIcon} from "@/assets/icon/solid"
-import {DownloadingState} from "@/yakitGVDefine"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import React from "react"
 import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import {safeFormatDownloadProcessState} from "@/components/layout/utils"
+import useDownloadUrlToLocalHooks from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -162,7 +161,6 @@ export const CustomFile = () => {
         if (fileInfo) onUpload(fileInfo.path)
     })
     const onCancel = useMemoizedFn(() => {
-        console.log('cancel-oos-split-upload',uploadTokenRef.current)
         ipcRenderer.invoke("cancel-oos-split-upload", uploadTokenRef.current).then(() => {
             onRemoveFile()
         })
@@ -382,55 +380,39 @@ const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
 
     const [percent, setPercent] = useState<number>(0)
 
-    useEffect(() => {
-        ipcRenderer.on(`download-url-to-path-progress`, (e, data: {state: DownloadingState; openPath: string}) => {
-            const {state} = data
-            const newState = safeFormatDownloadProcessState(state)
-            const newPercent = Math.trunc(newState.percent * 100)
-            console.log("download-url-to-path-progress", data, newState, newPercent)
-            setPercent(newPercent)
-            if (newState.percent >= 1) {
-                setVisible(false)
-                setPercent(0)
-            }
-        })
+    const taskTokenRef = useRef(randomString(40))
 
-        ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
-            yakitNotify("error", `下载失败:${error}`)
-        })
-
-        ipcRenderer.on(`download-url-to-path-progress-finished`, (e) => {
+    const onProgressData = useMemoizedFn((newState) => {
+        const newPercent = Math.trunc(newState.percent * 100)
+        setPercent(newPercent)
+        if (newState.percent >= 1) {
             setVisible(false)
             setPercent(0)
-        })
-
-        return () => {
-            ipcRenderer.removeAllListeners(`download-url-to-path-progress`)
-            ipcRenderer.removeAllListeners(`download-url-to-path-progress-error`)
-            ipcRenderer.removeAllListeners(`download-url-to-path-progress-finished`)
         }
-    }, [])
+    })
+
+    const {onStart, onCancel: onNotepadDownCancel} = useDownloadUrlToLocalHooks({
+        path,
+        taskToken: taskTokenRef.current,
+        onUploadData: onProgressData,
+        onUploadEnd: () => {
+            setVisible(false)
+            setPercent(0)
+        }
+    })
     useEffect(() => {
         setPercent(0)
         if (!visible) return
         const value = {
             url,
-            path,
-            fileName
+            path
         }
-        console.log("download-url-to-path", value)
-        ipcRenderer.invoke("download-url-to-path", value)
+        onStart(value)
     }, [visible])
     const onCancel = useMemoizedFn(() => {
-        console.log("cancel-download-url-to-path", path)
-        ipcRenderer
-            .invoke("cancel-download-url-to-path", {path})
-            .then(() => {
-                onCancelDownload()
-            })
-            .catch((e) => {
-                yakitNotify("error", `取消下载失败: ${e}`)
-            })
+        onNotepadDownCancel().then(() => {
+            onCancelDownload()
+        })
     })
     return (
         <YakitHint
