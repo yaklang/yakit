@@ -445,12 +445,12 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     <FuncSearch
                         yakitCombinationSearchProps={{
                             selectProps: {size: "small"},
-                            inputSearchModuleTypeProps: {size: "middle"},
-                            beforeOptionWidth: 78
+                            inputSearchModuleTypeProps: {size: "middle"}
                         }}
                         value={search}
                         onChange={setSearch}
                         onSearch={onSearch}
+                        includeSearchType={["keyword", "userName"]}
                     />
                     <YakitButton
                         type='outline2'
