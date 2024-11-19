@@ -3,7 +3,6 @@ const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
-const crypto = require("crypto")
 const {Readable} = require("stream")
 
 module.exports = (win, getClient) => {
@@ -29,34 +28,6 @@ module.exports = (win, getClient) => {
         const fileData = fs.readFileSync(filePath)
         return fileData.toString("base64")
     })
-
-    // 计算Hash（支持分片计算与整体计算）
-    const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
-        return new Promise((resolve, reject) => {
-            let options = {}
-            if (size && chunkSize && chunkIndex) {
-                const start = chunkIndex * chunkSize
-                const end = Math.min(start + chunkSize, size)
-                options = {start, end}
-            }
-            // 创建当前分片的读取流
-            const chunkStream = fs.createReadStream(path, options)
-            // 计算Hash
-            const hash = crypto.createHash("sha1")
-            chunkStream.on("data", (chunk) => {
-                hash.update(chunk)
-            })
-            chunkStream.on("end", () => {
-                // 单独一片的Hash
-                const fileChunkHash = hash.digest("hex").slice(0, 8) // 仅保留前8个字符作为哈希值
-                resolve(fileChunkHash)
-            })
-
-            chunkStream.on("error", (err) => {
-                reject(err)
-            })
-        })
-    }
 
     // 上传次数缓存
     let postPackageHistory = {}
