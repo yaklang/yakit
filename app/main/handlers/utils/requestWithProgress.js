@@ -1,6 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
-const {throttle} = require('throttle-debounce');
+const { throttle } = require('throttle-debounce');
 const path = require("path");
 const {
     yaklangEngineDir,
@@ -89,6 +89,29 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
     });
 }
 
+/**
+ * TODO 待优化整合
+ * 取消下载并删除不完整的文件
+ */
+function cancelRequestProgress(path) {
+    return new Promise((resolve, reject) => {
+        if (writer) {
+            writer.on('close', () => {
+                try {
+                    fs.unlinkSync(path)
+                } catch (e) {
+
+                }
+                reject(new Error('Write operation cancelled'));
+            });
+            writer.destroy(new Error('Write operation cancelled'));
+            resolve()
+        } else {
+            resolve()
+        }
+    })
+}
+
 function cancelRequestWithProgress(version) {
     return new Promise((resolve, reject) => {
         if (version === "") reject(new Error('Version number does not exist'));
@@ -113,4 +136,5 @@ function cancelRequestWithProgress(version) {
 module.exports = {
     requestWithProgress,
     cancelRequestWithProgress,
+    cancelRequestProgress,
 }
