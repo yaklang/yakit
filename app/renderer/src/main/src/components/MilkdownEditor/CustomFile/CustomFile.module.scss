@@ -1,7 +1,8 @@
+$fileDivHeight: 64px;
 .file-custom {
     display: flex;
     width: 400px;
-    height: 64px;
+    height: $fileDivHeight;
     padding: 8px 12px 8px 8px;
     align-items: center;
     gap: 8px;
@@ -9,6 +10,7 @@
     border: 1px solid var(--yakit-border-color);
     cursor: default;
     user-select: none;
+    position: relative;
     .file-custom-content {
         display: flex;
         align-items: center;
@@ -75,6 +77,66 @@
                     display: none;
                 }
             }
+        }
+    }
+}
+.file-custom-selected {
+    background-color: var(--yakit-primary-2);
+}
+
+.tooltip-action {
+    position: absolute;
+    bottom: $fileDivHeight;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid var(--yakit-border-color);
+    background: #fff;
+    box-shadow: 0px 6px 20px 0px rgba(204, 210, 222, 0.3);
+    height: 52px;
+    padding: 12px;
+    gap: 8px;
+}
+.success-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 40px;
+    gap: 4px;
+    .x-circle-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 4px;
+        cursor: pointer;
+        border-radius: 4px;
+        &:hover {
+            background-color: var(--yakit-background-color);
+        }
+        .x-circle-icon {
+            svg {
+                width: 20px;
+                height: 20px;
+                color: var(--yakit-danger-5);
+            }
+        }
+    }
+}
+
+.download-progress {
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
         }
     }
 }
