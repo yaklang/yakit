@@ -20,7 +20,10 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
         {
             tag: `div[data-type='${fileCustomId}']`,
             getAttrs: (dom) => {
-                return {fileId: dom.getAttribute("data-file-id")}
+                return {
+                    fileId: dom.getAttribute("data-file-id"),
+                    path: dom.getAttribute("data-path")
+                }
             }
         }
     ],
@@ -34,11 +37,9 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
     parseMarkdown: {
         match: (node) => {
             const {type, name} = node
-            // console.log("parseMarkdown-match", node)
             return type === "textDirective" && name === "file"
         },
         runner: (state, node, type) => {
-            // console.log("parseMarkdown-runner", node)
             if (type.name === fileCustomId) {
                 state
                     .openNode(type, {...(node.attributes as Attrs)})
@@ -59,7 +60,8 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
                 .openNode("textDirective", undefined, {
                     name: "file",
                     attributes: {
-                        fileId: node.attrs.fileId
+                        fileId: node.attrs.fileId,
+                        path: node.attrs.path,
                     }
                 })
                 .next(node.content)
