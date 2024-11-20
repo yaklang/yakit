@@ -7,6 +7,11 @@ export interface PluginEnvVariablesProps {
     keys?: string[]
 }
 
+export interface PluginEnvInfo extends KVPair {
+    /** 是否在本地数据库中存在 */
+    isLocal: boolean
+}
+
 export interface PluginEnvData {
     Env: KVPair[]
 }

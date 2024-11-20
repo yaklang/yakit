@@ -2,7 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {useDebounceFn, useInViewport, useMemoizedFn, useVirtualList} from "ahooks"
 import {InputRef} from "antd"
 import {OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon} from "@/assets/icon/outline"
-import {PluginEnvVariablesProps} from "./PluginEnvVariablesType"
+import {PluginEnvInfo, PluginEnvVariablesProps} from "./PluginEnvVariablesType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -15,10 +15,16 @@ import {
     grpcSetPluginEnvVariables
 } from "../utils/grpc"
 import {KVPair} from "@/models/kv"
-import {failed} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 
 import classNames from "classnames"
 import styles from "./PluginEnvVariables.module.scss"
+
+const DefaultEnvInfo: PluginEnvInfo = {
+    Key: "",
+    Value: "",
+    isLocal: false
+}
 
 /** @name 插件全局变量 */
 export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props, ref) => {
@@ -30,8 +36,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     const [showScroll, setShowScroll] = useState<boolean>(false)
 
     const [loading, setLoading] = useState<boolean>(false)
-    const allData = useRef<KVPair[]>([])
-    const [data, setData] = useState<KVPair[]>([])
+    const [data, setData] = useState<PluginEnvInfo[]>([])
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const bodyRef = useRef<HTMLDivElement>(null)
@@ -49,7 +54,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                 setData([])
             }
         }
-    }, [inViewPort])
+    }, [inViewPort, keys])
 
     useEffect(() => {
         if (!wrapperRef.current) {
@@ -63,14 +68,14 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
     /** ---------- 搜索 Start ---------- */
     // 将插件里，并且不在本地全局环境变量的数据合并到整个表里
-    const handleIntegrateData = useMemoizedFn((envs: KVPair[]) => {
+    const handleIntegrateData = useMemoizedFn((envs: PluginEnvInfo[]) => {
         if (!keys || keys.length === 0) return envs
         else {
             const envKeys = envs.map((item) => item.Key)
             const filters = keys.filter((item) => !envKeys.includes(item))
             if (filters.length === 0) return envs
             const newEnv = filters.map((item) => {
-                return {Key: item, Value: ""}
+                return {Key: item, Value: "", isLocal: false} as PluginEnvInfo
             })
             return newEnv.concat(envs)
         }
@@ -82,10 +87,20 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
         setLoading(true)
         if (isPlugin) {
+            if (!keys || keys.length === 0) {
+                setData([])
+                setTimeout(() => {
+                    setLoading(false)
+                }, 200)
+                return
+            }
             grpcFetchPluginEnvVariables({Key: [...(keys || [])]})
                 .then((res) => {
-                    allData.current = handleIntegrateData(res.Env)
-                    setData(allData.current.filter((item) => item.Key.includes(search.current)))
+                    const envs = res.Env.map((item) => {
+                        return {...item, isLocal: true} as PluginEnvInfo
+                    })
+                    const arr = handleIntegrateData(envs)
+                    setData(arr.filter((item) => item.Key.includes(search.current)))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -96,8 +111,10 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         } else {
             grpcFetchAllPluginEnvVariables()
                 .then((res) => {
-                    allData.current = [...res.Env]
-                    setData(allData.current.filter((item) => item.Key.includes(search.current)))
+                    const envs = res.Env.map((item) => {
+                        return {...item, isLocal: true} as PluginEnvInfo
+                    })
+                    setData(envs.filter((item) => item.Key.includes(search.current)))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -121,19 +138,14 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     /** ---------- 搜索 End ---------- */
 
     // 更新数据
-    const updateData = useMemoizedFn((type: "delete" | "modify" | "add", info: KVPair) => {
+    const updateData = useMemoizedFn((type: "delete" | "modify" | "add", info: PluginEnvInfo) => {
         if (type === "delete") {
-            allData.current = allData.current.filter((item) => item.Key !== info.Key)
             setData((data) => data.filter((item) => item.Key !== info.Key))
         }
         if (type === "modify") {
-            allData.current = allData.current.map((item) => {
-                if (item.Key === info.Key) item.Value = info.Value
-                return item
-            })
             setData((data) => {
                 return data.map((item) => {
-                    if (item.Key === info.Key) item.Value = info.Value
+                    if (item.Key === info.Key) return {...info}
                     return item
                 })
             })
@@ -150,7 +162,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         return editingKeys.includes(key)
     })
     // 旧环境变量信息
-    const oldEnvInfo = useRef<KVPair>()
+    const oldEnvInfo = useRef<PluginEnvInfo>()
 
     // 双击编辑
     const inputRef = useRef<InputRef>(null)
@@ -161,7 +173,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         setActiveEditKey(undefined)
         setEnvValue("")
     })
-    const handleDoubleEdit = useMemoizedFn((info: KVPair) => {
+    const handleDoubleEdit = useMemoizedFn((info: PluginEnvInfo) => {
         if (isEditLoading(info.Key)) return
 
         oldEnvInfo.current = {...info}
@@ -175,7 +187,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     const handleDoubleEditBlur = useMemoizedFn(() => {
         const request: KVPair = {Key: activeEditKey || "", Value: envValue}
 
-        if (!activeEditKey || oldEnvInfo.current?.Value === envValue) {
+        if (!activeEditKey || (oldEnvInfo.current?.isLocal && oldEnvInfo.current?.Value === envValue)) {
             handleInitDouble()
             return
         }
@@ -183,7 +195,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         setEditingKeys((arr) => [...arr, request.Key])
         grpcSetPluginEnvVariables({Env: [{...request}]})
             .then(() => {
-                updateData("modify", request)
+                updateData("modify", {...request, isLocal: true})
                 handleInitDouble()
             })
             .catch(() => {})
@@ -197,11 +209,11 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     // 弹框编辑
     const isNew = useRef<boolean>(true)
     const [showEdit, setShowEdit] = useState<boolean>(false)
-    const [editInfo, setEditInfo] = useState<KVPair>()
+    const [editInfo, setEditInfo] = useState<PluginEnvInfo>()
 
     const [modalLoading, setModalLoading] = useState<boolean>(false)
 
-    const handleOpenEdit = useMemoizedFn((isEdit: boolean, info?: KVPair) => {
+    const handleOpenEdit = useMemoizedFn((isEdit: boolean, info?: PluginEnvInfo) => {
         if (showEdit) return
         if (isEdit && (!info || isEditLoading(info.Key))) return
 
@@ -216,15 +228,17 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
             failed("请填写变量名")
             return
         }
-        if (!isNew.current && oldEnvInfo.current?.Value === editInfo.Value) {
+        if (!isNew.current && oldEnvInfo.current?.isLocal && oldEnvInfo.current?.Value === editInfo.Value) {
+            yakitNotify("error", "请修改内容后再次操作")
             return
         }
 
+        const kv: KVPair = {Key: editInfo.Key, Value: editInfo.Value}
         const apiFunc = isNew.current ? grpcCreatePluginEnvVariables : grpcSetPluginEnvVariables
         setModalLoading(true)
-        apiFunc({Env: [{...editInfo}]})
+        apiFunc({Env: [{...kv}]})
             .then(() => {
-                updateData(isNew.current ? "add" : "modify", editInfo)
+                updateData(isNew.current ? "add" : "modify", {...editInfo, isLocal: true})
             })
             .catch(() => {})
             .finally(() => {
@@ -244,7 +258,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
     /** ----------  删除 Start ---------- */
     const [deleteKeys, setDeleteKeys] = useState<string[]>([])
-    const handleDelete = useMemoizedFn((info: KVPair) => {
+    const handleDelete = useMemoizedFn((info: PluginEnvInfo) => {
         const isExits = deleteKeys.includes(info.Key)
         if (isExits) return
 
@@ -274,8 +288,8 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                     <div className={styles["title-style"]}>插件全局变量</div>
                     <div className={styles["subtitle-style"]}>
                         {isPlugin
-                            ? "仅展示本插件使用到的变量，。编辑后会同步到全局"
-                            : "存放所有插件全局变量，可双击变量值修改"}
+                            ? "仅展示本插件使用到的变量，编辑后会同步到全局"
+                            : "存放所有插件全局变量，可双击变量值修改，但未配置的变量不会在此显示"}
                     </div>
                 </div>
 
@@ -319,7 +333,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                             <div ref={bodyRef}>
                                 {list.map((ele) => {
                                     const {data} = ele
-                                    const {Key: infoKey, Value: infoValue} = data
+                                    const {Key: infoKey, Value: infoValue, isLocal} = data
                                     return (
                                         <div key={infoKey} style={{height: 40}} className={styles["table-tr"]}>
                                             <YakitSpin spinning={editingKeys.includes(infoKey)}>
@@ -343,8 +357,12 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                                 onBlur={handleDoubleEditBlur}
                                                                 onPressEnter={handleDoubleEditBlur}
                                                             />
-                                                        ) : (
+                                                        ) : isLocal ? (
                                                             infoValue
+                                                        ) : (
+                                                            <span className={styles["plugin-env-value-noexist"]}>
+                                                                未配置
+                                                            </span>
                                                         )}
                                                     </div>
                                                     <div style={{maxWidth: 120}} className={styles["table-cell"]}>
@@ -388,7 +406,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
             <YakitModal
                 type='white'
-                title={`${isNew.current ? "新建" : "编辑"}变量值v`}
+                title={`${isNew.current ? "新建" : "编辑"}变量值`}
                 centered={true}
                 maskClosable={false}
                 closable={true}
@@ -404,7 +422,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                             value={editInfo?.Key}
                             disabled={!isNew.current}
                             onChange={(e) => {
-                                setEditInfo({...(editInfo || {Value: ""}), Key: e.target.value})
+                                setEditInfo({...(editInfo || DefaultEnvInfo), Key: e.target.value})
                             }}
                         />
                     </div>
@@ -415,7 +433,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                             allowClear={true}
                             value={editInfo?.Value}
                             onChange={(e) => {
-                                setEditInfo({...(editInfo || {Key: ""}), Value: e.target.value})
+                                setEditInfo({...(editInfo || DefaultEnvInfo), Value: e.target.value})
                             }}
                         />
                     </div>
