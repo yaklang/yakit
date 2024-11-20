@@ -14,6 +14,8 @@ import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
 import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
+import emiter from "@/utils/eventBus/eventBus"
+import { openExternalWebsite } from "@/utils/openWebsite"
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -162,18 +164,19 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             }
         }, [newRequest, isHttps])
 
-        const [url, setUrl] = useState<string>("")
-        useDebounceEffect(
-            () => {
-                ipcRenderer
-                    .invoke("ExtractUrl", {Request: newRequest, IsHTTPS: isHttps})
-                    .then((data: {Url: string}) => {
-                        setUrl(data.Url)
-                    })
-            },
-            [newRequest, isHttps],
-            {wait: 300}
-        )
+        const copyUrl = useMemoizedFn(() => {
+            copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
+        })
+        const onClickOpenBrowserMenu = useMemoizedFn(() => {
+            ipcRenderer
+                .invoke("ExtractUrl", {Request: newRequest, IsHTTPS: isHttps})
+                .then((data: {Url: string}) => {
+                    openExternalWebsite(data.Url)
+                })
+                .catch((e) => {
+                    yakitNotify("error", "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+                })
+        })
 
         return (
             <NewHTTPPacketEditor
@@ -198,7 +201,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                     pageId,
                 }}
                 extraEnd={firstNodeExtra && firstNodeExtra()}
-                url={url}
+                onClickUrlMenu={copyUrl}
+                onClickOpenBrowserMenu={onClickOpenBrowserMenu}
             />
         )
     })

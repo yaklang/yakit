@@ -25,7 +25,8 @@ import {v4 as uuidv4} from "uuid"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import { HTTPFlowBodyByIdRequest } from "@/components/HTTPHistory"
+import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -43,6 +44,8 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
     showDownBodyMenu?: boolean
+    onClickUrlMenu?: () => void
+    onClickOpenBrowserMenu?: () => void
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -63,6 +66,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         pageId,
         downbodyParams,
         showDownBodyMenu = true,
+        onClickUrlMenu,
+        onClickOpenBrowserMenu,
         ...restProps
     } = props
 
@@ -101,7 +106,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    callCopyToClipboard(url || "")
+                    if (onClickUrlMenu) {
+                        onClickUrlMenu()
+                    } else {
+                        callCopyToClipboard(url || "")
+                    }
                 }
             },
             copyCSRF: {
@@ -327,18 +336,20 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                 yakitNotify("info", "无数据包-无法复制 Body")
                                 return
                             }
-                            ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag:true}).then((bytes: {Raw: Uint8Array}) => {
-                                ipcRenderer
-                                    .invoke("BytesToBase64", {
-                                        Bytes: bytes.Raw
-                                    })
-                                    .then((res: {Base64: string}) => {
-                                        callCopyToClipboard(res.Base64)
-                                    })
-                                    .catch((err) => {
-                                        yakitNotify("error", `${err}`)
-                                    })
-                            })
+                            ipcRenderer
+                                .invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag: true})
+                                .then((bytes: {Raw: Uint8Array}) => {
+                                    ipcRenderer
+                                        .invoke("BytesToBase64", {
+                                            Bytes: bytes.Raw
+                                        })
+                                        .then((res: {Base64: string}) => {
+                                            callCopyToClipboard(res.Base64)
+                                        })
+                                        .catch((err) => {
+                                            yakitNotify("error", `${err}`)
+                                        })
+                                })
                         }
                     }
                 }
@@ -347,7 +358,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }, {}) as OtherMenuListProps
         }
 
-        if (url) {
+        if (url || onClickOpenBrowserMenu) {
             menuItems = Object.keys(menuItems).reduce((ac, a) => {
                 if (a === "openBrowser") {
                     ac["openURLBrowser"] = {
@@ -358,7 +369,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             }
                         ],
                         onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            url && openExternalWebsite(url)
+                            if (onClickOpenBrowserMenu) {
+                                onClickOpenBrowserMenu()
+                            } else if (url) {
+                                openExternalWebsite(url)
+                            }
                         }
                     }
                 }
@@ -383,7 +398,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     ipcRenderer
                                         .invoke("GetHTTPFlowBodyById", {
                                             ...downbodyParams,
-                                            uuid: uuidv4(),
+                                            uuid: uuidv4()
                                         })
                                         .then(() => {
                                             yakitNotify("success", "下载成功")
@@ -398,9 +413,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     yakitNotify("info", "无数据包-无法下载 Body")
                                     return
                                 }
-                                ipcRenderer.invoke("GetHTTPPacketBody", {Packet: text}).then((bytes: {Raw: Uint8Array}) => {
-                                    saveABSFileToOpen("packet-body.txt", bytes.Raw)
-                                })
+                                ipcRenderer
+                                    .invoke("GetHTTPPacketBody", {Packet: text})
+                                    .then((bytes: {Raw: Uint8Array}) => {
+                                        saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                    })
                             } catch (e) {
                                 failed("editor exec download body failed")
                             }
@@ -425,7 +442,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerValue,
         webSocketToServer,
         downstreamProxyStr,
-        downbodyParams
+        downbodyParams,
+        onClickUrlMenu,
+        onClickOpenBrowserMenu
     ])
 
     return (

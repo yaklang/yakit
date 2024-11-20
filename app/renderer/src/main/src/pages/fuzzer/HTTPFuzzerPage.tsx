@@ -3080,16 +3080,19 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             return Uint8ArrayToString(fuzzerResponse.ResponseRaw)
         }, [fuzzerResponse.ResponseRaw])
 
-        const [url, setUrl] = useState<string>("")
-        useDebounceEffect(
-            () => {
-                ipcRenderer.invoke("ExtractUrl", {Request: request, IsHTTPS: isHttps}).then((data: {Url: string}) => {
-                    setUrl(data.Url)
+        const copyUrl = useMemoizedFn(() => {
+            copyAsUrl({Request: request, IsHTTPS: !!isHttps})
+        })
+        const onClickOpenBrowserMenu = useMemoizedFn(() => {
+            ipcRenderer
+                .invoke("ExtractUrl", {Request: request, IsHTTPS: !!isHttps})
+                .then((data: {Url: string}) => {
+                    openExternalWebsite(data.Url)
                 })
-            },
-            [request, isHttps],
-            {wait: 300}
-        )
+                .catch((e) => {
+                    yakitNotify("error", "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")
+                })
+        })
 
         return (
             <>
@@ -3178,7 +3181,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, "")
                                 }
                             }}
-                            url={url}
+                            onClickUrlMenu={copyUrl}
+                            onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                             downbodyParams={{RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false}}
                             {...otherEditorProps}
                         />

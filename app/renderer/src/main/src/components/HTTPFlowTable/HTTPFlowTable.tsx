@@ -1508,18 +1508,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         cancleFilter(value)
     })
 
+    const cleanLogTableData = useMemoizedFn(() => {
+        setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+        setData([])
+        setParams({...params, AfterUpdatedAt: undefined, BeforeUpdatedAt: undefined})
+        setTimeout(() => {
+            updateData()
+        }, 100)
+    })
     useEffect(() => {
         /**
          * 清空log表格数据
          */
-        const cleanLogTableData = () => {
-            setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-            setData([])
-            setParams({...params, AfterUpdatedAt: undefined, BeforeUpdatedAt: undefined})
-            setTimeout(() => {
-                updateData()
-            }, 100)
-        }
         pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
         pageType === "MITM" && emiter.on("cleanMitmLogEvent", cleanLogTableData)
         return () => {

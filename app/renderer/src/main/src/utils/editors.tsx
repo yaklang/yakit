@@ -570,6 +570,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
     showDownBodyMenu?: boolean
+    onClickUrlMenu?: () => void
+    onClickOpenBrowserMenu?: () => void
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1192,6 +1194,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             url={props.url}
                             downbodyParams={props.downbodyParams}
                             showDownBodyMenu={props.showDownBodyMenu}
+                            onClickUrlMenu={props.onClickUrlMenu}
+                            onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
                             {...props.extraEditorProps}
                         />
                     )}
