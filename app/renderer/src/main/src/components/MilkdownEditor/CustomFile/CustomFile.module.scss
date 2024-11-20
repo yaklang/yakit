@@ -109,24 +109,24 @@ $fileDivHeight: 64px;
     justify-content: flex-end;
     min-width: 40px;
     gap: 4px;
-    .x-circle-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        padding: 4px;
-        cursor: pointer;
-        border-radius: 4px;
-        &:hover {
-            background-color: var(--yakit-background-color);
-        }
-        .x-circle-icon {
-            svg {
-                width: 20px;
-                height: 20px;
-                color: var(--yakit-danger-5);
-            }
+}
+.x-circle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+    .x-circle-icon {
+        svg {
+            width: 20px;
+            height: 20px;
+            color: var(--yakit-danger-5);
         }
     }
 }
