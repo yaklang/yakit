@@ -131,19 +131,17 @@ export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.GetNo
     })
 }
 
-export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, API.NotepadDownloadResponse> = (
+export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, string> = (
     params,
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        NetWorkApi<API.NotepadDownloadRequest, API.NotepadDownloadResponse>({
+        NetWorkApi<API.NotepadDownloadRequest, string>({
             method: "post",
             url: "notepad/download",
             data: params
         })
-            .then((res) => {
-                resolve(res)
-            })
+            .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "下载记事本失败:" + err)
                 reject(err)

@@ -17,7 +17,7 @@ import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/ima
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
 
 import "./css/index.scss"
-import {yakitInfo} from "@/utils/notification"
+import {yakitInfo, yakitNotify} from "@/utils/notification"
 import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock/CodeBlock"
@@ -49,6 +49,8 @@ import {codeCustomPlugin} from "./utils/codePlugin"
 import {MilkdownHr} from "./MilkdownHr/MilkdownHr"
 
 import {tableBlock} from "@milkdown/kit/component/table-block"
+import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
+import {httpUploadImgBase64} from "@/apiUtils/http"
 
 const markdown = `
 
@@ -154,9 +156,9 @@ const markdown1 = `
 
 #ggg
 
-:file[]{fileId="111"}
+:file[]{fileId="https://yakit-online.oss-accelerate.aliyuncs.com/notepade/2e80f8894f904134fb795f0731bed428-1732088835089&*&app.zip"}
 
-![1.00](https://milkdown.dev/polar.jpeg "Hello by a polar bear")
+![1.00]()
 
 Maybe more? ![]()
 
@@ -166,6 +168,14 @@ Maybe more? ![]()
 const markdown2 = `#ggg
 fsdfsdf
 `
+/**选择的图片转为Base64 */
+export const getBase64 = (file): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = (error) => reject(error)
+    })
 
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const {setEditor, customPlugin = []} = props
@@ -210,9 +220,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 ctx.update(uploadConfig.key, (prev) => ({
                     ...prev,
                     uploader: async (files, schema) => {
-                        // console.log("uploadConfig-files", files)
                         const images: File[] = []
-
                         for (let i = 0; i < files.length; i++) {
                             const file = files.item(i)
                             if (!file) {
@@ -223,22 +231,29 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             if (!file.type.includes("image")) {
                                 continue
                             }
-
+                            if (file.size > ImgMaxSize) {
+                                yakitNotify("error", "图片大小不能超过1M")
+                                continue
+                            }
                             images.push(file)
                         }
-
                         const nodes: Node[] = await Promise.all(
                             images.map(async (image) => {
-                                // const src = await YourUploadAPI(image)
-                                const src = "https://milkdown.dev/polar.jpeg"
                                 const alt = image.name
-                                return schema.nodes.image.createAndFill({
-                                    src,
-                                    alt
-                                }) as Node
+                                try {
+                                    const src = await uploadImg(image)
+                                    return schema.nodes["image-block"].createAndFill({
+                                        src,
+                                        alt
+                                    }) as Node
+                                } catch (error) {
+                                    return schema.nodes.image.createAndFill({
+                                        src: "",
+                                        alt
+                                    }) as Node
+                                }
                             })
                         )
-
                         return nodes
                     }
                 }))
@@ -266,9 +281,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             />
                         </svg>
                     `,
-                    onUpload: async (file: File) => {
-                        // console.log("imageBlockConfig-file", file)
-                        const url = "https://milkdown.dev/polar.jpeg"
+                    onUpload: async (image: File) => {
+                        const url = uploadImg(image)
                         return url
                     }
                 }))
@@ -293,9 +307,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             />
                             <circle cx="14" cy="8" r="1" fill="currentColor" />
                         </svg> `,
-                    onUpload: async (file: File) => {
-                        // console.log("file", file)
-                        const url = "https://milkdown.dev/polar.jpeg"
+                    onUpload: async (image: File) => {
+                        const url = uploadImg(image)
                         return url
                     }
                 }))
@@ -379,6 +392,27 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             )
         ].flat()
     }, [])
+
+    const uploadImg = useMemoizedFn(async (image) => {
+        if (image.size > ImgMaxSize) {
+            yakitNotify("error", "图片大小不能超过1M")
+            return ""
+        }
+        try {
+            const base64 = await getBase64(image)
+            const src = await httpUploadImgBase64({
+                base64,
+                imgInfo: {
+                    filename: image.name || "image.png",
+                    contentType: image.type || "image/png"
+                },
+                type: "notepad"
+            })
+            return src
+        } catch (error) {
+            return ""
+        }
+    })
 
     const {get} = useEditor((root) => {
         return (

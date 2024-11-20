@@ -374,7 +374,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         setDownItemLoading(true)
         const downParams: API.NotepadDownloadRequest = {
             hash: record.hash,
-            downloadUrl: ""
         }
         onBaseDown(downParams)
             .then((res) => {
@@ -394,7 +393,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         const downParams: API.NotepadDownloadRequest = {
             ...filter,
             hash: isAllSelect ? "" : selectedRowKeys?.join(","),
-            downloadUrl: ""
         }
         setLoading(true)
         onBaseDown(downParams)
@@ -415,7 +413,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             }
             apiDownloadNotepad(params)
                 .then((res) => {
-                    //TODO - 等待后端给最新的接口文档
+                    //TODO - 待验证
                     saveDialogAndGetLocalFileInfo((res as string) || "")
                         .then(resolve)
                         .catch(reject)
