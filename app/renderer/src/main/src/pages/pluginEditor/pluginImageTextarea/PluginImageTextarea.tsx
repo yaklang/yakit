@@ -15,7 +15,7 @@ import {ImagePreviewList} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import classNames from "classnames"
 import styles from "./PluginImageTextarea.module.scss"
 
-const ImgMaxSize = 1 * 1024 * 1024
+export const ImgMaxSize = 1 * 1024 * 1024
 
 export const PluginImageTextarea: React.FC<PluginImageTextareaProps> = memo(
     forwardRef((props, ref) => {

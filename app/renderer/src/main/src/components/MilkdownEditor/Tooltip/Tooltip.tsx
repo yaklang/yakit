@@ -103,8 +103,8 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
 
     useDebounceEffect(
         () => {
-            tooltipProvider.current?.hide()
-            if (isSelectFile()) {
+            if (isSelectFile() || isSelectImg()) {
+                tooltipProvider.current?.hide()
                 return
             }
             tooltipProvider.current?.update(view, prevState)
@@ -115,15 +115,26 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
     /**判断选中节点是否为文件 */
     const isSelectFile = useMemoizedFn(() => {
         const selectedNode = getSelectNode()
-        const firstChild = selectedNode.firstChild
-        return firstChild?.type.name === fileCustomSchema.node.id
+        return selectedNode?.type.name === fileCustomSchema.node.id
+    })
+    /**判断选中节点是否为 图片 */
+    const isSelectImg = useMemoizedFn(() => {
+        const {state} = view
+        const selectedNode = getSelectNode()
+        switch (selectedNode?.type.name) {
+            case state.schema.nodes.image.name:
+            case state.schema.nodes["image-block"].name:
+                return true
+            default:
+                return false
+        }
     })
     /**
      * 获取选中的节点
      */
     const getSelectNode = useMemoizedFn(() => {
-        const {$from} = view.state.selection
-        const selectedNode = $from.node()
+        const {from} = view.state.selection
+        const selectedNode = view.state.doc.nodeAt(from)
         return selectedNode
     })
 
