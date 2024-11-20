@@ -1,4 +1,5 @@
 import {APIFunc} from "@/apiUtils/type"
+import {getTypeAndNameByPath} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {PluginListPageMeta, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -158,11 +159,7 @@ export interface SaveDialogResponse {
     /** 文件名 */
     fileName: string
 }
-/**获取文件名称 */
-const getFileName = (filePath) => {
-    const match = filePath.match(/[^\\/]+$/) // 匹配最后的文件名
-    return match ? match[0] : ""
-}
+
 /**
  * @description 打开保存文件框，返回保存信息(路径和文件名)
  * @param url
@@ -176,7 +173,7 @@ export const saveDialogAndGetLocalFileInfo: APIFunc<string, SaveDialogResponse> 
             reject("下载链接为空")
             return
         }
-        const fileName = getFileName(url)
+        const fileName = getTypeAndNameByPath(url).fileName
         ipcRenderer
             .invoke("show-save-dialog", fileName)
             .then((res) => {
@@ -189,7 +186,6 @@ export const saveDialogAndGetLocalFileInfo: APIFunc<string, SaveDialogResponse> 
                     }
                     resolve(v)
                 } else {
-                    if (!hiddenError) yakitNotify("error", "获取保存文件路径错误")
                     reject("获取保存文件路径错误")
                 }
             })

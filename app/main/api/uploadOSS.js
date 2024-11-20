@@ -117,8 +117,12 @@ module.exports = (win, getClient) => {
                         })
                     }
                     if (res.code !== 200 && ossPostPackageHistory[hash] <= 3) {
-                        // 传输失败 重传3次
-                        await ossUploadBigFile({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token })
+                        try {
+                            // 传输失败 重传3次
+                            await ossUploadBigFile({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token })
+                        } catch (error) {
+                            reject(error)
+                        }
                     } else if (ossPostPackageHistory[hash] > 3) {
                         reject(res.data.reason)
                     }

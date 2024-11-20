@@ -32,14 +32,12 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
             const {state} = data
             const newState = safeFormatDownloadProcessState(state)
             isSuccess = true
-            console.log("download-url-to-path-progress", newState)
             onUploadData(newState)
         })
 
         ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
             isSuccess = false
             onUploadError && onUploadError()
-            console.log("download-url-to-path-progress-error", error)
             yakitNotify("error", `下载失败:${error}`)
         })
 
@@ -48,7 +46,6 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
                 onUploadSuccess && onUploadSuccess()
             }
             onUploadEnd && onUploadEnd()
-            console.log("download-url-to-path-progress-finished")
         })
 
         return () => {
@@ -58,7 +55,6 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
         }
     }, [])
     const onStart = (uploadParams: DownloadUrlToLocal) => {
-        console.log("download-url-to-path", uploadParams)
         const params = {
             url: uploadParams.onlineUrl,
             path: uploadParams.localPath

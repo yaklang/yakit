@@ -84,13 +84,13 @@ const hashChunk = ({ path, size, chunkSize, chunkIndex }) => {
         // 创建当前分片的读取流
         const chunkStream = fs.createReadStream(path, options)
         // 计算Hash
-        const hash = crypto.createHash("sha1")
+        const hash = crypto.createHash("md5")
         chunkStream.on("data", (chunk) => {
             hash.update(chunk)
         })
         chunkStream.on("end", () => {
             // 单独一片的Hash
-            const fileChunkHash = hash.digest("hex").slice(0, 8) // 仅保留前8个字符作为哈希值
+            const fileChunkHash = hash.digest("hex")
             resolve(fileChunkHash)
         })
 

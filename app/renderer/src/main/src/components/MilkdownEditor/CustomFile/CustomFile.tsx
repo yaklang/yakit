@@ -33,6 +33,7 @@ import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
 import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
+import useUploadOSSHooks from "@/hook/useUploadOSS/useUploadOSS"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -48,10 +49,16 @@ interface DownFileInfoProps {
     path: string
     fileName: string
 }
-const getTypeAndNameByPath = (path) => {
-    const index = path.lastIndexOf(".")
-    const fileType = path.substring(index, path.length)
-    const fileName = path.split("\\").pop()
+/**上传文件后,后端拼接hash和文件名的字符:&*&;方便截取文件名 */
+export const getTypeAndNameByPath = (path) => {
+    let newPath = path
+    const firstIndex = newPath.indexOf("&*&")
+    if (firstIndex !== -1) {
+        newPath = path.substring(firstIndex + 3, path.length)
+    }
+    const index = newPath.lastIndexOf(".")
+    const fileType = newPath.substring(index, newPath.length)
+    const fileName = newPath.split("\\").pop()
     return {fileType, fileName}
 }
 export const CustomFile = () => {
@@ -99,36 +106,25 @@ export const CustomFile = () => {
                 })
         }
     }, [])
-    useEffect(() => {
-        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-data`, async (e, resData) => {
-            const {progress, res} = resData
-            const p = Math.trunc(progress)
+    const {onStart, onCancel: onUploadCancel} = useUploadOSSHooks({
+        taskToken: uploadTokenRef.current,
+        onUploadData: (p) => {
             if (p >= 100) setLoading(false)
             setPercent(p)
-            if (res?.code === 200 && typeof res?.data === "string") {
-                const url = res?.data || ""
-                const {fileName} = getTypeAndNameByPath(url)
-                setAttrs({fileId: url})
-                setFileInfo((v) => ({...v, url, name: fileName}))
-            }
-            if (res?.code === 209) {
-                setErrorReason(res?.data?.reason || "")
-            }
-        })
-        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-error`, async (e, error) => {
-            setErrorReason(`项目上传失败:${error}`)
-            failed(`项目上传失败:${error}`)
-        })
-        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-end`, async (e, error) => {
+        },
+        onUploadEnd: () => {
             setLoading(false)
             setPercent(0)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-data`)
-            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-error`)
-            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-end`)
+        },
+        onUploadError: (reason) => {
+            setErrorReason(reason || "")
+        },
+        setUrl: (url) => {
+            setAttrs({fileId: url})
+            setFileInfo((v) => ({...v, url}))
         }
-    }, [])
+    })
+
     const getFileInfoByLink = useMemoizedFn(() => {
         const {fileId, path: initPath} = attrs
         const path = initPath.replace(/\\/g, "\\")
@@ -137,9 +133,9 @@ export const CustomFile = () => {
             ipcRenderer
                 .invoke("get-http-file-link-info", fileId)
                 .then((res) => {
-                    const {fileType} = getTypeAndNameByPath(fileId)
+                    const {fileType, fileName} = getTypeAndNameByPath(fileId)
                     const item = {
-                        name: res.fileName,
+                        name: fileName,
                         size: res.size,
                         type: fileType,
                         url: fileId,
@@ -159,25 +155,20 @@ export const CustomFile = () => {
                 )
         }
     })
-    const onUpload = (filePath, isReload = false) => {
+    const onUpload = (filePath) => {
         if (!filePath) return
         setLoading(true)
         setErrorReason("")
         setPercent(0)
-        ipcRenderer.invoke("oss-split-upload", {
-            url: "upload/bigfile",
-            path: filePath,
-            token: uploadTokenRef.current,
-            isReload
-        })
+        onStart(filePath)
     }
     const onReloadUpload = useMemoizedFn((e) => {
         e.stopPropagation()
         e.preventDefault()
-        if (fileInfo) onUpload(fileInfo.path, true)
+        if (fileInfo) onUpload(fileInfo.path)
     })
     const onCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-oss-split-upload", uploadTokenRef.current).then(() => {
+        onUploadCancel().then(() => {
             onRemoveFile()
         })
     })
@@ -205,7 +196,7 @@ export const CustomFile = () => {
         const {fileId} = attrs
         saveDialogAndGetLocalFileInfo(fileId).then((v) => {
             setDownFileInfo(v)
-            setFileInfo({...fileInfo, path: v.path, name: v.fileName})
+            setFileInfo({...fileInfo, path: v.path})
             setVisibleDownFiles(true)
         })
     }
