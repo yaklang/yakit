@@ -50,7 +50,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const [shareText, setShareText] = useState<string>("")
     const [userList, setUserList] = useState<API.UserList[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
-
+    //TODO - 需要后端补协作者权限
     const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo.collaborator || [])
 
     const onClear = useMemoizedFn(() => {
