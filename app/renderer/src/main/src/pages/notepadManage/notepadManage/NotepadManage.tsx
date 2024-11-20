@@ -416,7 +416,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             apiDownloadNotepad(params)
                 .then((res) => {
                     //TODO - 等待后端给最新的接口文档
-                    console.log("apiDownloadNotepad", res)
                     saveDialogAndGetLocalFileInfo((res as string) || "")
                         .then(resolve)
                         .catch(reject)

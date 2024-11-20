@@ -141,7 +141,6 @@ export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, API.Notepad
             data: params
         })
             .then((res) => {
-                console.log("notepad/download", params, res)
                 resolve(res)
             })
             .catch((err) => {
@@ -210,7 +209,6 @@ export const onOpenLocalFileByPath: APIFunc<string, boolean> = (path, hiddenErro
                     openABSFileLocated(path)
                 } else {
                     if (!hiddenError) yakitNotify("error", `目标文件已不存在`)
-                    reject()
                 }
                 resolve(flag)
             })

@@ -1,6 +1,6 @@
 import {useNodeViewContext} from "@prosemirror-adapter/react"
 import styles from "./CustomFile.module.scss"
-import {useEffect, useRef, useState} from "react"
+import {useEffect, useRef, useState, ReactNode} from "react"
 import {randomString} from "@/utils/randomUtil"
 import {failed, yakitNotify} from "@/utils/notification"
 import {
@@ -16,6 +16,7 @@ import {
     OutlineDocumentduplicateIcon,
     OutlineDownloadIcon,
     OutlineFolderIcon,
+    OutlineRefreshIcon,
     OutlineUploadIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -56,40 +57,28 @@ const getTypeAndNameByPath = (path) => {
 export const CustomFile = () => {
     const {node, contentRef, selected, setAttrs, view} = useNodeViewContext()
     const {attrs} = node
-    const [fileInfo, setFileInfo] = useState<CustomFileItem>()
+    const [fileInfo, setFileInfo] = useState<CustomFileItem>({
+        name: "",
+        size: 0,
+        type: "",
+        url: "",
+        path: ""
+    })
     const [percent, setPercent] = useState<number>(0)
     const [loading, setLoading] = useState<boolean>(false)
-    const [downLoading, setDownLoading] = useState<boolean>(false)
-    const [downPercent, setDownPercent] = useState<string>()
     const [errorReason, setErrorReason] = useState<string>("")
     const [downFileInfo, setDownFileInfo] = useState<DownFileInfoProps>()
     const [visibleDownFiles, setVisibleDownFiles] = useState<boolean>(false)
+    const [queryFileErrorInfo, setQueryFileErrorInfo] = useState<string>("")
+    const [loadingRefresh, setLoadingRefresh] = useState<boolean>(false)
 
     const uploadTokenRef = useRef(randomString(40))
 
     useEffect(() => {
         const {fileId, path: initPath} = attrs
-        console.log("CustomFile-attrs", attrs)
         const path = initPath.replace(/\\/g, "\\")
-
         if (fileId !== "0") {
-            ipcRenderer
-                .invoke("get-http-file-link-info", fileId)
-                .then((res) => {
-                    const {fileType} = getTypeAndNameByPath(fileId)
-                    const item = {
-                        name: res.fileName,
-                        size: res.size,
-                        type: fileType,
-                        url: fileId,
-                        path
-                    }
-                    console.log("get-http-file-link-info", item, res)
-                    setFileInfo(item)
-                })
-                .catch((e) => {
-                    yakitNotify("error", `获取文件信息错误${e}`)
-                })
+            getFileInfoByLink()
         } else if (path) {
             ipcRenderer
                 .invoke("fetch-file-info-by-path", path)
@@ -102,7 +91,6 @@ export const CustomFile = () => {
                         url: "",
                         path
                     }
-                    console.log("fileInfo", fileInfo, item)
                     setFileInfo(item)
                     onUpload(path)
                 })
@@ -112,51 +100,84 @@ export const CustomFile = () => {
         }
     }, [])
     useEffect(() => {
-        ipcRenderer.on(`oos-split-upload-${uploadTokenRef.current}-data`, async (e, resData) => {
-            console.log("split-upload", resData)
+        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-data`, async (e, resData) => {
             const {progress, res} = resData
             const p = Math.trunc(progress)
             if (p >= 100) setLoading(false)
             setPercent(p)
             if (res?.code === 200 && typeof res?.data === "string") {
-                // setAttrs({path: "", fileId: res?.data})
-                setAttrs({fileId: res?.data})
+                const url = res?.data || ""
+                const {fileName} = getTypeAndNameByPath(url)
+                setAttrs({fileId: url})
+                setFileInfo((v) => ({...v, url, name: fileName}))
             }
             if (res?.code === 209) {
                 setErrorReason(res?.data?.reason || "")
             }
         })
-        ipcRenderer.on(`oos-split-upload-${uploadTokenRef.current}-error`, async (e, error) => {
-            console.log("split-upload-error", error)
+        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-error`, async (e, error) => {
             setErrorReason(`项目上传失败:${error}`)
             failed(`项目上传失败:${error}`)
         })
-        ipcRenderer.on(`oos-split-upload-${uploadTokenRef.current}-end`, async (e, error) => {
-            console.log("split-upload-end")
+        ipcRenderer.on(`oss-split-upload-${uploadTokenRef.current}-end`, async (e, error) => {
             setLoading(false)
             setPercent(0)
         })
         return () => {
-            ipcRenderer.removeAllListeners(`oos-split-upload-${uploadTokenRef.current}-data`)
-            ipcRenderer.removeAllListeners(`oos-split-upload-${uploadTokenRef.current}-error`)
-            ipcRenderer.removeAllListeners(`oos-split-upload-${uploadTokenRef.current}-end`)
+            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-data`)
+            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-error`)
+            ipcRenderer.removeAllListeners(`oss-split-upload-${uploadTokenRef.current}-end`)
         }
     }, [])
-    const onUpload = (filePath) => {
+    const getFileInfoByLink = useMemoizedFn(() => {
+        const {fileId, path: initPath} = attrs
+        const path = initPath.replace(/\\/g, "\\")
+        if (fileId !== "0") {
+            setLoadingRefresh(true)
+            ipcRenderer
+                .invoke("get-http-file-link-info", fileId)
+                .then((res) => {
+                    const {fileType} = getTypeAndNameByPath(fileId)
+                    const item = {
+                        name: res.fileName,
+                        size: res.size,
+                        type: fileType,
+                        url: fileId,
+                        path
+                    }
+                    setFileInfo(item)
+                })
+                .catch((e) => {
+                    setTimeout(() => {
+                        setQueryFileErrorInfo(`${e}`)
+                    }, 500)
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoadingRefresh(false)
+                    }, 200)
+                )
+        }
+    })
+    const onUpload = (filePath, isReload = false) => {
         if (!filePath) return
         setLoading(true)
         setErrorReason("")
         setPercent(0)
-        console.log("oos-split-upload", {url: "upload/bigfile", path: filePath, token: uploadTokenRef.current})
-        ipcRenderer.invoke("oos-split-upload", {url: "upload/bigfile", path: filePath, token: uploadTokenRef.current})
+        ipcRenderer.invoke("oss-split-upload", {
+            url: "upload/bigfile",
+            path: filePath,
+            token: uploadTokenRef.current,
+            isReload
+        })
     }
     const onReloadUpload = useMemoizedFn((e) => {
         e.stopPropagation()
         e.preventDefault()
-        if (fileInfo) onUpload(fileInfo.path)
+        if (fileInfo) onUpload(fileInfo.path, true)
     })
     const onCancel = useMemoizedFn(() => {
-        ipcRenderer.invoke("cancel-oos-split-upload", uploadTokenRef.current).then(() => {
+        ipcRenderer.invoke("cancel-oss-split-upload", uploadTokenRef.current).then(() => {
             onRemoveFile()
         })
     })
@@ -184,14 +205,13 @@ export const CustomFile = () => {
         const {fileId} = attrs
         saveDialogAndGetLocalFileInfo(fileId).then((v) => {
             setDownFileInfo(v)
-            if (fileInfo) setFileInfo({...fileInfo, path: v.path, name: v.fileName})
+            setFileInfo({...fileInfo, path: v.path, name: v.fileName})
             setVisibleDownFiles(true)
         })
     }
     const onCopyLink = useMemoizedFn((e) => {
         e.stopPropagation()
         e.preventDefault()
-        console.log("onCopyLink", fileInfo)
         if (fileInfo?.url) {
             callCopyToClipboard(fileInfo.url).catch(() => {
                 yakitNotify("error", "复制失败")
@@ -230,7 +250,6 @@ export const CustomFile = () => {
     })
     const onOpenFile = useMemoizedFn(() => {
         if (!fileInfo) return
-        console.log("fileInfo?.path", fileInfo?.path)
         onOpenLocalFileByPath(fileInfo?.path).then((flag) => {
             if (!flag) {
                 setFileInfo({...fileInfo, path: ""})
@@ -238,8 +257,23 @@ export const CustomFile = () => {
         })
     })
     const onCancelDownload = useMemoizedFn(() => {
-        if (fileInfo) setFileInfo({...fileInfo, path: ""})
+        setFileInfo({...fileInfo, path: ""})
         setVisibleDownFiles(false)
+    })
+    const onRefreshFileInfo = useMemoizedFn((e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        setQueryFileErrorInfo("")
+        getFileInfoByLink()
+    })
+    const errorNode = useMemoizedFn((error) => {
+        return (
+            <Tooltip title={`${error}`}>
+                <div className={styles["x-circle-btn"]}>
+                    <SolidXcircleIcon className={styles["x-circle-icon"]} onClick={onRemoveFile} />
+                </div>
+            </Tooltip>
+        )
     })
     return (
         <>
@@ -253,24 +287,15 @@ export const CustomFile = () => {
                     e.preventDefault()
                 }}
             >
-                {fileInfo ? (
-                    <div className={styles["file-custom-content"]}>
-                        <div className={styles["file-type"]}>{renderType()}</div>
-                        <div className={styles["file-info"]}>
-                            <div className={styles["info-name"]}>{fileInfo.name}</div>
-                            <div className={styles["info-size"]}>{numeral(fileInfo.size).format("0b")}</div>
-                        </div>
-                        <div className={styles["file-extra"]}>
-                            {errorReason ? (
+                {!!(fileInfo.path || fileInfo.url) ? (
+                    <CustomFileItem
+                        title={renderType()}
+                        subTitle={fileInfo.name}
+                        describe={numeral(fileInfo.size).format("0b")}
+                        extra={
+                            errorReason ? (
                                 <div className={styles["error-action"]}>
-                                    <Tooltip title={`${errorReason}`}>
-                                        <div className={styles["x-circle-btn"]}>
-                                            <SolidXcircleIcon
-                                                className={styles["x-circle-icon"]}
-                                                onClick={onRemoveFile}
-                                            />
-                                        </div>
-                                    </Tooltip>
+                                    {errorNode(errorReason)}
                                     <Tooltip title='上传失败，点击重新上传'>
                                         <YakitButton
                                             type='text2'
@@ -325,9 +350,29 @@ export const CustomFile = () => {
                                         </div>
                                     )}
                                 </>
-                            )}
-                        </div>
-                    </div>
+                            )
+                        }
+                    />
+                ) : queryFileErrorInfo ? (
+                    <CustomFileItem
+                        title={renderType()}
+                        subTitle='获取文件信息错误'
+                        extra={
+                            <>
+                                <div className={styles["error-action"]}>
+                                    {errorNode(queryFileErrorInfo)}
+                                    <Tooltip title='重新获取文件信息'>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineRefreshIcon />}
+                                            loading={loadingRefresh}
+                                            onClick={onRefreshFileInfo}
+                                        />
+                                    </Tooltip>
+                                </div>
+                            </>
+                        }
+                    />
                 ) : (
                     "文件加载中..."
                 )}
@@ -417,5 +462,25 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
                 />
             </div>
         </YakitHint>
+    )
+})
+
+interface CustomFileItemProps {
+    title: ReactNode
+    subTitle: ReactNode
+    describe?: ReactNode
+    extra: ReactNode
+}
+const CustomFileItem: React.FC<CustomFileItemProps> = React.memo((props) => {
+    const {extra, title, subTitle, describe} = props
+    return (
+        <div className={styles["file-custom-content"]}>
+            <div className={styles["file-type"]}>{title}</div>
+            <div className={styles["file-info"]}>
+                <div className={styles["info-name"]}>{subTitle}</div>
+                {describe && <div className={styles["info-size"]}>{describe}</div>}
+            </div>
+            <div className={styles["file-extra"]}>{extra}</div>
+        </div>
     )
 })
