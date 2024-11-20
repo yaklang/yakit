@@ -38,6 +38,7 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
         request.enable_plugin_selector = modify.EnablePluginSelector
         request.plugin_selector_types = modify.PluginSelectorTypes
         request.content = modify.Content
+        request.pluginEnvKey = modify.PluginEnvKey
     }
 
     // 没有tags就赋值为undefined
@@ -48,6 +49,8 @@ export const convertRemoteToRemoteInfo = (info: API.PluginsDetail, modify?: Plug
     if ((request.riskInfo || []).length === 0) request.riskInfo = undefined
     // 没有params就赋值为undefined
     if ((request.params || []).length === 0) request.params = undefined
+    // 没有pluginEnvKey就赋值为undefined
+    if ((request.pluginEnvKey || []).length === 0) request.pluginEnvKey = undefined
 
     return toolDelInvalidKV(request) as API.PluginsRequest
 }
@@ -178,7 +181,8 @@ export const onCodeToInfo: APIFunc<PluginCodeToInfoRequest, CodeToInfoResponsePr
                     Information: res.Information || [],
                     CliParameter: res.CliParameter || [],
                     RiskInfo: res.RiskInfo || [],
-                    Tags: res.Tags || []
+                    Tags: res.Tags || [],
+                    PluginEnvKey: res.PluginEnvKey || []
                 })
             })
             .catch((e: any) => {

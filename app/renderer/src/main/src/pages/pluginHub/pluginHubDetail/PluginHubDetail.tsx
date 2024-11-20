@@ -19,7 +19,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginToDetailInfo} from "../type"
 import {thousandthConversion} from "@/pages/plugins/pluginReducer"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
-import {PluginOperateHint} from "../defaultConstant"
+import {PluginDetailAvailableTab, PluginOperateHint} from "../defaultConstant"
 import emiter from "@/utils/eventBus/eventBus"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -34,6 +34,7 @@ import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {PluginLog} from "../pluginLog/PluginLog"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {PluginLogRefProps} from "../pluginLog/PluginLogType"
+import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -111,7 +112,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
                     if (isCorePlugin) return
 
-                    if (["online", "comment", "log"].includes(activeKey)) setLoading(true)
+                    if (PluginDetailAvailableTab.online.includes(activeKey)) setLoading(true)
                     apiFetchOnlinePluginInfo({uuid: currentRequest.current?.uuid}, true)
                         .then((res) => {
                             setOnlinePlugin({
@@ -123,7 +124,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         .catch(() => {
                             setOnlinePlugin(undefined)
                             if (hasLocal) {
-                                if (["exectue", "local"].includes(activeKey)) return
+                                if (PluginDetailAvailableTab.local.includes(activeKey)) return
                                 setActiveKey("exectue")
                             } else {
                                 onError(true, false, "请从左侧列表重新选择插件")
@@ -310,8 +311,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
                             // 可以打开的 tab 页面
                             let validTab: string[] = []
-                            if (onlineTab) validTab = validTab.concat(["online", "log"])
-                            if (localTab) validTab = validTab.concat(["exectue", "local"])
+                            if (onlineTab) validTab = validTab.concat([...PluginDetailAvailableTab.online])
+                            if (localTab) validTab = validTab.concat([...PluginDetailAvailableTab.local])
 
                             // 主动跳到指定 tab 页面
                             if (autoOpenDetailTab && validTab.includes(multiTab[0])) {
@@ -325,10 +326,10 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             }
                             setAutoOpenDetailTab && setAutoOpenDetailTab(undefined)
                         } else {
-                            if (["exectue", "local"].includes(activeKey) && onlineTab && !localTab) {
+                            if (PluginDetailAvailableTab.local.includes(activeKey) && onlineTab && !localTab) {
                                 setActiveKey("online")
                             }
-                            if (["online", "comment", "log"].includes(activeKey) && !onlineTab && localTab) {
+                            if (PluginDetailAvailableTab.online.includes(activeKey) && !onlineTab && localTab) {
                                 setActiveKey("exectue")
                             }
                         }
@@ -440,7 +441,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             if (type === "delLocal") {
                 const info = localPlugin ? {name: localPlugin.ScriptName, id: `${localPlugin.Id}`} : undefined
                 setLocalPlugin(undefined)
-                if (["exectue", "local"].includes(activeKey)) {
+                if (PluginDetailAvailableTab.local.includes(activeKey)) {
                     if (!!onlinePlugin) onTabChange("online")
                     else onError(true, false, "请选择插件查看详情")
                 }
@@ -452,7 +453,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             if (type === "delOnline") {
                 const info = onlinePlugin ? {name: onlinePlugin.script_name, uuid: onlinePlugin.uuid} : undefined
                 setOnlinePlugin(undefined)
-                if (["online", "comment", "log"].includes(activeKey)) {
+                if (PluginDetailAvailableTab.online.includes(activeKey)) {
                     if (!!localPlugin) onTabChange("exectue")
                     else onError(true, false, "请选择插件查看详情")
                 }
@@ -632,7 +633,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             if (!isDisable) return barNode
 
                             let hint = ""
-                            if (["online", "comment", "log"].includes(key as string)) {
+                            if (PluginDetailAvailableTab.online.includes(key as string)) {
                                 hint = isCorePlugin
                                     ? PluginOperateHint["banCorePluginOP"]
                                     : PluginOperateHint["banOnlineOP"]
@@ -841,6 +842,39 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         </div>
                                     )}
                                 </div>
+                            </TabPane>
+
+                            <TabPane tab='配置' key='setting' disabled={!hasLocal}>
+                                {!!localPlugin ? (
+                                    <div className={styles["tab-pane-wrapper"]}>
+                                        <HubDetailHeader
+                                            pluginName={localPlugin?.ScriptName || "-"}
+                                            help={localPlugin?.Help || "-"}
+                                            type={localPlugin?.Type || "yak"}
+                                            tags={localPlugin?.Tags || ""}
+                                            extraNode={extraNode}
+                                            img={localPlugin?.HeadImg || ""}
+                                            user={localPlugin?.Author || "-"}
+                                            prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
+                                                headImg: ele.HeadImg,
+                                                userName: ele.UserName
+                                            }))}
+                                            updated_at={localPlugin?.UpdatedAt || 0}
+                                            basePluginName={copySourcePlugin}
+                                            infoExtra={infoExtraNode}
+                                        />
+                                        <div className={styles["detail-content"]}>
+                                            <PluginEnvVariables
+                                                isPlugin={true}
+                                                keys={localPlugin?.PluginEnvKey || []}
+                                            />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={styles["tab-pane-empty"]}>
+                                        <YakitEmpty title='暂无环境变量信息' />
+                                    </div>
+                                )}
                             </TabPane>
                         </PluginTabs>
 

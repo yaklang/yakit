@@ -456,6 +456,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             // 源码-获取参数信息
             if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
                 data.Params = codeAnalysis.CliParameter || []
+                data.PluginEnvKey = codeAnalysis.PluginEnvKey || []
             }
 
             return data

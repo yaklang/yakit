@@ -467,6 +467,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             // 源码-获取参数信息
             if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
                 data.Params = codeAnalysis.CliParameter || []
+                data.PluginEnvKey = codeAnalysis.PluginEnvKey || []
             }
 
             const obj = convertRemoteToRemoteInfo(plugin, data)

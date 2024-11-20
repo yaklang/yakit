@@ -12,6 +12,7 @@ import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {useStore} from "@/store"
+import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
@@ -94,24 +95,24 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     }, [])
 
     /** ---------- Tabs组件逻辑 Start ---------- */
+    // 无详情页的列表tab类型
+    const noDetailTabs = useRef<PluginSourceType[]>(["recycle", "setting"])
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
     const rendered = useRef<Set<string>>(new Set())
-
     const [active, setActive] = useState<PluginSourceType>()
-
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
     const onSetActive = useMemoizedFn((type: PluginSourceType, isSwitchExpand = true) => {
         setHintShow((val) => {
             for (let key of Object.keys(val)) {
-                if (type === "recycle") val[key] = false
-                else if (type === "own" && !isLogin) val[key] = false
-                else if (key === type) val[key] = true
-                else val[key] = false
+                if (noDetailTabs.current.includes(type)) val[key] = false // 点击后隐藏空内容的 tooltip
+                else if (type === "own" && !isLogin) val[key] = false // 点击后隐藏未登录时空内容的 tooltip
+                else if (key === type) val[key] = true // 正常展示提示
+                else val[key] = false // 无关联类型隐藏提示
             }
             return {...val}
         })
         if (type === active) {
-            if (active === "recycle") return
+            if (noDetailTabs.current.includes(active)) return
             if (isSwitchExpand) {
                 isDetail ? setHiddenDetail((val) => !val) : setActiveHidden((val) => !val)
             }
@@ -119,7 +120,7 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
             if (!rendered.current.has(type)) {
                 rendered.current.add(type)
             }
-            setHiddenDetailPage(type === "recycle")
+            setHiddenDetailPage(noDetailTabs.current.includes(type))
             setActive(type)
         }
     })
@@ -173,9 +174,9 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     }, [])
     /** ---------- 通信监听 Start ---------- */
 
-    const barHint = useMemoizedFn((key: string, isActive: boolean) => {
+    const barHint = useMemoizedFn((key: PluginSourceType, isActive: boolean) => {
         if (isActive) {
-            if (key === "recycle") return ""
+            if (noDetailTabs.current.includes(key)) return ""
             if (key === "own" && !isLogin) return ""
 
             if (isDetail) {
@@ -284,6 +285,16 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
                         })}
                     >
                         <HubListRecycle />
+                    </div>
+                )}
+
+                {rendered.current.has("setting") && (
+                    <div
+                        className={classNames(styles["side-content"], {
+                            [styles["side-hidden-content"]]: active !== "setting"
+                        })}
+                    >
+                        <PluginEnvVariables />
                     </div>
                 )}
             </div>

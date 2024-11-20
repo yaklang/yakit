@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {useInViewport, useMemoizedFn, useVirtualList} from "ahooks"
+import {useDebounceFn, useInViewport, useMemoizedFn, useVirtualList} from "ahooks"
 import {InputRef} from "antd"
 import {OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {PluginEnvVariablesProps} from "./PluginEnvVariablesType"
@@ -62,6 +62,20 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     }, [data])
 
     /** ---------- 搜索 Start ---------- */
+    // 将插件里，并且不在本地全局环境变量的数据合并到整个表里
+    const handleIntegrateData = useMemoizedFn((envs: KVPair[]) => {
+        if (!keys || keys.length === 0) return envs
+        else {
+            const envKeys = envs.map((item) => item.Key)
+            const filters = keys.filter((item) => !envKeys.includes(item))
+            if (filters.length === 0) return envs
+            const newEnv = filters.map((item) => {
+                return {Key: item, Value: ""}
+            })
+            return newEnv.concat(envs)
+        }
+    })
+
     // 查询列表
     const fetchList = useMemoizedFn(() => {
         if (loading) return
@@ -70,8 +84,8 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         if (isPlugin) {
             grpcFetchPluginEnvVariables({Key: [...(keys || [])]})
                 .then((res) => {
-                    allData.current = [...res.Env]
-                    handleSearch(search.current)
+                    allData.current = handleIntegrateData(res.Env)
+                    setData(allData.current.filter((item) => item.Key.includes(search.current)))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -83,7 +97,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
             grpcFetchAllPluginEnvVariables()
                 .then((res) => {
                     allData.current = [...res.Env]
-                    handleSearch(search.current)
+                    setData(allData.current.filter((item) => item.Key.includes(search.current)))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -95,15 +109,15 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     })
 
     const search = useRef<string>("")
-    const handleSearch = useMemoizedFn((val: string) => {
-        search.current = val
-        if (loading) return
-        setLoading(true)
-        setData(allData.current.filter((item) => item.Key.indexOf(val) > -1))
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
+    const handleSearch = useMemoizedFn(
+        useDebounceFn(
+            (val: string) => {
+                search.current = val
+                fetchList()
+            },
+            {wait: 200}
+        ).run
+    )
     /** ---------- 搜索 End ---------- */
 
     // 更新数据
@@ -125,7 +139,6 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
             })
         }
         if (type === "add") {
-            allData.current = [info, ...allData.current]
             handleSearch(search.current)
         }
     })
@@ -141,28 +154,28 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
     // 双击编辑
     const inputRef = useRef<InputRef>(null)
-    const activeEditKey = useRef<string>()
+    const [activeEditKey, setActiveEditKey] = useState<string>()
     const [envValue, setEnvValue] = useState<string>("")
     const handleInitDouble = useMemoizedFn(() => {
         oldEnvInfo.current = undefined
-        activeEditKey.current = undefined
+        setActiveEditKey(undefined)
         setEnvValue("")
     })
     const handleDoubleEdit = useMemoizedFn((info: KVPair) => {
         if (isEditLoading(info.Key)) return
 
         oldEnvInfo.current = {...info}
-        activeEditKey.current = info.Key
-        setEnvValue(info.Value)
+        setActiveEditKey(info.Key)
+        setEnvValue(info.Value || "")
         setTimeout(() => {
             // 输入框聚焦
             inputRef.current?.focus()
         }, 10)
     })
     const handleDoubleEditBlur = useMemoizedFn(() => {
-        const request: KVPair = {Key: activeEditKey.current || "", Value: envValue}
+        const request: KVPair = {Key: activeEditKey || "", Value: envValue}
 
-        if (!activeEditKey.current || oldEnvInfo.current?.Value === envValue) {
+        if (!activeEditKey || oldEnvInfo.current?.Value === envValue) {
             handleInitDouble()
             return
         }
@@ -186,6 +199,8 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     const [showEdit, setShowEdit] = useState<boolean>(false)
     const [editInfo, setEditInfo] = useState<KVPair>()
 
+    const [modalLoading, setModalLoading] = useState<boolean>(false)
+
     const handleOpenEdit = useMemoizedFn((isEdit: boolean, info?: KVPair) => {
         if (showEdit) return
         if (isEdit && (!info || isEditLoading(info.Key))) return
@@ -196,22 +211,27 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
         setShowEdit(true)
     })
     const handleOKEdit = useMemoizedFn(() => {
+        if (modalLoading) return
         if (!editInfo || !editInfo.Key) {
             failed("请填写变量名")
             return
         }
-        if (!isNew && oldEnvInfo.current?.Value === editInfo.Value) {
+        if (!isNew.current && oldEnvInfo.current?.Value === editInfo.Value) {
             return
         }
 
         const apiFunc = isNew.current ? grpcCreatePluginEnvVariables : grpcSetPluginEnvVariables
+        setModalLoading(true)
         apiFunc({Env: [{...editInfo}]})
             .then(() => {
-                updateData(isNew ? "add" : "modify", editInfo)
+                updateData(isNew.current ? "add" : "modify", editInfo)
             })
             .catch(() => {})
             .finally(() => {
                 handleCancelEdit()
+                setTimeout(() => {
+                    setModalLoading(false)
+                }, 300)
             })
     })
     const handleCancelEdit = useMemoizedFn(() => {
@@ -245,11 +265,18 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     /** ----------  删除 End ---------- */
 
     return (
-        <div ref={pluginEnvVarRef} className={styles["plugin-env-variables"]}>
+        <div
+            ref={pluginEnvVarRef}
+            className={classNames(styles["plugin-env-variables"], {[styles["plugin-env-to-plugin"]]: isPlugin})}
+        >
             <div className={styles["plugin-env-variables-header"]}>
                 <div className={styles["header-title"]}>
                     <div className={styles["title-style"]}>插件全局变量</div>
-                    <div className={styles["subtitle-style"]}>存放所有插件全局变量，可双击变量值修改</div>
+                    <div className={styles["subtitle-style"]}>
+                        {isPlugin
+                            ? "仅展示本插件使用到的变量，。编辑后会同步到全局"
+                            : "存放所有插件全局变量，可双击变量值修改"}
+                    </div>
                 </div>
 
                 <div className={styles["header-extra"]}>
@@ -260,16 +287,18 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                         onSearch={handleSearch}
                     />
 
-                    <YakitButton
-                        type='outline2'
-                        size='large'
-                        icon={<OutlinePluscircleIcon />}
-                        onClick={() => {
-                            handleOpenEdit(false)
-                        }}
-                    >
-                        新建
-                    </YakitButton>
+                    {!isPlugin && (
+                        <YakitButton
+                            type='outline2'
+                            size='large'
+                            icon={<OutlinePluscircleIcon />}
+                            onClick={() => {
+                                handleOpenEdit(false)
+                            }}
+                        >
+                            新建
+                        </YakitButton>
+                    )}
                 </div>
             </div>
 
@@ -303,7 +332,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                             handleDoubleEdit(data)
                                                         }}
                                                     >
-                                                        {activeEditKey.current === infoKey ? (
+                                                        {activeEditKey === infoKey ? (
                                                             <YakitInput
                                                                 ref={inputRef}
                                                                 allowClear={true}
@@ -312,6 +341,7 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                                     setEnvValue(e.target.value)
                                                                 }}
                                                                 onBlur={handleDoubleEditBlur}
+                                                                onPressEnter={handleDoubleEditBlur}
                                                             />
                                                         ) : (
                                                             infoValue
@@ -319,16 +349,20 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
                                                     </div>
                                                     <div style={{maxWidth: 120}} className={styles["table-cell"]}>
                                                         <div className={styles["plugin-env-variables-operate"]}>
-                                                            <YakitButton
-                                                                type='text'
-                                                                colors='danger'
-                                                                icon={<OutlineTrashIcon />}
-                                                                loading={deleteKeys.includes(infoKey)}
-                                                                onClick={() => {
-                                                                    handleDelete(data)
-                                                                }}
-                                                            />
-                                                            <div className={styles["divider-style"]}></div>
+                                                            {!isPlugin && (
+                                                                <>
+                                                                    <YakitButton
+                                                                        type='text'
+                                                                        colors='danger'
+                                                                        icon={<OutlineTrashIcon />}
+                                                                        loading={deleteKeys.includes(infoKey)}
+                                                                        onClick={() => {
+                                                                            handleDelete(data)
+                                                                        }}
+                                                                    />
+                                                                    <div className={styles["divider-style"]}></div>
+                                                                </>
+                                                            )}
                                                             <YakitButton
                                                                 type='text2'
                                                                 icon={<OutlinePencilaltIcon />}
@@ -354,11 +388,12 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
 
             <YakitModal
                 type='white'
-                title='编辑变量值'
+                title={`${isNew.current ? "新建" : "编辑"}变量值v`}
                 centered={true}
                 maskClosable={false}
                 closable={true}
                 visible={showEdit}
+                okButtonProps={{loading: modalLoading}}
                 onCancel={handleCancelEdit}
                 onOk={handleOKEdit}
             >

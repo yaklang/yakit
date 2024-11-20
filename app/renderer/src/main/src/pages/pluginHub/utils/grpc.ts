@@ -128,10 +128,10 @@ export const grpcFetchAllPluginEnvVariables: APINoRequestFunc<PluginEnvData> = (
 }
 
 /** @name 查询传入插件环境变量对应的值 */
-export const grpcFetchPluginEnvVariables: APIFunc<QueryPluginEnvRequest, PluginEnvData> = (hiddenError) => {
+export const grpcFetchPluginEnvVariables: APIFunc<QueryPluginEnvRequest, PluginEnvData> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("QueryPluginEnv")
+            .invoke("QueryPluginEnv", request)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询插件环境变量失败:" + e)
@@ -141,10 +141,10 @@ export const grpcFetchPluginEnvVariables: APIFunc<QueryPluginEnvRequest, PluginE
 }
 
 /** @name 创建插件环境变量 */
-export const grpcCreatePluginEnvVariables: APIFunc<PluginEnvData, undefined> = (hiddenError) => {
+export const grpcCreatePluginEnvVariables: APIFunc<PluginEnvData, undefined> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("CreatePluginEnv")
+            .invoke("CreatePluginEnv", request)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "创建插件环境变量失败:" + e)
@@ -154,10 +154,10 @@ export const grpcCreatePluginEnvVariables: APIFunc<PluginEnvData, undefined> = (
 }
 
 /** @name 设置插件环境变量 */
-export const grpcSetPluginEnvVariables: APIFunc<PluginEnvData, undefined> = (hiddenError) => {
+export const grpcSetPluginEnvVariables: APIFunc<PluginEnvData, undefined> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("SetPluginEnv")
+            .invoke("SetPluginEnv", request)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "设置插件环境变量失败:" + e)
@@ -167,10 +167,10 @@ export const grpcSetPluginEnvVariables: APIFunc<PluginEnvData, undefined> = (hid
 }
 
 /** @name 删除插件环境变量 */
-export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undefined> = (hiddenError) => {
+export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undefined> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("DeletePluginEnv")
+            .invoke("DeletePluginEnv", request)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "删除插件环境变量失败:" + e)

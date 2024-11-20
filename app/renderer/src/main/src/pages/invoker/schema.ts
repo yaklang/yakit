@@ -111,6 +111,8 @@ export interface YakScript {
     isLocalPlugin?: boolean
     RiskInfo?: YakRiskInfoProps[]
     IsUpdate?: boolean
+    /** 全局变量 */
+    PluginEnvKey?: string[]
 }
 
 export interface Collaborator {
@@ -139,7 +141,7 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
     IgnoreGeneralModuleOrder?: boolean
     UUID?: string
     // 插件组
-    Group?: { UnSetGroup: boolean, Group: string[], IsPocBuiltIn?: string }
+    Group?: {UnSetGroup: boolean; Group: string[]; IsPocBuiltIn?: string}
     ExcludeTypes?: string[]
     IsMITMParamPlugins?: number //0->默认全部 1->是mitm带参数插件 2->mitm不带参数;
 
@@ -183,8 +185,8 @@ export interface GroupCount {
     Value: string
     Total: number
     Default: boolean
-    TemporaryId?:string
-    IsPocBuiltIn?:boolean
+    TemporaryId?: string
+    IsPocBuiltIn?: boolean
 }
 
 export interface QueryYakScriptGroupResponse {
@@ -200,7 +202,7 @@ export interface SaveYakScriptGroupRequest {
     Filter: QueryYakScriptRequest
     SaveGroup: string[]
     RemoveGroup: string[]
-    PageId?:string
+    PageId?: string
 }
 
 export interface ResetYakScriptGroupRequest {
