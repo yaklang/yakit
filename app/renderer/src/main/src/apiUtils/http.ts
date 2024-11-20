@@ -6,7 +6,7 @@ import {API} from "@/services/swagger/resposeType"
 const {ipcRenderer} = window.require("electron")
 
 interface HttpUploadImgBaseRequest {
-    type?: "img" | "headImg" | "comment" | "plugins"
+    type?: "img" | "headImg" | "comment" | "plugins" | "notepad"
 }
 
 export interface HttpUploadImgPathRequest extends HttpUploadImgBaseRequest {

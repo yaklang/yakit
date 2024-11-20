@@ -897,21 +897,6 @@ export declare namespace API {
     export interface Operation extends GormBaseModel, NewOperation {}
     export interface NotepadDownloadWhere {
         hash?: string
-        downloadUrl: string
-    }
-    export interface NotepadDownloadResponse {
-        /**
-         * Percentage of the download completed
-         */
-        progress?: number
-        /**
-         * Direct URL to download if available
-         */
-        downloadUrl?: string
-        /**
-         * Status message regarding the download
-         */
-        message?: string
     }
     export interface NotepadDownloadRequest extends GetNotepadRequest, NotepadDownloadWhere {}
     export interface NewUrmResponse {

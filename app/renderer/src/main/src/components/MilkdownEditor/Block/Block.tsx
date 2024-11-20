@@ -29,6 +29,8 @@ import {Tooltip} from "antd"
 import {defaultBlockList} from "../constants"
 import {cloneDeep} from "lodash"
 import {BlockListProps} from "../MilkdownEditorType"
+import {httpUploadImgPath} from "@/apiUtils/http"
+import {yakitNotify} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -148,13 +150,19 @@ export const BlockView = (block) => {
                             const index = path.lastIndexOf(".")
                             const fileType = path.substring(index, path.length)
                             if (imgTypes.includes(fileType)) {
-                                action(
-                                    callCommand(insertImageBlockCommand.key, {
-                                        src: `atom://${path}`,
-                                        alt: path,
-                                        title: ""
+                                httpUploadImgPath({path, type: "notepad"})
+                                    .then((src) => {
+                                        action(
+                                            callCommand(insertImageBlockCommand.key, {
+                                                src,
+                                                alt: path,
+                                                title: ""
+                                            })
+                                        )
                                     })
-                                )
+                                    .catch((e) => {
+                                        yakitNotify("error", `上传图片失败:${e}`)
+                                    })
                             } else {
                                 action(callCommand(fileCommand.key, {id: "0", path}))
                             }
