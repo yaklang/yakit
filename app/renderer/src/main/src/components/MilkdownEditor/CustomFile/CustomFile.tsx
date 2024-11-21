@@ -34,8 +34,7 @@ import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownload
 import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
 import useUploadOSSHooks from "@/hook/useUploadOSS/useUploadOSS"
-
-const {ipcRenderer} = window.require("electron")
+import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 
 interface CustomFileItem {
     name: string
@@ -84,26 +83,22 @@ export const CustomFile = () => {
     useEffect(() => {
         const {fileId, path: initPath} = attrs
         const path = initPath.replace(/\\/g, "\\")
+        setAttrs({path})
         if (fileId !== "0") {
             getFileInfoByLink()
         } else if (path) {
-            ipcRenderer
-                .invoke("fetch-file-info-by-path", path)
-                .then((fileInfo) => {
-                    const {fileName, fileType} = getTypeAndNameByPath(path)
-                    const item = {
-                        name: fileName,
-                        size: fileInfo.size,
-                        type: fileType,
-                        url: "",
-                        path
-                    }
-                    setFileInfo(item)
-                    onUpload(path)
-                })
-                .catch((err) => {
-                    failed(`获取文件信息失败:${err}`)
-                })
+            getLocalFileLinkInfo(path).then((fileInfo) => {
+                const {fileName, fileType} = getTypeAndNameByPath(path)
+                const item = {
+                    name: fileName,
+                    size: fileInfo.size,
+                    type: fileType,
+                    url: "",
+                    path
+                }
+                setFileInfo(item)
+                onUpload(path)
+            })
         }
     }, [])
     const {onStart, onCancel: onUploadCancel} = useUploadOSSHooks({
@@ -130,8 +125,7 @@ export const CustomFile = () => {
         const path = initPath.replace(/\\/g, "\\")
         if (fileId !== "0") {
             setLoadingRefresh(true)
-            ipcRenderer
-                .invoke("get-http-file-link-info", fileId)
+            getHttpFileLinkInfo(fileId, true)
                 .then((res) => {
                     const {fileType, fileName} = getTypeAndNameByPath(fileId)
                     const item = {

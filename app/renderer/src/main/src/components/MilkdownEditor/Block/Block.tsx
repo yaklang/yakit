@@ -31,10 +31,14 @@ import {cloneDeep} from "lodash"
 import {BlockListProps} from "../MilkdownEditorType"
 import {httpUploadImgPath} from "@/apiUtils/http"
 import {yakitNotify} from "@/utils/notification"
+import {getLocalFileLinkInfo} from "../CustomFile/utils"
+import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
 
 const {ipcRenderer} = window.require("electron")
 
 const imgTypes = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".svg"]
+
+const FileMaxSize = 1024 * 1024 * 1024
 
 export const BlockView = (block) => {
     const ref = useRef<HTMLDivElement>(null)
@@ -147,25 +151,35 @@ export const BlockView = (block) => {
                         const filesLength = data.filePaths.length
                         if (filesLength) {
                             const path = data.filePaths[0].replace(/\\/g, "\\")
-                            const index = path.lastIndexOf(".")
-                            const fileType = path.substring(index, path.length)
-                            if (imgTypes.includes(fileType)) {
-                                httpUploadImgPath({path, type: "notepad"})
-                                    .then((src) => {
-                                        action(
-                                            callCommand(insertImageBlockCommand.key, {
-                                                src,
-                                                alt: path,
-                                                title: ""
-                                            })
-                                        )
-                                    })
-                                    .catch((e) => {
-                                        yakitNotify("error", `上传图片失败:${e}`)
-                                    })
-                            } else {
-                                action(callCommand(fileCommand.key, {id: "0", path}))
-                            }
+                            getLocalFileLinkInfo(path).then((res) => {
+                                if (res.size > FileMaxSize) {
+                                    yakitNotify("error", "文件大小不能超过1G")
+                                    return
+                                }
+                                const index = path.lastIndexOf(".")
+                                const fileType = path.substring(index, path.length)
+                                if (imgTypes.includes(fileType)) {
+                                    if (res.size > ImgMaxSize) {
+                                        yakitNotify("error", "图片大小不能超过1M")
+                                        return
+                                    }
+                                    httpUploadImgPath({path, type: "notepad"})
+                                        .then((src) => {
+                                            action(
+                                                callCommand(insertImageBlockCommand.key, {
+                                                    src,
+                                                    alt: path,
+                                                    title: ""
+                                                })
+                                            )
+                                        })
+                                        .catch((e) => {
+                                            yakitNotify("error", `上传图片失败:${e}`)
+                                        })
+                                } else {
+                                    action(callCommand(fileCommand.key, {id: "0", path}))
+                                }
+                            })
                         }
                     })
 

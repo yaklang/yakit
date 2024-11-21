@@ -373,7 +373,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         actionItemRef.current = record
         setDownItemLoading(true)
         const downParams: API.NotepadDownloadRequest = {
-            hash: record.hash,
+            hash: record.hash
         }
         onBaseDown(downParams)
             .then((res) => {
@@ -392,7 +392,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         const filter = isAllSelect ? convertGetNotepadRequest(search) : {}
         const downParams: API.NotepadDownloadRequest = {
             ...filter,
-            hash: isAllSelect ? "" : selectedRowKeys?.join(","),
+            hash: isAllSelect ? "" : selectedRowKeys?.join(",")
         }
         setLoading(true)
         onBaseDown(downParams)
@@ -422,6 +422,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         })
     })
     const onCancelDownload = useMemoizedFn(() => {
+        /**TODO - 取消下载或者下载完成,都需要删除oss上面的文件 */
         setBatchDownInfo(undefined)
     })
     const selectNumber = useCreation(() => {

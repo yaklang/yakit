@@ -1,4 +1,3 @@
-
 .milkdown milkdown-image-block.selected > .image-wrapper:before {
     content: "";
     position: absolute;
@@ -61,7 +60,7 @@ milkdown-image-block > .image-edit {
 }
 
 milkdown-image-block > .image-edit .image-icon {
-    color: darkgray;
+    color: var(--yakit-body-text-color);
 }
 
 milkdown-image-block > .image-edit .image-icon svg {
@@ -70,7 +69,7 @@ milkdown-image-block > .image-edit .image-icon svg {
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder {
-    color: darkgray;
+    color: var(--yakit-body-text-color);
 }
 
 milkdown-image-block > .image-edit .link-importer .link-input-area {
@@ -80,7 +79,7 @@ milkdown-image-block > .image-edit .link-importer .link-input-area {
 
 milkdown-image-block > .image-edit .link-importer .placeholder .uploader {
     gap: 8px;
-    color: fuchsia;
+    color: var(--yakit-primary-3);
     justify-content: center;
     transition: color 0.2s;
 }
@@ -90,7 +89,7 @@ milkdown-image-block > .image-edit .link-importer.focus .placeholder .uploader {
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder .uploader:hover {
-    color: fuchsia;
+    color: var(--yakit-primary-3);
 }
 
 milkdown-image-block > .image-edit .link-importer .placeholder .text {
@@ -98,7 +97,7 @@ milkdown-image-block > .image-edit .link-importer .placeholder .text {
 }
 
 milkdown-image-block > .image-edit .confirm {
-    background: darkgray;
+    background: var(--yakit-body-text-color);
     color: antiquewhite;
     line-height: 40px;
     padding: 0 24px;
