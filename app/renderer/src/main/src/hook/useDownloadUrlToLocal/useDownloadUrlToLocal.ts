@@ -34,13 +34,11 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
             isSuccess = true
             onUploadData(newState)
         })
-
         ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
             isSuccess = false
             onUploadError && onUploadError()
             yakitNotify("error", `下载失败:${error}`)
         })
-
         ipcRenderer.on(`download-url-to-path-progress-finished-`, (e) => {
             if (isSuccess) {
                 onUploadSuccess && onUploadSuccess()
