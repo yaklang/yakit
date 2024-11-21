@@ -39,11 +39,10 @@ import {ExportYakScriptStreamRequest} from "@/pages/plugins/local/PluginsLocalTy
 import {defaultSearch} from "@/pages/plugins/builtInData"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
+import {setClipboardText} from "@/utils/clipboard"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
-
-const {ipcRenderer} = window.require("electron")
 
 export interface HubExtraOperateRef {
     downloadedNext: (flag: boolean) => void
@@ -341,12 +340,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         const handleShare = useMemoizedFn(() => {
             activeOperate.current = ""
             if (!online) return
-            ipcRenderer
-                .invoke("copy-clipboard", online.uuid || "")
-                .then(() => {
-                    yakitNotify("success", "分享ID已复制到剪切板")
-                })
-                .catch(() => {})
+            setClipboardText(online.uuid || "", {hintText: "分享ID已复制到剪切板"})
         })
 
         const [uploadHint, setUploadHint] = useState<boolean>(false)

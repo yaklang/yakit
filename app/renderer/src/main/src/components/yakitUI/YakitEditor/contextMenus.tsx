@@ -6,15 +6,12 @@ import {AutoCard} from "../../AutoCard"
 import {YakitEditor} from "./YakitEditor"
 import {YakitButton} from "../YakitButton/YakitButton"
 import {monacoEditorClear, monacoEditorWrite} from "@/pages/fuzzer/fuzzerTemplates"
-import {failed, yakitNotify} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import {fetchCursorContent, fetchSelectionRange} from "./editorUtils"
-import {useEffect, useRef, useState} from "react"
-import {AutoSpin} from "@/components/AutoSpin"
-import {YakitSpin} from "../YakitSpin/YakitSpin"
-import {showYakitModal} from "../YakitModal/YakitModalConfirm"
 import emiter from "@/utils/eventBus/eventBus"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {CodecResponseProps, CodecWorkProps} from "@/pages/codec/NewCodec"
+import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -52,7 +49,7 @@ export const baseMenuLists: OtherMenuListProps = {
                     }
                 ])
                 if (flag) {
-                    ipcRenderer.invoke("set-copy-clipboard", `${content}`)
+                    setClipboardText(`${content}`)
                     editor.focus()
                 }
             }
@@ -62,7 +59,7 @@ export const baseMenuLists: OtherMenuListProps = {
     copy: {
         menu: [{key: "copy", label: "复制"}],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
-            if (editor) ipcRenderer.invoke("set-copy-clipboard", `${fetchCursorContent(editor, true)}`)
+            if (editor) setClipboardText(`${fetchCursorContent(editor, true)}`)
             return
         }
     },
@@ -75,8 +72,7 @@ export const baseMenuLists: OtherMenuListProps = {
             const position = fetchSelectionRange(editor, false)
             if (!position) return
 
-            ipcRenderer
-                .invoke("get-copy-clipboard")
+            getClipboardText()
                 .then((str: string) => {
                     if (editor?.executeEdits) {
                         editor.executeEdits("", [

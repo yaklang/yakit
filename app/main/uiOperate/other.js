@@ -21,15 +21,6 @@ module.exports = (win, getClient) => {
         if (flag) shell.openExternal(url)
     })
 
-    // 将渲染进程传入内容复制进系统剪切板内
-    ipcMain.handle("set-copy-clipboard", (e, text) => {
-        clipboard.writeText(text)
-    })
-    /** 将剪贴板中的内容传递进渲染进程 */
-    ipcMain.handle("get-copy-clipboard", (e, text) => {
-        return clipboard.readText()
-    })
-
     // 将绝对路径里的文件名(不带文件后缀)提取出来
     ipcMain.handle("fetch-path-file-name", (e, path) => {
         const extension = Path.extname(path)

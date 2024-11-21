@@ -1,21 +1,19 @@
-import React, {ReactElement, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {IMonacoEditor, NewHTTPPacketEditor, NewHTTPPacketEditorProp} from "@/utils/editors"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
+import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import {IMonacoEditor, NewHTTPPacketEditor} from "@/utils/editors"
 import {insertFileFuzzTag, insertTemporaryFileFuzzTag} from "../InsertFileFuzzTag"
 import {monacoEditorWrite} from "../fuzzerTemplates"
 import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import {callCopyToClipboard} from "@/utils/basic"
 import {execCodec} from "@/utils/encodec"
 import {copyAsUrl, showDictsAndSelect} from "../HTTPFuzzerPage"
 import styles from "./WebFuzzerNewEditor.module.scss"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setRemoteValue} from "@/utils/kv"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
 import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
-import emiter from "@/utils/eventBus/eventBus"
-import { openExternalWebsite } from "@/utils/openWebsite"
+import {openExternalWebsite} from "@/utils/openWebsite"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -152,8 +150,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                                 execCodec("packet-to-curl", newRequest, undefined, undefined, undefined, [
                                     {Key: "https", Value: isHttps ? "true" : ""}
                                 ]).then((data) => {
-                                    callCopyToClipboard(data)
-                                    yakitNotify("info", "复制到剪贴板")
+                                    setClipboardText(data, {hintText: "复制到剪贴板"})
                                 })
                                 return
                             default:

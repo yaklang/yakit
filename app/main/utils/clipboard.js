@@ -13,6 +13,11 @@ module.exports = (win, getClient) => {
         return {size: image.getSize(), blob: image.toDataURL()}
     })
 
+    // 设置剪切板文本信息
+    ipcMain.handle("set-clipboard-text", (e, text) => {
+        clipboard.writeText(text)
+        return
+    })
     // 获取剪切板文本信息
     ipcMain.handle("get-clipboard-text", (e) => {
         return clipboard.readText()

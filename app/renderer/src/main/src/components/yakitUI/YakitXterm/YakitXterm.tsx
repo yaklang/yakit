@@ -12,11 +12,11 @@ import styles from "./YakitXterm.module.scss"
 import classNames from "classnames"
 import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {warn} from "@/utils/notification"
-import {callCopyToClipboard, getCallCopyToClipboard} from "@/utils/basic"
 import {YakitMenuItemType} from "../YakitMenu/YakitMenu"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
+import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 
 export interface YakitXtermRefProps {
     terminal: Terminal
@@ -306,7 +306,12 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
                 return
             }
             loading.current = true
-            callCopyToClipboard(selectedText, false).finally(() => (loading.current = false))
+            setClipboardText(selectedText, {
+                hiddenHint: true,
+                finalCallback: () => {
+                    loading.current = false
+                }
+            })
         }),
         {wait: 200}
     ).run
@@ -315,7 +320,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         useMemoizedFn(() => {
             if (isWrite) {
                 loading.current = true
-                getCallCopyToClipboard()
+                getClipboardText()
                     .then((str: string) => {
                         if (terminalRef.current) {
                             terminalRef.current.paste(str)

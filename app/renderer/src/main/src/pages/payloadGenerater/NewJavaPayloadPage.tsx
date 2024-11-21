@@ -18,7 +18,6 @@ import {
     SettingReverseParamsInfo
 } from "../reverseServer/NewReverseServerPage"
 import {randomString} from "@/utils/randomUtil"
-import {callCopyToClipboard} from "@/utils/basic"
 import {ReverseNotification, ReverseTable} from "../reverseServer/ReverseTable"
 import {getRemoteValue} from "@/utils/kv"
 import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
@@ -40,6 +39,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1150,7 +1150,7 @@ export const PayloadCode: React.FC<PayloadCodeProp> = React.memo((props) => {
             saveABSFileToOpen(`${type}-${data.Class}-${data.Gadget}`, type === "hex" ? hex : code)
         }
 
-        if (value === "copy") callCopyToClipboard(code)
+        if (value === "copy") setClipboardText(code)
         if (value === "extra") onExtra()
     })
 

@@ -30,10 +30,10 @@ import {
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultGenerateReverseShellCommand} from "./constants"
 import {ReverseShellTerminal, XTermSizeProps} from "./ReverseShellTerminal/ReverseShellTerminal"
-import {callCopyToClipboard} from "@/utils/basic"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {OutlineCogIcon} from "@/assets/icon/outline"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 export interface ShellReceiverLeftListProps {
@@ -238,7 +238,7 @@ export const ShellReceiverMiddleItem: React.FC<ShellReceiverMiddleItemProps> = (
         })
     })
     const onCopy = useMemoizedFn(() => {
-        if (reverseShellCommand?.Result) callCopyToClipboard(reverseShellCommand?.Result)
+        if (reverseShellCommand?.Result) setClipboardText(reverseShellCommand?.Result)
     })
     const onIPChange = useMemoizedFn((e) => {
         setIP(e.target.value)

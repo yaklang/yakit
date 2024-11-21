@@ -27,7 +27,6 @@ import {
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
-import {callCopyToClipboard} from "../../utils/basic"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
 import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
@@ -151,6 +150,7 @@ import {
     apiSaveFuzzerConfig
 } from "../layout/mainOperatorContent/utils"
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
+import {setClipboardText} from "@/utils/clipboard"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -359,7 +359,7 @@ export function copyAsUrl(f: {Request: string; IsHTTPS: boolean}) {
     ipcRenderer
         .invoke("ExtractUrl", f)
         .then((data: {Url: string}) => {
-            callCopyToClipboard(data.Url)
+            setClipboardText(data.Url)
         })
         .catch((e) => {
             failed("复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整")

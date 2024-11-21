@@ -60,7 +60,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import Dragger from "antd/lib/upload/Dragger"
 import {v4 as uuidv4} from "uuid"
 import {DeletePayloadProps, NewPayloadTable, Payload, QueryPayloadParams} from "./newPayloadTable"
-import {callCopyToClipboard} from "@/utils/basic"
 import {PaginationSchema, QueryGeneralResponse} from "../invoker/schema"
 import {randomString} from "@/utils/randomUtil"
 import _isEqual from "lodash/isEqual"
@@ -78,6 +77,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -1845,7 +1845,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                                             setMenuOpen(false)
                                             switch (key) {
                                                 case "copyFuzztag":
-                                                    callCopyToClipboard(`{{payload(${inputName}/*)}}`)
+                                                    setClipboardText(`{{payload(${inputName}/*)}}`)
                                                     break
                                                 case "addChildPayload":
                                                     // 注: 此处需注意文件夹
@@ -2521,7 +2521,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                                             setMenuOpen(false)
                                             switch (key) {
                                                 case "copyFuzztag":
-                                                    callCopyToClipboard(`{{payload(${inputName})}}`)
+                                                    setClipboardText(`{{payload(${inputName})}}`)
                                                     break
                                                 case "importPayload":
                                                     const m = showYakitModal({
