@@ -5,7 +5,7 @@ export const Blockquote = () => {
 
     return (
         <blockquote
-            style={{borderLeft: "3px solid var(--yakit-border-color)", paddingLeft: 16, color: "#85899E"}}
+            style={{borderLeft: "3px solid var(--yakit-border-color)", paddingLeft: 16, color: "var(--yakit-body-text-color)"}}
             ref={contentRef}
         />
     )

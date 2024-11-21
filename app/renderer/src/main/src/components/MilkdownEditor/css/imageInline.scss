@@ -39,7 +39,7 @@ milkdown-image-inline > .empty-image-inline .image-icon svg {
 }
 
 milkdown-image-inline > .empty-image-inline .link-importer .placeholder {
-    color: darkgray;
+    color: var(--yakit-body-text-color);
     font-size: 12px;
 }
 
@@ -69,7 +69,7 @@ milkdown-image-inline > .empty-image-inline .link-importer .placeholder .text {
 }
 
 milkdown-image-inline > .empty-image-inline .confirm {
-    background: darkgray;
+    background: var(--yakit-body-text-color);
     color: antiquewhite;
     line-height: 28px;
     padding: 0 12px;
