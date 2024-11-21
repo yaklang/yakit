@@ -286,7 +286,7 @@ export interface FuzzerRequestProps {
     ActualAddr: string
     NoFollowRedirect: boolean
     SNI: string
-    SNIVal: string
+    OverwriteSNI: boolean
     // NoFollowMetaRedirect: boolean
     FollowJSRedirect: boolean
     HistoryWebFuzzerId?: number
@@ -388,8 +388,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         // Request: request,
         RequestRaw: new Uint8Array(), // StringToUint8Array(request, "utf8"),
         FuzzTagMode: value.fuzzTagMode,
+        OverwriteSNI: value.overwriteSNI !== "auto",
         SNI: value.sNI,
-        SNIVal: value.sNIVal,
         FuzzTagSyncIndex: value.fuzzTagSyncIndex,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
@@ -489,8 +489,6 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
 
     fuzzerRequests.MutateMethods = mutateMethods
 
-    console.log(123, fuzzerRequests);
-    
     return fuzzerRequests
 }
 
@@ -2227,7 +2225,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         noPopconfirm = true,
         retryNoPopconfirm = true,
         cancelCurrentHTTPFuzzer,
-        resumeAndPause,
+        resumeAndPause
     } = props
 
     const [color, setColor] = useState<string[]>()

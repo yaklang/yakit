@@ -88,7 +88,7 @@ const fuzzTagSyncOptions = [
 ]
 
 // 前端定义的字段值
-const SNIOptions = [
+const overwriteSNIOptions = [
     {
         value: "auto",
         label: "自动"
@@ -135,7 +135,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [httpResponse, setHttpResponse] = useState<string>(defaultHttpResponse)
 
     const [form] = Form.useForm()
-    const sNI = Form.useWatch("sNI", form)
+    const overwriteSNI = Form.useWatch("overwriteSNI", form)
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
 
@@ -521,25 +521,25 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             </Form.Item>
                             <Form.Item
                                 label={<span className={styles["advanced-config-form-label"]}>SNI 配置</span>}
-                                name='sNI'
+                                name='overwriteSNI'
                             >
                                 <YakitRadioButtons
                                     buttonStyle='solid'
-                                    options={SNIOptions}
+                                    options={overwriteSNIOptions}
                                     size={"small"}
                                     onChange={(e) => {
                                         if (e.target.value !== "mandatory") {
                                             onReset({
-                                                sNIVal: ""
+                                                sNI: ""
                                             })
                                         }
                                     }}
                                 />
                             </Form.Item>
-                            {sNI === "mandatory" && (
+                            {overwriteSNI === "mandatory" && (
                                 <Form.Item
                                     label={<span className={styles["advanced-config-form-label"]}>强制SNI</span>}
-                                    name='sNIVal'
+                                    name='sNI'
                                 >
                                     <YakitInput size='small' />
                                 </Form.Item>
