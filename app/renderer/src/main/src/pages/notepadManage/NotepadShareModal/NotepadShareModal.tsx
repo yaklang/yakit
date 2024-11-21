@@ -23,6 +23,7 @@ import classNames from "classnames"
 import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
+import {apiGetNotepadDetail} from "../notepadManage/utils"
 
 interface NotepadShareModalProps {
     notepadInfo: API.GetNotepadList
@@ -47,10 +48,10 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
 
     const [manageVisible, setManageVisible] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
+    const [loadingManage, setLoadingManage] = useState<boolean>(false)
     const [shareText, setShareText] = useState<string>("")
     const [userList, setUserList] = useState<API.UserList[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
-    //TODO - 需要后端补协作者权限
     const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo.collaborator || [])
 
     const onClear = useMemoizedFn(() => {
@@ -127,6 +128,20 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                     setCollaboratorLoading(false)
                 }, 200)
             )
+    })
+    const onOpenManage = useMemoizedFn(() => {
+        setLoadingManage(true)
+        // 查询该笔记本详情
+        apiGetNotepadDetail(notepadInfo.hash)
+            .then((res) => {
+                setCollaborators(res.collaborator)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setLoadingManage(false)
+                    setManageVisible(true)
+                }, 500)
+            })
     })
     const options = useCreation(() => {
         return userList
@@ -222,7 +237,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
             title={
                 <>
                     <div className={styles["title-text"]}>分享文档</div>
-                    <YakitButton type='text' size='large' onClick={() => setManageVisible(true)}>
+                    <YakitButton loading={loadingManage} type='text' size='large' onClick={onOpenManage}>
                         管理协作者 <OutlineCogIcon />
                     </YakitButton>
                 </>

@@ -5,8 +5,8 @@ import {yakitNotify} from "@/utils/notification"
 
 const {ipcRenderer} = window.require("electron")
 
-interface DirectoryProps{
-    filePaths:string[]
+interface DirectoryProps {
+    filePaths: string[]
 }
 export const openDirectory: APINoRequestFunc<DirectoryProps> = () => {
     return new Promise((resolve, reject) => {
