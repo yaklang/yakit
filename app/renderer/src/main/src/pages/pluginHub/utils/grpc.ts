@@ -1,4 +1,5 @@
 import {APIFunc} from "@/apiUtils/type"
+import {KVPair} from "@/models/kv"
 import {YakScript} from "@/pages/invoker/schema"
 import {yakitNotify} from "@/utils/notification"
 
@@ -70,6 +71,39 @@ export const grpcFetchLocalPluginDetailByID: APIFunc<string | number, YakScript>
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询本地插件详情失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface FetchExpressionToResultRequest {
+    Expression: string
+    Variables?: KVPair[]
+    ImportYaklangLibs?: boolean
+}
+export interface FetchExpressionToResultResponse {
+    Result: string
+    /** 结果是否可以用 */
+    BoolResult: boolean
+}
+/** @name 通过表达式获取代表的数据结果 */
+export const grpcFetchExpressionToResult: APIFunc<FetchExpressionToResultRequest, FetchExpressionToResultResponse> = (
+    request,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        const {Expression} = request
+        if (!Expression) {
+            if (!hiddenError) yakitNotify("error", "查询的表达式不能为空")
+            reject("查询的表达式不能为空")
+            return
+        }
+
+        ipcRenderer
+            .invoke("EvaluateExpression", {...request})
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "查询表达式失败:" + e)
                 reject(e)
             })
     })

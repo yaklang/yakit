@@ -461,4 +461,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SmokingEvaluatePlugin", async (e, params) => {
         return await asyncSmokingEvaluatePlugin(params)
     })
+
+    // asyncEvaluateExpression
+    const asyncEvaluateExpression = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().EvaluateExpression(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("EvaluateExpression", async (e, params) => {
+        return await asyncEvaluateExpression(params)
+    })
 }

@@ -75,6 +75,8 @@ export interface YakParamProps {
     MethodType?: string
     /** 值 */
     Value?: any
+    /** 建议表达式 */
+    SuggestionDataExpression?: string
 
     /** 是否开启缓存(动态表单upload-folder-path:目前由前端决定) */
     cacheRef?: any
