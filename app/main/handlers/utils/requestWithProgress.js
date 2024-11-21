@@ -89,7 +89,7 @@ function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undef
     });
 }
 
-function cancelRequestWithProgress(version) {
+function engineCancelRequestWithProgress(version) {
     return new Promise((resolve, reject) => {
         if (version === "") reject(new Error('Version number does not exist'));
         if (writer) {
@@ -110,7 +110,21 @@ function cancelRequestWithProgress(version) {
     })
 }
 
+function yakitCancelRequestWithProgress() {
+    return new Promise((resolve, reject) => {
+        if (writer) {
+            writer.on('close', () => {
+                reject(new Error('Write operation cancelled'));
+            });
+            writer.destroy(new Error('Write operation cancelled'));
+        } else {
+            resolve()
+        }
+    })
+}
+
 module.exports = {
     requestWithProgress,
-    cancelRequestWithProgress,
+    engineCancelRequestWithProgress,
+    yakitCancelRequestWithProgress
 }

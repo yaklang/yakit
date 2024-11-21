@@ -125,6 +125,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
         isBreakRef.current = false
         setVisible(false)
         setDownloadProgress(undefined)
+        ipcRenderer.invoke("cancel-download-yakit-version")
     })
 
     return (
