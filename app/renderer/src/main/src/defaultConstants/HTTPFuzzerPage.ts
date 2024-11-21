@@ -39,6 +39,8 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     noFixContentLength: false,
     noSystemProxy: false,
     maxBodySize: 5,
+    sNI: "auto",
+    sNIVal: "",
     resNumlimit: DefFuzzerTableMaxData,
     actualHost: "",
     timeout: 30.0,

@@ -16,6 +16,8 @@ export interface AdvancedConfigValueProps {
     noFixContentLength: boolean
     noSystemProxy: boolean
     resNumlimit: number
+    sNI: string
+    sNIVal: string
     actualHost: string
     timeout: number
     batchTarget?: Uint8Array

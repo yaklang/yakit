@@ -285,6 +285,8 @@ export interface FuzzerRequestProps {
     BatchTarget?: Uint8Array
     ActualAddr: string
     NoFollowRedirect: boolean
+    SNI: string
+    SNIVal: string
     // NoFollowMetaRedirect: boolean
     FollowJSRedirect: boolean
     HistoryWebFuzzerId?: number
@@ -386,6 +388,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         // Request: request,
         RequestRaw: new Uint8Array(), // StringToUint8Array(request, "utf8"),
         FuzzTagMode: value.fuzzTagMode,
+        SNI: value.sNI,
+        SNIVal: value.sNIVal,
         FuzzTagSyncIndex: value.fuzzTagSyncIndex,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
@@ -485,6 +489,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
 
     fuzzerRequests.MutateMethods = mutateMethods
 
+    console.log(123, fuzzerRequests);
+    
     return fuzzerRequests
 }
 

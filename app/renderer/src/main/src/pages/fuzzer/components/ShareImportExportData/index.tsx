@@ -43,6 +43,8 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         noSystemProxy: value.NoSystemProxy,
         resNumlimit: DefFuzzerTableMaxData,
         fuzzTagMode: value.FuzzTagMode,
+        sNI: value.SNI,
+        sNIVal: value.SNIVal,
         fuzzTagSyncIndex: value.FuzzTagSyncIndex,
         noFixContentLength: value.NoFixContentLength,
         timeout: value.PerRequestTimeoutSeconds,
