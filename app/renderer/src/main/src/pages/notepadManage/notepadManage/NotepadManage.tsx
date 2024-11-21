@@ -27,6 +27,7 @@ import {
     apiDownloadNotepad,
     apiGetNotepadList,
     convertGetNotepadRequest,
+    onOpenLocalFileByPath,
     saveDialogAndGetLocalFileInfo
 } from "./utils"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
@@ -45,6 +46,7 @@ import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc} from "@/apiUtils/type"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
+import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -398,7 +400,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         onBaseDown(downParams)
             .then((res) => {
                 setBatchDownInfo(res)
-                yakitNotify("success", "下载成功")
+                yakitNotify("success", "获取下载链接成功")
             })
             .finally(() =>
                 setTimeout(() => {
@@ -413,7 +415,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             }
             apiDownloadNotepad(params)
                 .then((res) => {
-                    //TODO - 待验证
                     saveDialogAndGetLocalFileInfo((res as string) || "")
                         .then(resolve)
                         .catch(reject)
@@ -422,8 +423,13 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         })
     })
     const onCancelDownload = useMemoizedFn(() => {
-        /**TODO - 取消下载或者下载完成,都需要删除oss上面的文件 */
-        setBatchDownInfo(undefined)
+        if (batchDownInfo) {
+            const [name, path] = batchDownInfo?.url.split("/").reverse()
+            const fileName = `${path}/${name}`
+            onOpenLocalFileByPath(batchDownInfo?.path)
+            httpDeleteOSSResource({file_name: [fileName]})
+            setBatchDownInfo(undefined)
+        }
     })
     const selectNumber = useCreation(() => {
         if (isAllSelect) {
