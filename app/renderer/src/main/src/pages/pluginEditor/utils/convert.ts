@@ -163,6 +163,7 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
     data.PluginSelectorTypes = (value.PluginSelectorTypes || []).join(",") || undefined
     data.Content = value.Content
     data.RiskInfo = (value.RiskDetail || []).filter((item) => item.CVE && item.TypeVerbose && item.Level)
+    data.PluginEnvKey = value.PluginEnvKey
 
     // 没有RiskDetail就赋值为undefined
     if (data.RiskInfo.length === 0) {
@@ -171,6 +172,10 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
     // 没有Params就赋值为undefined
     if ((data.Params || []).length === 0) {
         data.Params = undefined
+    }
+    // 没有PluginEnvKey就赋值为undefined
+    if ((data.PluginEnvKey || []).length === 0) {
+        data.PluginEnvKey = undefined
     }
 
     return toolDelInvalidKV(data) as localYakInfo
@@ -201,6 +206,7 @@ export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScrip
     data.plugin_selector_types = (value.PluginSelectorTypes || []).join(",") || undefined
     data.content = value.Content
     data.riskInfo = riskDetailConvertLocalToOnline(value.RiskDetail)
+    data.pluginEnvKey = value.PluginEnvKey
 
     if (data.tags.length === 0) {
         data.tags = undefined
@@ -210,6 +216,9 @@ export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScrip
     }
     if (data.riskInfo.length === 0) {
         data.riskInfo = undefined
+    }
+    if ((data.pluginEnvKey || []).length === 0) {
+        data.pluginEnvKey = undefined
     }
 
     return toolDelInvalidKV(data) as API.PluginsRequest
@@ -241,6 +250,7 @@ export const pluginConvertLocalToOnline = (value: YakScript) => {
     data.is_private = value.OnlineIsPrivate
     data.group = value.OnlineGroup
     data.isCorePlugin = value.IsCorePlugin
+    data.pluginEnvKey = value.PluginEnvKey
 
     if (data.tags.length === 0) {
         data.tags = undefined
@@ -250,6 +260,9 @@ export const pluginConvertLocalToOnline = (value: YakScript) => {
     }
     if (data.riskInfo.length === 0) {
         data.riskInfo = undefined
+    }
+    if ((data.pluginEnvKey || []).length === 0) {
+        data.pluginEnvKey = undefined
     }
 
     return toolDelInvalidKV(data) as API.PluginsRequest

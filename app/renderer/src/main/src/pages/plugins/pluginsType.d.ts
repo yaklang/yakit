@@ -47,6 +47,8 @@ export interface PluginDataProps {
     EnablePluginSelector?: boolean
     PluginSelectorTypes?: string
     Content: string
+    /** 环境变量 */
+    PluginEnvKey?: string[]
     /** 修改插件的原因 */
     modifyDescription?: string
 }
@@ -105,6 +107,9 @@ export interface localYakInfo {
     GeneralModuleKey?: string
     FromGit?: string
     IsCorePlugin?: boolean
+
+    /** 环境变量 */
+    PluginEnvKey?: string[]
 }
 /** ---------- grpc插件数据结构定义 End ---------- */
 
@@ -130,4 +135,5 @@ export interface CodeToInfoResponseProps {
     CliParameter: YakParamProps[]
     RiskInfo: YakRiskInfoProps[]
     Tags: string[]
+    PluginEnvKey: string[]
 }

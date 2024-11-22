@@ -32,6 +32,8 @@ export interface YakitPluginInfo extends YakitPluginBaseInfo {
     RiskDetail?: YakRiskInfoProps[]
     /** 参数信息 */
     Params?: YakParamProps[]
+    /** 全局变量 */
+    PluginEnvKey?: string[]
 }
 
 /** @name 插件补充资料 */

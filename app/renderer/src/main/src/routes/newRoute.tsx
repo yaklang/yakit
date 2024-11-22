@@ -861,8 +861,6 @@ export const getFixedPluginDescribe = (name: string) => {
     switch (name) {
         case "基础爬虫":
             return "通过爬虫可快速了解网站的整体架构"
-        case "空间引擎集成版本":
-            return ""
         case "子域名收集":
             return ""
         case "综合目录扫描与爆破":

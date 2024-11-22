@@ -362,8 +362,10 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                         {pluginName: info.ScriptName, pluginId: +info.Id || 0, headImg: info.HeadImg},
                         source
                     )
-                    if (callback) setTimeout(() => callback(), 200)
+                } else {
+                    yakitNotify("error", "线上无此插件，无法下载。")
                 }
+                if (callback) setTimeout(() => callback(), 200)
             })
             .catch((err) => yakitNotify("error", "下载菜单插件失败：" + err))
     })

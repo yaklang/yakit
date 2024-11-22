@@ -84,7 +84,15 @@ interface HubListLocalProps extends HubListBaseProps {
 }
 /** @name 本地插件 */
 export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
-    const {rootElementId, hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail, openGroupDrawer, onSetOpenGroupDrawer} = props
+    const {
+        rootElementId,
+        hiddenFilter,
+        isDetailList,
+        hiddenDetailList,
+        onPluginDetail,
+        openGroupDrawer,
+        onSetOpenGroupDrawer
+    } = props
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)

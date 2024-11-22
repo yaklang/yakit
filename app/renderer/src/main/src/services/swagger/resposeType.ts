@@ -571,6 +571,7 @@ export declare namespace API {
          * 插件附件
          */
         pluginSupplement?: string
+        pluginEnvKey?: string[]
     }
     export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
     export interface PluginsRecycle {
@@ -691,6 +692,7 @@ export declare namespace API {
          * 插件附件
          */
         pluginSupplement?: string
+        pluginEnvKey?: string[]
     }
     export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
     export interface PluginsAuditDetailResponse extends PluginsDetail, PluginsAuditDetail, PluginsAuditButton {}
@@ -754,6 +756,7 @@ export declare namespace API {
          * 是否为内置插件
          */
         isCorePlugin?: boolean
+        pluginEnvKey?: string[]
     }
     export interface PluginsAuditButton {
         /**
