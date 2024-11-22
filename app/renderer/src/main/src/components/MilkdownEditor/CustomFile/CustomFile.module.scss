@@ -11,6 +11,7 @@ $fileDivHeight: 64px;
     cursor: default;
     user-select: none;
     position: relative;
+    cursor: pointer;
     .file-custom-content {
         display: flex;
         align-items: center;
@@ -81,7 +82,11 @@ $fileDivHeight: 64px;
     }
 }
 .file-custom-selected {
-    background-color: var(--yakit-primary-2);
+    border-color: var(--yakit-primary-5);
+    &:hover {
+        border-color: var(--yakit-primary-2);
+        box-shadow: 0 0 0 1px var(--yakit-primary-2);
+    }
 }
 
 .tooltip-action {

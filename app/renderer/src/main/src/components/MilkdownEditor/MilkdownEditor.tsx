@@ -51,6 +51,7 @@ import {MilkdownHr} from "./MilkdownHr/MilkdownHr"
 import {tableBlock} from "@milkdown/kit/component/table-block"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
 import {httpUploadImgBase64} from "@/apiUtils/http"
+import {trackDeletePlugin} from "./utils/trackDeletePlugin"
 
 const markdown = `
 
@@ -463,6 +464,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(commentPlugin)
                 // hrPlugin
                 .use(hrPlugin)
+                // trackDeletePlugin
+                .use(trackDeletePlugin())
                 .use(customPlugin)
         )
     }, [])
