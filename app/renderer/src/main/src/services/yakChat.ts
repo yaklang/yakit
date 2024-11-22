@@ -3,8 +3,7 @@ import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from 
 
 const service = axios.create({
     // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
-    baseURL: "http://8.130.52.219:3000/"
-    // baseURL: "http://8.130.52.219:6006/"
+    baseURL: "http://8.130.52.219:6006/"
 })
 
 service.interceptors.request.use(
@@ -17,6 +16,30 @@ service.interceptors.request.use(
 )
 
 service.interceptors.response.use(
+    (response: AxiosResponse): AxiosResponse => {
+        if (response.status === 200) return response
+
+        throw new Error(response.status.toString())
+    },
+    (error) => {
+        return Promise.reject(error)
+    }
+)
+
+const service2 = axios.create({
+    baseURL: "http://8.130.52.219:3000/"
+})
+
+service2.interceptors.request.use(
+    (config) => {
+        return config
+    },
+    (error) => {
+        return Promise.reject(error.response)
+    }
+)
+
+service2.interceptors.response.use(
     (response: AxiosResponse): AxiosResponse => {
         if (response.status === 200) return response
 
@@ -46,7 +69,7 @@ interface YakChatPluginOptions {
 }
 
 function http({prompt,  token,  signal, onDownloadProgress}: YakChatOptions) {
-    return service({
+    return service2({
         url: "api/v1/chat/completions",
         method: "POST",
         headers: {
