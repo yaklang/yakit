@@ -24,24 +24,6 @@ import {RefreshIcon} from "@/assets/newIcon"
 
 const {ipcRenderer} = window.require("electron")
 
-export const callCopyToClipboard: (str: string, isShow?: boolean) => Promise<null> = (str: string, isShow = true) => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer
-            .invoke("copy-clipboard", str)
-            .then(() => {
-                isShow && info("Copy Finished")
-                resolve(null)
-            })
-            .catch(reject)
-    })
-}
-
-export const getCallCopyToClipboard: () => Promise<string> = () => {
-    return new Promise((resolve, reject) => {
-        ipcRenderer.invoke("get-copy-clipboard").then(resolve).catch(reject)
-    })
-}
-
 export const ConfigGlobalReverse = React.memo(() => {
     const [addr, setAddr, getAddr] = useGetState("")
     const [password, setPassword, getPassword] = useGetState("")

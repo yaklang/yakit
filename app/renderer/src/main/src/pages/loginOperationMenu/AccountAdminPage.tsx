@@ -28,13 +28,12 @@ import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResi
 import moment from "moment"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {callCopyToClipboard} from "@/utils/basic"
 import {unReadable} from "../dynamicControl/DynamicControl"
 import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {DefaultOptionType} from "antd/lib/cascader"
 import styles from "./AccountAdminPage.module.scss"
-const {ipcRenderer} = window.require("electron")
+import {setClipboardText} from "@/utils/clipboard"
 interface QueryAccountAdminRequest {
     departmentId?: number
     keywords: string
@@ -993,7 +992,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                             <div style={{textAlign: "center", marginTop: 10}}>
                                 <YakitButton
                                     type='primary'
-                                    onClick={() => callCopyToClipboard(`用户名：${user_name}\n密码：${password}`)}
+                                    onClick={() => setClipboardText(`用户名：${user_name}\n密码：${password}`)}
                                 >
                                     复制
                                 </YakitButton>
@@ -1031,8 +1030,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
                         secret
                     }
                     const showData = unReadable(resultObj)
-                    ipcRenderer.invoke("set-copy-clipboard", showData)
-                    yakitNotify("success", "复制远程连接成功")
+                    setClipboardText(showData, {hintText: "复制远程连接成功"})
                 } else {
                     yakitNotify("error", `暂无最新连接信息，请该用户发起远程连接后再操作`)
                 }
@@ -1490,7 +1488,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
                                 <div style={{textAlign: "center", marginTop: 10}}>
                                     <YakitButton
                                         type='primary'
-                                        onClick={() => callCopyToClipboard(`用户名：${user_name}\n密码：${password}`)}
+                                        onClick={() => setClipboardText(`用户名：${user_name}\n密码：${password}`)}
                                     >
                                         复制
                                     </YakitButton>

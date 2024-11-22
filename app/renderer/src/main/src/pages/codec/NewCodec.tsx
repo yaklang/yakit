@@ -57,6 +57,7 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import HexEditor from "react-hex-editor"
 import {HexEditorHandle} from "react-hex-editor/dist/types"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
@@ -212,8 +213,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
 
     // 复制
     const onCopy = useMemoizedFn(() => {
-        ipcRenderer.invoke("set-copy-clipboard", outputResponse?.Result || "")
-        success("复制成功")
+        setClipboardText(outputResponse?.Result || "")
     })
 
     const suffixFun = (file_name: string) => {
@@ -404,19 +404,21 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             <div className={styles["header"]}>
                                 <div className={styles["title"]}>
                                     <span className={styles["text"]}>Output</span>
-                                    {outputResponse && <YakitCheckableTag
-                                        style={{marginLeft: 8, marginRight: 0}}
-                                        checked={outputShowType === "hex"}
-                                        onChange={(checked) => {
-                                            if (checked) {
-                                                setOutputShowType("hex")
-                                            } else {
-                                                setOutputShowType("editor")
-                                            }
-                                        }}
-                                    >
-                                        hex原文
-                                    </YakitCheckableTag>}
+                                    {outputResponse && (
+                                        <YakitCheckableTag
+                                            style={{marginLeft: 8, marginRight: 0}}
+                                            checked={outputShowType === "hex"}
+                                            onChange={(checked) => {
+                                                if (checked) {
+                                                    setOutputShowType("hex")
+                                                } else {
+                                                    setOutputShowType("editor")
+                                                }
+                                            }}
+                                        >
+                                            hex原文
+                                        </YakitCheckableTag>
+                                    )}
                                     {outPutObj.hidden && (
                                         <Tooltip
                                             title={size && size.width > 450 ? null : "超大输出，请点击保存下载文件查看"}
@@ -2054,7 +2056,9 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     useDebounceEffect(
         () => {
             if (searchValue && searchValue.length) {
-                const filterCodec = cacheCodecRef.current.filter((item) => item.CodecName.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase()))
+                const filterCodec = cacheCodecRef.current.filter((item) =>
+                    item.CodecName.toLocaleLowerCase().includes(searchValue.toLocaleLowerCase())
+                )
                 setLeftSearchData(filterCodec)
                 setShowSearchList(true)
             } else {

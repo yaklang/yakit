@@ -58,11 +58,6 @@ module.exports = (win, getClient) => {
         streams[addr] = stream;
     })
 
-
-    ipcMain.handle("copy-clipboard", (e, text) => {
-        clipboard.writeText(text);
-    });
-
     const asyncGetReverseShellProgramList = (params) => {
         return new Promise((resolve, reject) => {
             getClient().GetReverseShellProgramList(params, (err, data) => {

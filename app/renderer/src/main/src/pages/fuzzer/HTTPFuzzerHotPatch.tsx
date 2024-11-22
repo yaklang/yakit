@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react"
 import {Form, Space} from "antd"
 import {YakEditor} from "../../utils/editors"
-import {callCopyToClipboard} from "../../utils/basic"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -17,6 +16,7 @@ import {yakitNotify} from "@/utils/notification"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {WEB_FUZZ_HOTPATCH_CODE} from "@/defaultConstants/HTTPFuzzerPage"
+import {setClipboardText} from "@/utils/clipboard"
 
 export interface HTTPFuzzerHotPatchProp {
     onInsert?: (s: string) => any
@@ -164,7 +164,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                                 <YakitButton
                                                     type='text'
                                                     onClick={() => {
-                                                        callCopyToClipboard(data.join("\n"))
+                                                        setClipboardText(data.join("\n"))
                                                     }}
                                                 >
                                                     复制 Fuzz 结果
@@ -172,7 +172,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                                 <YakitButton
                                                     type='text'
                                                     onClick={() => {
-                                                        callCopyToClipboard(params.Template)
+                                                        setClipboardText(params.Template)
                                                     }}
                                                 >
                                                     {" "}
@@ -198,7 +198,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             <YakitButton
                                 type='text'
                                 onClick={() => {
-                                    callCopyToClipboard(params.Template)
+                                    setClipboardText(params.Template)
                                 }}
                             >
                                 点击复制

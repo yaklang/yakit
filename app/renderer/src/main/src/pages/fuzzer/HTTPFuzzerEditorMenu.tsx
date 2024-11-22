@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Avatar, Space, Spin, Timeline} from "antd"
+import React, {useEffect, useRef, useState} from "react"
+import {Avatar, Timeline} from "antd"
 import {PlusOutlined} from "@ant-design/icons"
 import styles from "./HTTPFuzzerEditorMenu.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -18,7 +18,6 @@ import {
 } from "@/assets/newIcon"
 import {DragDropContext, Droppable, Draggable, DraggingStyle} from "@hello-pangea/dnd"
 import {AutoDecodeResult} from "@/utils/encodec"
-import {callCopyToClipboard} from "@/utils/basic"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {QueryFuzzerLabelResponseProps} from "./StringFuzzer"
 import {setRemoteValue} from "@/utils/kv"
@@ -30,6 +29,7 @@ import {IconSolidAIIcon} from "@/assets/icon/colors"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {defaultLabel} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSwitchToTag} from "../pluginEditor/defaultconstants"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
@@ -714,7 +714,7 @@ export const DecodeCopyReplace: React.FC<DecodeCopyReplaceProps> = (props) => {
                     <div
                         className={styles["yakit-copy"]}
                         onClick={() => {
-                            callCopyToClipboard(itemStr)
+                            setClipboardText(itemStr)
                         }}
                     >
                         <DocumentDuplicateSvgIcon className={styles["document-duplicate-svg-icon"]} />

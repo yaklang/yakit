@@ -57,6 +57,7 @@ import {APIFunc} from "@/apiUtils/type"
 import {PluginUploadModal} from "@/pages/pluginHub/pluginUploadModal/PluginUploadModal"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {setClipboardText} from "@/utils/clipboard"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -136,12 +137,14 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
         })
         const onOldDataOk = useMemoizedFn(() => {
             if (!copyLoading) setCopyLoading(true)
-            ipcRenderer.invoke("set-copy-clipboard", oldParamsRef.current)
-            setTimeout(() => {
-                onOldDataCancel()
-                yakitNotify("success", "复制成功")
-                setCopyLoading(false)
-            }, 500)
+            setClipboardText(oldParamsRef.current, {
+                finalCallback: () => {
+                    setTimeout(() => {
+                        onOldDataCancel()
+                        setCopyLoading(false)
+                    }, 200)
+                }
+            })
         })
         const onOldDataCancel = useMemoizedFn(() => {
             if (oldShow) setOldShow(false)

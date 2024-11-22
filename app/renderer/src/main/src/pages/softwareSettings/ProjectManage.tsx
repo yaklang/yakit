@@ -55,6 +55,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
 import {isCommunityEdition} from "@/utils/envfile"
+import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -665,8 +666,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     failed("该条项目无数据或无关键信息，复制失败!")
                     return
                 }
-                ipcRenderer.invoke("set-copy-clipboard", data.DatabasePath)
-                info("复制成功")
+                setClipboardText(data.DatabasePath)
                 return
             case "setCurrent":
                 if (!data || !data.Id) {

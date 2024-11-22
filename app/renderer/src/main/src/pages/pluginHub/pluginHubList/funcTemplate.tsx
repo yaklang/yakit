@@ -54,6 +54,7 @@ import {YakScript} from "@/pages/invoker/schema"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {PluginUpload} from "@/pages/plugins/local/PluginLocalUpload"
+import {setClipboardText} from "@/utils/clipboard"
 
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"
@@ -1061,9 +1062,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
             yakitNotify("error", "分享插件的UUID不存在")
             return
         }
-        ipcRenderer.invoke("copy-clipboard", info.uuid).then(() => {
-            yakitNotify("success", "插件UUID已粘贴到剪切板")
-        })
+        setClipboardText(info.uuid, {hintText: "插件UUID已粘贴到剪切板"})
     })
 
     const delLoading = useMemo(() => {

@@ -44,6 +44,7 @@ import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {Uint8ArrayToString} from "@/utils/str"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -726,7 +727,7 @@ export const OutputInfo: React.FC<OutputInfoProps> = (props) => {
 
     const setCopy = useDebounceFn(
         useMemoizedFn((content: string) => {
-            ipcRenderer.invoke("set-copy-clipboard", content)
+            setClipboardText(content)
         }),
         {wait: 10}
     ).run

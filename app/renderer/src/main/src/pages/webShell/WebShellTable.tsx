@@ -6,7 +6,6 @@ import cveStyles from "@/pages/cve/CVETable.module.scss";
 import mitmStyles from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking.module.scss";
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch";
 import {formatTimestamp} from "@/utils/timeUtil";
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch";
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {
     ArrowCircleRightSvgIcon,
@@ -16,28 +15,15 @@ import {
     SMViewGridAddIcon, TrashIcon
 } from "@/assets/newIcon";
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize";
-import {Button, Divider, Space, Tooltip} from 'antd';
+import {Button, Space, Tooltip} from 'antd';
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType";
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag";
 import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from 'ahooks';
 import {genDefaultPagination, PaginationSchema, QueryGeneralResponse} from "@/pages/invoker/schema";
 import style from "@/components/HTTPFlowTable/HTTPFlowTable.module.scss";
-import {showDrawer, showModal} from "@/utils/showModal";
+import {showModal} from "@/utils/showModal";
 import {RemarkDetail, WebShellCreatorForm} from "@/pages/webShell/WebShellComp";
 import {YakitMenu, YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu";
-import {
-    availableColors,
-    CalloutColor,
-    onRemoveCalloutColor,
-    onSendToTab
-} from "@/components/HTTPFlowTable/HTTPFlowTable";
-import {execPacketScan} from "@/pages/packetScanner/PacketScanner";
-import {packetScanDefaultValue} from "@/pages/packetScanner/DefaultPacketScanGroup";
-import {callCopyToClipboard} from "@/utils/basic";
-import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser";
-import {failed, success} from "@/utils/notification";
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
-import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {deleteWebShell, featurePing} from "@/pages/webShell/WebShellManager";
 import {addToTab} from "@/pages/MainTabs";
 import {

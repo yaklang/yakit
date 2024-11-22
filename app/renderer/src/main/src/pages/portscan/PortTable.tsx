@@ -6,11 +6,11 @@ import {formatTimestamp} from "../../utils/timeUtil"
 import {failed} from "../../utils/notification"
 import {DropdownMenu} from "../../components/baseTemplate/DropdownMenu"
 import {LineMenunIcon} from "../../assets/icons"
-import {callCopyToClipboard} from "../../utils/basic"
 import {ExportExcel} from "@/components/DataExport/DataExport"
 import {useMemoizedFn} from "ahooks"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import {setClipboardText} from "@/utils/clipboard"
 export interface PortTableProp {
     data: YakitPort[]
     isSimple?: boolean
@@ -175,7 +175,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                                 <a
                                     href='#'
                                     onClick={() => {
-                                        callCopyToClipboard(addr)
+                                        setClipboardText(addr)
                                     }}
                                 >
                                     {addr}

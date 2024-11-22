@@ -18,6 +18,7 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebsiteGV} from "@/enums/website"
+import {setClipboardText} from "@/utils/clipboard"
 
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
@@ -651,8 +652,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                 link = `https://${WebsiteGV.OSSSourceAddress}/yak/${latestVersion || "latest"}/yak_windows_amd64.exe`
                 break
         }
-        ipcRenderer.invoke("set-copy-clipboard", link)
-        success("复制成功")
+        setClipboardText(link)
     })
 
     useEffect(() => {

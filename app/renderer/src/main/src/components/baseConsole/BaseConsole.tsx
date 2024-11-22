@@ -20,6 +20,7 @@ import {WindowPositionType} from "../yakitUI/YakitWindow/YakitWindowType"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
+import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -118,7 +119,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
 
     const setCopy = useDebounceFn(
         useMemoizedFn((content: string) => {
-            ipcRenderer.invoke("set-copy-clipboard", content)
+            setClipboardText(content)
         }),
         {wait: 10}
     ).run

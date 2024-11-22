@@ -1,11 +1,10 @@
-import React, {ReactNode, useEffect, useRef, useState} from "react"
-import {Table, Space, Button, Input, Modal, Radio, Avatar, Spin, DatePicker, Menu} from "antd"
+import React, {ReactNode, useEffect, useState} from "react"
+import {Button, Input, Radio, Avatar, Spin} from "antd"
 import locale from "antd/es/date-picker/locale/zh_CN"
 import {API} from "@/services/swagger/resposeType"
-import {callCopyToClipboard} from "@/utils/basic"
-import {useDebounceFn, useGetState, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useGetState} from "ahooks"
 import moment from "moment"
-import {failed, success, warn} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import {NetWorkApi} from "@/services/fetch"
 import {PaginationSchema} from "@/pages/invoker/schema"
 import {ControlMyselfIcon, ControlOtherIcon} from "@/assets/icons"
@@ -14,7 +13,6 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ContentUploadInput} from "@/components/functionTemplate/ContentUploadTextArea"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {VirtualTable} from "./VirtualTable"
-import {QueryYakScriptsResponse} from "../invoker/schema"
 import {VirtualColumns} from "./VirtualTable"
 import {DynamicStatusProps, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -23,7 +21,8 @@ import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {getReleaseEditionName} from "@/utils/envfile"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
-import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {setClipboardText} from "@/utils/clipboard"
 const {TextArea} = Input
 const {ipcRenderer} = window.require("electron")
 export interface ControlOperationProps {
@@ -55,8 +54,8 @@ export const ControlOperation: React.FC<ControlOperationProps> = (props) => {
                 <YakitButton
                     onClick={closeControl}
                     size='max'
-                    type="primary"
-                    colors="danger"
+                    type='primary'
+                    colors='danger'
                     className={styles["control-operation-btn"]}
                 >
                     退出远程
@@ -208,8 +207,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
                     <YakitButton
                         loading={loading}
                         onClick={() => {
-                            ipcRenderer.invoke("set-copy-clipboard", textArea)
-                            success("复制成功")
+                            setClipboardText(textArea)
                         }}
                     >
                         复制密钥
@@ -233,8 +231,8 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
     const [loading, setLoading] = useState<boolean>(false)
 
     const onFinish = () => {
-        const resultObj: ResultObjProps|undefined = readable(textAreaValue)
-        if (resultObj&&resultObj?.id) {
+        const resultObj: ResultObjProps | undefined = readable(textAreaValue)
+        if (resultObj && resultObj?.id) {
             NetWorkApi<any, API.RemoteStatusResponse>({
                 method: "get",
                 url: "remote/status",
@@ -353,7 +351,7 @@ export interface DynamicControlProps {
     onCancle: () => void
     mainTitle: string
     secondTitle: string
-    children?: React.ReactNode
+    children?: ReactNode
     width?: number
 }
 
@@ -372,9 +370,7 @@ export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
             title={mainTitle}
             subTitle={secondTitle}
         >
-            <div className={styles["dynamic-control"]}>
-                {children}
-            </div>
+            <div className={styles["dynamic-control"]}>{children}</div>
         </YakitModal>
     )
 }
@@ -385,7 +381,7 @@ export interface ShowUserInfoProps extends API.NewUrmResponse {
 const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
     const {user_name, password, onClose} = props
     const copyUserInfo = () => {
-        callCopyToClipboard(`用户名：${user_name}\n密码：${password}`)
+        setClipboardText(`用户名：${user_name}\n密码：${password}`)
     }
     return (
         <div style={{padding: "0 10px"}}>
@@ -653,25 +649,26 @@ export const remoteOperation = (status: boolean, dynamicStatus: DynamicStatusPro
     const {id, host, port, secret, note} = dynamicStatus
     return new Promise(async (resolve, reject) => {
         NetWorkApi<API.RemoteOperationRequest, API.ActionSucceeded>({
-        url: "remote/operation",
-        method: "post",
-        data: {
-            tunnel: id,
-            addr: `${host}:${port}`,
-            auth: secret,
-            note,
-            status
-        }
-    })
-        .then((data) => {
-            if (data.ok) {}
+            url: "remote/operation",
+            method: "post",
+            data: {
+                tunnel: id,
+                addr: `${host}:${port}`,
+                auth: secret,
+                note,
+                status
+            }
         })
-        .catch((err) => {
-            failed(`连接远程/取消失败:${err}`)
-        })
-        .finally(() => {
-            resolve(true)
-        })
+            .then((data) => {
+                if (data.ok) {
+                }
+            })
+            .catch((err) => {
+                failed(`连接远程/取消失败:${err}`)
+            })
+            .finally(() => {
+                resolve(true)
+            })
     })
 }
 

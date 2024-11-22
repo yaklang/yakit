@@ -45,8 +45,8 @@ import {
 import {failed, success, warn} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
-import {callCopyToClipboard} from "@/utils/basic"
 import {OpenFileByPathProps} from "../YakRunnerType"
+import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -350,7 +350,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
     // 复制绝对路径
     const onCopyAbsolutePath = useMemoizedFn(() => {
-        callCopyToClipboard(info.path)
+        setClipboardText(info.path)
     })
 
     // 复制相对路径
@@ -361,7 +361,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
         const basePath = fileTree[0].path
         const relativePath = await getRelativePath(basePath, info.path)
-        callCopyToClipboard(relativePath)
+        setClipboardText(relativePath)
     })
 
     // 粘贴

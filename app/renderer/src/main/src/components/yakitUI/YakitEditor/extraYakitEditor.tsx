@@ -11,7 +11,6 @@ import {failed, info, yakitNotify} from "@/utils/notification"
 import {ShareValueProps, newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {StringToUint8Array} from "@/utils/str"
-import {callCopyToClipboard} from "@/utils/basic"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
@@ -26,7 +25,7 @@ import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {getRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
-import emiter from "@/utils/eventBus/eventBus"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -109,7 +108,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     if (onClickUrlMenu) {
                         onClickUrlMenu()
                     } else {
-                        callCopyToClipboard(url || "")
+                        setClipboardText(url || "")
                     }
                 }
             },
@@ -128,7 +127,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             return
                         }
                         generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
-                            callCopyToClipboard(code)
+                            setClipboardText(code)
                         })
                     } catch (e) {
                         failed("自动生成 CSRF 失败")
@@ -344,7 +343,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                             Bytes: bytes.Raw
                                         })
                                         .then((res: {Base64: string}) => {
-                                            callCopyToClipboard(res.Base64)
+                                            setClipboardText(res.Base64)
                                         })
                                         .catch((err) => {
                                             yakitNotify("error", `${err}`)

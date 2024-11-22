@@ -4,8 +4,7 @@ import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
 import {xtermFit} from "../utils/xtermUtils"
 import {TERMINAL_INPUT_KEY} from "./yakitUI/YakitCVXterm/YakitCVXterm"
-
-const {ipcRenderer} = window.require("electron")
+import {setClipboardText} from "@/utils/clipboard"
 
 export interface CVXtermProps extends IProps {
     isWrite?: boolean
@@ -92,9 +91,12 @@ export const CVXterm = forwardRef((props: CVXtermProps, ref) => {
                             timer.current = null
                         }
                         timer.current = setTimeout(() => {
-                            ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                timer.current = null
-                                setLoading(false)
+                            setClipboardText(str, {
+                                hiddenHint: true,
+                                finalCallback: () => {
+                                    timer.current = null
+                                    setLoading(false)
+                                }
                             })
                         }, 300)
                     }

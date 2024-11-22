@@ -8,6 +8,7 @@ import {useMemoizedFn} from "ahooks"
 import {CheckOutlined, LoadingOutlined} from "@ant-design/icons"
 import {success} from "@/utils/notification"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -79,15 +80,19 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
         e.stopPropagation()
         if (!props.copyText) return
         setLoading(true)
-        ipcRenderer.invoke("set-copy-clipboard", props.copyText)
-        setTimeout(() => {
-            setLoading(false)
-            setIsShowSure(true)
-            setTimeout(() => {
-                setIsShowSure(false)
-            }, 2000)
-            success("复制成功")
-        }, 1000)
+        setClipboardText(props.copyText, {
+            hiddenHint: true,
+            finalCallback: () => {
+                setTimeout(() => {
+                    setLoading(false)
+                    setIsShowSure(true)
+                    setTimeout(() => {
+                        setIsShowSure(false)
+                    }, 2000)
+                    success("复制成功")
+                }, 1000)
+            }
+        })
         if (props.onAfterCopy) props.onAfterCopy(e)
     })
     return (

@@ -1,12 +1,9 @@
-import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
+import {forwardRef, useImperativeHandle, useRef, useState} from "react"
 import {IProps} from "xterm-for-react/dist/src/XTerm"
 import {XTerm} from "xterm-for-react"
-import ReactResizeDetector from "react-resize-detector"
 import {xtermFit} from "@/utils/xtermUtils"
 import styles from "./YakitCVXterm.module.scss"
-import {Terminal as ITerminal} from "xterm"
-
-const {ipcRenderer} = window.require("electron")
+import {setClipboardText} from "@/utils/clipboard"
 
 export interface CVXtermProps extends IProps {
     isWrite?: boolean
@@ -105,9 +102,11 @@ export const YakitCVXterm = forwardRef((props: CVXtermProps, ref) => {
                             timer.current = null
                         }
                         timer.current = setTimeout(() => {
-                            ipcRenderer.invoke("copy-clipboard", str).finally(() => {
-                                timer.current = null
-                                setLoading(false)
+                            setClipboardText(str, {
+                                finalCallback: () => {
+                                    timer.current = null
+                                    setLoading(false)
+                                }
                             })
                         }, 300)
                     }

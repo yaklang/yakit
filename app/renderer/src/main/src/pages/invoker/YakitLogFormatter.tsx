@@ -9,7 +9,6 @@ import {HTTPFlowRiskViewer, YakitHTTPFlowRisk} from "../../components/HTTPFlowRi
 import {AutoCard} from "../../components/AutoCard"
 import MDEditor from "@uiw/react-md-editor"
 import {openABSFileLocated} from "../../utils/openWebsite"
-import {callCopyToClipboard} from "../../utils/basic"
 import styles from "./YakitLogFormatter.module.scss"
 import classNames from "classnames"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -27,6 +26,7 @@ import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakEditor} from "@/utils/editors"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {SolidCalendarIcon} from "@/assets/icon/solid"
+import {setClipboardText} from "@/utils/clipboard"
 
 const LogCharts = React.lazy(() => import("./LogCharts/LogCharts"))
 const WordCloudCharts = React.lazy(() => import("./LogCharts/WordCloudCharts"))
@@ -219,7 +219,7 @@ const FileLogShow: React.FC<FileLogShowProps> = React.memo((props) => {
     const {title, is_dir, is_existed, file_size, description, path, timestamp, showTime = true} = props
     const [expand, setExpand] = useState<boolean>(true)
     const onCopy = useMemoizedFn(() => {
-        callCopyToClipboard(path)
+        setClipboardText(path)
     })
     const onOpen = useMemoizedFn(() => {
         openABSFileLocated(path)

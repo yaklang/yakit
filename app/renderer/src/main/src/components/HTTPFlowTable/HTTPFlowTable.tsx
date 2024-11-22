@@ -1,5 +1,5 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Divider, Empty, Form, Input, Select, Space, Tooltip, Badge} from "antd"
+import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge} from "antd"
 import {YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
@@ -11,7 +11,6 @@ import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
 import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
-import {callCopyToClipboard} from "../../utils/basic"
 import {
     generateCSRFPocByRequest,
     generateYakCodeByRequest,
@@ -73,15 +72,10 @@ import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {Uint8ArrayToString} from "@/utils/str"
-import {WEB_FUZZ_PROXY} from "@/defaultConstants/HTTPFuzzerPage"
-import {onSetRemoteValuesBase} from "../yakitUI/utils"
-import {CacheDropDownGV} from "@/yakitGV"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import cloneDeep from "lodash/cloneDeep"
-import {parseStatusCodes} from "@/pages/fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
-
-const {Option} = Select
 
 export interface codecHistoryPluginProps {
     key: string
@@ -2721,14 +2715,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             webSocket: true,
             default: true,
             toWebFuzzer: true,
-            onClickSingle: (v) => callCopyToClipboard(v.Url),
+            onClickSingle: (v) => setClipboardText(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
                     yakitNotify("warning", "请选择数据")
                     return
                 }
                 if (v.length < number) {
-                    callCopyToClipboard(v.map((ele) => `${ele.Url}`).join("\r\n"))
+                    setClipboardText(v.map((ele) => `${ele.Url}`).join("\r\n"))
                     setSelectedRowKeys([])
                     setSelectedRows([])
                 } else {
@@ -2778,7 +2772,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
                 generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
-                    callCopyToClipboard(e)
+                    setClipboardText(e)
                 })
             }
         },
@@ -3129,7 +3123,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             flow.IsHTTPS,
             flow.Request,
             (code) => {
-                callCopyToClipboard(code)
+                setClipboardText(code)
             },
             RequestToYakCodeTemplate.Ordinary
         )
@@ -3144,7 +3138,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             flow.IsHTTPS,
             flow.Request,
             (code) => {
-                callCopyToClipboard(code)
+                setClipboardText(code)
             },
             RequestToYakCodeTemplate.Batch
         )
