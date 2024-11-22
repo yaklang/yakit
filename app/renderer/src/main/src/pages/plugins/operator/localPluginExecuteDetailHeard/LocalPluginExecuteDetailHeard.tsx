@@ -41,6 +41,8 @@ import {GetPluginLanguage} from "../../builtInData"
 import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
 import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
 import {defPluginExecuteFormValue} from "./constants"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -565,10 +567,10 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
                     help='可将文件夹拖入框内或点击此处'
                     disabled={disabled}
                     autoCompleteProps={{
-                        ref:item.cacheRef,
+                        ref: item.cacheRef,
                         cacheHistoryDataKey: item.cacheHistoryDataKey
                     }}
-                    renderType={item.cacheHistoryDataKey?"autoComplete":undefined}
+                    renderType={item.cacheHistoryDataKey ? "autoComplete" : undefined}
                 />
             )
         // 其他基础类型
@@ -606,11 +608,48 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         },
         {wait: 200, leading: true}
     ).run
+
+    const [additionalConfig, setAdditionalConfig] = useState<{inputOption: {label: string; value: any}[]}>()
+    useEffect(() => {
+        const {TypeVerbose, SuggestionDataExpression} = item
+        setAdditionalConfig(undefined)
+        if (TypeVerbose === "string") {
+            if (SuggestionDataExpression) {
+                // 输入框提供可选择选项
+                grpcFetchExpressionToResult({
+                    Expression: item.SuggestionDataExpression || "",
+                    ImportYaklangLibs: true
+                })
+                    .then((res) => {
+                        const {BoolResult, Result} = res
+                        if (BoolResult && Result) {
+                            try {
+                                let arr: string[] = JSON.parse(Result)
+                                !Array.isArray(arr) && (arr = [])
+                                setAdditionalConfig({
+                                    inputOption: arr.map((item) => ({
+                                        label: item,
+                                        value: item
+                                    }))
+                                })
+                            } catch (error) {}
+                        }
+                    })
+                    .catch(() => {})
+            }
+        }
+    }, [item])
+
     switch (item.TypeVerbose) {
         case "string":
             return (
                 <Form.Item {...formProps}>
-                    <YakitInput placeholder='请输入' disabled={disabled} />
+                    <YakitAutoComplete
+                        placeholder='请输入'
+                        options={additionalConfig?.inputOption || []}
+                        disabled={disabled}
+                    />
+                    {/* <YakitInput placeholder='请输入' disabled={disabled} /> */}
                 </Form.Item>
             )
         case "text":
