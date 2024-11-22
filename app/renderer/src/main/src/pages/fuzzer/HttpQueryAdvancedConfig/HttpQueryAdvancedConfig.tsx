@@ -87,6 +87,22 @@ const fuzzTagSyncOptions = [
     }
 ]
 
+// 前端定义的字段值
+const overwriteSNIOptions = [
+    {
+        value: "auto",
+        label: "自动"
+    },
+    {
+        value: "mandatory",
+        label: "强制"
+    },
+    {
+        value: "clear",
+        label: "清空"
+    }
+]
+
 type fields = keyof AdvancedConfigValueProps
 
 export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = React.memo((props) => {
@@ -119,6 +135,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [httpResponse, setHttpResponse] = useState<string>(defaultHttpResponse)
 
     const [form] = Form.useForm()
+    const overwriteSNI = Form.useWatch("overwriteSNI", form)
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
 
@@ -502,6 +519,31 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             >
                                 <YakitInput suffix='M' size='small' className={styles["fuzzer-maxBodySize-input"]} />
                             </Form.Item>
+                            <Form.Item
+                                label={<span className={styles["advanced-config-form-label"]}>SNI 配置</span>}
+                                name='overwriteSNI'
+                            >
+                                <YakitRadioButtons
+                                    buttonStyle='solid'
+                                    options={overwriteSNIOptions}
+                                    size={"small"}
+                                    onChange={(e) => {
+                                        if (e.target.value !== "mandatory") {
+                                            onReset({
+                                                sNI: ""
+                                            })
+                                        }
+                                    }}
+                                />
+                            </Form.Item>
+                            {overwriteSNI === "mandatory" && (
+                                <Form.Item
+                                    label={<span className={styles["advanced-config-form-label"]}>强制SNI</span>}
+                                    name='sNI'
+                                >
+                                    <YakitInput size='small' />
+                                </Form.Item>
+                            )}
                         </div>
                         <YakitCollapse
                             activeKey={activeKey}

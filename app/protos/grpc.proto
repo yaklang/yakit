@@ -4475,6 +4475,9 @@ message FuzzerRequest {
 
   repeated MutateMethod MutateMethods = 54;
   bool SetPauseStatus = 55;
+
+  string SNI = 56;
+  bool OverwriteSNI = 57;
 }
 
 message MutateMethod {
