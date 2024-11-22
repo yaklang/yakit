@@ -37,6 +37,7 @@ import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {API} from "@/services/swagger/resposeType"
 import {apiDeleteNotepadDetail, apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
 import moment from "moment"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -125,10 +126,17 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     useEffect(() => {
         if (pageInfo.notepadHash) {
+            setLoading(true)
             // 查询该笔记本详情
-            apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
-                setNotepadDetail(res)
-            })
+            apiGetNotepadDetail(pageInfo.notepadHash)
+                .then((res) => {
+                    setNotepadDetail(res)
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                )
         } else {
             // 新建笔记本并保存
             const params: API.PostNotepadRequest = {
@@ -259,7 +267,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [notepadWidth, clientWidthRef.current])
 
     return (
-        <>
+        <YakitSpin spinning={loading}>
             <div className={styles["modify-notepad"]}>
                 <div className={styles["modify-notepad-heard"]}>
                     <div className={styles["modify-notepad-heard-title"]}>{tabName}</div>
@@ -408,7 +416,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     </div>
                 </div>
             </div>
-        </>
+        </YakitSpin>
     )
 })
 

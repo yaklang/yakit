@@ -47,6 +47,7 @@ import {yakitNotify} from "@/utils/notification"
 import {APIFunc} from "@/apiUtils/type"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
+import {getFileNameByUrl} from "@/components/MilkdownEditor/utils/trackDeletePlugin"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -424,10 +425,11 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     })
     const onCancelDownload = useMemoizedFn(() => {
         if (batchDownInfo) {
-            const [name, path] = batchDownInfo?.url.split("/").reverse()
-            const fileName = `${path}/${name}`
+            const fileName = getFileNameByUrl(batchDownInfo?.url)
             onOpenLocalFileByPath(batchDownInfo?.path)
-            httpDeleteOSSResource({file_name: [fileName]})
+            if (fileName) {
+                httpDeleteOSSResource({file_name: [fileName]})
+            }
             setBatchDownInfo(undefined)
         }
     })
