@@ -333,7 +333,7 @@ export interface HTTPFlowTableProp {
     pageType?: HTTPHistorySourcePageType
     searchURL?: string
     includeInUrl?: string | string[]
-    onQueryParams?: (queryParams: string, execFlag?: boolean) => void
+    onQueryParams?: (queryParams: string, execFlag: boolean) => void
     titleHeight?: number
     containerClassName?: string
 
@@ -347,6 +347,8 @@ export interface HTTPFlowTableProp {
     showBatchActions?: boolean
     /** 下游代理地址 */
     downstreamProxyStr?: string
+    /** 进程名 */
+    ProcessName?: string[]
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -733,6 +735,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const ref = useRef(null)
 
+    const refreshTabsContRef = useRef<boolean>(false)
+
     useHotkeys(
         "ctrl+r",
         (e) => {
@@ -985,6 +989,29 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
      * @description 因为直接进行触发搜索时，可能当前已存在搜索过程，导致触发搜索失败
      */
     const triggerFilterValue = useRef<boolean>(false)
+    const campareProcessName = useCampare(props.ProcessName)
+    useUpdateEffect(() => {
+        if (pageType === "History") {
+            setParams({
+                ...params,
+                ProcessName: props.ProcessName || []
+            })
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
+            setSelected(undefined)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setIsAllSelect(false)
+            if (isGrpcRef.current) {
+                triggerFilterValue.current = true
+            } else {
+                setTimeout(() => {
+                    updateData()
+                }, 50)
+            }
+        }
+    }, [campareProcessName, pageType])
+
     /**
      * 网站树部分
      */
@@ -1010,27 +1037,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             } else {
                 setTimeout(() => {
                     updateData()
-                }, 10)
+                }, 50)
             }
         }
     }, [props.searchURL, props.includeInUrl, pageType])
     const [queryParams, setQueryParams] = useState<string>("")
     useEffect(() => {
-        if (pageType === "History" && queryParams !== "" && inViewport) {
-            props.onQueryParams && props.onQueryParams(queryParams)
+        if (queryParams !== "" && inViewport) {
+            let refreshFlag = false
+            if (refreshTabsContRef.current) {
+                refreshTabsContRef.current = false
+                refreshFlag = true
+            }
+            props.onQueryParams && props.onQueryParams(queryParams, refreshFlag)
         }
-    }, [queryParams, pageType, inViewport])
+    }, [queryParams, inViewport])
     const updateQueryParams = (query) => {
         const copyQuery = structuredClone(query)
-        // 此处删除与树相关得参数 由于queryParams参数需要带到网站树中去查询 是不需要searchURL与IncludeInUrl得 不然会造成死循环
-        delete copyQuery.SearchURL
-        delete copyQuery.IncludeInUrl
-        delete copyQuery.Pagination
-        delete copyQuery.AfterId
-        delete copyQuery.BeforeId
-        delete copyQuery.WithPayload
-        delete copyQuery.RuntimeIDs
-        delete copyQuery.AfterUpdatedAt
         copyQuery.Color = copyQuery.Color ? copyQuery.Color : []
         copyQuery.StatusCode = copyQuery.StatusCode ? copyQuery.StatusCode : ""
         setQueryParams(JSON.stringify(copyQuery))
@@ -1099,7 +1122,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
-        updateQueryParams(query)
 
         // 真正需要传给后端的查询数据
         const realQuery = cloneDeep(query)
@@ -1112,6 +1134,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
 
+        updateQueryParams(realQuery)
+        
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1650,7 +1674,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     wrapperStyle: {width: 270},
                     onRegular: (value) => {
                         // 只允许输入数字、逗号和连字符，去掉所有其他字符
-                        return value.replace(/[^0-9,-]/g, '')
+                        return value.replace(/[^0-9,-]/g, "")
                     }
                 }
             },
@@ -2027,7 +2051,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RequestSizeVerbose,
             action
         ]
-    }, [tags, tagsFilter, tagSearchVal, checkBodyLength, toWebFuzzer, downstreamProxyStr, pageType])
+    }, [tags, tagsFilter, tagSearchVal, checkBodyLength, toWebFuzzer, downstreamProxyStr, pageType, queryParams])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -2161,9 +2185,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", {DeleteAll: true})
             .then(() => {
                 setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-                if (pageType === "History") {
-                    props.onQueryParams && props.onQueryParams(queryParams, true)
-                }
+                refreshTabsContRef.current = true
                 updateData()
             })
             .catch((e: any) => {
@@ -2204,6 +2226,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
                 }
                 setParams({...newParams})
+                refreshTabsContRef.current = true
                 updateData()
             })
             .catch((e: any) => {
@@ -3183,15 +3206,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ExcludeInUrl: params.ExcludeInUrl,
             WithPayload: toWebFuzzer,
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
+            RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
+            ProcessName: []
         }
         setParams(newParams)
         setIsReset(!isReset)
         setColor([])
         setCheckBodyLength(false)
-        if (pageType === "History") {
-            props.onQueryParams && props.onQueryParams(queryParams, true)
-        }
+        refreshTabsContRef.current = true
         setTimeout(() => {
             updateData()
         }, 100)
@@ -3494,7 +3516,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const mitmHasParamsNamesArr = mitmHasParamsNames.split(",")
         let selectTypeList = params.SourceType?.split(",") || [""]
         if (mitmHasParamsNamesArr[0] !== "" || !mitmHasParamsNamesArr.length) {
-            selectTypeList = ["mitm", "scan"]
+            selectTypeList = ["scan"]
         } else {
             selectTypeList = selectTypeList.filter((item) => item !== "scan")
             if (selectTypeList[0] === "" || !selectTypeList.length) {
@@ -3520,16 +3542,40 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setParams(newParams)
     })
 
-    // mitm页面带参数插件跳转过来
+    const onMitmSearchInputVal = useMemoizedFn((Keyword: string) => {
+        setParams({
+            ...params,
+            Keyword: Keyword
+        })
+        setTimeout(() => {
+            updateData()
+        }, 20)
+    })
+
+    const onMitmCurProcess = useMemoizedFn((ProcessName: string) => {
+        setParams({
+            ...params,
+            ProcessName: ProcessName ? ProcessName.split(",") : []
+        })
+        setTimeout(() => {
+            updateData()
+        }, 20)
+    })
+
+    // mitm页面带参数跳转过来
     useEffect(() => {
         if (pageType === "MITM") {
             emiter.on("onHasParamsJumpHistory", onHasParamsJumpHistory)
             emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
+            emiter.on("onMitmSearchInputVal", onMitmSearchInputVal)
+            emiter.on("onMitmCurProcess", onMitmCurProcess)
         }
         return () => {
             if (pageType === "MITM") {
                 emiter.off("onHasParamsJumpHistory", onHasParamsJumpHistory)
-                emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
+                emiter.off("onMitmClearFromPlugin", onMitmClearFromPlugin)
+                emiter.off("onMitmSearchInputVal", onMitmSearchInputVal)
+                emiter.off("onMitmCurProcess", onMitmCurProcess)
             }
         }
     }, [pageType])

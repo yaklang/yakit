@@ -82,6 +82,7 @@ export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 整体的劫持状态
     const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
+    const statusRef = useRef<"idle" | "hijacked" | "hijacking">(status)
     const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
@@ -100,6 +101,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [downstreamProxyStr, setDownstreamProxyStr] = useState<string>("")
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
+
+    useEffect(() => {
+        statusRef.current = status
+    }, [status])
+
     // 检测当前劫持状态
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
@@ -137,7 +143,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             })
 
         // 用于 MITM 的 Message （YakitLog）
-        const messages: ExecResultLog[] = []
+        let messages: ExecResultLog[] = []
         const statusMap = new Map<string, StatusCardProps>()
         let lastStatusHash = ""
         ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
@@ -197,6 +203,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         })
 
         const updateLogs = () => {
+            if (statusRef.current === "idle") {
+                messages = []
+                lastStatusHash = ""
+                statusMap.clear()
+            }
             if (latestLogs.current.length !== messages.length) {
                 setLogs([...messages])
                 return

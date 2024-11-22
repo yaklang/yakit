@@ -12,4 +12,7 @@ export type MitmEventProps = {
     onHistoryTagToMitm: string
     onHistorySourceTypeToMitm: string
     onMitmClearFromPlugin?: string
+    onMitmSearchInputVal: string
+    onMITMLogProcessQuery: string
+    onMitmCurProcess: string
 }

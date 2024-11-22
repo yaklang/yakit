@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {Card, Col, Divider, Row, Space, Timeline} from "antd"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {showModal} from "../../utils/showModal"
@@ -37,15 +37,20 @@ export interface YakitLogViewersProp {
 }
 
 export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
+
+    const timelineItems = useMemo(
+        () =>
+            (props.data || []).map((item) => (
+                <Timeline.Item key={`${item.timestamp}-${item.level}-${item.data}`} color={LogLevelToCode(item.level)}>
+                    <YakitLogFormatter data={item.data} level={item.level} timestamp={item.timestamp} />
+                </Timeline.Item>
+            )),
+        [props.data]
+    );
+    
     return (
         <Timeline pending={!props.finished} reverse={true}>
-            {(props.data || []).map((e) => {
-                return (
-                    <Timeline.Item key={`${e.timestamp}-${e.level}`} color={LogLevelToCode(e.level)}>
-                        <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
-                    </Timeline.Item>
-                )
-            })}
+            {timelineItems}
         </Timeline>
     )
 })

@@ -13,8 +13,47 @@ import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
-import {OutlineLog2Icon} from "@/assets/icon/outline"
-import { MITMConsts } from "@/pages/mitm/MITMConsts"
+import {OutlineLog2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {MITMConsts} from "@/pages/mitm/MITMConsts"
+import {YakitInput} from "./yakitUI/YakitInput/YakitInput"
+import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
+import {
+    BaiduNetdiskIcon,
+    BashIcon,
+    BurpSuiteCommunityIcon,
+    BurpSuiteProfessionalIcon,
+    ChromeIcon,
+    ClashIconSvgIcon,
+    Cse360Icon,
+    CursorIcon,
+    DingtalkIcon,
+    DockerIcon,
+    ExcelIcon,
+    FeishuIcon,
+    FinderIcon,
+    FirefoxIcon,
+    JavaIcon,
+    MsedgeIcon,
+    OpenvpnIcon,
+    OperaIcon,
+    PowerpointIcon,
+    QqIcon,
+    QQMusicIcon,
+    Se360Icon,
+    TelegramIcon,
+    UToolsIcon,
+    VMwareIcon,
+    VscodeIcon,
+    WechatIcon,
+    WordIconIcon,
+    ZSHIcon
+} from "@/assets/commonProcessIcons"
+import {yakitNotify} from "@/utils/notification"
+import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
+import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
+import {RefreshIcon} from "@/assets/newIcon"
+import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
+const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -31,7 +70,7 @@ export interface HTTPHistoryProp extends HTTPPacketFuzzable {
     params?: YakQueryHTTPFlowRequest
 }
 
-type tabKeys = "web-tree"
+type tabKeys = "web-tree" | "process"
 
 interface HTTPHistoryTabsItem {
     key: tabKeys
@@ -113,6 +152,16 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 </>
             ),
             contShow: false // 初始为false
+        },
+        {
+            key: "process",
+            label: (
+                <>
+                    <OutlineTerminalIcon />
+                    进程
+                </>
+            ),
+            contShow: false
         }
     ])
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
@@ -156,8 +205,36 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         return curTabKey === key && hTTPHistoryTabs.find((item) => item.key === curTabKey)?.contShow
     }
     const openTabsFlag = useMemo(() => {
-        return hTTPHistoryTabs.every((item) => item.contShow)
+        return hTTPHistoryTabs.some((item) => item.contShow)
     }, [hTTPHistoryTabs])
+
+    const [curProcess, setCurProcess] = useState<string[]>([])
+    const [processQueryparams, setProcessQueryparams] = useState<string>("")
+    const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
+
+    // 表格参数改变
+    const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
+        try {
+            const treeQuery = JSON.parse(queryParams) || {}
+            delete treeQuery.Pagination
+            delete treeQuery.AfterId
+            delete treeQuery.BeforeId
+            delete treeQuery.SearchURL
+            delete treeQuery.IncludeInUrl
+            setTreeQueryparams(JSON.stringify(treeQuery))
+            setRefreshFlag(!!execFlag)
+
+            const processQuery = JSON.parse(queryParams) || {}
+            delete processQuery.Pagination
+            delete processQuery.AfterId
+            delete processQuery.BeforeId
+            delete processQuery.ProcessName
+            setProcessQueryparams(JSON.stringify(processQuery))
+            if (pageType === "MITM") {
+                emiter.emit("onMITMLogProcessQuery", JSON.stringify(processQuery))
+            }
+        } catch (error) {}
+    })
 
     /**
      * 网站树
@@ -168,7 +245,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [searchURL, setSearchURL] = useState<string>("")
     const [includeInUrl, setIncludeInUrl] = useState<string>("")
     const [treeQueryparams, setTreeQueryparams] = useState<string>("")
-    const [refreshTreeFlag, setRefreshTreeFlag] = useState<boolean>(false)
 
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
@@ -197,12 +273,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             emiter.off("onHistoryJumpWebTree", onJumpWebTree)
         }
     }, [])
-
-    // 表格参数改变
-    const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
-        setTreeQueryparams(queryParams)
-        setRefreshTreeFlag(!!execFlag)
-    })
 
     // 编辑器部分是否显示
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
@@ -258,7 +328,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                         height={treeWrapHeight - 30}
                                         searchPlaceholder='请输入域名进行搜索，例baidu.com'
                                         treeExtraQueryparams={treeQueryparams}
-                                        refreshTreeFlag={refreshTreeFlag}
+                                        refreshTreeFlag={refreshFlag}
                                         onGetUrl={(searchURL, includeInUrl) => {
                                             setSearchURL(searchURL)
                                             setIncludeInUrl(includeInUrl)
@@ -268,6 +338,24 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             setSecondNodeVisible(editor)
                                         }}
                                     ></WebTree>
+                                </div>
+                                <div
+                                    className={classNames(styles["hTTPHistory-tab-cont-item"])}
+                                    style={{
+                                        display: tabContItemShow("process") ? "block" : "none",
+                                        overflowY: "hidden"
+                                    }}
+                                >
+                                    <HistoryProcess
+                                        queryparamsStr={processQueryparams}
+                                        refreshProcessFlag={refreshFlag}
+                                        curProcess={curProcess}
+                                        onSetCurProcess={setCurProcess}
+                                        resetTableAndEditorShow={(table, editor) => {
+                                            setOnlyShowFirstNode(table)
+                                            setSecondNodeVisible(editor)
+                                        }}
+                                    ></HistoryProcess>
                                 </div>
                             </div>
                         )
@@ -307,6 +395,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     onQueryParams={onQueryParams}
                                     inViewport={inViewport}
                                     downstreamProxyStr={downstreamProxy}
+                                    ProcessName={curProcess}
                                 />
                             </div>
                         )}
@@ -347,3 +436,289 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         </div>
     )
 }
+
+interface CommonProcessItem {
+    process: string[]
+    icon: ReactElement
+}
+const commonProcess: CommonProcessItem[] = [
+    {
+        process: ["chrome"],
+        icon: <ChromeIcon />
+    },
+    {
+        process: ["firefox"],
+        icon: <FirefoxIcon />
+    },
+    {
+        process: ["opera"],
+        icon: <OperaIcon />
+    },
+    {
+        process: ["msedge"],
+        icon: <MsedgeIcon />
+    },
+    {
+        process: ["360se"],
+        icon: <Se360Icon />
+    },
+    {
+        process: ["360cse"],
+        icon: <Cse360Icon />
+    },
+    {
+        process: ["wechat"],
+        icon: <WechatIcon />
+    },
+    {
+        process: ["qq"],
+        icon: <QqIcon />
+    },
+    {
+        process: ["code"],
+        icon: <VscodeIcon />
+    },
+    {
+        process: ["dingtalk"],
+        icon: <DingtalkIcon />
+    },
+    {
+        process: ["feishu"],
+        icon: <FeishuIcon />
+    },
+    {
+        process: ["BaiduNetdisk"],
+        icon: <BaiduNetdiskIcon />
+    },
+    {
+        process: ["clash"],
+        icon: <ClashIconSvgIcon />
+    },
+    {
+        process: ["BurpSuiteCommunity"],
+        icon: <BurpSuiteCommunityIcon />
+    },
+    {
+        process: ["BurpSuiteProfessional"],
+        icon: <BurpSuiteProfessionalIcon />
+    },
+    {
+        process: ["Word"],
+        icon: <WordIconIcon />
+    },
+    {
+        process: ["Excel"],
+        icon: <ExcelIcon />
+    },
+    {
+        process: ["Powerpoint"],
+        icon: <PowerpointIcon />
+    },
+    {
+        process: ["Finder"],
+        icon: <FinderIcon />
+    },
+    {
+        process: ["cursor"],
+        icon: <CursorIcon />
+    },
+    {
+        process: ["openvpn", "openvpn-gui", "openvpnserv", "openvpnserv2"],
+        icon: <OpenvpnIcon />
+    },
+    {
+        process: ["docker"],
+        icon: <DockerIcon />
+    },
+    {
+        process: ["jdk", "java"],
+        icon: <JavaIcon />
+    },
+    {
+        process: ["zsh"],
+        icon: <ZSHIcon />
+    },
+    {
+        process: ["bash"],
+        icon: <BashIcon />
+    },
+    {
+        process: ["VMware"],
+        icon: <VMwareIcon />
+    },
+    {
+        process: ["Telegram"],
+        icon: <TelegramIcon />
+    },
+    {
+        process: ["uTools"],
+        icon: <UToolsIcon />
+    },
+    {
+        process: ["QQMusic"],
+        icon: <QQMusicIcon />
+    }
+]
+export const iconProcessMap = commonProcess.reduce(
+    (map, item) => {
+        item.process.forEach((name) => {
+            map[name.toLocaleLowerCase()] = item.icon
+        })
+        return map
+    },
+    {} as Record<string, ReactElement | undefined>
+)
+
+export interface ProcessItem {
+    process: string
+    icon?: ReactElement
+}
+interface HistoryProcessProps {
+    queryparamsStr: string
+    refreshProcessFlag: boolean
+    curProcess: string[]
+    onSetCurProcess: (curProcess: string[]) => void
+    resetTableAndEditorShow: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+}
+const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
+    const {queryparamsStr, refreshProcessFlag, curProcess, onSetCurProcess, resetTableAndEditorShow} = props
+    const processRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(processRef)
+    const [searchProcessVal, setSearchProcessVal] = useState<string>("")
+    const [processLoading, setProcessLoading] = useState<boolean>(false)
+    const [processList, setProcessList] = useState<ProcessItem[]>([])
+    const searchProcessValRef = useRef<string>(searchProcessVal)
+    const curProcessRef = useRef<string[]>(curProcess)
+    useEffect(() => {
+        searchProcessValRef.current = searchProcessVal
+    }, [searchProcessVal])
+    useEffect(() => {
+        curProcessRef.current = curProcess
+    }, [curProcess])
+
+    const renderProcessList = useMemo(() => {
+        return searchProcessVal
+            ? processList.filter((item) =>
+                  item.process.toLocaleLowerCase().includes(searchProcessVal.toLocaleLowerCase())
+              )
+            : processList
+    }, [searchProcessVal, processList])
+
+    const onProcessItemClick = (processItem: ProcessItem) => {
+        if (curProcess.includes(processItem.process)) {
+            const newProcess = curProcess.filter((process) => process !== processItem.process)
+            onSetCurProcess(newProcess)
+        } else {
+            onSetCurProcess([...curProcess, processItem.process])
+        }
+    }
+
+    useEffect(() => {
+        if (curProcessRef.current.length) {
+            if (refreshProcessFlag) {
+                if (searchProcessValRef.current) {
+                } else {
+                    resetTableAndEditorShow(true, false)
+                    refreshProcess()
+                }
+            }
+        } else {
+            if (!searchProcessValRef.current) {
+                refreshProcess()
+            }
+        }
+    }, [queryparamsStr, refreshProcessFlag, inViewport])
+
+    const refreshProcess = useMemoizedFn(() => {
+        setProcessLoading(true)
+        onSetCurProcess([])
+        try {
+            const query = JSON.parse(queryparamsStr)
+            ipcRenderer
+                .invoke("QueryHTTPFlowsProcessNames", query)
+                .then((res) => {
+                    const processArr = (res.ProcessNames || [])
+                        .filter((name: string) => name)
+                        .map((name: string) => {
+                            const lowerName = name.toLocaleLowerCase()
+                            const lastDotIndex = lowerName.lastIndexOf(".")
+                            const icon = Object.keys(iconProcessMap).find((key) => {
+                                if (key.startsWith("docker") && lowerName.startsWith("docker")) {
+                                    return true
+                                } else if (key.startsWith("jdk") && lowerName.startsWith("jdk")) {
+                                    return true
+                                } else if (key.startsWith("java") && lowerName.startsWith("java")) {
+                                    return true
+                                } else if (key.startsWith("vmware") && lowerName.startsWith("vmware")) {
+                                    return true
+                                } else if (lastDotIndex !== -1) {
+                                    return key.toLocaleLowerCase() === lowerName.slice(0, lastDotIndex)
+                                } else {
+                                    return false
+                                }
+                            })
+                            return {process: name, icon: icon ? iconProcessMap[icon] : undefined}
+                        })
+                    setProcessList(processArr)
+                })
+                .finally(() => {
+                    setProcessLoading(false)
+                })
+        } catch (error) {
+            setProcessLoading(false)
+        }
+    })
+
+    return (
+        <div className={styles["history-process"]} ref={processRef}>
+            <div className={styles["history-process-search-wrapper"]}>
+                <YakitInput.Search
+                    wrapperStyle={{width: "calc(100% - 40px)"}}
+                    allowClear={true}
+                    onSearch={(value) => setSearchProcessVal(value)}
+                />
+                <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshProcess} />
+            </div>
+            <div className={styles["process-list-wrapper"]}>
+                {processLoading ? (
+                    <YakitSpin style={{display: "block"}}></YakitSpin>
+                ) : (
+                    <>
+                        {renderProcessList.length ? (
+                            <>
+                                {renderProcessList.map((item) => (
+                                    <div
+                                        className={classNames(styles["process-list-item"], {
+                                            [styles["process-list-item-active"]]: curProcess.includes(item.process)
+                                        })}
+                                        key={item.process}
+                                    >
+                                        <YakitCheckbox
+                                            checked={curProcess.includes(item.process)}
+                                            onChange={() => {
+                                                onProcessItemClick(item)
+                                            }}
+                                        >
+                                            <div className={styles["process-item-left-wrapper"]}>
+                                                {item.icon ? (
+                                                    <div className={styles["process-icon"]}>{item.icon}</div>
+                                                ) : (
+                                                    <OutlineTerminalIcon className={styles["process-icon"]} />
+                                                )}
+                                                <div className={styles["process-item-label"]} title={item.process}>
+                                                    {item.process}
+                                                </div>
+                                            </div>
+                                        </YakitCheckbox>
+                                    </div>
+                                ))}
+                            </>
+                        ) : (
+                            <YakitEmpty></YakitEmpty>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    )
+})
