@@ -902,6 +902,8 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         useMemoizedFn(async () => {
             const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目编译"}, true)
             setLoading(false)
+            console.log("plugin---",plugin);
+            
             setPlugin(newPlugin)
         }),
         {wait: 300}
@@ -1018,7 +1020,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 .catch(() => {})
         }
     })
-    console.log("requiredParams---", requiredParams)
 
     return (
         <YakitSpin spinning={loading}>

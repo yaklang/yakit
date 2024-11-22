@@ -44,6 +44,7 @@ import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorCode.module.scss"
+import { getJsonSchemaListResult, JsonFormValidateProps } from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 export interface EditorCodeRefProps {
     onSubmit: () => string
@@ -120,6 +121,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 setFetchParamsLoading(true)
                 const codeInfo = await onCodeToInfo({type: type, code: getContent() || ""}, hiddenError)
                 if (codeInfo) {
+                    jsonSchemaListRef.current = [] 
                     setParams([...codeInfo.CliParameter])
                 }
                 setTimeout(() => {
@@ -143,6 +145,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
+        const jsonSchemaListRef = useRef<any[]>([])
 
         // 设置非(yak|lua)类型的插件参数初始值
         const onSettingDefault = useMemoizedFn(() => {
@@ -264,7 +267,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 <div className={styles["text-style"]}>额外参数 (非必填)</div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
 
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>
@@ -347,6 +350,15 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             if (form) {
                 form.validateFields()
                     .then(async (value: any) => {
+                        
+                        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                        
+                        if(result.jsonSchemaError.length>0) return
+                        result.jsonSchemaSuccess.forEach((item)=>{
+                            value[item.key] =  JSON.stringify(item.value) 
+                        })
+                        console.log("form---",value);
+
                         // 保存参数-请求路径的选项
                         if (pathRef && pathRef.current) {
                             pathRef.current.onSetRemoteValues(value?.Path || [])

@@ -22,6 +22,7 @@ import {YakParamProps} from "../../pluginsType"
 import {defPluginExecuteFormValue} from "./constants"
 import {splitPluginParamsData} from "@/pages/pluginEditor/utils/convert"
 import {RemotePluginGV} from "@/enums/plugin"
+import { JsonFormSchemaListWrapper } from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 const {YakitPanel} = YakitCollapse
 
@@ -175,12 +176,12 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
 )
 export default PluginExecuteExtraParams
 
-interface ExtraParamsNodeByTypeProps {
+interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper{
     extraParamsGroup: YakExtraParamProps[]
     pluginType: string
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-    const {extraParamsGroup, pluginType} = props
+    const {extraParamsGroup, pluginType,jsonSchemaListRef} = props
     const defaultActiveKey = useMemo(() => {
         return extraParamsGroup.map((ele) => ele.group)
     }, [extraParamsGroup])
@@ -190,7 +191,7 @@ export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React
                 <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
                     {item.data?.map((formItem) => (
                         <React.Fragment key={formItem.Field + formItem.FieldVerbose}>
-                            <FormContentItemByType item={formItem} pluginType={pluginType} />
+                            <FormContentItemByType item={formItem} pluginType={pluginType} jsonSchemaListRef={jsonSchemaListRef}/>
                         </React.Fragment>
                     ))}
                 </YakitPanel>
