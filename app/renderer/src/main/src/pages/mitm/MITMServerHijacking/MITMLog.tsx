@@ -104,7 +104,22 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             .filter((name: string) => name)
                             .map((name: string) => {
                                 const lowerName = name.toLocaleLowerCase()
-                                const icon = Object.keys(iconProcessMap).find((key) => lowerName.startsWith(key))
+                                const lastDotIndex = lowerName.lastIndexOf(".")
+                                const icon = Object.keys(iconProcessMap).find((key) => {
+                                    if (key.startsWith("docker") && lowerName.startsWith("docker")) {
+                                        return true
+                                    } else if (key.startsWith("jdk") && lowerName.startsWith("jdk")) {
+                                        return true
+                                    } else if (key.startsWith("java") && lowerName.startsWith("java")) {
+                                        return true
+                                    } else if (key.startsWith("vmware") && lowerName.startsWith("vmware")) {
+                                        return true
+                                    } else if (lastDotIndex !== -1) {
+                                        return key.toLocaleLowerCase() === lowerName.slice(0, lastDotIndex)
+                                    } else {
+                                        return false
+                                    }
+                                })
                                 return {process: name, icon: icon ? iconProcessMap[icon] : undefined}
                             })
                         setProcessList(processArr)

@@ -1141,7 +1141,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         updateQueryParams(realQuery)
-        // console.log('realQuery', realQuery);
         
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
