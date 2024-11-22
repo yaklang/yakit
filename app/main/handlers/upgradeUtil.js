@@ -28,7 +28,8 @@ const {
     downloadYakEngine
 } = require("./utils/network");
 const {
-    cancelRequestWithProgress
+    engineCancelRequestWithProgress,
+    yakitCancelRequestWithProgress
 } = require("./utils/requestWithProgress");
 const { getCheckTextUrl } = require("../handlers/utils/network")
 
@@ -367,7 +368,7 @@ module.exports = {
             return await asyncYakEngineVersionExistsAndCorrectness(version)
         })
         ipcMain.handle("cancel-download-yak-engine-version", async (e, version) => {
-            return await cancelRequestWithProgress(version)
+            return await engineCancelRequestWithProgress(version)
         })
 
         // asyncDownloadLatestYakit wrapper
@@ -387,7 +388,6 @@ module.exports = {
                 try {
                     fs.unlinkSync(dest)
                 } catch (e) {
-
                 }
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
@@ -407,6 +407,10 @@ module.exports = {
                 }
             })
         }
+
+        ipcMain.handle("cancel-download-yakit-version", async (e) => {
+            return await yakitCancelRequestWithProgress()
+        })
 
         ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
             return await asyncDownloadLatestYakit(version, isEnterprise)
