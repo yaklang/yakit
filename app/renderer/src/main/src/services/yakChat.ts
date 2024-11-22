@@ -3,7 +3,8 @@ import axios, {AxiosProgressEvent, GenericAbortSignal, type AxiosResponse} from 
 
 const service = axios.create({
     // baseURL: "https://u91298-91ae-7b4e898b.neimeng.seetacloud.com:6443/"
-    baseURL: "http://8.130.52.219:6006/"
+    baseURL: "http://8.130.52.219:3000/"
+    // baseURL: "http://8.130.52.219:6006/"
 })
 
 service.interceptors.request.use(
@@ -28,9 +29,7 @@ service.interceptors.response.use(
 
 interface YakChatOptions {
     prompt: string
-    is_bing: boolean
     token: string
-    history: {role: string; content: string}[]
     signal?: GenericAbortSignal
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
 }
@@ -46,20 +45,23 @@ interface YakChatPluginOptions {
     onDownloadProgress?: (progressEvent: AxiosProgressEvent) => void
 }
 
-function http({prompt, is_bing, token, history, signal, onDownloadProgress}: YakChatOptions) {
+function http({prompt,  token,  signal, onDownloadProgress}: YakChatOptions) {
     return service({
-        url: "chat-process",
+        url: "api/v1/chat/completions",
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+            "Authorization": "Bearer fastgpt-h5fLmpusTubmjg6Z52zWWryBk56b6ste3EvjhBJrIMBOEd4regoz6a",
         },
         data: {
-            prompt: prompt,
-            exp_length: 3,
-            attribute: "precise",
-            is_bing,
-            user_token: token,
-            history: history
+            chatId: token,
+            stream: true,
+            detail: false,
+            messages: [{
+                content: prompt,
+                role: "user"
+            }]
         },
         signal: signal,
         // 浏览器专属
@@ -67,8 +69,8 @@ function http({prompt, is_bing, token, history, signal, onDownloadProgress}: Yak
     })
 }
 
-export const chatCS = ({prompt, is_bing, token, history, signal, onDownloadProgress}: YakChatOptions) => {
-    return http({prompt, is_bing, token, history, signal, onDownloadProgress})
+export const chatCS = ({prompt, token, signal, onDownloadProgress}: YakChatOptions) => {
+    return http({prompt, token, signal, onDownloadProgress})
 }
 
 function httpPlugin({prompt, is_bing, token,plugin_scope, scripts, history,signal,onDownloadProgress}:YakChatPluginOptions){

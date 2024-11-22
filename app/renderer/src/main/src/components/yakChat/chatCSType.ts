@@ -65,10 +65,28 @@ export interface ChatCSSingleInfoProps {
 /** 后端返回的数据结构 */
 export interface ChatCSAnswerProps {
     id: string
+    object: string
+    created: number
+    model: string
+    choices: ChatCSChoicesItem[]
+}
+
+interface ChatCSChoicesItem {
+    delta: ChatCSdelta
+    index: number
+    finish_reason: null | string
+}
+
+interface ChatCSdelta {
+    role: string
+    content: string
+}
+
+/** 处理过后的后端数据结构 */
+export interface ChatCSAnswer {
+    id: string
     role: string
     result: string
-    // 加载中的字符
-    loadResult?: LoadObjProps[]
 }
 
 export interface PluginListItemProps {
