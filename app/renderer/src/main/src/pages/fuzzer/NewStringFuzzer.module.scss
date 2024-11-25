@@ -1,0 +1,95 @@
+.stringFuzzer {
+    display: flex;
+    .stringFuzzer-left {
+        width: 30%;
+        border-right: 1px solid var(--yakit-border-color);
+        .stringFuzzer-search {
+            padding: 8px;
+            padding-bottom: 0;
+            .search-icon {
+                color: #85899e;
+                svg {
+                    width: 12px;
+                    height: 12px;
+                    path {
+                        stroke-width: 1.5;
+                    }
+                }
+            }
+        }
+        .stringFuzzer-list {
+            padding: 8px;
+            &-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 35px;
+                padding: 8px;
+                &:not(:first-child) {
+                    border-top: 1px solid var(--yakit-border-color);
+                }
+                &:last-child {
+                    border-bottom: 1px solid var(--yakit-border-color);
+                }
+                &:hover {
+                    border-color: transparent;
+                    background-color: var(--yakit-card-background-color);
+                    & + .stringFuzzer-list-item {
+                        border-top-color: transparent;
+                    }
+                }
+                &-name {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                }
+                &-btns {
+                    cursor: pointer;
+                    white-space: nowrap;
+                    .list-opt-btn {
+                        &:hover {
+                            color: var(--yakit-primary-5);
+                        }
+                        &:first-of-type {
+                            margin-right: 8px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .stringFuzzer-right {
+        flex: 1;
+        &-editor {
+            height: calc(100% - 40px);
+        }
+        &-btns {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 40px;
+            padding-right: 8px;
+
+            gap: 8px;
+        }
+    }
+}
+.stringFuzzer-popover {
+    width: 429px;
+    :global {
+        .ant-popover-inner-content {
+            padding: 4px;
+        }
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+        .ant-popover-arrow {
+            right: 0;
+        }
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
+        }
+    }
+}

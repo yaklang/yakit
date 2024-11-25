@@ -4,6 +4,7 @@ import { EditorMenuItemType } from "./EditorMenu"
 import { EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import { HighLightText } from "@/components/HTTPFlowDetail"
 import { Selection } from "@/pages/yakRunner/RunnerTabs/RunnerTabsType";
+import { monaco } from "react-monaco-editor"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -80,6 +81,9 @@ export interface YakitEditorProps {
     /** @name 配置项-关联高亮显示配置 */
     highLightFind?: Selection[]
     highLightFindClass?: string
+
+    onCursorDetail?: (position: monaco.Position) => void
+    onSelectedText?: (selectedText: string) => void
 }
 
 /**
