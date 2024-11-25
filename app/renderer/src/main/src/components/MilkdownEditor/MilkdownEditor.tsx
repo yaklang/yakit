@@ -1,5 +1,5 @@
 import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
-import React, {useEffect} from "react"
+import React, {useEffect, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {blockquoteSchema, codeBlockSchema, commonmark, hrSchema, listItemSchema} from "@milkdown/kit/preset/commonmark"
@@ -22,12 +22,12 @@ import {placeholderConfig, placeholderPlugin} from "./Placeholder"
 import {$view} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock/CodeBlock"
 import {Blockquote} from "./Blockquote"
-import {CustomMilkdownProps, MilkdownEditorProps} from "./MilkdownEditorType"
+import {CustomMilkdownProps, DeleteOSSFileItem, MilkdownEditorProps} from "./MilkdownEditorType"
 import {alterCustomPlugin} from "./utils/alertPlugin"
 import {commentCustomPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useRafInterval} from "ahooks"
 import {underlineCustomPlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
@@ -50,8 +50,9 @@ import {MilkdownHr} from "./MilkdownHr/MilkdownHr"
 
 import {tableBlock} from "@milkdown/kit/component/table-block"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
-import {httpUploadImgBase64} from "@/apiUtils/http"
-import {trackDeletePlugin} from "./utils/trackDeletePlugin"
+import {httpDeleteOSSResource, httpUploadImgBase64} from "@/apiUtils/http"
+import {deletedFileUrlsCtx, trackDeletePlugin} from "./utils/trackDeletePlugin"
+import moment from "moment"
 
 const markdown = `
 
@@ -177,11 +178,18 @@ export const getBase64 = (file): Promise<string> =>
         reader.onload = () => resolve(reader.result as string)
         reader.onerror = (error) => reject(error)
     })
+export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
+    // 计算绝对时间差
+    const difference = Math.abs(timestamp1 - timestamp2)
 
+    // 判断是否大于30秒（10秒 = 10000毫秒）
+    return difference > 1000 * 30
+}
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const {setEditor, customPlugin = []} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
+    const [deletedFiles, setDeletedFiles] = useState<DeleteOSSFileItem[]>([])
     const blockPlugins: MilkdownPlugin[] = useCreation(() => {
         return [
             block,
@@ -211,6 +219,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
     const uploadPlugins = useCreation(() => {
         return [
+            ...uploadCustomPlugin(),
             upload,
             $view(fileCustomSchema.node, () =>
                 nodeViewFactory({
@@ -264,7 +273,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
     const imagePlugin = useCreation(() => {
         return [
-            ...uploadCustomPlugin(),
             imageBlockComponent,
             imageInlineComponent,
             insertImageBlockCommand,
@@ -315,7 +323,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [])
+    }, [nodeViewFactory])
 
     const linkTooltip = useCreation(() => {
         return [
@@ -473,8 +481,49 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         const editor = get()
         if (editor && setEditor) {
             setEditor(editor)
+            editor.action(onSetDeletedFiles)
         }
     }, [get])
+
+    const [interval, setInterval] = useState<number | undefined>(undefined)
+
+    useRafInterval(() => {
+        const fileName: string[] = []
+        const newDeletedFiles: DeleteOSSFileItem[] = []
+        const length = deletedFiles.length
+        for (let index = 0; index < length; index++) {
+            const element = deletedFiles[index]
+            if (isDifferenceGreaterThan30Seconds(element.time, moment().valueOf())) {
+                fileName.push(element.fileName)
+            } else {
+                newDeletedFiles.push(element)
+            }
+        }
+
+        if (fileName.length > 0) {
+            setInterval(undefined)
+            httpDeleteOSSResource({file_name: fileName}).finally(() => {
+                // 暂不考虑删除失败的情况
+                get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
+            })
+        }
+    }, interval)
+
+    const onSetDeletedFiles = useDebounceFn(
+        useMemoizedFn((ctx) => {
+            // 获取 trackDeletePlugin 插件共享的值
+            const urls = ctx.get(deletedFileUrlsCtx)
+            if (urls.length > 0) {
+                setInterval(1000)
+            } else {
+                setInterval(undefined)
+            }
+            setDeletedFiles(urls)
+        }),
+        {wait: 200}
+    ).run
+
+    const onDeleteFiles = useMemoizedFn(() => {})
 
     const onDifferences = useMemoizedFn((ctx) => {
         // 获取两个文档的差异
