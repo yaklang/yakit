@@ -21,6 +21,7 @@ export interface HTTPFlowTableFormConfigurationProps {
     urlPath: string[]
     fileSuffix: string[]
     searchContentType: string
+    excludeKeywords: string[]
 }
 
 export interface HTTPFlowTableFromValue {
@@ -29,6 +30,7 @@ export interface HTTPFlowTableFromValue {
     hostName: string[]
     fileSuffix: string[]
     searchContentType: string
+    excludeKeywords: string[]
 }
 
 export enum HTTPFlowTableFormConsts {
@@ -36,23 +38,37 @@ export enum HTTPFlowTableFormConsts {
     HTTPFlowTableHostName = "YAKIT_HTTPFlowTableHostName",
     HTTPFlowTableUrlPath = "YAKIT_HTTPFlowTableUrlPath",
     HTTPFlowTableFileSuffix = "YAKIT_HTTPFlowTableFileSuffix",
-    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType"
+    HTTPFlowTableContentType = "YAKIT_HTTPFlowTableContentType",
+    HTTPFlowTableExcludeKeywords = "YAKIT_HTTPFlowTableExcludeKeywords"
 }
 
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
-    const {visible, setVisible, responseType, onSave, filterMode, hostName, urlPath, fileSuffix, searchContentType} =
-        props
+    const {
+        visible,
+        setVisible,
+        responseType,
+        onSave,
+        filterMode,
+        hostName,
+        urlPath,
+        fileSuffix,
+        searchContentType,
+        excludeKeywords
+    } = props
+    const [filterModeVal, setFilterModeVal] = useState<"shield" | "show">("shield")
     const [filterModeDef, setFilterModeDef] = useState<"shield" | "show">("shield")
     const [hostNameDef, setHostNameDef] = useState<string[]>([])
     const [urlPathDef, setUrlPathDef] = useState<string[]>([])
     const [fileSuffixDef, setFileSuffixDef] = useState<string[]>([])
     const [searchContentTypeDef, setSearchContentTypeDef] = useState<string[]>()
+    const [excludeKeywordsDef, setExcludeKeywordsDef] = useState<string[]>()
     const [form] = Form.useForm()
     // 获取默认值
     useEffect(() => {
-        if(!visible) return
+        if (!visible) return
         // 筛选模式
         setFilterModeDef(filterMode)
+        setFilterModeVal(filterMode)
         // HostName
         setHostNameDef(hostName)
         // URL路径
@@ -63,8 +79,10 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         const contentType: string = searchContentType
         const searchType: string[] = contentType.length === 0 ? [] : contentType.split(",")
         setSearchContentTypeDef(searchType)
+        // 关键字
+        setExcludeKeywordsDef(excludeKeywords)
 
-        form.setFieldsValue({filterMode, hostName, urlPath, fileSuffix, searchContentType: searchType})
+        form.setFieldsValue({filterMode, hostName, urlPath, fileSuffix, searchContentType: searchType, excludeKeywords})
     }, [visible])
 
     /**
@@ -72,19 +90,21 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
      */
     const onSaveSetting = useMemoizedFn(() => {
         form.validateFields().then((formValue) => {
-            const {filterMode, urlPath = [], hostName = [], fileSuffix = []} = formValue
+            const {filterMode, urlPath = [], hostName = [], fileSuffix = [], excludeKeywords = []} = formValue
             let searchContentType: string = (formValue.searchContentType || []).join(",")
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode, filterMode)
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName, JSON.stringify(hostName))
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath, JSON.stringify(urlPath))
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix, JSON.stringify(fileSuffix))
             setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType, searchContentType)
+            setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords, JSON.stringify(excludeKeywords))
             onSave({
                 filterMode: filterMode,
                 hostName,
                 urlPath,
                 fileSuffix,
-                searchContentType
+                searchContentType,
+                excludeKeywords
             })
         })
     })
@@ -96,7 +116,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             hostName: hostNameDef,
             urlPath: urlPathDef,
             fileSuffix: fileSuffixDef,
-            searchContentType: searchContentTypeDef
+            searchContentType: searchContentTypeDef,
+            excludeKeywords: excludeKeywordsDef
         }
         const newValue = {
             ...formValue
@@ -136,6 +157,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
 
     const reset = () => {
         form.resetFields()
+        setFilterModeVal("shield")
     }
     return (
         <YakitDrawer
@@ -177,6 +199,10 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                                 label: "只展示"
                             }
                         ]}
+                        value={filterModeVal}
+                        onChange={(e) => {
+                            setFilterModeVal(e.target.value)
+                        }}
                     />
                 </Form.Item>
                 <Form.Item label='Hostname' name='hostName'>
@@ -195,6 +221,11 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 <Form.Item label={"响应类型"} name='searchContentType'>
                     <YakitSelect mode='tags' options={responseType}></YakitSelect>
                 </Form.Item>
+                {filterModeVal === "shield" && (
+                    <Form.Item label='关键字' name='excludeKeywords' help={"匹配逻辑与外面搜索关键字逻辑一样"}>
+                        <YakitSelect mode='tags'></YakitSelect>
+                    </Form.Item>
+                )}
                 <Form.Item label={" "} colon={false}>
                     <YakitButton type='text' onClick={reset}>
                         重置
