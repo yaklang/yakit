@@ -5552,29 +5552,29 @@ message SSAProgram{
   string Language = 6;
   string EngineVersion = 7;
 
-  // need re-compile
+  // need re-compile 
   bool Recompile = 8;
-  // risk number
-  int64 HighRiskNumber = 9;
-  int64 CriticalRiskNumber = 10;
-  int64 WarnRiskNumber = 11;
+  // risk number 
+  int64 HighRiskNumber = 9; 
+  int64 CriticalRiskNumber = 10; 
+  int64 WarnRiskNumber = 11; 
   int64 LowRiskNumber = 12;
 }
 
 message SSAProgramInput {
-  string Name = 1; // index
-  string Description = 2;
+  string Name = 1; // index 
+  string Description = 2; 
 }
 
 message SSAProgramFilter{
-  repeated string ProgramNames =  1;
-  repeated string Languages =  2;
-  repeated int64 Ids =  3;
+  repeated string ProgramNames =  1; 
+  repeated string Languages =  2; 
+  repeated int64 Ids =  3; 
 
   // update range
   int64 BeforeUpdatedAt = 5;
   int64 AfterUpdatedAt = 6;
-  // fuzz search
+  // fuzz search 
   string Keyword =  7 ;
   // id range
   int64 AfterID =  8;
@@ -5644,7 +5644,7 @@ message SyntaxFlowScanRequest{
 
   // 启动扫描任务
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
-  repeated string ProgramName = 3; // 用于指定扫描的程序
+  repeated string ProgramName = 3; // 用于指定扫描的程序 
   // 恢复扫描任务
   string ResumeTaskId = 5;         // 恢复任务ID
 
