@@ -19,3 +19,9 @@ export interface MilkdownBaseUtilProps {
 }
 export interface BlockListProps extends MilkdownBaseUtilProps {}
 export type TooltipListProps = MilkdownBaseUtilProps | {id: number; label: string}
+
+
+export interface DeleteOSSFileItem {
+    fileName: string
+    time: number
+}
