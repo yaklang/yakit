@@ -26,11 +26,6 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: 18.18.2
-                  # 缓存 yarn 依赖包 ↓↓↓
-                  cache: "yarn"
-                  cache-dependency-path: |
-                      yarn.lock
-                      app/renderer/src/main/yarn.lock
 
             - run: echo ${{ github.ref }}
             - run: cp buildutil/zip /usr/local/bin/zip
@@ -68,19 +63,26 @@ jobs:
             - name: Extract Package.json Version
               id: extract_version
               uses: Saionaro/extract-package-version@v1.1.1
-            - name: Set Yakit-CE Package.json Version
+            - name: Filter Yakit-CE Package.json Version
               uses: mad9000/actions-find-and-replace-string@5
               id: package_ce_version
               with:
                   source: ${{ steps.extract_version.outputs.version }}
                   find: "-ce"
                   replace: ""
-            - name: Set Yakit-EE Package.json Version
+            - name: Filter Yakit-EE Package.json Version
               uses: mad9000/actions-find-and-replace-string@5
-              id: package_version
+              id: package_ee_version
               with:
                   source: ${{ steps.package_ce_version.outputs.value }}
                   find: "-ee"
+                  replace: ""
+            - name: Filter Yakit-SE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_version
+              with:
+                  source: ${{ steps.package_ee_version.outputs.value }}
+                  find: "-se"
                   replace: ""
             - name: Echo Yakit Package Version
               run: echo ${{ steps.package_version.outputs.value }}

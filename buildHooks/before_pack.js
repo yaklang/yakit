@@ -14,6 +14,10 @@ module.exports = async function (context) {
     if (productVersion.endsWith("-ee")) {
         productVersion = productVersion.replace("-ee", "");
     }
+    // SE
+    if (productVersion.endsWith("-se")) {
+        productVersion = productVersion.replace("-se", "");
+    }
 
     /** win32 */
     const win32Config = context.electronPlatformName === "win32" ? context.packager.config.win : null;
