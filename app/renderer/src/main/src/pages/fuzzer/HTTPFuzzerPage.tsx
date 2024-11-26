@@ -517,33 +517,6 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         width: "70%",
         footer: null,
         subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
-        // content: (
-        //     <div style={{padding: 24}}>
-        //         <StringFuzzer
-        //             advanced={true}
-        //             disableBasicMode={true}
-        //             insertCallback={(template: string) => {
-        //                 if (!template) {
-        //                     Modal.warn({
-        //                         title: "Payload 为空 / Fuzz 模版为空"
-        //                     })
-        //                 } else {
-        //                     if (reqEditor && template) {
-        //                         reqEditor.trigger("keyboard", "type", {
-        //                             text: template
-        //                         })
-        //                     } else {
-        //                         Modal.error({
-        //                             title: "BUG: 编辑器失效"
-        //                         })
-        //                     }
-        //                     m.destroy()
-        //                 }
-        //             }}
-        //             close={() => m.destroy()}
-        //         />
-        //     </div>
-        // )
         content: (
             <NewStringFuzzer
                 insertCallback={(template: string) => {

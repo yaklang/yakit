@@ -5,7 +5,7 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -17,8 +17,6 @@ import {FUZZER_LABEL_LIST_NUMBER} from "./HTTPFuzzerEditorMenu"
 import {v4 as uuidv4} from "uuid"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {IMonacoEditor} from "@/utils/editors"
-import {getWordWithPointAtPosition} from "@/utils/monacoSpec/yakCompletionSchema"
-import {monaco} from "react-monaco-editor"
 import styles from "./NewStringFuzzer.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -67,7 +65,6 @@ export const NewStringFuzzer: React.FC<NewStringFuzzerProp> = (props) => {
     const [fuzztagList, setFuzztagList] = useState<FuzztagInfo[]>([])
     const [renderList, setRenderList] = useState<FuzztagInfo[]>([])
     const [searchVal, setSearchVal] = useState<string>("")
-    const [position, setPosition] = useState<monaco.Position>()
 
     const onSubmit = useMemoizedFn(() => {
         if (!template) {
@@ -189,7 +186,6 @@ export const NewStringFuzzer: React.FC<NewStringFuzzerProp> = (props) => {
             Name: tagItem.Name,
             Range: range
         }
-        console.log(params)
         ipcRenderer
             .invoke("GenerateFuzztag", params)
             .then((res) => {

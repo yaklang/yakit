@@ -54,7 +54,7 @@ afterRequest = func(rsp) {
 }
 
 // mirrorHTTPFlow 允许对每一个请求的响应做处理，定义为 func(req []byte, rsp []byte, params map[string]any) map[string]any
-// 返回值回作为下一个请求的参数，或者提取的数据，如果你需要解密响应内容，在这里操作是最合适的
+// 返回值会作为下一个请求的参数，或者提取的数据，如果你需要解密响应内容，在这里操作是最合适的
 mirrorHTTPFlow = func(req, rsp, params) {
     return params
 }
