@@ -144,9 +144,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         highLightText = [],
         highLightClass,
         highLightFind = [],
-        highLightFindClass,
-        onCursorDetail,
-        onSelectedText
+        highLightFindClass
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -1521,37 +1519,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             // console.log('当前光标位置：', position);
         })
     }
-
-    const getCursorDetails = useDebounceFn(
-        () => {
-            const position = editor?.getPosition()
-            if (position) {
-                onCursorDetail && onCursorDetail(position)
-            }
-        },
-        {wait: 300}
-    ).run
-    const getSelectedText = () => {
-        const selection = editor?.getSelection() // 获取选中范围
-        if (selection) {
-            const model = editor?.getModel()
-            const selectedText = model?.getValueInRange(selection) // 获取选中的文本
-            onSelectedText && onSelectedText(selectedText || "")
-        }
-    }
-    useEffect(() => {
-        if (editor) {
-            editor.onMouseDown((e) => {
-                getCursorDetails()
-            })
-            editor.onDidChangeCursorPosition(() => {
-                getCursorDetails()
-            })
-            editor.onDidChangeCursorSelection(() => {
-                getSelectedText()
-            })
-        }
-    }, [editor])
 
     return (
         <div
