@@ -43,7 +43,7 @@ import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
 import {defPluginExecuteFormValue} from "./constants"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
-import { JsonFormWrapper } from "@/components/JsonFormWrapper/JsonFormWrapper"
+import { getJsonSchemaListResult, JsonFormWrapper } from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -83,6 +83,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
     const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
+
+    const jsonSchemaListRef = useRef<any[]>([])
 
     const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
     const networkState = useNetwork()
@@ -166,7 +168,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
     })
     /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
-    const pluginParamsNodeByPluginType = (type: string) => {
+    const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
         switch (type) {
             case "yak":
             case "lua":
@@ -175,6 +177,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                         paramsList={requiredParams}
                         pluginType={plugin.Type}
                         isExecuting={isExecuting}
+                        jsonSchemaListRef={jsonSchemaListRef}
                     />
                 )
             case "codec":
@@ -213,12 +216,20 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             default:
                 return <></>
         }
-    }
+    })
     /**开始执行 */
     const onStartExecute = useMemoizedFn((value) => {
         let yakExecutorParams: YakExecutorParam[] = []
         yakExecutorParams = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
+        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+        if(result.jsonSchemaError.length>0) return
+        result.jsonSchemaSuccess.forEach((item)=>{
+            yakExecutorParams.push({
+                Key:item.key,
+                Value:JSON.stringify(item.value) 
+            })
+        })
 
         let executeParams: DebugPluginRequest = {
             Code: "",
@@ -466,6 +477,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     visible={extraParamsVisible}
                     setVisible={setExtraParamsVisible}
                     onSave={onSaveExtraParams}
+                    jsonSchemaListRef={jsonSchemaListRef}
                 />
             </React.Suspense>
         </>

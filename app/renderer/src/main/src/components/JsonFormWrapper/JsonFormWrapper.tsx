@@ -23,14 +23,23 @@ import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 export const getJsonSchemaListResult = (arr: any[]) => {
+    // 此处的key用于筛选重复的表单数据
+    let keyError: string[] = []
     let jsonSchemaError: JsonFormValidateProps[] = []
+    let keySuccess: string[] = []
     let jsonSchemaSuccess: JsonFormValidateProps[] = []
     arr.forEach((callback) => {
         const result: JsonFormValidateProps = callback()
         if (result.pass) {
-            jsonSchemaSuccess.push(result)
+            if (!keySuccess.includes(result.key)) {
+                jsonSchemaSuccess.push(result)
+                keySuccess.push(result.key)
+            }
         } else {
-            jsonSchemaError.push(result)
+            if (!keyError.includes(result.key)) {
+                jsonSchemaError.push(result)
+                keyError.push(result.key)
+            }
         }
     })
     return {
@@ -71,7 +80,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         if (jsonSchemaRef.current && jsonSchemaListRef.current) {
             jsonSchemaListRef.current.push(validate)
         }
-    }, [jsonSchemaRef.current,schema])
+    }, [jsonSchemaRef.current])
 
     // 调用校验是否错误
     const validate = () => {
@@ -392,13 +401,15 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 }}
                 // 自定义控件
                 fields={fields}
-                uiSchema={{
-                    /* 字段名 */
-                    // unremovable: {
-                    /* 全局 className*/
-                    // "ui:classNames": "test-task-title test-foo-bar"
-                    // }
-                }}
+                uiSchema={
+                    {
+                        /* 字段名 */
+                        // unremovable: {
+                        /* 全局 className*/
+                        // "ui:classNames": "test-task-title test-foo-bar"
+                        // }
+                    }
+                }
                 // disabled={disabled}
                 formData={formData}
                 onChange={(e) => {

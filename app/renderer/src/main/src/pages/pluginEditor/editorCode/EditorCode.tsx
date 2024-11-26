@@ -195,6 +195,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                             paramsList={requiredParams}
                             pluginType={type}
                             isExecuting={isExecuting}
+                            jsonSchemaListRef={jsonSchemaListRef}
                         />
                     )
                 case "codec":
