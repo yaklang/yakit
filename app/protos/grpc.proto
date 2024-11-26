@@ -202,7 +202,6 @@ service Yak {
   rpc GetHTTPFlowById(GetHTTPFlowByIdRequest) returns (HTTPFlow);
   rpc GetHTTPFlowBodyById(GetHTTPFlowBodyByIdRequest) returns (stream GetHTTPFlowBodyByIdResponse);
   rpc GetHTTPFlowByIds(GetHTTPFlowByIdsRequest) returns (HTTPFlows);
-  rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
   rpc QueryHTTPFlows(QueryHTTPFlowRequest) returns (QueryHTTPFlowResponse);
   rpc DeleteHTTPFlows(DeleteHTTPFlowRequest) returns (Empty);
   rpc SetTagForHTTPFlow(SetTagForHTTPFlowRequest) returns (Empty);
@@ -213,6 +212,7 @@ service Yak {
   rpc GetHTTPFlowBare(HTTPFlowBareRequest) returns (HTTPFlowBareResponse);
   rpc ExportHTTPFlows(ExportHTTPFlowsRequest) returns(QueryHTTPFlowResponse);
   rpc HTTPFlowsToOnline(HTTPFlowsToOnlineRequest) returns (Empty);
+  rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
 
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
@@ -287,7 +287,7 @@ service Yak {
   // save payload to database
   rpc SavePayload(SavePayloadRequest) returns (Empty);
   rpc SavePayloadStream(SavePayloadRequest) returns (stream SavePayloadProgress);
-  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress); // 两次stream
+  rpc SavePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   rpc SaveLargePayloadToFileStream(SavePayloadRequest) returns (stream SavePayloadProgress);
   // update group/folder/payload
   rpc RenamePayloadFolder(RenameRequest) returns (Empty);
@@ -723,14 +723,23 @@ service Yak {
 
   // syntaxflow scan 
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
+  rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
+  rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
   // query result 
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
+  //query ssa program
+  rpc QuerySSAPrograms(QuerySSAProgramRequest)returns(QuerySSAProgramResponse);
+  rpc UpdateSSAProgram(UpdateSSAProgramRequest)returns(DbOperateMessage);
+  rpc DeleteSSAPrograms(DeleteSSAProgramRequest)returns(DbOperateMessage);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
   rpc SetPluginEnv(PluginEnvData) returns (Empty); // create or update
   rpc DeletePluginEnv(DeletePluginEnvRequest) returns (Empty);
+
+  rpc GetAllFuzztagInfo (GetAllFuzztagInfoRequest) returns (GetAllFuzztagInfoResponse);
+  rpc GenerateFuzztag (GenerateFuzztagRequest) returns (GenerateFuzztagResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -1821,7 +1830,7 @@ message RegisterFacadesHTTPResponse {
 message GetHTTPPacketBodyRequest {
   string Packet = 1;
   bytes PacketRaw = 2;
-  bool ForceRenderFuzztag =3;
+  bool ForceRenderFuzztag = 3;
 }
 
 message DownloadBodyByHTTPFlowIDRequest {
@@ -1862,8 +1871,8 @@ message SaveFuzzerConfigRequest {
 }
 
 message QueryFuzzerConfigRequest {
-    Paging Pagination = 1;
-    repeated string PageId =2;
+  Paging Pagination = 1;
+  repeated string PageId = 2;
 }
 
 message QueryFuzzerConfigResponse {
@@ -1878,7 +1887,7 @@ message FuzzerConfig {
 
 message DeleteFuzzerConfigRequest {
   repeated string PageId = 1;
-  bool DeleteAll =2;
+  bool DeleteAll = 2;
 }
 
 message ExtractDataRequest {
@@ -2054,7 +2063,7 @@ message YaklangLanguageSuggestionRequest {
   // {
   // from database : support getReference 
   // if set this progranName will use this from database 
-  string ProgramName = 6; 
+  string ProgramName = 6;
   string FileName = 7;
   // } 
 }
@@ -2124,7 +2133,7 @@ message YaklangGetCliCodeFromDatabaseRequest {
 
 message StaticAnalyzeErrorRequest {
   bytes Code = 1;
-  string PluginType = 2;
+  string PluginType = 2; // "yak" "mitm" "port-scan" "codec" "syntaxflow"
 }
 
 message YaklangCompileAndFormatRequest {
@@ -3013,7 +3022,7 @@ message Risk {
 
   uint64 ResultID = 30;
   string SyntaxFlowVariable = 31;
-  string ProgramName  = 32;
+  string ProgramName = 32;
 }
 
 message QueryRisksRequest {
@@ -3932,6 +3941,7 @@ message YakScriptParam {
   string ExtraSetting = 8;
 
   string MethodType = 9;
+  string JsonSchema = 10;
 
   string SuggestionDataExpression = 11;
 }
@@ -4015,7 +4025,7 @@ message SaveYakScriptToOnlineRequest {
   string Token = 2;
   bool IsPrivate = 3;
   bool All = 4;
-  string PluginSupplement= 5;
+  string PluginSupplement = 5;
 }
 
 message SaveYakScriptToOnlineResponse {
@@ -4355,6 +4365,7 @@ message FuzzerParamItem {
   // nuclei-dsl / raw
   // fuzztag
   string Type = 3;
+  string MarshalValue = 4;
 }
 
 message FuzzerRequests {
@@ -4371,7 +4382,7 @@ message FuzzerRequest {
   bool IsHTTPS = 4;
   bool IsGmTLS = 35;
   bool ForceFuzz = 5;
-  string FuzzTagMode = 50;
+  string FuzzTagMode = 50; // "close"/"standard"/"legacy"
   bool FuzzTagSyncIndex = 51;
   string Proxy = 6;
   double PerRequestTimeoutSeconds = 7;
@@ -4488,6 +4499,7 @@ message MutateMethod {
 message KVPair {
   string Key = 1;
   string Value = 2;
+  string MarshalValue = 3;
 }
 
 message FuzzerResponseFilter {
@@ -4626,6 +4638,7 @@ message GetHTTPFlowBodyByIdRequest {
   bool IsRequest = 2;
   int64 BufSize = 3;
   string RuntimeId = 4;
+
   bool IsRisk = 5;
 }
 
@@ -4699,6 +4712,10 @@ message ExportHTTPFlowsRequest {
   QueryHTTPFlowRequest ExportWhere = 1;
   repeated int64 Ids = 2;
   repeated string FieldName = 3;
+}
+
+message QueryHTTPFlowsProcessNamesResponse {
+    repeated string ProcessNames = 1;
 }
 
 message DeleteHTTPFlowRequest {
@@ -4810,13 +4827,9 @@ message FuzzableParam {
 }
 
 message GetHTTPFlowBodyByIdResponse {
-   bytes Data = 1;
-   string Filename = 2; // 第一个响应里才有，应该保存的文件名
-   bool EOF = 3; // 是否是最后一个包
-}
-
-message QueryHTTPFlowsProcessNamesResponse {
-  repeated string ProcessNames = 1;
+  bytes Data = 1;
+  string Filename = 2; // 第一个响应里才有，应该保存的文件名
+  bool EOF = 3; // 是否是最后一个包
 }
 
 message QueryHTTPFlowResponse {
@@ -5021,7 +5034,7 @@ message MITMFilterData {
   repeated FilterDataItem ExcludeUri = 6;
 
   repeated FilterDataItem ExcludeMethods = 7;
-  repeated FilterDataItem ExcludeMIME  = 8;
+  repeated FilterDataItem ExcludeMIME = 8;
 }
 
 message Certificate {
@@ -5486,14 +5499,14 @@ message QuerySyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRule{
-  string RuleName =1;
+  string RuleName = 1;
   string Content = 2;
 
   string Language = 3;
   string Type = 4;
   string Severity = 5;
   string Purpose = 6;
-  bool IsBuildInRule =7;
+  bool IsBuildInRule = 7;
 
   string Title = 8;
   string TitleZh = 9;
@@ -5519,24 +5532,86 @@ message  SyntaxFlowRuleInput{
 message SyntaxFlowRuleFilter {
   repeated string RuleNames = 1;
   repeated string Language = 2;
-  repeated string GroupNames =3;
+  repeated string GroupNames = 3;
   repeated string Severity = 4;
   repeated string Purpose = 5;
   repeated string Tag = 6;
   string Keyword = 7;
+  // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
+  bool includeLibraryRule = 8; // default false 
+}
+
+message SSAProgram{
+  // basic info
+  int64 CreateAt = 1;
+  int64  UpdateAt = 2;
+  string Name = 3;
+  string Description = 4;
+  string Dbpath = 5;
+  string Language = 6;
+  string EngineVersion = 7;
+
+  // need re-compile
+  bool Recompile = 8;
+  // risk number
+  int64 HighRiskNumber = 9;
+  int64 CriticalRiskNumber = 10;
+  int64 WarnRiskNumber = 11;
+  int64 LowRiskNumber = 12;
+}
+
+message SSAProgramInput {
+  string Name = 1; // index
+  string Description = 2;
+}
+
+message SSAProgramFilter{
+  repeated string ProgramNames =  1;
+  repeated string Languages =  2;
+  repeated int64 Ids =  3;
+
+  // update range
+  int64 BeforeUpdatedAt = 5;
+  int64 AfterUpdatedAt = 6;
+  // fuzz search
+  string Keyword =  7 ;
+  // id range
+  int64 AfterID =  8;
+  int64 BeforeID = 9;
+}
+
+
+message QuerySSAProgramRequest{
+  Paging Paging = 1;
+  SSAProgramFilter Filter = 3;
+}
+
+message UpdateSSAProgramRequest{
+  SSAProgramInput ProgramInput = 1;
+}
+
+message DeleteSSAProgramRequest{
+  bool DeleteAll = 1;
+  SSAProgramFilter Filter = 2;
+}
+
+message QuerySSAProgramResponse{
+  Paging Paging = 1;
+  repeated SSAProgram Programs = 2;
+  int64 Total = 3;
 }
 
 message CreateSyntaxFlowRuleRequest{
-  SyntaxFlowRuleInput SyntaxFlowInput =1;
+  SyntaxFlowRuleInput SyntaxFlowInput = 1;
 }
 
 message UpdateSyntaxFlowRuleRequest{
-  SyntaxFlowRuleInput SyntaxFlowInput =1;
+  SyntaxFlowRuleInput SyntaxFlowInput = 1;
 }
 
 message QuerySyntaxFlowRuleResponse{
   Paging Pagination = 1;
-  DbOperateMessage DbMessage= 2;
+  DbOperateMessage DbMessage = 2;
   repeated SyntaxFlowRule Rule = 3;
   uint64 Total = 4;
 }
@@ -5556,7 +5631,7 @@ message SyntaxFlowGroup{
 }
 
 message QuerySyntaxFlowRuleGroupRequest{
-    SyntaxFlowRuleGroupFilter Filter = 1;
+  SyntaxFlowRuleGroupFilter Filter = 1;
 }
 
 message QuerySyntaxFlowRuleGroupResponse{
@@ -5568,7 +5643,56 @@ message SyntaxFlowScanRequest{
 
   // 启动扫描任务
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
-  repeated string ProgramName = 3; // 用于指定扫描的程序 
+  repeated string ProgramName = 3; // 用于指定扫描的程序
+  // 恢复扫描任务
+  string ResumeTaskId = 5;         // 恢复任务ID
+
+  // 其他参数 
+  bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
+}
+
+message QuerySyntaxFlowScanTaskRequest{
+  Paging Pagination = 1;
+  SyntaxFlowScanTaskFilter Filter = 2;
+}
+
+message SyntaxFlowScanTaskFilter{
+  repeated string Programs = 1;
+  repeated string Status = 2;
+  repeated string TaskIds = 3;
+  int64 FromId = 4;
+  int64  UntilId = 5;
+}
+
+message QuerySyntaxFlowScanTaskResponse{
+  Paging Pagination = 1;
+  repeated SyntaxFlowScanTask Data = 2;
+  int64 Total = 3;
+}
+
+message SyntaxFlowScanTask {
+    uint64 Id = 1;
+    int64 CreatedAt = 2;
+    int64 UpdatedAt = 3;
+
+    string TaskId = 4;
+    repeated string Programs = 5;
+    int64 RuleCount = 6;
+    string Status = 7; // executing / paused / done / error
+    string Reason = 8;
+    // query execute
+    int64 FailedQuery= 9;
+    int64 SkipQuery=10;
+    int64 SuccessQuery = 11;
+    // risk
+    int64 RiskCount =12;
+    // query process
+    int64 TotalQuery =13;
+}
+
+message DeleteSyntaxFlowScanTaskRequest{
+  bool DeleteAll = 1;
+  SyntaxFlowScanTaskFilter Filter = 2;
 }
 
 message SyntaxFlowScanResponse{
@@ -5585,8 +5709,8 @@ message SyntaxFlowScanResponse{
 
 
 message SyntaxFlowResultFilter {
-  repeated string TaskIDs = 1; 
-  repeated string ResultIDs = 2; 
+  repeated string TaskIDs = 1;
+  repeated string ResultIDs = 2;
   repeated string RuleNames = 3;
   repeated string ProgramNames = 4;
 
@@ -5595,7 +5719,7 @@ message SyntaxFlowResultFilter {
 
   bool OnlyRisk = 6;
 
-  int64 AfterID = 7; 
+  int64 AfterID = 7;
   int64 BeforeID = 8;
 
   repeated string Severity = 9;  //  "info", "low", "middle", "critical", "high"
@@ -5608,15 +5732,15 @@ message QuerySyntaxFlowResultRequest{
 
 message QuerySyntaxFlowResultResponse{
   Paging Pagination = 1;
-  DbOperateMessage DbMessage= 2;
+  DbOperateMessage DbMessage = 2;
   repeated SyntaxFlowResult Results = 3;
-  uint64 Total = 4; 
+  uint64 Total = 4;
 }
 
 
 message SyntaxFlowResult {
   // result ID for yakurl(syntaxflow://)
-  uint64 ResultID  = 1; 
+  uint64 ResultID = 1;
   string TaskID = 2;
 
   // rule info 
@@ -5629,10 +5753,10 @@ message SyntaxFlowResult {
 
   // target info 
   string ProgramName = 9;
-  string Language = 10; 
+  string Language = 10;
 
   // runtime info 
-  uint64 RiskCount = 11; 
+  uint64 RiskCount = 11;
 
   string RuleContent = 12;
 }
@@ -5648,4 +5772,39 @@ message PluginEnvData {
 message DeletePluginEnvRequest {
   string Key = 1;
   bool All = 2;
+}
+
+message GetAllFuzztagInfoRequest{
+  string Key = 1;
+}
+
+message GetAllFuzztagInfoResponse{
+  repeated FuzztagInfo Data = 2;
+}
+
+message FuzztagArgumentType{
+  string Name = 1;
+  string DefaultValue = 2;
+  string Description = 3;
+  bool IsOptional = 4;
+  bool IsList = 5;
+  repeated string Separators = 6;
+}
+message FuzztagInfo{
+  string Name = 1;
+  string Description = 2;
+  string VerboseName = 3;
+  repeated string Examples = 4;
+  repeated FuzztagArgumentType ArgumentTypes = 5;
+}
+
+message GenerateFuzztagRequest{
+  string Name = 1;
+  string Type = 2;
+  Range Range = 3;
+}
+
+message GenerateFuzztagResponse{
+  GeneralResponse Status = 1;
+  string Result = 2;
 }
