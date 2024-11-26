@@ -5555,10 +5555,11 @@ message SSAProgram{
   // need re-compile 
   bool Recompile = 8;
   // risk number 
-  int64 HighRiskNumber = 9; 
-  int64 CriticalRiskNumber = 10; 
-  int64 WarnRiskNumber = 11; 
-  int64 LowRiskNumber = 12;
+  uint32 HighRiskNumber = 9; 
+  uint32 CriticalRiskNumber = 10; 
+  uint32 WarnRiskNumber = 11; 
+  uint32 LowRiskNumber = 12;
+  uint32 Id = 13;
 }
 
 message SSAProgramInput {
@@ -5583,7 +5584,7 @@ message SSAProgramFilter{
 
 
 message QuerySSAProgramRequest{
-  Paging Paging = 1;
+  Paging Pagination = 1;
   SSAProgramFilter Filter = 3;
 }
 
@@ -5597,8 +5598,8 @@ message DeleteSSAProgramRequest{
 }
 
 message QuerySSAProgramResponse{
-  Paging Paging = 1;
-  repeated SSAProgram Programs = 2;
+  Paging Pagination = 1;
+  repeated SSAProgram Data = 2;
   int64 Total = 3;
 }
 
