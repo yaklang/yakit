@@ -396,7 +396,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     /* 字段名 */
                     // unremovable: {
                     /* 全局 className*/
-                    "ui:classNames": "cyj-task-title cyj-foo-bar"
+                    // "ui:classNames": "test-task-title test-foo-bar"
                     // }
                 }}
                 // disabled={disabled}

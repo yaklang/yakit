@@ -41,13 +41,13 @@
         flex: 1;
         overflow: hidden;
     }
-    .audit-log{
+    .audit-log {
         flex: 1;
         overflow: auto;
-        .audit-log-wrapper{
+        .audit-log-wrapper {
             overflow: auto;
-            :global{
-                .ant-tabs-nav{
+            :global {
+                .ant-tabs-nav {
                     display: none;
                 }
             }
@@ -314,7 +314,7 @@
             height: 100%;
         }
         .audit-text {
-           overflow: hidden;
+            overflow: hidden;
         }
 
         .audit-opt {
@@ -343,5 +343,34 @@
         overflow: hidden;
         height: 1px;
         border-top: 1px dashed #eaecf3;
+    }
+}
+
+.project-manager-edit-form{
+    padding: 8px 24px 8px 24px;
+    .opt-btn {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+}
+
+.extra-icon {
+    width: 16px;
+    height: 16px;
+    box-sizing: content-box;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #85899e;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+    &:hover {
+        background-color: var(--yakit-background-color);
+        color: var(--yakit-primary-5);
     }
 }

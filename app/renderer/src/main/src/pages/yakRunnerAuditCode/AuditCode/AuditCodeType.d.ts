@@ -75,9 +75,9 @@ export interface AuditNodeProps {
     Size: number
 
     // 请求Query
-    query?:{
-        Key: string;
-        Value: number;
+    query?: {
+        Key: string
+        Value: number
     }[]
 }
 
@@ -89,4 +89,63 @@ export interface AuditYakUrlProps {
     // 带参查询
     ProgramName?: string
     Query?: {Key: string; Value: number}[]
+}
+
+export interface AuditMainItemFormProps {}
+
+export interface AuditModalFormProps {
+    onCancel: () => void
+    // 拆分后不在有默认值
+    isInitDefault?: boolean
+    isExecuting: boolean
+    onStartAudit: (path: string, v: DebugPluginRequest) => void
+}
+
+export interface AuditModalFormModalProps {
+    onCancel: () => void
+    onSuccee: (path: string) => void
+    isInitDefault?: boolean
+    title?: string
+    // 绑定容器
+    warrpId?: HTMLElement | null
+}
+
+export interface QuerySSAProgramsProps {
+    ProgramNames?: string[]
+    Languages?: string[]
+    Ids?: number[]
+    BeforeUpdatedAt?: number
+    AfterUpdatedAt?: number
+    Keyword?: string
+    AfterID?: number
+    BeforeID?: number
+}
+
+export interface SSAProgramResponse {
+    CreateAt: number
+    UpdateAt: number
+    Name: string
+    Description: string
+    Dbpath: string
+    Language: string
+    EngineVersion: string
+    Recompile: boolean
+    HighRiskNumber: number
+    CriticalRiskNumber: number
+    WarnRiskNumber: number
+    LowRiskNumber: number
+    Id: number
+}
+
+export interface AuditHistoryTableProps {
+    pageType: "aucitCode" | "projectManager"
+    onClose?: () => void
+    onExecuteAudit?: () => void
+    refresh?: boolean
+}
+
+export interface ProjectManagerEditFormProps {
+    record: SSAProgramResponse
+    setData: React.Dispatch<React.SetStateAction<SSAProgramResponse[]>>
+    onClose: () => void
 }
