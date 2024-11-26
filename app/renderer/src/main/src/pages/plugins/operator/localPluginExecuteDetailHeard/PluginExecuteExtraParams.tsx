@@ -27,7 +27,7 @@ import { JsonFormSchemaListWrapper } from "@/components/JsonFormWrapper/JsonForm
 const {YakitPanel} = YakitCollapse
 
 type ExtraParamsValue = PluginExecuteExtraFormValue | CustomPluginExecuteFormValue
-interface PluginExecuteExtraParamsProps {
+interface PluginExecuteExtraParamsProps extends JsonFormSchemaListWrapper{
     ref?: any
     pluginType: string
     /** 选填参数数据 */
@@ -54,7 +54,8 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
             extraParamsValue,
             visible,
             setVisible,
-            onSave
+            onSave,
+            jsonSchemaListRef
         } = props
 
         const [form] = Form.useForm()
@@ -113,7 +114,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                 case "lua":
                     return (
                         <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
-                            <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} />
+                            <ExtraParamsNodeByType extraParamsGroup={extraParamsGroup} pluginType={pluginType} jsonSchemaListRef={jsonSchemaListRef}/>
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
                     )
