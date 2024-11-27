@@ -21,6 +21,7 @@ import {Checkbox, Form, FormInstance} from "antd"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
+import classNames from "classnames"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -393,7 +394,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
             <JsonForm
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
-                className={styles["json-schema-box"]}
+                className={classNames(styles["json-schema-box"],"json-schema-form")}
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器

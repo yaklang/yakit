@@ -1026,7 +1026,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         })
                     })
                     console.log("requestParams---",requestParams);
-                    
                     onStartAudit(value["programName"], requestParams)
                 })
                 .catch(() => {})
@@ -1047,6 +1046,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     /* eslint-disable no-template-curly-in-string */
                     required: "${label} 是必填字段"
                 }}
+                className={styles['audit-modal-form']}
             >
                 {/* <AuditMainItemForm /> */}
                 <div className={styles["custom-params-wrapper"]}>
@@ -1153,6 +1153,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
             Progress: progress
         })
     }, [streamInfo])
+    
     return (
         <>
             <YakitModal
