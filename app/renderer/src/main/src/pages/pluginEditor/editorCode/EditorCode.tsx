@@ -224,6 +224,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                     paramsList={requiredParams}
                                     pluginType={type}
                                     isExecuting={isExecuting}
+                                    jsonSchemaListRef={jsonSchemaListRef}
                                 />
                             ) : null}
                             <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -284,7 +285,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                         <div className={styles["text-style"]}>自定义参数 (非必填)</div>
                                         <div className={styles["divider-style"]}></div>
                                     </div>
-                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
                                 </>
                             ) : null}
                             {!isHiddenDefaultParams && (

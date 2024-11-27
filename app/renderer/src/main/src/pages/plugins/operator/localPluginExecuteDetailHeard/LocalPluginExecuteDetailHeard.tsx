@@ -207,6 +207,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                                 paramsList={requiredParams}
                                 pluginType={plugin.Type}
                                 isExecuting={isExecuting}
+                                jsonSchemaListRef={jsonSchemaListRef}
                             />
                         ) : null}
                         <PluginFixFormParams form={form} disabled={isExecuting} />

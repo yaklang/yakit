@@ -100,6 +100,7 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setClipboardText} from "@/utils/clipboard"
+import { getJsonSchemaListResult } from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -895,6 +896,9 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
     const [plugin, setPlugin] = useState<YakScript>()
     const [form] = Form.useForm()
+    const jsonSchemaListRef = useRef<{
+        [key: string]: any
+    }>({})
 
     const cacheRef = useRef<any>()
     // 获取参数
@@ -1009,6 +1013,20 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     if (value?.ProgramPath) {
                         cacheRef.current.onSetRemoteValues(value?.ProgramPath)
                     }
+
+                    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                    if(result.jsonSchemaError.length>0) {
+                        failed(`jsonSchema校验失败`)
+                        return
+                    }
+                    result.jsonSchemaSuccess.forEach((item)=>{
+                        requestParams.ExecParams.push({
+                            Key:item.key,
+                            Value:JSON.stringify(item.value) 
+                        })
+                    })
+                    console.log("requestParams---",requestParams);
+                    
                     onStartAudit(value["programName"], requestParams)
                 })
                 .catch(() => {})
@@ -1036,6 +1054,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         paramsList={requiredParams}
                         pluginType={"yak"}
                         isExecuting={isExecuting}
+                        jsonSchemaListRef={jsonSchemaListRef}
                     />
                 </div>
                 {groupParams.length > 0 ? (
@@ -1044,7 +1063,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                             <div className={styles["text-style"]}>额外参数 (非必填)</div>
                             <div className={styles["divider-style"]}></div>
                         </div>
-                        <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"yak"} />
+                        <ExtraParamsNodeByType
+                            extraParamsGroup={groupParams}
+                            pluginType={"yak"}
+                            jsonSchemaListRef={jsonSchemaListRef}
+                        />
                     </>
                 ) : null}
             </Form>
@@ -1426,7 +1449,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                             }
                                         })
                                     )
-                                    if(pageType === "aucitCode"){
+                                    if (pageType === "aucitCode") {
                                         onClose && onClose()
                                     }
                                 }}
@@ -1470,7 +1493,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         width: 448,
                                         type: "white",
                                         footer: null,
-                                        centered:true,
+                                        centered: true,
                                         content: (
                                             <ProjectManagerEditForm
                                                 record={record}
