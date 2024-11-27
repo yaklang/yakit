@@ -26,7 +26,7 @@ import {
     YakitFormDraggerContent,
     YakitFormDraggerContentPath
 } from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import classNames from "classnames"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -84,7 +84,9 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
     const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
 
-    const jsonSchemaListRef = useRef<any[]>([])
+    const jsonSchemaListRef = useRef<{
+        [key: string]: any; 
+    }>({})
 
     const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
     const networkState = useNetwork()
@@ -223,7 +225,11 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         yakExecutorParams = getYakExecutorParam({...value, ...customExtraParamsValue})
         const input = value["Input"]
         const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-        if(result.jsonSchemaError.length>0) return
+
+        if(result.jsonSchemaError.length>0) {
+            failed(`jsonSchema校验失败`)
+            return
+        }
         result.jsonSchemaSuccess.forEach((item)=>{
             yakExecutorParams.push({
                 Key:item.key,
@@ -251,11 +257,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         }
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-        console.log("xxx", {
-            params: executeParams,
-            token: token,
-            pluginCustomParams: plugin.Params
-        })
 
         apiDebugPlugin({
             params: executeParams,
@@ -784,7 +785,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                 </Form.Item>
             )
         case "json":
-            if(!jsonSchemaListRef?.current) return <></>
+            if(typeof jsonSchemaListRef?.current !== "object") return <></>
             let schema: any = {}
             try {
                 schema = JSON.parse(item.JsonSchema || "{}")

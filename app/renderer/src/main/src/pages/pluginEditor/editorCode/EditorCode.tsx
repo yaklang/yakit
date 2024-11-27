@@ -30,7 +30,7 @@ import {
 } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
-import {yakitNotify} from "@/utils/notification"
+import {failed, warn, yakitNotify} from "@/utils/notification"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "@/pages/plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import emiter from "@/utils/eventBus/eventBus"
@@ -121,7 +121,6 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 setFetchParamsLoading(true)
                 const codeInfo = await onCodeToInfo({type: type, code: getContent() || ""}, hiddenError)
                 if (codeInfo) {
-                    jsonSchemaListRef.current = [] 
                     setParams([...codeInfo.CliParameter])
                 }
                 setTimeout(() => {
@@ -145,7 +144,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
-        const jsonSchemaListRef = useRef<any[]>([])
+        const jsonSchemaListRef = useRef<{
+            [key: string]: any; 
+        }>({})
 
         // 设置非(yak|lua)类型的插件参数初始值
         const onSettingDefault = useMemoizedFn(() => {
@@ -186,7 +187,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
         })
 
-        const pluginRequiredItem = (type: string) => {
+        const pluginRequiredItem = useMemoizedFn((type: string) => {
             switch (type) {
                 case "yak":
                 case "lua":
@@ -234,7 +235,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 default:
                     return null
             }
-        }
+        })
 
         /** 请求类型-为原始请求则不展示额外参数 */
         const requestType = Form.useWatch("requestType", form)
@@ -353,12 +354,13 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                     .then(async (value: any) => {
                         
                         const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                        
-                        if(result.jsonSchemaError.length>0) return
+                        if(result.jsonSchemaError.length>0) {
+                            failed(`jsonSchema校验失败`)
+                            return
+                        }
                         result.jsonSchemaSuccess.forEach((item)=>{
                             value[item.key] =  JSON.stringify(item.value) 
                         })
-                        console.log("form---",value);
 
                         // 保存参数-请求路径的选项
                         if (pathRef && pathRef.current) {

@@ -78,12 +78,10 @@ export interface CustomPluginExecuteFormValue {
     [key: string]: number | string | boolean | string[] | Uint8Array | KVPair[] | number[]
 }
 
-export interface FormContentItemByTypeProps {
+export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper{
     item: YakParamProps
     pluginType?: string
     disabled?: boolean
-    /** JsonSchema数据收集(PS:此处可能存在多个内部Form因此采用Ref数组的形式依次校验) */
-    jsonSchemaListRef?: React.RefObject<any[]>
 }
 
 export interface PluginFixFormParamsProps {

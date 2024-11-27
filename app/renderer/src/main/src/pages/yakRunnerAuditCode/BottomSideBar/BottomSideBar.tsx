@@ -4,7 +4,7 @@ import {BottomSideBarProps} from "./BottomSideBarType"
 import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
 import {
-    OutlineAnnotationIcon,
+    OutlineBugIcon,
     OutlineScanRuleEditIcon,
 } from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
@@ -46,7 +46,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         onOpenEditorDetails("holeDetail")
                     }}
                 >
-                    <OutlineAnnotationIcon />
+                    <OutlineBugIcon />
                     漏洞详情
                 </div>
             </div>

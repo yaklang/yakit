@@ -22,14 +22,15 @@ import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 
-export const getJsonSchemaListResult = (arr: any[]) => {
+export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
     let keyError: string[] = []
     let jsonSchemaError: JsonFormValidateProps[] = []
     let keySuccess: string[] = []
     let jsonSchemaSuccess: JsonFormValidateProps[] = []
-    arr.forEach((callback) => {
-        const result: JsonFormValidateProps = callback()
+
+    Object.keys(obj).forEach((key) => {
+        const result: JsonFormValidateProps = obj[key]()
         if (result.pass) {
             if (!keySuccess.includes(result.key)) {
                 jsonSchemaSuccess.push(result)
@@ -42,6 +43,7 @@ export const getJsonSchemaListResult = (arr: any[]) => {
             }
         }
     })
+
     return {
         jsonSchemaError,
         jsonSchemaSuccess
@@ -57,11 +59,15 @@ export interface JsonFormValidateProps {
 
 export interface JsonFormSchemaListWrapper {
     /** JsonSchema数据收集(PS:此处可能存在多个内部Form因此采用Ref数组的形式依次校验) */
-    jsonSchemaListRef?: React.RefObject<any[]>
+    jsonSchemaListRef?: React.MutableRefObject<{
+        [key: string]: any
+    }>
 }
 
 export interface JsonFormWrapperProps {
-    jsonSchemaListRef: React.RefObject<any[]>
+    jsonSchemaListRef: React.MutableRefObject<{
+        [key: string]: any
+    }>
     field: string
     value?: string
     onChange?: (v: string) => void
@@ -78,7 +84,12 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     useEffect(() => {
         if (jsonSchemaRef.current && jsonSchemaListRef.current) {
-            jsonSchemaListRef.current.push(validate)
+            if (!jsonSchemaListRef.current.hasOwnProperty(field)) {
+                jsonSchemaListRef.current = {
+                    ...jsonSchemaListRef.current,
+                    [field]: validate
+                }
+            }
         }
     }, [jsonSchemaRef.current])
 
@@ -110,43 +121,16 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         setFormData(value)
     }, [value])
 
-    const UploadFolderPath = useMemoizedFn((props: FieldProps) => {
-        const {formData, disabled, onChange} = props
-        return (
-            <YakitDragger
-                value={formData}
-                isShowPathNumber={false}
-                selectType='folder'
-                multiple={false}
-                help='可将文件夹拖入框内或点击此处'
-                disabled={disabled}
-                onChange={(value) => {
-                    onChange(value === "" ? undefined : value)
-                }}
-            />
-        )
-    })
+    // const UploadFolderPath = useMemoizedFn((props: FieldProps) => {
+    //     const {formData, disabled, onChange} = props
+    //     return (
+    //         <></>
+    //     )
+    // })
 
-    const UploadPath = useMemoizedFn((props: FieldProps) => {
-        const {formData, disabled, onChange} = props
-        return (
-            <YakitDragger
-                value={formData}
-                isShowPathNumber={false}
-                selectType='file'
-                multiple={false}
-                disabled={disabled}
-                onChange={(value) => {
-                    onChange(value === "" ? undefined : value)
-                }}
-            />
-        )
-    })
-
-    const fields: RegistryFieldsType = {
-        "/yakit/upload-folder-path": UploadFolderPath,
-        "/yakit/upload-path": UploadPath
-    }
+    // const fields: RegistryFieldsType = {
+    //     "/test": UploadFolderPath,
+    // }
 
     const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
         // 是否显示字段的 label
@@ -158,50 +142,75 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     const getTextWidget = useMemoizedFn((props: WidgetProps) => {
         const {id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema} = props
-
-        switch (schema.type) {
-            case "number":
-                return (
-                    <YakitInputNumber
-                        style={{width: "100%"}}
-                        id={id}
-                        {...options}
-                        autoFocus={autofocus}
-                        required={required}
-                        disabled={disabled || readonly}
-                        value={value}
-                        onChange={(value) => {
-                            onChange(value)
-                        }}
-                        onBlur={(value) => {
-                            onBlur(id, value)
-                        }}
-                        onFocus={(value) => {
-                            onFocus(id, value)
-                        }}
-                    />
-                )
-            default:
-                return (
-                    <YakitInput
-                        {...options}
-                        type='text'
-                        autoFocus={autofocus}
-                        required={required}
-                        disabled={disabled || readonly}
-                        value={value}
-                        onChange={(event) => {
-                            onChange(event.target.value === "" ? options.emptyValue : event.target.value)
-                        }}
-                        onBlur={(event) => {
-                            onBlur(id, event.target.value)
-                        }}
-                        onFocus={(event) => {
-                            onFocus(id, event.target.value)
-                        }}
-                    />
-                )
+        if (schema.type === "number") {
+            return (
+                <YakitInputNumber
+                    style={{width: "100%"}}
+                    id={id}
+                    {...options}
+                    autoFocus={autofocus}
+                    required={required}
+                    disabled={disabled || readonly}
+                    value={value}
+                    onChange={(value) => {
+                        onChange(value)
+                    }}
+                    onBlur={(value) => {
+                        onBlur(id, value)
+                    }}
+                    onFocus={(value) => {
+                        onFocus(id, value)
+                    }}
+                />
+            )
+        } else if (schema.yakit_type === "upload-folder-path") {
+            return (
+                <YakitDragger
+                    value={value}
+                    isShowPathNumber={false}
+                    selectType='folder'
+                    multiple={false}
+                    help='可将文件夹拖入框内或点击此处'
+                    disabled={disabled}
+                    onChange={(value) => {
+                        onChange(value === "" ? options.emptyValue : value)
+                    }}
+                />
+            )
+        } else if (schema.yakit_type === "upload-path") {
+            return (
+                <YakitDragger
+                    value={value}
+                    isShowPathNumber={false}
+                    selectType='file'
+                    multiple={false}
+                    disabled={disabled}
+                    onChange={(value) => {
+                        onChange(value === "" ? options.emptyValue : value)
+                    }}
+                />
+            )
         }
+
+        return (
+            <YakitInput
+                {...options}
+                type='text'
+                autoFocus={autofocus}
+                required={required}
+                disabled={disabled || readonly}
+                value={value}
+                onChange={(event) => {
+                    onChange(event.target.value === "" ? options.emptyValue : event.target.value)
+                }}
+                onBlur={(event) => {
+                    onBlur(id, event.target.value)
+                }}
+                onFocus={(event) => {
+                    onFocus(id, event.target.value)
+                }}
+            />
+        )
     })
 
     const getTextareaWidget = useMemoizedFn((props: WidgetProps) => {
@@ -400,7 +409,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     UpDownWidget: getUpDownWidget
                 }}
                 // 自定义控件
-                fields={fields}
+                // fields={fields}
                 uiSchema={
                     {
                         /* 字段名 */
