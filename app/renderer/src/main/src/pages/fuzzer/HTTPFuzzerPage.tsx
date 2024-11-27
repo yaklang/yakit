@@ -1,5 +1,5 @@
 import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
+import {Form, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
     NewHTTPPacketEditor,
@@ -15,7 +15,6 @@ import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notifica
 import {
     useControllableValue,
     useCreation,
-    useDebounceEffect,
     useDebounceFn,
     useGetState,
     useInViewport,
@@ -32,7 +31,6 @@ import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareImportExportData} from "./components/ShareImportExportData"
-// import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -151,7 +149,6 @@ import {
 } from "../layout/mainOperatorContent/utils"
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 import {setClipboardText} from "@/utils/clipboard"
-import {NewStringFuzzer} from "./NewStringFuzzer"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -518,7 +515,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         footer: null,
         subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
         content: (
-            <NewStringFuzzer
+            <StringFuzzer
                 insertCallback={(template: string) => {
                     if (!template) {
                         yakitNotify("warning", "Payload 为空 / Fuzz 模版为空")
