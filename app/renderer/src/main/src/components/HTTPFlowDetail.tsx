@@ -63,6 +63,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     historyId?: string
     downstreamProxyStr?: string
     loading?: boolean
+    pageType?: HTTPHistorySourcePageType
 }
 
 const {Text} = Typography
