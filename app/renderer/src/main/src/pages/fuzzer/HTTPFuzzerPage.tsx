@@ -513,7 +513,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         title: "Fuzzer Tag 调试工具",
         width: "70%",
         footer: null,
-        subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+        subTitle: "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
         content: (
             <StringFuzzer
                 insertCallback={(template: string) => {

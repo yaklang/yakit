@@ -259,71 +259,72 @@ export const StringFuzzer: React.FC<StringFuzzerProps> = (props) => {
                         {renderList.length > 0 ? (
                             <>
                                 {renderList.map((item) => (
-                                    <div className={styles["stringFuzzer-list-item"]} key={item.VerboseName}>
-                                        <YakitPopover
-                                            placement='rightTop'
-                                            overlayClassName={styles["stringFuzzer-popover"]}
-                                            content={
-                                                <div className={styles["stringFuzzer-popover-cont"]}>
-                                                    <div className={styles["stringFuzzer-popover-cont-name"]}>
-                                                        {item.VerboseName}
-                                                    </div>
-                                                    <div className={styles["stringFuzzer-popover-cont-Egname"]}>
-                                                        {item.Name}
-                                                    </div>
-                                                    <div className={styles["stringFuzzer-popover-cont-desc"]}>
-                                                        描述：{item.Description}
-                                                    </div>
-                                                    <div className={styles["stringFuzzer-popover-cont-example"]}>
-                                                        示例：{item.Examples.join(", ")}
-                                                    </div>
-                                                    {item.ArgumentTypes.length > 0 && (
-                                                        <>
-                                                            <div>参数类型信息：</div>
-                                                            <table border={1} width='100%' cellPadding={8}>
-                                                                <tr>
-                                                                    <th>参数名</th>
-                                                                    <th>默认值</th>
-                                                                    <th>描述</th>
-                                                                    <th>可选参数</th>
-                                                                    <th>数组参数</th>
-                                                                    <th>分隔符</th>
-                                                                </tr>
-                                                                {item.ArgumentTypes.map((argItem) => (
-                                                                    <tr key={argItem.Name}>
-                                                                        <td>{argItem.Name}</td>
-                                                                        <td>{argItem.DefaultValue}</td>
-                                                                        <td>{argItem.Description}</td>
-                                                                        <td>{argItem.IsOptional + ""}</td>
-                                                                        <td>{argItem.IsList + ""}</td>
-                                                                        <td>{argItem.Separators}</td>
-                                                                    </tr>
-                                                                ))}
-                                                            </table>
-                                                        </>
-                                                    )}
+                                    <YakitPopover
+                                        placement='rightTop'
+                                        overlayClassName={styles["stringFuzzer-popover"]}
+                                        content={
+                                            <div className={styles["stringFuzzer-popover-cont"]}>
+                                                <div className={styles["stringFuzzer-popover-cont-name"]}>
+                                                    {item.VerboseName}
                                                 </div>
-                                            }
-                                        >
+                                                <div className={styles["stringFuzzer-popover-cont-Egname"]}>
+                                                    {item.Name}
+                                                </div>
+                                                <div className={styles["stringFuzzer-popover-cont-desc"]}>
+                                                    描述：{item.Description}
+                                                </div>
+                                                <div className={styles["stringFuzzer-popover-cont-example"]}>
+                                                    示例：{item.Examples.join(", ")}
+                                                </div>
+                                                {item.ArgumentTypes.length > 0 && (
+                                                    <>
+                                                        <div>参数类型信息：</div>
+                                                        <table border={1} width='100%' cellPadding={8}>
+                                                            <tr>
+                                                                <th>参数名</th>
+                                                                <th>默认值</th>
+                                                                <th>描述</th>
+                                                                <th>可选参数</th>
+                                                                <th>数组参数</th>
+                                                                <th>分隔符</th>
+                                                            </tr>
+                                                            {item.ArgumentTypes.map((argItem) => (
+                                                                <tr key={argItem.Name}>
+                                                                    <td>{argItem.Name}</td>
+                                                                    <td>{argItem.DefaultValue}</td>
+                                                                    <td>{argItem.Description}</td>
+                                                                    <td>{argItem.IsOptional + ""}</td>
+                                                                    <td>{argItem.IsList + ""}</td>
+                                                                    <td>{argItem.Separators}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </table>
+                                                    </>
+                                                )}
+                                            </div>
+                                        }
+                                        key={item.VerboseName}
+                                    >
+                                        <div className={styles["stringFuzzer-list-item"]}>
                                             <div className={styles["stringFuzzer-list-item-name"]}>
                                                 {item.VerboseName}
                                             </div>
-                                        </YakitPopover>
-                                        <div className={styles["stringFuzzer-list-item-btns"]}>
-                                            <span
-                                                className={styles["list-opt-btn"]}
-                                                onClick={() => generateFuzztag("wrap", item)}
-                                            >
-                                                嵌入
-                                            </span>
-                                            <span
-                                                className={styles["list-opt-btn"]}
-                                                onClick={() => generateFuzztag("insert", item)}
-                                            >
-                                                插入
-                                            </span>
+                                            <div className={styles["stringFuzzer-list-item-btns"]}>
+                                                <span
+                                                    className={styles["list-opt-btn"]}
+                                                    onClick={() => generateFuzztag("wrap", item)}
+                                                >
+                                                    嵌套
+                                                </span>
+                                                <span
+                                                    className={styles["list-opt-btn"]}
+                                                    onClick={() => generateFuzztag("insert", item)}
+                                                >
+                                                    插入
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </YakitPopover>
                                 ))}
                             </>
                         ) : (
