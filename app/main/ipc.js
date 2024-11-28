@@ -266,7 +266,7 @@ module.exports = {
         // 工具类 例如node文件处理
         const utils = fs.readdirSync(path.join(__dirname, "./utils"))
         utils.forEach((item) => {
-            require(path.join(__dirname, `./utils/${item}`))(win, getClient)
+            require(path.join(__dirname, `./utils/${item}`)).register(win, getClient)
         })
 
         // new plugins store

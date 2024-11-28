@@ -1,10 +1,11 @@
-const { ipcMain, dialog } = require("electron")
-const { Uint8ArrayToString, getNowTime } = require("../toolsFunc")
-const fs = require('fs');
+const {ipcMain} = require("electron")
+const {Uint8ArrayToString} = require("../toolsFunc")
+const fs = require("fs")
+const {handleSaveFileSystem} = require("../utils/fileSystemDialog")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("delete-http-flows-all", async (e, params) => {
-        getClient().DeleteHTTPFlows({ DeleteAll: true, ...params }, (err, data) => { })
+        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {})
     })
 
     // asyncDeleteHTTPFlows wrapper
@@ -109,8 +110,8 @@ module.exports = (win, getClient) => {
                 }
                 resolve({
                     ...data,
-                    RequestString: !!data?.Request?.length ? Uint8ArrayToString(data.Request) : '',
-                    ResponseString: !!data?.Response?.length ? Uint8ArrayToString(data.Response) : ''
+                    RequestString: !!data?.Request?.length ? Uint8ArrayToString(data.Request) : "",
+                    ResponseString: !!data?.Response?.length ? Uint8ArrayToString(data.Response) : ""
                 })
             })
         })
@@ -232,7 +233,7 @@ module.exports = (win, getClient) => {
 
     const execWriteFile = (uuid, resolve, reject) => {
         const context = activeRequests.get(uuid)
-        if (!context) return;
+        if (!context) return
         const timer = setInterval(() => {
             if (context.dataChunks.length > 0) {
                 try {
@@ -281,23 +282,25 @@ module.exports = (win, getClient) => {
                 // 只有第一次返回文件名
                 if (e.Filename) {
                     const fileName = e.Filename
-                    dialog.showSaveDialog({
-                        title: '保存文件',
+                    handleSaveFileSystem({
+                        title: "保存文件",
                         defaultPath: fileName
-                    }).then(file => {
-                        if (!file.canceled) {
-                            const filePath = file.filePath.toString()
-                            context.fileStream = fs.createWriteStream(filePath)
-                            execWriteFile(params.uuid, resolve, reject)
-                        } else {
+                    })
+                        .then((file) => {
+                            if (!file.canceled) {
+                                const filePath = file.filePath.toString()
+                                context.fileStream = fs.createWriteStream(filePath)
+                                execWriteFile(params.uuid, resolve, reject)
+                            } else {
+                                getHTTPFlowBodyByIdResponseStream.cancel()
+                                activeRequests.delete(params.uuid)
+                            }
+                        })
+                        .catch((err) => {
                             getHTTPFlowBodyByIdResponseStream.cancel()
                             activeRequests.delete(params.uuid)
-                        }
-                    }).catch(err => {
-                        getHTTPFlowBodyByIdResponseStream.cancel()
-                        activeRequests.delete(params.uuid)
-                        reject(err)
-                    })
+                            reject(err)
+                        })
                 }
             })
 
