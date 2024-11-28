@@ -726,6 +726,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [urlPath, setUrlPath] = useState<string[]>([])
     const [fileSuffix, setFileSuffix] = useState<string[]>([])
     const [searchContentType, setSearchContentType] = useState<string>("")
+    const [excludeKeywords, setExcludeKeywords] = useState<string[]>([])
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
 
@@ -838,6 +839,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setSearchContentType(ContentType)
                 }
             })
+            // 关键字
+            getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords).then((e) => {
+                if (!!e) {
+                    let excludeKeywords = JSON.parse(e)
+                    setExcludeKeywords(excludeKeywords)
+                }
+            })
         }
     }, [])
 
@@ -856,7 +864,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         IncludePath: [],
                         ExcludePath: urlPath,
                         IncludeSuffix: [],
-                        ExcludeSuffix: fileSuffix
+                        ExcludeSuffix: fileSuffix,
+                        ExcludeKeywords: excludeKeywords
                     }
                 }
                 // 展示
@@ -879,13 +888,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }, 10)
             }
         },
-        [filterMode, hostName, urlPath, fileSuffix, searchContentType],
+        [filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords],
         {wait: 500}
     )
 
     const isFilter: boolean = useMemo(() => {
-        return hostName.length > 0 || urlPath.length > 0 || fileSuffix.length > 0 || searchContentType?.length > 0
-    }, [hostName, urlPath, fileSuffix, searchContentType])
+        return hostName.length > 0 || urlPath.length > 0 || fileSuffix.length > 0 || searchContentType?.length > 0 || excludeKeywords.length > 0
+    }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
 
     useEffect(() => {
         if (pageType === "MITM") {
@@ -1135,7 +1144,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         updateQueryParams(realQuery)
-        
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -1936,9 +1944,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             title: "延迟(ms)",
             dataKey: "DurationMs",
             width: 200,
-            render: (text) => {
+            render: (text, rowData) => {
                 let timeMs: number = parseInt(text)
-                return <div className={style["duration-ms"]}>{timeMs}</div>
+                return (
+                    <div
+                        className={classNames({
+                            [style["duration-ms"]]: !hasRedOpacityBg(rowData.cellClassName)
+                        })}
+                    >
+                        {timeMs}
+                    </div>
+                )
             }
             // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
             // sorterProps: {
@@ -3925,12 +3941,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 visible={drawerFormVisible}
                 setVisible={setDrawerFormVisible}
                 onSave={(val) => {
-                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType} = val
+                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = val
                     setFilterMode(filterMode)
                     setHostName(hostName)
                     setUrlPath(urlPath)
                     setFileSuffix(fileSuffix)
                     setSearchContentType(searchContentType)
+                    setExcludeKeywords(excludeKeywords)
                     setDrawerFormVisible(false)
                 }}
                 filterMode={filterMode}
@@ -3938,6 +3955,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 urlPath={urlPath}
                 fileSuffix={fileSuffix}
                 searchContentType={searchContentType}
+                excludeKeywords={excludeKeywords}
             />
         </div>
     )
