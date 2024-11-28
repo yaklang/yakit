@@ -794,7 +794,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                 console.error("Parse JsonSchema failed:", error)
             }
             return <JsonFormWrapper field={item.Field} schema={schema} 
-            jsonSchemaListRef={jsonSchemaListRef}
+            jsonSchemaListRef={jsonSchemaListRef} disabled={disabled}
             />
         default:
             return <></>

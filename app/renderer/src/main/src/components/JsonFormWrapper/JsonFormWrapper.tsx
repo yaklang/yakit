@@ -420,7 +420,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                         // }
                     }
                 }
-                // disabled={disabled}
+                disabled={disabled}
                 formData={formData}
                 onChange={(e) => {
                     // 更新表单值

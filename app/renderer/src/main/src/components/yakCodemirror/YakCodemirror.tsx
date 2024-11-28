@@ -33,7 +33,16 @@ import "codemirror/addon/selection/active-line"
 import "codemirror/addon/edit/matchbrackets"
 
 export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
-    const {value, onChange, fileName, readOnly = false, language = "javascript", theme = "solarized", highLight,firstLineNumber=1} = props
+    const {
+        value,
+        onChange,
+        fileName,
+        readOnly = false,
+        language = "javascript",
+        theme = "solarized",
+        highLight,
+        firstLineNumber = 1
+    } = props
     const [codemirrorEditor, setCodemirrorEditor] = useState<any>()
 
     // 根据文件后缀判断语言模式
@@ -116,7 +125,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
             readOnly,
             extraKeys: {
                 "Ctrl-Space": "autocomplete"
-            }
+            },
         }
         if (readOnly) {
             // 隐藏光标
@@ -145,7 +154,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
     }, [codemirrorEditor, highLight])
 
     return (
-        <div className={styles["yak-codemirror"]} style={{fontSize: 12}}>
+        <div className={styles["yak-codemirror"]} style={{fontSize: 14}}>
             <CodeMirror
                 value={value}
                 options={options}

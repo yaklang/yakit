@@ -2,6 +2,7 @@ import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useReducer, 
 import {
     CodeScaMainExecuteContentProps,
     CodeScanAuditExecuteFormProps,
+    CodeScanAuditExecuteRefProps,
     CodeScanByGroupProps,
     CodeScanExecuteContentProps,
     CodeScanExecuteContentRefProps,
@@ -78,7 +79,6 @@ import useHoldGRPCStream, {convertCardInfo} from "@/hook/useHoldGRPCStream/useHo
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {WaterMark} from "@ant-design/pro-layout"
-import {AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
@@ -271,9 +271,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
 
     // 隐藏插件列表
     const [hidden, setHidden] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(false)
-    // 如若没有已编译项目则需跳转至审计编译
-    const [isShowAuditCode, setShowAuditCode] = useState<boolean>(false)
 
     const pluginGroupRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(pluginGroupRef)
@@ -300,23 +297,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         return groups
     }, [pageInfo.selectGroupListByKeyWord])
 
-    const getAduitList = useMemoizedFn(async () => {
-        try {
-            setLoading(true)
-            const {res} = await grpcFetchAuditTree("/")
-            if (res.Resources.length === 0) {
-                setShowAuditCode(true)
-            }
-            setLoading(false)
-        } catch (error) {
-            setLoading(false)
-        }
-    })
-
-    useEffect(() => {
-        getAduitList()
-    }, [])
-
     const waterMarkStr = useMemo(() => {
         if (isCommunityEdition()) {
             return "Yakit技术浏览版仅供技术交流使用"
@@ -326,62 +306,39 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
 
     return (
         <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
-            <YakitSpin spinning={loading}>
-                {isShowAuditCode ? (
-                    <div className={styles["no-audit"]}>
-                        <YakitEmpty
-                            title='暂无数据'
-                            description='请先进行审计'
-                            children={
-                                <div className={styles["footer"]}>
-                                    <YakitButton
-                                        icon={<OutlinCompileIcon />}
-                                        onClick={() => {
-                                            addToTab(YakitRoute.YakRunner_Audit_Code)
-                                        }}
-                                    >
-                                        代码审计
-                                    </YakitButton>
-                                </div>
-                            }
-                        />
-                    </div>
-                ) : (
-                    <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
-                        <div
-                            className={classNames(styles["left-wrapper"], {
-                                [styles["left-wrapper-hidden"]]: hidden
-                            })}
-                        >
-                            <div className={styles["left-header-search"]}>
-                                <div className={styles["header-type-wrapper"]}>
-                                    <span className={styles["header-text"]}>扫描规则</span>
-                                </div>
-                                <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
-                                    <YakitButton
-                                        type='text2'
-                                        onClick={onClose}
-                                        icon={<OutlineCloseIcon className={styles["header-icon"]} />}
-                                    ></YakitButton>
-                                </Tooltip>
-                            </div>
-                            <CodeScanGroupByKeyWord
-                                inViewport={inViewport}
-                                selectGroupListByKeyWord={pageInfo.selectGroupListByKeyWord || []}
-                                setSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
-                            />
+            <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
+                <div
+                    className={classNames(styles["left-wrapper"], {
+                        [styles["left-wrapper-hidden"]]: hidden
+                    })}
+                >
+                    <div className={styles["left-header-search"]}>
+                        <div className={styles["header-type-wrapper"]}>
+                            <span className={styles["header-text"]}>扫描规则</span>
                         </div>
-                        <CodeScanExecuteContent
-                            hidden={hidden}
-                            setHidden={setHidden}
-                            selectGroupList={selectGroupListAll}
-                            onClearAll={onClearAll}
-                            pageInfo={pageInfo}
-                            pageId={pageId}
-                        />
+                        <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
+                            <YakitButton
+                                type='text2'
+                                onClick={onClose}
+                                icon={<OutlineCloseIcon className={styles["header-icon"]} />}
+                            ></YakitButton>
+                        </Tooltip>
                     </div>
-                )}
-            </YakitSpin>
+                    <CodeScanGroupByKeyWord
+                        inViewport={inViewport}
+                        selectGroupListByKeyWord={pageInfo.selectGroupListByKeyWord || []}
+                        setSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
+                    />
+                </div>
+                <CodeScanExecuteContent
+                    hidden={hidden}
+                    setHidden={setHidden}
+                    selectGroupList={selectGroupListAll}
+                    onClearAll={onClearAll}
+                    pageInfo={pageInfo}
+                    pageId={pageId}
+                />
+            </div>
         </WaterMark>
     )
 }
@@ -532,23 +489,25 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         valuePropName: "executeStatus",
         trigger: "setExecuteStatus"
     })
+    /**新项目-执行状态 */
+    const [isAuditExecuting, setAuditsExecuting] = useState<boolean>(false)
 
     /**是否展开/收起 */
     const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [progressShow, setProgressShow] = useState<{type: "new" | "old"; progress: number; name?: string}>()
+    const [progressShow, setProgressShow] = useState<{type: "new" | "old"; progress: number}>()
     const [total, setTotal] = useState<number>(0)
 
+    const [executeType, setExecuteType] = useState<"new" | "old">("new")
     /**暂停 */
     const [pauseLoading, setPauseLoading] = useState<boolean>(false)
     /**继续 */
     const [continueLoading, setContinueLoading] = useState<boolean>(false)
     // 任务列表抽屉
     const [visibleRaskList, setVisibleRaskList] = useState<boolean>(false)
-    // 项目编译
-    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
+        if (isAuditExecuting) return true
         return false
     }, [executeStatus])
 
@@ -586,6 +545,16 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         codeScanExecuteContentRef.current?.onContinue()
     })
 
+    const onAuditExecuteInTop = useMemoizedFn((e) => {
+        e.stopPropagation()
+        codeScanExecuteContentRef.current?.onStartAuditExecute()
+    })
+
+    const onStopAuditExecute = useMemoizedFn((e) => {
+        e.stopPropagation()
+        codeScanExecuteContentRef.current?.onStopAuditExecute()
+    })
+
     const [auditCodeList, setAuditCodeList] = useState<{label: string; value: string}[]>([])
 
     const getAduitList = useMemoizedFn(async () => {
@@ -601,18 +570,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     useEffect(() => {
         getAduitList()
     }, [])
-
-    const onCloseCompileModal = useMemoizedFn(() => {
-        setShowCompileModal(false)
-    })
-
-    const onSuccee = useMemoizedFn((path: string) => {
-        setShowCompileModal(false)
-        getAduitList()
-        codeScanExecuteContentRef.current?.onSetProject(path)
-    })
-
-    console.log("progressShow---", progressShow)
 
     return (
         <>
@@ -648,10 +605,10 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     </div>
                     <div className={styles["code-scan-executor-btn"]}>
                         {progressShow && (
-                            <div className={styles["progress-show"]}>
-                                {progressShow.type==="new"?"编译":"扫描"}
-                                <PluginExecuteProgress percent={progressShow.progress} name={progressShow.name || ""} />
-                            </div>
+                            <PluginExecuteProgress
+                                percent={progressShow.progress}
+                                name={progressShow.type === "new" ? "编译" : "扫描"}
+                            />
                         )}
                         {/* <YakitButton
                             type='text'
@@ -663,21 +620,16 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         >
                             任务列表
                         </YakitButton> */}
-                        <YakitButton
-                            type='text'
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setShowCompileModal(true)
-                            }}
-                            disabled={isExecuting}
-                            style={{padding: 0}}
-                        >
-                            添加项目
-                        </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
-                                      {/* {executeStatus === "paused" && !pauseLoading && (
+                                      {executeType === "new" ? (
+                                          <YakitButton danger onClick={onStopAuditExecute}>
+                                              停止
+                                          </YakitButton>
+                                      ) : (
+                                          <>
+                                              {/* {executeStatus === "paused" && !pauseLoading && (
                                           <YakitButton onClick={onContinue} loading={continueLoading}>
                                               继续
                                           </YakitButton>
@@ -687,19 +639,25 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                               暂停
                                           </YakitButton>
                                       )} */}
-                                      <YakitButton
-                                          danger
-                                          onClick={onStopExecute}
-                                          disabled={pauseLoading || continueLoading}
-                                      >
-                                          停止
-                                      </YakitButton>
+                                              <YakitButton
+                                                  danger
+                                                  onClick={onStopExecute}
+                                                  disabled={pauseLoading || continueLoading}
+                                              >
+                                                  停止
+                                              </YakitButton>
+                                          </>
+                                      )}
                                       <div className={styles["divider-style"]}></div>
                                   </>
                               )
                             : !isExpand && (
                                   <>
-                                      <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                      {executeType === "new" ? (
+                                          <YakitButton onClick={onAuditExecuteInTop}>编译</YakitButton>
+                                      ) : (
+                                          <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                      )}
                                       <div className={styles["divider-style"]}></div>
                                   </>
                               )}
@@ -724,40 +682,38 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         selectGroupList={selectGroupList}
                         setHidden={setHidden}
                         auditCodeList={auditCodeList}
+                        getAduitList={getAduitList}
+                        executeType={executeType}
+                        setExecuteType={setExecuteType}
+                        isAuditExecuting={isAuditExecuting}
+                        setAuditsExecuting={setAuditsExecuting}
                         pageInfo={pageInfo}
                     />
                 </div>
             </div>
-            <React.Suspense fallback={<>loading...</>}>
-                {visibleRaskList && (
-                    <>
-                        {/* <HybridScanTaskListDrawer
-                        visible={visibleRaskList}
-                        setVisible={setVisibleRaskList}
-                        hybridScanTaskSource='yakPoc'
-                    /> */}
-                    </>
-                )}
-            </React.Suspense>
-
-            {isShowCompileModal && (
-                <AuditModalFormModal
-                    onCancel={onCloseCompileModal}
-                    onSuccee={onSuccee}
-                    title='添加项目'
-                    warrpId={document.getElementById(`yakrunner-code-scan-${pageId}`)}
-                />
-            )}
         </>
     )
 })
 
 export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {isExpand, setIsExpand, setHidden, selectGroupList, setProgressShow, auditCodeList, pageInfo} = props
+        const {
+            isExpand,
+            setIsExpand,
+            setHidden,
+            selectGroupList,
+            setProgressShow,
+            auditCodeList,
+            getAduitList,
+            executeType,
+            setExecuteType,
+            pageInfo
+        } = props
         const [form] = Form.useForm()
-        const [executeType, setExecuteType] = useState<"new" | "old">("new")
+
         const [plugin, setPlugin] = useState<YakScript>()
+        /** 子组件方法传递给父组件 */
+        const codeScanAuditExecuteRef = useRef<CodeScanAuditExecuteRefProps>(null)
         // 获取参数
         const handleFetchParams = useDebounceFn(
             useMemoizedFn(async () => {
@@ -796,6 +752,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     form.setFieldsValue({
                         project
                     })
+                },
+                onStartAuditExecute: () => {
+                    codeScanAuditExecuteRef.current?.onStartAuditExecute()
+                },
+                onStopAuditExecute: () => {
+                    codeScanAuditExecuteRef.current?.onCancelAudit()
                 }
             }),
             [form]
@@ -813,19 +775,26 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             valuePropName: "continueLoading",
             trigger: "setContinueLoading"
         })
-        /**执行状态 */
+        /**已编译项目-执行状态 */
         const [executeStatus, setExecuteStatus] = useControllableValue<SyntaxFlowScanExecuteState>(props, {
             defaultValue: "default",
             valuePropName: "executeStatus",
             trigger: "setExecuteStatus"
         })
+        const [isAuditExecuting, setAuditsExecuting] = useControllableValue<boolean>(props, {
+            defaultValue: false,
+            valuePropName: "isAuditExecuting",
+            trigger: "setAuditsExecuting"
+        })
+
         const [token, setToken] = useState(randomString(20))
 
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
             if (executeStatus === "paused") return true
+            if (isAuditExecuting) return true
             return false
-        }, [executeStatus])
+        }, [executeStatus, isAuditExecuting])
 
         const isShowResult = useCreation(() => {
             return isExecuting || runtimeId
@@ -919,7 +888,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 setProgressShow({
                                     type: "old",
                                     progress: progressObj.progress,
-                                    name: progressObj.id
                                 })
                                 return
                             }
@@ -978,7 +946,17 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [])
 
         /**开始执行 */
-        const onStartExecute = useMemoizedFn(async (project) => {
+        const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
+            const {project} = value
+            if (!project) {
+                warn("请输入项目名称")
+                return
+            }
+            // 设置表单
+            if (isSetForm) {
+                getAduitList()
+                form.setFieldsValue({project})
+            }
             const params: SyntaxFlowScanRequest = {
                 ControlMode: "start",
                 ProgramName: [project],
@@ -1001,9 +979,13 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /**取消执行 */
         const onStopExecute = useMemoizedFn(() => {
-            apiCancelSyntaxFlowScan(token).then(() => {
-                setExecuteStatus("finished")
-            })
+            if (isAuditExecuting) {
+                codeScanAuditExecuteRef.current?.onCancelAudit()
+            } else {
+                apiCancelSyntaxFlowScan(token).then(() => {
+                    setExecuteStatus("finished")
+                })
+            }
         })
 
         /**暂停 */
@@ -1021,6 +1003,17 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             // })
         })
 
+        const getTabsState = useMemo(() => {
+            const tabsState = [
+                {tabName: "漏洞与风险", type: "risk"},
+                {tabName: "日志", type: "log"},
+                {tabName: "Console", type: "console"}
+            ]
+            if (runtimeId) {
+                return [{tabName: "审计结果", type: "result"}, ...tabsState]
+            }
+            return tabsState
+        }, [runtimeId])
         return (
             <>
                 <div
@@ -1032,6 +1025,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         <Col span={6}></Col>
                         <Col span={12}>
                             <YakitRadioButtons
+                                disabled={isExecuting}
                                 value={executeType}
                                 onChange={(e) => {
                                     setExecuteType(e.target.value)
@@ -1052,16 +1046,21 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     </Row>
                     {executeType === "new" ? (
                         <CodeScanAuditExecuteForm
+                            ref={codeScanAuditExecuteRef}
                             selectGroupList={selectGroupList}
                             plugin={plugin}
                             onStartExecute={onStartExecute}
                             setProgressShow={setProgressShow}
                             pushNewLogs={pushNewLogs}
+                            isAuditExecuting={isAuditExecuting}
+                            setAuditsExecuting={setAuditsExecuting}
+                            setExecuteType={setExecuteType}
+                            setIsExpand={setIsExpand}
                         />
                     ) : (
                         <Form
                             form={form}
-                            onFinish={({project}) => onStartExecute(project)}
+                            onFinish={(value) => onStartExecute(value)}
                             labelCol={{span: 6}}
                             wrapperCol={{span: 12}} //这样设置是为了让输入框居中
                             validateMessages={{
@@ -1128,12 +1127,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         streamInfo={{
                             progressState: [],
                             cardState: streamInfo.cardState,
-                            tabsState: [
-                                {tabName: "审计结果", type: "result"},
-                                {tabName: "漏洞与风险", type: "risk"},
-                                {tabName: "日志", type: "log"},
-                                {tabName: "Console", type: "console"}
-                            ],
+                            tabsState: getTabsState,
                             logState: streamInfo.logState,
                             tabsInfoState: {},
                             riskState: []
@@ -1148,175 +1142,207 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
     })
 )
 
-const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.memo((props) => {
-    const {selectGroupList, plugin, onStartExecute, setProgressShow, pushNewLogs} = props
-    const [form] = Form.useForm()
-    const jsonSchemaListRef = useRef<{
-        [key: string]: any
-    }>({})
-    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-    const openExtraPropsDrawer = useMemoizedFn(() => {
-        setExtraParamsVisible(true)
-    })
-
-    // 必要参数
-    const requiredParams = useMemo(() => {
-        return (
-            plugin?.Params.filter((item) => !!item.Required).map((item) => {
-                return item
-            }) || []
-        )
-    }, [plugin?.Params])
-    const [extraParamsValue, setExtraParamsValue] = useState<any>()
-    /** 选填参数 */
-    const groupParams = useMemo(() => {
-        const arr = plugin?.Params.filter((item) => !item.Required) || []
-        return ParamsToGroupByGroupName(arr)
-    }, [plugin?.Params])
-
-    const tokenRef = useRef<string>(randomString(40))
-    /** 是否在执行中 */
-    const [isExecuting, setIsExecuting] = useState<boolean>(false)
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-        taskName: "debug-plugin",
-        apiKey: "DebugPlugin",
-        token: tokenRef.current,
-        onEnd: () => {
-            debugPluginStreamEvent.stop()
-            setTimeout(() => {
-                setIsExecuting(false)
-            }, 300)
-        },
-        onError: () => {},
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-            setRuntimeId(rId)
-        }
-    })
-    const logInfoRef = useRef<StreamResult.Log[]>([])
-
-    // 执行审计
-    const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
-        debugPluginStreamEvent.reset()
-        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
-            setIsExecuting(true)
-            // setShowCompileModal(false)
-            // setShowRunAuditModal(true)
-            debugPluginStreamEvent.start()
+const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {
+            selectGroupList,
+            plugin,
+            onStartExecute,
+            setProgressShow,
+            pushNewLogs,
+            isAuditExecuting,
+            setAuditsExecuting,
+            setExecuteType,
+            setIsExpand
+        } = props
+        const [form] = Form.useForm()
+        const jsonSchemaListRef = useRef<{
+            [key: string]: any
+        }>({})
+        const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+        const openExtraPropsDrawer = useMemoizedFn(() => {
+            setExtraParamsVisible(true)
         })
-    })
 
-    const onCancelAudit = () => {
-        logInfoRef.current = []
-        debugPluginStreamEvent.cancel()
-        debugPluginStreamEvent.reset()
-    }
+        // 必要参数
+        const requiredParams = useMemo(() => {
+            return (
+                plugin?.Params.filter((item) => !!item.Required).map((item) => {
+                    return item
+                }) || []
+            )
+        }, [plugin?.Params])
+        const [extraParamsValue, setExtraParamsValue] = useState<any>()
+        /** 选填参数 */
+        const groupParams = useMemo(() => {
+            const arr = plugin?.Params.filter((item) => !item.Required) || []
+            return ParamsToGroupByGroupName(arr)
+        }, [plugin?.Params])
 
-    useEffect(() => {
-        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-        // 当任务结束时 跳转打开编译列表
-        if (progress === 1) {
-            setTimeout(() => {
-                logInfoRef.current = []
-                // onStartExecute()
-            }, 300)
-        }
-
-        let newLog = streamInfo.logState.slice(0, 100).map((item) => ({
-            type: "log",
-            content: item
-        }))
-        pushNewLogs(newLog)
-
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
-
-        setProgressShow({
-            type: "new",
-            progress: progress
+        const tokenRef = useRef<string>(randomString(40))
+        const [runtimeId, setRuntimeId] = useState<string>("")
+        const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+            taskName: "debug-plugin",
+            apiKey: "DebugPlugin",
+            token: tokenRef.current,
+            onEnd: () => {
+                debugPluginStreamEvent.stop()
+                setTimeout(() => {
+                    setAuditsExecuting(false)
+                    setProgressShow(undefined)
+                }, 300)
+            },
+            onError: () => {},
+            setRuntimeId: (rId) => {
+                yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+                setRuntimeId(rId)
+            }
         })
-    }, [streamInfo])
+        const runnerProject = useRef<string>()
 
-    const onStartAuditFun = useMemoizedFn(async (value) => {
-        if (!plugin) {
-            failed("插件获取失败")
-            return
-        }
-        const requestParams: DebugPluginRequest = {
-            Code: plugin.Content,
-            PluginType: plugin.Type,
-            Input: value["Input"] || "",
-            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-            ExecParams: [],
-            PluginName: ""
-        }
-
-        const request: Record<string, any> = {}
-        for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
-        requestParams.ExecParams = getYakExecutorParam({...value, ...extraParamsValue})
-
-        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-        if (result.jsonSchemaError.length > 0) {
-            failed(`jsonSchema校验失败`)
-            return
-        }
-        result.jsonSchemaSuccess.forEach((item) => {
-            requestParams.ExecParams.push({
-                Key: item.key,
-                Value: JSON.stringify(item.value)
+        // 执行审计
+        const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
+            debugPluginStreamEvent.reset()
+            apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+                setAuditsExecuting(true)
+                debugPluginStreamEvent.start()
             })
         })
-        console.log("requestParams---", requestParams)
-        onStartAudit(value["programName"], requestParams)
-    })
-    return (
-        <div className={styles[""]}>
-            <Form
-                form={form}
-                onFinish={onStartAuditFun}
-                labelCol={{span: 6}}
-                wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                validateMessages={{
-                    /* eslint-disable no-template-curly-in-string */
-                    required: "${label} 是必填字段"
-                }}
-                labelWrap={true}
-                className={styles["code-scan-form"]}
-            >
-                <div className={styles["custom-params-wrapper"]}>
-                    <ExecuteEnterNodeByPluginParams
-                        paramsList={requiredParams}
-                        pluginType={"yak"}
-                        isExecuting={isExecuting}
-                        jsonSchemaListRef={jsonSchemaListRef}
-                    />
-                </div>
-                <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                    <div className={styles["code-scan-execute-form-operate"]}>
-                        <YakitButton htmlType='submit' size='large' disabled={selectGroupList.length === 0}>
-                            开始编译
-                        </YakitButton>
-                        {groupParams.length > 0 && (
-                            <YakitButton type='text' onClick={openExtraPropsDrawer} disabled={isExecuting} size='large'>
-                                额外参数
-                            </YakitButton>
-                        )}
+
+        const onCancelAudit = () => {
+            debugPluginStreamEvent.cancel()
+            debugPluginStreamEvent.reset()
+        }
+
+        useImperativeHandle(
+            ref,
+            () => ({
+                onCancelAudit,
+                onStartAuditExecute: () => {
+                    form.validateFields()
+                        .then(onStartAuditFun)
+                        .catch((e) => {
+                            setIsExpand(true)
+                        })
+                }
+            }),
+            []
+        )
+
+        useUpdateEffect(() => {
+            const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+            // 当任务结束时 跳转打开编译列表
+            if (progress === 1) {
+                setTimeout(() => {
+                    setExecuteType("old")
+                    runnerProject.current && onStartExecute({project: runnerProject.current},true)
+                }, 300)
+            }
+
+            let newLog = streamInfo.logState.slice(0, 100).map((item) => ({
+                type: "log",
+                content: item
+            }))
+            pushNewLogs(newLog)
+
+            setProgressShow({
+                type: "new",
+                progress: progress
+            })
+        }, [streamInfo])
+
+        const onStartAuditFun = useMemoizedFn(async (value) => {
+            if (!plugin) {
+                failed("插件获取失败")
+                return
+            }
+            const requestParams: DebugPluginRequest = {
+                Code: plugin.Content,
+                PluginType: plugin.Type,
+                Input: value["Input"] || "",
+                HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+                ExecParams: [],
+                PluginName: ""
+            }
+
+            const request: Record<string, any> = {}
+            for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
+            requestParams.ExecParams = getYakExecutorParam({...value, ...extraParamsValue})
+
+            const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+            if (result.jsonSchemaError.length > 0) {
+                failed(`jsonSchema校验失败`)
+                return
+            }
+            result.jsonSchemaSuccess.forEach((item) => {
+                requestParams.ExecParams.push({
+                    Key: item.key,
+                    Value: JSON.stringify(item.value)
+                })
+            })
+            runnerProject.current = value["programName"]
+            onStartAudit(value["programName"], requestParams)
+        })
+        return (
+            <div className={styles["code-scan-audit-execute-form"]}>
+                <Form
+                    form={form}
+                    onFinish={onStartAuditFun}
+                    labelCol={{span: 6}}
+                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
+                    validateMessages={{
+                        /* eslint-disable no-template-curly-in-string */
+                        required: "${label} 是必填字段"
+                    }}
+                    labelWrap={true}
+                    className={styles["code-scan-form"]}
+                >
+                    <div className={styles["custom-params-wrapper"]}>
+                        <ExecuteEnterNodeByPluginParams
+                            paramsList={requiredParams}
+                            pluginType={"yak"}
+                            isExecuting={isAuditExecuting}
+                            jsonSchemaListRef={jsonSchemaListRef}
+                        />
                     </div>
-                </Form.Item>
-            </Form>
-            {/* 额外参数中没有JsonSchema */}
-            <React.Suspense fallback={<div>loading...</div>}>
-                <CodeScanExecuteExtraParamsDrawer
-                    groupParams={groupParams}
-                    visible={extraParamsVisible}
-                    setVisible={setExtraParamsVisible}
-                    extraParamsValue={extraParamsValue}
-                    setExtraParamsValue={setExtraParamsValue}
-                />
-            </React.Suspense>
-        </div>
-    )
-})
+                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
+                        <div className={styles["code-scan-execute-form-operate"]}>
+                            {isAuditExecuting ? (
+                                <YakitButton danger onClick={onCancelAudit} size='large'>
+                                    停止
+                                </YakitButton>
+                            ) : (
+                                <YakitButton htmlType='submit' size='large' disabled={selectGroupList.length === 0}>
+                                    开始编译
+                                </YakitButton>
+                            )}
+                            {groupParams.length > 0 && (
+                                <YakitButton
+                                    type='text'
+                                    onClick={openExtraPropsDrawer}
+                                    disabled={isAuditExecuting}
+                                    size='large'
+                                >
+                                    额外参数
+                                </YakitButton>
+                            )}
+                        </div>
+                    </Form.Item>
+                </Form>
+                {/* 额外参数中没有JsonSchema */}
+                <React.Suspense fallback={<div>loading...</div>}>
+                    <CodeScanExecuteExtraParamsDrawer
+                        groupParams={groupParams}
+                        visible={extraParamsVisible}
+                        setVisible={setExtraParamsVisible}
+                        extraParamsValue={extraParamsValue}
+                        setExtraParamsValue={setExtraParamsValue}
+                    />
+                </React.Suspense>
+            </div>
+        )
+    })
+)
 
 const CodeScanExecuteExtraParamsDrawer: React.FC<CodeScanExecuteExtraParamsDrawerProps> = React.memo((props) => {
     const {groupParams, visible, setVisible, extraParamsValue, setExtraParamsValue} = props

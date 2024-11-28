@@ -1,6 +1,6 @@
-.yak-codemirror{
+.yak-codemirror {
     .highlight-text {
-        background-color: #fff3b2;  // 浅黄色背景
+        background-color: #fff3b2; // 浅黄色背景
         // 或者使用其他样式
         // border-bottom: 2px solid #f00;  // 下划线
         // font-weight: bold;  // 加粗
@@ -8,8 +8,12 @@
     :global {
         // 禁用文本选择
         .CodeMirror {
-            font-family: "Courier New", Courier, monospace;
-            height: auto !important;  // 关键设置
+            pre.CodeMirror-line,
+            pre.CodeMirror-line-like {
+                font-family: "Courier New", Courier, monospace;
+            }
+
+            height: auto !important; // 关键设置
             // 设置最小高度（可选）
             min-height: 100px;
             // 设置最大高度（可选）
