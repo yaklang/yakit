@@ -1,10 +1,9 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
 import {HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {useDebounce, useMemoizedFn} from "ahooks"
-import {yakitFailed, yakitNotify} from "@/utils/notification"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {setRemoteValue} from "@/utils/kv"
@@ -77,12 +76,12 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         }
         sendFun()
     }
-    const sendFun = useDebounce(
+    const sendFun = useDebounceFn(
         () => {
             emiter.emit("onMitmCurProcess", curProcess + "")
         },
         {wait: 300}
-    )
+    ).run
     const onMITMLogProcessQuery = useMemoizedFn((queryStr: string) => {
         setQueryparamsStr(queryStr)
     })
