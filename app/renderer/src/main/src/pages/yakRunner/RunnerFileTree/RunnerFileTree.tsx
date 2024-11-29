@@ -69,7 +69,8 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
                 isShowPathNumber={false}
                 selectType='folder'
                 multiple={false}
-                help='可将文件夹拖入框内或点击此处'
+                help=''
+                uploadFolderText="选择本地文件夹"
                 onChange={(value) => {
                     setValue(value)
                     setAbsolutePath(value)
