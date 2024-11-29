@@ -82,6 +82,37 @@ module.exports = (win, getClient) => {
         })
     })
 
+
+    const asyncGetAllFuzztagInfo = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetAllFuzztagInfo(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GetAllFuzztagInfo", async (e, params) => {
+        return await asyncGetAllFuzztagInfo(params)
+    })
+
+    const asyncGenerateFuzztag = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GenerateFuzztag(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("GenerateFuzztag", async (e, params) => {
+        return await asyncGenerateFuzztag(params)
+    })
+
     const handlerHelper = require("./handleStreamWithContext");
     const streamHTTPFuzzerMap = new Map();
     ipcMain.handle("cancel-HTTPFuzzer", handlerHelper.cancelHandler(streamHTTPFuzzerMap));

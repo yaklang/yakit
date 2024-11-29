@@ -424,6 +424,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             defaultFold={defaultFold}
                                             historyId={historyId}
                                             downstreamProxyStr={downstreamProxy}
+                                            pageType={pageType}
                                             // defaultHeight={detailHeight}
                                         />
                                     </div>

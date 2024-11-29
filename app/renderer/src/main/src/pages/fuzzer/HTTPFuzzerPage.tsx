@@ -1,5 +1,5 @@
 import React, {CSSProperties, useEffect, useMemo, useRef, useState} from "react"
-import {Form, Modal, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
+import {Form, Result, Space, Popover, Tooltip, Divider, Descriptions} from "antd"
 import {
     IMonacoEditor,
     NewHTTPPacketEditor,
@@ -15,7 +15,6 @@ import {failed, info, yakitFailed, yakitNotify, warn} from "../../utils/notifica
 import {
     useControllableValue,
     useCreation,
-    useDebounceEffect,
     useDebounceFn,
     useGetState,
     useInViewport,
@@ -32,7 +31,6 @@ import {StringToUint8Array, Uint8ArrayToString} from "../../utils/str"
 import {PacketScanButton} from "@/pages/packetScanner/DefaultPacketScanGroup"
 import styles from "./HTTPFuzzerPage.module.scss"
 import {ShareImportExportData} from "./components/ShareImportExportData"
-// import {showExtractFuzzerResponseOperator} from "@/utils/extractor"
 import {
     ChevronLeftIcon,
     ChevronRightIcon,
@@ -515,33 +513,25 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         title: "Fuzzer Tag 调试工具",
         width: "70%",
         footer: null,
-        subTitle: "调试模式适合生成或者修改 Payload，在调试完成后，可以在 Web Fuzzer 中使用",
+        subTitle: "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
         content: (
-            <div style={{padding: 24}}>
-                <StringFuzzer
-                    advanced={true}
-                    disableBasicMode={true}
-                    insertCallback={(template: string) => {
-                        if (!template) {
-                            Modal.warn({
-                                title: "Payload 为空 / Fuzz 模版为空"
+            <StringFuzzer
+                insertCallback={(template: string) => {
+                    if (!template) {
+                        yakitNotify("warning", "Payload 为空 / Fuzz 模版为空")
+                    } else {
+                        if (reqEditor && template) {
+                            reqEditor.trigger("keyboard", "type", {
+                                text: template
                             })
                         } else {
-                            if (reqEditor && template) {
-                                reqEditor.trigger("keyboard", "type", {
-                                    text: template
-                                })
-                            } else {
-                                Modal.error({
-                                    title: "BUG: 编辑器失效"
-                                })
-                            }
-                            m.destroy()
+                            yakitNotify("error", "BUG: 编辑器失效")
                         }
-                    }}
-                    close={() => m.destroy()}
-                />
-            </div>
+                        m.destroy()
+                    }
+                }}
+                close={() => m.destroy()}
+            />
         )
     })
 }

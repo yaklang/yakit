@@ -25,7 +25,7 @@ import {
     YakitIModelDecoration,
     OperationRecord,
     OtherMenuListProps,
-    OperationRecordRes,
+    OperationRecordRes
 } from "./YakitEditorType"
 import {showByRightContext} from "../YakitMenu/showByRightContext"
 import {ConvertYakStaticAnalyzeErrorToMarker, YakStaticAnalyzeErrorResult} from "@/utils/editorMarkers"
@@ -70,7 +70,7 @@ import {useStore} from "@/store/editorState"
 import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
-import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
+import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 
 export interface CodecTypeProps {
     key?: string
@@ -555,7 +555,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 return
             case "yak-formatter":
                 if (!model) return
-                if(editor)yakCompileAndFormat.run(editor, model)
+                if (editor) yakCompileAndFormat.run(editor, model)
                 return
 
             default:
@@ -699,7 +699,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             for (let menus in contextMenu) {
                 /* 需要排序项 */
                 if (typeof contextMenu[menus].order === "number") {
-                    sortContextMenu = sortContextMenu.concat(cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[])
+                    sortContextMenu = sortContextMenu.concat(
+                        cloneDeep(contextMenu[menus]) as any as OtherMenuListProps[]
+                    )
                 } else {
                     /** 当cloneDeep里面存在reactnode时，执行会产生性能问题 */
                     rightContextMenu.current = rightContextMenu.current.concat(cloneDeep(contextMenu[menus].menu))
@@ -970,7 +972,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             current = model.deltaDecorations(current, generateDecorations())
         }
 
-
         editor.onDidChangeModelContent(() => {
             current = model.deltaDecorations(current, generateDecorations())
         })
@@ -986,7 +987,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         if (deltaDecorationsRef.current) {
             deltaDecorationsRef.current()
         }
-    }, [JSON.stringify(highLightText),JSON.stringify(highLightFind)])
+    }, [JSON.stringify(highLightText), JSON.stringify(highLightFind)])
 
     /** 右键菜单-重渲染换行符功能是否显示的开关文字内容 */
     useEffect(() => {

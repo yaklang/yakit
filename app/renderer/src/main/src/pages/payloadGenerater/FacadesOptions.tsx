@@ -132,28 +132,6 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                         </Button>
                     </Form.Item>
                 </Form>
-                {/* <StringFuzzer
-            advanced={true}
-            disableBasicMode={true}
-            insertCallback={(template: string) => {
-                if (!template) {
-                    Modal.warn({
-                        title: "Payload 为空 / Fuzz 模版为空"
-                    })
-                } else {
-                    if (reqEditor && template) {
-                        reqEditor.trigger("keyboard", "type", {
-                            text: template
-                        })
-                    } else {
-                        Modal.error({
-                            title: "BUG: 编辑器失效"
-                        })
-                    }
-                    m.destroy()
-                }
-            }}
-        /> */}
             </>
         </div>
     )
