@@ -82,6 +82,7 @@ import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/g
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
+import { setYakitEngineMode } from "@/constants/software"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -134,6 +135,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [engineMode, setEngineMode] = useState<YaklangEngineMode>()
     const cacheEngineMode = useRef<YaklangEngineMode>()
     const onSetEngineMode = useMemoizedFn((v?: YaklangEngineMode) => {
+        setYakitEngineMode(v)
         setEngineMode(v)
         cacheEngineMode.current = v
     })

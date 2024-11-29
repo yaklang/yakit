@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
-import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
+import {OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {CollapseList} from "../CollapseList/CollapseList"
@@ -52,9 +52,70 @@ import {
 } from "../FileTreeMap/ChildMap"
 import {v4 as uuidv4} from "uuid"
 import cloneDeep from "lodash/cloneDeep"
-import {failed, success} from "@/utils/notification"
+import {failed, success, warn} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
 import {Tooltip} from "antd"
+import {getYakitEngineMode} from "@/constants/software"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+
+export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
+    const {setAbsolutePath} = props
+    const [value, setValue] = useState<string>("")
+    return (
+        <div style={{padding: "20px 24px"}}>
+            <YakitDragger
+                value={value}
+                isShowPathNumber={false}
+                selectType='folder'
+                multiple={false}
+                help='可将文件夹拖入框内或点击此处'
+                onChange={(value) => {
+                    setValue(value)
+                    setAbsolutePath(value)
+                }}
+            />
+        </div>
+    )
+}
+
+// 打开文件夹
+export const openFolder = () => {
+    if (getYakitEngineMode() === "remote") {
+        let absolutePath = ""
+        const m = showYakitModal({
+            title: "请输入文件夹路径",
+            width: 400,
+            type: "white",
+            closable: false,
+            centered: true,
+            content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
+            onCancel: () => {
+                m.destroy()
+            },
+            onOk: async () => {
+                if (absolutePath.length === 0) {
+                    warn("请输入文件夹路径")
+                    return
+                }
+                emiter.emit("onOpenFileTree", absolutePath)
+                m.destroy()
+            }
+        })
+    } else {
+        ipcRenderer
+            .invoke("openDialog", {
+                title: "请选择文件夹",
+                properties: ["openDirectory"]
+            })
+            .then((data: any) => {
+                if (data.filePaths.length) {
+                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
+                    emiter.emit("onOpenFileTree", absolutePath)
+                }
+            })
+    }
+}
 
 const {ipcRenderer} = window.require("electron")
 
@@ -183,7 +244,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             {
                 key: "openFolder",
                 label: "打开文件夹"
-            },
+            }
         ]
         if (historyList.length > 0) {
             newMenu.push({
@@ -542,21 +603,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
         } catch (error) {}
-    })
-
-    // 打开文件夹
-    const openFolder = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFileTree", absolutePath)
-                }
-            })
     })
 
     // 打开历史
