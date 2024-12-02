@@ -723,8 +723,6 @@ service Yak {
 
   // syntaxflow scan 
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
-  rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
-  rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
   // query result 
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
   //query ssa program
@@ -5555,10 +5553,10 @@ message SSAProgram{
   // need re-compile 
   bool Recompile = 8;
   // risk number 
-  uint32 HighRiskNumber = 9; 
-  uint32 CriticalRiskNumber = 10; 
-  uint32 WarnRiskNumber = 11; 
-  uint32 LowRiskNumber = 12;
+  int64 HighRiskNumber = 9;
+  int64 CriticalRiskNumber = 10;
+  int64 WarnRiskNumber = 11;
+  int64 LowRiskNumber = 12;
   uint32 Id = 13;
 }
 
@@ -5584,8 +5582,17 @@ message SSAProgramFilter{
 
 
 message QuerySSAProgramRequest{
-  Paging Pagination = 1;
+  Paging Paging = 1; // abort 
+  Paging Pagination = 2; 
   SSAProgramFilter Filter = 3;
+}
+
+message QuerySSAProgramResponse{
+  Paging Paging = 1; // abort 
+  Paging Pagination = 5;
+  repeated SSAProgram Programs = 2; // abort
+  repeated SSAProgram Data = 4;
+  int64 Total = 3;
 }
 
 message UpdateSSAProgramRequest{
@@ -5597,11 +5604,6 @@ message DeleteSSAProgramRequest{
   SSAProgramFilter Filter = 2;
 }
 
-message QuerySSAProgramResponse{
-  Paging Pagination = 1;
-  repeated SSAProgram Data = 2;
-  int64 Total = 3;
-}
 
 message CreateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
@@ -5653,49 +5655,6 @@ message SyntaxFlowScanRequest{
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
 }
 
-message QuerySyntaxFlowScanTaskRequest{
-  Paging Pagination = 1;
-  SyntaxFlowScanTaskFilter Filter = 2;
-}
-
-message SyntaxFlowScanTaskFilter{
-  repeated string Programs = 1;
-  repeated string Status = 2;
-  repeated string TaskIds = 3;
-  int64 FromId = 4;
-  int64  UntilId = 5;
-}
-
-message QuerySyntaxFlowScanTaskResponse{
-  Paging Pagination = 1;
-  repeated SyntaxFlowScanTask Data = 2;
-  int64 Total = 3;
-}
-
-message SyntaxFlowScanTask {
-    uint64 Id = 1;
-    int64 CreatedAt = 2;
-    int64 UpdatedAt = 3;
-
-    string TaskId = 4;
-    repeated string Programs = 5;
-    int64 RuleCount = 6;
-    string Status = 7; // executing / paused / done / error
-    string Reason = 8;
-    // query execute
-    int64 FailedQuery= 9;
-    int64 SkipQuery=10;
-    int64 SuccessQuery = 11;
-    // risk
-    int64 RiskCount =12;
-    // query process
-    int64 TotalQuery =13;
-}
-
-message DeleteSyntaxFlowScanTaskRequest{
-  bool DeleteAll = 1;
-  SyntaxFlowScanTaskFilter Filter = 2;
-}
 
 message SyntaxFlowScanResponse{
   string TaskID = 1;
