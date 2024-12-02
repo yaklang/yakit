@@ -1,7 +1,7 @@
 import React from "react"
 import {IMonacoCodeEditor, YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {failed, yakitFailed} from "@/utils/notification"
+import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import prettier from "prettier/standalone"
 import babelParser from "prettier/plugins/babel"
 import htmlParser from "prettier/plugins/html"
@@ -33,9 +33,24 @@ const safeRenderBody = (body: string, onFinished: (data: string) => any) => {
         yakitFailed(`Render Failed: ${e}`)
     }
 }
+
+function extractAndCompareCode(originalCode: string, formattedCode: string) {
+    // 使用正则提取所有字母和数字，并转为小写
+    const extractChars = (code: string): string[] =>
+        (code.match(/[a-zA-Z0-9]/g) || []).map((char) => char.toLowerCase())
+
+    const originalChars = extractChars(originalCode)
+    const formattedChars = extractChars(formattedCode)
+
+    return originalChars.length > formattedChars.length
+}
+
 const formatCode = async (rsp: PacketPrettifyHelperResponse, option, callback) => {
     try {
         const formattedCode = await prettier.format(Uint8ArrayToString(rsp.Body), option)
+        if (extractAndCompareCode(Uint8ArrayToString(rsp.Body), formattedCode)) {
+            yakitNotify("info", "原始内容可能存在问题，美化丢失了部分内容")
+        }
         callback(formattedCode)
     } catch (error) {
         // 处理错误
@@ -229,23 +244,23 @@ export const prettifyPacketCode = (text: string) => {
 
 // 渲染功能(Html + Image)
 export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: string) => any) => {
-    if(packet.length>0){
+    if (packet.length > 0) {
         ipcRenderer
-        .invoke("PacketPrettifyHelper", {
-            Packet: typeof packet == "string" ? StringToUint8Array(packet) : packet
-        })
-        .then((rsp: PacketPrettifyHelperResponse) => {
-            const contentType = rsp.ContentType.toLowerCase()
-            if (contentType.includes("html")) {
-                safeRenderBody(Uint8ArrayToString(rsp.Body), (data: string) => {
-                    onFormatted(data)
-                })
-            } else if (rsp.IsImage) {
-                onFormatted(Uint8ArrayToString(rsp.ImageHtmlTag))
-            } else {
-                onFormatted()
-            }
-        })
+            .invoke("PacketPrettifyHelper", {
+                Packet: typeof packet == "string" ? StringToUint8Array(packet) : packet
+            })
+            .then((rsp: PacketPrettifyHelperResponse) => {
+                const contentType = rsp.ContentType.toLowerCase()
+                if (contentType.includes("html")) {
+                    safeRenderBody(Uint8ArrayToString(rsp.Body), (data: string) => {
+                        onFormatted(data)
+                    })
+                } else if (rsp.IsImage) {
+                    onFormatted(Uint8ArrayToString(rsp.ImageHtmlTag))
+                } else {
+                    onFormatted()
+                }
+            })
     }
 }
 
