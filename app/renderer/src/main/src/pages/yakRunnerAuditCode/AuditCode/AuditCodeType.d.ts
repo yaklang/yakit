@@ -110,6 +110,14 @@ export interface AuditModalFormModalProps {
     warrpId?: HTMLElement | null
 }
 
+export interface AfreshAuditModalProps {
+    afreshName?: string
+    setAfreshName: (v?: string) => void
+    onSuccee: () => void
+    // 绑定容器
+    warrpId?: HTMLElement | null
+}
+
 export interface QuerySSAProgramsProps {
     ProgramNames?: string[]
     Languages?: string[]
@@ -142,6 +150,7 @@ export interface AuditHistoryTableProps {
     onClose?: () => void
     onExecuteAudit?: () => void
     refresh?: boolean
+    warrpId?: HTMLElement | null
 }
 
 export interface ProjectManagerEditFormProps {

@@ -49,7 +49,7 @@ import {failed, success} from "@/utils/notification"
 import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
 import {Tooltip} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {AuditHistoryTable} from "../AuditCode/AuditCode"
+import {AfreshAuditModal, AuditHistoryTable} from "../AuditCode/AuditCode"
 
 import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
@@ -64,9 +64,10 @@ import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
-    const {fileTreeLoad,boxHeight} = props
+    const {fileTreeLoad, boxHeight} = props
     const {fileTree, activeFile, projectName} = useStore()
     const {handleFileLoadData} = useDispatcher()
+    const [afreshName, setAfreshName] = useState<string>()
     const [visible, setVisible] = useState<boolean>(false)
     const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
     // 选中的文件或文件夹
@@ -261,15 +262,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
     })
 
-    
-
     // 关闭抽屉
     const onCloseDrawer = useMemoizedFn(() => {
         setVisible(false)
     })
 
     return (
-        <div className={styles["runner-file-tree"]} >
+        <div className={styles["runner-file-tree"]}>
             <div className={styles["container"]}>
                 <OpenedFile />
 
@@ -294,7 +293,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         disabled={fileTree.length === 0}
                                         type='text2'
                                         icon={<OutlineReloadScanIcon />}
-                                        onClick={() => {}}
+                                        onClick={() => {
+                                            setAfreshName(projectName)
+                                        }}
                                     />
                                 </Tooltip>
                                 <Tooltip title={"刷新资源管理器"}>
@@ -340,7 +341,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 </div>
             </div>
             <YakitDrawer
-                getContainer={undefined}
+                getContainer={document.getElementById("audit-code") || document.body}
                 placement='bottom'
                 mask={false}
                 closable={false}
@@ -351,8 +352,20 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 className={classNames(styles["audit-history-drawer"])}
                 onClose={onCloseDrawer}
             >
-                <AuditHistoryTable pageType="aucitCode" onClose={()=>setVisible(false)} />
+                <AuditHistoryTable
+                    pageType='aucitCode'
+                    onClose={() => setVisible(false)}
+                    warrpId={document.getElementById("audit-code")}
+                />
             </YakitDrawer>
+
+            <AfreshAuditModal
+                afreshName={afreshName}
+                setAfreshName={setAfreshName}
+                onSuccee={() => {
+                    emiter.emit("onCodeAuditRefreshTree")
+                }}
+            />
         </div>
     )
 })

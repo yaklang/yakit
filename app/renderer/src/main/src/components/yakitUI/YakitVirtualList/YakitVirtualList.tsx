@@ -7,6 +7,7 @@ import {
     useDebounceEffect,
     useMemoizedFn,
     useThrottleFn,
+    useUpdateEffect,
     useVirtualList
 } from "ahooks"
 import {useRef, useState} from "react"
@@ -46,7 +47,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
     const containerRef = useRef<HTMLDivElement>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
 
-    const [list] = useVirtualList(data, {
+    const [list, scrollTo] = useVirtualList(data, {
         containerTarget: containerRef,
         wrapperTarget: wrapperRef,
         itemHeight: 48,
@@ -68,9 +69,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                 setScroll(true)
             }
         },
-        [vlistHeigth, wrapperRef.current?.clientHeight, refresh, hasMore],
+        [vlistHeigth, wrapperRef.current?.clientHeight, hasMore],
         {wait: 200}
     )
+
+    useUpdateEffect(() => {
+        scrollTo(0)
+    }, [refresh])
 
     const onScrollCapture = useThrottleFn(
         () => {

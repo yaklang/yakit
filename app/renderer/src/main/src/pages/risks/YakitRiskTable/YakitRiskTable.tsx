@@ -1230,7 +1230,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                             <div className={styles["virtual-table-heard-right-item"]}>
                                                 <span className={styles["virtual-table-heard-right-text"]}>Total</span>
                                                 <span className={styles["virtual-table-heard-right-number"]}>
-                                                    {response.Total}
+                                                    {allTotal}
                                                 </span>
                                             </div>
                                             <Divider type='vertical' />
