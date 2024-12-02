@@ -21,7 +21,15 @@ import {
     HybridScanExecuteContent,
     HybridScanExecuteContentRefProps
 } from "@/pages/plugins/pluginBatchExecutor/pluginBatchExecutor"
-import {useControllableValue, useCreation, useDebounceFn, useInViewport, useInterval, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceFn,
+    useInViewport,
+    useInterval,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {
     ExpandAndRetract,
@@ -68,6 +76,7 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
+import {PrivateDomainGV} from "@/utils/envfile"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -283,7 +292,7 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             })
         }
     }, [])
-    
+
     // 当其他地方直接设置setHidden(true)时，tab相关状态也需要更新
     const handleHidden = useMemoizedFn(() => {
         if (hidden) {
@@ -377,7 +386,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
 
     /**获取最新的私有域,并刷新列表 */
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
             if (setting) {
                 const values = JSON.parse(setting)
                 privateDomainRef.current = values.BaseUrl

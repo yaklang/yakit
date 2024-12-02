@@ -108,3 +108,11 @@ export const globalUserLogin = (token: any) => {
         return setRemoteValue(RemoteGV.TokenOnlineEnterprise, token)
     }
 }
+
+export const PrivateDomainGV = {
+    /** @name 私有域地址 */
+    HttpSetting: getReleaseEditionName() === "Yakit" ? "httpSetting" : "httpSetting_" + getReleaseEditionName(),
+    /** @name 私有域地址下拉列表 */
+    ConfigBaseUrl:
+        getReleaseEditionName() === "Yakit" ? "config_base_url" : "config_base_url_" + getReleaseEditionName()
+}

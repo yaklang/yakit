@@ -8,7 +8,7 @@ import {API} from "./services/swagger/resposeType"
 import {useEeSystemConfig, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
+import {isCommunityEdition, isEnpriTrace, PrivateDomainGV} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
@@ -131,13 +131,13 @@ function NewApp() {
     }
 
     const testYak = () => {
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
                     .then((data: OnlineProfileProps) => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
-                        setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl: data.BaseUrl}))
+                        setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
                     })
                     .catch((e) => {
@@ -152,7 +152,7 @@ function NewApp() {
                     } as OnlineProfileProps)
                     .then(() => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
-                        setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
+                        setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify(values))
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))
@@ -295,16 +295,16 @@ function NewApp() {
         }
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         // 登录账号时 连接 WebSocket 服务器
-        if(userInfo.isLogin){
+        if (userInfo.isLogin) {
             ipcRenderer.invoke("socket-start")
         }
         // 退出账号时 关闭 WebSocket 服务器
-        else{
+        else {
             ipcRenderer.invoke("socket-close")
         }
-    },[userInfo.isLogin])
+    }, [userInfo.isLogin])
 
     if (!agreed) {
         return (
@@ -336,7 +336,9 @@ function NewApp() {
                             <br />
                             3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
                             <br />
-                            4. 如果您需要使用Yakit<span className={styles["sign-bold-content"]}>用于商业化目的</span>，请确保你们已经<span className={styles["sign-bold-content"]}>获得官方授权</span>，否则我们将追究您的相关责任。
+                            4. 如果您需要使用Yakit<span className={styles["sign-bold-content"]}>用于商业化目的</span>
+                            ，请确保你们已经<span className={styles["sign-bold-content"]}>获得官方授权</span>
+                            ，否则我们将追究您的相关责任。
                             <br />
                             <span className={styles["sign-bold-content"]}>
                                 如果发现上述禁止行为，我们将保留追究您法律责任的权利。

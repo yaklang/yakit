@@ -13,11 +13,11 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {InformationCircleIcon} from "@/assets/newIcon"
-import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
+import {CacheDropDownGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
-import {isEnpriTrace} from "@/utils/envfile"
+import {isEnpriTrace, PrivateDomainGV} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -77,7 +77,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             method: "post",
             url: "urm/login",
             data: {
-                user_name,
+                user_name: user_name.trim(),
                 pwd
             }
         })
@@ -107,24 +107,26 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                             NetWorkApi<any, API.SystemConfigResponse>({
                                 method: "get",
                                 url: "system/config"
-                            }).then((config) => {
-                                const data = config.data || []
-                                setEeSystemConfig([...data])
-                                let syncData = false
-                                data.forEach((item) => {
-                                    if (item.configName === "syncData") {
-                                        syncData = item.isOpen
+                            })
+                                .then((config) => {
+                                    const data = config.data || []
+                                    setEeSystemConfig([...data])
+                                    let syncData = false
+                                    data.forEach((item) => {
+                                        if (item.configName === "syncData") {
+                                            syncData = item.isOpen
+                                        }
+                                    })
+
+                                    // 企业版同步各账号的流量数据、漏洞数据等到Web端
+                                    if (syncData) {
+                                        aboutLoginUpload(res.token)
+                                        loginHTTPFlowsToOnline(res.token)
                                     }
                                 })
-
-                                // 企业版同步各账号的流量数据、漏洞数据等到Web端
-                                if (syncData) {
-                                    aboutLoginUpload(res.token)
-                                    loginHTTPFlowsToOnline(res.token)
-                                }
-                            }).catch(() => {
-                                setEeSystemConfig([])
-                            })
+                                .catch(() => {
+                                    setEeSystemConfig([])
+                                })
                         } else {
                             aboutLoginUpload(res.token)
                             loginHTTPFlowsToOnline(res.token)
@@ -145,10 +147,12 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
     const onFinish = useMemoizedFn((v: OnlineProfileProps) => {
         setLoading(true)
+        const BaseUrl = v.BaseUrl.endsWith('/') ? v.BaseUrl.slice(0, -1) : v.BaseUrl
         const values = {
             ...formValue,
             ...v,
-            IsCompany: enterpriseLogin
+            IsCompany: enterpriseLogin,
+            BaseUrl
         }
         ipcRenderer
             .invoke("SetOnlineProfile", {
@@ -170,23 +174,28 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     ipcRenderer
                         .invoke("Codec", {Type: "base64", Text: v.pwd, Params: [], ScriptName: ""})
                         .then((res) => {
-                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({...values, pwd: res.Result}))
+                            setRemoteValue(
+                                PrivateDomainGV.HttpSetting,
+                                JSON.stringify({...values, pwd: res.Result})
+                            )
                         })
                         .catch(() => {})
                 } else {
-                    setRemoteValue(RemoteGV.HttpSetting, JSON.stringify(values))
+                    setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify(values))
                 }
 
                 if (!enterpriseLogin && isEnpriTrace()) {
                     NetWorkApi<any, API.SystemConfigResponse>({
                         method: "get",
                         url: "system/config"
-                    }).then((config) => {
-                        const data = config.data || []
-                        setEeSystemConfig([...data])
-                    }).catch(() => {
-                        setEeSystemConfig([])
                     })
+                        .then((config) => {
+                            const data = config.data || []
+                            setEeSystemConfig([...data])
+                        })
+                        .catch(() => {
+                            setEeSystemConfig([])
+                        })
                 }
             })
             .catch((e: any) => {
@@ -210,7 +219,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         httpHistoryRef.current.onSetRemoteValues(url)
     })
     const getHttpSetting = useMemoizedFn(() => {
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
             if (!setting) return
             const value = JSON.parse(setting)
             setDefaultHttpUrl(value.BaseUrl)
@@ -285,7 +294,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 >
                     <YakitAutoComplete
                         ref={httpHistoryRef}
-                        cacheHistoryDataKey={CacheDropDownGV.ConfigBaseUrl}
+                        cacheHistoryDataKey={PrivateDomainGV.ConfigBaseUrl}
                         initValue={defaultHttpUrl}
                         placeholder='请输入你的私有域地址'
                         defaultOpen={!enterpriseLogin}

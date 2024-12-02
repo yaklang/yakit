@@ -114,6 +114,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
+import {PrivateDomainGV} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -1637,7 +1638,7 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                 params: {
                     runtimeId,
                     defaultActiveKey,
-                    hybridScanMode:'status'
+                    hybridScanMode: "status"
                 }
             })
         )
@@ -1797,7 +1798,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
 
     /**获取最新的私有域 */
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
-        getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
             if (setting) {
                 const values = JSON.parse(setting)
                 privateDomainRef.current = values.BaseUrl
