@@ -89,6 +89,7 @@ import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {number} from "echarts"
+import { CodeScanTaskListDrawer } from "./CodeScanTaskListDrawer/CodeScanTaskListDrawer"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {
@@ -503,7 +504,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     /**继续 */
     const [continueLoading, setContinueLoading] = useState<boolean>(false)
     // 任务列表抽屉
-    const [visibleRaskList, setVisibleRaskList] = useState<boolean>(false)
+    const [visibleScanList, setVisibleScanList] = useState<boolean>(false)
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
@@ -610,16 +611,16 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                 name={progressShow.type === "new" ? "编译" : "扫描"}
                             />
                         )}
-                        {/* <YakitButton
+                        <YakitButton
                             type='text'
                             onClick={(e) => {
                                 e.stopPropagation()
-                                setVisibleRaskList(true)
+                                setVisibleScanList(true)
                             }}
                             style={{padding: 0}}
                         >
                             任务列表
-                        </YakitButton> */}
+                        </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
@@ -691,6 +692,14 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     />
                 </div>
             </div>
+            <React.Suspense fallback={<>loading...</>}>
+                {visibleScanList && (
+                    <CodeScanTaskListDrawer
+                        visible={visibleScanList}
+                        setVisible={setVisibleScanList}
+                    />
+                )}
+            </React.Suspense>
         </>
     )
 })
