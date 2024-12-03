@@ -47,6 +47,7 @@ export interface AdvancedConfigurationFromValue {
     etcHosts: any[]
     filterWebsocket: boolean
     disableCACertPage: boolean
+    DisableWebsocketCompression: boolean
 }
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -65,6 +66,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         const [etcHosts, setEtcHosts] = useState<any[]>([])
         const [filterWebsocketDef, setFilterWebsocketDef] = useState<boolean>(false)
         const [disableCACertPageDef, setDisableCACertPageDef] = useState<boolean>(false)
+        const [disableWebsocketCompressionDef, setDisableWebsocketCompressionDef] = useState<boolean>(false)
 
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -91,7 +93,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                             proxyUsername: enableProxyAuthDef ? proxyUsernameDef : "",
                             proxyPassword: enableProxyAuthDef ? proxyPasswordDef : "",
                             filterWebsocket: filterWebsocketDef,
-                            disableCACertPage: disableCACertPageDef
+                            disableCACertPage: disableCACertPageDef,
+                            DisableWebsocketCompression: disableWebsocketCompressionDef
                         }
                     }
                 }
@@ -106,6 +109,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 dnsServersDef,
                 filterWebsocketDef,
                 disableCACertPageDef,
+                disableWebsocketCompressionDef,
                 visible,
                 form
             ]
@@ -181,6 +185,15 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 const v = e === "true" ? true : false
                 setDisableCACertPageDef(v)
                 form.setFieldsValue({disableCACertPage: v})
+            })
+            // 启用webSocket压缩
+            getRemoteValue(RemoteGV.MITMDisableWebsocketCompression).then((e) => {
+                let v = true
+                if (e) {
+                    v = e === "true" ? true : false
+                }
+                setDisableWebsocketCompressionDef(v)
+                form.setFieldsValue({DisableWebsocketCompression: v})
             })
         }, [visible])
         /**
@@ -266,6 +279,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
+                setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
                 onSave(params)
             })
         })
@@ -278,6 +292,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 enableProxyAuth: enableProxyAuthDef,
                 filterWebsocket: filterWebsocketDef,
                 disableCACertPage: disableCACertPageDef,
+                DisableWebsocketCompression: disableWebsocketCompressionDef,
                 proxyUsername: proxyUsernameDef,
                 proxyPassword: proxyPasswordDef
             }
@@ -450,6 +465,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         valuePropName='checked'
                         help={"开启后免配置启动不会访问初始页面"}
                     >
+                        <YakitSwitch size='large' />
+                    </Form.Item>
+                    <Form.Item label={"启用WebSocket压缩"} name='DisableWebsocketCompression' valuePropName='checked'>
                         <YakitSwitch size='large' />
                     </Form.Item>
                     <Form.Item label='客户端 TLS 导入' className={styles["advanced-configuration-drawer-TLS"]}>
