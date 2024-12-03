@@ -75,6 +75,7 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import cloneDeep from "lodash/cloneDeep"
 import {setClipboardText} from "@/utils/clipboard"
+import {RemoteHistoryGV} from "@/enums/history"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -893,7 +894,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     )
 
     const isFilter: boolean = useMemo(() => {
-        return hostName.length > 0 || urlPath.length > 0 || fileSuffix.length > 0 || searchContentType?.length > 0 || excludeKeywords.length > 0
+        return (
+            hostName.length > 0 ||
+            urlPath.length > 0 ||
+            fileSuffix.length > 0 ||
+            searchContentType?.length > 0 ||
+            excludeKeywords.length > 0
+        )
     }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
 
     useEffect(() => {
@@ -1104,7 +1111,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // history 页面时，判断倒序情况，并且未加载的数据超过200条时刷新页面(这里的数据是减去了缓存数据[offsetdata]数量后的数据)
         // start
         let isInitRefresh: boolean = false
-        if (pageType === "History" && type === "top" && sortRef.current.order !== "asc" && maxIdRef.current) {
+        if (
+            !backgroundRefresh &&
+            pageType === "History" &&
+            type === "top" &&
+            sortRef.current.order !== "asc" &&
+            maxIdRef.current
+        ) {
             const paginationProps = {
                 Page: 1,
                 Limit: 300,
@@ -1427,18 +1440,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
         }
 
+        // 如果页面可见，更新滚动条位置信息
+        // 记录的滚动条位置信息为了，在后台刷新时使用，因为在后台时，该页面已被 display:none
+        if (inViewport) {
+            scrollSize.current = {scrollTop, scrollBottomPercent: scrollBottomPercent || 0}
+        }
+
         if (triggerFilterValue.current) {
             updateData()
             triggerFilterValue.current = false
         }
 
         // 滚动条接近触顶
-        if (scrollTop < 10) {
+        if (scrollSize.current.scrollTop < 10) {
             updateTopData()
             setOffsetData([])
         }
         // 滚动条接近触底
-        else if (typeof scrollBottomPercent === "number" && scrollBottomPercent > 0.9) {
+        else if (
+            typeof scrollSize.current.scrollBottomPercent === "number" &&
+            scrollSize.current.scrollBottomPercent > 0.9
+        ) {
             updateBottomData()
             setOffsetData([])
         }
@@ -1504,8 +1526,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             clearInterval(idRef.current)
         }
     }, [])
+
+    /** ---------- 后台刷新 Start ---------- */
+    const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+    const isBackgroundRefresh = useMemo(() => {
+        return backgroundRefresh && pageType === "History"
+    }, [backgroundRefresh, pageType])
     useEffect(() => {
-        if (inViewport) {
+        // 获取缓存的后台刷新状态
+        getRemoteValue(RemoteHistoryGV.BackgroundRefresh)
+            .then((value) => {
+                setBackgroundRefresh(!!value)
+            })
+            .catch(() => {})
+    }, [])
+
+    // 实时更新滚动条位置
+    const scrollSize = useRef<{scrollTop: number; scrollBottomPercent: number}>({scrollTop: 0, scrollBottomPercent: 0})
+    /** ---------- 后台刷新 End ---------- */
+
+    useEffect(() => {
+        if (inViewport || isBackgroundRefresh) {
             scrollUpdate()
             if (isLoop) {
                 if (idRef.current) {
@@ -1515,7 +1556,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         return () => clearInterval(idRef.current)
-    }, [inViewport, isLoop])
+    }, [inViewport, isLoop, isBackgroundRefresh])
 
     // 保留数组中非重复数据
     const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -3747,7 +3788,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             setDrawerFormVisible(true)
                                                         }}
                                                     >
-                                                        高级筛选
+                                                        高级配置
                                                     </YakitButton>
                                                     {isFilter && (
                                                         <YakitTag color={"success"}>
@@ -3940,8 +3981,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 responseType={contentType}
                 visible={drawerFormVisible}
                 setVisible={setDrawerFormVisible}
-                onSave={(val) => {
-                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = val
+                onSave={(filters, setting) => {
+                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
                     setFilterMode(filterMode)
                     setHostName(hostName)
                     setUrlPath(urlPath)
@@ -3949,6 +3990,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     setSearchContentType(searchContentType)
                     setExcludeKeywords(excludeKeywords)
                     setDrawerFormVisible(false)
+
+                    const {backgroundRefresh: newBackgroundRefresh} = setting
+                    if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
                 }}
                 filterMode={filterMode}
                 hostName={hostName}

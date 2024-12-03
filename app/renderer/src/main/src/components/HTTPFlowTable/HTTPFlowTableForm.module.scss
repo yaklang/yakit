@@ -1,4 +1,4 @@
-.http-flow-table-form-configuration{
+.http-flow-table-form-configuration {
     :global {
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
@@ -24,6 +24,53 @@
         .advanced-configuration-drawer-title-btns {
             display: flex;
             gap: 8px;
+        }
+    }
+
+    .advanced-config-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .config-item-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            .item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .header-title {
+                    font-weight: 600;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: var(--yakit-header-color);
+                }
+            }
+        }
+    }
+
+    .setting-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-left: 20px;
+        .background-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .title-style {
+                font-size: 12px;
+                line-height: 16px;
+                color: var(--yakit-header-color);
+            }
+            .hint-style {
+                cursor: pointer;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--ui-neutral-50);
+                }
+            }
         }
     }
 }
