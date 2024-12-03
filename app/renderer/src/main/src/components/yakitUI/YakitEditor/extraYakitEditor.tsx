@@ -86,10 +86,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [])
 
     const rightMenuType: YakitEditorExtraRightMenuType[] = useMemo(() => {
+        const init: YakitEditorExtraRightMenuType[] = ["code", "decode", "http"]
         if (noPacketModifier) {
-            return []
+            return init
         } else {
-            return ["customcontextmenu", "aiplugin"]
+            return init.concat(["customcontextmenu", "aiplugin"])
         }
     }, [noPacketModifier])
 
@@ -469,9 +470,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
     return (
         <YakitEditor
-            menuType={["code", "decode", "http", ...rightMenuType]}
+            menuType={rightMenuType}
             readOnly={readOnly}
-            contextMenu={{...rightContextMenu}}
+            contextMenu={rightContextMenu}
             {...restProps}
             {...extraEditorProps}
         />

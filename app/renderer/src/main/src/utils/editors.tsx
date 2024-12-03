@@ -26,7 +26,8 @@ import IModelDecoration = editor.IModelDecoration
 import {
     OperationRecordRes,
     OtherMenuListProps,
-    YakitEditorProps
+    YakitEditorProps,
+    YakitIMonacoEditor
 } from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -582,7 +583,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         editorOperationRecord,
         typeOptionVal,
         onTypeOptionVal,
-        highLightText = [],
+        highLightText,
         downstreamProxyStr = ""
     } = props
     const [mode, setMode] = useState("text")
@@ -597,6 +598,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
     const [type, setType] = useState<"beautify" | "render">()
+    const editorHighLightText = useMemo(() => {
+        return type === undefined ? highLightText || [] : []
+    }, [type, highLightText])
+
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<string>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
@@ -921,6 +926,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
     }, [type])
 
+    const handleEditorMount = useMemoizedFn((editor: YakitIMonacoEditor) => {
+        setMonacoEditor(editor)
+    })
+
     return (
         <div className={styles["new-http-packet-editor"]}>
             <Card
@@ -1163,11 +1172,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             noWordWrap={noWordwrap}
                             fontSize={fontSize}
                             showLineBreaks={showLineBreaks}
-                            contextMenu={props.contextMenu || {}}
+                            contextMenu={props.contextMenu}
                             noPacketModifier={props.noPacketModifier}
-                            editorDidMount={(editor) => {
-                                setMonacoEditor(editor)
-                            }}
+                            editorDidMount={handleEditorMount}
                             editorOperationRecord={editorOperationRecord}
                             defaultHttps={props.defaultHttps}
                             isWebSocket={props.isWebSocket}
@@ -1176,7 +1183,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             webFuzzerValue={props.webFuzzerValue}
                             webFuzzerCallBack={props.webFuzzerCallBack}
                             editorId={editorId}
-                            highLightText={type === undefined ? highLightText : []}
+                            highLightText={editorHighLightText}
                             downstreamProxyStr={downstreamProxyStr}
                             url={props.url}
                             downbodyParams={props.downbodyParams}
