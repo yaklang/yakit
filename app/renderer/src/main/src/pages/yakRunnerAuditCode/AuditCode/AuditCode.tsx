@@ -1027,7 +1027,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                             Value: JSON.stringify(item.value)
                         })
                     })
-                    console.log("requestParams---", requestParams)
                     onStartAudit(value["programName"], requestParams)
                 })
                 .catch(() => {})
@@ -1383,7 +1382,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     const {pageType, onClose, onExecuteAudit, warrpId} = props
     const {projectName} = useStore()
     const [afreshName, setAfreshName] = useState<string>()
-    const [refresh, setRefresh] = useControllableValue<boolean>(props)
+    const [refresh, setRefresh] = useControllableValue<boolean>(props, {
+        defaultValue: false,
+        valuePropName: "refresh",
+        trigger: "setRefresh"
+    })
     const [params, setParams] = useState<QuerySSAProgramsProps>({
         Keyword: ""
     })
@@ -1426,8 +1429,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         if (isGrpcRef.current) return
         isGrpcRef.current = true
         const paginationProps = {
+            ...pagination,
             Page: page || 1,
-            Limit: limit || pagination.Limit
+            Limit: limit || pagination.Limit,
         }
         if (reload) {
             afterId.current = undefined
@@ -1467,8 +1471,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 
     const getTotalFun = useMemoizedFn(() => {
         const paginationProps = {
+            ...pagination,
             Page: 1,
-            Limit: pagination.Limit
+            Limit: pagination.Limit,
         }
         ipcRenderer
             .invoke("QuerySSAPrograms", {

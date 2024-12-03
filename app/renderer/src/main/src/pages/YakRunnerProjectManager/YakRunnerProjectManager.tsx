@@ -45,6 +45,7 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
                         setShowCompileModal(true)
                     }}
                     refresh={refresh}
+                    setRefresh={setRefresh}
                 />
                 {isShowCompileModal && (
                     <AuditModalFormModal

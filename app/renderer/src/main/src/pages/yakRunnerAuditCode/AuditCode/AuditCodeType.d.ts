@@ -150,6 +150,7 @@ export interface AuditHistoryTableProps {
     onClose?: () => void
     onExecuteAudit?: () => void
     refresh?: boolean
+    setRefresh?: (v: boolean) => void
     warrpId?: HTMLElement | null
 }
 
