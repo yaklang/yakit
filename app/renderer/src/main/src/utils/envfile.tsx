@@ -111,8 +111,8 @@ export const globalUserLogin = (token: any) => {
 
 export const PrivateDomainGV = {
     /** @name 私有域地址 */
-    HttpSetting: getReleaseEditionName() === "Yakit" ? "httpSetting" : "httpSetting_" + getReleaseEditionName(),
+    HttpSetting: getReleaseEditionName() === "EnpriTrace" ? "httpSetting" : "httpSetting_" + getReleaseEditionName(),
     /** @name 私有域地址下拉列表 */
     ConfigBaseUrl:
-        getReleaseEditionName() === "Yakit" ? "config_base_url" : "config_base_url_" + getReleaseEditionName()
+        getReleaseEditionName() === "EnpriTrace" ? "config_base_url" : "config_base_url_" + getReleaseEditionName()
 }
