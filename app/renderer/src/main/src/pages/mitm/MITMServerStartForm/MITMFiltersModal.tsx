@@ -3,15 +3,21 @@ import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {info, yakitFailed, warn} from "@/utils/notification"
+import {info, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Modal} from "antd"
+import {Modal, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RemoveIcon} from "@/assets/newIcon"
 import {MITMAdvancedFilter, MITMFilters, MITMFilterSchema, onFilterEmptyMITMAdvancedFilters} from "./MITMFilters"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {OutlineClockIcon, OutlineStorageIcon, OutlineTrashIcon} from "@/assets/icon/outline"
+import {
+    OutlineClockIcon,
+    OutlineExportIcon,
+    OutlineSaveIcon,
+    OutlineStorageIcon,
+    OutlineTrashIcon
+} from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import emiter from "@/utils/eventBus/eventBus"
@@ -19,6 +25,8 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {defaultMITMAdvancedFilter, defaultMITMFilterData} from "@/defaultConstants/mitm"
 import cloneDeep from "lodash/cloneDeep"
 import {MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI} from "./utils"
+import {saveABSFileToOpen} from "@/utils/openWebsite"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const MITMAdvancedFilters = React.lazy(() => import("./MITMFilters"))
 const {ipcRenderer} = window.require("electron")
@@ -225,6 +233,19 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         }
     })
 
+    const onFilterExport = useMemoizedFn(() => {
+        const baseFilter = getMITMFilterData().baseFilter
+        const advancedFilters = getMITMFilterData().advancedFilters
+        const encoder = new TextEncoder()
+        const exportData = encoder.encode(JSON.stringify({baseFilter, advancedFilters}))
+        saveABSFileToOpen("filter-config.json", exportData)
+    })
+
+    const [importVisibel, setImportVisibel] = useState<boolean>(false)
+    const onFilterImport = useMemoizedFn(() => {
+        setImportVisibel(true)
+    })
+
     return (
         <YakitModal
             visible={visible}
@@ -256,6 +277,39 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             maskClosable={false}
             subTitle={
                 <div className={styles["mitm-filters-subTitle"]}>
+                    <Tooltip title='导出配置' align={{offset: [0, 10]}}>
+                        <YakitButton
+                            style={{padding: "3px 8px"}}
+                            type='text'
+                            icon={<OutlineExportIcon />}
+                            onClick={onFilterExport}
+                        />
+                    </Tooltip>
+                    <Tooltip title='导入配置' align={{offset: [0, 10]}}>
+                        <YakitButton
+                            style={{padding: "3px 8px"}}
+                            type='text'
+                            icon={<OutlineSaveIcon />}
+                            onClick={onFilterImport}
+                        />
+                    </Tooltip>
+                    <ImportFileModal
+                        visible={importVisibel}
+                        title='从 JSON 中导入'
+                        fileType='application/json'
+                        onCancel={() => {
+                            setImportVisibel(false)
+                        }}
+                        onOk={(value) => {
+                            try {
+                                const importValue = JSON.parse(value)
+                                onMenuSelect(importValue)
+                                setImportVisibel(false)
+                            } catch (error) {
+                                yakitNotify("error", "导入失败")
+                            }
+                        }}
+                    ></ImportFileModal>
                     <YakitButton
                         style={{padding: "3px 8px"}}
                         icon={<OutlineStorageIcon />}
@@ -439,3 +493,92 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
         </div>
     )
 })
+
+interface ImportFileModalProps {
+    title: string
+    visible: boolean
+    okText?: string
+    fileType?: string
+    onCancel: () => void
+    onOk: (value: string) => void
+}
+const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
+    const {title, visible, okText = "导入", fileType, onCancel, onOk} = props
+    const [value, setValue] = useState<string>("")
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    useEffect(() => {
+        if (visible) {
+            setValue("")
+        }
+    }, [visible])
+
+    const onClickUpload = () => {
+        if (fileInputRef.current) {
+            // 点击自定义按钮时触发文件选择框
+            fileInputRef.current.click()
+        }
+    }
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files
+        handleReadAsText(files)
+        event.target.value = ""
+    }
+
+    const handleReadAsText = (files: FileList | null) => {
+        if (!files) return
+        if (files.length > 0) {
+            setValue("")
+            const file = files[0]
+            if (fileType && file.type !== fileType) {
+                yakitNotify("warning", "导入文件不符合格式要求")
+                return
+            }
+            const reader = new FileReader()
+            reader.onload = (e) => {
+                const content = e.target?.result
+                if (typeof content === "string") {
+                    setValue(content)
+                }
+            }
+            reader.readAsText(file)
+        }
+    }
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault() // 防止默认行为以允许放置
+    }
+
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        const files = event.dataTransfer.files // 获取拖放的文件
+        handleReadAsText(files)
+    }
+
+    return (
+        <YakitModal
+            title={title}
+            width={850}
+            subTitle={
+                <div className={styles["import-text"]}>
+                    可将文件拖入框内，或
+                    <input type='file' className={styles["fileInput"]} ref={fileInputRef} onChange={handleFileChange} />
+                    <YakitButton type='text' onClick={onClickUpload} style={{fontSize: 14}}>
+                        点击此处
+                    </YakitButton>
+                    上传，也支持直接粘贴代码
+                </div>
+            }
+            destroyOnClose={true}
+            visible={visible}
+            okText={okText}
+            onCancel={onCancel}
+            onOk={() => onOk(value)}
+        >
+            <div className={styles["import-editor"]} onDragOver={handleDragOver} onDrop={handleDrop}>
+                <YakitEditor value={value} setValue={setValue}></YakitEditor>
+            </div>
+        </YakitModal>
+    )
+}
