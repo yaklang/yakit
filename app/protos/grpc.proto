@@ -5741,6 +5741,50 @@ message SyntaxFlowScanResponse{
   repeated Risk risks = 5;
 }
 
+message QuerySyntaxFlowScanTaskRequest{
+  Paging Pagination = 1;
+  SyntaxFlowScanTaskFilter Filter = 2;
+}
+
+message SyntaxFlowScanTaskFilter{
+  repeated string Programs = 1;
+  repeated string Status = 2;
+  repeated string TaskIds = 3;
+  int64 FromId = 4;
+  int64  UntilId = 5;
+}
+
+message QuerySyntaxFlowScanTaskResponse{
+  Paging Pagination = 1;
+  repeated SyntaxFlowScanTask Data = 2;
+  int64 Total = 3;
+}
+
+message SyntaxFlowScanTask {
+    uint64 Id = 1;
+    int64 CreatedAt = 2;
+    int64 UpdatedAt = 3;
+
+    string TaskId = 4;
+    repeated string Programs = 5;
+    int64 RuleCount = 6;
+    string Status = 7; // executing / paused / done / error
+    string Reason = 8;
+    // query execute
+    int64 FailedQuery= 9;
+    int64 SkipQuery=10;
+    int64 SuccessQuery = 11;
+    // risk
+    int64 RiskCount =12;
+    // query process
+    int64 TotalQuery =13;
+}
+
+message DeleteSyntaxFlowScanTaskRequest{
+  bool DeleteAll = 1;
+  SyntaxFlowScanTaskFilter Filter = 2;
+}
+
 
 message SyntaxFlowResultFilter {
   repeated string TaskIDs = 1;
