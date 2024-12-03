@@ -1,5 +1,5 @@
 import {defaultValueCtx, Editor, rootCtx} from "@milkdown/kit/core"
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {blockquoteSchema, codeBlockSchema, commonmark, hrSchema, listItemSchema} from "@milkdown/kit/preset/commonmark"
@@ -42,7 +42,6 @@ import {fileCustomSchema, uploadCustomPlugin} from "./utils/uploadPlugin"
 import {CustomFile} from "./CustomFile/CustomFile"
 import {insertImageBlockCommand} from "./utils/imageBlock"
 
-import {collab} from "@milkdown/plugin-collab"
 import {listCustomPlugin} from "./utils/listPlugin"
 import {headingCustomPlugin} from "./utils/headingPlugin"
 import {codeCustomPlugin} from "./utils/codePlugin"
@@ -53,6 +52,13 @@ import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTe
 import {httpDeleteOSSResource, httpUploadImgBase64} from "@/apiUtils/http"
 import {deletedFileUrlsCtx, trackDeletePlugin} from "./utils/trackDeletePlugin"
 import moment from "moment"
+import {randomColor} from "@/utils/randomUtil"
+import {useStore} from "@/store"
+import {CollabManager} from "./CollabManager"
+import emiter from "@/utils/eventBus/eventBus"
+
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 
 const markdown = `
 
@@ -190,6 +196,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
     const [deletedFiles, setDeletedFiles] = useState<DeleteOSSFileItem[]>([])
+    const userInfo = useStore((s) => s.userInfo)
+
     const blockPlugins: MilkdownPlugin[] = useCreation(() => {
         return [
             block,
@@ -422,18 +430,19 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             return ""
         }
     })
-
-    const {get} = useEditor((root) => {
+    const collabManagerRef = useRef<CollabManager>()
+    const {get, loading} = useEditor((root) => {
         return (
             Editor.make()
                 .config((ctx) => {
                     ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, markdown1)
+                    ctx.set(defaultValueCtx, "")
                     ctx.set(tooltip.key, {
                         view: pluginViewFactory({
                             component: TooltipView
                         })
                     })
+                    onCollab(ctx)
                 })
                 .use(commonmark)
                 .use(gfm)
@@ -477,17 +486,77 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(customPlugin)
         )
     }, [])
+
     useEffect(() => {
+        if (!loading) return
         const editor = get()
         if (editor && setEditor) {
             setEditor(editor)
+            // DeletedFiles
             editor.action(onSetDeletedFiles)
+            // editor.action(onCollab)
         }
-    }, [get])
+
+        return () => {
+            onDeleteAllFiles()
+        }
+    }, [loading])
+    useEffect(() => {
+        return () => {
+            collabManagerRef.current && collabManagerRef.current.disconnect()
+        }
+    }, [])
+
+    const onConnect = useMemoizedFn(() => {
+        collabManagerRef.current?.connect()
+    })
+    const onDisConnect = useMemoizedFn(() => {
+        collabManagerRef.current?.disconnect()
+    })
+    const onCollab = useDebounceFn(
+        (ctx) => {
+            if (collabManagerRef.current) return
+            const user = {
+                name: userInfo.companyName || "",
+                color: `${randomColor()}`,
+                heardImg: userInfo.companyHeadImg || ""
+            }
+            const collabService = ctx.get(collabServiceCtx)
+            collabManagerRef.current = new CollabManager(collabService, user, userInfo.token)
+
+            collabManagerRef.current.flush("")
+        },
+        {wait: 500, leading: true}
+    ).run
 
     const [interval, setInterval] = useState<number | undefined>(undefined)
 
     useRafInterval(() => {
+        onDeleteFiles()
+    }, interval)
+
+    /**设置当前文档中被删除的文件名称 */
+    const onSetDeletedFiles = useDebounceFn(
+        useMemoizedFn((ctx) => {
+            // 获取 trackDeletePlugin 插件共享的值
+            const urls = ctx.get(deletedFileUrlsCtx)
+            if (urls.length > 0) {
+                setInterval(1000)
+            } else {
+                setInterval(undefined)
+            }
+            setDeletedFiles(urls)
+        }),
+        {wait: 200}
+    ).run
+    /**删除文档中被删除的所有文件 */
+    const onDeleteAllFiles = useMemoizedFn(() => {
+        if (deletedFiles.length > 0) {
+            httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)})
+        }
+    })
+    /**删除在文档中被删除30s的文件 */
+    const onDeleteFiles = useMemoizedFn(() => {
         const fileName: string[] = []
         const newDeletedFiles: DeleteOSSFileItem[] = []
         const length = deletedFiles.length
@@ -507,23 +576,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
             })
         }
-    }, interval)
-
-    const onSetDeletedFiles = useDebounceFn(
-        useMemoizedFn((ctx) => {
-            // 获取 trackDeletePlugin 插件共享的值
-            const urls = ctx.get(deletedFileUrlsCtx)
-            if (urls.length > 0) {
-                setInterval(1000)
-            } else {
-                setInterval(undefined)
-            }
-            setDeletedFiles(urls)
-        }),
-        {wait: 200}
-    ).run
-
-    const onDeleteFiles = useMemoizedFn(() => {})
+    })
 
     const onDifferences = useMemoizedFn((ctx) => {
         // 获取两个文档的差异
@@ -543,7 +596,13 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
         ctx.set(defaultValueCtx, content)
     })
-    return <Milkdown />
+    return (
+        <div>
+            <YakitButton onClick={onConnect}>链接</YakitButton>
+            <YakitButton onClick={onDisConnect}>断开</YakitButton>
+            <Milkdown />
+        </div>
+    )
 })
 
 export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) => {
