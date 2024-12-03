@@ -3532,7 +3532,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const mitmHasParamsNamesArr = mitmHasParamsNames.split(",")
         let selectTypeList = params.SourceType?.split(",") || [""]
         if (mitmHasParamsNamesArr[0] !== "" || !mitmHasParamsNamesArr.length) {
-            selectTypeList = ["scan"]
+            selectTypeList = ["mitm", "scan"]
         } else {
             selectTypeList = selectTypeList.filter((item) => item !== "scan")
             if (selectTypeList[0] === "" || !selectTypeList.length) {
