@@ -11228,6 +11228,13 @@ lib0@^0.2.31, lib0@^0.2.42, lib0@^0.2.52, lib0@^0.2.85, lib0@^0.2.86:
   dependencies:
     isomorphic.js "^0.2.4"
 
+lib0@^0.2.98:
+  version "0.2.98"
+  resolved "https://registry.yarnpkg.com/lib0/-/lib0-0.2.98.tgz#fe55203b8586512c1837248d5f309d7dfd566f5d"
+  integrity sha512-XteTiNO0qEXqqweWx+b21p/fBnNHUA1NwAtJNJek1oPrewEZs2uiT4gWivHKr9GqCjDPAhchz0UQO8NwU3bBNA==
+  dependencies:
+    isomorphic.js "^0.2.4"
+
 lilconfig@^2.0.3, lilconfig@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/lilconfig/-/lilconfig-2.1.0.tgz#78e23ac89ebb7e1bfbf25b18043de756548e7f52"
