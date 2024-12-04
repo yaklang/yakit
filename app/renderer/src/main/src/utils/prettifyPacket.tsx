@@ -49,7 +49,7 @@ const formatCode = async (rsp: PacketPrettifyHelperResponse, option, callback) =
     try {
         const formattedCode = await prettier.format(Uint8ArrayToString(rsp.Body), option)
         if (extractAndCompareCode(Uint8ArrayToString(rsp.Body), formattedCode)) {
-            yakitNotify("info", "原始内容可能存在问题，美化丢失了部分内容")
+            yakitNotify("info", "原始数据可能存在问题，美化丢失了部分内容")
         }
         callback(formattedCode)
     } catch (error) {
