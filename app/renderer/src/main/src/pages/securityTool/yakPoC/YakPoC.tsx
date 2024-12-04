@@ -76,7 +76,7 @@ import {compareAsc} from "@/pages/yakitStore/viewers/base"
 import {batchPluginType} from "@/defaultConstants/PluginBatchExecutor"
 import {defaultPocPageInfo} from "@/defaultConstants/YakPoC"
 import {HybridScanControlAfterRequest} from "@/models/HybridScan"
-import {PrivateDomainGV} from "@/utils/envfile"
+import { getRemoteHttpSettingGV } from "@/utils/envfile"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -386,7 +386,7 @@ const PluginListByGroup: React.FC<PluginListByGroupProps> = React.memo((props) =
 
     /**获取最新的私有域,并刷新列表 */
     const getPrivateDomainAndRefList = useMemoizedFn(() => {
-        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
+        getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (setting) {
                 const values = JSON.parse(setting)
                 privateDomainRef.current = values.BaseUrl

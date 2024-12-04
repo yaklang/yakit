@@ -15,7 +15,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import styles from "./PluginLocalListDetails.module.scss"
 import {FilterPopoverBtn} from "../../funcTemplate"
 import {defaultFilter, defaultSearch} from "../../builtInData"
-import {PrivateDomainGV} from "@/utils/envfile"
+import { getRemoteHttpSettingGV } from "@/utils/envfile"
 
 /**
  * @description 本地插件列表，左右布局，左边为插件列表右边为传入的node
@@ -109,7 +109,7 @@ export const PluginLocalListDetails: React.FC<PluginLocalListDetailsProps> = Rea
 
         /**获取最新的私有域,并刷新列表 */
         const getPrivateDomainAndRefList = useMemoizedFn(() => {
-            getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
+            getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
                 if (setting) {
                     const values = JSON.parse(setting)
                     privateDomainRef.current = values.BaseUrl

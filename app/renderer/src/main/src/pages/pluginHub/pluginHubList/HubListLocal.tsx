@@ -76,7 +76,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import {PrivateDomainGV} from "@/utils/envfile"
+import { getRemoteHttpSettingGV } from "@/utils/envfile"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
@@ -105,7 +105,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 私有域
     const privateDomain = useRef<string>("")
     const fetchPrivateDomain = useMemoizedFn((callback?: () => void) => {
-        getRemoteValue(PrivateDomainGV.HttpSetting)
+        getRemoteValue(getRemoteHttpSettingGV())
             .then((res) => {
                 if (res) {
                     try {

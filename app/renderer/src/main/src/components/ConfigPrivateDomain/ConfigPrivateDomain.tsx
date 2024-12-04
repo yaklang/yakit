@@ -17,7 +17,7 @@ import {CacheDropDownGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitAutoCompleteRefProps} from "../yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
-import {isEnpriTrace, PrivateDomainGV} from "@/utils/envfile"
+import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -175,13 +175,13 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                         .invoke("Codec", {Type: "base64", Text: v.pwd, Params: [], ScriptName: ""})
                         .then((res) => {
                             setRemoteValue(
-                                PrivateDomainGV.HttpSetting,
+                                getRemoteHttpSettingGV(),
                                 JSON.stringify({...values, pwd: res.Result})
                             )
                         })
                         .catch(() => {})
                 } else {
-                    setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify(values))
+                    setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                 }
 
                 if (!enterpriseLogin && isEnpriTrace()) {
@@ -219,7 +219,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         httpHistoryRef.current.onSetRemoteValues(url)
     })
     const getHttpSetting = useMemoizedFn(() => {
-        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
+        getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) return
             const value = JSON.parse(setting)
             setDefaultHttpUrl(value.BaseUrl)
@@ -294,7 +294,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                 >
                     <YakitAutoComplete
                         ref={httpHistoryRef}
-                        cacheHistoryDataKey={PrivateDomainGV.ConfigBaseUrl}
+                        cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
                         initValue={defaultHttpUrl}
                         placeholder='请输入你的私有域地址'
                         defaultOpen={!enterpriseLogin}

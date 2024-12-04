@@ -37,7 +37,7 @@ import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
-import {PrivateDomainGV} from "@/utils/envfile"
+import { getRemoteHttpSettingGV } from "@/utils/envfile"
 
 const {TabPane} = PluginTabs
 
@@ -101,7 +101,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         // 私有域
         const privateDomain = useRef<string>("")
         const fetchPrivateDomain = useMemoizedFn(() => {
-            getRemoteValue(PrivateDomainGV.HttpSetting)
+            getRemoteValue(getRemoteHttpSettingGV())
                 .then((res) => {
                     if (res) {
                         try {
@@ -139,7 +139,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 .catch(() => {})
         })
         useEffect(() => {
-            getRemoteValue(PrivateDomainGV.HttpSetting)
+            getRemoteValue(getRemoteHttpSettingGV())
                 .then((res) => {
                     if (res) {
                         try {

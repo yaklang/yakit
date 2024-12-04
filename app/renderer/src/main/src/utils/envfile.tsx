@@ -1,6 +1,7 @@
 import {info} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import {RemotePrivateDomainGV} from "@/enums/privateDomain"
 
 enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
@@ -109,10 +110,28 @@ export const globalUserLogin = (token: any) => {
     }
 }
 
-export const PrivateDomainGV = {
-    /** @name 私有域地址 */
-    HttpSetting: getReleaseEditionName() === "EnpriTrace" ? "httpSetting" : "httpSetting_" + getReleaseEditionName(),
-    /** @name 私有域地址下拉列表 */
-    ConfigBaseUrl:
-        getReleaseEditionName() === "EnpriTrace" ? "config_base_url" : "config_base_url_" + getReleaseEditionName()
+export const getRemoteHttpSettingGV = () => {
+    switch (GetReleaseEdition()) {
+        case PRODUCT_RELEASE_EDITION.Yakit:
+            return RemotePrivateDomainGV.ceHttpSetting
+        case PRODUCT_RELEASE_EDITION.EnpriTrace:
+            return RemotePrivateDomainGV.eeHttpSetting
+        case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+            return RemotePrivateDomainGV.seHttpSetting
+        case PRODUCT_RELEASE_EDITION.BreachTrace:
+            return RemotePrivateDomainGV.basHttpSetting
+    }
+}
+
+export const getRemoteConfigBaseUrlGV = () => {
+    switch (GetReleaseEdition()) {
+        case PRODUCT_RELEASE_EDITION.Yakit:
+            return RemotePrivateDomainGV.ceConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.EnpriTrace:
+            return RemotePrivateDomainGV.eeConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+            return RemotePrivateDomainGV.seConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.BreachTrace:
+            return RemotePrivateDomainGV.basConfigBaseUrl
+    }
 }

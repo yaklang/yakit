@@ -8,7 +8,7 @@ import {API} from "./services/swagger/resposeType"
 import {useEeSystemConfig, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {isCommunityEdition, isEnpriTrace, PrivateDomainGV} from "@/utils/envfile"
+import {getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
@@ -131,13 +131,13 @@ function NewApp() {
     }
 
     const testYak = () => {
-        getRemoteValue(PrivateDomainGV.HttpSetting).then((setting) => {
+        getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
             if (!setting) {
                 ipcRenderer
                     .invoke("GetOnlineProfile", {})
                     .then((data: OnlineProfileProps) => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: data.BaseUrl}) // 同步
-                        setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify({BaseUrl: data.BaseUrl}))
+                        setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: data.BaseUrl}))
                         refreshLogin()
                     })
                     .catch((e) => {
@@ -152,7 +152,7 @@ function NewApp() {
                     } as OnlineProfileProps)
                     .then(() => {
                         ipcRenderer.sendSync("sync-edit-baseUrl", {baseUrl: values.BaseUrl}) // 同步
-                        setRemoteValue(PrivateDomainGV.HttpSetting, JSON.stringify(values))
+                        setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
                         refreshLogin()
                     })
                     .catch((e: any) => failed("设置私有域失败:" + e))

@@ -1,9 +1,8 @@
 import {UserInfoProps} from "@/store"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
-import {getLocalValue, getRemoteValue, setRemoteValue} from "./kv"
-import {GetReleaseEdition, isCommunityEdition, globalUserLogout, isEnpriTraceAgent, isEnpriTrace} from "@/utils/envfile"
-import {RemoteGV} from "@/yakitGV"
+import {getLocalValue, getRemoteValue} from "./kv"
+import {globalUserLogout, isEnpriTraceAgent, isEnpriTrace, getRemoteHttpSettingGV} from "@/utils/envfile"
 import {NowProjectDescription} from "@/pages/globalVariable"
 import emiter from "./eventBus/eventBus"
 import {LocalGVS} from "@/enums/localGlobal"
@@ -29,7 +28,7 @@ export const loginOut = async (userInfo: UserInfoProps) => {
 
 export const loginOutLocal = (userInfo: UserInfoProps) => {
     if (!userInfo.isLogin) return
-    getRemoteValue("httpSetting").then(async (setting) => {
+    getRemoteValue(getRemoteHttpSettingGV()).then(async (setting) => {
         if (!setting) return
         const values = JSON.parse(setting)
         const OnlineBaseUrl: string = values.BaseUrl

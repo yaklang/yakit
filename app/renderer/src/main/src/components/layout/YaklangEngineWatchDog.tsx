@@ -7,7 +7,7 @@ import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {isEnpriTraceAgent, PrivateDomainGV} from "@/utils/envfile"
+import {getRemoteHttpSettingGV, isEnpriTraceAgent} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
 
 export interface YaklangEngineWatchDogCredential {
@@ -83,7 +83,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         remoteOperation(true, dynamicStatus, userInfo)
                         if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
                             setRemoteValue(
-                                PrivateDomainGV.HttpSetting,
+                                getRemoteHttpSettingGV(),
                                 JSON.stringify({BaseUrl: dynamicStatus.baseUrl})
                             )
                         }
