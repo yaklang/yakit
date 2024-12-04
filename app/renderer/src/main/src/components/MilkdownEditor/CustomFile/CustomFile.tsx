@@ -25,7 +25,6 @@ import numeral from "numeral"
 import classNames from "classnames"
 import {TooltipIcon} from "../Tooltip/Tooltip"
 import {useMemoizedFn} from "ahooks"
-import {callCopyToClipboard} from "@/utils/basic"
 import {SolidXcircleIcon} from "@/assets/icon/solid"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import React from "react"
@@ -35,6 +34,7 @@ import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/note
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
 import useUploadOSSHooks from "@/hook/useUploadOSS/useUploadOSS"
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
+import {setClipboardText} from "@/utils/clipboard"
 
 interface CustomFileItem {
     name: string
@@ -198,8 +198,10 @@ export const CustomFile = () => {
         e.stopPropagation()
         e.preventDefault()
         if (fileInfo?.url) {
-            callCopyToClipboard(fileInfo.url).catch(() => {
-                yakitNotify("error", "复制失败")
+            setClipboardText(fileInfo.url, {
+                failedCallback: () => {
+                    yakitNotify("error", "复制失败")
+                }
             })
         } else {
             yakitNotify("error", "复制失败")
