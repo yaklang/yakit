@@ -971,6 +971,14 @@ export declare namespace API {
         hash: string
         description: string
         status: number
+        /**
+         * 协作文档ID
+         */
+        notepadHash?: string
+        /**
+         * 协作文档标题
+         */
+        notepadTitle?: string
     }
     export interface LogsRequest {
         uuid: string
@@ -1302,7 +1310,7 @@ export declare namespace API {
         user_id: number
         head_img: string
         user_name: string
-        role: string
+        role?: string
     }
     export interface ActionSucceeded {
         /**

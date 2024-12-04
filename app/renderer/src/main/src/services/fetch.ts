@@ -76,7 +76,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 }
 
 // token过期，退出
-const tokenOverdue = (res) => {
+export const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
     // 异常过期 无法通过接口更新连接状态 故只作退出远程处理
     ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:false})
