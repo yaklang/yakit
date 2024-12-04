@@ -476,13 +476,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {!isEnpriTraceAgent() && (
+                    {/* {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onLogin={() => setLoginShow(true)}
                         />
-                    )}
+                    )} */}
                     {!showProjectManage && (
                         <UIOpSetting
                             engineMode={engineMode}
