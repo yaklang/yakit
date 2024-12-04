@@ -317,7 +317,7 @@ function NewApp() {
         }
     }, [])
 
-    if (!agreed) {
+    if (false) {
         return (
             <>
                 <div className={styles["yakit-mask-drag-wrapper"]}></div>
