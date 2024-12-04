@@ -104,13 +104,13 @@ function NewApp() {
     }, [])
 
     /** 是否展示用户协议 */
-    useEffect(() => {
-        getLocalValue(LocalGVS.UserProtocolAgreed)
-            .then((value: any) => {
-                setAgreed(!!value)
-            })
-            .catch(() => {})
-    }, [])
+    // useEffect(() => {
+    //     getLocalValue(LocalGVS.UserProtocolAgreed)
+    //         .then((value: any) => {
+    //             setAgreed(!!value)
+    //         })
+    //         .catch(() => {})
+    // }, [])
 
     // 全局监听登录状态
     const setStoreUserInfo = useStore((state) => state.setStoreUserInfo)

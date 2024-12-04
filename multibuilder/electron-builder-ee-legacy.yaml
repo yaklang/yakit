@@ -1,7 +1,7 @@
 appId: "io.yaklang.enpritrace"
 extraMetadata:
     name: enpritrace
-productName: "EnpriTrace"
+productName: "CSPG"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
@@ -74,7 +74,7 @@ linux:
           arch:
               - x64
               - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakiteelogo.png"
 
 win:
     # requestedExecutionLevel: requireAdministrator

@@ -405,7 +405,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         isRunRef.current = true
         let settledArr: (() => Promise<string>)[] = []
         if (isIRify()) {
-            settledArr = [onRuleUpdate, getCurrentYak]
+            settledArr = [
+                onRuleUpdate, 
+                // getCurrentYak
+            ]
         } else {
             settledArr = [
                 updateSystemProxy,
@@ -413,7 +416,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 updatePcap,
                 updateChromePath,
                 updateMITMCert,
-                getCurrentYak
+                // getCurrentYak
             ]
         }
         if (serverPushStatus) {
