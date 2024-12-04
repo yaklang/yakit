@@ -127,7 +127,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                             initFormValue={initFormValue}
                             requiredParams={requiredParams}
                             groupParams={groupParams}
-                        ></MitmHasParamsForm>
+                        />
                     </div>
                 ),
                 onOkText: "确定",
@@ -508,7 +508,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             wrapperCol={{span: 15}}
             initialValues={initFormValue}
         >
-            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} jsonSchemaListRef={jsonSchemaListRef}/>
+            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} jsonSchemaListRef={jsonSchemaListRef} jsonSchemaInitial={initFormValue}/>
             <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"mitm"} />
         </Form>
     )

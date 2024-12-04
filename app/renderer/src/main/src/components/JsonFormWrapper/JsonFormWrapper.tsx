@@ -63,6 +63,10 @@ export interface JsonFormSchemaListWrapper {
     jsonSchemaListRef?: React.MutableRefObject<{
         [key: string]: any
     }>
+    /** JsonSchema 默认值(PS:此值为对象 key值用于寻找对应默认值) */
+    jsonSchemaInitial?: {
+        [key: string]: any
+    }
 }
 
 export interface JsonFormWrapperProps {
@@ -117,7 +121,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         }
     }
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         // 当外部 value 变化时更新内部状态
         setFormData(value)
     }, [value])
@@ -394,7 +398,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
             <JsonForm
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
-                className={classNames(styles["json-schema-box"],"json-schema-form")}
+                className={classNames(styles["json-schema-box"], "json-schema-form")}
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器
