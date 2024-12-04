@@ -1,7 +1,10 @@
 import {CollabService} from "@milkdown/plugin-collab"
 import {Doc} from "yjs"
 import {WebsocketProvider} from "./WebsocketProvider/WebsocketProvider"
-import {WSConnectedStatusType} from "./WebsocketProvider/WebsocketProviderType"
+import {ObservableV2} from "lib0/observable"
+import {CloseEvent} from "ws"
+import isEqual from "lodash/isEqual"
+import {CollabStatus} from "./MilkdownEditorType"
 
 const wsUrl = "ws://192.168.3.100:8088/api/ws"
 // const wsUrl = "ws://localhost:1880/ws"
@@ -12,17 +15,26 @@ interface CollabUserInfo {
     heardImg: string
 }
 
-export class CollabManager {
+interface CollabManagerEvents {
+    "offline-after": (event: CloseEvent) => void
+    "link-status-onchange": (s: CollabStatus) => void
+}
+export class CollabManager extends ObservableV2<CollabManagerEvents> {
     private doc!: Doc
     private wsProvider!: WebsocketProvider
-    public status: WSConnectedStatusType
+
+    private collabStatus: CollabStatus
 
     constructor(
         private collabService: CollabService,
         private user: CollabUserInfo,
         private token: string
     ) {
-        this.status = "disconnected"
+        super()
+        this.collabStatus = {
+            status: "disconnected",
+            isSynced: false
+        }
     }
 
     flush(template: string) {
@@ -43,18 +55,28 @@ export class CollabManager {
             heardImg: this.user.heardImg
         })
         this.wsProvider.on("status", (payload) => {
-            this.status = payload.status
+            this.setCollabStatus({...this.collabStatus, status: payload.status})
         })
-        this.wsProvider.on("connection-close", (payload) => {})
-        this.wsProvider.on("connection-error", (payload) => {
-            /**TODO - 额外的ws断开操作 */
+        this.wsProvider.on("connection-close", (payload, provider) => {
+            this.emit("offline-after", [payload])
         })
+        this.wsProvider.on("connection-error", (payload) => {})
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
         this.wsProvider.once("synced", async (isSynced: boolean) => {
+            this.setCollabStatus({...this.collabStatus, isSynced})
             if (isSynced) {
                 this.collabService.applyTemplate(template).connect()
             }
         })
+    }
+
+    // 用于更新collabStatus并触发事件
+    private setCollabStatus(newStatus: CollabStatus) {
+        if (isEqual(this.collabStatus.status, newStatus)) {
+            this.collabStatus = {...newStatus}
+            // 触发'状态变化'事件
+            this.emit("link-status-onchange", [newStatus])
+        }
     }
 
     send(hash: string, content: string) {
