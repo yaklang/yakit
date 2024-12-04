@@ -109,7 +109,7 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${StrStr} $0 $EXEFILE "EnpriTrace"
+        ${StrStr} $0 $EXEFILE "CSPG"
         ${If} $0 != "" ; ee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
@@ -123,6 +123,9 @@ FunctionEnd
                 ${If} $0 != "" ; sce
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
                     StrCpy $EXE_NAME "SastScan"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
+                    StrCpy $EXE_NAME "CSGP"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -154,6 +157,9 @@ FunctionEnd
                 ${If} ${FileExists} `$INSTDIR\SastScan.exe` ; sce
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
                     StrCpy $EXE_NAME "SastScan"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
+                    StrCpy $EXE_NAME "CSGP"
                 ${EndIf}
             ${EndIf}
         ${EndIf}

@@ -168,7 +168,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                     <div className={styles["rmeote-divider"]}></div>
                     <div className={styles["remote-info"]}>
                         <Form colon={false} labelAlign='right' labelCol={{span: 8}}>
-                            <Form.Item label='Yak gRPC 主机地址:' required={true}>
+                            <Form.Item label='gRPC 主机地址:' required={true}>
                                 <YakitInput
                                     className={classNames(styles["input-style"], {
                                         [styles["error-border"]]: isCheck && !remote.host
@@ -177,7 +177,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                     onChange={(e) => setRemote({...remote, host: e.target.value})}
                                 />
                             </Form.Item>
-                            <Form.Item label='Yak gRPC 端口:' required={true}>
+                            <Form.Item label='gRPC 端口:' required={true}>
                                 <YakitInput
                                     className={classNames(styles["input-style"], {
                                         [styles["error-border"]]: isCheck && !remote.port
