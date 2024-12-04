@@ -2,7 +2,9 @@ import * as encoding from "lib0/encoding"
 import * as decoding from "lib0/decoding"
 import * as awarenessProtocol from "y-protocols/awareness"
 import {ObservableV2} from "lib0/observable"
-import {Doc} from "yjs"
+import {Doc, Transaction} from "yjs"
+import {WebsocketProvider} from "./WebsocketProvider"
+import {CloseEvent, Event} from "ws"
 
 type WebSocketType = typeof WebSocket
 // 同步文档操作函数接口
@@ -46,7 +48,7 @@ export interface WebsocketProviderOptions {
 }
 
 export type WebsocketProviderBcSubscriber = (data: ArrayBuffer, origin: any) => void
-export type WebsocketProviderUpdateHandler = (update: Uint8Array, origin: any, ydoc: Y.Doc, tr: Y.Transaction) => void
+export type WebsocketProviderUpdateHandler = (update: Uint8Array, origin: any, ydoc: Doc, tr: Transaction) => void
 export type WebsocketProviderAwarenessUpdateHandler = (
     changed: {added: number[]; updated: number[]; removed: number[]},
     origin: any
@@ -76,7 +78,7 @@ export type ObservableEvents = {
     /**ws链接状态 */
     status: (s: WebsocketProviderEmitOfStatus) => void // error事件，接收一个Error对象
     /***ws 链接报错 */
-    "connection-error": (event: any, provider: WebSocketType) => void
+    "connection-error": (event: Event, provider: WebSocketType) => void
     /***ws 关闭链接 */
-    "connection-close": (event: any, provider: WebSocketType) => void
+    "connection-close": (event: CloseEvent, provider: WebSocketType) => void
 }

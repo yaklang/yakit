@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
-import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {CollabStatus, EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import styles from "./ModifyNotepad.module.scss"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
@@ -27,7 +27,7 @@ import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/stor
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {AuthorIcon, AuthorImg, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
-import {replaceAll, getMarkdown} from "@milkdown/kit/utils"
+import {getMarkdown} from "@milkdown/kit/utils"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
@@ -38,6 +38,7 @@ import {API} from "@/services/swagger/resposeType"
 import {apiDeleteNotepadDetail, apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
 import moment from "moment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -93,7 +94,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         return cloneDeep(defaultModifyNotepadPageInfo)
     })
 
-    const [loading, setLoading] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(true)
     const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [expand, setExpand] = useState<boolean>(true)
@@ -116,6 +117,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         hash: ""
     })
 
+    const [documentLinkStatus, setDocumentLinkStatus] = useState<CollabStatus>({
+        status: "disconnected",
+        isSynced: false
+    })
+
     const notepadRef = useRef<HTMLDivElement>(null)
     const treeKeysRef = useRef<string[]>([])
 
@@ -126,17 +132,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     useEffect(() => {
         if (pageInfo.notepadHash) {
-            setLoading(true)
             // 查询该笔记本详情
-            apiGetNotepadDetail(pageInfo.notepadHash)
-                .then((res) => {
-                    setNotepadDetail(res)
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoading(false)
-                    }, 200)
-                )
+            apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
+                setNotepadDetail(res)
+            })
         } else {
             // 新建笔记本并保存
             const params: API.PostNotepadRequest = {
@@ -169,7 +168,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if (!editor) return
         if (notepadDetail.content) {
             // 更新笔记本的值
-            editor.action(replaceAll(notepadDetail.content))
+            /**NOTE - 不通过查询笔记本详情更新编辑器的值，而是通过ws链接成功后ws返回最新的内容 */
+            // editor.action(replaceAll(notepadDetail.content))
         }
     }, [notepadDetail.content, editor])
     const onRemoveEmptyNotepad = useMemoizedFn(() => {
@@ -248,6 +248,29 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const onExpandIcon = useMemoizedFn(() => {
         setExpand(!expand)
     })
+    const onSetDocumentLinkStatus = useMemoizedFn((val: CollabStatus) => {
+        setDocumentLinkStatus(val)
+        if (val.status === "connected") {
+            setLoading(false)
+        }
+    })
+
+    const renderOnlineStatus = useCreation(() => {
+        const {status, isSynced} = documentLinkStatus
+        switch (status) {
+            case "connected":
+                return (
+                    <>
+                        <YakitTag color='green'>在线</YakitTag>
+                        <span>{isSynced ? "已经保存到云端" : "保存中..."}</span>
+                    </>
+                )
+            case "connecting":
+                return <YakitTag color='blue'>连接中...</YakitTag>
+            default:
+                return <YakitTag color='red'>离线</YakitTag>
+        }
+    }, [documentLinkStatus])
 
     const expandedKeys = useCreation(() => {
         return treeKeysRef.current.filter((ele) => !excludeExpandedKeys.includes(ele))
@@ -265,6 +288,12 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if ((notepadWidth || clientWidthRef.current) < notepadMixWidth) return 300
         return (notepadWidth - 820 - 32) / 2
     }, [notepadWidth, clientWidthRef.current])
+    const routeInfo = useCreation(() => {
+        return {
+            pageId,
+            route: YakitRoute.Modify_Notepad
+        }
+    }, [pageId, YakitRoute.Modify_Notepad])
 
     return (
         <YakitSpin spinning={loading}>
@@ -398,6 +427,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     创建时间:
                                     {moment(notepadDetail?.updated_at).format("YYYY-MM-DD HH:mm")}
                                 </span>
+                                <Divider type='vertical' style={{margin: "0 8px"}} />
+                                {renderOnlineStatus}
                                 <YakitButton
                                     onClick={() => {
                                         if (editor) {
@@ -411,7 +442,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                             </div>
                         </div>
                         <div className={styles["notepad-editor"]}>
-                            <MilkdownEditor setEditor={setEditor} customPlugin={cataloguePlugin(getCatalogue)} />
+                            <MilkdownEditor
+                                setEditor={setEditor}
+                                customPlugin={cataloguePlugin(getCatalogue)}
+                                enableCollab={true}
+                                onChangeWSLinkStatus={onSetDocumentLinkStatus}
+                                routeInfo={routeInfo}
+                            />
                         </div>
                     </div>
                 </div>

@@ -381,11 +381,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
 
     /** ---------- 新逻辑 start ---------- */
-    /**切换一级菜单选中key */
+   
     useEffect(() => {
+         /**切换一级菜单选中key */
         emiter.on("switchMenuItem", onSwitchMenuItem)
+         /**关闭一级菜单 */
+        emiter.on("onCloseFirstMenu", onCloseFirstMenu)
         return () => {
             emiter.off("switchMenuItem", onSwitchMenuItem)
+            emiter.off("onCloseFirstMenu", onCloseFirstMenu)
         }
     }, [])
     const onSwitchMenuItem = useMemoizedFn((data) => {
@@ -397,6 +401,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         } catch (error) {
             yakitNotify("error", `切换一级菜单选中key失败:${error}`)
         }
+    })
+    const onCloseFirstMenu=useMemoizedFn((res)=>{
+        try {
+            const value:OnlyPageCache=JSON.parse(res)
+            const data:OnlyPageCache={
+                menuName: "",
+                route:value.route
+            }
+            removeMenuPage(data)
+        } catch (error) {
+            
+        }
+        
     })
     /**
      * @name 渲染端通信-从顶部菜单里打开一个指定页面
@@ -1467,7 +1484,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /**
      * @name 移除一级页面
-     * @param assignRoute 删除页面后指定某个页面展示(如果指定页面未打开则执行正常流程)
+     * @param assignRoute //ANCHOR[id=remove-menuPage] - 删除页面后指定某个页面展示(如果指定页面未打开则执行正常流程)
      */
     const removeMenuPage = useMemoizedFn((data: OnlyPageCache, assignPage?: OnlyPageCache) => {
         // 获取需要关闭页面的索引
@@ -2848,6 +2865,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         )
         useEffect(() => {
             getIsCloseGroupTip()
+            emiter.on("onCloseCurrentPage", onCloseCurrentPage)
+            return () => {
+                emiter.off("onCloseCurrentPage", onCloseCurrentPage)
+            }
         }, [])
 
         const tabMenuSubRef = useRef<any>()
@@ -3437,6 +3458,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             } else {
                 setSelectSubMenu({...handleItem})
             }
+        })
+        const onCloseCurrentPage = useMemoizedFn((id: string) => {
+            const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, id)
+            if (!current) return
+            const removeItem: MultipleNodeInfo = {
+                id: current.pageId,
+                verbose: current.pageName,
+                sortFieId: current.sortFieId,
+                groupId: current.pageGroupId
+            }
+            onRemoveSubPage(removeItem)
         })
         /** 关闭当前标签页 */
         const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {

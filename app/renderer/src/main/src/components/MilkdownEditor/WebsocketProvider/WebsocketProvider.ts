@@ -92,7 +92,7 @@ const readMessage = (provider: WebsocketProvider, buf: Uint8Array, emitSynced: b
  */
 const setupWS = (provider) => {
     if (provider.shouldConnect && provider.ws === null) {
-        const websocket = new provider._WS(provider.url, provider.protocols)
+        const websocket: WebSocket = new provider._WS(provider.url, provider.protocols)
         websocket.binaryType = "arraybuffer"
         provider.ws = websocket
         provider.wsconnecting = true
@@ -139,13 +139,21 @@ const setupWS = (provider) => {
             } else {
                 provider.wsUnsuccessfulReconnects++
             }
-            // Start with no reconnect timeout and increase timeout by
-            // using exponential backoff starting with 100ms
-            setTimeout(
-                setupWS,
-                math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
-                provider
-            )
+            switch (event.code) {
+                case 401:
+                case 209:
+                case 500:
+                    break
+                default:
+                    // Start with no reconnect timeout and increase timeout by
+                    // using exponential backoff starting with 100ms
+                    setTimeout(
+                        setupWS,
+                        math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
+                        provider
+                    )
+                    break
+            }
         }
         websocket.onopen = () => {
             provider.wsLastMessageReceived = time.getUnixTime()
@@ -256,35 +264,36 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      * @type {WebSocket?}
      */
     public ws: WebSocket | null
+    public doc: Y.Doc
+    public wsUnsuccessfulReconnects: number
+    public wsconnected: boolean
+    public wsconnecting: boolean
+    /**
+     * @type {boolean}
+     */
+    public _synced: boolean
+    public wsLastMessageReceived: number
 
-    private serverUrl: string
-    private bcChannel: string
-    private maxBackoffTime: number
+    public serverUrl: string
+    public bcChannel: string
+    public maxBackoffTime: number
     /**
      * The specified url parameters. This can be safely updated. The changed parameters will be used
      * when a new connection is established.
      * @type {Object<string,string>}
      */
-    private params: {[key: string]: string}
-    private protocols: string[]
-    private doc: Y.Doc
-    private _WS: typeof WebSocket
-    private wsconnected: boolean
-    private wsconnecting: boolean
-    private bcconnected: boolean
-    private disableBc: boolean
-    private wsUnsuccessfulReconnects: number
-    /**
-     * @type {boolean}
-     */
-    private _synced: boolean
+    public params: {[key: string]: string}
+    public protocols: string[]
+    public _WS: typeof WebSocket
 
-    private wsLastMessageReceived: number
+    public bcconnected: boolean
+    public disableBc: boolean
+
     /**
      * Whether to connect to other peers or not
      * @type {boolean}
      */
-    private shouldConnect: boolean
+    public shouldConnect: boolean
     /**
      * @type {number}
      */

@@ -59,6 +59,9 @@ import emiter from "@/utils/eventBus/eventBus"
 
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
+import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
+import {CloseEvent} from "ws"
+import {tokenOverdue} from "@/services/fetch"
 
 const markdown = `
 
@@ -192,12 +195,13 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     return difference > 1000 * 30
 }
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {setEditor, customPlugin = []} = props
+    const {routeInfo, setEditor, customPlugin, enableCollab, onChangeWSLinkStatus} = props
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
     const [deletedFiles, setDeletedFiles] = useState<DeleteOSSFileItem[]>([])
     const userInfo = useStore((s) => s.userInfo)
 
+    const collabManagerRef = useRef<CollabManager>()
     const blockPlugins: MilkdownPlugin[] = useCreation(() => {
         return [
             block,
@@ -430,7 +434,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             return ""
         }
     })
-    const collabManagerRef = useRef<CollabManager>()
+
     const {get, loading} = useEditor((root) => {
         return (
             Editor.make()
@@ -442,7 +446,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             component: TooltipView
                         })
                     })
-                    onCollab(ctx)
+                    if (enableCollab) {
+                        onCollab(ctx)
+                    }
                 })
                 .use(commonmark)
                 .use(gfm)
@@ -483,7 +489,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 .use(hrPlugin)
                 // trackDeletePlugin
                 .use(trackDeletePlugin())
-                .use(customPlugin)
+                .use(customPlugin || [])
         )
     }, [])
 
@@ -494,9 +500,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             setEditor(editor)
             // DeletedFiles
             editor.action(onSetDeletedFiles)
-            // editor.action(onCollab)
         }
-
         return () => {
             onDeleteAllFiles()
         }
@@ -523,8 +527,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             }
             const collabService = ctx.get(collabServiceCtx)
             collabManagerRef.current = new CollabManager(collabService, user, userInfo.token)
-
             collabManagerRef.current.flush("")
+            collabManagerRef.current.on("offline-after", onLinkError)
+            if (onChangeWSLinkStatus) {
+                collabManagerRef.current.on("link-status-onchange", onChangeWSLinkStatus)
+            }
         },
         {wait: 500, leading: true}
     ).run
@@ -534,6 +541,59 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     useRafInterval(() => {
         onDeleteFiles()
     }, interval)
+
+    const onLinkError = useMemoizedFn((event: CloseEvent) => {
+        if (!routeInfo) {
+            console.error("当enableCollab为true,routeInfo必传")
+            return
+        }
+        switch (event.code) {
+            // 401是指没有传token或者token过期
+            case 401:
+                // 退出登录
+                tokenOverdue({
+                    code: 401,
+                    message: event.reason,
+                    userInfo
+                })
+                // 关闭笔记本编辑一级菜单
+                setTimeout(() => {
+                    emiter.emit(
+                        "onCloseFirstMenu",
+                        JSON.stringify({
+                            route: routeInfo.route
+                        })
+                    )
+                }, 1000)
+                break
+
+            // 209 这种可以能处理出错，例如没传messageType
+            case 209:
+            // 就可能是后端从http升级websocket失败啊，这种服务相关的
+            case 500:
+                // 弹出框，显示网络异常，关闭/保存按钮
+                const m = showYakitModal({
+                    title: "网络异常",
+                    content: (
+                        <span>
+                            错误原因:{event.code}:{event.reason}
+                        </span>
+                    ),
+                    closable: false,
+                    onOkText: "关闭页面",
+                    cancelButtonProps: {style: {display: "none"}},
+                    onOk: () => {
+                        emiter.emit("onCloseCurrentPage", routeInfo.pageId)
+                        m.destroy()
+                    },
+                    bodyStyle: {padding: 24}
+                })
+                yakitNotify("error", event.reason)
+                break
+            default:
+                break
+        }
+    })
 
     /**设置当前文档中被删除的文件名称 */
     const onSetDeletedFiles = useDebounceFn(
