@@ -16,9 +16,8 @@ import {VirtualTable} from "./VirtualTable"
 import {VirtualColumns} from "./VirtualTable"
 import {DynamicStatusProps, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {getReleaseEditionName} from "@/utils/envfile"
+import {getReleaseEditionName, getRemoteHttpSettingGV} from "@/utils/envfile"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
@@ -246,7 +245,7 @@ export const ControlOther: React.FC<ControlOtherProps> = (props) => {
                     // 如有受控端服务则杀掉
                     ipcRenderer.invoke("kill-dynamic-control")
                     setLoading(true)
-                    getRemoteValue(RemoteGV.HttpSetting).then((setting) => {
+                    getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
                         if (!setting) return
                         const value = JSON.parse(setting)
                         let url = value.BaseUrl

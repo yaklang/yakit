@@ -1497,10 +1497,10 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             <div className={styles["version-list-wrap"]}>
                 {renderVersionList.length ? (
                     <>
-                        {renderVersionList.map((v) => (
+                        {renderVersionList.map((v, index) => (
                             <div
                                 className={styles["version-list-item"]}
-                                key={v}
+                                key={index}
                                 onClick={() => versionListItemClick(v)}
                             >
                                 {v}

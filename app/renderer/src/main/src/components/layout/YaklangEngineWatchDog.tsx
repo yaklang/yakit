@@ -5,10 +5,9 @@ import {EngineWatchDogCallbackType, YaklangEngineMode} from "@/yakitGVDefine"
 import {EngineModeVerbose} from "@/components/basics/YakitLoading"
 import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {getRemoteHttpSettingGV, isEnpriTraceAgent} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
 
 export interface YaklangEngineWatchDogCredential {
@@ -83,7 +82,10 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
                         remoteOperation(true, dynamicStatus, userInfo)
                         if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
-                            setRemoteValue(RemoteGV.HttpSetting, JSON.stringify({BaseUrl: dynamicStatus.baseUrl}))
+                            setRemoteValue(
+                                getRemoteHttpSettingGV(),
+                                JSON.stringify({BaseUrl: dynamicStatus.baseUrl})
+                            )
                         }
                     }
                 })

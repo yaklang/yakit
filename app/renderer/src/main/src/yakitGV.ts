@@ -21,8 +21,6 @@ export enum LocalGV {
 
 /** 引擎数据库缓存数据-键值变量 */
 export enum RemoteGV {
-    /** @name 私有域地址 */
-    HttpSetting = "httpSetting",
     /** @name 全局反连地址 */
     GlobalBridgeAddr = "yak-bridge-addr",
     /** @name 全局反连密钥 */
@@ -123,7 +121,7 @@ export enum RemoteGV {
     /**@name 基础爬虫左侧tabs */
     SinglePluginExecTabs = "single-plugin-exec-tabs",
     /**@name 专项漏洞左侧tabs */
-    YakPocTabs = "yakpoc-tabs",
+    YakPocTabs = "yakpoc-tabs"
 }
 
 /** 项目逻辑全局变量 */
@@ -142,8 +140,7 @@ export enum CacheDropDownGV {
     MITMDefaultHostHistoryList = "mitm_default_host_history",
     /** @name CVETable 设置代理 */
     CVEProxyList = "cev_proxy_list",
-    /** @name 私有域地址 */
-    ConfigBaseUrl = "config_base_url",
+    
     /** @name 配置插件源 -》设置代理 */
     ConfigProxy = "config_proxy",
     /** @name MITM 保存用户数据地址 */

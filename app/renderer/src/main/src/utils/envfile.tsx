@@ -1,6 +1,7 @@
 import {info} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
+import {RemotePrivateDomainGV} from "@/enums/privateDomain"
 
 enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
@@ -106,5 +107,31 @@ export const globalUserLogin = (token: any) => {
         return setRemoteValue(RemoteGV.TokenOnline, token)
     } else {
         return setRemoteValue(RemoteGV.TokenOnlineEnterprise, token)
+    }
+}
+
+export const getRemoteHttpSettingGV = () => {
+    switch (GetReleaseEdition()) {
+        case PRODUCT_RELEASE_EDITION.Yakit:
+            return RemotePrivateDomainGV.ceHttpSetting
+        case PRODUCT_RELEASE_EDITION.EnpriTrace:
+            return RemotePrivateDomainGV.eeHttpSetting
+        case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+            return RemotePrivateDomainGV.seHttpSetting
+        case PRODUCT_RELEASE_EDITION.BreachTrace:
+            return RemotePrivateDomainGV.basHttpSetting
+    }
+}
+
+export const getRemoteConfigBaseUrlGV = () => {
+    switch (GetReleaseEdition()) {
+        case PRODUCT_RELEASE_EDITION.Yakit:
+            return RemotePrivateDomainGV.ceConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.EnpriTrace:
+            return RemotePrivateDomainGV.eeConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+            return RemotePrivateDomainGV.seConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.BreachTrace:
+            return RemotePrivateDomainGV.basConfigBaseUrl
     }
 }
