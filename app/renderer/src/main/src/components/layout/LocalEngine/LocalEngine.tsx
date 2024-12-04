@@ -4,7 +4,7 @@ import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {getRandomLocalEnginePort} from "../WelcomeConsoleUtil"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
 import {failed, info, yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakitAndYaklang} from "../update/UpdateYakitAndYaklang"
@@ -106,7 +106,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 // 开发环境不做版本检测和 hash 检测
                 handleFetchYakitAndYaklangLocalVersion(
                     isDevRef.current ? undefined : handleFetchYakitAndYaklangLatestVersion,
-                    !isDevRef.current
+                    false
                 )
             }, 500)
         })
@@ -265,8 +265,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         }, [])
 
         const handleFetchYakitAndYaklangLatestVersion = useMemoizedFn(() => {
-            if (isEnpriTraceAgent()) {
-                // SE版本不检查更新
+            if (isEnpriTraceAgent() || isEnpriTrace()) {
+                // SE、EE版本不检查更新
                 preventUpdateHint.current = true
                 return
             }
