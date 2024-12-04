@@ -886,6 +886,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [currentVersion, setCurrentVersion] = useState<string>("")
 
     const showCheckVersion = useMemo(() => {
+        return false
         if (isDev.current) return false
         if (!builtInVersion) return false
         if (!currentVersion) return false
@@ -1005,7 +1006,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- EE版-license Start ---------- */
     // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(false)
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
         ipcRenderer.on("again-judge-license-login", () => {
