@@ -80,7 +80,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
                             <Button type={"link"} icon={<ReloadOutlined/>} onClick={update}/>
                         </Space>
                         <div>
-                            本配置将会对绝大部分 Yak 插件自动生效，如果在扫描模块中配置代理，一般来说，配置的代理将会自动覆盖这个配置。
+                            本配置将会对绝大部分插件自动生效，如果在扫描模块中配置代理，一般来说，配置的代理将会自动覆盖这个配置。
                         </div>
                     </Space>
                 </>}

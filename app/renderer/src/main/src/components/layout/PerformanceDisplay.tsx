@@ -197,7 +197,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 <div ref={listRef} className={styles["ui-engine-list-wrapper"]}>
                     <div className={styles["ui-engine-list-body"]}>
                         <div className={styles["engine-list-header"]}>
-                            本地 Yak 进程管理
+                            本地 进程管理
                             <YakitPopconfirm
                                 title={"重置引擎版本会恢复最初引擎出厂版本，同时强制重启"}
                                 onConfirm={async () => {
