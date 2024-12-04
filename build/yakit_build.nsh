@@ -128,6 +128,9 @@ FunctionEnd
                     ${If} $0 != ""
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "Memfit_InstallPath"
                         StrCpy $EXE_NAME "Memfit"
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
+                        StrCpy $EXE_NAME "CSGP"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -164,6 +167,9 @@ FunctionEnd
                     ${If} ${FileExists} `$INSTDIR\Memfit.exe` ; memfit
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "Memfit_InstallPath"
                         StrCpy $EXE_NAME "Memfit"
+                    ${Else}   
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CSGP_InstallPath"
+                        StrCpy $EXE_NAME "CSGP"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}

@@ -217,7 +217,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                                 }}
                                 icon={<RefreshIcon />}
                             >
-                                更新 yak 引擎本地 IP
+                                更新引擎本地 IP
                             </YakitButton>
                         </div>
                     }
