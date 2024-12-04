@@ -413,13 +413,16 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             updatePcap(),
             updateChromePath(),
             updateMITMCert(),
-            getCurrentYak()
+            // getCurrentYak()
         ]
         if (serverPushStatus) {
             settledArr.push(updatePluginTotal())
         }
         if (isIRify()) {
-            settledArr = [onRuleUpdate(), getCurrentYak()]
+            settledArr = [
+                onRuleUpdate(), 
+                // getCurrentYak()
+            ]
         }
         Promise.allSettled(settledArr)
             .then((values) => {
