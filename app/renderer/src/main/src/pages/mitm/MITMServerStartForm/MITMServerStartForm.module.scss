@@ -237,6 +237,20 @@
     }
 }
 
+.import-text {
+    color: #B4BBCA;
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 16px;
+    .fileInput {
+        display: none;
+    }
+}
+.import-editor {
+    height: 700px;
+    margin: -17px;
+}
+
 .mitm-certificate-download-modal {
     .certificate-download-modal-footer {
         font-weight: 400;
