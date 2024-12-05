@@ -5583,8 +5583,10 @@ message SyntaxFlowRuleFilter {
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
   bool includeLibraryRule = 8; // default false
   // for infinite list
-  int64 FromId = 9;
-  int64  UntilId = 10;
+  int64 FromId = 9; // 废弃
+  int64  UntilId = 10;  // 废弃
+  int64 AfterId = 11;
+  int64 BeforeId = 12;
 }
 
 message SSAProgram{
