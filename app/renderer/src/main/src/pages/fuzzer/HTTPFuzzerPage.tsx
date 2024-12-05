@@ -513,7 +513,8 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
         title: "Fuzzer Tag 调试工具",
         width: "70%",
         footer: null,
-        subTitle: "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
+        subTitle:
+            "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
         content: (
             <StringFuzzer
                 insertCallback={(template: string) => {
@@ -842,7 +843,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setFailedFuzzer([])
         setSuccessCount(0)
         setFailedCount(0)
-        setRuntimeId("")
+        if (!retryRef.current) {
+            runtimeIdRef.current = ""
+        }
     })
 
     const retryRef = useRef<boolean>(false)
@@ -966,6 +969,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(RemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
+        
         if (retryRef.current) {
             retryRef.current = false
             const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
@@ -1042,7 +1046,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
-    const [runtimeId, setRuntimeId] = useState<string>("")
+    const runtimeIdRef = useRef<string>("")
 
     useEffect(() => {
         const token = tokenRef.current
@@ -1082,7 +1086,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
             taskIDRef.current = data.TaskId
-            setRuntimeId(data.RuntimeID)
+
+            if (runtimeIdRef.current) {
+                if (!runtimeIdRef.current.includes(data.RuntimeID)) {
+                    runtimeIdRef.current = runtimeIdRef.current + "," + data.RuntimeID
+                }
+            } else {
+                runtimeIdRef.current = data.RuntimeID
+            }
 
             if (count === 0) {
                 // 重置extractedMap
@@ -2049,7 +2060,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 <ResponseAllDataCard
-                    runtimeId={runtimeId}
+                    runtimeId={runtimeIdRef.current}
                     showAllDataRes={showAllDataRes}
                     setShowAllDataRes={() => setShowAllDataRes(false)}
                 />
