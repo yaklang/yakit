@@ -1602,7 +1602,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         JSON.stringify({
                                             route: YakitRoute.YakRunner_Code_Scan,
                                             params: {
-                                                projectName: record.Name
+                                                projectName: [record.Name]
                                             }
                                         })
                                     )

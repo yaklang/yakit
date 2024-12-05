@@ -48,6 +48,38 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamSyntaxFlowScanMap, token)
     })
 
+    // 规则执行-任务列表
+    const asyncQuerySyntaxFlowScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySyntaxFlowScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QuerySyntaxFlowScanTask", async (e, params) => {
+        return await asyncQuerySyntaxFlowScanTask(params)
+    })
+
+    // 规则执行-任务列表/删除
+    const asyncDeleteSyntaxFlowScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSyntaxFlowScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteSyntaxFlowScanTask", async (e, params) => {
+        return await asyncDeleteSyntaxFlowScanTask(params)
+    })
+
     const asyncQuerySyntaxFlowResult = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QuerySyntaxFlowResult(params, (err, data) => {

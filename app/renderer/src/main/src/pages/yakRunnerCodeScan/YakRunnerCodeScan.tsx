@@ -89,7 +89,8 @@ import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {number} from "echarts"
-import { CodeScanTaskListDrawer } from "./CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import {CodeScanTaskListDrawer} from "./CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import emiter from "@/utils/eventBus/eventBus"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {
@@ -254,7 +255,6 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
 
 export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const {pageId} = props
-
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -264,6 +264,8 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.YakRunner_Code_Scan, pageId)
         if (currentItem && currentItem.pageParamsInfo.codeScanPageInfo) {
+            console.log("initPageInfo---", currentItem.pageParamsInfo.codeScanPageInfo)
+
             return currentItem.pageParamsInfo.codeScanPageInfo
         }
         return {...defaultCodeScanPageInfo}
@@ -689,15 +691,13 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         isAuditExecuting={isAuditExecuting}
                         setAuditsExecuting={setAuditsExecuting}
                         pageInfo={pageInfo}
+                        pageId={pageId}
                     />
                 </div>
             </div>
             <React.Suspense fallback={<>loading...</>}>
                 {visibleScanList && (
-                    <CodeScanTaskListDrawer
-                        visible={visibleScanList}
-                        setVisible={setVisibleScanList}
-                    />
+                    <CodeScanTaskListDrawer visible={visibleScanList} setVisible={setVisibleScanList} />
                 )}
             </React.Suspense>
         </>
@@ -716,8 +716,18 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             getAduitList,
             executeType,
             setExecuteType,
-            pageInfo
+            pageInfo,
+            pageId
         } = props
+
+        const {queryPagesDataById,updatePagesDataCacheById} = usePageInfo(
+            (s) => ({
+                queryPagesDataById: s.queryPagesDataById,
+                updatePagesDataCacheById: s.updatePagesDataCacheById
+            }),
+            shallow
+        )
+
         const [form] = Form.useForm()
 
         const [plugin, setPlugin] = useState<YakScript>()
@@ -737,12 +747,71 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [])
 
         useEffect(() => {
-            if (pageInfo.projectName) {
+            const {projectName,codeScanMode,runtimeId} = pageInfo
+            if (projectName) {
                 form.setFieldsValue({
-                    project: pageInfo.projectName
+                    project: projectName
                 })
             }
+            if (codeScanMode && runtimeId) {
+                onMultipleTask(runtimeId,codeScanMode)
+            }
         }, [])
+
+        const codeScanFormRef = useRef<HTMLDivElement>(null)
+        const [inViewport = true] = useInViewport(codeScanFormRef)
+        useEffect(() => {
+            if (inViewport) {
+                emiter.on("onSetCodeScanTaskStatus", onSetCodeScanTaskStatusFun)
+            }
+            return () => {
+                emiter.off("onSetCodeScanTaskStatus", onSetCodeScanTaskStatusFun)
+            }
+        }, [inViewport])
+
+        // 重新设置代码扫描任务状态
+        const onSetCodeScanTaskStatusFun = useMemoizedFn((res) => {
+            try {
+                const value = JSON.parse(res)
+                const {runtimeId, codeScanMode, pageId: pId} = value
+
+                console.log("onSetCodeScanTaskStatusFun---", value)
+
+                if (pageId !== pId) return
+                if (!runtimeId) {
+                    yakitNotify("error", "未设置正常得 runtimeId")
+                    return
+                }
+                if (codeScanMode === "new") {
+                    yakitNotify("error", "重试(new)不走该操作,请传入正确的codeScanMode")
+                    return
+                }
+                onMultipleTask(runtimeId,codeScanMode)
+            } catch (error) {}
+        })
+
+        // 查看、暂停、继续任务时执行
+        const onMultipleTask = useMemoizedFn((runtimeId,codeScanMode)=>{
+            const params: SyntaxFlowScanRequest = {
+                ControlMode: codeScanMode,
+                ResumeTaskId: runtimeId,
+                Filter: {
+                    RuleNames: [],
+                    Language: [],
+                    GroupNames: selectGroupList,
+                    Severity: [],
+                    Purpose: [],
+                    Tag: [],
+                    Keyword: ""
+                }
+            }
+            console.log("onMultipleTask---",params);
+            apiSyntaxFlowScan(params, token).then(() => {
+                setIsExpand(false)
+                setExecuteStatus("process")
+                if (setHidden) setHidden(true)
+            })
+        })
 
         useImperativeHandle(
             ref,
@@ -773,6 +842,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         )
 
         const [runtimeId, setRuntimeId] = useState<string>("")
+        const runTimeIdRef = useRef<string>()
 
         const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
@@ -861,6 +931,23 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             }
         })
 
+        const onUpdateExecutorPageInfo = useMemoizedFn((runtimeId: string) => {
+            if (!pageId) return
+            const route = YakitRoute.YakRunner_Code_Scan
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(route, pageId)
+            if (!currentItem) return
+            let newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageParamsInfo: {
+                    codeScanPageInfo: {
+                        ...currentItem.pageParamsInfo.codeScanPageInfo,
+                        runtimeId
+                    }
+                }
+            }
+            updatePagesDataCacheById(route, {...newCurrentItem})
+        })
+
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
@@ -887,7 +974,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         }
                     }
                     if (!!data?.RuntimeID) {
-                        setRuntimeId(data.RuntimeID)
+                        runTimeIdRef.current = data.RuntimeID
                     }
                     if (data && data.IsMessage) {
                         try {
@@ -896,7 +983,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             if (obj.type === "progress") {
                                 setProgressShow({
                                     type: "old",
-                                    progress: progressObj.progress,
+                                    progress: progressObj.progress
                                 })
                                 return
                             }
@@ -944,6 +1031,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 setTimeout(() => {
                     setPauseLoading(false)
                     setContinueLoading(false)
+                    if (runTimeIdRef.current && runTimeIdRef.current !== runtimeId) {
+                        setRuntimeId(runTimeIdRef.current)
+                        /**更新该页面最新的runtimeId */
+                        onUpdateExecutorPageInfo(runTimeIdRef.current)
+                    }
                 }, 200)
             })
             return () => {
@@ -968,7 +1060,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             }
             const params: SyntaxFlowScanRequest = {
                 ControlMode: "start",
-                ProgramName: [project],
+                ProgramName: project,
                 Filter: {
                     RuleNames: [],
                     Language: [],
@@ -979,6 +1071,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Keyword: ""
                 }
             }
+            console.log("walala", params)
+
             apiSyntaxFlowScan(params, token).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
@@ -1023,12 +1117,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             }
             return tabsState
         }, [runtimeId])
+
         return (
             <>
                 <div
                     className={classNames(styles["code-scan-execute-form-wrapper"], {
                         [styles["code-scan-execute-form-wrapper-hidden"]]: !isExpand
                     })}
+                    ref={codeScanFormRef}
                 >
                     <Row style={{marginBottom: 16}}>
                         <Col span={6}></Col>
@@ -1085,6 +1181,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 rules={[{required: true, message: "请选择项目名称"}]}
                             >
                                 <YakitSelect
+                                    mode='multiple'
+                                    allowClear
                                     showSearch
                                     placeholder='请选择项目名称'
                                     options={auditCodeList}
@@ -1244,7 +1342,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             if (progress === 1) {
                 setTimeout(() => {
                     setExecuteType("old")
-                    runnerProject.current && onStartExecute({project: runnerProject.current},true)
+                    runnerProject.current && onStartExecute({project: runnerProject.current}, true)
                 }, 300)
             }
 
