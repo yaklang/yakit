@@ -721,9 +721,14 @@ service Yak {
   rpc CreateSyntaxFlowRule(CreateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc CreateSyntaxFlowRuleEx(CreateSyntaxFlowRuleRequest) returns (SyntaxFlowRule);
+  rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (SyntaxFlowRule);
+  // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
-
-  // syntaxflow scan 
+  rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
+  rpc CreateSyntaxFlowRuleGroup(CreateSyntaxFlowGroupRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleAndGroup(UpdateSyntaxFlowRuleAndGroupRequest) returns (DbOperateMessage);
+  // syntaxflow scan
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
   rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
@@ -4728,6 +4733,7 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeHash = 41;
   repeated string HiddenIndex = 42;
+  
   repeated string ProcessName = 43;
   repeated string ExcludeKeywords = 44;
   string KeywordType = 45; // <empty> = all/response/request
@@ -5048,6 +5054,7 @@ message MITMRequest {
   // random JA3 fingerprint
   bool RandomJA3 = 62;
 
+  // disable websocket compression
   bool DisableWebsocketCompression = 64;
 }
 
@@ -5533,6 +5540,8 @@ message QuerySyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRule{
+  int64 Id = 18;
+
   string RuleName = 1;
   string Content = 2;
 
@@ -5564,6 +5573,7 @@ message  SyntaxFlowRuleInput{
 }
 
 message SyntaxFlowRuleFilter {
+  repeated int64 Ids = 11;
   repeated string RuleNames = 1;
   repeated string Language = 2;
   repeated string GroupNames = 3;
@@ -5572,7 +5582,10 @@ message SyntaxFlowRuleFilter {
   repeated string Tag = 6;
   string Keyword = 7;
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-  bool includeLibraryRule = 8; // default false 
+  bool includeLibraryRule = 8; // default false
+  // for infinite list
+  int64 FromId = 9;
+  int64  UntilId = 10;
 }
 
 message SSAProgram{
@@ -5660,6 +5673,7 @@ message DeleteSyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRuleGroupFilter {
+  repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
 }
@@ -5675,6 +5689,21 @@ message QuerySyntaxFlowRuleGroupRequest{
 
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
+}
+
+message CreateSyntaxFlowGroupRequest{
+  string GroupName = 1;
+}
+
+message UpdateSyntaxFlowRuleAndGroupRequest{
+   SyntaxFlowRuleFilter Filter = 1;
+   repeated string AddGroups= 2;
+   repeated string RemoveGroups = 3;
+   bool All = 4;
+}
+
+message DeleteSyntaxFlowRuleGroupRequest{
+  SyntaxFlowRuleGroupFilter Filter = 1;
 }
 
 message SyntaxFlowScanRequest{
