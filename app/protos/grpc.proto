@@ -4480,7 +4480,7 @@ message FuzzerRequest {
   bool OverwriteSNI = 57;
   
   // use tcp conn pool
-  bool UseConnPool = 58;
+  bool DisableUseConnPool = 58;
 }
 
 message MutateMethod {
