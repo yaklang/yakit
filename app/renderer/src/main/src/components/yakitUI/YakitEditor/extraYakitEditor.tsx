@@ -67,7 +67,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         showDownBodyMenu = true,
         onClickUrlMenu,
         onClickOpenBrowserMenu,
-        type,
         ...restProps
     } = props
 
@@ -452,7 +451,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
         return menuItems
     }, [
-        type,
         defaultHttps,
         system,
         originValue,

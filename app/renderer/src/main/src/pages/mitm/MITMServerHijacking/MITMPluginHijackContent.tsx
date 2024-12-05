@@ -7,7 +7,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {HotPatchTemplate} from "@/pages/invoker/data/MITMPluginTamplate"
 import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {EditorProps, YakCodeEditor} from "@/utils/editors"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
@@ -28,6 +27,7 @@ import {RemoteGV} from "@/yakitGV"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import emiter from "@/utils/eventBus/eventBus"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -142,7 +142,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     const [hookScriptNameSearch, setHookScriptNameSearch] = useState<string>("")
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
     const [isHooksSearch, setIsHooksSearch] = useState<boolean>(false)
-    const [refreshCode, setRefreshCode] = useState<boolean>(false)
     /**
      * 选中的插件组
      */
@@ -298,9 +297,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
             yakitFailed(`更新 MITM 插件状态失败: ${e}`)
         })
     })
-    const onRefresh = useMemoizedFn(() => {
-        setRefreshCode(!refreshCode)
-    })
 
     const onSearch = useMemoizedFn(() => {
         setTriggerSearch(!triggerSearch)
@@ -337,7 +333,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     } else {
                         setScript({...script, Content: HotPatchTemplate})
                     }
-                    onRefresh()
                 })
             }
         }
@@ -352,7 +347,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             title={"确认重置热加载代码？"}
                             onConfirm={() => {
                                 setScript(HotLoadDefaultData)
-                                onRefresh()
                             }}
                             placement='top'
                         >
@@ -455,25 +449,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             <></>
                         )}
                         <div className={styles["hot-patch-code-editor"]}>
-                            <YakCodeEditor
-                                bordered={false}
-                                refreshTrigger={refreshCode}
-                                noHeader={true}
-                                noPacketModifier={true}
-                                originValue={script.Content}
-                                onChange={(e) =>
+                            <YakitEditor
+                                type={"mitm"}
+                                value={script.Content}
+                                setValue={(value) => {
                                     setScript({
                                         ...script,
-                                        Content: e
+                                        Content: value
                                     })
-                                }
-                                language={"mitm"}
-                                extraEditorProps={
-                                    {
-                                        noMiniMap: true,
-                                        noWordWrap: true
-                                    } as EditorProps
-                                }
+                                }}
+                                noMiniMap={true}
+                                noWordWrap={true}
                             />
                         </div>
                     </div>

@@ -29,7 +29,6 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakCodeEditor} from "@/utils/editors"
 import {LoadingOutlined} from "@ant-design/icons"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {failed, yakitNotify} from "@/utils/notification"
@@ -65,6 +64,7 @@ import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import emiter from "@/utils/eventBus/eventBus"
 import {SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -878,18 +878,13 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 onCancel={() => setVisibleImport(false)}
                 width='60%'
                 onOk={() => onImportJSON()}
-                okText="导入"
+                okText='导入'
                 confirmLoading={importLoading}
                 bodyStyle={{padding: 0}}
             >
-                        <div style={{height: 400}}>
-                            <YakCodeEditor
-                                refreshTrigger={refreshTrigger}
-                                originValue={menuDataString}
-                                language={"json"}
-                                onChange={setMenuDataString}
-                            />
-                        </div>
+                <div style={{height: 400}}>
+                    <YakitEditor type='json' value={menuDataString} setValue={setMenuDataString}></YakitEditor>
+                </div>
             </YakitModal>
         </div>
     )
