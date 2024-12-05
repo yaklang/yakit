@@ -719,10 +719,10 @@ service Yak {
   // SyntaxFlow Rule
   rpc QuerySyntaxFlowRule(QuerySyntaxFlowRuleRequest) returns (QuerySyntaxFlowRuleResponse);
   rpc CreateSyntaxFlowRule(CreateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc CreateSyntaxFlowRuleEx(CreateSyntaxFlowRuleRequest) returns (CreateSyntaxFlowRuleResponse);
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (UpdateSyntaxFlowRuleResponse);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
-  rpc CreateSyntaxFlowRuleEx(CreateSyntaxFlowRuleRequest) returns (SyntaxFlowRule);
-  rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (SyntaxFlowRule);
   // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
   rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
@@ -5566,14 +5566,13 @@ message SyntaxFlowRule{
 }
 
 message  SyntaxFlowRuleInput{
-  string RuleName = 1;
+  string RuleName = 1; // RuleName作为索引，因此不能update RuleName
   string Content = 2;
   string Language = 3;
   repeated string Tags = 4;
 }
 
 message SyntaxFlowRuleFilter {
-  repeated int64 Ids = 11;
   repeated string RuleNames = 1;
   repeated string Language = 2;
   repeated string GroupNames = 3;
@@ -5657,8 +5656,18 @@ message CreateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
 }
 
+message CreateSyntaxFlowRuleResponse {
+  DbOperateMessage Message = 1; 
+  SyntaxFlowRule Rule = 2;
+}
+
 message UpdateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
+}
+
+message UpdateSyntaxFlowRuleResponse{
+  DbOperateMessage Message = 1; 
+  SyntaxFlowRule Rule = 2;
 }
 
 message QuerySyntaxFlowRuleResponse{
