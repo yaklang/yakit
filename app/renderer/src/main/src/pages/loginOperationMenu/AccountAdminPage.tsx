@@ -281,9 +281,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
         return arr
     }
     const onLoadData = ({key, children, data}: any) => {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<DataSourceProps[] | undefined>((resolve, reject) => {
             if (children) {
-                resolve()
+                resolve(undefined)
                 return
             }
             NetWorkApi<DepartmentGroupListRequest, API.DepartmentGroupList>({
@@ -302,23 +302,24 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                             isLeaf: true,
                             pid: key
                         }))
-                        setDepartment((prev) => refreshChildrenByParent(prev, key, newArr))
+                        const newDepartment = refreshChildrenByParent(department, key, newArr)
+                        setDepartment(newDepartment)
+                        resolve(newDepartment)
                     } else {
                         // 当获取结果为空 则为删除的最后一个
-                        setDepartment((prev) =>
-                            prev.map((node) => {
-                                if (node.key === key) {
-                                    return {
-                                        ...node,
-                                        isLeaf: true,
-                                        children: null
-                                    }
+                        const newDepartment = department.map((node) => {
+                            if (node.key === key) {
+                                return {
+                                    ...node,
+                                    isLeaf: true,
+                                    children: null
                                 }
-                                return node
-                            })
-                        )
+                            }
+                            return node
+                        })
+                        setDepartment(newDepartment)
+                        resolve(newDepartment)
                     }
-                    resolve()
                 })
                 .catch((err) => {
                     reject(err)
@@ -362,6 +363,23 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
             return department
         }
     }, [noDepartmentNum, department])
+
+    const refreshTreeData = (newDepartment: DataSourceProps[]) => {
+        if (noDepartmentNum) {
+            return [
+                {
+                    title: "无归属",
+                    key: -1,
+                    userNum: noDepartmentNum,
+                    isLeaf: true,
+                    isShowAllBtn: false
+                },
+                ...newDepartment
+            ]
+        } else {
+            return newDepartment
+        }
+    }
 
     const onRemove = (id: number, pid?: number) => {
         NetWorkApi<DepartmentRemoveProps, API.ActionSucceeded>({
@@ -412,21 +430,27 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                     yakitNotify("success", "修改成功")
                     // 第一层更新
                     if (pid === 0) {
-                        setDepartment((prev) =>
-                            prev.map((node) => {
-                                if (node.key === id) {
-                                    return {
-                                        ...node,
-                                        title: name
-                                    }
+                        const newDepartment = department.map((node) => {
+                            if (node.key === id) {
+                                return {
+                                    ...node,
+                                    title: name
                                 }
-                                return node
-                            })
-                        )
+                            }
+                            return node
+                        })
+                        setDepartment(newDepartment)
+                        updateSelectTitle(refreshTreeData(newDepartment), id)
+                        onSelectDepartmentId(id)
                     }
                     // 内部更新
                     else {
-                        onLoadData({key: pid})
+                        onLoadData({key: pid}).then((newDepartment) => {
+                            if (newDepartment) {
+                                updateSelectTitle(refreshTreeData(newDepartment), id)
+                            }
+                            onSelectDepartmentId(id)
+                        })
                     }
                 }
             })
@@ -570,7 +594,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                         [styles["department-item-select"]]: selectDepartmentId === key
                                     })}
                                 >
-                                    <div className={styles["department-item-info"]}>
+                                    <div className={classNames(styles["department-item-info"], "content-ellipsis")}>
                                         {title}（{userNum}）
                                     </div>
                                     {isShowAllBtn && (
@@ -601,7 +625,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         updateSelectTitle(treeData, key)
-                                                        onSelectDepartmentId(key)
+                                                        if (selectDepartmentId !== key) {
+                                                            onSelectDepartmentId(key)
+                                                        }
                                                     }}
                                                 ></YakitButton>
                                             </YakitPopover>
@@ -629,7 +655,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         updateSelectTitle(treeData, key)
-                                                        onSelectDepartmentId(key)
+                                                        if (selectDepartmentId !== key) {
+                                                            onSelectDepartmentId(key)
+                                                        }
                                                         const m = showYakitModal({
                                                             title: "添加二级部门",
                                                             width: 500,
