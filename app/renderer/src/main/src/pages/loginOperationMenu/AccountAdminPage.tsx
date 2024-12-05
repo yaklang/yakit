@@ -570,7 +570,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                         [styles["department-item-select"]]: selectDepartmentId === key
                                     })}
                                 >
-                                    <div className={styles["department-item-info"]}>
+                                    <div className={classNames(styles["department-item-info"], "content-ellipsis")}>
                                         {title}（{userNum}）
                                     </div>
                                     {isShowAllBtn && (
@@ -601,7 +601,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         updateSelectTitle(treeData, key)
-                                                        onSelectDepartmentId(key)
+                                                        if (selectDepartmentId !== key) {
+                                                            onSelectDepartmentId(key)
+                                                        }
                                                     }}
                                                 ></YakitButton>
                                             </YakitPopover>
@@ -629,7 +631,9 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                                                     onClick={(e) => {
                                                         e.stopPropagation()
                                                         updateSelectTitle(treeData, key)
-                                                        onSelectDepartmentId(key)
+                                                        if (selectDepartmentId !== key) {
+                                                            onSelectDepartmentId(key)
+                                                        }
                                                         const m = showYakitModal({
                                                             title: "添加二级部门",
                                                             width: 500,
