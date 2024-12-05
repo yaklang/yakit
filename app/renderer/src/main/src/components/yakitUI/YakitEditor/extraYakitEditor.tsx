@@ -14,7 +14,7 @@ import {StringToUint8Array} from "@/utils/str"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
 import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
-import {execAutoDecode} from "@/utils/encodec"
+import {execAutoDecode, execCodec} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -89,7 +89,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         if (noPacketModifier) {
             return []
         } else {
-            return ["http", "customcontextmenu", "aiplugin"]
+            return ["customcontextmenu", "aiplugin"]
         }
     }, [noPacketModifier])
 
@@ -97,6 +97,27 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         const originValueBytes = StringToUint8Array(originValue)
         let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
+            copyCURL: {
+                menu: [{key: "copy-as-curl", label: "复制 curl 命令"}],
+                onRun: (editor, key) => {
+                    switch (key) {
+                        case "copy-as-curl":
+                            const text = editor.getModel()?.getValue() || ""
+                            if (!text) {
+                                info("数据包为空")
+                                return
+                            }
+                            execCodec("packet-to-curl", text, undefined, undefined, undefined, [
+                                {Key: "https", Value: defaultHttps ? "true" : ""}
+                            ]).then((data) => {
+                                setClipboardText(data, {hintText: "复制到剪贴板"})
+                            })
+                            return
+                        default:
+                            break
+                    }
+                }
+            },
             copyUrl: {
                 menu: [
                     {
@@ -448,7 +469,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
 
     return (
         <YakitEditor
-            menuType={["code", "decode", ...rightMenuType]}
+            menuType={["code", "decode", "http", ...rightMenuType]}
             readOnly={readOnly}
             contextMenu={{...rightContextMenu}}
             {...restProps}

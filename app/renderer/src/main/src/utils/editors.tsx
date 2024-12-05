@@ -446,19 +446,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
     )
 }
 
-export const YakCodeEditor: React.FC<NewHTTPPacketEditorProp> = React.memo((props: NewHTTPPacketEditorProp) => {
-    return (
-        <NewHTTPPacketEditor
-            noHeader={true}
-            language={props.language || "yak"}
-            {...props}
-            noPacketModifier={true}
-            utf8={true}
-            isResponse={true}
-        />
-    )
-})
-
 export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.memo(
     (props: YakInteractiveEditorProp) => {
         return (
