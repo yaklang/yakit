@@ -200,8 +200,8 @@
     .code-scan-executor-body {
         padding: 0 12px 16px;
     }
-    .code-scan-executor-btn{
-        .progress-show{
+    .code-scan-executor-btn {
+        .progress-show {
             display: flex;
             align-items: center;
             gap: 2px;
@@ -341,15 +341,14 @@
     }
 }
 
-
-.code-scan-form{
+.code-scan-form {
     :global {
         .json-schema-form {
             .ant-form-item {
                 display: flex;
                 flex-direction: row;
                 .ant-form-item-label {
-                    flex: 8;
+                    flex: 0 0 25%;
                     text-align: right;
                     label::after {
                         content: ":";
@@ -361,9 +360,8 @@
                         align-items: center;
                     }
                 }
-                .ant-form-item-control {
-                    flex: 16;
-                    max-width: 75%;
+                .ant-form-item-label + .ant-form-item-control {
+                    flex: 0 0 50%; 
                 }
 
                 .ant-form-item-label {
@@ -391,6 +389,11 @@
                         }
                     }
                 }
+            }
+
+            // 需询问后端是否可从schema中移除
+            #root_auth__error,#root_proxy__error {
+                display: none;
             }
         }
     }

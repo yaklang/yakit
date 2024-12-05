@@ -668,11 +668,11 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             return (
                 <Form.Item {...formProps}>
                     <YakitAutoComplete
-                        placeholder='请输入'
                         options={additionalConfig?.inputOption || []}
                         disabled={disabled}
-                    />
-                    {/* <YakitInput placeholder='请输入' disabled={disabled} /> */}
+                    >
+                        <YakitInput placeholder='请输入'/> 
+                    </YakitAutoComplete>
                 </Form.Item>
             )
         case "text":

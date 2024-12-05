@@ -424,6 +424,10 @@
                     }
                 }
             }
+            // 需询问后端是否可从schema中移除
+            #root_auth__error,#root_proxy__error {
+                display: none;
+            }
         }
     }
 }

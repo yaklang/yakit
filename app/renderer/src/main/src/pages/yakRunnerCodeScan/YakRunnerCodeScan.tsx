@@ -729,6 +729,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         useEffect(() => {
             if (pageInfo.projectName) {
+                setExecuteType("old")
                 form.setFieldsValue({
                     project: pageInfo.projectName
                 })
@@ -1204,6 +1205,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
             debugPluginStreamEvent.reset()
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+                setIsExpand(false)
                 setAuditsExecuting(true)
                 debugPluginStreamEvent.start()
             })

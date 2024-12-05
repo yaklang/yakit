@@ -1494,6 +1494,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 })
                 .then(() => {
                     update(true)
+                    setIsAllSelect(false)
+                    setSelectedRowKeys([])
                 })
         } catch (error) {
             setLoading(false)
