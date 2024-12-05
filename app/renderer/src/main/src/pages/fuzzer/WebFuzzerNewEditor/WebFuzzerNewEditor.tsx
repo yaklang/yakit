@@ -135,31 +135,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                                 break
                         }
                     }
-                },
-                copyURL: {
-                    menu: [
-                        // {key: "copy-as-url", label: "复制为 URL"},
-                        {key: "copy-as-curl", label: "复制 curl 命令"}
-                    ],
-                    onRun: (editor, key) => {
-                        switch (key) {
-                            // case "copy-as-url":
-                            //     copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
-                            //     return
-                            case "copy-as-curl":
-                                execCodec("packet-to-curl", newRequest, undefined, undefined, undefined, [
-                                    {Key: "https", Value: isHttps ? "true" : ""}
-                                ]).then((data) => {
-                                    setClipboardText(data, {hintText: "复制到剪贴板"})
-                                })
-                                return
-                            default:
-                                break
-                        }
-                    }
                 }
             }
-        }, [newRequest, isHttps])
+        }, [])
 
         const copyUrl = useMemoizedFn(() => {
             copyAsUrl({Request: newRequest, IsHTTPS: isHttps})
