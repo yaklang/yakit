@@ -121,7 +121,9 @@ export enum RemoteGV {
     /**@name 基础爬虫左侧tabs */
     SinglePluginExecTabs = "single-plugin-exec-tabs",
     /**@name 专项漏洞左侧tabs */
-    YakPocTabs = "yakpoc-tabs"
+    YakPocTabs = "yakpoc-tabs",
+    /**@name 启用webSocket压缩 */
+    MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
 }
 
 /** 项目逻辑全局变量 */

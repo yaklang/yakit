@@ -202,7 +202,8 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             dnsServers: params.dnsServers,
             hosts: params.etcHosts,
             filterWebsocket: params.filterWebsocket,
-            disableCACertPage: params.disableCACertPage
+            disableCACertPage: params.disableCACertPage,
+            DisableWebsocketCompression: params.DisableWebsocketCompression
         }
         if (params.stateSecretHijacking === "enableGMTLS") {
             extra.enableGMTLS = true

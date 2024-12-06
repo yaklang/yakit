@@ -327,7 +327,8 @@ module.exports = (win, getClient) => {
                 host, port, downstreamProxy,
                 enableHttp2, ForceDisableKeepAlive, certificates,
                 ...extra,
-                DisableCACertPage: extra.disableCACertPage
+                DisableCACertPage: extra.disableCACertPage,
+                DisableWebsocketCompression: !extra.DisableWebsocketCompression
             })
         }
     })
