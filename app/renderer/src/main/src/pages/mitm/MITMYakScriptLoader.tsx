@@ -326,7 +326,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 <OutlinePencilaltIcon
                     className={style["mitm-params-edit-icon"]}
                     onClick={() => {
-                        handleMitmHasParams(hackingCheck)
+                        handleMitmHasParams(true)
                     }}
                 />
             )}
