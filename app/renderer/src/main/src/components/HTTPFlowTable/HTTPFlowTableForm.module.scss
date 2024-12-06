@@ -1,4 +1,4 @@
-.http-flow-table-form-configuration{
+.http-flow-table-form-configuration {
     :global {
         .ant-form-item-with-help .ant-form-item-explain {
             font-size: 12px;
@@ -24,6 +24,68 @@
         .advanced-configuration-drawer-title-btns {
             display: flex;
             gap: 8px;
+        }
+    }
+
+    .advanced-config-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        .config-item-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            .item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                .header-title {
+                    font-weight: 600;
+                    font-size: 14px;
+                    line-height: 20px;
+                    color: var(--yakit-header-color);
+                }
+            }
+        }
+    }
+
+    .setting-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            &-header {
+                flex: 0 0 25%;
+                max-width: 25%;
+                padding-right: 12px;
+                display: flex;
+                justify-content: right;
+                align-items: center;
+            }
+            &-body {
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        .background-refresh {
+            .title-style {
+                font-size: 14px;
+                line-height: 22px;
+                color: var(--yakit-header-color);
+            }
+            .hint-style {
+                cursor: pointer;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                    color: var(--ui-neutral-50);
+                }
+            }
         }
     }
 }

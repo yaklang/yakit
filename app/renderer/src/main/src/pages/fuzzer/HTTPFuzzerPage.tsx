@@ -1174,12 +1174,39 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
+    /**
+     * @name 用于定时更新丢弃包的数量展示
+     * @description 更新间隔为500ms 未更新的触发超过5次则停止更新
+     */
+    const dcountTimer = useRef<NodeJS.Timeout | null>(null)
+    const handleStartDCountTimer = useMemoizedFn((init: number) => {
+        let count = init
+        setDroppedCount(init)
+        let noUpdateCount: number = 0
+
+        if (dcountTimer.current) clearInterval(dcountTimer.current)
+        dcountTimer.current = setInterval(() => {
+            if (count === dCountRef.current) {
+                noUpdateCount++
+                if (noUpdateCount > 5) {
+                    dcountTimer.current && clearInterval(dcountTimer.current)
+                    dcountTimer.current = null
+                    noUpdateCount = 0
+                }
+            } else {
+                count = dCountRef.current
+                setDroppedCount(count)
+            }
+        }, 500)
+    })
+
     /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
     const onIsDropped = useMemoizedFn((data) => {
         if (data.Discard) {
             // 丢弃不匹配的内容
             dCountRef.current++
-            setDroppedCount(dCountRef.current)
+            !dcountTimer.current && handleStartDCountTimer(dCountRef.current)
+            // setDroppedCount(dCountRef.current)
             return true
         }
         return false
@@ -3099,6 +3126,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 })
         })
 
+        const editorDownBodyParams = useMemo(() => {
+            return {RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false}
+        }, [fuzzerResponse.RuntimeID])
+
         return (
             <>
                 <YakitResizeBox
@@ -3188,7 +3219,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             }}
                             onClickUrlMenu={copyUrl}
                             onClickOpenBrowserMenu={onClickOpenBrowserMenu}
-                            downbodyParams={{RuntimeId: fuzzerResponse.RuntimeID, IsRequest: false}}
+                            downbodyParams={editorDownBodyParams}
                             {...otherEditorProps}
                         />
                     }
