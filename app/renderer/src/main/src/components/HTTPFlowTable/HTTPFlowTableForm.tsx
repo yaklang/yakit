@@ -14,7 +14,7 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import cloneDeep from "lodash/cloneDeep"
 
-// import classNames from "classnames"
+import classNames from "classnames"
 import styles from "./HTTPFlowTableForm.module.scss"
 
 export interface HTTPFlowTableFormConfigurationProps {
@@ -318,24 +318,28 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 {/* 配置项 */}
                 <div className={styles["config-item-wrapper"]}>
                     <div className={styles["item-header"]}>
-                        <div className={styles["header-title"]}>配置</div>
+                        <div className={styles["header-title"]}>其他配置</div>
                         {/* <YakitButton type='text' onClick={()=>{}}>
                             重置
                         </YakitButton> */}
                     </div>
 
                     <div className={styles["setting-body"]}>
-                        <div className={styles["background-refresh"]}>
-                            <YakitCheckbox
-                                checked={backgroundRefresh}
-                                onChange={(e) => {
-                                    setBackgroundRefresh(e.target.checked)
-                                }}
-                            />
-                            <span className={styles["title-style"]}>后台刷新</span>
-                            <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
-                                <OutlineInformationcircleIcon className={styles["hint-style"]} />
-                            </Tooltip>
+                        <div className={classNames(styles["background-refresh"], styles["setting-item"])}>
+                            <div className={styles["setting-item-header"]}>
+                                <YakitCheckbox
+                                    checked={backgroundRefresh}
+                                    onChange={(e) => {
+                                        setBackgroundRefresh(e.target.checked)
+                                    }}
+                                />
+                            </div>
+                            <div className={styles["setting-item-body"]}>
+                                <span className={styles["title-style"]}>后台刷新</span>
+                                <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
+                                    <OutlineInformationcircleIcon className={styles["hint-style"]} />
+                                </Tooltip>
+                            </div>
                         </div>
                     </div>
                 </div>

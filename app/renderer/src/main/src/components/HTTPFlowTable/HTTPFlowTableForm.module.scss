@@ -53,14 +53,29 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding-left: 20px;
-        .background-refresh {
+
+        .setting-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            &-header {
+                flex: 0 0 25%;
+                max-width: 25%;
+                padding-right: 12px;
+                display: flex;
+                justify-content: right;
+                align-items: center;
+            }
+            &-body {
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        .background-refresh {
             .title-style {
-                font-size: 12px;
-                line-height: 16px;
+                font-size: 14px;
+                line-height: 22px;
                 color: var(--yakit-header-color);
             }
             .hint-style {
