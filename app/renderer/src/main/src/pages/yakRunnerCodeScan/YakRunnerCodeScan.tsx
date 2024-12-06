@@ -85,7 +85,7 @@ import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {ExtraParamsNodeByType} from "../plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {getYakExecutorParam, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
-import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
+import {apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {number} from "echarts"
@@ -507,7 +507,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     const isExecuting = useCreation(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
-        if (isAuditExecuting) return true
         return false
     }, [executeStatus])
 
@@ -793,9 +792,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
             if (executeStatus === "paused") return true
-            if (isAuditExecuting) return true
             return false
-        }, [executeStatus, isAuditExecuting])
+        }, [executeStatus])
 
         const isShowResult = useCreation(() => {
             return isExecuting || runtimeId
@@ -826,6 +824,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
             new Map<string, HoldGRPCStreamProps.CacheCard>()
         )
+
+        const resetStreamInfo = useMemoizedFn(()=>{
+            messages.current = []
+            cardKVPair.current = new Map<string, HoldGRPCStreamProps.CacheCard>()
+            setRuntimeId("")
+        })
 
         useEffect(() => {
             let id = setInterval(() => {
@@ -974,6 +978,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             apiSyntaxFlowScan(params, token).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
+                resetStreamInfo()
                 if (setHidden) setHidden(true)
             })
         })
@@ -984,6 +989,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 codeScanAuditExecuteRef.current?.onCancelAudit()
             } else {
                 apiCancelSyntaxFlowScan(token).then(() => {
+                    setIsExpand(true)
                     setExecuteStatus("finished")
                 })
             }
@@ -1057,6 +1063,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             setAuditsExecuting={setAuditsExecuting}
                             setExecuteType={setExecuteType}
                             setIsExpand={setIsExpand}
+                            setExecuteStatus={setExecuteStatus}
+                            resetStreamInfo={resetStreamInfo}
                         />
                     ) : (
                         <Form
@@ -1154,7 +1162,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             isAuditExecuting,
             setAuditsExecuting,
             setExecuteType,
-            setIsExpand
+            setIsExpand,
+            setExecuteStatus,
+            resetStreamInfo
         } = props
         const [form] = Form.useForm()
         const jsonSchemaListRef = useRef<{
@@ -1193,7 +1203,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     setProgressShow(undefined)
                 }, 300)
             },
-            onError: () => {},
+            onError: () => {
+                setExecuteStatus("error")
+            },
             setRuntimeId: (rId) => {
                 yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
                 setRuntimeId(rId)
@@ -1205,15 +1217,19 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
             debugPluginStreamEvent.reset()
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+                resetStreamInfo()
                 setIsExpand(false)
                 setAuditsExecuting(true)
+                setExecuteStatus("process")
                 debugPluginStreamEvent.start()
             })
         })
 
         const onCancelAudit = () => {
-            debugPluginStreamEvent.cancel()
-            debugPluginStreamEvent.reset()
+            apiCancelDebugPlugin(tokenRef.current).then(() => {
+                setIsExpand(true)
+                setExecuteStatus("finished")
+            })
         }
 
         useImperativeHandle(
