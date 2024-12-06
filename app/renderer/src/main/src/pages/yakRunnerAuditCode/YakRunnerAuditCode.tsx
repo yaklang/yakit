@@ -9,7 +9,6 @@ import {
     YakRunnerHistoryProps
 } from "./YakRunnerAuditCodeType"
 import {Divider, Progress, Tooltip} from "antd"
-import {} from "@ant-design/icons"
 import {AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
 import {

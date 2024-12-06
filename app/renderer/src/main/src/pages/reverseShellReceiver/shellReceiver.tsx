@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
 import {Divider, Form, Result, Tooltip} from "antd"
-import {} from "@ant-design/icons"
 import {useControllableValue, useCreation, useDebounceFn, useInterval, useMemoizedFn, useVirtualList} from "ahooks"
 import styles from "./shellReceiver.module.scss"
 import {failed, success} from "@/utils/notification"

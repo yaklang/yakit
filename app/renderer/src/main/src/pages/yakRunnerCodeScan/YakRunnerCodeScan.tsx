@@ -20,7 +20,6 @@ import {
     YakRunnerCodeScanProps
 } from "./YakRunnerCodeScanType"
 import {Col, Divider, Form, Row, Tooltip} from "antd"
-import {} from "@ant-design/icons"
 import {
     useControllableValue,
     useCreation,

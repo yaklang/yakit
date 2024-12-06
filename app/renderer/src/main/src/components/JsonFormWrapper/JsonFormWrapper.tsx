@@ -84,7 +84,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     const jsonSchemaRef = useRef<any>()
 
     useEffect(() => {
-        if (jsonSchemaRef.current && jsonSchemaListRef.current) {
+        if (jsonSchemaListRef.current) {
             if (!jsonSchemaListRef.current.hasOwnProperty(field)) {
                 jsonSchemaListRef.current = {
                     ...jsonSchemaListRef.current,
@@ -92,7 +92,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 }
             }
         }
-    }, [jsonSchemaRef.current])
+    }, [])
 
     // 调用校验是否错误
     const validate = () => {

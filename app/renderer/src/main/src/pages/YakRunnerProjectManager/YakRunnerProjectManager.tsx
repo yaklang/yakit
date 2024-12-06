@@ -1,6 +1,4 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {} from "antd"
-import {} from "@ant-design/icons"
 import {YakRunnerProjectManagerProps} from "./YakRunnerProjectManagerType"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
