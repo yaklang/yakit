@@ -107,17 +107,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         },
         {
             title: "作者",
-            dataIndex: "author",
-            render: (text, record) => (
-                <div className={styles["author-cell"]}>
-                    {judgeAvatar(
-                        {companyHeadImg: record.headImg, companyName: record.userName},
-                        28,
-                        randomAvatarColor()
-                    )}
-                    <span className='content-ellipsis'>{record.userName}</span>
-                </div>
-            )
+            dataIndex: "userName"
         },
         {
             title: "协作人",
@@ -127,20 +117,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     <YakitPopover
                         content={
                             <div className={styles["collaborators-popover-content"]}>
-                                {(record.collaborator || []).map((ele) => (
-                                    <Tooltip
-                                        destroyTooltipOnHide={true}
-                                        key={ele.user_id}
-                                        title={ele.user_name}
-                                        placement='top'
-                                    >
-                                        {judgeAvatar(
-                                            {companyHeadImg: ele.head_img, companyName: ele.user_name},
-                                            28,
-                                            randomAvatarColor()
-                                        )}
-                                    </Tooltip>
-                                ))}
+                                {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
                             </div>
                         }
                         destroyTooltipOnHide={true}
@@ -222,9 +199,10 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         }
     ]
     useEffect(() => {
+        if (!userInfo.isLogin) return
         getList()
         fetchInitTotal()
-    }, [inViewPort, refresh])
+    }, [userInfo.isLogin, inViewPort, refresh])
     const fetchInitTotal = useMemoizedFn(() => {
         apiGetNotepadList({
             page: 1,
