@@ -20,8 +20,8 @@ export type YakRunnerAuditEventProps = {
     onExecuteAuditModal?: string
     // 打开编译右侧详情
     onCodeAuditOpenRightDetail: string
-    // 打开编译右侧BUG详情
-    onCodeAuditOpenRightBugDetail: string
+    // 打开编译BUG详情
+    onCodeAuditOpenBugDetail: string
     // 打开审计树
     onCodeAuditOpenAuditTree: string
     // 刷新树
@@ -32,4 +32,8 @@ export type YakRunnerAuditEventProps = {
     onAuditCodePageInfo: string
     // 重置整个代码审计页面
     onInitAuditCodePage?: string
+    // 执行审计
+    onAuditRuleSubmit: string
+    // 停止审计
+    onStopAuditRule?: string
 }

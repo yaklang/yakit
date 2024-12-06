@@ -354,7 +354,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
                 setTerminalRunnerId(runnnerId)
                 setTerminalIds([...terminalIds, runnnerId])
-                isShowEditorDetails && success(`终端${folderPathRef.current}监听成功`)
+                // isShowEditorDetails && success(`终端${folderPathRef.current}监听成功`)
             })
             .catch((e: any) => {
                 failed(`ERROR: ${JSON.stringify(e)}`)
@@ -418,7 +418,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const onListeningTerminalEnd = useMemoizedFn((data: {id: string; path: string}) => {
         const {id, path} = data
         if (getMapAllTerminalKey().includes(id)) {
-            isShowEditorDetails && warn(`终端${path}被关闭`)
+            // isShowEditorDetails && warn(`终端${path}被关闭`)
             // 列表关闭
             if (terminalIds.length > 1) {
                 if (terminalRunnerId === id) {
@@ -456,14 +456,22 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         })
 
         // grpc通知关闭
-        const errorKey = "client-listening-terminal-end"
-        ipcRenderer.on(errorKey, (e: any, data: {id: string; path: string}) => {
+        const closeKey = "client-listening-terminal-end"
+        ipcRenderer.on(closeKey, (e: any, data: {id: string; path: string}) => {
             onListeningTerminalEnd(data)
         })
+
+        // grpc错误
+        const errorKey = "client-listening-terminal-error"
+        ipcRenderer.on(errorKey, (e: any, data: {id: string; path: string}) => {
+            warn(`终端${data.path}错误`)
+        })
+
         return () => {
             // 移除
             ipcRenderer.removeAllListeners(key)
             ipcRenderer.removeAllListeners(successKey)
+            ipcRenderer.removeAllListeners(closeKey)
             ipcRenderer.removeAllListeners(errorKey)
             // 清空
             xtermClear(terminalRef)

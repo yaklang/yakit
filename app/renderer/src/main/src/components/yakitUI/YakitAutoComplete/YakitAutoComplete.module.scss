@@ -38,6 +38,7 @@
             border-color: var(--yakit-border-hover-color);
         }
         .ant-select-focused .ant-select-selector {
+            border-radius: 4px;
             border-color: var(--yakit-border-focus-color) !important;
             box-shadow: 0 0 0 2px var(--yakit-box-shadow-color) !important;
         }

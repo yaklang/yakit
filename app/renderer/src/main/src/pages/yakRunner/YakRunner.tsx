@@ -462,11 +462,11 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const unTitleCountRef = useRef<number>(1)
 
     const addFileTab = useThrottleFn(
-        () => {
+        (e?: any, params?: {name: string; code: string}) => {
             // 新建临时文件
             const scratchFile: FileDetailInfo = {
                 name: `Untitle-${unTitleCountRef.current}.yak`,
-                code: "# input your yak code\nprintln(`Hello Yak World!`)",
+                code: params?.code || "# input your yak code\nprintln(`Hello Yak World!`)",
                 icon: "_f_yak",
                 isActive: true,
                 openTimestamp: moment().unix(),
@@ -870,6 +870,18 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         })
         return () => {
             ipcRenderer.removeAllListeners("client-yak-end")
+        }
+    }, [])
+
+    useEffect(() => {
+        // 调用打开临时文件
+        ipcRenderer.on("fetch-send-to-yak-running", (e, res: any) => {
+            const {name = "", code = ""} = res || {}
+            if (!name || !code) return
+            addFileTab(e, {name, code})
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("fetch-send-to-yak-running")
         }
     }, [])
 

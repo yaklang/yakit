@@ -27,6 +27,8 @@ export interface YakitDraggerProps extends FileDraggerProps {
     inputProps?: InputProps
     /**@description selectType为file,该属性才有效*/
     setContent?: (s: string) => void
+    uploadFileText?: string
+    uploadFolderText?:string
     help?: ReactDOM
     showDefHelp?: boolean
     /**回显的文本值 */

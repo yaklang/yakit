@@ -30,7 +30,7 @@ import {
 } from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
-import {yakitNotify} from "@/utils/notification"
+import {failed, warn, yakitNotify} from "@/utils/notification"
 import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin} from "@/pages/plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import emiter from "@/utils/eventBus/eventBus"
@@ -44,6 +44,7 @@ import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorCode.module.scss"
+import { getJsonSchemaListResult, JsonFormValidateProps } from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 export interface EditorCodeRefProps {
     onSubmit: () => string
@@ -143,6 +144,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
 
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
+        const jsonSchemaListRef = useRef<{
+            [key: string]: any; 
+        }>({})
 
         // 设置非(yak|lua)类型的插件参数初始值
         const onSettingDefault = useMemoizedFn(() => {
@@ -183,7 +187,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             form.setFieldsValue({...cloneDeep(defaultValue || {}), ...newFormValue})
         })
 
-        const pluginRequiredItem = (type: string) => {
+        const pluginRequiredItem = useMemoizedFn((type: string) => {
             switch (type) {
                 case "yak":
                 case "lua":
@@ -192,6 +196,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                             paramsList={requiredParams}
                             pluginType={type}
                             isExecuting={isExecuting}
+                            jsonSchemaListRef={jsonSchemaListRef}
                         />
                     )
                 case "codec":
@@ -219,6 +224,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                     paramsList={requiredParams}
                                     pluginType={type}
                                     isExecuting={isExecuting}
+                                    jsonSchemaListRef={jsonSchemaListRef}
                                 />
                             ) : null}
                             <PluginFixFormParams form={form} disabled={isExecuting} />
@@ -230,7 +236,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 default:
                     return null
             }
-        }
+        })
 
         /** 请求类型-为原始请求则不展示额外参数 */
         const requestType = Form.useWatch("requestType", form)
@@ -264,7 +270,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 <div className={styles["text-style"]}>额外参数 (非必填)</div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
 
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>
@@ -279,7 +285,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                         <div className={styles["text-style"]}>自定义参数 (非必填)</div>
                                         <div className={styles["divider-style"]}></div>
                                     </div>
-                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} />
+                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
                                 </>
                             ) : null}
                             {!isHiddenDefaultParams && (
@@ -347,6 +353,16 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             if (form) {
                 form.validateFields()
                     .then(async (value: any) => {
+                        
+                        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                        if(result.jsonSchemaError.length>0) {
+                            failed(`jsonSchema校验失败`)
+                            return
+                        }
+                        result.jsonSchemaSuccess.forEach((item)=>{
+                            value[item.key] =  JSON.stringify(item.value) 
+                        })
+
                         // 保存参数-请求路径的选项
                         if (pathRef && pathRef.current) {
                             pathRef.current.onSetRemoteValues(value?.Path || [])

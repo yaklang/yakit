@@ -11,10 +11,14 @@ import {randomString} from "@/utils/randomUtil"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
-import { ConvertYakStaticAnalyzeErrorToMarker, IMonacoEditorMarker, YakStaticAnalyzeErrorResult } from "@/utils/editorMarkers"
-import { FileNodeMapProps, FileNodeProps } from "./FileTree/FileTreeType"
-import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
-import { YaklangMonacoSpec } from "@/utils/monacoSpec/yakEditor"
+import {
+    ConvertYakStaticAnalyzeErrorToMarker,
+    IMonacoEditorMarker,
+    YakStaticAnalyzeErrorResult
+} from "@/utils/editorMarkers"
+import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
+import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -58,7 +62,6 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
         }
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            // console.log("审计树获取---", params, res)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve({res, data})
         } catch (error) {
@@ -335,7 +338,6 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
         resolve(null)
     })
 }
-
 
 /**
  * @name 新增分栏数据里某个节点的file数据
@@ -718,7 +720,7 @@ export const monacaLanguageType = (suffix?: string) => {
     switch (suffix) {
         case "yak":
             return YaklangMonacoSpec
-            case "sf": 
+        case "sf":
             return SyntaxFlowMonacoSpec
         default:
             return undefined

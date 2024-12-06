@@ -18,6 +18,7 @@ import {
     PublicPluginStoreIcon,
     PublicPocIcon,
     PublicPortsIcon,
+    PublicProjectManagerIcon,
     PublicReportIcon,
     PublicReverseServerIcon,
     PublicRiskIcon,
@@ -342,6 +343,18 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "代码审计" && (
                 <>
+                <div
+                        className={styles["vertical-menu-wrapper"]}
+                        onClick={() => onMenu(YakitRoute.YakRunner_Project_Manager)}
+                    >
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicProjectManagerIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>项目管理</div>
+                    </div>
+                    <div className={styles["divider-style"]}></div>
                     <div
                         className={styles["vertical-menu-wrapper"]}
                         onClick={() => onMenu(YakitRoute.YakRunner_Audit_Code)}

@@ -10,21 +10,27 @@ import classNames from "classnames"
 import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType} from "./BottomEditorDetailsType"
 import {OutlineCogIcon, OutlineExitIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SyntaxCheckList} from "./SyntaxCheckList/SyntaxCheckList"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
-import {Selection} from "../RunnerTabs/RunnerTabsType"
-import { HelpInfoList } from "@/pages/yakRunner/CollapseList/CollapseList"
+import {PaperAirplaneIcon} from "@/assets/newIcon"
+import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
+import useDispatcher from "../hooks/useDispatcher"
+import {HoleBugDetail} from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-
-    const {activeFile, fileTree} = useStore()
+    const {projectName, auditExecuting} = useStore()
+    const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
+    // monaco输入内容
+    const [ruleEditor, setRuleEditor] = useState<string>("")
+    // 展示所需的BugHash
+    const [bugHash, setBugHash] = useState<string>()
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -36,24 +42,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         }
     }, [showItem, isShowEditorDetails])
 
-    const syntaxCheckData = useMemo(() => {
-        if (activeFile?.syntaxCheck) {
-            return activeFile.syntaxCheck
-        }
-        return []
-    }, [activeFile?.syntaxCheck])
-
-    // 跳转至编辑器并选中
-    const onJumpToEditor = useMemoizedFn((selections: Selection) => {
-        if (activeFile?.path) {
-            const obj: JumpToEditorProps = {
-                selections,
-                id: activeFile?.path || ""
-            }
-            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-        }
-    })
-
     const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
         try {
             const {type}: {type: ShowItemType} = JSON.parse(v)
@@ -62,14 +50,28 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         } catch (error) {}
     })
 
+    const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
+        setBugHash(hash)
+    })
+
     useEffect(() => {
         emiter.on("onCodeAuditOpenBottomDetail", onOpenBottomDetailFun)
+        // 打开编译BUG详情
+        emiter.on("onCodeAuditOpenBugDetail", onCodeAuditOpenBugDetailFun)
         return () => {
             emiter.off("onCodeAuditOpenBottomDetail", onOpenBottomDetailFun)
+            emiter.off("onCodeAuditOpenBugDetail", onCodeAuditOpenBugDetailFun)
         }
     }, [])
 
+    const onAuditRuleSubmit = useMemoizedFn(() => {
+        setAuditRule && setAuditRule(ruleEditor)
+        emiter.emit("onAuditRuleSubmit", ruleEditor)
+    })
 
+    const onStopAuditRule = useMemoizedFn(() => {
+        emiter.emit("onStopAuditRule")
+    })
 
     return (
         <div className={styles["bottom-editor-details"]}>
@@ -77,25 +79,45 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 <div className={styles["select-box"]}>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "syntaxCheck",
-                            [styles["no-active-item"]]: showItem !== "syntaxCheck"
+                            [styles["active-item"]]: showItem === "ruleEditor",
+                            [styles["no-active-item"]]: showItem !== "ruleEditor"
                         })}
-                        onClick={() => setShowItem("syntaxCheck")}
+                        onClick={() => setShowItem("ruleEditor")}
                     >
-                        <div className={styles["title"]}>语法检查</div>
-                        {activeFile && <div className={styles["count"]}>{syntaxCheckData.length}</div>}
+                        <div className={styles["title"]}>规则编写</div>
                     </div>
                     <div
                         className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "helpInfo",
-                            [styles["no-active-item"]]: showItem !== "helpInfo"
+                            [styles["active-item"]]: showItem === "holeDetail",
+                            [styles["no-active-item"]]: showItem !== "holeDetail"
                         })}
-                        onClick={() => setShowItem("helpInfo")}
+                        onClick={() => setShowItem("holeDetail")}
                     >
-                        <div className={styles["title"]}>帮助信息</div>
+                        <div className={styles["title"]}>漏洞详情</div>
                     </div>
                 </div>
                 <div className={styles["extra"]}>
+                    {showItem === "ruleEditor" && (
+                        <>
+                            {auditExecuting ? (
+                                <YakitButton
+                                    danger
+                                    icon={<PaperAirplaneIcon />}
+                                    onClick={onStopAuditRule}
+                                >
+                                    暂停执行
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    icon={<PaperAirplaneIcon />}
+                                    onClick={onAuditRuleSubmit}
+                                    disabled={!projectName || ruleEditor.length === 0}
+                                >
+                                    开始审计
+                                </YakitButton>
+                            )}
+                        </>
+                    )}
                     <YakitButton
                         type='text2'
                         icon={<OutlineXIcon />}
@@ -106,30 +128,27 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 </div>
             </div>
             <div className={styles["content"]}>
-                {showType.includes("syntaxCheck") && (
+                {showType.includes("ruleEditor") && (
                     <div
                         className={classNames(styles["render-hideen"], {
-                            [styles["render-show"]]: showItem === "syntaxCheck"
+                            [styles["render-show"]]: showItem === "ruleEditor"
                         })}
                     >
-                        {activeFile ? (
-                            <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
-                        ) : (
-                            <div className={styles["no-syntax-check"]}>请选中具体文件查看语法检查信息</div>
-                        )}
+                        <RuleEditorBox ruleEditor={ruleEditor} setRuleEditor={setRuleEditor} disabled={auditExecuting}/>
                     </div>
                 )}
-                {/* 帮助信息只有yak有 */}
-                {showType.includes("helpInfo") && (
+                {showType.includes("holeDetail") && (
                     <div
                         className={classNames(styles["render-hideen"], {
-                            [styles["render-show"]]: showItem === "helpInfo"
+                            [styles["render-show"]]: showItem === "holeDetail"
                         })}
                     >
-                        {activeFile?.language === "yak" ? (
-                            <HelpInfoList onJumpToEditor={onJumpToEditor} />
+                        {bugHash ? (
+                            <HoleBugDetail bugHash={bugHash} />
                         ) : (
-                            <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
+                            <div className={styles["no-audit"]}>
+                                <YakitEmpty title='暂无漏洞' />
+                            </div>
                         )}
                     </div>
                 )}

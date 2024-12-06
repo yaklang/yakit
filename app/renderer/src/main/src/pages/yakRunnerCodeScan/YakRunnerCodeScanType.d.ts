@@ -1,7 +1,6 @@
-import {GroupCount} from "@/pages/invoker/schema"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
-import {ExecResult} from "@/pages/invoker/schema"
+import {ExecResult, YakScript, GroupCount} from "@/pages/invoker/schema"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {CodeScanPageInfoProps} from "@/store/pageInfo"
 
@@ -29,6 +28,7 @@ export interface CodeScanExecuteContentProps {
     onClearAll: () => void
     selectGroupList: string[]
     pageInfo: CodeScanPageInfoProps
+    pageId: string
 }
 
 export interface CodeScanByGroupProps {
@@ -42,7 +42,9 @@ export interface CodeScanExecuteContentRefProps {
     onStartExecute: () => void
     onPause: () => void
     onContinue: () => void
-    onSetProject: (v:string) => void
+    onSetProject: (v: string) => void
+    onStartAuditExecute: () => void
+    onStopAuditExecute: () => void
 }
 
 export interface CodeScaMainExecuteContentProps {
@@ -54,10 +56,15 @@ export interface CodeScaMainExecuteContentProps {
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
     selectGroupList: string[]
     /**进度条信息 */
-    setProgressList: (s: StreamResult.Progress[]) => void
+    setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
-    auditCodeList:{label: string; value: string}[]
+    auditCodeList: {label: string; value: string}[]
+    getAduitList: () => void
     pageInfo: CodeScanPageInfoProps
+    executeType: "new" | "old"
+    isAuditExecuting: boolean
+    setAuditsExecuting: (v: boolean) => void
+    setExecuteType: (v: "new" | "old") => void
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -181,4 +188,33 @@ export interface QuerySyntaxFlowResultResponse {
     DbMessage: DbOperateMessage
     Results: SyntaxFlowResult[]
     Total: number
+}
+
+export interface CodeScanExecuteExtraParamsDrawerProps {
+    groupParams: YakExtraParamProps[]
+    visible: boolean
+    setVisible: (v: boolean) => void
+    extraParamsValue: any
+    setExtraParamsValue: (v: any) => void
+}
+
+export interface CodeScanAuditExecuteRefProps {
+    onCancelAudit: () => void
+    onStartAuditExecute: () => void
+}
+
+export interface CodeScanAuditExecuteFormProps {
+    ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
+    selectGroupList: string[]
+    plugin?: YakScript
+    onStartExecute: (v: {project: string},is?: boolean) => void
+    /**进度条信息 */
+    setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
+    pushNewLogs: (log: StreamResult.Message[]) => void
+    isAuditExecuting: boolean
+    setAuditsExecuting: (v: boolean) => void
+    setExecuteType: (type: "new" | "old") => void
+    setIsExpand: (v: boolean) => void
+    setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
+    resetStreamInfo: () => void
 }

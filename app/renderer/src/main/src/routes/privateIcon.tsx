@@ -2724,3 +2724,76 @@ const PrivateSolidCodeScan = () => (
 export const PrivateSolidCodeScanIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PrivateSolidCodeScan} {...props} />
 }
+
+const PrivateOutlineProjectManager = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <rect
+            x='15.8243'
+            y='3.9947'
+            width='4.5'
+            height='16.5'
+            rx='0.85'
+            transform='rotate(-6 15.8243 3.9947)'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+        />
+        <rect x='8.75' y='3.71429' width='4.5' height='16.5' rx='0.85' stroke='#31343F' strokeWidth='1.5' />
+        <path d='M10.5 7.96429H11.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M10.5 11.9643H11.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        <rect x='1.75' y='3.71429' width='4.5' height='16.5' rx='0.85' stroke='#31343F' strokeWidth='1.5' />
+        <path d='M3.5 7.96429H4.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 11.9643H4.5' stroke='#F28B44' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 15.9643H4.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+    </svg>
+)
+
+/**
+ * @name 项目管理
+ */
+export const PrivateOutlineProjectManagerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PrivateOutlineProjectManager} {...props} />
+}
+
+const PrivateSolidProjectManager = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <rect
+            x='15.8243'
+            y='3.9947'
+            width='4.5'
+            height='16.5'
+            rx='0.85'
+            transform='rotate(-6 15.8243 3.9947)'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <rect
+            x='8.75'
+            y='3.71429'
+            width='4.5'
+            height='16.5'
+            rx='0.85'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <path d='M10.5 7.96429H11.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M10.5 11.9643H11.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        <rect
+            x='1.75'
+            y='3.71429'
+            width='4.5'
+            height='16.5'
+            rx='0.85'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <path d='M3.5 7.96429H4.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 11.9643H4.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+        <path d='M3.5 15.9643H4.5' stroke='#31343F' strokeWidth='1.5' strokeLinecap='round' />
+    </svg>
+)
+
+export const PrivateSolidProjectManagerIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PrivateSolidProjectManager} {...props} />
+}

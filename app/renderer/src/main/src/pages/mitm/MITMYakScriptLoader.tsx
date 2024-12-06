@@ -34,6 +34,7 @@ import {SolidDotsverticalIcon, SolidLightningboltIcon} from "@/assets/icon/solid
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
+import { getJsonSchemaListResult } from "@/components/JsonFormWrapper/JsonFormWrapper"
 const {Text} = Typography
 
 const {ipcRenderer} = window.require("electron")
@@ -466,6 +467,9 @@ interface MitmHasParamsFormProps {
 const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) => {
     const {initFormValue, requiredParams, groupParams} = props
     const [form] = Form.useForm()
+    const jsonSchemaListRef = useRef<{
+        [key: string]: any; 
+    }>({})
 
     useImperativeHandle(
         ref,
@@ -480,6 +484,14 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             if (!form) return resolve(undefined)
             form.validateFields()
                 .then((values) => {
+                    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                    if(result.jsonSchemaError.length>0) {
+                        failed(`jsonSchema校验失败`)
+                        return
+                    }
+                    result.jsonSchemaSuccess.forEach((item)=>{
+                        values[item.key] = JSON.stringify(item.value) 
+                    })
                     resolve(values)
                 })
                 .catch(() => {
@@ -496,7 +508,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             wrapperCol={{span: 15}}
             initialValues={initFormValue}
         >
-            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} />
+            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} jsonSchemaListRef={jsonSchemaListRef}/>
             <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"mitm"} />
         </Form>
     )

@@ -4,6 +4,15 @@
     flex: 1 1;
     height: 100%;
     overflow: hidden;
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
     .left-wrapper {
         display: flex;
         flex-direction: column;
@@ -191,12 +200,18 @@
     .code-scan-executor-body {
         padding: 0 12px 16px;
     }
+    .code-scan-executor-btn {
+        .progress-show {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+    }
 }
 
 .code-scan-execute-form-wrapper {
-    display: grid;
-    grid-template-rows: 1fr;
-    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
     padding-top: 16px;
     :global {
         .ant-form {
@@ -209,8 +224,9 @@
     }
 }
 .code-scan-execute-form-wrapper-hidden {
-    grid-template-rows: 0fr;
+    height: 0px;
     padding-top: 0;
+    overflow: hidden;
 }
 
 .code-scan-execute-log-wrapper {
@@ -320,6 +336,64 @@
             background-color: #f0f1f3;
             .flow-rule-item {
                 border-color: transparent;
+            }
+        }
+    }
+}
+
+.code-scan-form {
+    :global {
+        .json-schema-form {
+            .ant-form-item {
+                display: flex;
+                flex-direction: row;
+                .ant-form-item-label {
+                    flex: 0 0 25%;
+                    text-align: right;
+                    label::after {
+                        content: ":";
+                        position: relative;
+                        top: -0.5px;
+                        margin: 0 8px 0 2px;
+                        z-index: 1;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+                }
+                .ant-form-item-label + .ant-form-item-control {
+                    flex: 0 0 50%; 
+                }
+
+                .ant-form-item-label {
+                    // 仅在相邻元素不是 .ant-form-item-control 时应用样式
+                    &:not(:has(+ .ant-form-item-control)) {
+                        display: none;
+                        width: 100%;
+                        padding: 0;
+                        margin-bottom: 20px;
+                        text-align: left;
+                        border: 0;
+                        border-bottom: 1px solid #e5e5e5;
+                        label {
+                            font-size: 21px !important;
+                            color: #333;
+                        }
+                        label::after {
+                            content: "";
+                            position: relative;
+                            top: -0.5px;
+                            margin: 0 8px 0 2px;
+                            z-index: 1;
+                            display: inline-flex;
+                            align-items: center;
+                        }
+                    }
+                }
+            }
+
+            // 需询问后端是否可从schema中移除
+            #root_auth__error,#root_proxy__error {
+                display: none;
             }
         }
     }

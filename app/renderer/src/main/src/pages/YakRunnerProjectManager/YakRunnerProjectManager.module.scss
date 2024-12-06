@@ -1,0 +1,13 @@
+.yakrunner-project-manager{
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
+}

@@ -77,6 +77,7 @@ import {
     YaklangLanguageSuggestionRequest
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
+import { openFolder } from "../RunnerFileTree/RunnerFileTree"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1230,21 +1231,6 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 emiter.emit("onOpenFileByPath", JSON.stringify(OpenFileByPathParams))
             }
         } catch (error) {}
-    })
-
-    // 打开文件夹
-    const openFolder = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("openDialog", {
-                title: "请选择文件夹",
-                properties: ["openDirectory"]
-            })
-            .then((data: any) => {
-                if (data.filePaths.length) {
-                    let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
-                    emiter.emit("onOpenFileTree", absolutePath)
-                }
-            })
     })
 
     return (

@@ -86,6 +86,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         size,
         inputProps = {},
         help = "可将文件拖入框内或点击此处",
+        uploadFileText,
+        uploadFolderText,
         value: fileName,
         onChange: setFileName,
         setContent,
@@ -487,7 +489,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFile()
                                     }}
                                 >
-                                    上传文件
+                                    {uploadFileText||"上传文件"}
                                 </span>
                             </span>
                             {isShowPathNumber && (
@@ -514,7 +516,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFolder()
                                     }}
                                 >
-                                    上传文件夹
+                                    {uploadFolderText||"上传文件夹"}
                                 </span>
                             </span>
                             {isShowPathNumber && (
@@ -541,7 +543,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFile()
                                     }}
                                 >
-                                    上传文件
+                                    {uploadFileText||"上传文件"}
                                 </span>
                                 <Divider type='vertical' />
                                 <span
@@ -553,7 +555,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                         onUploadFolder()
                                     }}
                                 >
-                                    上传文件夹
+                                    {uploadFolderText||"上传文件夹"}
                                 </span>
                             </span>
 

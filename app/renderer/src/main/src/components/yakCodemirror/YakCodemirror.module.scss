@@ -1,0 +1,41 @@
+.yak-codemirror {
+    .highlight-text {
+        background-color: #fff3b2; // 浅黄色背景
+        // 或者使用其他样式
+        // border-bottom: 2px solid #f00;  // 下划线
+        // font-weight: bold;  // 加粗
+    }
+    :global {
+        // 禁用文本选择
+        .CodeMirror {
+            pre.CodeMirror-line,
+            pre.CodeMirror-line-like {
+                font-family: "Courier New", Courier, monospace;
+            }
+
+            height: auto !important; // 关键设置
+            // 设置最小高度（可选）
+            min-height: 100px;
+            // 设置最大高度（可选）
+            max-height: 300px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        // 移除只读模式下的背景色
+        .CodeMirror-readonly {
+            background-color: transparent;
+        }
+
+        // 优化滚动条样式
+        .CodeMirror-scrollbar-filler {
+            background-color: transparent;
+        }
+
+        .CodeMirror-simplescroll-horizontal,
+        .CodeMirror-simplescroll-vertical {
+            background-color: #f5f5f5;
+            border: none;
+        }
+    }
+}

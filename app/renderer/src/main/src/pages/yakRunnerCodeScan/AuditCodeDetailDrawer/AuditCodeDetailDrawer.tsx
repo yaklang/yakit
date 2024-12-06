@@ -1,6 +1,4 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {} from "antd"
-import {} from "@ant-design/icons"
 import {useGetState, useMap, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
@@ -373,7 +371,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                             {isShowAuditDetail ? (
                                 <>
                                     {bugId && bugHash ? (
-                                        <RightBugDetail bugHash={bugHash} />
+                                        <HoleBugDetail bugHash={bugHash} />
                                     ) : (
                                         <RightAuditDetail
                                             auditRightParams={auditRightParams}
@@ -395,11 +393,11 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     )
 }
 
-interface RightBugDetailProps {
+interface HoleBugDetailProps {
     bugHash: string
 }
 
-export const RightBugDetail: React.FC<RightBugDetailProps> = React.memo((props) => {
+export const HoleBugDetail: React.FC<HoleBugDetailProps> = React.memo((props) => {
     const {bugHash} = props
     const [info, setInfo] = useState<Risk>()
     useEffect(() => {

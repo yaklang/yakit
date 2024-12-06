@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState, WheelEvent} from "react"
 import classNames from "classnames"
 import styles from "./RightAuditDetail.module.scss"
 import {useMemoizedFn, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
@@ -22,7 +22,8 @@ import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} f
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {v4 as uuidv4} from "uuid"
-import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 
 interface AuditResultItemProps {
     onDetail: (data: CodeRangeProps) => void
@@ -62,7 +63,21 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
     }
 
     const renderItem = (info: GraphInfoProps) => {
-        return <div className={styles["ir-code-box"]}>{info.source_code}</div>
+        const filename = info.code_range.url.split("/").pop()
+        const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
+        return (
+            <YakCodemirror
+                readOnly={true}
+                fileName={filename}
+                value={info.source_code}
+                firstLineNumber={source_code_line}
+                highLight={{
+                    from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
+                    to: {line: end_line - source_code_line, ch: end_column} // 结束位置
+                }}
+            />
+        )
+        // return <div className={styles["ir-code-box"]}>{info.source_code}</div>
     }
 
     return (
@@ -366,6 +381,15 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         {wait: 200}
     ).run
 
+    const handleWheel = useMemoizedFn((event: WheelEvent<HTMLDivElement>) => {
+        if (event.deltaY > 0) {
+            // 最小缩放比例为0.2
+            setScale((prevScale) => Math.max(0.2, prevScale - 0.2))
+        } else if (event.deltaY < 0) {
+            setScale((prevScale) => prevScale + 0.2)
+        }
+    })
+
     return (
         <div className={styles["flow-chart-box"]} id={idBoxRef.current}>
             <div className={styles["header"]}>
@@ -399,6 +423,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
                 ref={svgBoxRef}
             />
             {nodeId && (
@@ -427,7 +452,26 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                                 </div>
                             </Tooltip>
                         )}
-                        {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>}
+                        {contentInfo && (
+                            <YakCodemirror
+                                readOnly={true}
+                                fileName={contentInfo?.code_range.url.split("/").pop()}
+                                value={contentInfo?.ir_code || ""}
+                                firstLineNumber={contentInfo.code_range.source_code_line}
+                                highLight={{
+                                    from: {
+                                        line:
+                                            contentInfo.code_range.start_line - contentInfo.code_range.source_code_line,
+                                        ch: contentInfo.code_range.start_column
+                                    }, // 开始位置
+                                    to: {
+                                        line: contentInfo.code_range.end_line - contentInfo.code_range.source_code_line,
+                                        ch: contentInfo.code_range.end_column
+                                    } // 结束位置
+                                }}
+                            />
+                        )}
+                        {/* {contentInfo && <div className={styles["ir-code-box"]}>{contentInfo?.ir_code}</div>} */}
                     </div>
                 </div>
             )}
@@ -441,6 +485,8 @@ export interface CodeRangeProps {
     start_line: number
     end_column: number
     end_line: number
+    // 代码段启示行数
+    source_code_line: number
 }
 
 export interface GraphInfoProps {
