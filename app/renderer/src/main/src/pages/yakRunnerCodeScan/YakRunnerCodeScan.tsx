@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useReducer, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     CodeScaMainExecuteContentProps,
     CodeScanByGroupProps,
@@ -7,10 +7,6 @@ import {
     CodeScanGroupByKeyWordItemProps,
     CodeScanGroupByKeyWordProps,
     FlowRuleDetailsListItemProps,
-    QuerySyntaxFlowRuleRequest,
-    QuerySyntaxFlowRuleResponse,
-    SyntaxFlowGroup,
-    SyntaxFlowRule,
     SyntaxFlowScanExecuteState,
     SyntaxFlowScanRequest,
     SyntaxFlowScanResponse,
@@ -18,13 +14,10 @@ import {
 } from "./YakRunnerCodeScanType"
 import {Divider, Form, Tooltip} from "antd"
 import {} from "@ant-design/icons"
-import {useControllableValue, useCreation, useDebounceFn, useGetState, useInViewport, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
+import {info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlinCompileIcon,
@@ -40,34 +33,34 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {RemoteGV} from "@/yakitGV"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {GroupCount} from "../invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {addToTab} from "../MainTabs"
-import {
-    apiCancelSyntaxFlowScan,
-    apiFetchQuerySyntaxFlowRule,
-    apiFetchQuerySyntaxFlowRuleGroup,
-    apiSyntaxFlowScan
-} from "./utils"
+import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
-import useHoldGRPCStream, { convertCardInfo } from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import { HoldGRPCStreamProps, StreamResult } from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {isCommunityEdition} from "@/utils/envfile"
 import {WaterMark} from "@ant-design/pro-layout"
 import {AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import { v4 as uuidv4 } from "uuid"
+import {v4 as uuidv4} from "uuid"
+import {grpcFetchLocalRuleGroupList, grpcFetchLocalRuleList} from "../ruleManagement/api"
+import {
+    QuerySyntaxFlowRuleRequest,
+    QuerySyntaxFlowRuleResponse,
+    SyntaxFlowGroup,
+    SyntaxFlowRule
+} from "../ruleManagement/RuleManagementType"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {
@@ -102,9 +95,9 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
                 KeyWord
             }
         }
-        apiFetchQuerySyntaxFlowRuleGroup(params)
-            .then((res) => {
-                setResponse(res)
+        grpcFetchLocalRuleGroupList(params)
+            .then(({Group}) => {
+                setResponse(Group)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -420,9 +413,9 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                     Order: "desc"
                 }
             }
-            query.Filter.GroupNames = selectGroupList
+            if (query.Filter) query.Filter.GroupNames = selectGroupList
             try {
-                const res = await apiFetchQuerySyntaxFlowRule(query)
+                const res = await grpcFetchLocalRuleList(query)
                 if (!res.Rule) res.Rule = []
                 const length = +res.Pagination.Page === 1 ? res.Rule.length : res.Rule.length + response.Rule.length
                 setHasMore(length < +res.Total)
@@ -794,7 +787,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /** 放入日志队列 */
         const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
-            messages.current.unshift({ ...log, content: { ...log.content, id: uuidv4() } })
+            messages.current.unshift({...log, content: {...log.content, id: uuidv4()}})
             // 只缓存 100 条结果（日志类型 + 数据类型）
             if (messages.current.length > 100) {
                 messages.current.pop()
@@ -814,7 +807,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     .filter((i) => i.data !== "null")
                 setStreamInfo({
                     cardState: convertCardInfo(cardKVPair.current),
-                    logState: logs,
+                    logState: logs
                 })
             }, 200)
             return () => clearInterval(id)
@@ -865,7 +858,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
                             if (obj.type === "progress") {
                                 setProgressList([obj.content] as StreamResult.Progress[])
-                                return 
+                                return
                             }
 
                             // feature-status-card-data 卡片展示
@@ -877,8 +870,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                     if (!checkInfo) return
 
                                     const obj: StreamResult.Card = checkInfo
-                                    const { id, data, tags } = obj
-                                    const { timestamp } = logData
+                                    const {id, data, tags} = obj
+                                    const {timestamp} = logData
                                     const originData = cardKVPair.current.get(id)
                                     if (originData && originData.Timestamp > timestamp) {
                                         return
@@ -889,13 +882,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                         Timestamp: timestamp,
                                         Tags: Array.isArray(tags) ? tags : []
                                     })
-                                } catch (e) { }
+                                } catch (e) {}
                                 return
                             }
 
                             pushLogs(obj)
-
-                        } catch (error) { }
+                        } catch (error) {}
                     }
                 }
             })
@@ -1031,24 +1023,24 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     </Form>
                 </div>
                 {isShowResult && (
-                        <PluginExecuteResult
-                            streamInfo={{
-                                progressState: [],
-                                cardState: streamInfo.cardState,
-                                tabsState: [
-                                    {tabName: "审计结果", type: "result"},
-                                    {tabName: "漏洞与风险", type: "risk"},
-                                    {tabName: "日志", type: "log"},
-                                    {tabName: "Console", type: "console"}
-                                ],
-                                logState:streamInfo.logState,
-                                tabsInfoState:{},
-                                riskState:[],
-                            }}
-                            runtimeId={runtimeId}
-                            loading={isExecuting}
-                            defaultActiveKey={undefined}
-                        />
+                    <PluginExecuteResult
+                        streamInfo={{
+                            progressState: [],
+                            cardState: streamInfo.cardState,
+                            tabsState: [
+                                {tabName: "审计结果", type: "result"},
+                                {tabName: "漏洞与风险", type: "risk"},
+                                {tabName: "日志", type: "log"},
+                                {tabName: "Console", type: "console"}
+                            ],
+                            logState: streamInfo.logState,
+                            tabsInfoState: {},
+                            riskState: []
+                        }}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        defaultActiveKey={undefined}
+                    />
                 )}
             </>
         )

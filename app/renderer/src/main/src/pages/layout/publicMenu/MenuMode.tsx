@@ -21,6 +21,7 @@ import {
     PublicReportIcon,
     PublicReverseServerIcon,
     PublicRiskIcon,
+    PublicRuleManagementIcon,
     PublicScanPortIcon,
     PublicShellReceiverIcon,
     PublicSpaceEngineIcon,
@@ -364,6 +365,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             </div>
                         </div>
                         <div className={styles["title-style"]}>代码扫描</div>
+                    </div>
+                    <div className={styles["divider-style"]}></div>
+                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.Rule_Management)}>
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicRuleManagementIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>规则管理</div>
                     </div>
                 </>
             )}

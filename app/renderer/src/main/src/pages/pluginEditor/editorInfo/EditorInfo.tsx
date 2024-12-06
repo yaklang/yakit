@@ -180,7 +180,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         // 更新 form 里的数据
         const updateFormData = useMemoizedFn((value: Record<string, any>) => {
             if (form) {
-                form.setFieldsValue({...form.getFieldsValue, ...cloneDeep(value)})
+                form.setFieldsValue({...form.getFieldsValue(), ...cloneDeep(value)})
             }
         })
         /** ---------- 表单相关方法  End ---------- */

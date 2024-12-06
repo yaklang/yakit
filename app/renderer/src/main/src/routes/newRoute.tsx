@@ -137,6 +137,7 @@ import {YakRunnerCodeScan} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan"
 import {YakRunnerAuditCode} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
+import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -221,7 +222,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     data_statistics: {label: "数据统计"},
     "space-engine": {label: "空间引擎"},
     "yakrunner-code-scan": {label: "代码扫描"},
-    "yakrunner-audit-code": {label: "代码审计"}
+    "yakrunner-audit-code": {label: "代码审计"},
+    "rule-management": {label: "规则管理"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -255,7 +257,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Plugin_Audit,
     YakitRoute.Beta_WebShellManager,
     YakitRoute.Data_Statistics,
-    YakitRoute.YakRunner_Audit_Code
+    YakitRoute.YakRunner_Audit_Code,
+    YakitRoute.Rule_Management
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -288,7 +291,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DB_Risk,
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
-    YakitRoute.YakRunner_Audit_Code
+    YakitRoute.YakRunner_Audit_Code,
+    YakitRoute.Rule_Management
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -524,6 +528,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerCodeScan pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Code:
             return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
+        case YakitRoute.Rule_Management:
+            return <RuleManagement />
         default:
             return <div />
     }
@@ -771,6 +777,10 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {
                 page: YakitRoute.YakRunner_Code_Scan,
                 ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
+            },
+            {
+                page: YakitRoute.Rule_Management,
+                ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
             }
         ]
     },
