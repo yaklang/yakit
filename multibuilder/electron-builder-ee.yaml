@@ -1,7 +1,7 @@
 appId: "io.yaklang.enpritrace"
 extraMetadata:
     name: enpritrace
-productName: "逻辑漏洞自动化检测与利用系统"
+productName: "CSPG"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
