@@ -72,7 +72,7 @@ linux:
           arch:
               - x64
               - arm64
-    icon: "app/assets/yakiteelogo.icns"
+    icon: "app/assets/yakiteelogo.png"
 
 win:
     # requestedExecutionLevel: requireAdministrator
