@@ -211,6 +211,9 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             <Divider dashed style={{marginTop: 0}} />
                         </Col>
                     </Row>
+                    <Form.Item label='生效url' name='ValidURL'>
+                        <YakitInput />
+                    </Form.Item>
                     <Form.Item label='命中颜色' name='Color'>
                         <YakitSelect size='middle' wrapperStyle={{width: "100%"}}>
                             {colorSelectNode}
