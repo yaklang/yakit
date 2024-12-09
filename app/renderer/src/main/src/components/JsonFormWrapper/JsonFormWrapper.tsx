@@ -22,6 +22,7 @@ import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
+import ArrayFieldTemplate from "./ArrayFieldTemplate"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -402,6 +403,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器
+                templates={{ ArrayFieldTemplate }}
                 widgets={{
                     // 将默认控件替换为自定义控件
                     TextWidget: getTextWidget,

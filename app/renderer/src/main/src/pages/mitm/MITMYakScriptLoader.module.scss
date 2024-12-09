@@ -95,6 +95,50 @@
     max-height: 700px;
     margin: 15px 10px;
     overflow: auto;
+    :global {
+        .json-schema-form {
+            padding: 0px 16px;
+            .ant-form-item {
+                display: flex;
+                flex-direction: row;
+                // padding: 0px 16px;
+                .ant-form-item-label {
+                    flex: 8;
+                    text-align: right;
+                    label::after {
+                        content: ":";
+                        position: relative;
+                        top: -0.5px;
+                        margin: 0 8px 0 2px;
+                        z-index: 1;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+                }
+                .ant-form-item-control {
+                    flex: 16;
+                }
+            }
+            .ant-form-item-label {
+                // 仅在相邻元素不是 .ant-form-item-control 时应用样式
+                &:not(:has(+ .ant-form-item-control)) {
+                    text-align: left;
+                    label {
+                        color: #333;
+                    }
+                    label::after {
+                        content: "";
+                        position: relative;
+                        top: -0.5px;
+                        margin: 0 8px 0 2px;
+                        z-index: 1;
+                        display: inline-flex;
+                        align-items: center;
+                    }
+                }
+            }
+        }
+    }
 }
 
 .extra-menu {

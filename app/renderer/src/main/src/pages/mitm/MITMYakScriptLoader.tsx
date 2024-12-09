@@ -505,7 +505,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             form={form}
             layout={"horizontal"}
             labelCol={{span: 8}}
-            wrapperCol={{span: 15}}
+            wrapperCol={{span: 16}}
             initialValues={initFormValue}
         >
             <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} jsonSchemaListRef={jsonSchemaListRef} jsonSchemaInitial={initFormValue}/>
