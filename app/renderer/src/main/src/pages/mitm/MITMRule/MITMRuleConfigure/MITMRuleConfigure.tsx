@@ -1,6 +1,5 @@
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {YakEditor} from "@/utils/editors"
 import {failed, info} from "@/utils/notification"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {Spin} from "antd"
@@ -10,6 +9,7 @@ import styles from "./MITMRuleConfigure.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMemoizedFn} from "ahooks"
 import defaultConfig from "./yakitMitmReplacerRulesConfig.json"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,7 +43,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>
-                    <YakEditor type={"json"} value={new Buffer(value).toString("utf8")} readOnly={true} />
+                    <YakitEditor type={"json"} value={new Buffer(value).toString("utf8")} readOnly={true} />
                 </div>
             </Spin>
         </YakitModal>
@@ -123,8 +123,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
         >
             <Spin spinning={loading}>
                 <div style={{height: 466}}>
-                    <YakEditor
-                        triggerId={loading}
+                    <YakitEditor
                         type={"json"}
                         value={new Buffer(params.JsonRaw).toString("utf8")}
                         setValue={(e) => {
