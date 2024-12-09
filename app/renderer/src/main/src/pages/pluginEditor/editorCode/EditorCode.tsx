@@ -44,7 +44,7 @@ import {CodeScoreModal} from "@/pages/plugins/funcTemplate"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorCode.module.scss"
-import { getJsonSchemaListResult, JsonFormValidateProps } from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {getJsonSchemaListResult, JsonFormValidateProps} from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 export interface EditorCodeRefProps {
     onSubmit: () => string
@@ -145,7 +145,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
         /** ---------- 参数获取和展示逻辑 Start ---------- */
         const [form] = Form.useForm()
         const jsonSchemaListRef = useRef<{
-            [key: string]: any; 
+            [key: string]: any
         }>({})
 
         // 设置非(yak|lua)类型的插件参数初始值
@@ -209,12 +209,22 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                         Help: "Input"
                     }
                     return (
-                        <OutputFormComponentsByType
-                            key='Input-Input'
-                            item={codecItem}
-                            codeType='plaintext'
-                            disabled={isExecuting}
-                        />
+                        <>
+                            {params.length > 0 && requiredParams.length > 0 ? (
+                                <ExecuteEnterNodeByPluginParams
+                                    paramsList={requiredParams}
+                                    pluginType={type}
+                                    isExecuting={isExecuting}
+                                    jsonSchemaListRef={jsonSchemaListRef}
+                                />
+                            ) : null}
+                            <OutputFormComponentsByType
+                                key='Input-Input'
+                                item={codecItem}
+                                codeType='plaintext'
+                                disabled={isExecuting}
+                            />
+                        </>
                     )
                 case "mitm":
                     return (
@@ -270,13 +280,18 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                 <div className={styles["text-style"]}>额外参数 (非必填)</div>
                                 <div className={styles["divider-style"]}></div>
                             </div>
-                            <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
+                            <ExtraParamsNodeByType
+                                extraParamsGroup={groupParams}
+                                pluginType={type}
+                                jsonSchemaListRef={jsonSchemaListRef}
+                            />
 
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>
                     )
 
                 case "mitm":
+                case "codec":
                     return isHiddenDefaultParams && isHiddenCustomParams ? null : (
                         <>
                             {!isHiddenCustomParams ? (
@@ -285,7 +300,11 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                                         <div className={styles["text-style"]}>自定义参数 (非必填)</div>
                                         <div className={styles["divider-style"]}></div>
                                     </div>
-                                    <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={type} jsonSchemaListRef={jsonSchemaListRef}/>
+                                    <ExtraParamsNodeByType
+                                        extraParamsGroup={groupParams}
+                                        pluginType={type}
+                                        jsonSchemaListRef={jsonSchemaListRef}
+                                    />
                                 </>
                             ) : null}
                             {!isHiddenDefaultParams && (
@@ -353,14 +372,13 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             if (form) {
                 form.validateFields()
                     .then(async (value: any) => {
-                        
                         const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                        if(result.jsonSchemaError.length>0) {
+                        if (result.jsonSchemaError.length > 0) {
                             failed(`jsonSchema校验失败`)
                             return
                         }
-                        result.jsonSchemaSuccess.forEach((item)=>{
-                            value[item.key] =  JSON.stringify(item.value) 
+                        result.jsonSchemaSuccess.forEach((item) => {
+                            value[item.key] = JSON.stringify(item.value)
                         })
 
                         // 保存参数-请求路径的选项

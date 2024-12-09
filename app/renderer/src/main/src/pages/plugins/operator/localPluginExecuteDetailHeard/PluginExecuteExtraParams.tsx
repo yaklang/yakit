@@ -85,6 +85,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                         onSave({customValue: formValue, fixedValue: {...defPluginExecuteFormValue}})
                     })
                     break
+                case "codec":
                 case "mitm":
                     form.validateFields().then((formValue: HTTPRequestBuilderParams) => {
                         if (formValue.Path) {

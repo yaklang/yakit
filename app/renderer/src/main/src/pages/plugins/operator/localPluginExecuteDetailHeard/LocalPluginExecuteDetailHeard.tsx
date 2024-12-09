@@ -10,7 +10,7 @@ import {
     YakExtraParamProps,
     FormContentItemByTypeProps,
     PluginFixFormParamsProps,
-    RequestType,
+    RequestType
 } from "./LocalPluginExecuteDetailHeardType"
 import {PluginDetailHeader} from "../../baseTemplate"
 import styles from "./LocalPluginExecuteDetailHeard.module.scss"
@@ -43,7 +43,7 @@ import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
 import {defPluginExecuteFormValue} from "./constants"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
-import { getJsonSchemaListResult, JsonFormWrapper } from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -85,7 +85,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
 
     const jsonSchemaListRef = useRef<{
-        [key: string]: any; 
+        [key: string]: any
     }>({})
 
     const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
@@ -192,12 +192,22 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
                     Help: "Input"
                 }
                 return (
-                    <OutputFormComponentsByType
-                        key='Input-Input'
-                        item={codecItem}
-                        codeType='plaintext'
-                        disabled={isExecuting}
-                    />
+                    <>
+                        {plugin.Params.length > 0 && requiredParams.length > 0 ? (
+                            <ExecuteEnterNodeByPluginParams
+                                paramsList={requiredParams}
+                                pluginType={plugin.Type}
+                                isExecuting={isExecuting}
+                                jsonSchemaListRef={jsonSchemaListRef}
+                            />
+                        ) : null}
+                        <OutputFormComponentsByType
+                            key='Input-Input'
+                            item={codecItem}
+                            codeType='plaintext'
+                            disabled={isExecuting}
+                        />
+                    </>
                 )
             case "mitm":
                 return (
@@ -227,14 +237,14 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
         const input = value["Input"]
         const result = getJsonSchemaListResult(jsonSchemaListRef.current)
 
-        if(result.jsonSchemaError.length>0) {
+        if (result.jsonSchemaError.length > 0) {
             failed(`jsonSchema校验失败`)
             return
         }
-        result.jsonSchemaSuccess.forEach((item)=>{
+        result.jsonSchemaSuccess.forEach((item) => {
             yakExecutorParams.push({
-                Key:item.key,
-                Value:JSON.stringify(item.value) 
+                Key: item.key,
+                Value: JSON.stringify(item.value)
             })
         })
 
@@ -316,7 +326,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const isShowExtraParamsButton = useMemo(() => {
         switch (plugin.Type) {
             case "codec":
-                return false
+                if (extraParamsGroup.length > 0) return true
+                return requestType === "input"
             case "mitm":
                 if (extraParamsGroup.length > 0) return true
                 return requestType === "input"
@@ -334,6 +345,8 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             case "lua":
                 return customExtraParamsValue
             case "mitm":
+                return {...customExtraParamsValue, ...extraParamsValue}
+            case "codec":
                 return {...customExtraParamsValue, ...extraParamsValue}
             case "port-scan":
             case "nuclei":
@@ -488,13 +501,18 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 
 /**执行的入口通过插件参数生成组件 */
 export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
-    const {paramsList, pluginType, isExecuting,jsonSchemaListRef} = props
+    const {paramsList, pluginType, isExecuting, jsonSchemaListRef} = props
 
     return (
         <>
             {paramsList.map((item) => (
                 <React.Fragment key={item.Field + item.FieldVerbose}>
-                    <FormContentItemByType item={item} pluginType={pluginType} disabled={isExecuting} jsonSchemaListRef={jsonSchemaListRef}/>
+                    <FormContentItemByType
+                        item={item}
+                        pluginType={pluginType}
+                        disabled={isExecuting}
+                        jsonSchemaListRef={jsonSchemaListRef}
+                    />
                 </React.Fragment>
             ))}
         </>
@@ -502,7 +520,7 @@ export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginPa
 })
 /**插件执行输入》输出form表单的组件item */
 export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
-    const {item, disabled, pluginType,jsonSchemaListRef} = props
+    const {item, disabled, pluginType, jsonSchemaListRef} = props
     let extraSetting: FormExtraSettingProps | undefined = undefined
     try {
         extraSetting = JSON.parse(item.ExtraSetting || "{}") || {
@@ -610,7 +628,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, codeType, disabled, pluginType,jsonSchemaListRef} = props
+    const {item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef} = props
     const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
 
     const formProps = {
@@ -667,11 +685,8 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "string":
             return (
                 <Form.Item {...formProps}>
-                    <YakitAutoComplete
-                        options={additionalConfig?.inputOption || []}
-                        disabled={disabled}
-                    >
-                        <YakitInput placeholder='请输入'/> 
+                    <YakitAutoComplete options={additionalConfig?.inputOption || []} disabled={disabled}>
+                        <YakitInput placeholder='请输入' />
                     </YakitAutoComplete>
                 </Form.Item>
             )
@@ -786,16 +801,21 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                 </Form.Item>
             )
         case "json":
-            if(typeof jsonSchemaListRef?.current !== "object") return <></>
+            if (typeof jsonSchemaListRef?.current !== "object") return <></>
             let schema: any = {}
             try {
                 schema = JSON.parse(item.JsonSchema || "{}")
             } catch (error) {
                 console.error("Parse JsonSchema failed:", error)
             }
-            return <JsonFormWrapper field={item.Field} schema={schema} 
-            jsonSchemaListRef={jsonSchemaListRef} disabled={disabled}
-            />
+            return (
+                <JsonFormWrapper
+                    field={item.Field}
+                    schema={schema}
+                    jsonSchemaListRef={jsonSchemaListRef}
+                    disabled={disabled}
+                />
+            )
         default:
             return <></>
     }
