@@ -216,7 +216,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     JSON.stringify({
                         route: YakitRoute.YakRunner_Code_Scan,
                         params: {
-                            projectName
+                            projectName:[projectName]
                         }
                     })
                 )
