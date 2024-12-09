@@ -839,6 +839,10 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
         const [inputType, setInputType] = useState<"content" | "path">("content")
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value) => {
+            if (selectNum === 0) {
+                yakitNotify("info", "请勾选插件")
+                return
+            }
             const hybridScanParams: HybridScanControlAfterRequest = {
                 ...getHybridScanParams(value),
                 HybridScanTaskSource: hybridScanTaskSource
@@ -942,7 +946,7 @@ export const HybridScanExecuteContent: React.FC<HybridScanExecuteContentProps> =
                                     </>
                                 ) : (
                                     <>
-                                        <YakitButton htmlType='submit' size='large' disabled={selectNum === 0}>
+                                        <YakitButton htmlType='submit' size='large'>
                                             开始执行
                                         </YakitButton>
                                     </>
