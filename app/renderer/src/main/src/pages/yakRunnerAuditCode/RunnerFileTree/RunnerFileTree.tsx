@@ -102,10 +102,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         } catch (error) {}
     })
 
+    // 打开已有项目
+    const onCodeAuditHistoryExpandedFun = useMemoizedFn(() => {
+        setVisible(true)
+    })
+
     useEffect(() => {
         emiter.on("onCodeAuditDefaultExpanded", onDefaultExpanded)
+        emiter.on("onCodeAuditHistoryExpanded", onCodeAuditHistoryExpandedFun)
         return () => {
             emiter.off("onCodeAuditDefaultExpanded", onDefaultExpanded)
+            emiter.off("onCodeAuditHistoryExpanded", onCodeAuditHistoryExpandedFun)
         }
     }, [])
 
