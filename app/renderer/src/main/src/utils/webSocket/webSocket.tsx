@@ -26,7 +26,7 @@ export const startWebSocket = () => {
         // 连接成功时 通知需要消息中心信息
         sendWebSocket({
             messageType: "messageLog",
-            params: {}
+            params: {},
         })
     })
 

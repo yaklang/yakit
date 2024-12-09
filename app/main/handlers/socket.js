@@ -1,7 +1,7 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const WebSocket = require("ws")
 const url = require("url")
-const {HttpSetting, USER_INFO} = require("../state")
+const { HttpSetting, USER_INFO } = require("../state")
 
 const getSocketUrl = (inputUrl) => {
     // 解析 URL
@@ -57,7 +57,7 @@ module.exports = (win, getClient) => {
         if (isConnect && ws) {
             onCloseSocket()
         }
-        const {token} = USER_INFO
+        const { token } = USER_INFO
         const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/ws`
         // console.log("USER_INFO--------------------", socketUrl, token)
         ws = new WebSocket(socketUrl, {

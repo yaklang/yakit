@@ -1,10 +1,10 @@
 import React, {useEffect, useRef, useState} from "react"
 import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
-import {CollabStatus, EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
+import {CollabStatus, EditorMilkdownProps, MilkdownCollabProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import styles from "./ModifyNotepad.module.scss"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
-import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps, OnlineUsersProps} from "./ModifyNotepadType"
+import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps} from "./ModifyNotepadType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider, Tooltip, Tree} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -39,29 +39,10 @@ import {apiDeleteNotepadDetail, apiGetNotepadDetail, apiSaveNotepadList} from ".
 import moment from "moment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CollabUserInfo} from "@/components/MilkdownEditor/CollabManager"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
-const onlineUserList: OnlineUsersProps[] = [
-    {
-        id: 1,
-        name: "张三",
-        img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
-        onlineStatus: "#56C991"
-    },
-    {
-        id: 2,
-        name: "李四",
-        img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
-        onlineStatus: "#4A94F8"
-    },
-    {
-        id: 3,
-        name: "王五",
-        img: "https://img2.baidu.com/it/u=3239145147,4288448155&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
-        onlineStatus: "#8863F7"
-    }
-]
 const notepadMixWidth = 1200
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const {pageId} = props
@@ -98,7 +79,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [expand, setExpand] = useState<boolean>(true)
-    const [onlineUsers, setOnlineUsers] = useState<OnlineUsersProps[]>(onlineUserList)
+    const [onlineUsers, setOnlineUsers] = useState<CollabUserInfo[]>([])
     const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
 
     const [shareVisible, setShareVisible] = useState<boolean>(false)
@@ -134,6 +115,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
+                console.log("apiGetNotepadDetail", res)
                 setNotepadDetail(res)
             })
         } else {
@@ -249,20 +231,26 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         setExpand(!expand)
     })
     const onSetDocumentLinkStatus = useMemoizedFn((val: CollabStatus) => {
+        console.log("onSetDocumentLinkStatus", val)
         setDocumentLinkStatus(val)
         if (val.status === "connected") {
             setLoading(false)
         }
     })
 
+    const onSetOnlineUsers = useMemoizedFn((users: CollabUserInfo[]) => {
+        setOnlineUsers(users.filter((ele) => ele.userId !== userInfo.user_id))
+    })
+
     const renderOnlineStatus = useCreation(() => {
-        const {status, isSynced} = documentLinkStatus
+        const {status, isSynced = true, isSave = true} = documentLinkStatus
         switch (status) {
             case "connected":
                 return (
                     <>
                         <YakitTag color='green'>在线</YakitTag>
-                        <span>{isSynced ? "已经保存到云端" : "保存中..."}</span>
+                        <span>{isSave ? "已经保存到云端" : "保存中..."}</span>
+                        {isSynced && "已同步"}
                     </>
                 )
             case "connecting":
@@ -288,12 +276,25 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if ((notepadWidth || clientWidthRef.current) < notepadMixWidth) return 300
         return (notepadWidth - 820 - 32) / 2
     }, [notepadWidth, clientWidthRef.current])
-    const routeInfo = useCreation(() => {
-        return {
-            pageId,
-            route: YakitRoute.Modify_Notepad
+    const collabProps: MilkdownCollabProps = useCreation(() => {
+        const collabValue: MilkdownCollabProps = {
+            enableCollab: true,
+            milkdownHash: notepadDetail.hash,
+            routeInfo: {
+                pageId,
+                route: YakitRoute.Modify_Notepad
+            },
+            enableSaveHistory: true,
+            onChangeWSLinkStatus: onSetDocumentLinkStatus,
+            onChangeOnlineUser: setOnlineUsers
+            // onChangeOnlineUser: onSetOnlineUsers,// 过滤了作者本人
         }
-    }, [pageId, YakitRoute.Modify_Notepad])
+        return collabValue
+    }, [notepadDetail.hash, pageId, YakitRoute.Modify_Notepad])
+
+    const authorAvatar = useCreation(() => {
+        return judgeAvatar(userInfo, 28, avatarColor.current)
+    }, [userInfo.companyName])
 
     return (
         <YakitSpin spinning={loading}>
@@ -303,14 +304,19 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     <div className={styles["modify-notepad-heard-extra"]}>
                         <div className={styles["modify-notepad-heard-extra-online-user"]}>
                             {onlineUsers.map((item) => (
-                                <Tooltip key={item.id} title={item.name}>
-                                    <div key={item.id}>
+                                <Tooltip key={item.userId} title={item.name}>
+                                    {/* {judgeAvatar(
+                                        {companyHeadImg: item.heardImg, companyName: item.name},
+                                        28,
+                                        randomAvatarColor()
+                                    )} */}
+                                    <div key={item.userId}>
                                         <AuthorImg
-                                            src={item.img}
+                                            src={item.heardImg}
                                             icon={
                                                 <div
                                                     className={styles["online-user-dot"]}
-                                                    style={{backgroundColor: item.onlineStatus}}
+                                                    style={{backgroundColor: item.color}}
                                                 />
                                             }
                                             iconClassName={styles["online-user-icon"]}
@@ -357,7 +363,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         />
                         <Divider type='vertical' style={{margin: 0}} />
 
-                        <Tooltip title={userInfo.companyName}>{judgeAvatar(userInfo, 28, avatarColor.current)}</Tooltip>
+                        <Tooltip title={userInfo.companyName}>{authorAvatar}</Tooltip>
                     </div>
                 </div>
                 <div className={classNames(styles["notepad"])} ref={notepadRef}>
@@ -419,7 +425,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 onChange={(e) => onSetTabName(e.target.value)}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
-                                <AuthorImg src={notepadDetail?.headImg} />
+                                {notepadDetail?.headImg ? <AuthorImg src={notepadDetail?.headImg} /> : authorAvatar}
                                 <span>{notepadDetail?.userName}</span>
                                 <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
@@ -445,9 +451,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                             <MilkdownEditor
                                 setEditor={setEditor}
                                 customPlugin={cataloguePlugin(getCatalogue)}
-                                enableCollab={true}
-                                onChangeWSLinkStatus={onSetDocumentLinkStatus}
-                                routeInfo={routeInfo}
+                                collabProps={collabProps}
                             />
                         </div>
                     </div>

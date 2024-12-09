@@ -28,6 +28,8 @@ export declare namespace API {
          */
         messageType: string
         params: object
+        yjsParams?: string
+        token?: string
     }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
