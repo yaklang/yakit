@@ -65,6 +65,7 @@ export interface CodeScaMainExecuteContentProps {
     isAuditExecuting: boolean
     setAuditsExecuting: (v: boolean) => void
     setExecuteType: (v: "new" | "old") => void
+    pageId: string
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -139,7 +140,8 @@ export type SyntaxFlowScanModeType = "start" | "pause" | "resume" | "status"
 export interface SyntaxFlowScanRequest {
     ControlMode: SyntaxFlowScanModeType
     Filter?: SyntaxFlowRuleFilter
-    ProgramName: string[]
+    ProgramName?: string[]
+    ResumeTaskId?: string
 }
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"

@@ -1,0 +1,56 @@
+@use "../../securityTool/securityTool.scss" as securityTool;
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+%display-column-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+%svg {
+    width: 16px;
+    height: 16px;
+    svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.table-status-item {
+    @extend %display-flex-center;
+    gap: 4px;
+    .status-text {
+        color: var(--yakit-header-color);
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+    }
+    .icon-success {
+        @extend %svg;
+        color: var(--yakit-success-5);
+    }
+    .icon-primary {
+        @extend %svg;
+        color: var(--yakit-primary-5);
+        animation: spin 1s infinite linear;
+    }
+    .icon-helper {
+        @extend %svg;
+        color: var(--yakit-helper-text-color);
+    }
+    .icon-danger {
+        @extend %svg;
+        color: var(--yakit-danger-5);
+    }
+    .icon-question {
+        @extend %svg;
+        color: var(--yakit-helper-text-color);
+        cursor: pointer;
+        &:hover {
+            color: var(--yakit-primary-5);
+        }
+    }
+}

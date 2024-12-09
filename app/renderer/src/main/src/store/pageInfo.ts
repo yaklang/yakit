@@ -183,8 +183,10 @@ export interface AuditCodePageInfoProps {
 }
 
 export interface CodeScanPageInfoProps {
-    projectName?: string
+    projectName?: string[]
     selectGroupListByKeyWord?: string[]
+    codeScanMode?: HybridScanModeType
+    runtimeId?: string
 }
 
 interface PageInfoStoreProps {
