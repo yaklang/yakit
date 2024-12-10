@@ -7,6 +7,7 @@ import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
+import yakitCE from "@/assets/yakit.jpg"
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import styles from "./yakitLoading.module.scss"
@@ -101,7 +102,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 rules={[
                                     {required: true, message: `请输入端口号`},
                                     {
-                                        pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+                                        pattern:
+                                            /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
                                         message: "请输入正确的端口号"
                                     }
                                 ]}
@@ -279,13 +281,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {/* 社区版 - 启动Logo */}
                     {isCommunityEdition() && (
                         <div className={styles["yakit-loading-icon-wrapper"]}>
-                            <div className={styles["theme-icon-wrapper"]}>
-                                <div className={styles["theme-icon"]}>
-                                    <YakitThemeLoadingSvgIcon />
-                                </div>
-                            </div>
                             <div className={styles["white-icon"]}>
-                                <YakitLoadingSvgIcon />
+                                <img src={yakitCE} alt='暂无图片' />
                             </div>
                         </div>
                     )}

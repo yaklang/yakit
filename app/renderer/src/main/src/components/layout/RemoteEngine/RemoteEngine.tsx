@@ -16,7 +16,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakEditor} from "@/utils/editors"
-
+import yakitCE from "@/assets/yakit.jpg"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSE from "@/assets/yakitSE.png"
 import classNames from "classnames"
@@ -124,7 +124,11 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
             <YakitSpin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        {isCommunityEdition() && <YakitThemeSvgIcon className={styles["logo-img"]} />}
+                        {isCommunityEdition() && (
+                            <div className={styles["logo-img"]}>
+                                <img src={yakitCE} alt='暂无图片' />
+                            </div>
+                        )}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
                                 <img src={yakitEE} alt='暂无图片' />
