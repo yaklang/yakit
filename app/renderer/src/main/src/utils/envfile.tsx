@@ -29,7 +29,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
             return "SS-EnpriTrace"
         default:
-            return "Yakit"
+            return "渗透测试平台V1.0"
     }
 }
 /** EE */

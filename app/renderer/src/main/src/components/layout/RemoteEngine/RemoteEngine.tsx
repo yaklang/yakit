@@ -16,7 +16,7 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakEditor} from "@/utils/editors"
-
+import yakitCE from "@/assets/yakit.jpg"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSE from "@/assets/yakitSE.png"
 import yakitSS from "@/assets/yakitSS.png"
@@ -132,7 +132,9 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                                         <img src={yakitSS} alt='暂无图片' />
                                     </div>
                                 ) : (
-                                    <YakitThemeSvgIcon className={styles["logo-img"]} />
+                                    <div className={styles["logo-img"]}>
+                                        <img src={yakitCE} alt='暂无图片' />
+                                    </div>
                                 )}
                             </>
                         )}
