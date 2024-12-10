@@ -157,55 +157,55 @@ jobs:
             - name: View Published Content
               run:
                   ls ./release
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-arm64.dmg
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-x64.dmg
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-amd64.AppImage
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-arm64.AppImage
-                  # 渗透测试平台V1.0-1.3.4-sp6-windows-amd64.exe
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-arm64.dmg
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-x64.dmg
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-amd64.AppImage
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-arm64.AppImage
-                  # 渗透测试平台V1.0-1.3.4-sp6-windows-legacy-amd64.exe
+                  # stcsPlatform-1.3.4-sp6-darwin-arm64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-x64.dmg
+                  # stcsPlatform-1.3.4-sp6-linux-amd64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-arm64.AppImage
+                  # stcsPlatform-1.3.4-sp6-windows-amd64.exe
+                  # stcsPlatform-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-legacy-x64.dmg
+                  # stcsPlatform-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  # stcsPlatform-1.3.4-sp6-windows-legacy-amd64.exe
 
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Windows
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-windows-amd64.exe
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-amd64.exe
+                  # stcsPlatform-1.3.4-sp6-windows-amd64.exe
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-windows-amd64.exe
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-amd64.exe
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-arm64.dmg
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-arm64.dmg
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-x64.dmg
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-x64.dmg
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-amd64.AppImage
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-amd64.AppImage
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Linux(arm64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-arm64.AppImage
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-arm64.AppImage
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
                   if-no-files-found: error
 
@@ -213,40 +213,40 @@ jobs:
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-windows-legacy-amd64.exe
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
+                  # stcsPlatform-1.3.4-sp6-windows-legacy-amd64.exe
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-arm64.dmg
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-x64.dmg
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
+                  # stcsPlatform-1.3.4-sp6-darwin-legacy-x64.dmg
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-amd64.AppImage
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
                   if-no-files-found: error
             - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Linux(arm64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-arm64.AppImage
-                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
+                  # stcsPlatform-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  name: stcsPlatform-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
                   path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
                   if-no-files-found: error
 
