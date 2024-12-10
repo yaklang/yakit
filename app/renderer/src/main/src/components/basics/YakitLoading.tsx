@@ -7,6 +7,7 @@ import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
+import yakitCE from "@/assets/yakit.jpg"
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSS from "@/assets/yakitSS.png"
@@ -291,13 +292,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 </div>
                             ) : (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["theme-icon-wrapper"]}>
-                                        <div className={styles["theme-icon"]}>
-                                            <YakitThemeLoadingSvgIcon />
-                                        </div>
-                                    </div>
                                     <div className={styles["white-icon"]}>
-                                        <YakitLoadingSvgIcon />
+                                        <img src={yakitCE} alt='暂无图片' />
                                     </div>
                                 </div>
                             )}
