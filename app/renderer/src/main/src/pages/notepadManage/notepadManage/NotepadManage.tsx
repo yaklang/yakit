@@ -12,7 +12,7 @@ import {
     OutlineShareIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {Divider, Tooltip} from "antd"
+import {Divider} from "antd"
 import {API} from "@/services/swagger/resposeType"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import moment from "moment"
@@ -41,13 +41,12 @@ import {shallow} from "zustand/shallow"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {judgeAvatar} from "@/pages/MainOperator"
-import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc} from "@/apiUtils/type"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {getFileNameByUrl} from "@/components/MilkdownEditor/utils/trackDeletePlugin"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -66,6 +65,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     )
 
     const [loading, setLoading] = useState<boolean>(true)
+    const [pageLoading, setPageLoading] = useState<boolean>(false)
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
 
@@ -338,14 +338,14 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             ...filter,
             hash: isAllSelect ? "" : selectedRowKeys?.join(",")
         }
-        setLoading(true)
+        setPageLoading(true)
         apiDeleteNotepadDetail(removeParams)
             .then(() => {
                 setRefresh(!refresh)
             })
             .finally(() =>
                 setTimeout(() => {
-                    setLoading(false)
+                    setPageLoading(false)
                 }, 200)
             )
     })
@@ -420,87 +420,90 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
     return (
         <div className={styles["notepad-manage"]} ref={notepadRef}>
-            <div className={styles["notepad-manage-heard"]}>
-                <div className={styles["heard-title"]}>
-                    <span>记事本管理</span>
-                    <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectNumber} />
+            <YakitSpin spinning={pageLoading}>
+                <div className={styles["notepad-manage-heard"]}>
+                    <div className={styles["heard-title"]}>
+                        <span>记事本管理</span>
+                        <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectNumber} />
+                    </div>
+                    <div className={styles["heard-extra"]}>
+                        <FuncSearch
+                            yakitCombinationSearchProps={{
+                                selectProps: {size: "small"},
+                                inputSearchModuleTypeProps: {size: "middle"}
+                            }}
+                            value={search}
+                            onChange={setSearch}
+                            onSearch={onSearch}
+                            includeSearchType={["keyword", "userName"]}
+                        />
+                        <YakitButton
+                            type='outline2'
+                            danger
+                            icon={<OutlineTrashIcon />}
+                            disabled={totalRef.current === 0}
+                            onClick={() => onBatchRemove()}
+                            loading={pageLoading}
+                        >
+                            删除
+                        </YakitButton>
+                        <YakitButton
+                            type='outline2'
+                            icon={<OutlineClouddownloadIcon />}
+                            disabled={totalRef.current === 0}
+                            onClick={() => onBatchDown()}
+                        >
+                            批量下载
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toModifyNotepad()}>
+                            新建
+                        </YakitButton>
+                    </div>
                 </div>
-                <div className={styles["heard-extra"]}>
-                    <FuncSearch
-                        yakitCombinationSearchProps={{
-                            selectProps: {size: "small"},
-                            inputSearchModuleTypeProps: {size: "middle"}
-                        }}
-                        value={search}
-                        onChange={setSearch}
-                        onSearch={onSearch}
-                        includeSearchType={["keyword", "userName"]}
-                    />
-                    <YakitButton
-                        type='outline2'
-                        danger
-                        icon={<OutlineTrashIcon />}
-                        disabled={totalRef.current === 0}
-                        onClick={() => onBatchRemove()}
-                    >
-                        删除
-                    </YakitButton>
-                    <YakitButton
-                        type='outline2'
-                        icon={<OutlineClouddownloadIcon />}
-                        disabled={totalRef.current === 0}
-                        onClick={() => onBatchDown()}
-                    >
-                        批量下载
-                    </YakitButton>
-                    <Divider type='vertical' style={{margin: 0}} />
-                    <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toModifyNotepad()}>
-                        新建
-                    </YakitButton>
-                </div>
-            </div>
-            {totalRef.current === 0 || +response.pagemeta.total === 0 ? (
-                totalRef.current === 0 ? (
-                    <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                {totalRef.current === 0 || +response.pagemeta.total === 0 ? (
+                    totalRef.current === 0 ? (
+                        <YakitEmpty style={{paddingTop: 48}} description='请点击右上角【新建】按钮添加数据' />
+                    ) : (
+                        <YakitEmpty
+                            image={SearchResultEmpty}
+                            imageStyle={{margin: "96px auto 12px", height: 200}}
+                            title='搜索结果“空”'
+                        />
+                    )
                 ) : (
-                    <YakitEmpty
-                        image={SearchResultEmpty}
-                        imageStyle={{margin: "96px auto 12px", height: 200}}
-                        title='搜索结果“空”'
-                    />
-                )
-            ) : (
-                <YakitVirtualList<API.GetNotepadList>
-                    loading={loading}
-                    hasMore={hasMore}
-                    columns={columns}
-                    data={response.data}
-                    page={+(response.pagemeta.page || 1)}
-                    loadMoreData={loadMoreData}
-                    renderKey='hash'
-                    rowSelection={{
-                        isAll: isAllSelect,
-                        type: "checkbox",
-                        selectedRowKeys,
-                        onSelectAll: onSelectAll,
-                        onChangeCheckboxSingle: onSelectChange,
-                        getCheckboxProps: (record) => {
-                            return {
-                                disabled: record.userName !== userInfo.companyName
+                    <YakitVirtualList<API.GetNotepadList>
+                        loading={loading}
+                        hasMore={hasMore}
+                        columns={columns}
+                        data={response.data}
+                        page={+(response.pagemeta.page || 1)}
+                        loadMoreData={loadMoreData}
+                        renderKey='hash'
+                        rowSelection={{
+                            isAll: isAllSelect,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll: onSelectAll,
+                            onChangeCheckboxSingle: onSelectChange,
+                            getCheckboxProps: (record) => {
+                                return {
+                                    disabled: record.userName !== userInfo.companyName
+                                }
                             }
-                        }
-                    }}
-                />
-            )}
-            {batchDownInfo && (
-                <DownFilesModal
-                    url={batchDownInfo.url}
-                    path={batchDownInfo.path}
-                    visible={!!batchDownInfo.url}
-                    setVisible={onCancelDownload}
-                    onCancelDownload={onCancelDownload}
-                />
-            )}
+                        }}
+                    />
+                )}
+                {batchDownInfo && (
+                    <DownFilesModal
+                        url={batchDownInfo.url}
+                        path={batchDownInfo.path}
+                        visible={!!batchDownInfo.url}
+                        setVisible={onCancelDownload}
+                        onCancelDownload={onCancelDownload}
+                    />
+                )}
+            </YakitSpin>
         </div>
     )
 })
