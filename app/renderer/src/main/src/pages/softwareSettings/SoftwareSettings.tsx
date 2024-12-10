@@ -14,6 +14,7 @@ import yakitEEProject from "@/assets/yakitFontEE.png";
 import yakitSEProject from "@/assets/yakitFontSE.png";
 import yakitEEMiniProject from "@/assets/yakitEE.png";
 import yakitSEMiniProject from "@/assets/yakitSE.png";
+import yakitCEMiniProject from "@/assets/yakit.jpg"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -34,7 +35,7 @@ const ProjectLogo = (showMini:boolean) => {
         return <img style={{height:"100%"}} src={showMini?yakitSEMiniProject:yakitSEProject} alt="暂无图片" />
     }
     else{
-        return <YakitLogoSvgIcon />
+        return <img style={{height:"100%"}} src={yakitCEMiniProject} alt="暂无图片" />
     }
 }
 const SettingsMenu: SettingsMenuProp[] = [

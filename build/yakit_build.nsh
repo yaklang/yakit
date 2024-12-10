@@ -104,15 +104,22 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
+    
+    ; 检测是否是 EnpriTraceAgent
     ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
-    ${If} $0 != "" ; se
+    ${If} $0 != ""
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
+        ; 检测是否是 EnpriTrace
         ${StrStr} $0 $EXEFILE "EnpriTrace"
-        ${If} $0 != "" ; ee
+        ${If} $0 != ""
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
+        ${Else}
+            ; 默认为 渗透测试平台V1.0
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V1.0_InstallPath"
+            StrCpy $EXE_NAME "渗透测试平台V1.0"
         ${EndIf}
     ${EndIf}
 
@@ -127,14 +134,20 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
-    ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
+    
+    ; 检查目标文件存在性
+    ${If} ${FileExists} "$INSTDIR\EnpriTraceAgent.exe"
+        ; SE版本
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
-    ${Else}
-        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "EnpriTrace"
-        ${EndIf}
+    ${ElseIf} ${FileExists} "$INSTDIR\EnpriTrace.exe"
+        ; EE版本
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+        StrCpy $EXE_NAME "EnpriTrace"
+    ${ElseIf} ${FileExists} "$INSTDIR\渗透测试平台V1.0.exe"
+        ; 渗透测试平台版本
+        StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V1.0_InstallPath"
+        StrCpy $EXE_NAME "渗透测试平台V1.0"
     ${EndIf}
 
     !insertmacro checkInstalled
