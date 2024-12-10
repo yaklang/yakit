@@ -15,12 +15,6 @@ export interface MilkdownCatalogueProps {
     children?: MilkdownCatalogueProps[]
 }
 
-export interface OnlineUsersProps {
-    id: number
-    name: string
-    img: string
-    onlineStatus: string
-}
 
 export interface CatalogueTreeNodeProps {
     info: MilkdownCatalogueProps
