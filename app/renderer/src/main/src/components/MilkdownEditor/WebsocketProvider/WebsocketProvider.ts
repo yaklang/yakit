@@ -17,11 +17,12 @@ import * as url from "lib0/url"
 import * as env from "lib0/environment"
 import {
     MessageHandlersProps,
-    NotepadActionType,
+    NotepadWsRequest,
     ObservableEvents,
     WebsocketProviderAwarenessUpdateHandler,
     WebsocketProviderBcSubscriber,
     WebsocketProviderExitHandler,
+    WebsocketProviderGetSendData,
     WebsocketProviderOptions,
     WebsocketProviderUpdateHandler
 } from "./WebsocketProviderType"
@@ -90,7 +91,7 @@ const readMessage = (provider: WebsocketProvider, buf: Uint8Array, emitSynced: b
 /**
  * @param {WebsocketProvider} provider
  */
-const setupWS = (provider) => {
+const setupWS = (provider: WebsocketProvider) => {
     if (provider.shouldConnect && provider.ws === null) {
         const websocket: WebSocket = new provider._WS(provider.url, provider.protocols)
         websocket.binaryType = "arraybuffer"
@@ -108,7 +109,8 @@ const setupWS = (provider) => {
                 const encoder = readMessage(provider, yjsParams, true)
                 if (encoding.length(encoder) > 1) {
                     const messageUint8Array = encoding.toUint8Array(encoder)
-                    websocket.send(getSendData(messageUint8Array, notepadActions.edit))
+                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
+                    websocket.send(value)
                 }
             } catch (error) {}
         }
@@ -141,6 +143,7 @@ const setupWS = (provider) => {
             }
             switch (event.code) {
                 case 401:
+                case 403:
                 case 209:
                 case 500:
                     break
@@ -171,7 +174,7 @@ const setupWS = (provider) => {
             syncProtocol.writeSyncStep1(encoder, provider.doc)
             const encoderUint8Array = encoding.toUint8Array(encoder)
 
-            websocket.send(getSendData(encoderUint8Array, notepadActions.join))
+            websocket.send(provider?.getSendData({buf: encoderUint8Array, docType: notepadActions.join}))
 
             // broadcast local awareness state
             if (provider.awareness.getLocalState() !== null) {
@@ -182,7 +185,9 @@ const setupWS = (provider) => {
                     awarenessProtocol.encodeAwarenessUpdate(provider.awareness, [provider.doc.clientID])
                 )
                 const encoderAwarenessStateUint8Array = encoding.toUint8Array(encoderAwarenessState)
-                websocket.send(getSendData(encoderAwarenessStateUint8Array, notepadActions.edit))
+                websocket.send(
+                    provider?.getSendData({buf: encoderAwarenessStateUint8Array, docType: notepadActions.edit})
+                )
             }
         }
         provider.emit("status", [
@@ -194,36 +199,13 @@ const setupWS = (provider) => {
 }
 
 /**
- * @param {ArrayBuffer} buf
- */
-export const getSendData = (buf: Uint8Array, docType: NotepadActionType): Buffer => {
-    try {
-        const value = {
-            messageType: "notepad",
-            params: {
-                hash: "463cae77-9024-47b6-b274-4f6afcab0f8f",
-                content: "",
-                docType
-            },
-            yjsParams: Buffer.from(buf).toString("base64")
-        }
-        // // 将 `value` 对象转换为 JSON 字符串
-        const jsonString = JSON.stringify(value)
-        const finalArrayBuffer = Buffer.from(jsonString)
-        return finalArrayBuffer
-    } catch (error) {
-        return Buffer.from("")
-    }
-}
-
-/**
  * @param {WebsocketProvider} provider
  * @param {ArrayBuffer} buf
  */
 const broadcastMessage = (provider, buf) => {
     const ws = provider.ws
     if (provider.wsconnected && ws && ws.readyState === ws.OPEN) {
-        ws.send(getSendData(buf, notepadActions.edit))
+        ws.send(provider?.getSendData({buf, docType: notepadActions.edit}))
     }
     if (provider.bcconnected) {
         bc.publish(provider.bcChannel, buf, provider)
@@ -283,6 +265,8 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      * @type {Object<string,string>}
      */
     public params: {[key: string]: string}
+    /**send */
+    public data?: NotepadWsRequest
     public protocols: string[]
     public _WS: typeof WebSocket
 
@@ -294,6 +278,9 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      * @type {boolean}
      */
     public shouldConnect: boolean
+
+    public getSendData: WebsocketProviderGetSendData
+
     /**
      * @type {number}
      */
@@ -315,7 +302,8 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             WebSocketPolyfill = WebSocket,
             resyncInterval = -1,
             maxBackoffTime = 2500,
-            disableBc = false
+            disableBc = false,
+            data
         } = options
         // ensure that url is always ends with /
         while (serverUrl[serverUrl.length - 1] === "/") {
@@ -326,6 +314,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         this.maxBackoffTime = maxBackoffTime
 
         this.params = params
+        this.data = data
         this.protocols = protocols
         this.doc = doc
         this._WS = WebSocketPolyfill
@@ -353,9 +342,37 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     encoding.writeVarUint(encoder, messageSync)
                     syncProtocol.writeSyncStep1(encoder, doc)
                     const resyncUint8Array = encoding.toUint8Array(encoder)
-                    this.ws.send(getSendData(resyncUint8Array, notepadActions.join))
+                    this.ws.send(this.getSendData({buf: resyncUint8Array, docType: notepadActions.join}))
                 }
             }, resyncInterval)
+        }
+        /**
+         * @description content一直为空，只发送操作，后端不会存历史
+         * @param {ArrayBuffer|undefined} buf
+         * @param {NotepadActionType} docType
+         */
+        this.getSendData = (sendData) => {
+            if (!this.data) return Buffer.from("")
+            const {params, messageType, token} = this.data
+            const {hash} = params
+            const {buf, docType} = sendData
+            try {
+                const value: NotepadWsRequest = {
+                    messageType,
+                    params: {
+                        hash,
+                        content: "",
+                        docType
+                    },
+                    yjsParams: buf ? Buffer.from(buf).toString("base64") : "",
+                    token
+                }
+                const jsonString = JSON.stringify(value)
+                const finalArrayBuffer = Buffer.from(jsonString)
+                return finalArrayBuffer
+            } catch (error) {
+                return Buffer.from("")
+            }
         }
 
         /**
@@ -402,7 +419,6 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             process.on("exit", this._exitHandler)
         }
         awareness.on("update", this._awarenessUpdateHandler)
-
         this._checkInterval = setInterval(() => {
             if (this.wsconnected && messageReconnectTimeout < time.getUnixTime() - this.wsLastMessageReceived) {
                 // no message received in a long time - not even your own awareness
@@ -501,9 +517,12 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     disconnect(): void {
         this.shouldConnect = false
         this.disconnectBc()
-        if (this.ws !== null) {
-            this.ws.send(getSendData(new Uint8Array(), notepadActions.leave))
-            this.ws.close()
+        if (!!this.ws && this.ws?.readyState === WebSocket.OPEN) {
+            const value = this.getSendData({buf: new Uint8Array(), docType: notepadActions.leave})
+            this.ws?.send(value)
+            setTimeout(() => {
+                this.ws?.close()
+            }, 200)
         }
     }
 
