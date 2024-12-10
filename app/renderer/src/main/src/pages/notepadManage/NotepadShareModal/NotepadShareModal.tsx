@@ -24,24 +24,18 @@ import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {apiGetNotepadDetail} from "../notepadManage/utils"
+import {
+    NotepadShareModalProps,
+    NotepadPermissionType,
+    SelectUserProps,
+    NotepadCollaboratorInfoProps
+} from "./NotepadShareModalType"
+import {notepadRole} from "./constants"
 
-interface NotepadShareModalProps {
-    notepadInfo: API.GetNotepadList
-    onClose: () => void
-}
-
-interface SelectUserProps {
-    id: number
-    name: string
-}
-interface NotepadCollaboratorInfoProps extends API.CollaboratorInfo {
-    imgNode?: ReactNode
-}
-type NotepadPermissionType = "view" | "edit" | ""
 const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) => {
     const {notepadInfo, onClose} = props
     const userInfo = useStore((s) => s.userInfo)
-    const [selectAuth, setSelectAuth] = useState<NotepadPermissionType>("view")
+    const [selectAuth, setSelectAuth] = useState<NotepadPermissionType>(notepadRole.viewPermission)
     const [searchValue, setSearchValue] = useState<string>("")
     const [confirmLoading, setConfirmLoading] = useState<boolean>(false)
     const [collaboratorLoading, setCollaboratorLoading] = useState<boolean>(false)
@@ -321,8 +315,8 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
     const [authVisibleMenu, setAuthVisibleMenu] = useState<boolean>(false)
     const menuList: YakitMenuItemType[] = useCreation(() => {
         let menu: YakitMenuItemType[] = [
-            {key: "view", label: "可阅读"},
-            {key: "edit", label: "可编辑"}
+            {key: notepadRole.viewPermission, label: "可阅读"},
+            {key: notepadRole.editPermission, label: "可编辑"}
         ]
         if (enableRemove) {
             menu = [...menu, {type: "divider"}, {key: "remove", label: "移除", type: "danger"}]
@@ -331,9 +325,9 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
     }, [enableRemove])
     const text = useCreation(() => {
         switch (currentRole) {
-            case "view":
+            case notepadRole.viewPermission:
                 return "可阅读"
-            case "edit":
+            case notepadRole.editPermission:
                 return "可编辑"
             default:
                 return "移除"
