@@ -912,7 +912,7 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                 </>
             )}
             {requestType === "httpFlowId" && (
-                <Form.Item label='请求ID' name='httpFlowId' required={true}>
+                <Form.Item label='请求ID' name='httpFlowId' rules={[{ required: true }]}>
                     <YakitInput.TextArea placeholder='请输入请求ID,多个请求Id用“英文逗号”分隔' disabled={disabled} />
                 </Form.Item>
             )}
