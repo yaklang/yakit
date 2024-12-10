@@ -104,8 +104,10 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
+    
+    ; 检测是否是 EnpriTraceAgent
     ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
-    ${If} $0 != "" ; se
+    ${If} $0 != ""
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
@@ -123,6 +125,9 @@ FunctionEnd
                 ${If} $0 != "" ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V2.0_InstallPath"
+                    StrCpy $EXE_NAME "渗透测试平台V2.0"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -139,7 +144,10 @@ FunctionEnd
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
     StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
     StrCpy $EXE_NAME "Yakit"
-    ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
+    
+    ; 检查目标文件存在性
+    ${If} ${FileExists} "$INSTDIR\EnpriTraceAgent.exe"
+        ; SE版本
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
@@ -154,6 +162,11 @@ FunctionEnd
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    ${If} ${FileExists} `$INSTDIR\渗透测试平台V2.0.exe` ; 渗透测试平台V2.0
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V2.0_InstallPath"
+                        StrCpy $EXE_NAME "渗透测试平台V2.0"
+                    ${EndIf}
                 ${EndIf}
             ${EndIf}
         ${EndIf}
