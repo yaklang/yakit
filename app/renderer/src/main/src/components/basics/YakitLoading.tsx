@@ -10,6 +10,7 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {setLocalValue} from "@/utils/kv"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 
+import yakitCE from "@/assets/yakit.jpg"
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSS from "@/assets/yakitSS.png"
@@ -349,13 +350,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 </div>
                             ) : (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
-                                    <div className={styles["theme-icon-wrapper"]}>
-                                        <div className={styles["theme-icon"]}>
-                                            <YakitThemeLoadingSvgIcon />
-                                        </div>
-                                    </div>
                                     <div className={styles["white-icon"]}>
-                                        <YakitLoadingSvgIcon />
+                                        <img src={yakitCE} alt='暂无图片' />
                                     </div>
                                 </div>
                             )}

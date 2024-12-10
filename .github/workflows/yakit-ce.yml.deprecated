@@ -68,21 +68,21 @@ jobs:
             - name: Extract Package.json Version
               id: extract_version
               uses: Saionaro/extract-package-version@v1.1.1
-            - name: Set Yakit-CE Package.json Version
+            - name: Set 渗透测试平台V1.0-CE Package.json Version
               uses: mad9000/actions-find-and-replace-string@5
               id: package_ce_version
               with:
                   source: ${{ steps.extract_version.outputs.version }}
                   find: "-ce"
                   replace: ""
-            - name: Set Yakit-EE Package.json Version
+            - name: Set 渗透测试平台V1.0-EE Package.json Version
               uses: mad9000/actions-find-and-replace-string@5
               id: package_version
               with:
                   source: ${{ steps.package_ce_version.outputs.value }}
                   find: "-ee"
                   replace: ""
-            - name: Echo Yakit Package Version
+            - name: Echo 渗透测试平台V1.0 Package Version
               run: echo ${{ steps.package_version.outputs.value }}
 
             - run: yarn install && yarn install-render
@@ -93,25 +93,25 @@ jobs:
               working-directory: ./
               run: yarn build-render
 
-            - name: Build Yakit (MultiPlatform)
+            - name: Build 渗透测试平台V1.0 (MultiPlatform)
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'normal') }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn add -D dmg-license && yarn electron-publish
-            - name: Build Yakit (MAC)
+            - name: Build 渗透测试平台V1.0 (MAC)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'normal' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn pack-mac
-            - name: Build Yakit (LINUX)
+            - name: Build 渗透测试平台V1.0 (LINUX)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'normal' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn pack-linux
-            - name: Build Yakit (WIN)
+            - name: Build 渗透测试平台V1.0 (WIN)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'normal' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -128,26 +128,26 @@ jobs:
               id: download-windows-leagacy-engine
               run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
-            - name: Build Yakit Legacy (MultiPlatform)
+            - name: Build 渗透测试平台V1.0 Legacy (MultiPlatform)
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || (env.PACKAGING_PLATFORM == 'mwl' && env.COMPATIBILITY_MODE == 'legacy') }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn add -D dmg-license && yarn electron-publish-legacy
-            - name: Build Yakit Legacy (MAC)
+            - name: Build 渗透测试平台V1.0 Legacy (MAC)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'mac' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn pack-mac-legacy
-            - name: Build Yakit Legacy (LINUX)
+            - name: Build 渗透测试平台V1.0 Legacy (LINUX)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'linux' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: yarn pack-linux-legacy
 
-            - name: Build Yakit Legacy (WIN)
+            - name: Build 渗透测试平台V1.0 Legacy (WIN)
               if: ${{ env.IS_TAG_RELEASE != 'tag/v' && env.PACKAGING_PLATFORM == 'win' && env.COMPATIBILITY_MODE == 'legacy' }}
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -157,97 +157,97 @@ jobs:
             - name: View Published Content
               run:
                   ls ./release
-                  # Yakit-1.3.4-sp6-darwin-arm64.dmg
-                  # Yakit-1.3.4-sp6-darwin-x64.dmg
-                  # Yakit-1.3.4-sp6-linux-amd64.AppImage
-                  # Yakit-1.3.4-sp6-linux-arm64.AppImage
-                  # Yakit-1.3.4-sp6-windows-amd64.exe
-                  # Yakit-1.3.4-sp6-darwin-legacy-arm64.dmg
-                  # Yakit-1.3.4-sp6-darwin-legacy-x64.dmg
-                  # Yakit-1.3.4-sp6-linux-legacy-amd64.AppImage
-                  # Yakit-1.3.4-sp6-linux-legacy-arm64.AppImage
-                  # Yakit-1.3.4-sp6-windows-legacy-amd64.exe
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-arm64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-x64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-amd64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-arm64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-windows-amd64.exe
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-x64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-windows-legacy-amd64.exe
 
-            - name: Upload Yakit(CE) Artifacts Windows
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Windows
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # Yakit-1.3.4-sp6-windows-amd64.exe
-                  name: Yakit-${{ steps.package_version.outputs.value }}-windows-amd64.exe
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-windows-amd64.exe
+                  # 渗透测试平台V1.0-1.3.4-sp6-windows-amd64.exe
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-amd64.exe
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-amd64.exe
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Mac(m1)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # Yakit-1.3.4-sp6-darwin-arm64.dmg
-                  name: Yakit-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-arm64.dmg
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Mac(intel)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # Yakit-1.3.4-sp6-darwin-x64.dmg
-                  name: Yakit-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-x64.dmg
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-x64.dmg
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Linux(amd64)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # Yakit-1.3.4-sp6-linux-amd64.AppImage
-                  name: Yakit-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-amd64.AppImage
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-amd64.AppImage
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Linux(arm64)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Linux(arm64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'normal') }}
               with:
-                  # Yakit-1.3.4-sp6-linux-arm64.AppImage
-                  name: Yakit-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-arm64.AppImage
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-arm64.AppImage
                   if-no-files-found: error
 
-            - name: Upload Yakit(CE) Artifacts Legacy Windows
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Windows
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'win') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # Yakit-1.3.4-sp6-windows-legacy-amd64.exe
-                  name: Yakit-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
+                  # 渗透测试平台V1.0-1.3.4-sp6-windows-legacy-amd64.exe
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-windows-legacy-amd64.exe
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Legacy Mac(m1)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Mac(m1)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # Yakit-1.3.4-sp6-darwin-legacy-arm64.dmg
-                  name: Yakit-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-arm64.dmg
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Legacy Mac(intel)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Mac(intel)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'mac') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # Yakit-1.3.4-sp6-darwin-legacy-x64.dmg
-                  name: Yakit-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
+                  # 渗透测试平台V1.0-1.3.4-sp6-darwin-legacy-x64.dmg
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-darwin-legacy-x64.dmg
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Legacy Linux(amd64)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Linux(amd64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # Yakit-1.3.4-sp6-linux-legacy-amd64.AppImage
-                  name: Yakit-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-amd64.AppImage
                   if-no-files-found: error
-            - name: Upload Yakit(CE) Artifacts Legacy Linux(arm64)
+            - name: Upload 渗透测试平台V1.0(CE) Artifacts Legacy Linux(arm64)
               uses: actions/upload-artifact@v4
               if: ${{ env.IS_TAG_RELEASE == 'tag/v' || ((env.PACKAGING_PLATFORM == 'mwl' || env.PACKAGING_PLATFORM == 'linux') && env.COMPATIBILITY_MODE == 'legacy') }}
               with:
-                  # Yakit-1.3.4-sp6-linux-legacy-arm64.AppImage
-                  name: Yakit-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
-                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
+                  # 渗透测试平台V1.0-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  name: 渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
+                  path: ./release/渗透测试平台V1.0-${{ steps.package_version.outputs.value }}-linux-legacy-arm64.AppImage
                   if-no-files-found: error
 
     publish_yakit_ce_to_oss:
@@ -256,14 +256,14 @@ jobs:
             - build_yakit
         runs-on: ubuntu-latest
         steps:
-            - name: Fetch Yakit CE Tag
+            - name: Fetch 渗透测试平台V1.0 CE Tag
               uses: mad9000/actions-find-and-replace-string@5
               id: fetch_tag_release
               with:
                   source: ${{ github.ref }}
                   find: "refs/tags/v"
                   replace: ""
-            - name: Generate Yakit CE Version
+            - name: Generate 渗透测试平台V1.0 CE Version
               uses: mad9000/actions-find-and-replace-string@5
               id: generate_version
               with:
@@ -271,7 +271,7 @@ jobs:
                   find: "-ce"
                   replace: ""
 
-            - name: Download Yakit And Legacy Yakit
+            - name: Download 渗透测试平台V1.0 And Legacy 渗透测试平台V1.0
               uses: actions/download-artifact@v4
               with:
                   merge-multiple: true
@@ -287,7 +287,7 @@ jobs:
                   name: Release ${{ github.ref_name }}
                   tag: ${{ github.ref_name }}
 
-            - name: Upload Yakit To OSS
+            - name: Upload 渗透测试平台V1.0 To OSS
               uses: tvrcgo/upload-to-oss@master
               with:
                   key-id: ${{ secrets.OSS_KEY_ID }}
@@ -299,7 +299,7 @@ jobs:
 
             - name: Update OSS latest file
               run: echo ${{ steps.generate_version.outputs.value }} > ./yakit-version.txt
-            - name: Upload Yakit Version to oss
+            - name: Upload 渗透测试平台V1.0 Version to oss
               uses: tvrcgo/upload-to-oss@master
               with:
                   key-id: ${{ secrets.OSS_KEY_ID }}
