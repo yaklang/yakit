@@ -727,6 +727,7 @@ service Yak {
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
   rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
   rpc CreateSyntaxFlowRuleGroup(CreateSyntaxFlowGroupRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleGroup(UpdateSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
   rpc UpdateSyntaxFlowRuleAndGroup(UpdateSyntaxFlowRuleAndGroupRequest) returns (DbOperateMessage);
   // syntaxflow scan
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
@@ -5570,6 +5571,8 @@ message  SyntaxFlowRuleInput{
   string Content = 2;
   string Language = 3;
   repeated string Tags = 4;
+  repeated string GroupNames = 5;
+  string Description = 6;
 }
 
 message SyntaxFlowRuleFilter {
@@ -5687,11 +5690,13 @@ message SyntaxFlowRuleGroupFilter {
   repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
+  string  IsBuildIn = 3; // "true"表示获取内置组，其它字符串表示获取非内置组，填空表示获取所有组
 }
 
 message SyntaxFlowGroup{
   string GroupName = 1;
   int32  Count = 2;
+  bool  IsBuildIn =3;
 }
 
 message QuerySyntaxFlowRuleGroupRequest{
@@ -5704,6 +5709,11 @@ message QuerySyntaxFlowRuleGroupResponse{
 
 message CreateSyntaxFlowGroupRequest{
   string GroupName = 1;
+}
+
+message UpdateSyntaxFlowRuleGroupRequest {
+  string OldGroupName = 1;
+  string NewGroupName = 2;
 }
 
 message UpdateSyntaxFlowRuleAndGroupRequest{
