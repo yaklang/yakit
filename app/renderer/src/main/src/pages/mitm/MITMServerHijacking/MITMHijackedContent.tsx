@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed} from "@/utils/notification"
-import {useCreation, useGetState, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounce, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -96,6 +96,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [modifiedPacket, setModifiedPacket] = useState<string>("")
 
+    useDebounceEffect(
+        () => {
+            setModifiedPacket(currentPacket)
+        },
+        [currentPacket],
+        {wait: 500}
+    )
+
     const [width, setWidth] = useState<number>(0)
 
     const {setIsRefreshHistory} = useStore()
@@ -106,8 +114,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
     const [alertVisible, setAlertVisible] = useState<boolean>(false)
 
-    const [beautifyOpen, setBeautifyOpen] = useState<boolean>(false)
-    const [currentBeautifyPacket, setCurrentBeautifyPacket] = useState<string>("")
+    const [beautifyTriggerRefresh, setBeautifyTriggerRefresh] = useState<boolean>(false) // 美化触发编辑器刷新
 
     const [sourceType, setSourceType] = useState<string>("mitm")
 
@@ -402,29 +409,24 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     /**
      * 美化
      */
-    useEffect(() => {
-        if (currentPacket === "") {
-            setCurrentBeautifyPacket(currentPacket)
+    const onSetBeautifyTrigger = useMemoizedFn((flag: boolean) => {
+        if (modifiedPacket === "") {
             return
         }
         const encoder = new TextEncoder()
-        const bytes = encoder.encode(currentPacket)
+        const bytes = encoder.encode(modifiedPacket)
         const mb = bytes.length / 1024 / 1024
         if (mb > 0.5) {
-            setCurrentBeautifyPacket(currentPacket)
+            return
         } else {
-            prettifyPacketCode(currentPacket)
-                .then((res) => {
-                    if (!!res) setCurrentBeautifyPacket(Uint8ArrayToString(res as Uint8Array))
-                })
-                .catch(() => {
-                    setCurrentBeautifyPacket(currentPacket)
-                })
+            prettifyPacketCode(modifiedPacket).then((res) => {
+                if (!!res) {
+                    setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
+                    setBeautifyTriggerRefresh(flag)
+                }
+            })
         }
-    }, [currentPacket])
-    const onSetBeautifyOpen = (flag: boolean) => {
-        setBeautifyOpen(flag)
-    }
+    })
 
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (autoForward) {
@@ -444,12 +446,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         width={width}
                         calloutColor={calloutColor}
                         onSetCalloutColor={setCalloutColor}
-                        beautifyOpen={beautifyOpen}
-                        onSetBeautifyOpen={onSetBeautifyOpen}
+                        beautifyTriggerRefresh={beautifyTriggerRefresh}
+                        onSetBeautifyTrigger={onSetBeautifyTrigger}
                     />
                 )
             case "log":
-                return <MITMLogHeardExtra sourceType={sourceType} onSetSourceType={setSourceType} setShowPluginHistoryList={setShowPluginHistoryList} />
+                return (
+                    <MITMLogHeardExtra
+                        sourceType={sourceType}
+                        onSetSourceType={setSourceType}
+                        setShowPluginHistoryList={setShowPluginHistoryList}
+                    />
+                )
             default:
                 break
         }
@@ -477,8 +485,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 urlInfo={urlInfo}
                                 isHttp={isHttp}
                                 currentIsWebsocket={currentIsWebsocket}
-                                currentPacket={beautifyOpen ? currentBeautifyPacket : currentPacket}
-                                beautifyOpen={beautifyOpen}
+                                currentPacket={modifiedPacket}
+                                beautifyTriggerRefresh={beautifyTriggerRefresh}
                                 setModifiedPacket={setModifiedPacket}
                                 forResponse={forResponse}
                                 currentPacketId={currentPacketId}
