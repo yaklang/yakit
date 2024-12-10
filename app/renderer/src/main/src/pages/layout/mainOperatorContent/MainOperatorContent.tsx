@@ -1404,7 +1404,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     )
                 }
                 break
-
+            case YakitRoute.YakScript:
+                emiter.emit("onCloseYakRunner")
+                break
             default:
                 removeMenuPage(data)
                 break
