@@ -88,11 +88,13 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 columns={[
                     {
                         title: "规则名",
+                        ellipsis: {
+                            showTitle: false
+                        },
                         render: (i: HTTPFlowExtractedData) => (
                             <Text
-                                style={{maxWidth: 100}}
                                 ellipsis={{
-                                    tooltip: true
+                                    tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.RuleName}</div>
                                 }}
                             >
                                 {i.RuleName}
@@ -102,9 +104,11 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                     },
                     {
                         title: "规则数据",
+                        ellipsis: {
+                            showTitle: false
+                        },
                         render: (i: HTTPFlowExtractedData) => (
                             <Text
-                                style={{maxWidth: 200}}
                                 ellipsis={{
                                     tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
                                 }}
@@ -115,7 +119,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                         width: 210
                     }
                 ]}
-                scroll={{x: "auto"}}
                 loading={loading}
                 size={"small"}
                 style={{margin: 0, padding: 0}}

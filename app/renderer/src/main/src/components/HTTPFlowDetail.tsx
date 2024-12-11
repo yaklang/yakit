@@ -13,7 +13,7 @@ import {HTTPFlowForWebsocketViewer, WebSocketEditor} from "@/pages/websocket/HTT
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
-import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {HTTPFlowExtractedData, HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
 import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
@@ -697,19 +697,14 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
 
-    const mainCol: number = useMemo(() => {
-        let col: number = 19
-        if (isFold) {
-            col = 24
-        }
-        return col
-    }, [isFold])
-
     return isSelect ? (
         <div className={styles["http-history-box"]}>
-            <Row className={styles["http-history-detail-wrapper"]} gutter={8}>
-                <Col span={mainCol} style={{height: "100%"}}>
-                    {flow && (
+            <YakitResizeBox
+                key={isFold + ""}
+                freeze={!isFold}
+                isRecalculateWH={!isFold}
+                firstNode={
+                    flow && (
                         <HTTPFlowDetailRequestAndResponse
                             flow={flow}
                             flowRequestLoad={flowRequestLoad}
@@ -717,149 +712,194 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             highLightText={highLightText}
                             {...props}
                         />
-                    )}
-                </Col>
-                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && !isFold && (
-                    <Col span={5}>
-                        <NewHTTPPacketEditor
-                            title={
-                                <Button.Group size={"small"}>
-                                    {existedInfoType.map((i) => {
-                                        return (
-                                            <YakitButton
-                                                size='small'
-                                                type={infoType === i ? "primary" : "outline2"}
-                                                onClick={() => {
-                                                    setInfoType(i)
-                                                }}
-                                                key={i}
-                                            >
-                                                {infoTypeVerbose(i)}
-                                            </YakitButton>
-                                        )
-                                    })}
-                                </Button.Group>
-                            }
-                            readOnly={true}
-                            noLineNumber={true}
-                            noMinimap={true}
-                            noHex={true}
-                            hideSearch={true}
-                            refreshTrigger={infoType}
-                            loading={infoTypeLoading}
-                            extraEnd={
-                                <div className={classNames(styles["http-history-fold-box"])}>
-                                    <div className={styles["http-history-icon-box"]}>
-                                        <Tooltip placement='top' title='向右收起'>
-                                            <SideBarOpenIcon
-                                                className={styles["fold-icon"]}
-                                                onClick={() => {
-                                                    setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
-                                                    setFold(true)
-                                                }}
-                                            />
-                                        </Tooltip>
-                                    </div>
-                                </div>
-                            }
-                            originValue={(() => {
-                                switch (infoType) {
-                                    case "domains":
-                                        return (
-                                            "# 根域 (Root-Domains)\r\n" +
-                                            (flow?.RootDomains || []).join("\r\n") +
-                                            "\r\n\r\n# 域名 (Domain) \r\n" +
-                                            (flow?.Domains || []).join("\r\n")
-                                        )
-                                    case "json":
-                                        return (flow?.JsonObjects || []).join("\r\n")
-                                    default:
-                                        return ""
-                                }
-                            })()}
-                            editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
-                            isShowBeautifyRender={false}
-                            showDownBodyMenu={false}
-                        />
-                    </Col>
-                )}
-                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && !isFold && (
-                    <Col span={5}>
-                        <HTTPFlowExtractedDataTable
-                            hiddenIndex={flow?.HiddenIndex || ""}
-                            title={
-                                <div className={styles["table-header"]}>
-                                    <Button.Group size={"small"}>
-                                        {existedInfoType.map((i) => {
-                                            return (
-                                                <YakitButton
-                                                    size='small'
-                                                    type={infoType === i ? "primary" : "outline2"}
-                                                    onClick={() => {
-                                                        setInfoType(i)
-                                                    }}
-                                                    key={i}
-                                                >
-                                                    {infoTypeVerbose(i)}
-                                                </YakitButton>
-                                            )
-                                        })}
-                                    </Button.Group>
-                                    <div className={classNames(styles["http-history-fold-box"])}>
-                                        <div className={styles["http-history-icon-box"]}>
-                                            <Tooltip placement='top' title='向右收起'>
-                                                <SideBarOpenIcon
-                                                    className={styles["fold-icon"]}
-                                                    onClick={() => {
-                                                        setRemoteValue("IsFoldValue", JSON.stringify({is: true, id}))
-                                                        setFold(true)
-                                                    }}
-                                                />
-                                            </Tooltip>
-                                        </div>
-                                    </div>
-                                </div>
-                            }
-                            onSetHighLightText={setHighLightText}
-                        />
-                    </Col>
-                )}
-                {existedInfoType.length === 0 && !isFold && (
-                    <Col span={5}>
-                        <div className={styles["empty-box"]}>
-                            <div className={classNames(styles["empty-box-fold-box"])}>
-                                <div className={styles["empty-box-icon-box"]}>
-                                    <Tooltip placement='top' title='向右收起'>
-                                        <SideBarOpenIcon
+                    )
+                }
+                firstMinSize='850px'
+                firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
+                secondNode={
+                    <>
+                        {isFold ? (
+                            <div
+                                className={classNames(
+                                    styles["http-history-fold-box"],
+                                    styles["http-history-fold-border-box"]
+                                )}
+                            >
+                                <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
+                                    <Tooltip placement='top' title='向左展开'>
+                                        <SideBarCloseIcon
                                             className={styles["fold-icon"]}
                                             onClick={() => {
-                                                setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
-                                                setFold(true)
+                                                setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
+                                                setFold(false)
                                             }}
                                         />
                                     </Tooltip>
                                 </div>
                             </div>
-                            <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
-                        </div>
-                    </Col>
-                )}
-            </Row>
-            {isFold && (
-                <div className={classNames(styles["http-history-fold-box"], styles["http-history-fold-border-box"])}>
-                    <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
-                        <Tooltip placement='top' title='向左展开'>
-                            <SideBarCloseIcon
-                                className={styles["fold-icon"]}
-                                onClick={() => {
-                                    setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
-                                    setFold(false)
-                                }}
-                            />
-                        </Tooltip>
-                    </div>
-                </div>
-            )}
+                        ) : (
+                            <div className={styles["http-history-detail-wrapper"]}>
+                                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
+                                    <NewHTTPPacketEditor
+                                        title={
+                                            <Button.Group size={"small"}>
+                                                {existedInfoType.map((i) => {
+                                                    return (
+                                                        <YakitButton
+                                                            size='small'
+                                                            type={infoType === i ? "primary" : "outline2"}
+                                                            onClick={() => {
+                                                                setInfoType(i)
+                                                            }}
+                                                            key={i}
+                                                        >
+                                                            {infoTypeVerbose(i)}
+                                                        </YakitButton>
+                                                    )
+                                                })}
+                                            </Button.Group>
+                                        }
+                                        readOnly={true}
+                                        noLineNumber={true}
+                                        noMinimap={true}
+                                        noHex={true}
+                                        hideSearch={true}
+                                        refreshTrigger={infoType}
+                                        loading={infoTypeLoading}
+                                        extraEnd={
+                                            <div className={classNames(styles["http-history-fold-box"])}>
+                                                <div className={styles["http-history-icon-box"]}>
+                                                    <Tooltip placement='top' title='向右收起'>
+                                                        <SideBarOpenIcon
+                                                            className={styles["fold-icon"]}
+                                                            onClick={() => {
+                                                                setRemoteValue(
+                                                                    "IsFoldValue",
+                                                                    JSON.stringify({is: true, id})
+                                                                )
+                                                                setFold(true)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                </div>
+                                            </div>
+                                        }
+                                        originValue={(() => {
+                                            switch (infoType) {
+                                                case "domains":
+                                                    return (
+                                                        "# 根域 (Root-Domains)\r\n" +
+                                                        (flow?.RootDomains || []).join("\r\n") +
+                                                        "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                        (flow?.Domains || []).join("\r\n")
+                                                    )
+                                                case "json":
+                                                    return (flow?.JsonObjects || []).join("\r\n")
+                                                default:
+                                                    return ""
+                                            }
+                                        })()}
+                                        editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                                        isShowBeautifyRender={false}
+                                        showDownBodyMenu={false}
+                                    />
+                                )}
+                                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
+                                    <HTTPFlowExtractedDataTable
+                                        hiddenIndex={flow?.HiddenIndex || ""}
+                                        title={
+                                            <div className={styles["table-header"]}>
+                                                <Button.Group size={"small"}>
+                                                    {existedInfoType.map((i) => {
+                                                        return (
+                                                            <YakitButton
+                                                                size='small'
+                                                                type={infoType === i ? "primary" : "outline2"}
+                                                                onClick={() => {
+                                                                    setInfoType(i)
+                                                                }}
+                                                                key={i}
+                                                            >
+                                                                {infoTypeVerbose(i)}
+                                                            </YakitButton>
+                                                        )
+                                                    })}
+                                                </Button.Group>
+                                                <Space>
+                                                    <YakitDropdownMenu
+                                                        menu={{
+                                                            data: [
+                                                                {key: "xlsx", label: "xlsx"},
+                                                                {key: "csv", label: "csv"}
+                                                            ],
+                                                            onClick: ({key}) => {
+                                                                switch (key) {
+                                                                    case "xlsx":
+                                                                        break
+                                                                    case "csv":
+                                                                        break
+                                                                    default:
+                                                                        break
+                                                                }
+                                                            }
+                                                        }}
+                                                        dropdown={{
+                                                            trigger: ["click"],
+                                                            placement: "bottomRight"
+                                                        }}
+                                                    >
+                                                        <YakitButton type='primary' size='small'>
+                                                            导出
+                                                        </YakitButton>
+                                                    </YakitDropdownMenu>
+
+                                                    <div className={classNames(styles["http-history-fold-box"])}>
+                                                        <div className={styles["http-history-icon-box"]}>
+                                                            <Tooltip placement='top' title='向右收起'>
+                                                                <SideBarOpenIcon
+                                                                    className={styles["fold-icon"]}
+                                                                    onClick={() => {
+                                                                        setRemoteValue(
+                                                                            "IsFoldValue",
+                                                                            JSON.stringify({is: true, id})
+                                                                        )
+                                                                        setFold(true)
+                                                                    }}
+                                                                />
+                                                            </Tooltip>
+                                                        </div>
+                                                    </div>
+                                                </Space>
+                                            </div>
+                                        }
+                                        onSetHighLightText={setHighLightText}
+                                    />
+                                )}
+                                {existedInfoType.length === 0 && (
+                                    <div className={styles["empty-box"]}>
+                                        <div className={classNames(styles["empty-box-fold-box"])}>
+                                            <div className={styles["empty-box-icon-box"]}>
+                                                <Tooltip placement='top' title='向右收起'>
+                                                    <SideBarOpenIcon
+                                                        className={styles["fold-icon"]}
+                                                        onClick={() => {
+                                                            setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
+                                                            setFold(true)
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            </div>
+                                        </div>
+                                        <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
+                }
+                secondRatio={isFold ? "36px" : "20%"}
+                secondMinSize={isFold ? "36px" : "350px"}
+            ></YakitResizeBox>
         </div>
     ) : null
 }
