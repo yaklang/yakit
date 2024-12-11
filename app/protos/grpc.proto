@@ -5097,6 +5097,7 @@ message MITMContentReplacer {
   // 匹配掉之后直接丢包
   bool Drop = 17;
 
+  string EffectiveURL = 18;
 }
 
 message RemoveHookParams {
