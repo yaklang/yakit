@@ -37,6 +37,7 @@ import {
     OpenvpnIcon,
     OperaIcon,
     PowerpointIcon,
+    ProxifierIcon,
     QqIcon,
     QQMusicIcon,
     Se360Icon,
@@ -556,8 +557,8 @@ const commonProcess: CommonProcessItem[] = [
         icon: <UToolsIcon />
     },
     {
-        process: ["QQMusic"],
-        icon: <QQMusicIcon />
+        process: ["Proxifier"],
+        icon: <ProxifierIcon />
     }
 ]
 export const iconProcessMap = commonProcess.reduce(
@@ -642,7 +643,6 @@ const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
                         .filter((name: string) => name)
                         .map((name: string) => {
                             const lowerName = name.toLocaleLowerCase()
-                            const lastDotIndex = lowerName.lastIndexOf(".")
                             const icon = Object.keys(iconProcessMap).find((key) => {
                                 if (key.startsWith("docker") && lowerName.startsWith("docker")) {
                                     return true
@@ -652,10 +652,8 @@ const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
                                     return true
                                 } else if (key.startsWith("vmware") && lowerName.startsWith("vmware")) {
                                     return true
-                                } else if (lastDotIndex !== -1) {
-                                    return key.toLocaleLowerCase() === lowerName.slice(0, lastDotIndex)
                                 } else {
-                                    return false
+                                    return lowerName.includes(key)
                                 }
                             })
                             return {process: name, icon: icon ? iconProcessMap[icon] : undefined}
