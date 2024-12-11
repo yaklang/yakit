@@ -149,8 +149,8 @@ export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
 export interface SyntaxFlowScanResponse {
     TaskID: string
     Status: SyntaxFlowScanStatus
-    CurrentRuleName: string
     ExecResult: ExecResult
+    Config: SyntaxFlowScanRequest
 }
 
 export interface SyntaxFlowResultFilter {
