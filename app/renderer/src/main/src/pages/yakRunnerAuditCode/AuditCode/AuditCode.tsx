@@ -65,7 +65,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import {LoadingOutlined} from "@ant-design/icons"
+import {DeleteOutlined, LoadingOutlined, ReloadOutlined} from "@ant-design/icons"
 import {StringToUint8Array} from "@/utils/str"
 import {clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail} from "./AuditTree/AuditMap"
 import {clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail} from "./AuditTree/ChildMap"
@@ -103,6 +103,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setClipboardText} from "@/utils/clipboard"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -390,7 +391,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const {setOnlyFileTree} = props
     const {projectName, pageInfo, auditRule, auditExecuting} = useStore()
     const {setAuditExecuting} = useDispatcher()
-
+    const [auditType, setAuditType] = useState<"result" | "history">("result")
     const [loading, setLoading] = useState<boolean>(false)
     const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
@@ -705,6 +706,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
         apiDebugPlugin({params: requestParams, token: tokenRef.current})
             .then(() => {
+                setAuditType("result")
                 setAuditExecuting && setAuditExecuting(true)
                 setOnlyFileTree(false)
                 debugPluginStreamEvent.start()
@@ -786,8 +788,28 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         <YakitSpin spinning={loading}>
             <div className={styles["audit-code"]}>
                 <div className={styles["header"]}>
-                    <div className={styles["title"]}>代码审计</div>
-                    {auditExecuting && (
+                    <div className={styles["title"]}>
+                        <YakitRadioButtons
+                            size='small'
+                            value={auditType}
+                            onChange={(e) => {
+                                const value = e.target.value
+                                setAuditType(value as "result" | "history")
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    label: "审计结果",
+                                    value: "result"
+                                },
+                                {
+                                    label: "审计历史",
+                                    value: "history"
+                                }
+                            ]}
+                        />
+                    </div>
+                    {auditExecuting ? (
                         <div className={styles["extra"]}>
                             <Progress
                                 strokeColor='#F28B44'
@@ -795,33 +817,60 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 percent={Math.floor((resultInfo?.progress || 0) * 100)}
                             />
                         </div>
+                    ) : (
+                        <>
+                            {auditType === "history" && (
+                                <div className={styles["extra"]}>
+                                    <YakitButton
+                                        type='text'
+                                        size={"small"}
+                                        icon={<ReloadOutlined />}
+                                        onClick={(e) => {}}
+                                    />
+                                    <YakitPopconfirm title={"将会删除所有审计历史，确定删除吗"} onConfirm={() => {}}>
+                                        <YakitButton
+                                            type='text'
+                                            size={"small"}
+                                            colors='danger'
+                                            icon={<DeleteOutlined />}
+                                        />
+                                    </YakitPopconfirm>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
-                {isShowEmpty ? (
-                    <div className={styles["no-data"]}>暂无数据</div>
-                ) : (
+                {auditType === "result" ? (
                     <>
-                        {auditExecuting ? (
-                            <div className={styles["audit-log"]}>
-                                <PluginExecuteLog
-                                    loading={auditExecuting}
-                                    messageList={resultInfo?.logState || []}
-                                    wrapperClassName={styles["audit-log-wrapper"]}
-                                />
-                            </div>
+                        {isShowEmpty ? (
+                            <div className={styles["no-data"]}>暂无数据</div>
                         ) : (
-                            <AuditTree
-                                data={auditDetailTree}
-                                expandedKeys={expandedKeys}
-                                setExpandedKeys={setExpandedKeys}
-                                onLoadData={onLoadData}
-                                foucsedKey={foucsedKey}
-                                setFoucsedKey={setFoucsedKey}
-                                onJump={onJump}
-                                bugId={bugId}
-                            />
+                            <>
+                                {auditExecuting ? (
+                                    <div className={styles["audit-log"]}>
+                                        <PluginExecuteLog
+                                            loading={auditExecuting}
+                                            messageList={resultInfo?.logState || []}
+                                            wrapperClassName={styles["audit-log-wrapper"]}
+                                        />
+                                    </div>
+                                ) : (
+                                    <AuditTree
+                                        data={auditDetailTree}
+                                        expandedKeys={expandedKeys}
+                                        setExpandedKeys={setExpandedKeys}
+                                        onLoadData={onLoadData}
+                                        foucsedKey={foucsedKey}
+                                        setFoucsedKey={setFoucsedKey}
+                                        onJump={onJump}
+                                        bugId={bugId}
+                                    />
+                                )}
+                            </>
                         )}
                     </>
+                ) : (
+                    <>审计历史</>
                 )}
             </div>
         </YakitSpin>
@@ -1431,7 +1480,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         const paginationProps = {
             ...pagination,
             Page: page || 1,
-            Limit: limit || pagination.Limit,
+            Limit: limit || pagination.Limit
         }
         if (reload) {
             afterId.current = undefined
@@ -1473,7 +1522,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         const paginationProps = {
             ...pagination,
             Page: 1,
-            Limit: pagination.Limit,
+            Limit: pagination.Limit
         }
         ipcRenderer
             .invoke("QuerySSAPrograms", {
