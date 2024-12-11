@@ -428,8 +428,48 @@
                 }
             }
             // 需询问后端是否可从schema中移除
-            #root_auth__error,#root_proxy__error {
+            #root_auth__error,
+            #root_proxy__error {
                 display: none;
+            }
+        }
+    }
+}
+
+.audit-history-list {
+    padding: 4px 8px;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    .audit-history-list-box {
+        flex: 1;
+        overflow: hidden;
+        .history-item {
+            cursor: pointer;
+            padding: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--yakit-header-color);
+            .title {
+                display: flex;
+                gap: 6px;
+            }
+            &:hover {
+                border-radius: 4px;
+                background: rgba(204, 210, 222, 0.5);
+            }
+            .terminal-icon {
+                color: var(--yakit-helper-text-color);
+                svg {
+                    width: 16px;
+                    height: 16px;
+
+                    &:hover {
+                        color: var(--yakit-primary-5);
+                    }
+                }
             }
         }
     }

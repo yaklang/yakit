@@ -9,12 +9,14 @@ import {AuditCode} from "../AuditCode/AuditCode"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {RunnerFileTree} from "../RunnerFileTree/RunnerFileTree"
 import useStore from "../hooks/useStore"
+import { ShowItemType } from "../BottomEditorDetails/BottomEditorDetailsType"
 const {ipcRenderer} = window.require("electron")
 export interface LeftAuditProps {
     fileTreeLoad: boolean
+    onOpenEditorDetails: (v: ShowItemType) => void
 }
 export const LeftAudit: React.FC<LeftAuditProps> = (props) => {
-    const {fileTreeLoad} = props
+    const {fileTreeLoad,onOpenEditorDetails} = props
     const {pageInfo} = useStore()
     const [isOnlyFileTree, setOnlyFileTree] = useState<boolean>(true)
     const ref = useRef(null)
@@ -32,12 +34,13 @@ export const LeftAudit: React.FC<LeftAuditProps> = (props) => {
             secondMinSize: 180,
             lineStyle: {}
         }
-        if (isOnlyFileTree) {
-            p.secondRatio = "0%"
-            p.firstRatio = "100%"
-            p.secondMinSize = 0
-            p.lineStyle = {display: "none"}
-        }
+        // 因需求变动暂屏蔽隐藏
+        // if (isOnlyFileTree) {
+        //     p.secondRatio = "0%"
+        //     p.firstRatio = "100%"
+        //     p.secondMinSize = 0
+        //     p.lineStyle = {display: "none"}
+        // }
         return p
     }, [isOnlyFileTree])
 
@@ -55,7 +58,7 @@ export const LeftAudit: React.FC<LeftAuditProps> = (props) => {
                 firstNodeStyle={{padding: 0}}
                 secondNodeStyle={{padding: 0}}
                 firstNode={<RunnerFileTree fileTreeLoad={fileTreeLoad} boxHeight={boxHeight}/>}
-                secondNode={<AuditCode setOnlyFileTree={setOnlyFileTree} />}
+                secondNode={<AuditCode setOnlyFileTree={setOnlyFileTree} onOpenEditorDetails={onOpenEditorDetails}/>}
                 {...ResizeBoxProps}
             />
         </div>
