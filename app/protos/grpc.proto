@@ -133,7 +133,6 @@ service Yak {
   rpc MITM(stream MITMRequest) returns (stream MITMResponse);
   rpc SetMITMFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
   rpc GetMITMFilter(Empty) returns (SetMITMFilterRequest);
-  rpc ResetMITMFilter(Empty) returns (SetMITMFilterRequest); //重置MITM启动前的过滤器
   rpc DownloadMITMCert(Empty) returns (MITMCert);
 
   // 开启端口
@@ -720,16 +719,13 @@ service Yak {
   rpc CreateSyntaxFlowRule(CreateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
-  // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
-  rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
-  rpc CreateSyntaxFlowRuleGroup(CreateSyntaxFlowGroupRequest) returns (DbOperateMessage);
-  rpc UpdateSyntaxFlowRuleAndGroup(UpdateSyntaxFlowRuleAndGroupRequest) returns (DbOperateMessage);
-  // syntaxflow scan
+
+  // syntaxflow scan 
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
   rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
-  // query result
+  // query result 
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
   //query ssa program
   rpc QuerySSAPrograms(QuerySSAProgramRequest)returns(QuerySSAProgramResponse);
@@ -3048,9 +3044,6 @@ message QueryRisksRequest {
   repeated int64 Ids = 14;
 
   string RuntimeId = 15;
-
-  // ssa program 
-  repeated string SSAProgramNames = 16;
 }
 
 message QueryRisksResponse {
@@ -4496,12 +4489,6 @@ message FuzzerRequest {
 
   string SNI = 56;
   bool OverwriteSNI = 57;
-
-  // use tcp conn pool
-  bool DisableUseConnPool = 58;
-
-  // disable hotPatch
-  bool DisableHotPatch = 59;
 }
 
 message MutateMethod {
@@ -4712,7 +4699,6 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeHash = 41;
   repeated string HiddenIndex = 42;
-  
   repeated string ProcessName = 43;
   repeated string ExcludeKeywords = 44;
 }
@@ -5032,7 +5018,6 @@ message MITMRequest {
   // random JA3 fingerprint
   bool RandomJA3 = 62;
 
-  // disable websocket compression
   bool DisableWebsocketCompression = 64;
 }
 
@@ -5111,7 +5096,6 @@ message MITMContentReplacer {
   // 匹配掉之后直接丢包
   bool Drop = 17;
 
-  string EffectiveURL = 18;
 }
 
 message RemoveHookParams {
@@ -5518,8 +5502,6 @@ message QuerySyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRule{
-  int64 Id = 18;
-
   string RuleName = 1;
   string Content = 2;
 
@@ -5559,10 +5541,7 @@ message SyntaxFlowRuleFilter {
   repeated string Tag = 6;
   string Keyword = 7;
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-  bool includeLibraryRule = 8; // default false
-  // for infinite list
-  int64 FromId = 9;
-  int64  UntilId = 10;
+  bool includeLibraryRule = 8; // default false 
 }
 
 message SSAProgram{
@@ -5575,9 +5554,9 @@ message SSAProgram{
   string Language = 6;
   string EngineVersion = 7;
 
-  // need re-compile
+  // need re-compile 
   bool Recompile = 8;
-  // risk number
+  // risk number 
   int64 HighRiskNumber = 9;
   int64 CriticalRiskNumber = 10;
   int64 WarnRiskNumber = 11;
@@ -5586,19 +5565,19 @@ message SSAProgram{
 }
 
 message SSAProgramInput {
-  string Name = 1; // index
-  string Description = 2;
+  string Name = 1; // index 
+  string Description = 2; 
 }
 
 message SSAProgramFilter{
-  repeated string ProgramNames =  1;
-  repeated string Languages =  2;
-  repeated int64 Ids =  3;
+  repeated string ProgramNames =  1; 
+  repeated string Languages =  2; 
+  repeated int64 Ids =  3; 
 
   // update range
   int64 BeforeUpdatedAt = 5;
   int64 AfterUpdatedAt = 6;
-  // fuzz search
+  // fuzz search 
   string Keyword =  7 ;
   // id range
   int64 AfterID =  8;
@@ -5612,6 +5591,14 @@ message QuerySSAProgramRequest{
   SSAProgramFilter Filter = 3;
 }
 
+message QuerySSAProgramResponse{
+  Paging Paging = 1; // abort 
+  Paging Pagination = 5;
+  repeated SSAProgram Programs = 2; // abort
+  repeated SSAProgram Data = 4;
+  int64 Total = 3;
+}
+
 message UpdateSSAProgramRequest{
   SSAProgramInput ProgramInput = 1;
 }
@@ -5621,13 +5608,6 @@ message DeleteSSAProgramRequest{
   SSAProgramFilter Filter = 2;
 }
 
-message QuerySSAProgramResponse{
-  Paging Paging = 1; // abort 
-  Paging Pagination = 5;
-  repeated SSAProgram Programs = 2; // abort
-  repeated SSAProgram Data = 4;
-  int64 Total = 3;
-}
 
 message CreateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
@@ -5649,7 +5629,6 @@ message DeleteSyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRuleGroupFilter {
-  repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
 }
@@ -5667,33 +5646,19 @@ message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
 }
 
-message CreateSyntaxFlowGroupRequest{
-  string GroupName = 1;
-}
-
-message UpdateSyntaxFlowRuleAndGroupRequest{
-   SyntaxFlowRuleFilter Filter = 1;
-   repeated string AddGroups= 2;
-   repeated string RemoveGroups = 3;
-   bool All = 4;
-}
-
-message DeleteSyntaxFlowRuleGroupRequest{
-  SyntaxFlowRuleGroupFilter Filter = 1;
-}
-
 message SyntaxFlowScanRequest{
   string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
 
   // 启动扫描任务
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
-  repeated string ProgramName = 3; // 用于指定扫描的程序
+  repeated string ProgramName = 3; // 用于指定扫描的程序 
   // 恢复扫描任务
   string ResumeTaskId = 5;         // 恢复任务ID
 
   // 其他参数 
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
 }
+
 
 message QuerySyntaxFlowScanTaskRequest{
   Paging Pagination = 1;
