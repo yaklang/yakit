@@ -20,6 +20,9 @@
         }
         .extra {
             flex: 1;
+            display: flex;
+            justify-content: end;
+            gap: 8px;
         }
     }
     .textarea-box {
