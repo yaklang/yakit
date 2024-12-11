@@ -1,5 +1,6 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
+import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
 export interface YakURLKVPair {
     Key: string
     Value: string
@@ -7,6 +8,7 @@ export interface YakURLKVPair {
 
 export interface AuditCodeProps {
     setOnlyFileTree: (v: boolean) => void
+    onOpenEditorDetails: (v: ShowItemType) => void
 }
 
 export interface AuditTreeProps {
@@ -157,4 +159,21 @@ export interface ProjectManagerEditFormProps {
     record: SSAProgramResponse
     setData: React.Dispatch<React.SetStateAction<SSAProgramResponse[]>>
     onClose: () => void
+}
+
+export interface AuditHistoryListRefProps {
+    onRefresh: () => void
+}
+
+export interface AuditHistoryListProps {
+    ref?: React.ForwardedRef<AuditHistoryListRefProps>
+    setAuditType: (v: "result" | "history") => void
+    onAuditRuleSubmitFun: (
+        textArea?: string,
+        Query?: {
+            Key: string
+            Value: number
+        }[]
+    ) => void
+    onOpenEditorDetails: (v: ShowItemType) => void
 }

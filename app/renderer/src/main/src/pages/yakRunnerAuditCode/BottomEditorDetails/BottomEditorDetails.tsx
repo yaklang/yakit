@@ -35,6 +35,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
+    const onResetAuditRuleFun = useMemoizedFn((v:string)=>{
+        setRuleEditor(v)
+    })
+
+    useEffect(()=>{
+        emiter.on("onResetAuditRule", onResetAuditRuleFun)
+        return () => {
+            emiter.off("onResetAuditRule", onResetAuditRuleFun)
+        }
+    },[])
+
     useEffect(() => {
         if (showItem && isShowEditorDetails) {
             if (showType.includes(showItem)) return

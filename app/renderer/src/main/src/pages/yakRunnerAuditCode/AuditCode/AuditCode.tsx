@@ -1,7 +1,9 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     AfreshAuditModalProps,
     AuditCodeProps,
+    AuditHistoryListProps,
+    AuditHistoryListRefProps,
     AuditHistoryTableProps,
     AuditMainItemFormProps,
     AuditModalFormModalProps,
@@ -32,6 +34,7 @@ import {
 import {
     useControllableValue,
     useDebounceFn,
+    useGetState,
     useInterval,
     useInViewport,
     useMemoizedFn,
@@ -82,12 +85,16 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {QuestionMarkCircleIcon, TrashIcon} from "@/assets/newIcon"
+import {QuestionMarkCircleIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
 import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
-import {QuerySyntaxFlowResultRequest, QuerySyntaxFlowResultResponse, SyntaxFlowResult} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import {
+    QuerySyntaxFlowResultRequest,
+    QuerySyntaxFlowResultResponse,
+    SyntaxFlowResult
+} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -104,7 +111,9 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setClipboardText} from "@/utils/clipboard"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {NewHTTPPacketEditor} from "@/utils/editors"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -389,7 +398,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 const TopId = "top-message"
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
-    const {setOnlyFileTree} = props
+    const {setOnlyFileTree, onOpenEditorDetails} = props
     const {projectName, pageInfo, auditRule, auditExecuting} = useStore()
     const {setAuditExecuting} = useDispatcher()
     const [auditType, setAuditType] = useState<"result" | "history">("result")
@@ -398,6 +407,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    /** 子组件方法传递给父组件 */
+    const auditHistoryListRef = useRef<AuditHistoryListRefProps>(null)
     // 已审计的参数Query用于加载更多时使用
     const runQueryRef = useRef<
         {
@@ -805,7 +816,8 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 },
                                 {
                                     label: "审计历史",
-                                    value: "history"
+                                    value: "history",
+                                    disabled: !projectName
                                 }
                             ]}
                         />
@@ -826,16 +838,10 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         type='text'
                                         size={"small"}
                                         icon={<ReloadOutlined />}
-                                        onClick={(e) => {}}
+                                        onClick={(e) => {
+                                            auditHistoryListRef.current?.onRefresh()
+                                        }}
                                     />
-                                    <YakitPopconfirm title={"将会删除所有审计历史，确定删除吗"} onConfirm={() => {}}>
-                                        <YakitButton
-                                            type='text'
-                                            size={"small"}
-                                            colors='danger'
-                                            icon={<DeleteOutlined />}
-                                        />
-                                    </YakitPopconfirm>
                                 </div>
                             )}
                         </>
@@ -871,7 +877,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         )}
                     </>
                 ) : (
-                    <AuditHistoryList />
+                    <AuditHistoryList
+                        ref={auditHistoryListRef}
+                        setAuditType={setAuditType}
+                        onAuditRuleSubmitFun={onAuditRuleSubmitFun}
+                        onOpenEditorDetails={onOpenEditorDetails}
+                    />
                 )}
             </div>
         </YakitSpin>
@@ -879,100 +890,189 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 }
 
 // 审计历史
-export const AuditHistoryList: React.FC<AuditMainItemFormProps> = (props) => {
-    const {} = props
-    const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
-        Filter: {
-            TaskIDs: [],
-            ResultIDs: [],
-            RuleNames: [],
-            ProgramNames: [],
-            Keyword: "",
-            OnlyRisk: false
-        },
-        Pagination: genDefaultPagination(20)
-    })
-    const [loading, setLoading] = useState<boolean>(false)
-    const [hasMore, setHasMore] = useState<boolean>(false)
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [response, setResponse] = useState<QuerySyntaxFlowResultResponse>({
-        Results: [],
-        Pagination: genDefaultPagination(20),
-        DbMessage:{
-            TableName:"",
-            Operation:"",
-            EffectRows:"",
-            ExtraMessage:""
-        },
-        Total: 0
-    })
-    useEffect(()=>{
-        update(1)
-    },[])
+export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {onOpenEditorDetails, onAuditRuleSubmitFun, setAuditType} = props
+        const {projectName} = useStore()
+        const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
+            Filter: {
+                TaskIDs: [],
+                ResultIDs: [],
+                RuleNames: [],
+                ProgramNames: [],
+                Keyword: "",
+                OnlyRisk: false
+            },
+            Pagination: genDefaultPagination(20)
+        })
+        const [loading, setLoading] = useState<boolean>(false)
+        const [hasMore, setHasMore] = useState<boolean>(false)
+        const [isRefresh, setIsRefresh] = useState<boolean>(false)
+        const [response, setResponse] = useState<QuerySyntaxFlowResultResponse>({
+            Results: [],
+            Pagination: genDefaultPagination(20),
+            DbMessage: {
+                TableName: "",
+                Operation: "",
+                EffectRows: "",
+                ExtraMessage: ""
+            },
+            Total: 0
+        })
 
-    const update = useMemoizedFn((page: number)=>{
-        setLoading(true)
-        const paginationProps = {
-            ...query.Pagination,
-            Page: page,
-            Limit: 20
-        }
-        const finalParams: QuerySyntaxFlowResultRequest = {
-            ...query,
-            Pagination: paginationProps
-        }
-        const isInit = page === 1
-        apiFetchQuerySyntaxFlowResult(finalParams)
-            .then((res: QuerySyntaxFlowResultResponse) => {
-                console.log("审计历史---",res);
-                
-                const resData = res?.Results || []
-                if (resData.length > 0) {
-                    setQuery((prevQuery) => ({
-                        ...prevQuery,
-                        Pagination: {
-                            ...prevQuery.Pagination,
-                            Page: +res.Pagination.Page
-                        }
-                    }))
+        useImperativeHandle(
+            ref,
+            () => ({
+                onRefresh: () => {
+                    setIsRefresh(!isRefresh)
+                    update(1)
                 }
-                const d = isInit ? res.Results : (response?.Results || []).concat(res.Results)
-                const isMore = res.Results.length < res.Pagination.Limit || d.length === response.Total
-                setHasMore(!isMore)
-                setResponse({
-                    ...res,
-                    Results: d
+            }),
+            []
+        )
+
+        useEffect(() => {
+            update(1)
+        }, [])
+
+        const update = useMemoizedFn((page: number) => {
+            setLoading(true)
+            const paginationProps = {
+                ...query.Pagination,
+                Page: page,
+                Limit: 20
+            }
+            const finalParams: QuerySyntaxFlowResultRequest = {
+                ...query,
+                Filter: {
+                    ...query.Filter,
+                    ProgramNames: [projectName || ""]
+                },
+                Pagination: paginationProps
+            }
+            const isInit = page === 1
+            apiFetchQuerySyntaxFlowResult(finalParams)
+                .then((res: QuerySyntaxFlowResultResponse) => {
+                    const resData = res?.Results || []
+                    if (resData.length > 0) {
+                        setQuery((prevQuery) => ({
+                            ...prevQuery,
+                            Pagination: {
+                                ...prevQuery.Pagination,
+                                Page: +res.Pagination.Page
+                            }
+                        }))
+                    }
+                    const d = isInit ? res.Results : (response?.Results || []).concat(res.Results)
+                    const isMore = res.Results.length < res.Pagination.Limit || d.length === response.Total
+
+                    setHasMore(!isMore)
+                    setResponse({
+                        ...res,
+                        Results: d
+                    })
+                    if (isInit) {
+                        setIsRefresh((prevIsRefresh) => !prevIsRefresh)
+                    }
                 })
-                if (isInit) {
-                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
-                }
-            })
-            .catch(() => {
-            })
-    })
+                .finally(() => {
+                    setLoading(false)
+                })
+                .catch(() => {})
+        })
 
-    return <div className={styles["audit-history-list"]}>
-        <RollingLoadList<SyntaxFlowResult>
-                    loading={loading}
-                    isRef={isRefresh}
-                    hasMore={hasMore}
-                    data={response.Results}
-                    page={response.Pagination.Page}
-                    loadMoreData={() => {
-                        // 请求下一页数据
-                        update(+response.Pagination.Page + 1)
+        return (
+            <div className={styles["audit-history-list"]}>
+                <YakitInput.Search
+                    placeholder='请输入关键词搜索'
+                    value={query.Filter.Keyword}
+                    onChange={(e) => {
+                        setQuery({
+                            ...query,
+                            Filter: {
+                                ...query.Filter,
+                                Keyword: e.target.value
+                            }
+                        })
                     }}
-                    rowKey='TaskID'
-                    defItemHeight={99}
-                    classNameRow={classNames(styles["list-item"], styles["list-item-hoverable"])}
-                    renderRow={(rowData: SyntaxFlowResult, index: number) => {
-                        return (
-                            <></>
-                        )
+                    onPressEnter={() => update(1)}
+                    onSearch={() => {
+                        update(1)
                     }}
                 />
-    </div>
-}
+                <div className={styles["audit-history-list-box"]}>
+                    <RollingLoadList<SyntaxFlowResult>
+                        loading={loading}
+                        isRef={isRefresh}
+                        hasMore={hasMore}
+                        data={response.Results}
+                        page={response.Pagination.Page}
+                        loadMoreData={() => {
+                            // 请求下一页数据
+                            update(+response.Pagination.Page + 1)
+                        }}
+                        rowKey='ResultID'
+                        defItemHeight={32}
+                        renderRow={(rowData: SyntaxFlowResult, index: number) => {
+                            return (
+                                <div
+                                    className={styles["history-item"]}
+                                    onClick={() => {
+                                        // 审计结果
+                                        setAuditType("result")
+                                        onAuditRuleSubmitFun("", [{Key: "result_id", Value: rowData.ResultID}])
+                                        // 规则编写
+                                        onOpenEditorDetails("ruleEditor")
+                                        setTimeout(() => {
+                                            emiter.emit("onResetAuditRule", rowData.RuleContent)
+                                        }, 200)
+                                    }}
+                                >
+                                    <div className={styles["title"]}>
+                                        <div>{`ID:${rowData.ResultID}`}</div>
+                                        <div style={{overflow: "hidden"}}>
+                                            <YakitTag
+                                                color='info'
+                                                style={{
+                                                    whiteSpace: "normal",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    display: "block",
+                                                    lineHeight: "14px"
+                                                }}
+                                            >
+                                                风险个数：{rowData.RiskCount}
+                                            </YakitTag>
+                                        </div>
+                                    </div>
+                                    <YakitPopover
+                                        placement={"topRight"}
+                                        content={
+                                            <div style={{width: 600, height: 300}}>
+                                                <NewHTTPPacketEditor
+                                                    originValue={rowData.RuleContent}
+                                                    readOnly={true}
+                                                    noMinimap={true}
+                                                    noHeader={true}
+                                                    showDownBodyMenu={false}
+                                                />
+                                            </div>
+                                        }
+                                    >
+                                        <TerminalIcon
+                                            className={styles["terminal-icon"]}
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                    </YakitPopover>
+                                </div>
+                            )
+                        }}
+                    />
+                </div>
+            </div>
+        )
+    })
+)
 
 // 审计表单主要项内容
 export const AuditMainItemForm: React.FC<AuditMainItemFormProps> = (props) => {

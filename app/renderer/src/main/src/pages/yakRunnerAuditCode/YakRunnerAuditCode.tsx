@@ -688,7 +688,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 firstMinSize={200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
-                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad} />}
+                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails}/>}
                                 secondNodeStyle={{overflow: "unset", padding: 0}}
                                 secondNode={
                                     <YakitResizeBox
