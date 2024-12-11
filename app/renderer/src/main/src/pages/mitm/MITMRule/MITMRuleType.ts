@@ -58,14 +58,23 @@ export interface ExtractRegularProps {
 export interface ExtraHTTPSelectProps {
     list: HTTPHeader[]
     tip: string
-    onSave: (h: HTTPHeader) => any
+    onSave: (h: HTTPHeader | HTTPCookieSetting, updateIndex?: number) => any
     onRemove: (h: number) => any
 }
 
 export interface InputHTTPHeaderFormProps {
     visible: boolean
     setVisible: (b: boolean) => void
-    onSave: (h: HTTPHeader) => any
+    onSave: (h: HTTPHeader, updateIndex?: number) => any
+    updateIndex?: number
+    initFormVal?: HTTPHeader
+}
+export interface InputHTTPCookieFormProps {
+    visible: boolean
+    setVisible: (b: boolean) => void
+    onSave: (h: HTTPCookieSetting, updateIndex?: number) => any
+    updateIndex?: number
+    initFormVal?: HTTPCookieSetting
 }
 
 export interface YakitSelectMemoProps {

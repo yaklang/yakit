@@ -5,6 +5,7 @@ import classNames from "classnames"
 import {
     ExtractRegularProps,
     ExtraHTTPSelectProps,
+    InputHTTPCookieFormProps,
     InputHTTPHeaderFormProps,
     MITMContentReplacerRule,
     MITMRuleFromModalProps,
@@ -78,14 +79,28 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
             Rule: val
         })
     })
-    const getExtraHeaders = useMemoizedFn((val) => {
+    const getExtraHeaders = useMemoizedFn((val, updateIndex) => {
+        let ExtraHeaders: HTTPHeader[] = []
+        if (updateIndex === undefined) {
+            ExtraHeaders = [...headers, val]
+        } else {
+            headers[updateIndex] = val
+            ExtraHeaders = [...headers]
+        }
         form.setFieldsValue({
-            ExtraHeaders: [...headers, val]
+            ExtraHeaders: ExtraHeaders
         })
     })
-    const getExtraCookies = useMemoizedFn((val) => {
+    const getExtraCookies = useMemoizedFn((val, updateIndex) => {
+        let ExtraCookies: HTTPCookieSetting[] = []
+        if (updateIndex === undefined) {
+            ExtraCookies = [...cookies, val]
+        } else {
+            cookies[updateIndex] = val
+            ExtraCookies = [...cookies]
+        }
         form.setFieldsValue({
-            ExtraCookies: [...cookies, val]
+            ExtraCookies: ExtraCookies
         })
     })
     const onRemoveExtraHeaders = useMemoizedFn((index: number) => {
@@ -184,7 +199,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                                 <ExtraHTTPSelect
                                     tip='Cookie'
                                     onSave={getExtraCookies}
-                                    list={cookies.map((item) => ({Header: item.Key, Value: item.Value}))}
+                                    list={cookies.map((item) => ({...item, Header: item.Key, Value: item.Value}))}
                                     onRemove={onRemoveExtraCookies}
                                 />
                             </Form.Item>
@@ -371,10 +386,28 @@ export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
 const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
     const {tip, onSave, list, onRemove} = props
     const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
+    const [initHeaderFormVal, setInitHeaderFormVal] = useState<HTTPHeader>()
+    const [initCookieFormVal, setInitCookieFormVal] = useState<any>()
+    const [updateHeaderIndex, setUpdateHeaderIndex] = useState<number>()
+    const [updateCookieIndex, setUpdateCookieIndex] = useState<number>()
+
     return (
         <div className={styles["yakit-extra-http-select"]}>
             <div className={styles["yakit-extra-http-select-heard"]}>
-                <YakitButton type='text' icon={<PlusCircleIcon />} onClick={() => setVisibleHTTPHeader(true)}>
+                <YakitButton
+                    type='text'
+                    icon={<PlusCircleIcon />}
+                    onClick={() => {
+                        if (tip === "Header") {
+                            setInitHeaderFormVal(undefined)
+                            setUpdateHeaderIndex(undefined)
+                        } else {
+                            setInitCookieFormVal(undefined)
+                            setUpdateCookieIndex(undefined)
+                        }
+                        setVisibleHTTPHeader(true)
+                    }}
+                >
                     添加
                 </YakitButton>
                 <div className={styles["extra-tip"]}>
@@ -382,8 +415,22 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
                 </div>
             </div>
             {(tip === "Header" && (
-                <InputHTTPHeaderForm visible={visibleHTTPHeader} setVisible={setVisibleHTTPHeader} onSave={onSave} />
-            )) || <InputHTTPCookieForm visible={visibleHTTPHeader} setVisible={setVisibleHTTPHeader} onSave={onSave} />}
+                <InputHTTPHeaderForm
+                    initFormVal={initHeaderFormVal}
+                    updateIndex={updateHeaderIndex}
+                    visible={visibleHTTPHeader}
+                    setVisible={setVisibleHTTPHeader}
+                    onSave={onSave}
+                />
+            )) || (
+                <InputHTTPCookieForm
+                    initFormVal={initCookieFormVal}
+                    updateIndex={updateCookieIndex}
+                    visible={visibleHTTPHeader}
+                    setVisible={setVisibleHTTPHeader}
+                    onSave={onSave}
+                />
+            )}
 
             {list && list.length > 0 && (
                 <div className={styles["http-tags"]}>
@@ -393,6 +440,19 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
                             closable
                             onClose={() => onRemove(index)}
                             className={styles["tag-item"]}
+                            onClick={() => {
+                                if (tip === "Header") {
+                                    setInitHeaderFormVal({
+                                        Header: item.Header,
+                                        Value: item.Value
+                                    })
+                                    setUpdateHeaderIndex(index)
+                                } else {
+                                    setInitCookieFormVal({...item})
+                                    setUpdateCookieIndex(index)
+                                }
+                                setVisibleHTTPHeader(true)
+                            }}
                         >
                             {item.Header}
                         </YakitTag>
@@ -404,8 +464,18 @@ const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
 })
 
 const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave} = props
+    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
     const [form] = Form.useForm()
+
+    useEffect(() => {
+        if (visible) {
+            if (initFormVal !== undefined) {
+                form.setFieldsValue(initFormVal)
+            } else {
+                form.resetFields()
+            }
+        }
+    }, [visible])
     return (
         <YakitModal
             title='输入新的 HTTP Header'
@@ -415,12 +485,13 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
             footer={null}
             closable={true}
             bodyStyle={{padding: 0}}
+            destroyOnClose={true}
         >
             <Form
                 labelCol={{span: 5}}
                 wrapperCol={{span: 14}}
                 onFinish={(val: HTTPHeader) => {
-                    onSave(val)
+                    onSave(val, updateIndex)
                     setVisible(false)
                     form.resetFields()
                 }}
@@ -494,10 +565,36 @@ const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
     )
 })
 
-const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave} = props
+const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((props) => {
+    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
     const [form] = Form.useForm()
     const [advanced, setAdvanced] = useState(false)
+
+    useEffect(() => {
+        if (visible) {
+            if (initFormVal !== undefined) {
+                if (
+                    initFormVal.Path ||
+                    initFormVal.Domain ||
+                    initFormVal.HttpOnly ||
+                    initFormVal.Secure ||
+                    initFormVal.SameSiteMode ||
+                    initFormVal.Expires ||
+                    initFormVal.MaxAge
+                ) {
+                    setAdvanced(true)
+                } else {
+                    setAdvanced(false)
+                }
+                form.resetFields()
+                form.setFieldsValue(initFormVal)
+            } else {
+                setAdvanced(false)
+                form.resetFields()
+            }
+        }
+    }, [visible])
+
     return (
         <YakitModal
             title='输入新的 Cookie 值'
@@ -508,12 +605,13 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
             closable={true}
             width={600}
             bodyStyle={{padding: 0}}
+            destroyOnClose={true}
         >
             <Form
                 labelCol={{span: 5}}
                 wrapperCol={{span: 14}}
-                onFinish={(val: HTTPHeader) => {
-                    onSave(val)
+                onFinish={(val: HTTPCookieSetting) => {
+                    onSave(val, updateIndex)
                     setVisible(false)
                     form.resetFields()
                 }}
@@ -550,10 +648,15 @@ const InputHTTPCookieForm: React.FC<InputHTTPHeaderFormProps> = React.memo((prop
                         <Form.Item label='Domain' name='Domain'>
                             <YakitInput />
                         </Form.Item>
-                        <Form.Item label='HttpOnly' name='HttpOnly'>
+                        <Form.Item label='HttpOnly' name='HttpOnly' valuePropName='checked'>
                             <YakitSwitch />
                         </Form.Item>
-                        <Form.Item label='Secure' name='Secure' help='仅允许 Cookie 在 HTTPS 生效'>
+                        <Form.Item
+                            label='Secure'
+                            name='Secure'
+                            help='仅允许 Cookie 在 HTTPS 生效'
+                            valuePropName='checked'
+                        >
                             <YakitSwitch />
                         </Form.Item>
                         <Form.Item label='SameSite 策略' name='SameSiteMode' initialValue='default'>
