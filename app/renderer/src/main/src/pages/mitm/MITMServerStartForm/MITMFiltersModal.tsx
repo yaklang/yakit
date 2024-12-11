@@ -59,11 +59,20 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
 
     const onResetFilters = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-reset-filter").then(() => {
+        function resetFilterOk() {
             info("MITM 过滤器重置命令已发送")
             emiter.emit("onSetFilterWhiteListEvent", false + "")
             setVisible(false)
-        })
+        }
+        if (isStartMITM) {
+            ipcRenderer.invoke("mitm-reset-filter").then(() => {
+                resetFilterOk()
+            })
+        } else {
+            ipcRenderer.invoke("ResetMITMFilter").then(() => {
+                resetFilterOk()
+            })
+        }
     })
     useEffect(() => {
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
@@ -320,11 +329,14 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     <YakitButton type='text' onClick={() => onClearFilters()}>
                         清除
                     </YakitButton>
-                    {isStartMITM && (
-                        <YakitButton type='text' onClick={() => onResetFilters()}>
-                            重置过滤器
-                        </YakitButton>
-                    )}
+                    <YakitButton
+                        type='text'
+                        onClick={() => {
+                            onResetFilters()
+                        }}
+                    >
+                        重置过滤器
+                    </YakitButton>
                 </div>
             }
             className={styles["mitm-filters-modal"]}

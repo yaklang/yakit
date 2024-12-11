@@ -356,6 +356,22 @@ module.exports = (win, getClient) => {
     //     return await asyncFetchHostIp(params)
     // })
 
+    // 劫持前重置过滤器
+    const asyncResetMITMFilter = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ResetMITMFilter(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ResetMITMFilter", async (e, params) => {
+        return await asyncResetMITMFilter(params)
+    })
+
     // asyncDownloadMITMCert wrapper
     const asyncDownloadMITMCert = (params) => {
         return new Promise((resolve, reject) => {
