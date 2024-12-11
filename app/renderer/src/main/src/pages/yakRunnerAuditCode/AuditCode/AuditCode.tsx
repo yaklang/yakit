@@ -87,7 +87,7 @@ import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
-import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import {QuerySyntaxFlowResultRequest, QuerySyntaxFlowResultResponse, SyntaxFlowResult} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
@@ -104,6 +104,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {setClipboardText} from "@/utils/clipboard"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -870,11 +871,107 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         )}
                     </>
                 ) : (
-                    <>审计历史</>
+                    <AuditHistoryList />
                 )}
             </div>
         </YakitSpin>
     )
+}
+
+// 审计历史
+export const AuditHistoryList: React.FC<AuditMainItemFormProps> = (props) => {
+    const {} = props
+    const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
+        Filter: {
+            TaskIDs: [],
+            ResultIDs: [],
+            RuleNames: [],
+            ProgramNames: [],
+            Keyword: "",
+            OnlyRisk: false
+        },
+        Pagination: genDefaultPagination(20)
+    })
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [response, setResponse] = useState<QuerySyntaxFlowResultResponse>({
+        Results: [],
+        Pagination: genDefaultPagination(20),
+        DbMessage:{
+            TableName:"",
+            Operation:"",
+            EffectRows:"",
+            ExtraMessage:""
+        },
+        Total: 0
+    })
+    useEffect(()=>{
+        update(1)
+    },[])
+
+    const update = useMemoizedFn((page: number)=>{
+        setLoading(true)
+        const paginationProps = {
+            ...query.Pagination,
+            Page: page,
+            Limit: 20
+        }
+        const finalParams: QuerySyntaxFlowResultRequest = {
+            ...query,
+            Pagination: paginationProps
+        }
+        const isInit = page === 1
+        apiFetchQuerySyntaxFlowResult(finalParams)
+            .then((res: QuerySyntaxFlowResultResponse) => {
+                console.log("审计历史---",res);
+                
+                const resData = res?.Results || []
+                if (resData.length > 0) {
+                    setQuery((prevQuery) => ({
+                        ...prevQuery,
+                        Pagination: {
+                            ...prevQuery.Pagination,
+                            Page: +res.Pagination.Page
+                        }
+                    }))
+                }
+                const d = isInit ? res.Results : (response?.Results || []).concat(res.Results)
+                const isMore = res.Results.length < res.Pagination.Limit || d.length === response.Total
+                setHasMore(!isMore)
+                setResponse({
+                    ...res,
+                    Results: d
+                })
+                if (isInit) {
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
+                }
+            })
+            .catch(() => {
+            })
+    })
+
+    return <div className={styles["audit-history-list"]}>
+        <RollingLoadList<SyntaxFlowResult>
+                    loading={loading}
+                    isRef={isRefresh}
+                    hasMore={hasMore}
+                    data={response.Results}
+                    page={response.Pagination.Page}
+                    loadMoreData={() => {
+                        // 请求下一页数据
+                        update(+response.Pagination.Page + 1)
+                    }}
+                    rowKey='TaskID'
+                    defItemHeight={99}
+                    classNameRow={classNames(styles["list-item"], styles["list-item-hoverable"])}
+                    renderRow={(rowData: SyntaxFlowResult, index: number) => {
+                        return (
+                            <></>
+                        )
+                    }}
+                />
+    </div>
 }
 
 // 审计表单主要项内容
