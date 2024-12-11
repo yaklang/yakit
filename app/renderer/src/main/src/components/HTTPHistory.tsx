@@ -39,7 +39,6 @@ import {
     PowerpointIcon,
     ProxifierIcon,
     QqIcon,
-    QQMusicIcon,
     Se360Icon,
     TelegramIcon,
     UToolsIcon,
