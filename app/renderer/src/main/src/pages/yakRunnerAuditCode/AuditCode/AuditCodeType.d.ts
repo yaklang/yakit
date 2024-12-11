@@ -1,6 +1,5 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
-
 export interface YakURLKVPair {
     Key: string
     Value: string

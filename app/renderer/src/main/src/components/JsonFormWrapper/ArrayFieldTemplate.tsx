@@ -1,30 +1,21 @@
 import React from "react"
-import {isMultiSelect, getDefaultRegistry} from "react-jsonschema-form/lib/utils"
-import {ArrayFieldTemplateProps, FieldProps, IdSchema, AddButtonProps} from "react-jsonschema-form"
-import {JSONSchema6} from "json-schema"
-import classNames from "classnames"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitButton, YakitButtonProp} from "../yakitUI/YakitButton/YakitButton"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 // import {SolidArrownarrowdownIcon, SolidArrownarrowupIcon} from "@/assets/icon/solid"
 
-const AddButton: React.FC<AddButtonProps> = (props) => (
+const AddButton: React.FC<YakitButtonProp> = (props) => (
     <YakitButton {...props} type="outline1" icon={<PlusIcon />}>
         添加
     </YakitButton>
 )
 
-const ArrayFieldTemplate: React.FC<ArrayFieldTemplateProps> = (props: ArrayFieldTemplateProps) => {
-    const {schema, registry = getDefaultRegistry()}: {schema: JSONSchema6; registry: FieldProps["registry"]} = props
-
-    if (isMultiSelect(schema, registry.definitions)) {
-        return <DefaultFixedArrayFieldTemplate {...props} />
-    }
+const ArrayFieldTemplate: React.FC<any> = (props: any) => {
     return <DefaultNormalArrayFieldTemplate {...props} />
 }
 
 interface ArrayFieldTitleProps {
     TitleField: any
-    idSchema: IdSchema
+    idSchema: any
     title: string
     required: boolean
 }
@@ -45,7 +36,7 @@ const ArrayFieldTitle: React.FC<ArrayFieldTitleProps> = (props: ArrayFieldTitleP
 
 interface ArrayFieldDescriptionProps {
     DescriptionField: any
-    idSchema: IdSchema
+    idSchema: any
     description: string
 }
 
@@ -125,48 +116,7 @@ const DefaultArrayItem: React.FC<any> = (props) => {
     )
 }
 
-const DefaultFixedArrayFieldTemplate: React.FC<ArrayFieldTemplateProps> = (props: ArrayFieldTemplateProps) => {
-    const {
-        className,
-        TitleField,
-        idSchema,
-        title,
-        uiSchema,
-        schema,
-        items,
-        canAdd,
-        required,
-        onAddClick,
-        disabled,
-        readonly
-    } = props
-
-    return (
-        <fieldset className={classNames(className)}>
-            <ArrayFieldTitle
-                key={`array-field-title-${idSchema.$id}`}
-                TitleField={TitleField}
-                idSchema={idSchema}
-                title={uiSchema["ui:title"] || title}
-                required={required}
-            />
-
-            {(uiSchema["ui:description"] || schema.description) && (
-                <div className='field-description' key={`field-description-${idSchema.$id}`}>
-                    {uiSchema["ui:description"] || schema.description}
-                </div>
-            )}
-
-            <div className='row array-item-list' key={`array-item-list-${idSchema.$id}`}>
-                {items && items.map(DefaultArrayItem)}
-            </div>
-
-            {canAdd && <AddButton className='array-item-add' onClick={onAddClick} disabled={disabled || readonly} />}
-        </fieldset>
-    )
-}
-
-const DefaultNormalArrayFieldTemplate: React.FC<ArrayFieldTemplateProps> = (props) => {
+const DefaultNormalArrayFieldTemplate: React.FC<any> = (props) => {
     const {
         TitleField,
         idSchema,
