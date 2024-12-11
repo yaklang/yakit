@@ -804,7 +804,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Keyword: ""
                 }
             }
-            console.log("onMultipleTask---",params);
+            console.log("onMultipleTask---",params,token);
             apiSyntaxFlowScan(params, token).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
@@ -955,6 +955,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
+                    console.log("token-data:",res);
+                    
                     const data = res.ExecResult
 
                     if (!!res.Status) {
