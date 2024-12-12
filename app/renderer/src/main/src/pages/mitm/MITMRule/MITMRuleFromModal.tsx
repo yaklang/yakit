@@ -211,7 +211,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             <Divider dashed style={{marginTop: 0}} />
                         </Col>
                     </Row>
-                    <Form.Item label='生效url' name='EffectiveURL'>
+                    <Form.Item label='生效url' name='EffectiveURL' help='配置后规则只对该url生效，支持填写正则'>
                         <YakitInput />
                     </Form.Item>
                     <Form.Item label='命中颜色' name='Color'>
