@@ -20,7 +20,7 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             try {
                 // path为文件路径 token为切片进度回调 url为接口
-                const { url, path, token, } = params
+                const { url, path, token, filedHash = '', type } = params
                 // 获取文件名
                 const fileName = customPath.basename(path)
                 // 文件大小（以字节为单位）
@@ -56,7 +56,9 @@ module.exports = (win, getClient) => {
                             totalChunks,
                             fileName,
                             hash,
-                            fileHash: fileHashTime,
+                            fileHashTime: fileHashTime,
+                            filedHash,
+                            type,
                             token,
                             cancelToken: cancelTokenSource.token
                         })
@@ -90,7 +92,7 @@ module.exports = (win, getClient) => {
         })
     })
     // 上传到oss
-    const ossUploadBigFile = ({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHash, token, cancelToken }) => {
+    const ossUploadBigFile = ({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHashTime, filedHash, type, token, cancelToken }) => {
         return new Promise((resolve, reject) => {
             ossPostPackageHistory[hash] ? (ossPostPackageHistory[hash] += 1) : (ossPostPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
@@ -98,7 +100,10 @@ module.exports = (win, getClient) => {
             formData.append("file", chunkStream)
             formData.append("index", chunkIndex)
             formData.append("totalChunks", totalChunks)
-            formData.append("hash", fileHash)
+            formData.append("hash", fileHashTime)
+            formData.append("filedHash", filedHash)
+            formData.append("type", type)
+
 
             service({
                 url,
