@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement} from "react"
-import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip, Typography} from "antd"
+import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
 import {IMonacoEditor, NewHTTPPacketEditor, RenderTypeOptionVal} from "../utils/editors"
@@ -13,8 +13,13 @@ import {HTTPFlowForWebsocketViewer, WebSocketEditor} from "@/pages/websocket/HTT
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
-import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {HTTPFlowExtractedData, HTTPFlowExtractedDataTable} from "@/components/HTTPFlowExtractedDataTable"
+import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    ExtractedDataFilter,
+    HTTPFlowExtractedData,
+    HTTPFlowExtractedDataTable,
+    QueryMITMRuleExtractedDataRequest
+} from "@/components/HTTPFlowExtractedDataTable"
 import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
@@ -65,8 +70,6 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     loading?: boolean
     pageType?: HTTPHistorySourcePageType
 }
-
-const {Text} = Typography
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
     response: FuzzerResponse
@@ -647,8 +650,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     Page: 1,
                     Limit: 10
                 },
-                HTTPFlowHiddenIndex: i.HiddenIndex
-            })
+                Filter: {
+                    TraceID: [i.HiddenIndex]
+                }
+            } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
@@ -696,6 +701,24 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setInfoTypeLoading(true)
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
+
+    const [exportMITMRuleFilter, setExportMITMRuleFilter] = useState<ExtractedDataFilter>({
+        TraceID: [],
+        RuleVerbose: []
+    })
+    const exportMITMRuleExtractedData = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("ExportMITMRuleExtractedData", {
+                Filter: exportMITMRuleFilter
+            })
+            .then((ExportFilePath: string) => {
+                openABSFileLocated(ExportFilePath)
+                yakitNotify("success", "导出成功")
+            })
+            .catch((err) => {
+                yakitNotify("error", "导出失败：" + err)
+            })
+    })
 
     return isSelect ? (
         <div className={styles["http-history-box"]}>
@@ -807,6 +830,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
                                     <HTTPFlowExtractedDataTable
                                         hiddenIndex={flow?.HiddenIndex || ""}
+                                        onSetExportMITMRuleFilter={setExportMITMRuleFilter}
                                         title={
                                             <div className={styles["table-header"]}>
                                                 <Button.Group size={"small"}>
@@ -826,33 +850,13 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                     })}
                                                 </Button.Group>
                                                 <Space>
-                                                    <YakitDropdownMenu
-                                                        menu={{
-                                                            data: [
-                                                                {key: "xlsx", label: "xlsx"},
-                                                                {key: "csv", label: "csv"}
-                                                            ],
-                                                            onClick: ({key}) => {
-                                                                switch (key) {
-                                                                    case "xlsx":
-                                                                        break
-                                                                    case "csv":
-                                                                        break
-                                                                    default:
-                                                                        break
-                                                                }
-                                                            }
-                                                        }}
-                                                        dropdown={{
-                                                            trigger: ["click"],
-                                                            placement: "bottomRight"
-                                                        }}
+                                                    <YakitButton
+                                                        type='primary'
+                                                        size='small'
+                                                        onClick={exportMITMRuleExtractedData}
                                                     >
-                                                        <YakitButton type='primary' size='small'>
-                                                            导出
-                                                        </YakitButton>
-                                                    </YakitDropdownMenu>
-
+                                                        导出
+                                                    </YakitButton>
                                                     <div className={classNames(styles["http-history-fold-box"])}>
                                                         <div className={styles["http-history-icon-box"]}>
                                                             <Tooltip placement='top' title='向右收起'>

@@ -1,11 +1,11 @@
-const {ipcMain} = require("electron")
-const {Uint8ArrayToString} = require("../toolsFunc")
+const { ipcMain } = require("electron")
+const { Uint8ArrayToString } = require("../toolsFunc")
 const fs = require("fs")
-const {handleSaveFileSystem} = require("../utils/fileSystemDialog")
+const { handleSaveFileSystem } = require("../utils/fileSystemDialog")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("delete-http-flows-all", async (e, params) => {
-        getClient().DeleteHTTPFlows({DeleteAll: true, ...params}, (err, data) => {})
+        getClient().DeleteHTTPFlows({ DeleteAll: true, ...params }, (err, data) => { })
     })
 
     // asyncDeleteHTTPFlows wrapper
@@ -327,6 +327,31 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("QueryMITMRuleExtractedData", async (e, params) => {
         return await asyncQueryMITMRuleExtractedData(params)
+    })
+
+
+    // asyncExportMITMRuleExtractedData wrapper
+    const asyncExportMITMRuleExtractedData = (params) => {
+        return new Promise((resolve, reject) => {
+            const responseStream = getClient().ExportMITMRuleExtractedData(params)
+            responseStream.on("data", (e) => {
+                if (!win) {
+                    return
+                }
+                if (e.Percent === 1) {
+                    resolve(e.ExportFilePath)
+                }
+            })
+            responseStream.on("error", (e) => {
+                if (!win) {
+                    return
+                }
+                reject(e)
+            })
+        })
+    }
+    ipcMain.handle("ExportMITMRuleExtractedData", async (e, params) => {
+        return await asyncExportMITMRuleExtractedData(params)
     })
 
     const asyncHTTPFlowsShare = (params) => {

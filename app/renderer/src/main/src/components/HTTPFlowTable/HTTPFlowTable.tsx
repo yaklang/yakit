@@ -4164,7 +4164,7 @@ const contentType: FiltersItemProps[] = [
     }
 ]
 
-const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
+export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
     const {originalList, onSelect, value, filterProps, onClose, onQuery, searchVal, onChangeSearchVal} = props
     const {filterSearch, filterSearchInputProps = {}} = filterProps || {}
 

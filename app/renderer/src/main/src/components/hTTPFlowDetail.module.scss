@@ -137,6 +137,15 @@
             padding: 0 12px;
         }
     }
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .filter-icon-color {
+        color: var(--yakit-primary-5);
+    }
 }
 .render-html-box{
     height: 100%;
