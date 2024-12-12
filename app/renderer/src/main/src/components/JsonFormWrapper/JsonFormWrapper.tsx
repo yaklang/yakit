@@ -2,27 +2,20 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./JsonFormWrapper.module.scss"
 import validator from "@rjsf/validator-ajv8" // 添加这行
 import JsonForm from "@rjsf/antd"
-import {
-    ErrorSchema,
-    FieldProps,
-    labelValue,
-    RegistryFieldsType,
-    RegistryWidgetsType,
-    UiSchema,
-    WidgetProps
-} from "@rjsf/utils"
+import { RJSFSchema, UiSchema, WidgetProps} from "@rjsf/utils"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitDragger} from "../yakitUI/YakitForm/YakitForm"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
-import {Checkbox, Form, FormInstance} from "antd"
+import {Checkbox, Form, FormInstance, Grid} from "antd"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
-import ArrayFieldTemplate from "./ArrayFieldTemplate"
+import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
+import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -77,7 +70,7 @@ export interface JsonFormWrapperProps {
     field: string
     value?: string
     onChange?: (v: string) => void
-    schema: any
+    schema: RJSFSchema
     disabled?: boolean
 }
 
@@ -138,13 +131,13 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     //     "/test": UploadFolderPath,
     // }
 
-    const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
-        // 是否显示字段的 label
-        acc[key] = {
-            "ui:label": true
-        }
-        return acc
-    }, {})
+    // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
+    //     // 是否显示字段的 label
+    //     acc[key] = {
+    //         "ui:label": true
+    //     }
+    //     return acc
+    // }, {})
 
     const getTextWidget = useMemoizedFn((props: WidgetProps) => {
         const {id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema} = props
@@ -390,20 +383,46 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         )
     })
 
-    const AntdForm = useMemoizedFn((props) => {
-        return <Form {...props} />
-    })
+    const uiSchema: UiSchema = {
+        "ui:grid": [
+            {
+                firstName: 7,
+                lastName: 7,
+                companyName: 7,
+                b: 3
+            },
+            
+        ]
+        
+    }
 
+    // {
+    //     type: "object",
+    //     properties: {
+    //         firstName: {
+    //             type: "string"
+    //         },
+    //         lastName: {
+    //             type: "string"
+    //         },
+    //         companyName: {
+    //             type: "string"
+    //         },
+    //         b: {
+    //             type: "boolean"
+    //         }
+    //     }
+    // }
     return (
         <>
             <JsonForm
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
-                className={classNames(styles["json-schema-box"], "json-schema-form")}
+                className={classNames(styles["json-schema-box"])}
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器
-                templates={{ ArrayFieldTemplate }}
+                templates={{ArrayFieldTemplate, ObjectFieldTemplate}}
                 widgets={{
                     // 将默认控件替换为自定义控件
                     TextWidget: getTextWidget,
@@ -419,11 +438,11 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 // fields={fields}
                 uiSchema={
                     {
-                        /* 字段名 */
-                        // unremovable: {
-                        /* 全局 className*/
-                        // "ui:classNames": "test-task-title test-foo-bar"
-                        // }
+                    /* 字段名 */
+                    // unremovable: {
+                    /* 全局 className*/
+                    "ui:classNames": "json-schema-row-form"
+                    // }
                     }
                 }
                 disabled={disabled}
