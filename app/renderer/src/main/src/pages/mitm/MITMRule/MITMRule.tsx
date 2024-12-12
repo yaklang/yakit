@@ -368,6 +368,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 }
             },
             {
+                title: "生效url",
+                dataKey: "EffectiveURL",
+                width: 240
+            },
+            {
                 title: "命中颜色",
                 dataKey: "Color",
                 ellipsis: false,
