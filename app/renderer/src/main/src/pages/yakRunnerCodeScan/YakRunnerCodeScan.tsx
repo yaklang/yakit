@@ -951,6 +951,10 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
         /**开始执行 */
         const onStartExecute = useMemoizedFn(async (value, isSetForm?: boolean) => {
+            if(selectGroupList.length===0){
+                warn("请选择扫描规则")
+                return
+            }
             const {project} = value
             if (!project) {
                 warn("请输入项目名称")
@@ -1118,7 +1122,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                             <YakitButton
                                                 htmlType='submit'
                                                 size='large'
-                                                disabled={selectGroupList.length === 0}
                                             >
                                                 开始执行
                                             </YakitButton>
@@ -1269,6 +1272,10 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         }, [streamInfo])
 
         const onStartAuditFun = useMemoizedFn(async (value) => {
+            if(selectGroupList.length===0){
+                warn("请选择扫描规则")
+                return
+            }
             if (!plugin) {
                 failed("插件获取失败")
                 return
@@ -1329,7 +1336,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                     停止
                                 </YakitButton>
                             ) : (
-                                <YakitButton htmlType='submit' size='large' disabled={selectGroupList.length === 0}>
+                                <YakitButton htmlType='submit' size='large'>
                                     开始编译
                                 </YakitButton>
                             )}

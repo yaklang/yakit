@@ -22,6 +22,8 @@ export type YakRunnerEventProps = {
     onDeleteInFileTree: string
     // 关闭打开的文件
     onCloseFile: string
+    // 监听一级页面关闭事件
+    onCloseYakRunner?: string
     // 定位文件树
     onScrollToFileTree: string
     // 终端中打开

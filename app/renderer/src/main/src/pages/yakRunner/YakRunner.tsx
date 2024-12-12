@@ -13,6 +13,7 @@ import {
     grpcFetchCreateFile,
     grpcFetchFileTree,
     judgeAreaExistFilePath,
+    judgeAreaExistFileUnSave,
     MAX_FILE_SIZE_BYTES,
     monacaLanguageType,
     removeAreaFileInfo,
@@ -66,6 +67,7 @@ import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Progress} from "antd"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
+import { YakitRoute } from "@/enums/yakitRoute"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -344,6 +346,20 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
+    const onCloseYakRunnerFun = useMemoizedFn(async()=>{
+        if(activeFile?.isUnSave){
+            emiter.emit("onCloseFile", activeFile.path)
+            return
+        }
+        const unSaveArr = await judgeAreaExistFileUnSave(areaInfo)
+        if(unSaveArr.length > 0){
+            emiter.emit("onCloseFile", unSaveArr[0])
+        }
+        else{
+            emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
+        }
+    })
+
     useEffect(() => {
         // 监听文件树打开
         emiter.on("onOpenFileTree", onOpenFileTreeFun)
@@ -351,10 +367,13 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.on("onRefreshTree", onRefreshTreeFun)
         // 通过路径打开文件
         emiter.on("onOpenFileByPath", onOpenFileByPathFun)
+        // 监听一级页面关闭事件
+        emiter.on("onCloseYakRunner", onCloseYakRunnerFun)
         return () => {
             emiter.off("onOpenFileTree", onOpenFileTreeFun)
             emiter.off("onRefreshTree", onRefreshTreeFun)
             emiter.off("onOpenFileByPath", onOpenFileByPathFun)
+            emiter.off("onCloseYakRunner", onCloseYakRunnerFun)
         }
     }, [])
 
