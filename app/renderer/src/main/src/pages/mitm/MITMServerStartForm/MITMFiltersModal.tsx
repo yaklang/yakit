@@ -5,12 +5,10 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {info, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Modal, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {RemoveIcon} from "@/assets/newIcon"
 import {MITMAdvancedFilter, MITMFilters, MITMFilterSchema, onFilterEmptyMITMAdvancedFilters} from "./MITMFilters"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {
     OutlineClockIcon,
     OutlineExportIcon,
@@ -61,11 +59,20 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
 
     const onResetFilters = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-reset-filter").then(() => {
+        function resetFilterOk() {
             info("MITM 过滤器重置命令已发送")
             emiter.emit("onSetFilterWhiteListEvent", false + "")
             setVisible(false)
-        })
+        }
+        if (isStartMITM) {
+            ipcRenderer.invoke("mitm-reset-filter").then(() => {
+                resetFilterOk()
+            })
+        } else {
+            ipcRenderer.invoke("ResetMITMFilter").then(() => {
+                resetFilterOk()
+            })
+        }
     })
     useEffect(() => {
         ipcRenderer.on("client-mitm-filter", (e, msg) => {
@@ -124,20 +131,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         filtersRef.current.clearFormValue()
         setFilterData([])
     }
-
-    // 判断对象内的属性是否为空
-    const areObjectPropertiesEmpty = useMemoizedFn((obj) => {
-        try {
-            for (const key in obj) {
-                if (obj[key] !== null && obj[key] !== undefined && Array.isArray(obj[key]) && obj[key].length > 0) {
-                    return false
-                }
-            }
-            return true
-        } catch (error) {
-            return true
-        }
-    })
 
     // 保存过滤器
     const onSaveFilter = useMemoizedFn(() => {
@@ -336,46 +329,19 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     <YakitButton type='text' onClick={() => onClearFilters()}>
                         清除
                     </YakitButton>
-                    {isStartMITM && (
-                        <YakitButton type='text' onClick={() => onResetFilters()}>
-                            重置过滤器
-                        </YakitButton>
-                    )}
+                    <YakitButton
+                        type='text'
+                        onClick={() => {
+                            onResetFilters()
+                        }}
+                    >
+                        重置过滤器
+                    </YakitButton>
                 </div>
             }
             className={styles["mitm-filters-modal"]}
             onOk={() => {
-                const filter = getMITMFilterData().baseFilter
-                const advancedFilters = getMITMFilterData().advancedFilters
-                if (!advancedFilters.length && areObjectPropertiesEmpty(filter)) {
-                    Modal.confirm({
-                        title: "温馨提示",
-                        icon: <ExclamationCircleOutlined />,
-                        content: "过滤器为空时将重置为默认配置，确认重置吗？",
-                        okText: "确认",
-                        cancelText: "取消",
-                        closable: true,
-                        closeIcon: (
-                            <div
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    Modal.destroyAll()
-                                }}
-                                className='modal-remove-icon'
-                            >
-                                <RemoveIcon />
-                            </div>
-                        ),
-                        onOk: () => {
-                            onSetFilter()
-                        },
-                        onCancel: () => {},
-                        cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                        okButtonProps: {size: "small", className: "modal-ok-button"}
-                    })
-                } else {
-                    onSetFilter()
-                }
+                onSetFilter()
             }}
             bodyStyle={{padding: 0}}
         >

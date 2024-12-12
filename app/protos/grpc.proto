@@ -133,6 +133,7 @@ service Yak {
   rpc MITM(stream MITMRequest) returns (stream MITMResponse);
   rpc SetMITMFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
   rpc GetMITMFilter(Empty) returns (SetMITMFilterRequest);
+  rpc ResetMITMFilter(Empty) returns (SetMITMFilterRequest); //重置MITM启动前的过滤器
   rpc DownloadMITMCert(Empty) returns (MITMCert);
 
   // 开启端口
