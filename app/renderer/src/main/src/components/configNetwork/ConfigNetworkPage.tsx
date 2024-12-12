@@ -189,10 +189,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
             const {ClientCertificates, SynScanNetInterface} = rsp
             console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
-                if (!data || data.AvailablePcapDevices.length == 0) {
+                if (!data || !data.AvailablePcapDevices?.length) {
                     return
                 }
-                const interfaceList = data.AvailablePcapDevices.map((item) => ({
+                const interfaceList = data.AvailablePcapDevices.filter((el) => el).map((item) => ({
                     label: `${item.NetInterfaceName}-(${item.IP})`,
                     value: item.Name
                 }))
@@ -893,7 +893,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 } else if (value > 50) {
                                                     value = 50
                                                 }
-                                                setParams({...params, MaxContentLength: value})                            
+                                                setParams({...params, MaxContentLength: value})
                                             }
                                         }}
                                         onBlur={() => {
