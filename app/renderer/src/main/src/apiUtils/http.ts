@@ -5,24 +5,37 @@ import {API} from "@/services/swagger/resposeType"
 
 const {ipcRenderer} = window.require("electron")
 
-interface HttpUploadImgBaseRequest {
+export interface HttpUploadImgBaseRequest {
     type?: "img" | "headImg" | "comment" | "plugins" | "notepad"
 }
 
 export interface HttpUploadImgPathRequest extends HttpUploadImgBaseRequest {
     path: string
+    filedHash?: string
 }
 /** @name 上传图片(文件路径) */
 export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         // console.log("http-upload-img-path|api:upload/img", JSON.stringify({...request}))
+        let enable = true
+        switch (request.type) {
+            case "notepad":
+                if (!request.filedHash) {
+                    enable = false
+                    yakitNotify("error", "type为notepad,filedHash必传")
+                }
+                break
+            default:
+                break
+        }
+        if (!enable) return
         ipcRenderer
             .invoke("http-upload-img-path", request)
             .then((res) => {
                 if (res?.code === 200 && res?.data) {
                     resolve(res.data)
                 } else {
-                    const message = res?.message || "未知错误"
+                    const message = res?.message || res?.data?.reason || "未知错误"
                     if (!hiddenError) yakitNotify("error", "上传图片失败:" + message)
                     reject(message)
                 }
