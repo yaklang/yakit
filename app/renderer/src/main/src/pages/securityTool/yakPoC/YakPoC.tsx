@@ -208,7 +208,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: true, curTabKey: type}))
         setPocTabs([...pocTabs])
     })
     /**设置输入模块的初始值后，根据value刷新列表相关数据 */
@@ -243,7 +242,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
                 i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: contShow, curTabKey: item.key}))
         setPocTabs([...pocTabs])
         setHidden(!pocTabs.some((item) => item.contShow))
         setType(item.key)
@@ -261,35 +259,8 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             setPocTabs([...pocTabs])
             setType(t)
             setHidden(!pocTabs.some((item) => item.contShow))
-            setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: true, curTabKey: t}))
         } else {
-            getRemoteValue(RemoteGV.YakPocTabs).then((setting: string) => {
-                if (setting) {
-                    try {
-                        const tabs = JSON.parse(setting)
-                        pocTabs.forEach((i) => {
-                            if (i.key === tabs.curTabKey) {
-                                i.contShow = tabs.contShow
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setPocTabs([...pocTabs])
-                        setType(tabs.curTabKey)
-                    } catch (error) {
-                        pocTabs.forEach((i) => {
-                            if (i.key === "keyword") {
-                                i.contShow = true
-                            } else {
-                                i.contShow = false
-                            }
-                        })
-                        setPocTabs([...pocTabs])
-                        setType("keyword")
-                    }
-                }
-                setHidden(!pocTabs.some((item) => item.contShow))
-            })
+            setHidden(false)
         }
     }, [])
 
@@ -299,7 +270,6 @@ export const YakPoC: React.FC<YakPoCProps> = React.memo((props) => {
             pocTabs.forEach((i) => {
                 i.contShow = false
             })
-            setRemoteValue(RemoteGV.YakPocTabs, JSON.stringify({contShow: false, curTabKey: type}))
             setPocTabs([...pocTabs])
         }
     })
