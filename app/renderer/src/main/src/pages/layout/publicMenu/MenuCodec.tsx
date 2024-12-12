@@ -108,7 +108,16 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                 WorkFlow: [
                     {
                         CodecType: "Fuzz",
-                        Params: []
+                        Params: [
+                            {
+                                "Key": "timeout",
+                                "Value": "10"
+                            },
+                            {
+                                "Key": "limit",
+                                "Value": "10000"
+                            }
+                        ]
                     }
                 ]
             }
