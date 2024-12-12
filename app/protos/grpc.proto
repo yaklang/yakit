@@ -5694,8 +5694,6 @@ message SyntaxFlowScanResponse{
   // result 
   SyntaxFlowResult Result = 4;
   repeated Risk risks = 5;
-
-  SyntaxFlowScanRequest Config = 6; 
 }
 
 message QuerySyntaxFlowScanTaskRequest{
@@ -5736,6 +5734,8 @@ message SyntaxFlowScanTask {
     int64 RiskCount =12;
     // query process
     int64 TotalQuery =13;
+
+    SyntaxFlowScanRequest Config = 14;
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
