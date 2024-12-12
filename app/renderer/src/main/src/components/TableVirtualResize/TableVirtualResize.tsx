@@ -654,6 +654,32 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             scrollBottom: scrollBottom
                         })
                     }
+                    console.log(
+                        "preScrollBottom.current > scrollBottom",
+                        preScrollBottom.current,
+                        scrollBottom,
+                        preScrollBottom.current > scrollBottom
+                    )
+                    console.log(
+                        "scrollBottom <= (scrollToBottom || 300)",
+                        scrollBottom,
+                        scrollBottom || 300,
+                        scrollBottom <= (scrollToBottom || 300)
+                    )
+                    console.log("hasMore", hasMore)
+                    console.log(
+                        "prePage.current != pagination.page",
+                        prePage.current,
+                        pagination.page,
+                        prePage.current != pagination.page
+                    )
+                    console.log(
+                        "execute",
+                        preScrollBottom.current > scrollBottom &&
+                            scrollBottom <= (scrollToBottom || 300) &&
+                            !hasMore &&
+                            prePage.current != pagination.page
+                    )
                     //向下滑动
                     if (
                         preScrollBottom.current > scrollBottom &&

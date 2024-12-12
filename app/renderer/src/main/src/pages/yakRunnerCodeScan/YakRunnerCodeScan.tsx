@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useReducer, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     CodeScaMainExecuteContentProps,
     CodeScanAuditExecuteFormProps,
@@ -10,34 +10,18 @@ import {
     CodeScanGroupByKeyWordItemProps,
     CodeScanGroupByKeyWordProps,
     FlowRuleDetailsListItemProps,
-    QuerySyntaxFlowRuleRequest,
-    QuerySyntaxFlowRuleResponse,
-    SyntaxFlowGroup,
-    SyntaxFlowRule,
     SyntaxFlowScanExecuteState,
     SyntaxFlowScanRequest,
     SyntaxFlowScanResponse,
     YakRunnerCodeScanProps
 } from "./YakRunnerCodeScanType"
 import {Col, Divider, Form, Row, Tooltip} from "antd"
-import {
-    useControllableValue,
-    useCreation,
-    useDebounceFn,
-    useGetState,
-    useInViewport,
-    useMemoizedFn,
-    useUpdateEffect
-} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
+import {failed, info, warn, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
-    OutlinCompileIcon,
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineCloseIcon,
@@ -51,24 +35,16 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {RemoteGV} from "@/yakitGV"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakScript} from "../invoker/schema"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExpandAndRetract} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
     ExecuteEnterNodeByPluginParams,
     PluginExecuteProgress
 } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import useHoldBatchGRPCStream from "@/hook/useHoldBatchGRPCStream/useHoldBatchGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {addToTab} from "../MainTabs"
-import {
-    apiCancelSyntaxFlowScan,
-    apiFetchQuerySyntaxFlowRule,
-    apiFetchQuerySyntaxFlowRuleGroup,
-    apiSyntaxFlowScan
-} from "./utils"
+import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -87,7 +63,14 @@ import {getYakExecutorParam, ParamsToGroupByGroupName} from "../plugins/editDeta
 import {apiCancelDebugPlugin, apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
-import {number} from "echarts"
+import {grpcFetchLocalRuleGroupList, grpcFetchLocalRuleList} from "../ruleManagement/api"
+import {
+    QuerySyntaxFlowRuleRequest,
+    QuerySyntaxFlowRuleResponse,
+    SyntaxFlowGroup,
+    SyntaxFlowRule
+} from "../ruleManagement/RuleManagementType"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {
@@ -122,9 +105,9 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
                 KeyWord
             }
         }
-        apiFetchQuerySyntaxFlowRuleGroup(params)
-            .then((res) => {
-                setResponse(res)
+        grpcFetchLocalRuleGroupList(params)
+            .then(({Group}) => {
+                setResponse(Group)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -398,9 +381,9 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                     Order: "desc"
                 }
             }
-            query.Filter.GroupNames = selectGroupList
+            if (query.Filter) query.Filter.GroupNames = selectGroupList
             try {
-                const res = await apiFetchQuerySyntaxFlowRule(query)
+                const res = await grpcFetchLocalRuleList(query)
                 if (!res.Rule) res.Rule = []
                 const length = +res.Pagination.Page === 1 ? res.Rule.length : res.Rule.length + response.Rule.length
                 setHasMore(length < +res.Total)
@@ -824,7 +807,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             new Map<string, HoldGRPCStreamProps.CacheCard>()
         )
 
-        const resetStreamInfo = useMemoizedFn(()=>{
+        const resetStreamInfo = useMemoizedFn(() => {
             messages.current = []
             cardKVPair.current = new Map<string, HoldGRPCStreamProps.CacheCard>()
             setRuntimeId("")
@@ -891,7 +874,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             if (obj.type === "progress") {
                                 setProgressShow({
                                     type: "old",
-                                    progress: progressObj.progress,
+                                    progress: progressObj.progress
                                 })
                                 return
                             }
@@ -1252,7 +1235,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             if (progress === 1) {
                 setTimeout(() => {
                     setExecuteType("old")
-                    runnerProject.current && onStartExecute({project: runnerProject.current},true)
+                    runnerProject.current && onStartExecute({project: runnerProject.current}, true)
                 }, 300)
             }
 
