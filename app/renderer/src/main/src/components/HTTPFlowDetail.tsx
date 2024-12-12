@@ -740,7 +740,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 firstMinSize='850px'
                 firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
                 secondNode={
-                    <>
+                    <div style={{paddingRight: 2, height: "100%"}}>
                         {isFold ? (
                             <div
                                 className={classNames(
@@ -899,7 +899,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 )}
                             </div>
                         )}
-                    </>
+                    </div>
                 }
                 secondRatio={isFold ? "36px" : "20%"}
                 secondMinSize={isFold ? "36px" : "350px"}
