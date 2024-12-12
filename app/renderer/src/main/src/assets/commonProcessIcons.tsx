@@ -1822,27 +1822,30 @@ const UToolsIconSvg = () => (
 export const UToolsIcon: React.FC = (props: Partial<IconProps>) => {
     return <Icon component={UToolsIconSvg} {...props} />
 }
-const QQMusicIconSvg = () => (
-    <svg
-        viewBox='0 0 1024 1024'
-        version='1.1'
-        xmlns='http://www.w3.org/2000/svg'
-        p-id='3384'
-        width='200'
-        height='200'
-    >
+
+const ProxifierIconSvg = () => (
+    <svg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect x='52' y='2' width='14' height='38' fill='#60A3E5' />
         <path
-            d='M64 512C64 264.576 264.576 64 512 64S960 264.576 960 512 759.424 960 512 960 64 759.424 64 512z'
-            fill='#FEDB00'
-            p-id='3385'
-        ></path>
-        <path
-            d='M359.978667 204.373333c-10.282667 14.72 0 32.938667 0 32.938667l233.728 345.514667a219.648 219.648 0 0 0-107.562667-5.973334c-109.653333 20.821333-184.192 116.736-166.4 214.272 17.749333 97.493333 121.045333 159.658667 230.698667 138.794667 109.653333-20.821333 184.192-116.736 166.4-214.272-2.602667-14.378667-18.218667-50.346667-20.906667-54.741333l-212.224-388.437334C751.786667 269.696 671.36 38.741333 671.36 38.741333c-37.802667 61.781333-139.52 70.186667-139.52 70.186667-128.554667 17.578667-171.861333 95.445333-171.861333 95.445333z'
-            fill='#1FB07B'
-            p-id='3386'
-        ></path>
+            d='M66 40C66 54.3594 54.3594 66 40 66C25.6406 66 14 54.3594 14 40C14 25.6406 25.6406 14 40 14C54.3594 14 66 25.6406 66 40ZM28.001 40C28.001 46.6269 33.3731 51.999 40 51.999C46.6269 51.999 51.999 46.6269 51.999 40C51.999 33.3731 46.6269 28.001 40 28.001C33.3731 28.001 28.001 33.3731 28.001 40Z'
+            fill='url(#paint0_angular_716_95)'
+        />
+        <rect x='14' y='40' width='14' height='38' fill='#60A3E5' />
+        <defs>
+            <radialGradient
+                id='paint0_angular_716_95'
+                cx='0'
+                cy='0'
+                r='1'
+                gradientUnits='userSpaceOnUse'
+                gradientTransform='translate(40 40) rotate(-180) scale(26)'
+            >
+                <stop stop-color='#60A3E5' />
+                <stop offset='1' stop-color='#1A529D' />
+            </radialGradient>
+        </defs>
     </svg>
 )
-export const QQMusicIcon: React.FC = (props: Partial<IconProps>) => {
-    return <Icon component={QQMusicIconSvg} {...props} />
+export const ProxifierIcon: React.FC = (props: Partial<IconProps>) => {
+    return <Icon component={ProxifierIconSvg} {...props} />
 }
