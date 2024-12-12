@@ -13,6 +13,7 @@ import {
     grpcFetchCreateFile,
     grpcFetchFileTree,
     judgeAreaExistFilePath,
+    judgeAreaExistFileUnSave,
     MAX_FILE_SIZE_BYTES,
     monacaLanguageType,
     removeAreaFileInfo,
@@ -345,9 +346,14 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
-    const onCloseYakRunnerFun = useMemoizedFn(()=>{
-        if(activeFile && activeFile.path){
+    const onCloseYakRunnerFun = useMemoizedFn(async()=>{
+        if(activeFile?.isUnSave){
             emiter.emit("onCloseFile", activeFile.path)
+            return
+        }
+        const unSaveArr = await judgeAreaExistFileUnSave(areaInfo)
+        if(unSaveArr.length > 0){
+            emiter.emit("onCloseFile", unSaveArr[0])
         }
         else{
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
