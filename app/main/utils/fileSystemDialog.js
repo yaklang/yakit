@@ -10,8 +10,8 @@ const handleOpenFileSystem = (options) => {
     return new Promise(async (resolve, reject) => {
         try {
             const object = await dialog.showOpenDialog({
+                defaultPath: path.join(app.getPath("desktop")),
                 ...options,
-                defaultPath: path.join(app.getPath("desktop"))
             })
             resolve({...object})
         } catch (error) {
@@ -26,11 +26,12 @@ const handleOpenFileSystem = (options) => {
  * @return {Promise<Electron.SaveDialogReturnValue>}
  */
 const handleSaveFileSystem = (options) => {
+    
     return new Promise(async (resolve, reject) => {
         try {
             const obejct = await dialog.showSaveDialog({
+                defaultPath: path.join(app.getPath("desktop")),
                 ...options,
-                defaultPath: path.join(app.getPath("desktop"))
             })
             resolve({...obejct})
         } catch (error) {
