@@ -178,6 +178,23 @@
         border-radius: 50%;
     }
 }
+
+.inputSearchModule {
+    :global {
+        .ant-input-affix-wrapper {
+            height: 24px;
+            width: calc(100% - 24px);
+        }
+        .ant-input-group-addon {
+            height: 24px;
+            line-height: 24px;
+            .ant-input-search-button {
+                height: 24px;
+                width: 24px;
+            }
+        }
+    }
+}
 .mitm-log-heard {
     display: flex;
     align-items: center;
@@ -187,6 +204,10 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        &-search {
+            width: 260px;
+            @extend .inputSearchModule
+        }
     }
 }
 
@@ -488,4 +509,8 @@
             }
         }
     }
+}
+
+.http-history-search-drop-down-popover {
+    @extend .inputSearchModule
 }
