@@ -50,6 +50,7 @@ import {
 import {Drawer, Input, Progress, Tooltip} from "antd"
 import {
     CacheChatCSProps,
+    ChatCSAnswer,
     ChatCSAnswerProps,
     ChatCSMultipleInfoProps,
     ChatCSPluginAnswerProps,
@@ -466,22 +467,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         return chatHistory
     })
     /** 解析后端流内的内容数据 */
-    const analysisFlowData: (flow: string) => ChatCSAnswerProps | undefined = useMemoizedFn((flow) => {
+    const analysisFlowData: (flow: string) => ChatCSAnswer | undefined = useMemoizedFn((flow) => {
         const objects: ChatCSAnswerProps[] = []
-        let answer: ChatCSAnswerProps | undefined = undefined
-        let loadObj: LoadObjProps[] = []
-        // 获取加载中的字符 使用正则表达式匹配
-        const regex = /state:\{([^}]+)\}/g
-        let match
-        while ((match = regex.exec(flow)) !== null) {
-            try {
-                loadObj.push(JSON.parse(`{${match[1]}}`) as LoadObjProps)
-            } catch (error) {}
-        }
-
-        if (loadObj.length > 0) {
-            answer = {id: loadObj[loadObj.length - 1].id, role: "", result: "", loadResult: loadObj}
-        }
+        let answer: ChatCSAnswer | undefined = undefined
         flow.split("data:")
             .filter((item) => item.length !== 0)
             .forEach((itemIn) => {
@@ -492,8 +480,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
         let resultAll: string = ""
         objects.map((item, index) => {
-            const {id = "", role = "", result = ""} = item
-            resultAll += result
+            const {id = ''} = item
+            const {role = "", content = ""} = item.choices[0].delta
+            resultAll += content
             if (answer && objects.length === index + 1) {
                 answer = {...answer, id, role, result: resultAll}
             }
@@ -681,7 +670,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 load_content: [],
                 end: false
             }
-            let result: string = ""
             return await new Promise((resolve, reject) => {
                 chatCS({
                     ...params,
@@ -690,19 +678,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     onDownloadProgress: ({event}) => {
                         if (!event.target) return
                         const {responseText} = event.target
-
-                        let answer: ChatCSAnswerProps | undefined = analysisFlowData(responseText)
-
+                        let answer: ChatCSAnswer | undefined = analysisFlowData(responseText)
                         // 正常数据中，如果没有答案，则后端返回的text为空，这种情况数据自动抛弃
                         if (answer && answer.result.length !== 0) {
                             if (cs.content === answer.result) return
                             if (!cs.id) cs.id = answer.id
                             cs.content = answer.result
-                        }
-                        if (answer && answer?.loadResult && answer.loadResult.length !== 0) {
-                            if (JSON.stringify(cs.load_content) === JSON.stringify(answer.loadResult)) return
-                            if (!cs.id) cs.id = answer.id
-                            cs.load_content = answer.loadResult
                         }
                         setContentList(cs, contents, group)
                     }
