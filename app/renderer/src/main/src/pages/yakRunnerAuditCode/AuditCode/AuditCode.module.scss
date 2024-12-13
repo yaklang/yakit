@@ -379,58 +379,17 @@
 }
 
 .audit-modal-form {
+    .custom-params-wrapper {
+        padding-right: 16px;
+    }
     :global {
         .json-schema-form {
-            .ant-form-item {
-                display: flex;
-                flex-direction: row;
-                .ant-form-item-label {
-                    flex: 8;
-                    text-align: right;
-                    label::after {
-                        content: ":";
-                        position: relative;
-                        top: -0.5px;
-                        margin: 0 8px 0 2px;
-                        z-index: 1;
-                        display: inline-flex;
-                        align-items: center;
-                    }
+            .json-schema-row-form {
+                // 需询问后端是否可从schema中移除
+                #root_auth__error,
+                #root_proxy__error {
+                    display: none;
                 }
-                .ant-form-item-control {
-                    flex: 16;
-                }
-
-                .ant-form-item-label {
-                    // 仅在相邻元素不是 .ant-form-item-control 时应用样式
-                    &:not(:has(+ .ant-form-item-control)) {
-                        display: none;
-                        width: 100%;
-                        padding: 0;
-                        margin-bottom: 20px;
-                        text-align: left;
-                        border: 0;
-                        border-bottom: 1px solid #e5e5e5;
-                        label {
-                            font-size: 21px !important;
-                            color: #333;
-                        }
-                        label::after {
-                            content: "";
-                            position: relative;
-                            top: -0.5px;
-                            margin: 0 8px 0 2px;
-                            z-index: 1;
-                            display: inline-flex;
-                            align-items: center;
-                        }
-                    }
-                }
-            }
-            // 需询问后端是否可从schema中移除
-            #root_auth__error,
-            #root_proxy__error {
-                display: none;
             }
         }
     }
@@ -442,33 +401,36 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    .audit-history-list-box {
+    gap: 4px;
+    .header {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+    }
+    .audit-history-list-container {
         flex: 1;
         overflow: hidden;
-        .history-item {
-            cursor: pointer;
-            padding: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--yakit-header-color);
-            .title {
+        .history-item-box {
+            padding: 2px;
+            border-bottom: 1px solid #f0f0f0;
+            .history-item {
+                margin-bottom: 4px;
+                cursor: pointer;
+                padding: 4px 12px;
                 display: flex;
-                gap: 6px;
-            }
-            &:hover {
-                border-radius: 4px;
-                background: rgba(204, 210, 222, 0.5);
-            }
-            .terminal-icon {
-                color: var(--yakit-helper-text-color);
-                svg {
-                    width: 16px;
-                    height: 16px;
-
-                    &:hover {
-                        color: var(--yakit-primary-5);
-                    }
+                justify-content: space-between;
+                align-items: center;
+                color: var(--yakit-header-color);
+                .title {
+                    display: flex;
+                    gap: 6px;
+                }
+                &:hover {
+                    border-color: transparent;
+                    box-shadow:
+                        0 1px 2px -2px rgba(0, 0, 0, 0.16),
+                        0 3px 6px 0 rgba(0, 0, 0, 0.12),
+                        0 5px 12px 4px rgba(0, 0, 0, 0.09);
                 }
             }
         }

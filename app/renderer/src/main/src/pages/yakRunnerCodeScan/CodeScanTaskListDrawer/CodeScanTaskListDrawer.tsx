@@ -22,6 +22,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import { SyntaxFlowScanRequest } from "../YakRunnerCodeScanType"
 const {ipcRenderer} = window.require("electron")
 interface CodeScanTaskListForwardedRefProps {
     onRemove: () => void
@@ -117,6 +118,8 @@ interface SyntaxFlowScanTask {
     SuccessQuery: number
     RiskCount: number
     TotalQuery: number
+
+    Config: SyntaxFlowScanRequest
 }
 
 interface QuerySyntaxFlowScanTaskResponse {

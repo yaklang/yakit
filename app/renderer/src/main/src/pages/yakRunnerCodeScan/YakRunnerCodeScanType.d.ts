@@ -29,6 +29,7 @@ export interface CodeScanExecuteContentProps {
     selectGroupList: string[]
     pageInfo: CodeScanPageInfoProps
     pageId: string
+    onSetSelectGroupListByKeyWord: (v: string[]) => void
 }
 
 export interface CodeScanByGroupProps {
@@ -58,13 +59,14 @@ export interface CodeScaMainExecuteContentProps {
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
-    auditCodeList: {label: string; value: string}[]
+    auditCodeList: {label: string; value: string,language:string}[]
     getAduitList: () => void
     pageInfo: CodeScanPageInfoProps
     executeType: "new" | "old"
     isAuditExecuting: boolean
     setAuditsExecuting: (v: boolean) => void
     setExecuteType: (v: "new" | "old") => void
+    onSetSelectGroupListByKeyWord: (v: string[]) => void
     pageId: string
 }
 
@@ -150,7 +152,6 @@ export interface SyntaxFlowScanResponse {
     TaskID: string
     Status: SyntaxFlowScanStatus
     ExecResult: ExecResult
-    Config: SyntaxFlowScanRequest
 }
 
 export interface SyntaxFlowResultFilter {

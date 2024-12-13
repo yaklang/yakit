@@ -114,6 +114,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {NewHTTPPacketEditor} from "@/utils/editors"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -842,6 +843,41 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             auditHistoryListRef.current?.onRefresh()
                                         }}
                                     />
+                                    <YakitDropdownMenu
+                                        menu={{
+                                            data: [
+                                                {
+                                                    key: "deleteAll",
+                                                    label: "删除全部"
+                                                },
+                                                {
+                                                    key: "deleteSome",
+                                                    label: "仅删除无漏洞数据"
+                                                }
+                                            ],
+                                            onClick: ({key}) => {
+                                                switch (key) {
+                                                    case "deleteAll":
+                                                        break
+                                                    case "deleteSome":
+                                                        break
+                                                    default:
+                                                        break
+                                                }
+                                            }
+                                        }}
+                                        dropdown={{
+                                            trigger: ["click"],
+                                            placement: "bottom"
+                                        }}
+                                    >
+                                        <YakitButton
+                                            type='text'
+                                            size={"small"}
+                                            colors='danger'
+                                            icon={<DeleteOutlined />}
+                                        />
+                                    </YakitDropdownMenu>
                                 </div>
                             )}
                         </>
@@ -983,24 +1019,41 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
 
         return (
             <div className={styles["audit-history-list"]}>
-                <YakitInput.Search
-                    placeholder='请输入关键词搜索'
-                    value={query.Filter.Keyword}
-                    onChange={(e) => {
-                        setQuery({
-                            ...query,
-                            Filter: {
-                                ...query.Filter,
-                                Keyword: e.target.value
-                            }
-                        })
-                    }}
-                    onPressEnter={() => update(1)}
-                    onSearch={() => {
-                        update(1)
-                    }}
-                />
-                <div className={styles["audit-history-list-box"]}>
+                <div className={styles["header"]}>
+                    <YakitInput.Search
+                        wrapperStyle={{flex:3}}
+                        placeholder='请输入关键词搜索'
+                        value={query.Filter.Keyword}
+                        onChange={(e) => {
+                            setQuery({
+                                ...query,
+                                Filter: {
+                                    ...query.Filter,
+                                    Keyword: e.target.value
+                                }
+                            })
+                        }}
+                        onPressEnter={() => update(1)}
+                        onSearch={() => {
+                            update(1)
+                        }}
+                    />
+                    <YakitSelect
+                        value={'all'}
+                        onChange={(value) => {
+                            // setType(value)
+                        }}
+                        size="small"
+                        wrapperStyle={{flex:2}}
+                    >
+                        <YakitSelect.Option value='all'>全部历史</YakitSelect.Option>
+                        <YakitSelect.Option value='all1'>代码扫描</YakitSelect.Option>
+                        <YakitSelect.Option value='all2'>手工审计</YakitSelect.Option>
+                        <YakitSelect.Option value='all3'>调试数据</YakitSelect.Option>
+                    </YakitSelect>
+                </div>
+
+                <div className={styles["audit-history-list-container"]}>
                     <RollingLoadList<SyntaxFlowResult>
                         loading={loading}
                         isRef={isRefresh}
@@ -1012,41 +1065,12 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                             update(+response.Pagination.Page + 1)
                         }}
                         rowKey='ResultID'
-                        defItemHeight={32}
+                        defItemHeight={37}
                         renderRow={(rowData: SyntaxFlowResult, index: number) => {
                             return (
-                                <div
-                                    className={styles["history-item"]}
-                                    onClick={() => {
-                                        // 审计结果
-                                        setAuditType("result")
-                                        onAuditRuleSubmitFun("", [{Key: "result_id", Value: rowData.ResultID}])
-                                        // 规则编写
-                                        onOpenEditorDetails("ruleEditor")
-                                        setTimeout(() => {
-                                            emiter.emit("onResetAuditRule", rowData.RuleContent)
-                                        }, 200)
-                                    }}
-                                >
-                                    <div className={styles["title"]}>
-                                        <div>{`ID:${rowData.ResultID}`}</div>
-                                        <div style={{overflow: "hidden"}}>
-                                            <YakitTag
-                                                color='info'
-                                                style={{
-                                                    whiteSpace: "normal",
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    display: "block",
-                                                    lineHeight: "14px"
-                                                }}
-                                            >
-                                                风险个数：{rowData.RiskCount}
-                                            </YakitTag>
-                                        </div>
-                                    </div>
+                                <div className={styles["history-item-box"]}>
                                     <YakitPopover
-                                        placement={"topRight"}
+                                        placement={"rightTop"}
                                         content={
                                             <div style={{width: 600, height: 300}}>
                                                 <NewHTTPPacketEditor
@@ -1059,10 +1083,37 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                                             </div>
                                         }
                                     >
-                                        <TerminalIcon
-                                            className={styles["terminal-icon"]}
-                                            onClick={(e) => e.stopPropagation()}
-                                        />
+                                        <div
+                                            className={styles["history-item"]}
+                                            onClick={() => {
+                                                // 审计结果
+                                                setAuditType("result")
+                                                onAuditRuleSubmitFun("", [{Key: "result_id", Value: rowData.ResultID}])
+                                                // 规则编写
+                                                onOpenEditorDetails("ruleEditor")
+                                                setTimeout(() => {
+                                                    emiter.emit("onResetAuditRule", rowData.RuleContent)
+                                                }, 200)
+                                            }}
+                                        >
+                                            <div className={styles["title"]}>
+                                                <div>{`ID:${rowData.ResultID}`}</div>
+                                                <div style={{overflow: "hidden"}}>
+                                                    <YakitTag
+                                                        color='info'
+                                                        style={{
+                                                            whiteSpace: "normal",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            display: "block",
+                                                            lineHeight: "14px"
+                                                        }}
+                                                    >
+                                                        风险个数：{rowData.RiskCount}
+                                                    </YakitTag>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </YakitPopover>
                                 </div>
                             )

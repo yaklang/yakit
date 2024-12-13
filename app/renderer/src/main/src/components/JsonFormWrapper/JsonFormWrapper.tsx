@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./JsonFormWrapper.module.scss"
 import validator from "@rjsf/validator-ajv8" // 添加这行
 import JsonForm from "@rjsf/antd"
-import { RJSFSchema, UiSchema, WidgetProps} from "@rjsf/utils"
+import {RJSFSchema, UiSchema, WidgetProps} from "@rjsf/utils"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
@@ -390,10 +390,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 lastName: 7,
                 companyName: 7,
                 b: 3
-            },
-            
+            }
         ]
-        
     }
 
     // {
@@ -418,7 +416,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
             <JsonForm
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
-                className={classNames(styles["json-schema-box"])}
+                // 此处的json-schema-form应用于特殊页面的另类布局处理
+                className={classNames(styles["json-schema-box"], "json-schema-form")}
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器
@@ -436,15 +435,13 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 }}
                 // 自定义控件
                 // fields={fields}
-                uiSchema={
-                    {
+                uiSchema={{
                     /* 字段名 */
                     // unremovable: {
                     /* 全局 className*/
                     "ui:classNames": "json-schema-row-form"
                     // }
-                    }
-                }
+                }}
                 disabled={disabled}
                 formData={formData}
                 onChange={(e) => {
