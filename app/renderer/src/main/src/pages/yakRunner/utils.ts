@@ -413,6 +413,26 @@ export const onSyntaxCheck = (code: string, type :string) => {
 }
 
 /**
+ * @name 判断分栏数据里是否存在未保存文件
+ */
+export const judgeAreaExistFileUnSave = (areaInfo: AreaInfoProps[]): Promise<string[]> => {
+    return new Promise(async (resolve, reject) => {
+        let unSaveArr:string[] = []
+        const newAreaInfo: AreaInfoProps[] = cloneDeep(areaInfo)
+        newAreaInfo.forEach((item, index) => {
+            item.elements.forEach((itemIn, indexIn) => {
+                itemIn.files.forEach((file, fileIndex) => {
+                    if (file.isUnSave) {
+                        unSaveArr.push(file.path)
+                    }
+                })
+            })
+        })
+        resolve(unSaveArr)
+    })
+}
+
+/**
  * @name 判断分栏数据里是否存在某个节点file数据
  */
 export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string): Promise<FileDetailInfo | null> => {

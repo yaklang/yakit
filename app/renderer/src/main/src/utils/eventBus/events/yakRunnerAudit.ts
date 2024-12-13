@@ -36,4 +36,6 @@ export type YakRunnerAuditEventProps = {
     onAuditRuleSubmit: string
     // 停止审计
     onStopAuditRule?: string
+    // 打开已有项目
+    onCodeAuditHistoryExpanded?: string
 }

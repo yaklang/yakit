@@ -1197,23 +1197,9 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
         getHistoryList()
     }, [])
 
-    // 打开文件
-    const openFile = useMemoizedFn(async () => {
-        try {
-            const openFileInfo = await getOpenFileInfo()
-            if (openFileInfo) {
-                const {path, name} = openFileInfo
-                const OpenFileByPathParams: OpenFileByPathProps = {
-                    params: {
-                        path,
-                        name
-                    },
-                    isHistory: true,
-                    isOutside: true
-                }
-                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-            }
-        } catch (error) {}
+    // 打开已有项目
+    const openHistoryExpanded = useMemoizedFn(async () => {
+        emiter.emit("onCodeAuditHistoryExpanded")
     })
 
     // 打开编译项目
@@ -1243,7 +1229,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                             </div>
                             <OutlinCompileIcon className={styles["icon-style"]} />
                         </div>
-                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
+                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openHistoryExpanded}>
                             <div className={styles["btn-title"]}>
                                 <YakRunnerOpenFileIcon />
                                 打开已有项目
