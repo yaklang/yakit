@@ -117,9 +117,7 @@
 .http-history-fold-border-box{
     width: 32px;
     border-radius: 2px;
-    border-top: 1px solid #f0f0f0;
-    border-right: 1px solid #f0f0f0;
-    border-bottom: 1px solid #f0f0f0;
+    border: 1px solid #f0f0f0;
 }
 
 .httpFlow-data-table {
@@ -138,6 +136,15 @@
             min-height: 33px;
             padding: 0 12px;
         }
+    }
+    .filter-icon {
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+    .filter-icon-color {
+        color: var(--yakit-primary-5);
     }
 }
 .render-html-box{

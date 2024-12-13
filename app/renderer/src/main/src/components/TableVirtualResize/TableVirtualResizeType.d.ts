@@ -241,6 +241,7 @@ export interface SelectSearchProps {
     onQuery: () => void
     searchVal?: string
     onChangeSearchVal?: (val: string) => void
+    selectContainerStyle?: CSSProperties
 }
 
 export interface FixedWidthProps {

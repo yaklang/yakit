@@ -594,6 +594,7 @@ service Yak {
 
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+  rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
 
   /*
     ChaosMakerRule: Bas
@@ -1678,8 +1679,25 @@ message QueryMITMRuleExtractedDataResponse {
 
 message QueryMITMRuleExtractedDataRequest {
   Paging Pagination = 1;
-  string HTTPFlowHash = 2;
-  string HTTPFlowHiddenIndex = 3;
+  string HTTPFlowHash = 2; // 废弃
+  string HTTPFlowHiddenIndex = 3; //废弃
+  ExtractedDataFilter Filter = 4;
+}
+
+message ExtractedDataFilter {
+  repeated string TraceID = 1; // 对应原来的  HTTPFlowHiddenIndex 或者 HTTPFlowHash
+  repeated string RuleVerbose = 2;
+}
+
+message ExportMITMRuleExtractedDataRequest {
+  ExtractedDataFilter Filter = 1;
+  string ExportFilePath = 2;
+}
+
+message ExportMITMRuleExtractedDataResponse {
+  string ExportFilePath = 1;
+  double Percent = 2;
+  string Verbose = 4;
 }
 
 message ExportProjectRequest {

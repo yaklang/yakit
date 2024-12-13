@@ -391,10 +391,9 @@
 
 .select-search {
     position: relative;
-
+    overflow: hidden;
     .select-container {
-        max-height: 40vh;
-        min-height: 34px;
+        max-height: 200px;
         overflow-y: auto;
         margin-bottom: 4px;
         overflow-anchor: none;
