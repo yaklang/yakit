@@ -184,6 +184,9 @@
         .ant-input-affix-wrapper {
             height: 24px;
             width: calc(100% - 24px);
+            .ant-input {
+                height: 22px;
+            }
         }
         .ant-input-group-addon {
             height: 24px;
