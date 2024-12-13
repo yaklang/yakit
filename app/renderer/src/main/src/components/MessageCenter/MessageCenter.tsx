@@ -296,7 +296,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                     {data.handlerRole === "auditor" && <div className={styles["role"]}>审核员</div>}
                     {data.handlerRole === "trusted" && <div className={styles["role"]}>信任用户</div>}
                     <div className={styles["split"]}>·</div>
-                    <div className={styles["time"]}>{formatTimestampJudge(data.updated_at * 1000)}</div>
+                    <div className={styles["time"]}>{formatTimestampJudge(data.created_at * 1000)}</div>
                 </div>
                 <div
                     className={classNames(styles["content"], {
