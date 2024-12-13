@@ -67,7 +67,7 @@ export interface TableVirtualResizeProps<T> {
     currentIndex?: number // 当前row的index
     setCurrentIndex?: (v?: number) => void
     scrollToIndex?: number | string // 滚动到指定index
-    isRefresh?: boolean //刷新表格 滚动至0
+    isRefresh: boolean //刷新表格 滚动至0
     disableSorting?: boolean //禁用排序
     query?: object
     currentSelectItem?: T
@@ -200,7 +200,7 @@ export interface RowSelectionProps<T> {
     /**是否显示全选按钮 */
     isShowAll?: boolean
     type?: "checkbox" | "radio" //默认 checkbox
-    selectedRowKeys?: string[]|number[]
+    selectedRowKeys?: string[] | number[]
     onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
     onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
     /**	选择框的默认属性配置 */

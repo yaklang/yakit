@@ -55,31 +55,33 @@ export enum YakitRoute {
     SimpleDetect = "simple-detect",
     // 录屏管理器
     ScreenRecorderPage = "screen-recorder-page",
-    // 全局功能-试验性功能-BAS实验室
+    /** 全局功能-试验性功能-BAS实验室 */
     DB_ChaosMaker = "db-chaosmaker",
-    // 调试插件编辑器
+    /** 调试插件编辑器 */
     Beta_DebugTrafficAnalize = "**beta-debug-traffic-analize",
-    // 调试插件编辑器
+    /** 调试插件编辑器 */
     Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
-    // 靶场调试
+    /** 靶场调试 */
     Beta_VulinboxManager = "beta-vulinbox-manager",
-    // 网络调试
+    /** 网络调试 */
     Beta_DiagnoseNetwork = "beta-diagnose-network",
-    // 配置全局
+    /** 配置全局 */
     Beta_ConfigNetwork = "beta-config-network",
-    // 插件管理
+    /** 插件管理 */
     Plugin_Audit = "plugin-audit",
-    // WebShell 管理
+    /** WebShell 管理 */
     Beta_WebShellManager = "beta-webshell-manager",
     Beta_WebShellOpt = "beta-webshell-opt",
-    // 数据统计
+    /** 数据统计 */
     Data_Statistics = "data_statistics",
-    /**空间引擎 */
+    /** 空间引擎 */
     Space_Engine = "space-engine",
-    // YakRunner代码扫描
+    /** YakRunner代码扫描 */
     YakRunner_Code_Scan = "yakrunner-code-scan",
     // YakRunner代码审计
     YakRunner_Audit_Code = "yakrunner-audit-code",
     // YakRunner项目管理
-    YakRunner_Project_Manager = "yakrunner-project-manager"
+    YakRunner_Project_Manager = "yakrunner-project-manager",
+    /** 规则管理 */
+    Rule_Management = "rule-management"
 }

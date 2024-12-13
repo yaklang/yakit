@@ -42,6 +42,7 @@ export const JSONTableRender: React.FC<JSONTableRenderProp> = (props) => {
 
     return (
         <TableVirtualResize
+            isRefresh={false}
             loading={false}
             titleHeight={42}
             isShowTitle={false}
