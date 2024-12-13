@@ -1,0 +1,412 @@
+.water-mark {
+    width: 100%;
+    height: 100%;
+}
+
+.rule-management-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+.rule-management-group {
+    width: 301px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-right: 1px solid #eaecf3;
+    background: #f8f8f8;
+    .group-list {
+        flex: 1;
+        overflow: hidden;
+    }
+    .group-divider {
+        height: 1px;
+        border-bottom: 1px solid #e6e8ed;
+    }
+}
+
+.rule-management-body {
+    flex: 1;
+    overflow: hidden;
+    padding: 12px 16px 12px 12px;
+    .table-header {
+        height: 68px;
+        padding-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .header-body {
+            height: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .header-extra {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                .divider-style {
+                    width: 1px;
+                    height: 16px;
+                    border-left: 1px solid #eaecf3;
+                }
+                .btns-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+            }
+
+            .header-title {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                .title-style {
+                    color: #31343f;
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+            }
+        }
+    }
+
+    .table-body {
+        .base-col {
+            overflow: hidden;
+        }
+        .col-level-tag {
+            gap: 4px;
+            margin-right: 0;
+            svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        .col-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .divider-style {
+                width: 1px;
+                height: 12px;
+                border-left: 1px solid #eaecf3;
+            }
+        }
+    }
+}
+
+// ---------- RuleGroupList ----------
+.rule-group-list {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .list-header {
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eaecf3;
+        .title-body {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+
+    .list-search {
+        padding: 0 12px;
+    }
+
+    .list-container {
+        flex: 1;
+        overflow: hidden;
+        .list-body {
+            height: 100%;
+            overflow: hidden auto;
+            padding: 0 12px;
+            position: relative;
+
+            .list-add-input {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                background-color: transparent;
+                width: 100%;
+                padding: 6px 8px;
+            }
+        }
+    }
+
+    .list-local-opt {
+        height: 40px;
+        padding: 10px 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #eaecf3;
+
+        .info-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: #ffb660;
+            }
+            .title-style {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 16px;
+            }
+        }
+
+        .total-style {
+            color: #b4bbca;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+        .btns-wrapper {
+            display: none;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 4px;
+        }
+    }
+    .list-local-opt:first-child {
+        border-top: 0;
+    }
+    .list-local-opt:hover {
+        border-radius: 4px;
+        background: #f0f1f3;
+        border-color: transparent;
+
+        .info-wrapper {
+            svg {
+                color: #ffb660;
+            }
+            .title-style {
+                color: #31343f;
+            }
+        }
+        .total-style {
+            display: none;
+        }
+        .btns-wrapper {
+            display: flex;
+        }
+    }
+    .list-local-opt:hover + .list-local-opt {
+        border-top-color: transparent;
+    }
+
+    .list-local-opt-active {
+        border-radius: 4px;
+        background: #f28b44;
+        border-color: transparent;
+
+        .info-wrapper {
+            svg {
+                color: #ffffff;
+            }
+            .title-style {
+                color: #ffffff;
+            }
+        }
+        .total-style {
+            color: #ffffff;
+        }
+    }
+    .list-local-opt-active + .list-local-opt {
+        border-top-color: transparent;
+    }
+}
+
+// ---------- RuleImportExportModal ----------
+.rule-import-export-modal {
+    .export-hint {
+        background: rgba(86, 201, 145, 0.1);
+        color: #85899e;
+        padding: 8px 16px;
+        margin-bottom: 15px;
+    }
+    .import-hint {
+        background: #fff2f0;
+        color: #85899e;
+        padding: 8px 16px;
+        margin-bottom: 16px;
+    }
+}
+
+// ---------- EditRuleDrawer ----------
+.edit-rule-drawer {
+    .drawer-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .divider-style {
+            width: 1px;
+            height: 16px;
+            border-left: 1px solid #e6e8ed;
+        }
+    }
+
+    .drawer-body {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        background: #ffffff;
+    }
+
+    .rule-info {
+        border-right: 1px solid #eaecf3;
+        display: flex;
+        flex-direction: column;
+        transition:
+            width 0.2s ease,
+            opacity 0.2s ease;
+
+        .info-header {
+            padding: 6px 12px;
+            height: 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eaecf3;
+            .header-title {
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+            }
+        }
+        .info-setting {
+            flex: 1;
+            overflow: hidden;
+            padding: 20px 12px 0px 12px;
+            .info-setting-form {
+                height: 100%;
+                overflow: hidden auto;
+                :global {
+                    .form-item-required {
+                        margin: 0 4px;
+                        padding-top: 4px;
+                        color: #f4736b;
+                        font-size: 14px;
+                        line-height: 14px;
+                    }
+
+                    .ant-row.ant-form-item {
+                        gap: 2px;
+                        .ant-form-item-label {
+                            padding-bottom: 0;
+                        }
+                        .ant-form-item-label
+                            > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .rule-info-show {
+        width: 402px;
+        opacity: 1;
+    }
+    .rule-info-hidden {
+        width: 0;
+        opacity: 0;
+    }
+
+    .rule-code {
+        flex: 1;
+        padding-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .code-header {
+            padding: 12px 12px 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            .header-tab {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+        }
+
+        .code-body {
+            flex: 1;
+            padding: 0px 12px;
+
+            .tab-pane-show {
+                width: 100%;
+                height: 100%;
+            }
+            .tab-pane-hidden {
+                display: none;
+            }
+
+            .tab-pane-code {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                border-radius: 4px;
+                overflow: hidden;
+                border: 1px solid #eaecf3;
+
+                .code-editor {
+                    flex: 1;
+                    overflow: hidden;
+                }
+
+                .code-params {
+                    width: 301px;
+                    display: flex;
+                    flex-direction: column;
+                    border-left: 1px solid #eaecf3;
+                    background: #f8f8f8;
+                    .params-header {
+                        padding: 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 1px solid #eaecf3;
+                        .header-title {
+                            color: #31343f;
+                            font-size: 12px;
+                            font-weight: 500;
+                            line-height: 16px;
+                        }
+                    }
+
+                    .params-container {
+                        flex: 1;
+                        overflow: hidden;
+                        padding: 8px 12px 0 12px;
+                        .params-form {
+                            height: 100%;
+                            overflow: hidden auto;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -259,8 +259,8 @@ export const PluginEnvVariables: React.FC<PluginEnvVariablesProps> = memo((props
     /** ----------  删除 Start ---------- */
     const [deleteKeys, setDeleteKeys] = useState<string[]>([])
     const handleDelete = useMemoizedFn((info: PluginEnvInfo) => {
-        const isExits = deleteKeys.includes(info.Key)
-        if (isExits) return
+        const isExist = deleteKeys.includes(info.Key)
+        if (isExist) return
 
         setDeleteKeys((arr) => {
             return [...arr, info.Key]

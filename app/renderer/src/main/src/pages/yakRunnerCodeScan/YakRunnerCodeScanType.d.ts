@@ -3,6 +3,7 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {ExecResult, YakScript, GroupCount} from "@/pages/invoker/schema"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {CodeScanPageInfoProps} from "@/store/pageInfo"
+import {SyntaxFlowGroup, SyntaxFlowRule, SyntaxFlowRuleFilter} from "../ruleManagement/RuleManagementType"
 
 export interface YakRunnerCodeScanProps {
     pageId: string
@@ -84,64 +85,6 @@ export interface FlowRuleDetailsListItemProps {
 export type SyntaxFlowScanExecuteState = "default" | "process" | "finished" | "error" | "paused"
 
 // -------------------------以下为grpc----------
-
-export interface SyntaxFlowRuleGroupFilter {
-    KeyWord: string
-}
-
-export interface QuerySyntaxFlowRuleGroupRequest {
-    Filter: SyntaxFlowRuleGroupFilter
-}
-
-export interface SyntaxFlowGroup {
-    GroupName: string
-    Count: number
-}
-
-export interface QuerySyntaxFlowRuleGroupResponse {
-    Group: SyntaxFlowGroup[]
-}
-
-export interface SyntaxFlowRuleFilter {
-    RuleNames: string[]
-    Language: string[]
-    GroupNames: string[]
-    Severity: string[]
-    Purpose: string[]
-    Tag: string[]
-    Keyword: string
-}
-
-export interface QuerySyntaxFlowRuleRequest {
-    Pagination: Paging
-    Filter: SyntaxFlowRuleFilter
-}
-
-export interface SyntaxFlowRule {
-    RuleName: string
-    Content: string
-    Language: string
-    Type: string
-    Severity: string
-    Purpose: string
-    IsBuildInRule: boolean
-    Title: string
-    TitleZh: string
-    Description: string
-    Verified: boolean
-    AllowIncluded: boolean
-    IncludedName: string
-    Tag: string
-    AlertDesc: string
-    Hash: string
-    GroupName: string[]
-}
-
-export interface QuerySyntaxFlowRuleResponse {
-    Pagination: Paging
-    Rule: SyntaxFlowRule[]
-    Total: number
-}
 
 export type SyntaxFlowScanModeType = "start" | "pause" | "resume" | "status"
 
