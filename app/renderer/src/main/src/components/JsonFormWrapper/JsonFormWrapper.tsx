@@ -71,12 +71,13 @@ export interface JsonFormWrapperProps {
     value?: string
     onChange?: (v: string) => void
     schema: RJSFSchema
+    uiSchema: UiSchema
     disabled?: boolean
 }
 
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
-    const {jsonSchemaListRef, field, value, schema, disabled} = props
+    const {jsonSchemaListRef, field, value, schema, uiSchema, disabled} = props
 
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
@@ -130,14 +131,6 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     // const fields: RegistryFieldsType = {
     //     "/test": UploadFolderPath,
     // }
-
-    // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
-    //     // 是否显示字段的 label
-    //     acc[key] = {
-    //         "ui:label": true
-    //     }
-    //     return acc
-    // }, {})
 
     const getTextWidget = useMemoizedFn((props: WidgetProps) => {
         const {id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema} = props
@@ -383,16 +376,23 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         )
     })
 
-    const uiSchema: UiSchema = {
-        "ui:grid": [
-            {
-                firstName: 7,
-                lastName: 7,
-                companyName: 7,
-                b: 3
-            }
-        ]
-    }
+    // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
+    //     // 是否显示字段的 label
+    //     acc[key] = {
+    //         "ui:label": true
+    //     }
+    //     return acc
+    // }, {})
+    // const uiSchema: UiSchema = {
+    //     "ui:grid": [
+    //         {
+    //             firstName: 7,
+    //             lastName: 7,
+    //             companyName: 7,
+    //             b: 3
+    //         }
+    //     ]
+    // }
 
     // {
     //     type: "object",
@@ -410,6 +410,12 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     //             type: "boolean"
     //         }
     //     }
+    // }
+
+    /* 字段名 */
+    // unremovable: {
+    /* 全局 className*/
+    // "ui:classNames": "json-schema-row-form"
     // }
     return (
         <>
@@ -435,13 +441,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 }}
                 // 自定义控件
                 // fields={fields}
-                uiSchema={{
-                    /* 字段名 */
-                    // unremovable: {
-                    /* 全局 className*/
-                    "ui:classNames": "json-schema-row-form"
-                    // }
-                }}
+                uiSchema={uiSchema}
                 disabled={disabled}
                 formData={formData}
                 onChange={(e) => {

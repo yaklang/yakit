@@ -789,16 +789,18 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "json":
             if(typeof jsonSchemaListRef?.current !== "object") return <></>
             let schema: any = {}
+            let uiSchema: any = {}
             let value: any = undefined
             try {
                 schema = JSON.parse(item.JsonSchema || "{}")
+                uiSchema = JSON.parse(item.UISchema || "{}")
                 if(jsonSchemaInitial&&jsonSchemaInitial[item.Field]){
                     value = JSON.parse(jsonSchemaInitial[item.Field])
                 }
             } catch (error) {
                 console.error("Parse JsonSchema failed:", error)
             }
-            return <JsonFormWrapper field={item.Field} schema={schema} 
+            return <JsonFormWrapper field={item.Field} schema={schema} uiSchema={uiSchema}
             jsonSchemaListRef={jsonSchemaListRef} disabled={disabled}
             value={value}
             />
