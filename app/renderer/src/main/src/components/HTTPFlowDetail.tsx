@@ -723,7 +723,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     return isSelect ? (
         <div className={styles["http-history-box"]}>
             <YakitResizeBox
-                key={isFold + ""}
+                key={isFold + "" + flow?.Id + flow?.HiddenIndex}
                 freeze={!isFold}
                 isRecalculateWH={!isFold}
                 firstNode={
