@@ -1820,6 +1820,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     updateData()
                                 }, 100)
                             }}
+                            selectContainerStyle={{
+                                maxHeight: '40vh',
+                            }}
                         ></MultipleSelect>
                     )
                 }
@@ -4165,7 +4168,7 @@ const contentType: FiltersItemProps[] = [
 ]
 
 export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
-    const {originalList, onSelect, value, filterProps, onClose, onQuery, searchVal, onChangeSearchVal} = props
+    const {originalList, onSelect, value, filterProps, onClose, onQuery, searchVal, onChangeSearchVal, selectContainerStyle} = props
     const {filterSearch, filterSearchInputProps = {}} = filterProps || {}
 
     const containerRef = useRef(null)
@@ -4268,7 +4271,7 @@ export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
                         </div>
                     </div>
                 )}
-                <div ref={containerRef} className={style["select-container"]}>
+                <div ref={containerRef} className={style["select-container"]} style={selectContainerStyle}>
                     <div ref={wrapperRef} className={style["select-wrapper"]}>
                         {(list.length > 0 &&
                             list.map((item) => {
