@@ -113,7 +113,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 }}
                 icon={<SolidTerminalIcon />}
             >
-                Yak Runner
+                Runner
             </YakitButton>
             <ImportLocalPlugin
                 visible={visibleImport}
