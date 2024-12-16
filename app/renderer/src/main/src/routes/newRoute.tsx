@@ -195,7 +195,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
     cve: {label: "CVE 管理"},
-    yakScript: {label: "Yak Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
+    yakScript: {label: "Runner", describe: "使用特有的 Yaklang 进行编程，直接调用引擎最底层能力 POC 种类"},
     "payload-manager": {
         label: "Payload",
         describe: "通过上传文件、手动删改等，自定义 Payload，可在爆破和 Web Fuzzer 中进行使用"

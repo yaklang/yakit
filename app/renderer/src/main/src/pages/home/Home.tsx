@@ -130,7 +130,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const toolsList = useMemo(() => {
         return [
             {
-                label: "YakRunner",
+                label: "Runner",
                 icon: <PublicToolYakScriptIcon />,
                 iconStyle: {backgroundColor: "#8863f7", padding: 1},
                 desc: "Yak语言编辑器",
