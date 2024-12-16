@@ -5641,14 +5641,6 @@ message QuerySSAProgramRequest{
   SSAProgramFilter Filter = 3;
 }
 
-message QuerySSAProgramResponse{
-  Paging Paging = 1; // abort 
-  Paging Pagination = 5;
-  repeated SSAProgram Programs = 2; // abort
-  repeated SSAProgram Data = 4;
-  int64 Total = 3;
-}
-
 message UpdateSSAProgramRequest{
   SSAProgramInput ProgramInput = 1;
 }
@@ -5656,6 +5648,14 @@ message UpdateSSAProgramRequest{
 message DeleteSSAProgramRequest{
   bool DeleteAll = 1;
   SSAProgramFilter Filter = 2;
+}
+
+message QuerySSAProgramResponse{
+  Paging Paging = 1; // abort 
+  Paging Pagination = 5;
+  repeated SSAProgram Programs = 2; // abort
+  repeated SSAProgram Data = 4;
+  int64 Total = 3;
 }
 
 message CreateSyntaxFlowRuleRequest{
@@ -5691,7 +5691,7 @@ message SyntaxFlowRuleGroupFilter {
   repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
-  string  IsBuildIn = 3; // "true"表示获取内置组，其它字符串表示获取非内置组，填空表示获取所有组
+  string  FilterGroupKind = 3; // "buildIn"内置组，"unBuildIn"非内置组, 空为所有
 }
 
 message SyntaxFlowGroup{
