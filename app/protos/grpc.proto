@@ -5633,14 +5633,6 @@ message QuerySSAProgramRequest{
   SSAProgramFilter Filter = 3;
 }
 
-message QuerySSAProgramResponse{
-  Paging Paging = 1; // abort 
-  Paging Pagination = 5;
-  repeated SSAProgram Programs = 2; // abort
-  repeated SSAProgram Data = 4;
-  int64 Total = 3;
-}
-
 message UpdateSSAProgramRequest{
   SSAProgramInput ProgramInput = 1;
 }
@@ -5648,6 +5640,14 @@ message UpdateSSAProgramRequest{
 message DeleteSSAProgramRequest{
   bool DeleteAll = 1;
   SSAProgramFilter Filter = 2;
+}
+
+message QuerySSAProgramResponse{
+  Paging Paging = 1; // abort 
+  Paging Pagination = 5;
+  repeated SSAProgram Programs = 2; // abort
+  repeated SSAProgram Data = 4;
+  int64 Total = 3;
 }
 
 message CreateSyntaxFlowRuleRequest{
@@ -5683,7 +5683,7 @@ message SyntaxFlowRuleGroupFilter {
   repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
-  string  IsBuildIn = 3; // "true"表示获取内置组，其它字符串表示获取非内置组，填空表示获取所有组
+  string  FilterGroupKind = 3; // "buildIn"内置组，"unBuildIn"非内置组, 空为所有
 }
 
 message SyntaxFlowGroup{
@@ -5733,12 +5733,15 @@ message SyntaxFlowScanRequest{
 
   // 启动扫描任务
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
-  repeated string ProgramName = 3; // 用于指定扫描的程序 
+  repeated string ProgramName = 3; // 用于指定扫描的程序
   // 恢复扫描任务
   string ResumeTaskId = 5;         // 恢复任务ID
 
   // 其他参数 
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
+
+  // for new rule scan task 
+  SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
 }
 
 
@@ -5753,6 +5756,8 @@ message SyntaxFlowScanTaskFilter{
   repeated string TaskIds = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
+  string keyword = 6; // fuzz search program-name 
+  repeated string Kind = 7; // "debug" | "scan";
 }
 
 message QuerySyntaxFlowScanTaskResponse{
@@ -5779,6 +5784,9 @@ message SyntaxFlowScanTask {
     int64 RiskCount =12;
     // query process
     int64 TotalQuery =13;
+
+    SyntaxFlowScanRequest Config = 14;
+    string Kind =  15; // "debug" | "scan"
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
@@ -5814,6 +5822,7 @@ message SyntaxFlowResultFilter {
   int64 BeforeID = 8;
 
   repeated string Severity = 9;  //  "info", "low", "middle", "critical", "high"
+  repeated string Kind = 10 ; //   "query" | "debug" | "scan"
 }
 
 message QuerySyntaxFlowResultRequest{
@@ -5850,6 +5859,7 @@ message SyntaxFlowResult {
   uint64 RiskCount = 11;
 
   string RuleContent = 12;
+  string Kind =  13; // "query" | "debug" | "scan"
 }
 
 message QueryPluginEnvRequest {
