@@ -22,7 +22,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import { SyntaxFlowScanRequest } from "../YakRunnerCodeScanType"
+import {SyntaxFlowScanRequest} from "../YakRunnerCodeScanType"
 const {ipcRenderer} = window.require("electron")
 interface CodeScanTaskListForwardedRefProps {
     onRemove: () => void
@@ -96,6 +96,7 @@ interface SyntaxFlowScanTaskFilter {
     TaskIds?: string[]
     FromId?: number
     UntilId?: number
+    Kind?: string[]
 }
 
 interface QuerySyntaxFlowScanTaskRequest {
@@ -120,6 +121,7 @@ interface SyntaxFlowScanTask {
     TotalQuery: number
 
     Config: SyntaxFlowScanRequest
+    Kind: "debug" | "scan"
 }
 
 interface QuerySyntaxFlowScanTaskResponse {
@@ -307,6 +309,38 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                     }
                 },
                 {
+                    title: "任务类型",
+                    dataKey: "Kind",
+                    render: (value) => {
+                        switch (value) {
+                            case "debug":
+                                return "规则调试"
+                            case "scan":
+                                return "代码扫描"
+                            default:
+                                return "-"
+                        }
+                    },
+                    filterProps: {
+                        filtersType: "select",
+                        filterMultiple: true,
+                        filtersSelectAll: {
+                            isAll: true
+                        },
+                        filterKey: "Kind",
+                        filters: [
+                            {
+                                label: "规则调试",
+                                value: "debug"
+                            },
+                            {
+                                label: "代码扫描",
+                                value: "scan"
+                            }
+                        ]
+                    }
+                },
+                {
                     title: "创建时间",
                     dataKey: "CreatedAt",
                     render: (v) => (v ? formatTimestamp(v) : "-"),
@@ -405,6 +439,7 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         const onDetails = useMemoizedFn((record: SyntaxFlowScanTask, codeScanMode: HybridScanModeType) => {
             const runtimeId = record.TaskId
             const projectName = record.Programs
+            const selectGroupListByKeyWord = record.Config.Filter?.GroupNames
             const route = YakitRoute.YakRunner_Code_Scan
             const current: PageNodeItemProps | undefined = getPageInfoByRuntimeId(route, runtimeId)
             // 重试new 都是新建页面
@@ -415,7 +450,13 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                     if (codeScanMode !== "status") {
                         emiter.emit(
                             "onSetCodeScanTaskStatus",
-                            JSON.stringify({runtimeId, codeScanMode, projectName, pageId: current.pageId})
+                            JSON.stringify({
+                                runtimeId,
+                                codeScanMode,
+                                projectName,
+                                selectGroupListByKeyWord,
+                                pageId: current.pageId
+                            })
                         )
                     }
                 }, 200)
@@ -427,7 +468,8 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                         params: {
                             runtimeId,
                             codeScanMode,
-                            projectName
+                            projectName,
+                            selectGroupListByKeyWord
                         }
                     })
                 )

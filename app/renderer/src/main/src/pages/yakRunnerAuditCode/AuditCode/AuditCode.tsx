@@ -843,7 +843,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             auditHistoryListRef.current?.onRefresh()
                                         }}
                                     />
-                                    <YakitDropdownMenu
+                                    {/* <YakitDropdownMenu
                                         menu={{
                                             data: [
                                                 {
@@ -877,7 +877,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             colors='danger'
                                             icon={<DeleteOutlined />}
                                         />
-                                    </YakitDropdownMenu>
+                                    </YakitDropdownMenu> */}
                                 </div>
                             )}
                         </>
@@ -937,7 +937,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 RuleNames: [],
                 ProgramNames: [],
                 Keyword: "",
-                OnlyRisk: false
+                OnlyRisk: false,
             },
             Pagination: genDefaultPagination(20)
         })
@@ -986,9 +986,11 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 },
                 Pagination: paginationProps
             }
+            
             const isInit = page === 1
             apiFetchQuerySyntaxFlowResult(finalParams)
                 .then((res: QuerySyntaxFlowResultResponse) => {
+                    // console.log("finalParams---",finalParams,res);
                     const resData = res?.Results || []
                     if (resData.length > 0) {
                         setQuery((prevQuery) => ({
@@ -1021,7 +1023,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
             <div className={styles["audit-history-list"]}>
                 <div className={styles["header"]}>
                     <YakitInput.Search
-                        wrapperStyle={{flex:3}}
+                        wrapperStyle={{flex: 3}}
                         placeholder='请输入关键词搜索'
                         value={query.Filter.Keyword}
                         onChange={(e) => {
@@ -1039,17 +1041,28 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                         }}
                     />
                     <YakitSelect
-                        value={'all'}
+                        value={query.Filter.Kind}
                         onChange={(value) => {
-                            // setType(value)
+                            setQuery({
+                                ...query,
+                                Filter: {
+                                    ...query.Filter,
+                                    Kind: value
+                                }
+                            })
+                            setTimeout(()=>{
+                                update(1)
+                            },200)
                         }}
-                        size="small"
-                        wrapperStyle={{flex:2}}
+                        size='small'
+                        wrapperStyle={{flex: 2}}
+                        mode='multiple'
+                        maxTagCount= 'responsive'
+                        placeholder='请选择任务类型'
                     >
-                        <YakitSelect.Option value='all'>全部历史</YakitSelect.Option>
-                        <YakitSelect.Option value='all1'>代码扫描</YakitSelect.Option>
-                        <YakitSelect.Option value='all2'>手工审计</YakitSelect.Option>
-                        <YakitSelect.Option value='all3'>调试数据</YakitSelect.Option>
+                        <YakitSelect.Option value='scan'>代码扫描</YakitSelect.Option>
+                        <YakitSelect.Option value='query'>手工审计</YakitSelect.Option>
+                        <YakitSelect.Option value='debug'>调试数据</YakitSelect.Option>
                     </YakitSelect>
                 </div>
 

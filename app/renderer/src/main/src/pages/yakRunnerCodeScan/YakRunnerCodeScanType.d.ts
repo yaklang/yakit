@@ -164,6 +164,7 @@ export interface SyntaxFlowResultFilter {
     AfterID?: number
     BeforeID?: number
     Severity?: string[]
+    Kind?: string[]
 }
 
 export interface QuerySyntaxFlowResultRequest {

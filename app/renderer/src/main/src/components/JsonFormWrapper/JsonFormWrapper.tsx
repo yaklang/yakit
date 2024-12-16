@@ -155,33 +155,12 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     }}
                 />
             )
-        } else if (schema.yakit_type === "upload-folder-path") {
-            return (
-                <YakitDragger
-                    value={value}
-                    isShowPathNumber={false}
-                    selectType='folder'
-                    multiple={false}
-                    help='可将文件夹拖入框内或点击此处'
-                    disabled={disabled}
-                    onChange={(value) => {
-                        onChange(value === "" ? options.emptyValue : value)
-                    }}
-                />
-            )
-        } else if (schema.yakit_type === "upload-path") {
-            return (
-                <YakitDragger
-                    value={value}
-                    isShowPathNumber={false}
-                    selectType='file'
-                    multiple={false}
-                    disabled={disabled}
-                    onChange={(value) => {
-                        onChange(value === "" ? options.emptyValue : value)
-                    }}
-                />
-            )
+        } else if (schema.yakit_type === "file") {
+            return getFileWidget(props)
+        } else if (schema.yakit_type === "files") {
+            return getFilesWidget(props)
+        } else if (schema.yakit_type === "folder") {
+            return getFolderWidget(props)
         }
 
         return (
@@ -376,6 +355,56 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         )
     })
 
+    const getFileWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options} = props
+        return (
+            <YakitDragger
+                value={value}
+                isShowPathNumber={false}
+                selectType='file'
+                multiple={false}
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
+    const getFilesWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options} = props
+        return (
+            <YakitDragger
+                value={value}
+                isShowPathNumber={false}
+                selectType='file'
+                renderType='textarea'
+                multiple={false}
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
+    const getFolderWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options} = props
+        return (
+            <YakitDragger
+                value={value}
+                isShowPathNumber={false}
+                selectType='folder'
+                multiple={false}
+                help='可将文件夹拖入框内或点击此处'
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
     // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
     //     // 是否显示字段的 label
     //     acc[key] = {
@@ -437,7 +466,11 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     CheckboxesWidget: getCheckboxesWidget,
                     PasswordWidget: getPasswordWidget,
                     RadioWidget: getRadioWidget,
-                    UpDownWidget: getUpDownWidget
+                    UpDownWidget: getUpDownWidget,
+                    FileWidget: getFileWidget,
+                    // uiSchema 自定义控件
+                    files: getFilesWidget,
+                    folder: getFolderWidget
                 }}
                 // 自定义控件
                 // fields={fields}

@@ -961,8 +961,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
-                    console.log("token-data:", res)
-
+                    // console.log("token-data:", res)
                     const data = res.ExecResult
 
                     if (!!res.Status) {
