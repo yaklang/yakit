@@ -159,7 +159,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     }}
                     icon={<SolidTerminalIcon />}
                 >
-                    Yak Runner
+                    Runner
                 </YakitButton>
             ) : (
                 <>
@@ -206,7 +206,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         }}
                         icon={<SolidTerminalIcon />}
                     >
-                        Yak Runner
+                        Runner
                     </YakitButton>
                     <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
                     <ImportLocalPlugin
