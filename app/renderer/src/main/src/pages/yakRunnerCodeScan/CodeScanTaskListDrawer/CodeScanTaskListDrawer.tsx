@@ -330,12 +330,12 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
                         filterKey: "Kind",
                         filters: [
                             {
-                                label: "规则调试",
-                                value: "debug"
-                            },
-                            {
                                 label: "代码扫描",
                                 value: "scan"
+                            },
+                            {
+                                label: "规则调试",
+                                value: "debug"
                             }
                         ]
                     }

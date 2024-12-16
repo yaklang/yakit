@@ -1060,9 +1060,9 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                         maxTagCount= 'responsive'
                         placeholder='请选择任务类型'
                     >
+                        <YakitSelect.Option value='query'>手动审计</YakitSelect.Option>
                         <YakitSelect.Option value='scan'>代码扫描</YakitSelect.Option>
-                        <YakitSelect.Option value='query'>手工审计</YakitSelect.Option>
-                        <YakitSelect.Option value='debug'>调试数据</YakitSelect.Option>
+                        <YakitSelect.Option value='debug'>规则调试</YakitSelect.Option>
                     </YakitSelect>
                 </div>
 
