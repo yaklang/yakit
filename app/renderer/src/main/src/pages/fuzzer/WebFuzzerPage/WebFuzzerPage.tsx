@@ -11,10 +11,10 @@ import {shallow} from "zustand/shallow"
 import emiter from "@/utils/eventBus/eventBus"
 import {getRemoteValue} from "@/utils/kv"
 import {AdvancedConfigShowProps} from "../HTTPFuzzerPage"
-import {RemoteGV} from "@/yakitGV"
 
 import cloneDeep from "lodash/cloneDeep"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 const {ipcRenderer} = window.require("electron")
 
 export const webFuzzerTabs = [
@@ -76,7 +76,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
-        getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
+        getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
             if (!c) return
             try {
                 const newAdvancedConfigShow = initWebFuzzerPageInfo().advancedConfigShow

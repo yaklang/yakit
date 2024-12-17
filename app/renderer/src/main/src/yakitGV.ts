@@ -55,15 +55,7 @@ export enum RemoteGV {
 
     /** @name chat-cs聊天记录 */
     ChatCSStorage = "chat-cs-storage",
-
-    /** @name webFuzzer页面的二级菜单tab数据历史缓存记录 */
-    FuzzerCacheHistoryList = "fuzzer-list-cache-history-list",
-    /** @name webFuzzer页面以及每个页面的数据缓存字段 */
-    FuzzerCache = "fuzzer-list-cache",
-    /** @name webFuzzer序列的缓存历史缓存记录 */
-    FuzzerSequenceCacheHistoryList = "fuzzer_sequence_cache-history-list",
-    /** @name webFuzzer序列的缓存字段 */
-    FuzzerSequenceCache = "fuzzer_sequence_cache",
+    
     /** @name history页面左侧tabs */
     HistoryLeftTabs = "new_history_left_tabs",
     /** @name 临时项目记录是否记住不给提示 */
@@ -80,24 +72,16 @@ export enum RemoteGV {
     HistoryResponseEditorBeautify = "history_response_editor_beautify",
     /** @name history编辑器请求美化&渲染 */
     HistoryRequestEditorBeautify = "history_request_editor_beautify",
-    /** @name WebFuzzer编辑器美化 */
-    WebFuzzerEditorBeautify = "webFuzzer_editor_beautify",
-    /** @name WebFuzzer编辑器美化&渲染 */
-    WebFuzzerOneResEditorBeautifyRender = "webFuzzer_one_res_editor_beautify_render",
     /**@name 专项漏洞关键词搜索缓存 */
     PocPluginKeywords = "poc-plugin-keywords",
     /**@name 代码扫描关键词搜索缓存 */
     CodeScanKeywords = "code-scan-keywords",
     /**@name MITM 用户数据是否保存 */
     MITMUserDataSave = "mitm_user_data_save",
-    /**@name WebFuzzer高级配置内容的显/隐 */
-    WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show",
     /**@name MITM热加载代码保存 */
     MITMHotPatchCodeSave = "mitm_hot_patch_code_save",
     /**@name fuzzer序列页面中,页面配置内容的显/隐 */
     FuzzerSequenceSettingShow = "fuzzer_sequence_setting_show",
-    /**@name WebFuzzer最大响应数量限制 */
-    FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
     /**@name 漏洞风险导出字段缓存 */
     RiskExportFields = "risk-export-fields",
     /**@name RiskPage页面中,高级查询内容的显/隐 */

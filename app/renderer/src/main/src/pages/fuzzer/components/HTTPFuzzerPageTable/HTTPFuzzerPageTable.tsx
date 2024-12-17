@@ -37,6 +37,7 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -867,7 +868,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         useEffect(() => {
             if (currentSelectItem) {
                 setCodeKey("utf-8")
-                getRemoteValue(RemoteGV.WebFuzzerEditorBeautify).then((res) => {
+                getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
                     if (!!res) {
                         setTypeOptionVal(res)
                     } else {
@@ -1114,10 +1115,10 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {
                                     setTypeOptionVal(typeOptionVal)
-                                    setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
+                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
                                 } else {
                                     setTypeOptionVal(undefined)
-                                    setRemoteValue(RemoteGV.WebFuzzerEditorBeautify, "")
+                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, "")
                                 }
                             }}
                             onClickUrlMenu={copyUrl}

@@ -15,12 +15,8 @@ Host: www.example.com
 
 {"key": "value"}`
 
-export const WEB_FUZZ_PROXY = "WEB_FUZZ_PROXY"
 export const WEB_FUZZ_HOTPATCH_CODE = "WEB_FUZZ_HOTPATCH_CODE"
 export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
-
-export const WEB_FUZZ_DNS_Server_Config = "WEB_FUZZ_DNS_Server_Config"
-export const WEB_FUZZ_DNS_Hosts_Config = "WEB_FUZZ_DNS_Hosts_Config"
 
 // WebFuzzer表格默认显示数量
 export const DefFuzzerTableMaxData = 2000

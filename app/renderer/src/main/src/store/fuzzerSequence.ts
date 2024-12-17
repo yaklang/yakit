@@ -9,6 +9,7 @@ import debounce from "lodash/debounce"
 import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
 import {createWithEqualityFn} from "zustand/traditional"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 
 interface FuzzerSequenceProps {
     fuzzerSequenceList: FuzzerSequenceListProps[]
@@ -193,7 +194,9 @@ try {
         (selectedState) => {
             const sequenceCache = getFuzzerSequenceProcessedCacheData(selectedState)
             // console.log("saveFuzzerSequenceCache", sequenceCache)
-            setRemoteProjectValue(RemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache)).catch((error) => {})
+            setRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache, JSON.stringify(sequenceCache)).catch(
+                (error) => {}
+            )
         },
         500,
         {leading: true}

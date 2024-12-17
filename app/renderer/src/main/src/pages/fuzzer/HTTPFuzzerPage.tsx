@@ -116,7 +116,6 @@ import blastingIdmp4 from "@/assets/blasting-id.mp4"
 import blastingPwdmp4 from "@/assets/blasting-pwd.mp4"
 import blastingCountmp4 from "@/assets/blasting-count.mp4"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
-import {RemoteGV} from "@/yakitGV"
 import {WebFuzzerType} from "./WebFuzzerPage/WebFuzzerPageType"
 import cloneDeep from "lodash/cloneDeep"
 
@@ -130,11 +129,8 @@ import {
     defaultPostTemplate,
     emptyFuzzer,
     defaultWebFuzzerPageInfo,
-    WEB_FUZZ_DNS_Hosts_Config,
-    WEB_FUZZ_DNS_Server_Config,
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
-    WEB_FUZZ_PROXY,
     defaultLabel,
     defaultAdvancedConfigValue
 } from "@/defaultConstants/HTTPFuzzerPage"
@@ -149,6 +145,7 @@ import {
 } from "../layout/mainOperatorContent/utils"
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 import {setClipboardText} from "@/utils/clipboard"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -548,11 +545,11 @@ export interface FuzzerCacheDataProps {
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
     return new Promise(async (resolve, rejects) => {
         try {
-            const proxy = await getRemoteValue(WEB_FUZZ_PROXY)
-            const dnsServers = await getRemoteValue(WEB_FUZZ_DNS_Server_Config)
-            const etcHosts = await getRemoteValue(WEB_FUZZ_DNS_Hosts_Config)
-            const advancedConfigShow = await getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow)
-            const resNumlimit = await getRemoteValue(RemoteGV.FuzzerResMaxNumLimit)
+            const proxy = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY)
+            const dnsServers = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config)
+            const etcHosts = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config)
+            const advancedConfigShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
+            const resNumlimit = await getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit)
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
                 dnsServers: !!dnsServers ? JSON.parse(dnsServers) : [],
@@ -700,7 +697,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 [type]: c
             }
             setAdvancedConfigShow(newValue)
-            setRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow, JSON.stringify(newValue))
+            setRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow, JSON.stringify(newValue))
             emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
         } catch (error) {}
     })
@@ -964,12 +961,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (advancedConfigValue.proxy && advancedConfigValue.proxy.length > 0) {
             getProxyList(advancedConfigValue.proxy)
         }
-        setRemoteValue(WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
-        setRemoteValue(WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
-        setRemoteValue(WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
-        setRemoteValue(RemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
+        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
+        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
+        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
+        setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
-        
+
         if (retryRef.current) {
             retryRef.current = false
             const retryTaskID = failedFuzzer.length > 0 ? failedFuzzer[0].TaskId : undefined
@@ -3098,7 +3095,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         useEffect(() => {
             if (fuzzerResponse.ResponseRaw) {
                 setCodeKey("utf-8")
-                getRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
+                getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
                     if (!!res) {
                         setResTypeOptionVal(res)
                     } else {
@@ -3211,10 +3208,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             onTypeOptionVal={(typeOptionVal) => {
                                 if (typeOptionVal !== undefined) {
                                     setResTypeOptionVal(typeOptionVal)
-                                    setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
+                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, typeOptionVal)
                                 } else {
                                     setResTypeOptionVal(undefined)
-                                    setRemoteValue(RemoteGV.WebFuzzerOneResEditorBeautifyRender, "")
+                                    setRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender, "")
                                 }
                             }}
                             onClickUrlMenu={copyUrl}
