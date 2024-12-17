@@ -834,7 +834,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.etcHosts = cacheData.etcHosts
                 newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
                 newAdvancedConfigValue.repeatTimes = cacheData.repeatTimes
-                newAdvancedConfigValue.concurrent = cacheData.concurrent
+                newAdvancedConfigValue.concurrent = +cacheData.concurrent
                 newAdvancedConfigValue.minDelaySeconds = cacheData.minDelaySeconds
                 newAdvancedConfigValue.maxDelaySeconds = cacheData.maxDelaySeconds
             }
@@ -1655,7 +1655,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 etcHosts: cacheData.etcHosts,
                 resNumlimit: cacheData.resNumlimit,
                 repeatTimes: cacheData.repeatTimes,
-                concurrent: cacheData.concurrent,
+                concurrent: +cacheData.concurrent,
                 minDelaySeconds: cacheData.minDelaySeconds,
                 maxDelaySeconds: cacheData.maxDelaySeconds,
             }
