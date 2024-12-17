@@ -6,9 +6,11 @@ import {
     RuleImportExportModalProps,
     SyntaxFlowGroup,
     SyntaxFlowRuleInput,
-    UpdateRuleToGroupProps
+    UpdateRuleToGroupProps,
+    SyntaxFlowRuleFilter,
+    UpdateSyntaxFlowRuleAndGroupRequest
 } from "./RuleManagementType"
-import {useCreation, useDebounceFn, useMemoizedFn, useSize, useVirtualList} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useSize, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouduploadIcon,
@@ -16,6 +18,7 @@ import {
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
     OutlinePlusIcon,
+    OutlineSearchIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -36,7 +39,8 @@ import {
     grpcFetchLocalRuleGroupList,
     grpcFetchRulesForSameGroup,
     grpcUpdateLocalRule,
-    grpcUpdateLocalRuleGroup
+    grpcUpdateLocalRuleGroup,
+    grpcUpdateRuleToGroup
 } from "./api"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
@@ -58,17 +62,15 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {DefaultRuleContent, RuleLanguageList} from "@/defaultConstants/RuleManagement"
-
-import classNames from "classnames"
-import styles from "./RuleManagement.module.scss"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
-const {ipcRenderer} = window.require("electron")
+import classNames from "classnames"
+import styles from "./RuleManagement.module.scss"
 
 /** @name 规则组列表组件 */
 export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props) => {
-    const {onGroupChange} = props
+    const {isrefresh, onGroupChange} = props
 
     const [data, setData] = useState<SyntaxFlowGroup[]>([])
     const groupLength = useMemo(() => {
@@ -109,7 +111,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
 
     useEffect(() => {
         fetchList()
-    }, [])
+    }, [isrefresh])
 
     // 搜索
     const search = useRef<string>("")
@@ -122,15 +124,16 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
     ).run
 
     /** ---------- 多选逻辑 ---------- */
-    const [select, setSelect, getSelect] = useGetSetState<SyntaxFlowGroup[]>([])
+    const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
     const selectGroups = useMemo(() => {
+        // 这里的延时触发搜索由外层去控制
+        onGroupChange(select.map((item) => item.GroupName))
         return select.map((item) => item.GroupName)
     }, [select])
     const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
         const isExist = select.includes(info)
         if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
         else setSelect((arr) => [...arr, info])
-        onGroupChange(getSelect().map((item) => item.GroupName))
     })
 
     // 更新数据
@@ -218,6 +221,8 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
         setEditGroup((arr) => [...arr, editInfo.GroupName])
         grpcUpdateLocalRuleGroup({OldGroupName: editInfo.GroupName, NewGroupName: editName})
             .then(() => {
+                // 改名后自动把选中里的该条去掉
+                setSelect((arr) => arr.filter((item) => item.GroupName !== editInfo.GroupName))
                 handleUpdateData("modify", editInfo, {...editInfo, GroupName: editName})
                 initEdit()
             })
@@ -261,6 +266,8 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
         })
         grpcDeleteLocalRuleGroup({Filter: {GroupNames: [GroupName]}})
             .then(() => {
+                // 删除后自动把选中里的该条去掉
+                setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
                 handleUpdateData("delete", info)
             })
             .catch(() => {})
@@ -503,6 +510,10 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     })
 
     const isEdit = useMemo(() => !!info, [info])
+    const isBuildInRule = useMemo(() => {
+        if (!info) return false
+        return !!info.IsBuildInRule
+    }, [info])
 
     useEffect(() => {
         if (visible) {
@@ -512,7 +523,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 form &&
                     form.setFieldsValue({
                         RuleName: info.RuleName || "",
-                        GroupName: info.GroupName || [],
+                        GroupNames: info.GroupName || [],
                         Description: info.Description || "",
                         Language: info.Language
                     })
@@ -561,6 +572,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
         const api = isEdit ? grpcUpdateLocalRule : grpcCreateLocalRule
+        console.log("api", JSON.stringify(request))
         api({SyntaxFlowInput: request})
             .then(({Rule}) => {
                 onCallback(true, Rule)
@@ -808,10 +820,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             title={"新建规则"}
             extra={
                 <div className={styles["drawer-extra"]}>
-                    <YakitButton loading={loading} onClick={handleFormSubmit}>
-                        保存
-                    </YakitButton>
-                    <div className={styles["divider-style"]}></div>
+                    {!isBuildInRule && (
+                        <>
+                            <YakitButton loading={loading} onClick={handleFormSubmit}>
+                                保存
+                            </YakitButton>
+                            <div className={styles["divider-style"]}></div>
+                        </>
+                    )}
                     <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
                 </div>
             }
@@ -843,7 +859,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 name={"RuleName"}
                                 rules={[{required: true, message: "规则名必填"}]}
                             >
-                                <YakitInput placeholder='请输入规则名' disabled={isEdit} />
+                                <YakitInput placeholder='请输入规则名' disabled={isEdit || isBuildInRule} />
                             </Form.Item>
 
                             <Form.Item
@@ -855,11 +871,20 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 name={"GroupNames"}
                                 rules={[{required: true, message: "分组必填"}]}
                             >
-                                <YakitSelect mode='tags' placeholder='请选择分组' options={groups} />
+                                <YakitSelect
+                                    mode='tags'
+                                    placeholder='请选择分组'
+                                    disabled={isBuildInRule}
+                                    options={groups}
+                                />
                             </Form.Item>
 
                             <Form.Item label={"描述"} name={"Description"}>
-                                <YakitInput.TextArea isShowResize={false} autoSize={{minRows: 2, maxRows: 4}} />
+                                <YakitInput.TextArea
+                                    disabled={isBuildInRule}
+                                    isShowResize={false}
+                                    autoSize={{minRows: 2, maxRows: 4}}
+                                />
                             </Form.Item>
 
                             <Form.Item
@@ -871,7 +896,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 name={"Language"}
                                 rules={[{required: true, message: "语言必填"}]}
                             >
-                                <YakitSelect allowClear size='large' options={RuleLanguageList} />
+                                <YakitSelect
+                                    allowClear
+                                    size='large'
+                                    disabled={isBuildInRule}
+                                    options={RuleLanguageList}
+                                />
                             </Form.Item>
                         </Form>
                     </div>
@@ -922,7 +952,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                         >
                             <div className={styles["tab-pane-code"]}>
                                 <div className={styles["code-editor"]}>
-                                    <YakitEditor type={SyntaxFlowMonacoSpec} value={content} setValue={setContent} />
+                                    <YakitEditor
+                                        readOnly={isBuildInRule}
+                                        type={SyntaxFlowMonacoSpec}
+                                        value={content}
+                                        setValue={setContent}
+                                    />
                                 </div>
 
                                 <div className={styles["code-params"]}>
@@ -975,52 +1010,353 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     )
 })
 
+/** 扩展定义-SyntaxFlowGroup，前端逻辑需要 */
+interface FrontSyntaxFlowGroup extends SyntaxFlowGroup {
+    /** 是否为新建组 */
+    isCreate: boolean
+}
 /** @name 规则添加分组 */
 export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) => {
-    const {rules} = props
+    const {allCheck, rules, filters, callback} = props
 
+    /** 添加分组按钮是否可用 */
     const isActive = useMemo(() => {
-        return !rules.length
-    }, [rules])
+        if (allCheck) return true
+        return !!rules.length
+    }, [allCheck, rules])
+    // 生成规则的请求参数
+    const ruleRequest = useMemoizedFn(() => {
+        if (allCheck) return cloneDeep(filters)
+        else return {RuleNames: (rules || []).map((item) => item.RuleName)} as SyntaxFlowRuleFilter
+    })
 
-    const [groups, setGroups] = useState<SyntaxFlowGroup[]>([])
+    // 规则所属组交集
+    const [oldGroup, setOldGroup, getOldGroup] = useGetSetState<FrontSyntaxFlowGroup[]>([])
+    // 全部规则组
+    const allGroup = useRef<FrontSyntaxFlowGroup[]>([])
+    // 可选规则组
+    const [showGroup, setShowGroup] = useState<FrontSyntaxFlowGroup[]>([])
+    // 搜索内容
+    const [search, setSearch] = useState<string>("")
 
+    // 新加规则组
+    const [addGroup, setAddGroup] = useState<FrontSyntaxFlowGroup[]>([])
+    // 移除规则组
+    const [removeGroup, setRemoveGroup] = useState<FrontSyntaxFlowGroup[]>([])
+
+    /** ---------- 获取规则所属组交集、全部规则组-逻辑 Start ---------- */
+    const getFilter = useMemoizedFn(() => {
+        return cloneDeep(filters)
+    })
+    useDebounceEffect(
+        () => {
+            if (!allCheck && rules.length === 0) {
+                setOldGroup([])
+                return
+            }
+
+            let request: SyntaxFlowRuleFilter = {}
+            if (allCheck) request = getFilter() || {}
+            else request.RuleNames = rules.map((item) => item.RuleName)
+
+            grpcFetchRulesForSameGroup({Filter: request})
+                .then(({Group}) => {
+                    setOldGroup(
+                        (Group || []).map((item) => ({
+                            ...item,
+                            isCreate: false
+                        }))
+                    )
+                })
+                .catch(() => {
+                    setOldGroup([])
+                })
+        },
+        [allCheck, rules],
+        {wait: 300}
+    )
+
+    // 新加规则组popover
+    const [addGroupVisible, setAddGroupVisible] = useState<boolean>(false)
+    const handleAddGroupVisibleChange = useMemoizedFn((visible: boolean) => {
+        setAddGroupVisible(visible)
+    })
+
+    const loading = useRef<boolean>(false)
+    const handleReset = useMemoizedFn(() => {
+        setRemoveGroup([])
+        setAddGroup([])
+    })
     useEffect(() => {
-        if (rules.length === 0) {
-            return
+        if (addGroupVisible) {
+            setRemoveGroup([...getOldGroup()])
+            if (loading.current) return
+            loading.current = true
+            grpcFetchLocalRuleGroupList({Filter: {}})
+                .then(({Group}) => {
+                    const groups = (Group || []).map((item) => ({...item, isCreate: false}))
+                    allGroup.current = groups
+                    setShowGroup(allGroup.current)
+                })
+                .catch(() => {})
+                .finally(() => {
+                    loading.current = false
+                })
+
+            return () => {
+                handleReset()
+            }
         }
-        grpcFetchRulesForSameGroup({Filter: {RuleNames: rules.map((item) => item.RuleName)}})
-            .then(({Group}) => {
-                setGroups(Group || [])
+    }, [addGroupVisible])
+    /** ---------- 获取规则所属组交集、全部规则组-逻辑 End ---------- */
+
+    /** ---------- 移除旧规则组 Start ---------- */
+    const delGroups = useRef<string[]>([])
+    // 单个
+    const handleSingleRemove = useMemoizedFn((info: FrontSyntaxFlowGroup) => {
+        if (!info) return
+        const isExist = delGroups.current.includes(info.GroupName)
+        if (isExist) return
+
+        delGroups.current = [...delGroups.current, info.GroupName]
+        const request: UpdateSyntaxFlowRuleAndGroupRequest = {
+            Filter: ruleRequest(),
+            AddGroups: [],
+            RemoveGroups: [info.GroupName]
+        }
+        grpcUpdateRuleToGroup(request)
+            .then(() => {
+                setOldGroup((groups) => groups.filter((item) => item.GroupName !== info.GroupName))
+                callback()
             })
             .catch(() => {})
-    }, [rules])
+            .finally(() => {
+                delGroups.current = delGroups.current.filter((item) => item !== info.GroupName)
+            })
+    })
+
+    // 批量
+    const handleAllRemove = useMemoizedFn(() => {
+        const request: UpdateSyntaxFlowRuleAndGroupRequest = {
+            Filter: ruleRequest(),
+            AddGroups: [],
+            RemoveGroups: oldGroup.map((item) => item.GroupName)
+        }
+        grpcUpdateRuleToGroup(request)
+            .then(() => {
+                callback()
+                setOldGroup([])
+            })
+            .catch(() => {})
+    })
+    /** ---------- 移除旧规则组 End ---------- */
+
+    /** ---------- 新增规则组逻辑 Start ---------- */
+    useDebounceEffect(
+        () => {
+            setShowGroup(allGroup.current.filter((item) => item.GroupName.indexOf(search || "") > -1))
+        },
+        [search],
+        {wait: 300}
+    )
+
+    // 新建一条规则组
+    const handleCreateGroup = useMemoizedFn((name: string) => {
+        const group: FrontSyntaxFlowGroup = {
+            GroupName: name,
+            Count: 0,
+            IsBuildIn: false,
+            isCreate: true
+        }
+        setAddGroup((arr) => [...arr, group])
+        allGroup.current = [group, ...allGroup.current]
+        setShowGroup((arr) => [group, ...arr])
+    })
+
+    const handleSearchEnter = useMemoizedFn(() => {
+        if (showGroup.length > 0) return
+        handleCreateGroup(search)
+        setSearch("")
+    })
+    const handleCheckboxCreate = useMemoizedFn(() => {
+        if (showGroup.length > 0) return
+        handleCreateGroup(search)
+        setSearch("")
+    })
+
+    const handleCheck = useMemoizedFn((checked: boolean, info: FrontSyntaxFlowGroup) => {
+        if (checked) {
+            // 判断规则组是否属于已经存在于交集的规则组
+            const isExist = oldGroup.findIndex((item) => item.GroupName === info.GroupName) > -1
+            const setHooks = isExist ? setRemoveGroup : setAddGroup
+            setHooks((arr) => [...arr, info])
+            return
+        } else {
+            const isExistRemove = removeGroup.findIndex((item) => item.GroupName === info.GroupName) > -1
+            const setHooks = isExistRemove ? setRemoveGroup : setAddGroup
+            setHooks((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+            if (!isExistRemove && info.isCreate) {
+                // 新建的规则组在取消勾选后要从列表中移除
+                allGroup.current = allGroup.current.filter((item) => item.GroupName !== info.GroupName)
+                setShowGroup((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+            }
+        }
+    })
+
+    const [submitLoading, setSubmitLoading] = useState<boolean>(false)
+    const handleSubmit = useMemoizedFn(() => {
+        if (submitLoading) return
+
+        const request: UpdateSyntaxFlowRuleAndGroupRequest = {
+            Filter: ruleRequest(),
+            AddGroups: [],
+            RemoveGroups: []
+        }
+        request.RemoveGroups = oldGroup
+            .filter((item) => removeGroup.findIndex((i) => i.GroupName === item.GroupName) === -1)
+            .map((item) => item.GroupName)
+        request.AddGroups = addGroup.map((item) => item.GroupName)
+
+        setSubmitLoading(true)
+        grpcUpdateRuleToGroup(request)
+            .then(() => {
+                callback()
+                handelCancel()
+            })
+            .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    setSubmitLoading(false)
+                }, 300)
+            })
+    })
+
+    const handelCancel = useMemoizedFn(() => {
+        setAddGroupVisible(false)
+    })
+    /** ---------- 新增规则组逻辑 End ---------- */
 
     return (
-        <div>
-            {groups.length > 0 && (
-                <div>
-                    {groups.length <= 2 ? (
-                        groups.map((item) => {
+        <div className={styles["update-rule-to-group"]}>
+            {oldGroup.length > 0 && (
+                <div className={styles["group-tags"]}>
+                    {oldGroup.length <= 2 ? (
+                        oldGroup.map((item) => {
                             return (
-                                <YakitTag key={item.GroupName} color='info' closable onClose={() => {}}>
+                                <YakitTag
+                                    key={item.GroupName}
+                                    color='info'
+                                    closable
+                                    onClose={() => {
+                                        handleSingleRemove(item)
+                                    }}
+                                >
                                     {item.GroupName}
                                 </YakitTag>
                             )
                         })
                     ) : (
-                        <YakitPopover>
-                            <YakitTag closable onClose={() => {}}>
-                                规则组{rules.length}
+                        <YakitPopover
+                            overlayClassName={styles["rule-group-intersection-popover"]}
+                            content={
+                                <div className={styles["rule-group-intersection"]}>
+                                    {oldGroup.map((item) => {
+                                        return (
+                                            <Tooltip key={item.GroupName} placement='top' title={item.GroupName}>
+                                                <YakitTag
+                                                    key={item.GroupName}
+                                                    color='info'
+                                                    closable
+                                                    onClose={() => {
+                                                        handleSingleRemove(item)
+                                                    }}
+                                                >
+                                                    {item.GroupName}
+                                                </YakitTag>
+                                            </Tooltip>
+                                        )
+                                    })}
+                                </div>
+                            }
+                            trigger='hover'
+                            placement='bottom'
+                        >
+                            <YakitTag closable onClose={handleAllRemove}>
+                                规则组{oldGroup.length}
                             </YakitTag>
                         </YakitPopover>
                     )}
                 </div>
             )}
 
-            <YakitPopover>
-                <YakitButton type='text' disabled={isActive} icon={<OutlinePluscircleIcon />}>
-                    {groups.length ? undefined : "添加分组"}
+            <YakitPopover
+                overlayClassName={styles["add-and-remove-group-popover"]}
+                visible={addGroupVisible}
+                placement='bottomRight'
+                trigger='click'
+                content={
+                    <div className={styles["add-and-remove-group"]}>
+                        <div className={styles["search-header"]}>
+                            勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。
+                        </div>
+                        <div className={styles["search-input"]}>
+                            <YakitInput
+                                placeholder='输入关键字...'
+                                prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                                value={search}
+                                allowClear={true}
+                                onChange={(e) => {
+                                    const val = e.target.value.trim()
+                                    setSearch(val)
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        e.stopPropagation()
+                                        handleSearchEnter()
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className={styles["group-list"]}>
+                            {showGroup.length === 0 && search && (
+                                <div className={styles["group-list-item"]}>
+                                    <YakitCheckbox onChange={handleCheckboxCreate} />
+                                    <span className={styles["title-style"]}>新增分组"{search}"</span>
+                                </div>
+                            )}
+                            {showGroup.map((item) => {
+                                const {GroupName} = item
+                                const isCheck =
+                                    [...addGroup, ...removeGroup].findIndex((item) => item.GroupName === GroupName) > -1
+                                return (
+                                    <div key={item.GroupName} className={styles["group-list-item"]}>
+                                        <YakitCheckbox
+                                            checked={isCheck}
+                                            onChange={(e) => {
+                                                handleCheck(e.target.checked, item)
+                                            }}
+                                        />
+                                        <span className={styles["title-style"]}>{item.GroupName}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className={styles["group-footer"]}>
+                            <div className={styles["group-footer-btns"]}>
+                                <YakitButton type='outline2' onClick={handelCancel}>
+                                    取消
+                                </YakitButton>
+                                <YakitButton loading={submitLoading} onClick={handleSubmit}>
+                                    确认
+                                </YakitButton>
+                            </div>
+                        </div>
+                    </div>
+                }
+                onVisibleChange={handleAddGroupVisibleChange}
+            >
+                <YakitButton type='text' disabled={!isActive} icon={<OutlinePluscircleIcon />}>
+                    {oldGroup.length ? undefined : "添加分组"}
                 </YakitButton>
             </YakitPopover>
         </div>

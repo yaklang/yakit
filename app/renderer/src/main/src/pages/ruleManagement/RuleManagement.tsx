@@ -12,7 +12,7 @@ import {
     OutlineExportIcon,
     OutlineEyeIcon,
     OutlineImportIcon,
-    OutlinePencilIcon,
+    OutlinePencilaltIcon,
     OutlinePlusIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
@@ -29,6 +29,7 @@ import {genDefaultPagination} from "../invoker/schema"
 import {grpcDeleteLocalRule, grpcFetchLocalRuleList} from "./api"
 import {RuleLanguageList, RuleLevel, RuleLevelList} from "@/defaultConstants/RuleManagement"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {Tooltip} from "antd"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -64,10 +65,24 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         })
     })
 
+    const [groupRefresh, setGroupRefresh] = useState<boolean>(false)
     const handleGroupChange = useMemoizedFn((groups: string[]) => {
         setFilters((filters) => {
             return {...filters, GroupNames: groups}
         })
+    })
+    const tableHeaderTitle = useMemo(() => {
+        if (!filters.GroupNames) return "全部"
+        if (filters.GroupNames.length === 0) return "全部"
+        return filters.GroupNames.join(",")
+    }, [filters.GroupNames])
+
+    // 清空选中并刷新列表和规则组数据
+    const handleRefreshGroup = useMemoizedFn(() => {
+        setAllCheck(false)
+        setSelectList([])
+        setGroupRefresh((v) => !v)
+        fetchList()
     })
 
     const onTableFilterChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, tableFilters: any) => {
@@ -210,7 +225,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                             <div className={styles["col-btns"]}>
                                 <YakitButton
                                     type='text2'
-                                    icon={<OutlinePencilIcon />}
+                                    icon={<OutlinePencilaltIcon />}
                                     loading={isLoading}
                                     onClick={() => {
                                         handleOpenEditHint(rowData)
@@ -290,29 +305,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const handleCallbackEditHint = useMemoizedFn((result: boolean, info?: SyntaxFlowRule) => {
         if (result) {
             if (!info) return
-            const isEdit = !!editInfo.current
-            if (isEdit) {
-                setData((res) => {
-                    return {
-                        ...res,
-                        Rule: res.Rule.map((ele) => {
-                            if (ele.RuleName === info.RuleName) {
-                                return info
-                            }
-                            return ele
-                        })
-                    }
-                })
-            } else {
-                const isAdd = info.RuleName.indexOf(filters.Keyword || "") > -1
-                isAdd &&
-                    setData((res) => {
-                        return {
-                            ...res,
-                            Rule: [...res.Rule, info]
-                        }
-                    })
-            }
+            fetchList()
         }
         handleCancelEditHint()
     })
@@ -374,7 +367,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             <div ref={wrapperRef} className={styles["rule-management-page"]}>
                 <div className={styles["rule-management-group"]}>
                     <div className={styles["group-list"]}>
-                        <LocalRuleGroupList onGroupChange={handleGroupChange} />
+                        <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
                     </div>
 
                     {/* <div className={styles["group-divider"]}></div>
@@ -389,7 +382,16 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                             <div className={styles["table-header"]}>
                                 <div className={styles["header-body"]}>
                                     <div className={styles["header-title"]}>
-                                        <span className={styles["title-style"]}>全部</span>
+                                        <Tooltip placement='bottom' title={tableHeaderTitle}>
+                                            <span
+                                                className={classNames(
+                                                    styles["title-style"],
+                                                    "yakit-content-single-ellipsis"
+                                                )}
+                                            >
+                                                {tableHeaderTitle}
+                                            </span>
+                                        </Tooltip>
                                     </div>
 
                                     <div className={styles["header-extra"]}>
@@ -439,7 +441,12 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                         <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
                                     </div>
 
-                                    <UpdateRuleToGroup rules={selectList} />
+                                    <UpdateRuleToGroup
+                                        allCheck={allCheck}
+                                        rules={selectList}
+                                        filters={filters}
+                                        callback={handleRefreshGroup}
+                                    />
                                 </div>
                             </div>
                         }
@@ -475,6 +482,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                 <EditRuleDrawer
                     getContainer={wrapperRef.current || undefined}
+                    info={editInfo.current}
                     visible={editHint}
                     onCallback={handleCallbackEditHint}
                 />
