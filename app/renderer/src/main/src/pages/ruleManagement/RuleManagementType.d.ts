@@ -3,6 +3,7 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 export interface RuleManagementProps {}
 
 export interface LocalRuleGroupListProps {
+    isrefresh?: boolean
     onGroupChange: (groups: string[]) => void
 }
 
@@ -23,7 +24,11 @@ export interface EditRuleDrawerProps {
 }
 
 export interface UpdateRuleToGroupProps {
+    allCheck: boolean
     rules: SyntaxFlowRule[]
+    filters: SyntaxFlowRuleFilter
+    /** 完成操作后触发规则组数据刷新 */
+    callback: () => void
 }
 
 /** ---------- 规则组相关接口定义 Start ---------- */
@@ -31,7 +36,7 @@ export interface UpdateRuleToGroupProps {
 export interface SyntaxFlowRuleGroupFilter {
     GroupNames?: string[]
     KeyWord?: string
-    IsBuildIn?: string
+    FilterGroupKind?: string // "buildin"内置组, "unBuildIn"非内置组, 空为所有
 }
 export interface QuerySyntaxFlowRuleGroupRequest {
     Filter: SyntaxFlowRuleGroupFilter
@@ -59,7 +64,7 @@ export interface DeleteSyntaxFlowRuleGroupRequest {
 }
 
 export interface UpdateSyntaxFlowRuleAndGroupRequest {
-    Filter?: SyntaxFlowRuleFilter
+    Filter: SyntaxFlowRuleFilter
     AddGroups: string[]
     RemoveGroups: string[]
     All?: boolean // 废弃

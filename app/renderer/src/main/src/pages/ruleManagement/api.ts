@@ -141,6 +141,7 @@ export const grpcDeleteLocalRule: APIFunc<DeleteSyntaxFlowRuleRequest, any> = (r
 /** @name 更新规则里的本地组 */
 export const grpcUpdateRuleToGroup: APIFunc<UpdateSyntaxFlowRuleAndGroupRequest, any> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
+        console.log(`UpdateSyntaxFlowRuleAndGroup-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("UpdateSyntaxFlowRuleAndGroup", request)
             .then(resolve)
