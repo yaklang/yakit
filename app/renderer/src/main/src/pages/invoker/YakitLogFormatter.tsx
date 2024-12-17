@@ -37,20 +37,13 @@ export interface YakitLogViewersProp {
 }
 
 export const YakitLogViewers = React.memo((props: YakitLogViewersProp) => {
-
-    const timelineItems = useMemo(
-        () =>
-            (props.data || []).map((item) => (
-                <Timeline.Item key={`${item.timestamp}-${item.level}-${item.data}`} color={LogLevelToCode(item.level)}>
-                    <YakitLogFormatter data={item.data} level={item.level} timestamp={item.timestamp} />
-                </Timeline.Item>
-            )),
-        [props.data]
-    );
-    
     return (
         <Timeline pending={!props.finished} reverse={true}>
-            {timelineItems}
+            {(props.data || []).map((item, index) => (
+                <Timeline.Item key={`${item.timestamp}-${item.level}-${item.data}-${index}`} color={LogLevelToCode(item.level)}>
+                    <YakitLogFormatter data={item.data} level={item.level} timestamp={item.timestamp} />
+                </Timeline.Item>
+            ))}
         </Timeline>
     )
 })
@@ -165,7 +158,7 @@ export const YakitLogFormatter: React.FC<YakitLogFormatterProp> = React.memo((pr
                     <div className={styles["log-info"]}>
                         {showTime && <span className={styles["log-time"]}>{formatTime(timestamp)}</span>}
                         <span style={{margin: "0 4px"}}>·</span>
-                        <span style={{whiteSpace:"pre-wrap"}}>{data}</span>
+                        <span style={{whiteSpace: "pre-wrap"}}>{data}</span>
                     </div>
                 )
         }

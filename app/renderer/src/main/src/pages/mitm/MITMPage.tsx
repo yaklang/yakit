@@ -208,17 +208,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 lastStatusHash = ""
                 statusMap.clear()
             }
-            if (latestLogs.current.length !== messages.length) {
-                setLogs([...messages])
-                return
-            }
 
-            if (latestLogs.current.length > 0 && messages.length > 0) {
-                if (latestLogs.current[0].data !== messages[0].data) {
-                    setLogs([...messages])
+            try {
+                if (JSON.stringify(latestLogs.current) !== JSON.stringify(messages)) {
+                    const arr = [...messages]
+                    setLogs(arr)
                     return
                 }
-            }
+            } catch (error) {}
 
             if (getLatestStatusHash() !== lastStatusHash) {
                 setLatestStatusHash(lastStatusHash)
