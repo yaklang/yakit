@@ -36,6 +36,8 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     isGmTLS: false,
     noFixContentLength: false,
     noSystemProxy: false,
+    disableUseConnPool: false,
+    disableHotPatch: false,
     maxBodySize: 5,
     sNI: "",
     overwriteSNI: "auto",

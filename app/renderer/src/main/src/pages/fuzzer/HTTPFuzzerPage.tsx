@@ -303,6 +303,8 @@ export interface FuzzerRequestProps {
     DNSServers: string[]
     EtcHosts: KVPair[]
     NoSystemProxy: boolean
+    DisableUseConnPool: boolean
+    DisableHotPatch: boolean
     RepeatTimes: number
     Extractors: HTTPResponseExtractor[]
     Matchers: HTTPResponseMatcher[]
@@ -395,6 +397,8 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         BatchTarget: value.batchTarget || new Uint8Array(),
         NoFixContentLength: value.noFixContentLength,
         NoSystemProxy: value.noSystemProxy,
+        DisableUseConnPool: value.disableUseConnPool,
+        DisableHotPatch: value.disableHotPatch,
         Proxy: value.proxy ? value.proxy.join(",") : "",
         ActualAddr: value.actualHost,
         HotPatchCode: "",
