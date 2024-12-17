@@ -23,7 +23,7 @@ import {
     useSize,
     useUpdateEffect
 } from "ahooks"
-import {getRemoteValue, setRemoteValue} from "../../utils/kv"
+import {getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -559,10 +559,10 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
             const etcHosts = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config)
             const advancedConfigShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
             const resNumlimit = await getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit)
-            const repeatTimes = await getRemoteValue(FuzzerRemoteGV.FuzzerRepeatTimes)
-            const concurrent = await getRemoteValue(FuzzerRemoteGV.FuzzerConcurrent)
-            const minDelaySeconds = await getRemoteValue(FuzzerRemoteGV.FuzzerMinDelaySeconds)
-            const maxDelaySeconds = await getRemoteValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds)
+            const repeatTimes = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes)
+            const concurrent = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent)
+            const minDelaySeconds = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds)
+            const maxDelaySeconds = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds)
 
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
@@ -983,10 +983,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
-        setRemoteValue(FuzzerRemoteGV.FuzzerRepeatTimes, JSON.stringify(advancedConfigValue.repeatTimes))
-        setRemoteValue(FuzzerRemoteGV.FuzzerConcurrent, JSON.stringify(advancedConfigValue.concurrent))
-        setRemoteValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, JSON.stringify(advancedConfigValue.minDelaySeconds))
-        setRemoteValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, JSON.stringify(advancedConfigValue.maxDelaySeconds))
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes, JSON.stringify(advancedConfigValue.repeatTimes))
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent, JSON.stringify(advancedConfigValue.concurrent))
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, JSON.stringify(advancedConfigValue.minDelaySeconds))
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, JSON.stringify(advancedConfigValue.maxDelaySeconds))
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
 
         if (retryRef.current) {
