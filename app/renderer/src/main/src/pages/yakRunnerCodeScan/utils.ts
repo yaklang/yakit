@@ -1,5 +1,7 @@
 import {info, yakitNotify} from "@/utils/notification"
 import {
+    DeleteSyntaxFlowResultRequest,
+    DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
     QuerySyntaxFlowResultResponse,
     QuerySyntaxFlowRuleGroupRequest,
@@ -115,6 +117,26 @@ export const apiFetchQuerySyntaxFlowResult: (
             .catch((e) => {
                 reject(e)
                 yakitNotify("error", "获取审计结果：" + e)
+            })
+    })
+}
+
+/** 删除审计结果 */
+export const apiDeleteQuerySyntaxFlowResult: (
+    params: DeleteSyntaxFlowResultRequest
+) => Promise<DeleteSyntaxFlowResultResponse> = (params) => {
+    return new Promise((resolve, reject) => {
+        const queryParams: DeleteSyntaxFlowResultRequest = {
+            ...params
+        }
+        ipcRenderer
+            .invoke("DeleteSyntaxFlowResult", queryParams)
+            .then((res: DeleteSyntaxFlowResultResponse) => {
+                resolve(res)
+            })
+            .catch((e) => {
+                reject(e)
+                yakitNotify("error", "删除审计结果：" + e)
             })
     })
 }

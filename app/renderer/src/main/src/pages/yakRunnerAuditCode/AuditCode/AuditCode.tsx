@@ -47,7 +47,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {failed, warn, yakitNotify} from "@/utils/notification"
+import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
@@ -89,8 +89,10 @@ import {QuestionMarkCircleIcon, TerminalIcon, TrashIcon} from "@/assets/newIcon"
 import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
-import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
+import {apiDeleteQuerySyntaxFlowResult, apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {
+    DeleteSyntaxFlowResultRequest,
+    DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
     QuerySyntaxFlowResultResponse,
     SyntaxFlowResult
@@ -115,6 +117,7 @@ import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -408,6 +411,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
     const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const [removeVisible, setRemoveVisible] = useState<boolean>(false)
     /** 子组件方法传递给父组件 */
     const auditHistoryListRef = useRef<AuditHistoryListRefProps>(null)
     // 已审计的参数Query用于加载更多时使用
@@ -797,6 +801,18 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
+    const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
+        Filter: {
+            TaskIDs: [],
+            ResultIDs: [],
+            RuleNames: [],
+            ProgramNames: [],
+            Keyword: "",
+            OnlyRisk: false
+        },
+        Pagination: genDefaultPagination(20)
+    })
+
     return (
         <YakitSpin spinning={loading}>
             <div className={styles["audit-code"]}>
@@ -843,23 +859,26 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             auditHistoryListRef.current?.onRefresh()
                                         }}
                                     />
-                                    {/* <YakitDropdownMenu
+                                    <YakitDropdownMenu
                                         menu={{
                                             data: [
                                                 {
                                                     key: "deleteAll",
-                                                    label: "删除全部"
+                                                    label: "删除历史及漏洞"
                                                 },
                                                 {
                                                     key: "deleteSome",
-                                                    label: "仅删除无漏洞数据"
+                                                    label: "仅删除无漏洞数据",
+                                                    disabled: query.Filter.OnlyRisk
                                                 }
                                             ],
                                             onClick: ({key}) => {
                                                 switch (key) {
                                                     case "deleteAll":
+                                                        setRemoveVisible(true)
                                                         break
                                                     case "deleteSome":
+                                                        auditHistoryListRef.current?.onDeleteAuditHistory(false)
                                                         break
                                                     default:
                                                         break
@@ -877,7 +896,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             colors='danger'
                                             icon={<DeleteOutlined />}
                                         />
-                                    </YakitDropdownMenu> */}
+                                    </YakitDropdownMenu>
                                 </div>
                             )}
                         </>
@@ -918,8 +937,20 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         setAuditType={setAuditType}
                         onAuditRuleSubmitFun={onAuditRuleSubmitFun}
                         onOpenEditorDetails={onOpenEditorDetails}
+                        query={query}
+                        setQuery={setQuery}
                     />
                 )}
+                <YakitHint
+                    visible={removeVisible}
+                    title='删除历史及漏洞'
+                    content='会删除审计历史及相关漏洞数据，确认删除吗'
+                    onOk={() => {
+                        auditHistoryListRef.current?.onDeleteAuditHistory(true)
+                        setRemoveVisible(false)
+                    }}
+                    onCancel={() => setRemoveVisible(false)}
+                />
             </div>
         </YakitSpin>
     )
@@ -928,19 +959,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
 // 审计历史
 export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
     forwardRef((props, ref) => {
-        const {onOpenEditorDetails, onAuditRuleSubmitFun, setAuditType} = props
+        const {onOpenEditorDetails, onAuditRuleSubmitFun, setAuditType, query, setQuery} = props
         const {projectName} = useStore()
-        const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
-            Filter: {
-                TaskIDs: [],
-                ResultIDs: [],
-                RuleNames: [],
-                ProgramNames: [],
-                Keyword: "",
-                OnlyRisk: false,
-            },
-            Pagination: genDefaultPagination(20)
-        })
+
         const [loading, setLoading] = useState<boolean>(false)
         const [hasMore, setHasMore] = useState<boolean>(false)
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -962,6 +983,9 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 onRefresh: () => {
                     setIsRefresh(!isRefresh)
                     update(1)
+                },
+                onDeleteAuditHistory: (v) => {
+                    onDelete(v)
                 }
             }),
             []
@@ -986,7 +1010,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 },
                 Pagination: paginationProps
             }
-            
+
             const isInit = page === 1
             apiFetchQuerySyntaxFlowResult(finalParams)
                 .then((res: QuerySyntaxFlowResultResponse) => {
@@ -1019,6 +1043,29 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 .catch(() => {})
         })
 
+        const onDelete = useMemoizedFn((DeleteContainRisk: boolean) => {
+            setLoading(true)
+            const deleteParams: DeleteSyntaxFlowResultRequest = {
+                ...query,
+                DeleteContainRisk,
+                DeleteAll: true,
+                Filter: {
+                    ...query.Filter,
+                    ProgramNames: [projectName || ""]
+                }
+            }
+            // console.log("deleteParams---", deleteParams)
+
+            apiDeleteQuerySyntaxFlowResult(deleteParams)
+                .then((rsp: DeleteSyntaxFlowResultResponse) => {
+                    success(`已成功删除`)
+                    update(1)
+                })
+                .finally(() => {
+                    setLoading(false)
+                })
+                .catch(() => {})
+        })
         return (
             <div className={styles["audit-history-list"]}>
                 <div className={styles["header"]}>
@@ -1050,14 +1097,14 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                                     Kind: value
                                 }
                             })
-                            setTimeout(()=>{
+                            setTimeout(() => {
                                 update(1)
-                            },200)
+                            }, 200)
                         }}
                         size='small'
                         wrapperStyle={{flex: 2}}
                         mode='multiple'
-                        maxTagCount= 'responsive'
+                        maxTagCount='responsive'
                         placeholder='请选择任务类型'
                     >
                         <YakitSelect.Option value='query'>手动审计</YakitSelect.Option>
@@ -1065,7 +1112,25 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                         <YakitSelect.Option value='debug'>规则调试</YakitSelect.Option>
                     </YakitSelect>
                 </div>
-
+                <div className={styles["onlyRisk-box"]}>
+                    <YakitCheckbox
+                        value={query.Filter.OnlyRisk}
+                        onChange={(e) => {
+                            setQuery({
+                                ...query,
+                                Filter: {
+                                    ...query.Filter,
+                                    OnlyRisk: e.target.checked
+                                }
+                            })
+                            setTimeout(() => {
+                                update(1)
+                            }, 200)
+                        }}
+                    >
+                        <span style={{fontSize: 12}}>风险数大于0</span>
+                    </YakitCheckbox>
+                </div>
                 <div className={styles["audit-history-list-container"]}>
                     <RollingLoadList<SyntaxFlowResult>
                         loading={loading}

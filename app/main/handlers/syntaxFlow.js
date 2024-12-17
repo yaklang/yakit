@@ -96,6 +96,22 @@ module.exports = (win, getClient) => {
         return await asyncQuerySyntaxFlowResult(params)
     })
 
+    const asyncDeleteSyntaxFlowResult = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSyntaxFlowResult(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除审计结果
+    ipcMain.handle("DeleteSyntaxFlowResult", async (e, params) => {
+        return await asyncDeleteSyntaxFlowResult(params)
+    })
+
     const asyncQuerySSAPrograms = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QuerySSAPrograms(params, (err, data) => {

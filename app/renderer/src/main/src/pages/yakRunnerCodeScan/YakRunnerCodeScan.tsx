@@ -695,6 +695,10 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         onSetSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
                         pageInfo={pageInfo}
                         pageId={pageId}
+                        pauseLoading={pauseLoading}
+                        setPauseLoading={setPauseLoading}
+                        continueLoading={continueLoading}
+                        setContinueLoading={setContinueLoading}
                     />
                 </div>
             </div>

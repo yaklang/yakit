@@ -163,6 +163,7 @@ export interface ProjectManagerEditFormProps {
 
 export interface AuditHistoryListRefProps {
     onRefresh: () => void
+    onDeleteAuditHistory: (v:boolean) => void
 }
 
 export interface AuditHistoryListProps {
@@ -176,4 +177,6 @@ export interface AuditHistoryListProps {
         }[]
     ) => void
     onOpenEditorDetails: (v: ShowItemType) => void
+    query: QuerySyntaxFlowResultRequest
+    setQuery: (v:QuerySyntaxFlowResultRequest) => void
 }
