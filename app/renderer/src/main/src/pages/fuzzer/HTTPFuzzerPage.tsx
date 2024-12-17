@@ -132,7 +132,8 @@ import {
     WEB_FUZZ_HOTPATCH_CODE,
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
     defaultLabel,
-    defaultAdvancedConfigValue
+    defaultAdvancedConfigValue,
+    DefFuzzerConcurrent
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
 import {FuncBtn} from "../plugins/funcTemplate"
@@ -540,6 +541,10 @@ export interface FuzzerCacheDataProps {
     etcHosts: KVPair[]
     advancedConfigShow: AdvancedConfigShowProps | null
     resNumlimit: number
+    repeatTimes: number
+    concurrent: number
+    minDelaySeconds: number
+    maxDelaySeconds: number
 }
 /**获取fuzzer高级配置中得 proxy dnsServers etcHosts resNumlimit*/
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
@@ -550,12 +555,21 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
             const etcHosts = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config)
             const advancedConfigShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
             const resNumlimit = await getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit)
+            const repeatTimes = await getRemoteValue(FuzzerRemoteGV.FuzzerRepeatTimes)
+            const concurrent = await getRemoteValue(FuzzerRemoteGV.FuzzerConcurrent)
+            const minDelaySeconds = await getRemoteValue(FuzzerRemoteGV.FuzzerMinDelaySeconds)
+            const maxDelaySeconds = await getRemoteValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds)
+
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
                 dnsServers: !!dnsServers ? JSON.parse(dnsServers) : [],
                 etcHosts: !!etcHosts ? JSON.parse(etcHosts) : [],
                 advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
-                resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData
+                resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData,
+                repeatTimes: !!repeatTimes ? repeatTimes : 0,
+                concurrent: !!concurrent ? concurrent : DefFuzzerConcurrent,
+                minDelaySeconds: !!minDelaySeconds ? minDelaySeconds : 0,
+                maxDelaySeconds: !!maxDelaySeconds ? maxDelaySeconds : 0
             }
             resolve(value)
         } catch (error) {
@@ -965,6 +979,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
+        setRemoteValue(FuzzerRemoteGV.FuzzerRepeatTimes, JSON.stringify(advancedConfigValue.repeatTimes))
+        setRemoteValue(FuzzerRemoteGV.FuzzerConcurrent, JSON.stringify(advancedConfigValue.concurrent))
+        setRemoteValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, JSON.stringify(advancedConfigValue.minDelaySeconds))
+        setRemoteValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, JSON.stringify(advancedConfigValue.maxDelaySeconds))
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
 
         if (retryRef.current) {

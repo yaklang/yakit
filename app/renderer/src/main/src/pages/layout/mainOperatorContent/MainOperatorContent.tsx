@@ -114,7 +114,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerConcurrent, DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     defPluginBatchExecuteExtraFormValue,
     defaultPluginBatchExecutorPageInfo
@@ -819,7 +819,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dnsServers: [],
                 etcHosts: [],
                 advancedConfigShow: null,
-                resNumlimit: DefFuzzerTableMaxData
+                resNumlimit: DefFuzzerTableMaxData,
+                repeatTimes: 0,
+                concurrent: DefFuzzerConcurrent,
+                minDelaySeconds: 0,
+                maxDelaySeconds: 0,
             }
             let newAdvancedConfigValue = {
                 ...advancedConfigValue
@@ -829,6 +833,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.dnsServers = cacheData.dnsServers
                 newAdvancedConfigValue.etcHosts = cacheData.etcHosts
                 newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
+                newAdvancedConfigValue.repeatTimes = cacheData.repeatTimes
+                newAdvancedConfigValue.concurrent = cacheData.concurrent
+                newAdvancedConfigValue.minDelaySeconds = cacheData.minDelaySeconds
+                newAdvancedConfigValue.maxDelaySeconds = cacheData.maxDelaySeconds
             }
             let newAdvancedConfigShow = cacheData.advancedConfigShow
             let newIsHttps = !!isHttps
@@ -1635,13 +1643,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dnsServers: [],
                 etcHosts: [],
                 advancedConfigShow: null,
-                resNumlimit: DefFuzzerTableMaxData
+                resNumlimit: DefFuzzerTableMaxData,
+                repeatTimes: 0,
+                concurrent: DefFuzzerConcurrent,
+                minDelaySeconds: 0,
+                maxDelaySeconds: 0,
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
                 dnsServers: cacheData.dnsServers,
                 etcHosts: cacheData.etcHosts,
-                resNumlimit: cacheData.resNumlimit
+                resNumlimit: cacheData.resNumlimit,
+                repeatTimes: cacheData.repeatTimes,
+                concurrent: cacheData.concurrent,
+                minDelaySeconds: cacheData.minDelaySeconds,
+                maxDelaySeconds: cacheData.maxDelaySeconds,
             }
             clearAllData()
             // 菜单在代码内的名字

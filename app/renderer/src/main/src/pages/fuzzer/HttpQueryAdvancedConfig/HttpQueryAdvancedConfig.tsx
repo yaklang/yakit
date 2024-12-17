@@ -55,6 +55,7 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
+import { DefFuzzerConcurrent } from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -666,7 +667,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             const restValue = {
-                                                concurrent: 20,
+                                                concurrent: DefFuzzerConcurrent,
                                                 minDelaySeconds: undefined,
                                                 maxDelaySeconds: undefined,
                                                 repeatTimes: 0

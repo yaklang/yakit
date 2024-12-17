@@ -15,5 +15,9 @@ export enum FuzzerRemoteGV {
     /**@name WebFuzzer高级配置内容的显/隐 */
     WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show",
     /**@name WebFuzzer最大响应数量限制 */
-    FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit"
+    FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
+    FuzzerRepeatTimes = "Fuzzer_Repeat_Times",
+    FuzzerConcurrent = "Fuzzer_Concurrent",
+    FuzzerMinDelaySeconds = "Fuzzer_MinDelaySeconds",
+    FuzzerMaxDelaySeconds = "Fuzzer_MaxDelaySeconds",
 }

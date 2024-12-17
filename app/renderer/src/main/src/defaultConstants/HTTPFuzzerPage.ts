@@ -20,6 +20,8 @@ export const WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_C
 
 // WebFuzzer表格默认显示数量
 export const DefFuzzerTableMaxData = 2000
+// 发包配置默认显示数量
+export const DefFuzzerConcurrent = 20
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
     config: true,
@@ -43,7 +45,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置
-    concurrent: 20,
+    concurrent: DefFuzzerConcurrent,
     proxy: [],
     minDelaySeconds: 0,
     maxDelaySeconds: 0,
