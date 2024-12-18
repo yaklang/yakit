@@ -23,9 +23,8 @@ export const openDirectory: APINoRequestFunc<DirectoryProps> = () => {
     })
 }
 
-export interface OrdinaryQuery {
+export interface UserSearchQuery {
     keywords: string
-    role?: string
 }
 
 /**
@@ -33,19 +32,19 @@ export interface OrdinaryQuery {
  * @param query
  * @returns
  */
-export const apiGetUserOrdinary: APIFunc<OrdinaryQuery, API.UserOrdinaryResponse> = (query) => {
+export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<OrdinaryQuery, API.UserOrdinaryResponse>({
+            NetWorkApi<UserSearchQuery, API.UserOrdinaryResponse>({
                 method: "get",
-                url: "user/ordinary",
+                url: "user/search",
                 params: {
                     ...query
                 }
             })
                 .then(resolve)
                 .catch((err) => {
-                    yakitNotify("error", "获取普通用户失败：" + err)
+                    yakitNotify("error", "apiGetUserSearch获取普通用户失败:" + err)
                     reject(err)
                 })
         } catch (error) {
