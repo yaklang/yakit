@@ -12,7 +12,7 @@ import {
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
-import {apiGetUserOrdinary, apiSetNotepadPermission} from "./utils"
+import {apiGetUserSearch, apiSetNotepadPermission} from "./utils"
 import {API} from "@/services/swagger/resposeType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -46,7 +46,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const [shareText, setShareText] = useState<string>("")
     const [userList, setUserList] = useState<API.UserList[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
-    const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo.collaborator || [])
+    const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo?.collaborator || [])
 
     const onClear = useMemoizedFn(() => {
         setUserList([])
@@ -60,7 +60,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                 return
             }
             setLoading(true)
-            apiGetUserOrdinary({keywords: value})
+            apiGetUserSearch({keywords: value})
                 .then((res) => {
                     setUserList([...(res.data || [])])
                 })
@@ -81,7 +81,8 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
         const param: API.PostNotepadPermissionRequest = {
             notepadHash: notepadInfo.hash,
             userId: selectUserList.map((ele) => ele.id),
-            permissionType: selectAuth
+            permissionType: selectAuth,
+            description: shareText
         }
         setConfirmLoading(true)
         apiSetNotepadPermission(param)
@@ -128,7 +129,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
         // 查询该笔记本详情
         apiGetNotepadDetail(notepadInfo.hash)
             .then((res) => {
-                setCollaborators(res.collaborator)
+                setCollaborators(res.collaborator || [])
             })
             .finally(() => {
                 setTimeout(() => {
@@ -136,6 +137,12 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                     setManageVisible(true)
                 }, 500)
             })
+    })
+    const onCloseManage = useMemoizedFn(() => {
+        setShareText("")
+        setSearchValue("")
+        setSelectUserList([])
+        setManageVisible(false)
     })
     const options = useCreation(() => {
         return userList
@@ -154,7 +161,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
 
     const collaboratorList: NotepadCollaboratorInfoProps[] = useCreation(() => {
         const newCollaborator: NotepadCollaboratorInfoProps[] =
-            collaborators.map((ele) => ({
+            collaborators?.map((ele) => ({
                 ...ele,
                 imgNode: judgeAvatar(
                     {companyHeadImg: ele.head_img, companyName: ele.user_name},
@@ -162,30 +169,26 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                     randomAvatarColor()
                 )
             })) || []
-        const userRole: NotepadCollaboratorInfoProps[] = [
+        const authorUser: NotepadCollaboratorInfoProps[] = [
             {
-                user_id: userInfo.user_id || 0,
-                head_img: userInfo.companyHeadImg || "",
-                user_name: userInfo.companyName || "",
+                user_id: notepadInfo.notepadUserId || 0,
+                head_img: notepadInfo.headImg || "",
+                user_name: notepadInfo.userName || "",
                 imgNode: judgeAvatar(
-                    {companyHeadImg: userInfo.companyHeadImg, companyName: userInfo.companyName},
+                    {companyHeadImg: notepadInfo.headImg, companyName: notepadInfo.userName},
                     28,
                     randomAvatarColor()
                 ),
                 role: ""
             }
         ]
-        return userRole.concat(newCollaborator)
-    }, [collaborators, userInfo.user_id, userInfo.companyName, userInfo.companyHeadImg])
+        return authorUser.concat(newCollaborator)
+    }, [collaborators, notepadInfo.notepadUserId, notepadInfo.headImg, notepadInfo.userName])
     return manageVisible ? (
         <NotepadPopoverModal
             title={
                 <div className={styles["manage-title"]}>
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlineChevronleftIcon />}
-                        onClick={() => setManageVisible(false)}
-                    />
+                    <YakitButton type='text2' icon={<OutlineChevronleftIcon />} onClick={onCloseManage} />
                     <span className={styles["manage-title-text"]}>管理协作者</span>
                 </div>
             }
@@ -195,7 +198,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                     <YakitSpin spinning={collaboratorLoading}>
                         <div className={styles["collaborator-list"]}>
                             {collaboratorList?.map((item, index) =>
-                                item.user_id === userInfo.user_id ? (
+                                item.user_id === notepadInfo.notepadUserId ? (
                                     <div
                                         key={item.user_id}
                                         className={classNames(styles["manage-item"], styles["manage-item-author"])}
@@ -281,6 +284,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                     setShareText(e.target.value)
                                 }}
                                 status={(!shareText && "error") || ""}
+                                maxLength={100}
                             />
                         </div>
                     )}
