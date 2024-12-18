@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from "react"
 import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {YakEditor} from "@/utils/editors"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {useDebounceEffect, useGetState, useMap} from "ahooks"
 import {editor} from "monaco-editor"
@@ -17,6 +16,7 @@ import {RegexpInput} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import styles from "./extractor.module.scss"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
 export interface WebFuzzerResponseExtractorProp {
     responses: FuzzerResponse[]
@@ -190,6 +190,9 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                 type={"primary"}
                                 size={"small"}
                                 onClick={() => {
+                                    const t = randomString(46)
+                                    setToken(t)
+                                    setExtracted([])
                                     setLoading(true)
                                     responses.forEach((i, number) => {
                                         ipcRenderer
@@ -203,11 +206,11 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                                     Data: i.ResponseRaw,
                                                     Token: i.UUID
                                                 },
-                                                getToken()
+                                                t
                                             )
                                             .finally(() => {
                                                 if (number === responses.length - 1) {
-                                                    ipcRenderer.invoke("ExtractData", {End: true}, getToken())
+                                                    ipcRenderer.invoke("ExtractData", {End: true}, t)
                                                 }
                                             })
                                     })
@@ -274,7 +277,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                 <div style={{height: 400}}>
                     <ResizeBox
                         firstNode={
-                            <YakEditor
+                            <YakitEditor
                                 editorDidMount={(e) => {
                                     setEditor(e)
                                 }}
@@ -346,11 +349,10 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                                 }
                                 bodyStyle={{margin: 0, padding: 0}}
                             >
-                                <YakEditor
+                                <YakitEditor
                                     readOnly={true}
                                     noMiniMap={true}
                                     noLineNumber={true}
-                                    triggerId={extracted}
                                     type={"html"}
                                     value={extracted.join("\n")}
                                 />
