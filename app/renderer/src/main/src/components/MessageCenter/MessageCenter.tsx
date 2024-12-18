@@ -3,7 +3,7 @@ import {useGetState, useInterval, useMemoizedFn, useSize, useThrottleFn, useVirt
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./MessageCenter.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {Resizable} from "re-resizable"
@@ -28,6 +28,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
 import IconNoLoginMessage from "@/assets/no_login_message.png"
 import LoginMessage from "@/assets/login_message.png"
+import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -191,6 +192,8 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                         </span>
                     </>
                 )
+            case "notepad":
+                return <>{data.description}</>
             default:
                 return <></>
         }
@@ -256,6 +259,14 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                                     } as PluginHubPageInfoProps
                                 })
                             )
+                            break
+                        // 跳转到笔记本编辑页面
+                        case "notepad":
+                            if (!data.notepadHash) {
+                                yakitNotify("error", "未找到笔记本信息")
+                                break
+                            }
+                            toEditNotepad({notepadHash: data.notepadHash})
                             break
                         // 其余跳转到插件日志
                         default:
