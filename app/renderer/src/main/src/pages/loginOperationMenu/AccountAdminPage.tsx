@@ -836,9 +836,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
         return head_img && !!head_img.length ? (
             <Avatar size={20} src={head_img} />
         ) : (
-            <Avatar size={20} style={{backgroundColor: "var(--yakit-primary-6)"}}>
-                {user_name.slice(0, 1)}
-            </Avatar>
+            <span className={styles["userNameAvatar"]}>{user_name.slice(0, 1)}</span>
         )
     }
     const columns: ColumnsTypeProps[] = [
@@ -846,7 +844,7 @@ const AccountList: React.FC<AccountListProps> = (props) => {
             title: "用户名",
             dataKey: "user_name",
             render: (text, record) => (
-                <div>
+                <div className={styles['userNameWrapper']}>
                     {judgeAvatar(record)}
                     <span style={{marginLeft: 10}}>{text}</span>
                 </div>
