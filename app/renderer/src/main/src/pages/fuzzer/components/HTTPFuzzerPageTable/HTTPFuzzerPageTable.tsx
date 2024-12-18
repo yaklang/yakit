@@ -703,7 +703,8 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
                             const payloadsString = (record.Payloads || []).join("")
-                            keyWordIsPush = (responseString + payloadsString).includes(query.keyWord)
+                            const extractedResultsString = (record.ExtractedResults || []).map(item => `${item.Key}${item.Value}`).join("")
+                            keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(query.keyWord)
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
