@@ -14,6 +14,7 @@ export interface NotepadCollaboratorInfoProps extends API.CollaboratorInfo {
 }
 
 export interface NotepadRoleProps {
+    adminPermission: "admin"
     viewPermission: "view"
     editPermission: "edit"
     removePermission: ""
