@@ -3,7 +3,7 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {ExecResult, YakScript, GroupCount} from "@/pages/invoker/schema"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {CodeScanPageInfoProps} from "@/store/pageInfo"
-import {SyntaxFlowGroup, SyntaxFlowRule, SyntaxFlowRuleFilter} from "../ruleManagement/RuleManagementType"
+import {SyntaxFlowGroup, SyntaxFlowRule, SyntaxFlowRuleFilter, SyntaxFlowRuleInput} from "../ruleManagement/RuleManagementType"
 
 export interface YakRunnerCodeScanProps {
     pageId: string
@@ -83,6 +83,10 @@ export interface SyntaxFlowScanRequest {
     ControlMode: SyntaxFlowScanModeType
     Filter?: SyntaxFlowRuleFilter
     ProgramName: string[]
+
+    ResumeTaskId?: string
+
+    RuleInput?: SyntaxFlowRuleInput
 }
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"

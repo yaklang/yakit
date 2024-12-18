@@ -1,4 +1,6 @@
+import React from "react"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {SyntaxFlowScanRequest} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 
 export interface RuleManagementProps {}
 
@@ -29,6 +31,22 @@ export interface UpdateRuleToGroupProps {
     filters: SyntaxFlowRuleFilter
     /** 完成操作后触发规则组数据刷新 */
     callback: () => void
+}
+
+export interface RuleContentDebugResultRefProps {
+    onStart: (request: SyntaxFlowScanRequest) => Promise<undefined>
+    onPause: () => Promise<undefined>
+    onContinue: () => void
+    onStop: () => void
+}
+export interface RuleContentDebugResultProps {
+    ref?: React.ForwardedRef<RuleContentDebugResultRefProps>
+    /** 当前执行的状态 */
+    executeStatus?: SyntaxFlowScanExecuteState
+    setExecuteStatus?: (value: SyntaxFlowScanExecuteState) => void
+    /** 执行进度条 */
+    progress?: number
+    setProgress?: (value: number) => void
 }
 
 /** ---------- 规则组相关接口定义 Start ---------- */

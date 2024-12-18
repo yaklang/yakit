@@ -1,4 +1,4 @@
-import {memo, useEffect, useMemo, useRef, useState} from "react"
+import {forwardRef, memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     EditRuleDrawerProps,
     QuerySyntaxFlowRuleGroupRequest,
@@ -8,9 +8,10 @@ import {
     SyntaxFlowRuleInput,
     UpdateRuleToGroupProps,
     SyntaxFlowRuleFilter,
-    UpdateSyntaxFlowRuleAndGroupRequest
+    UpdateSyntaxFlowRuleAndGroupRequest,
+    RuleContentDebugResultProps
 } from "./RuleManagementType"
-import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useSize, useVirtualList} from "ahooks"
+import {useControllableValue, useDebounceEffect, useDebounceFn, useMemoizedFn, useSize, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouduploadIcon,
@@ -43,21 +44,9 @@ import {
     grpcUpdateRuleToGroup
 } from "./api"
 import cloneDeep from "lodash/cloneDeep"
-import {v4 as uuidv4} from "uuid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {CodeScanStreamInfo} from "../yakRunnerCodeScan/YakRunnerCodeScan"
-import {
-    SyntaxFlowScanExecuteState,
-    SyntaxFlowScanRequest,
-    SyntaxFlowScanResponse
-} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 import {yakitNotify} from "@/utils/notification"
-import {apiSyntaxFlowScan} from "../yakRunnerCodeScan/utils"
-import {randomString} from "@/utils/randomUtil"
-import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -67,6 +56,22 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
+import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
+import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {
+    SyntaxFlowScanExecuteState,
+    SyntaxFlowScanRequest,
+    SyntaxFlowScanResponse
+} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
+import {randomString} from "@/utils/randomUtil"
+import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {CodeScanStreamInfo} from "../yakRunnerCodeScan/YakRunnerCodeScan"
+import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {v4 as uuidv4} from "uuid"
+import useRuleDebug from "./useRuleDebug"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+
+const {ipcRenderer} = window.require("electron")
 
 /** @name 规则组列表组件 */
 export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props) => {
@@ -510,6 +515,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     })
 
     const isEdit = useMemo(() => !!info, [info])
+    // 是否为内置规则
     const isBuildInRule = useMemo(() => {
         if (!info) return false
         return !!info.IsBuildInRule
@@ -518,6 +524,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     useEffect(() => {
         if (visible) {
             handleSearchGroup()
+            handleFetchProject()
             if (info) {
                 setContent(info.Content)
                 form &&
@@ -532,6 +539,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 setExpand(true)
                 setContent(DefaultRuleContent)
                 setGroups([])
+                setProject([])
                 if (form) form.resetFields()
             }
         }
@@ -609,7 +617,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                     yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
                     return
                 }
-                if (!data.RuleName || !data.Language || data.GroupNames.length === 0) {
+                if (!data.RuleName || !data.Language) {
                     yakitNotify("error", "请填写完整规则必须信息")
                     return
                 }
@@ -621,191 +629,125 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     })
     /** ---------- 基础信息配置 End ---------- */
 
-    /** ---------- 规则源码 Start ---------- */
+    // 规则源码
     const [content, setContent] = useState<string>(DefaultRuleContent)
-    /** ---------- 规则源码 End ---------- */
 
-    /** ---------- 规则代码|调试 Start ---------- */
+    /** ---------- 规则代码调试 Start ---------- */
     const [activeTab, setActiveTab] = useState<"code" | "debug">("code")
 
     const [debugForm] = Form.useForm()
-    const token = useRef<string>(randomString(20))
+    // 项目列表
+    const [project, setProject] = useState<{label: string; value: string}[]>([])
+    const projectLoading = useRef<boolean>(false)
+    const handleFetchProject = useMemoizedFn((search?: string) => {
+        if (projectLoading.current) return
 
-    const [pauseLoading, setPauseLoading] = useState<boolean>(false)
-    const [continueLoading, setContinueLoading] = useState<boolean>(false)
-    const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
-    // logs
-    let messages = useRef<StreamResult.Message[]>([])
-
-    /** 放入日志队列 */
-    const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
-        messages.current.unshift({...log, content: {...log.content, id: uuidv4()}})
-        // 只缓存 100 条结果（日志类型 + 数据类型）
-        if (messages.current.length > 100) {
-            messages.current.pop()
+        const request = {
+            Filter: {Keyword: search || ""},
+            Pagination: genDefaultPagination(100)
         }
-    })
-    // card
-    let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
-        new Map<string, HoldGRPCStreamProps.CacheCard>()
-    )
-
-    /** 判断是否为无效数据 */
-    const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
-        try {
-            const check = JSON.parse(stream.data)
-            if (check === "null" || !check || check === "undefined") return false
-            return check
-        } catch (e) {
-            return false
-        }
-    })
-
-    useEffect(() => {
-        // let id = setInterval(() => {
-        //     // logs
-        //     const logs: StreamResult.Log[] = messages.current
-        //         .filter((i) => i.type === "log")
-        //         .map((i) => i.content as StreamResult.Log)
-        //         .filter((i) => i.data !== "null")
-        //     setStreamInfo({
-        //         cardState: convertCardInfo(cardKVPair.current),
-        //         logState: logs
-        //     })
-        // }, 200)
-        // ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
-        //     if (res) {
-        //         const data = res.ExecResult
-        //         if (!!res.Status) {
-        //             switch (res.Status) {
-        //                 case "done":
-        //                     setExecuteStatus("finished")
-        //                     break
-        //                 case "error":
-        //                     setExecuteStatus("error")
-        //                     break
-        //                 case "executing":
-        //                     setPauseLoading(false)
-        //                     setContinueLoading(false)
-        //                     setExecuteStatus("process")
-        //                     break
-        //                 case "paused":
-        //                     setExecuteStatus("paused")
-        //                     break
-        //                 default:
-        //                     break
-        //             }
-        //         }
-        //         if (!!data?.RuntimeID) {
-        //             setRuntimeId(data.RuntimeID)
-        //         }
-        //         if (data && data.IsMessage) {
-        //             try {
-        //                 let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
-        //                 if (obj.type === "progress") {
-        //                     setProgressList([obj.content] as StreamResult.Progress[])
-        //                     return
-        //                 }
-        //                 // feature-status-card-data 卡片展示
-        //                 const logData = obj.content as StreamResult.Log
-        //                 // feature-status-card-data 卡片展示
-        //                 if (obj.type === "log" && logData.level === "feature-status-card-data") {
-        //                     try {
-        //                         const checkInfo = checkStreamValidity(logData)
-        //                         if (!checkInfo) return
-        //                         const obj: StreamResult.Card = checkInfo
-        //                         const {id, data, tags} = obj
-        //                         const {timestamp} = logData
-        //                         const originData = cardKVPair.current.get(id)
-        //                         if (originData && originData.Timestamp > timestamp) {
-        //                             return
-        //                         }
-        //                         cardKVPair.current.set(id, {
-        //                             Id: id,
-        //                             Data: data,
-        //                             Timestamp: timestamp,
-        //                             Tags: Array.isArray(tags) ? tags : []
-        //                         })
-        //                     } catch (e) {}
-        //                     return
-        //                 }
-        //                 pushLogs(obj)
-        //             } catch (error) {}
-        //         }
-        //     }
-        // })
-        // ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-        //     setTimeout(() => {
-        //         setExecuteStatus("error")
-        //         setPauseLoading(false)
-        //         setContinueLoading(false)
-        //     }, 200)
-        //     yakitNotify("error", `[Mod] flow-scan error: ${error}`)
-        // })
-        // ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-        //     yakitNotify("info", "[SyntaxFlowScan] finished")
-        //     setTimeout(() => {
-        //         setPauseLoading(false)
-        //         setContinueLoading(false)
-        //     }, 200)
-        // })
-        // return () => {
-        //     ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
-        //     ipcRenderer.removeAllListeners(`${token}-data`)
-        //     ipcRenderer.removeAllListeners(`${token}-error`)
-        //     ipcRenderer.removeAllListeners(`${token}-end`)
-        // }
-        // return () => clearInterval(id)
-    }, [])
-
-    const handleStartExecute = useMemoizedFn(() => {
-        if (!debugForm) {
-            yakitNotify("error", "未获取到项目文件")
-            return
-        }
-        debugForm
-            .validateFields()
-            .then((values) => {
-                const {project} = values
-                const params: SyntaxFlowScanRequest = {
-                    ControlMode: "start",
-                    ProgramName: [project],
-                    Filter: {
-                        RuleNames: [],
-                        Language: [],
-                        GroupNames: [],
-                        Severity: [],
-                        Purpose: [],
-                        Tag: [],
-                        Keyword: ""
-                    }
+        projectLoading.current = true
+        ipcRenderer
+            .invoke("QuerySSAPrograms", request)
+            .then((res: QueryGeneralResponse<SSAProgramResponse>) => {
+                if (!res || !Array.isArray(res.Data)) {
+                    return
                 }
-                apiSyntaxFlowScan(params, token.current).then(() => {
-                    setExecuteStatus("process")
-                })
+                setProject(
+                    res.Data.map((item) => {
+                        return {label: item.Name, value: item.Name}
+                    })
+                )
             })
             .catch(() => {})
+            .finally(() => {
+                setTimeout(() => {
+                    projectLoading.current = false
+                }, 200)
+            })
     })
-    /** ---------- 规则代码|调试 End ---------- */
+    const handleSearchProject = useDebounceFn(
+        (val?: string) => {
+            handleFetchProject(val)
+        },
+        {wait: 300}
+    ).run
 
-    /** ---------- 调试逻辑 Start ---------- */
-    const [runtimeId, setRuntimeId] = useState<string>("")
-    const [executeStatus, setExecuteStatus] = useState<SyntaxFlowScanExecuteState>("default")
-    const isExecuting = useCreation(() => {
+    const token = useRef<string>(randomString(20))
+    const [{executeStatus, progress, runtimeId, streamInfo}, {onStart, onPause, onContinue, onStop, onReset}] =
+        useRuleDebug({
+            token: token.current
+        })
+
+    // 是否正在执行中
+    const isExecuting = useMemo(() => {
         if (executeStatus === "process") return true
         if (executeStatus === "paused") return true
         return false
     }, [executeStatus])
-
-    const isShowResult = useCreation(() => {
+    // 是否显示执行结果
+    const isShowResult = useMemo(() => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
 
-    const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
-        cardState: [],
-        logState: []
+    const getTabsState = useMemo(() => {
+        const tabsState = [
+            {tabName: "漏洞与风险", type: "risk"},
+            {tabName: "日志", type: "log"},
+            {tabName: "Console", type: "console"}
+        ]
+        if (runtimeId) {
+            return [{tabName: "审计结果", type: "result"}, ...tabsState]
+        }
+        return tabsState
+    }, [runtimeId])
+
+    const handleExecute = useMemoizedFn(() => {
+        form.validateFields()
+            .then(() => {
+                const data = handleGetFormData()
+                if (!data) {
+                    yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
+                    return
+                }
+                if (!data.RuleName || !data.Language) {
+                    yakitNotify("error", "请填写完整规则必须信息")
+                    return
+                }
+
+                debugForm
+                    .validateFields()
+                    .then((values) => {
+                        const {project} = values || {}
+                        if (!project) {
+                            return
+                        }
+                        setExpand(false)
+                        onStart({
+                            ControlMode: "start",
+                            ProgramName: [project],
+                            RuleInput: data
+                        })
+                    })
+                    .catch(() => {})
+            })
+            .catch(() => {
+                if (!expand) handleSetExpand()
+            })
     })
-    /** ---------- 调试逻辑 End ---------- */
+
+    const handlePause = useMemoizedFn(() => {
+        onPause()
+    })
+
+    const handleContinue = useMemoizedFn(() => {
+        onContinue()
+    })
+
+    const handleStop = useMemoizedFn(() => {
+        onStop()
+    })
+    /** ---------- 规则代码调试 End ---------- */
 
     return (
         <YakitDrawer
@@ -865,12 +807,21 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                             <Form.Item
                                 label={
                                     <>
-                                        所属分组<span className='form-item-required'>*</span>:
+                                        语言<span className='form-item-required'>*</span>:
                                     </>
                                 }
-                                name={"GroupNames"}
-                                rules={[{required: true, message: "分组必填"}]}
+                                name={"Language"}
+                                rules={[{required: true, message: "语言必填"}]}
                             >
+                                <YakitSelect
+                                    allowClear
+                                    size='large'
+                                    disabled={isBuildInRule}
+                                    options={RuleLanguageList}
+                                />
+                            </Form.Item>
+
+                            <Form.Item label={"所属分组"} name={"GroupNames"}>
                                 <YakitSelect
                                     mode='tags'
                                     placeholder='请选择分组'
@@ -884,23 +835,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                     disabled={isBuildInRule}
                                     isShowResize={false}
                                     autoSize={{minRows: 2, maxRows: 4}}
-                                />
-                            </Form.Item>
-
-                            <Form.Item
-                                label={
-                                    <>
-                                        语言<span className='form-item-required'>*</span>:
-                                    </>
-                                }
-                                name={"Language"}
-                                rules={[{required: true, message: "语言必填"}]}
-                            >
-                                <YakitSelect
-                                    allowClear
-                                    size='large'
-                                    disabled={isBuildInRule}
-                                    options={RuleLanguageList}
                                 />
                             </Form.Item>
                         </Form>
@@ -932,76 +866,98 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                             />
                         </div>
 
-                        {false ? (
-                            <YakitButton danger onClick={() => {}}>
-                                停止
-                            </YakitButton>
+                        {isExecuting ? (
+                            <div className={styles["header-extra-btns"]}>
+                                {executeStatus === "paused" ? (
+                                    <YakitButton onClick={handleContinue}>继续</YakitButton>
+                                ) : (
+                                    <YakitButton onClick={handlePause}>暂停</YakitButton>
+                                )}
+                                <YakitButton danger onClick={handleStop}>
+                                    停止
+                                </YakitButton>
+                            </div>
                         ) : (
-                            <YakitButton icon={<SolidPlayIcon />} onClick={() => {}}>
+                            <YakitButton
+                                icon={<SolidPlayIcon />}
+                                onClick={() => {
+                                    console.log(1111)
+                                    handleExecute()
+                                }}
+                            >
                                 执行
                             </YakitButton>
                         )}
                     </div>
 
                     <div className={styles["code-body"]}>
-                        <div
-                            tabIndex={activeTab === "code" ? 1 : -1}
-                            className={classNames(styles["tab-pane-show"], {
-                                [styles["tab-pane-hidden"]]: activeTab !== "code"
-                            })}
-                        >
-                            <div className={styles["tab-pane-code"]}>
-                                <div className={styles["code-editor"]}>
-                                    <YakitEditor
-                                        readOnly={isBuildInRule}
-                                        type={SyntaxFlowMonacoSpec}
-                                        value={content}
-                                        setValue={setContent}
-                                    />
-                                </div>
-
-                                <div className={styles["code-params"]}>
-                                    <div className={styles["params-header"]}>
-                                        <span className={styles["header-title"]}>参数配置</span>
-                                    </div>
-
-                                    <div className={styles["params-container"]}>
-                                        <Form form={debugForm} className={styles["params-form"]}>
-                                            <Form.Item label={"项目名称"} name={"porject"}>
-                                                <YakitSelect />
-                                            </Form.Item>
-                                        </Form>
+                        <div className={styles["code-tab"]}>
+                            <div
+                                tabIndex={activeTab === "code" ? 1 : -1}
+                                className={classNames(styles["tab-pane-show"], {
+                                    [styles["tab-pane-hidden"]]: activeTab !== "code"
+                                })}
+                            >
+                                <div className={styles["tab-pane-code"]}>
+                                    <div className={styles["code-editor"]}>
+                                        <YakitEditor
+                                            readOnly={isBuildInRule}
+                                            type={SyntaxFlowMonacoSpec}
+                                            value={content}
+                                            setValue={setContent}
+                                        />
                                     </div>
                                 </div>
                             </div>
+
+                            <div
+                                tabIndex={activeTab === "debug" ? 1 : -1}
+                                className={classNames(styles["tab-pane-show"], {
+                                    [styles["tab-pane-hidden"]]: activeTab !== "debug"
+                                })}
+                            >
+                                {isShowResult ? (
+                                    <PluginExecuteResult
+                                        streamInfo={{
+                                            progressState: [],
+                                            cardState: streamInfo.cardState,
+                                            tabsState: getTabsState,
+                                            logState: streamInfo.logState,
+                                            tabsInfoState: {},
+                                            riskState: []
+                                        }}
+                                        runtimeId={runtimeId}
+                                        loading={isExecuting}
+                                        defaultActiveKey={undefined}
+                                    />
+                                ) : (
+                                    <div className={styles["tab-pane-empty"]}>
+                                        <YakitEmpty style={{marginTop: 60}} description={"点击【执行】以开始"} />
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div
-                            tabIndex={activeTab === "debug" ? 1 : -1}
-                            className={classNames(styles["tab-pane-show"], {
-                                [styles["tab-pane-hidden"]]: activeTab !== "debug"
-                            })}
-                        >
-                            {isShowResult && (
-                                <PluginExecuteResult
-                                    streamInfo={{
-                                        progressState: [],
-                                        cardState: streamInfo.cardState,
-                                        tabsState: [
-                                            {tabName: "审计结果", type: "result"},
-                                            {tabName: "漏洞与风险", type: "risk"},
-                                            {tabName: "日志", type: "log"},
-                                            {tabName: "Console", type: "console"}
-                                        ],
-                                        logState: streamInfo.logState,
-                                        tabsInfoState: {},
-                                        riskState: []
-                                    }}
-                                    runtimeId={runtimeId}
-                                    loading={isExecuting}
-                                    defaultActiveKey={undefined}
-                                />
-                            )}
+                        <div className={styles["code-params"]}>
+                            <div className={styles["params-header"]}>
+                                <span className={styles["header-title"]}>参数配置</span>
+                            </div>
+
+                            <div className={styles["params-container"]}>
+                                <Form form={debugForm} className={styles["params-form"]}>
+                                    <Form.Item label={"项目名称"} name={"project"}>
+                                        <YakitSelect
+                                            showSearch={true}
+                                            placeholder='请选择项目后调试'
+                                            options={project}
+                                            defaultActiveFirstOption={false}
+                                            filterOption={false}
+                                            notFoundContent='暂无数据'
+                                            onSearch={handleSearchProject}
+                                        />
+                                    </Form.Item>
+                                </Form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1362,3 +1318,144 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
         </div>
     )
 })
+
+/** @name 规则源码调试结果 */
+const RuleContentDebugResult: React.FC<RuleContentDebugResultProps> = memo(
+    forwardRef((props, ref) => {
+        const {} = props
+
+        useImperativeHandle(ref, () => ({
+            onStart: handleStart,
+            onPause: handleStop,
+            onContinue: () => {},
+            onStop: () => {}
+        }))
+
+        /** ---------- 执行结果相关数据 Start ---------- */
+        const token = useRef<string>(randomString(20))
+
+        const [runtimeId, setRuntimeId] = useState<string>("")
+        const getTabsState = useMemo(() => {
+            const tabsState = [
+                {tabName: "漏洞与风险", type: "risk"},
+                {tabName: "日志", type: "log"},
+                {tabName: "Console", type: "console"}
+            ]
+            if (runtimeId) {
+                return [{tabName: "审计结果", type: "result"}, ...tabsState]
+            }
+            return tabsState
+        }, [runtimeId])
+
+        // 当前执行的状态
+        const [executeStatus, setExecuteStatus] = useControllableValue<SyntaxFlowScanExecuteState>(props, {
+            defaultValue: "default",
+            valuePropName: "executeStatus",
+            trigger: "setExecuteStatus"
+        })
+
+        // 是否正在执行中
+        const isExecuting = useMemo(() => {
+            if (executeStatus === "process") return true
+            if (executeStatus === "paused") return true
+            return false
+        }, [executeStatus])
+        // 是否显示执行结果
+        const isShowResult = useMemo(() => {
+            return isExecuting || runtimeId
+        }, [isExecuting, runtimeId])
+
+        // 进度条
+        const [progress, setProgress] = useControllableValue<number>(props, {
+            defaultValue: 0,
+            valuePropName: "progress",
+            trigger: "setProgress"
+        })
+
+        // logs
+        let messages = useRef<StreamResult.Message[]>([])
+
+        const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
+            cardState: [],
+            logState: []
+        })
+
+        // card
+        let cardKVPair = useRef<Map<string, HoldGRPCStreamProps.CacheCard>>(
+            new Map<string, HoldGRPCStreamProps.CacheCard>()
+        )
+        /** ---------- 执行结果相关数据 End ---------- */
+
+        /** 判断卡片数据是否为无效数据 */
+        const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
+            try {
+                const check = JSON.parse(stream.data)
+                if (check === "null" || !check || check === "undefined") return false
+                return check
+            } catch (e) {
+                return false
+            }
+        })
+
+        /** 放入日志队列 */
+        const pushLogs = useMemoizedFn((log: StreamResult.Message) => {
+            messages.current.unshift({...log, content: {...log.content, id: uuidv4()}})
+            // 只缓存 100 条结果（日志类型 + 数据类型）
+            if (messages.current.length > 100) {
+                messages.current.pop()
+            }
+        })
+
+        const handleStart = useMemoizedFn((request: SyntaxFlowScanRequest) => {
+            return new Promise<undefined>((resolve, reject) => {
+                handleReset()
+                ipcRenderer
+                    .invoke("SyntaxFlowScan", request, token.current)
+                    .then(() => {
+                        resolve(undefined)
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "规则执行出错:" + err)
+                        reject(err)
+                    })
+            })
+        })
+
+        const handleStop = useMemoizedFn(() => {
+            return new Promise<undefined>((resolve, reject) => {
+                handleReset()
+                ipcRenderer
+                    .invoke("cancel-SyntaxFlowScan", token.current)
+                    .then(() => {
+                        resolve(undefined)
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "取消规则执行出错:" + err)
+                        reject(err)
+                    })
+            })
+        })
+
+        const handleReset = useMemoizedFn(() => {})
+
+        return (
+            <div className={styles["rule-content-debug-result"]}>
+                {isShowResult && (
+                    <PluginExecuteResult
+                        streamInfo={{
+                            progressState: [],
+                            cardState: streamInfo.cardState,
+                            tabsState: getTabsState,
+                            logState: streamInfo.logState,
+                            tabsInfoState: {},
+                            riskState: []
+                        }}
+                        runtimeId={runtimeId}
+                        loading={isExecuting}
+                        defaultActiveKey={undefined}
+                    />
+                )}
+            </div>
+        )
+    })
+)
