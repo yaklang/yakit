@@ -29,10 +29,11 @@ import {Tooltip} from "antd"
 import {defaultBlockList} from "../constants"
 import {cloneDeep} from "lodash"
 import {BlockListProps} from "../MilkdownEditorType"
-import {httpUploadImgPath} from "@/apiUtils/http"
+import {HttpUploadImgBaseRequest, httpUploadImgPath} from "@/apiUtils/http"
 import {yakitNotify} from "@/utils/notification"
 import {getLocalFileLinkInfo} from "../CustomFile/utils"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
+import {EditorStatus} from "@milkdown/kit/core"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -40,17 +41,21 @@ const imgTypes = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".we
 
 const FileMaxSize = 1024 * 1024 * 1024
 
-export const BlockView = (block) => {
+interface BlockViewProps {
+    type: HttpUploadImgBaseRequest["type"]
+    notepadHash?: string
+}
+export const BlockView: React.FC<BlockViewProps> = (props) => {
+    const {notepadHash, type} = props
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<BlockProvider>()
 
     const [visibleAdd, setVisibleAdd] = useState(false)
-    const [blockList, setBlockList] = useState<BlockListProps[]>(cloneDeep(defaultBlockList))
+    const [blockList, setBlockList] = useState<BlockListProps[]>(cloneDeep(defaultBlockList)) // 后期选中某个类型的组件可能不会显示一些操作
 
-    const {view, prevState} = usePluginViewContext()
+    const {view} = usePluginViewContext()
 
     const [loading, get] = useInstance()
-
     const action = useCallback(
         (fn: (ctx: Ctx) => void) => {
             if (loading) return
@@ -61,6 +66,7 @@ export const BlockView = (block) => {
 
     useEffect(() => {
         const div = ref.current
+
         if (loading || !div) {
             return
         }
@@ -75,11 +81,14 @@ export const BlockView = (block) => {
             content: div
         })
         tooltipProvider.current?.update()
+    }, [loading])
 
+    useEffect(() => {
         return () => {
+            // 单独的Effect中卸载，避免在开发过程中热加载的时候报错
             tooltipProvider.current?.destroy()
         }
-    }, [loading, get, ref.current])
+    }, [])
 
     const onAddContent = useMemoizedFn(({label}) => {
         const {dispatch, state} = view
@@ -163,7 +172,7 @@ export const BlockView = (block) => {
                                         yakitNotify("error", "图片大小不能超过1M")
                                         return
                                     }
-                                    httpUploadImgPath({path, type: "notepad"})
+                                    httpUploadImgPath({path, type, filedHash: notepadHash})
                                         .then((src) => {
                                             action(
                                                 callCommand(insertImageBlockCommand.key, {
@@ -177,7 +186,7 @@ export const BlockView = (block) => {
                                             yakitNotify("error", `上传图片失败:${e}`)
                                         })
                                 } else {
-                                    action(callCommand(fileCommand.key, {id: "0", path}))
+                                    action(callCommand(fileCommand.key, {id: "0", path, notepadHash}))
                                 }
                             })
                         }
