@@ -22,7 +22,8 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
             getAttrs: (dom) => {
                 return {
                     fileId: dom.getAttribute("data-file-id"),
-                    path: dom.getAttribute("data-path")
+                    path: dom.getAttribute("data-path"),
+                    notepadHash: dom.getAttribute("data-notepad-hash")
                 }
             }
         }
@@ -62,6 +63,7 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
                     attributes: {
                         fileId: node.attrs.fileId,
                         path: node.attrs.path,
+                        notepadHash: node.attrs.notepadHash
                     }
                 })
                 .next(node.content)
@@ -70,7 +72,8 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
     },
     attrs: {
         fileId: {default: "0"},
-        path: {default: ""}
+        path: {default: ""},
+        notepadHash: {default: ""}
     }
 }))
 

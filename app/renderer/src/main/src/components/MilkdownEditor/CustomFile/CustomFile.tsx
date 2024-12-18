@@ -32,9 +32,10 @@ import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
 import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
-import useUploadOSSHooks from "@/hook/useUploadOSS/useUploadOSS"
+import useUploadOSSHooks, {UploadOSSStartProps} from "@/hook/useUploadOSS/useUploadOSS"
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 import {setClipboardText} from "@/utils/clipboard"
+import {uploadBigFileType} from "@/hook/useUploadOSS/constants"
 
 interface CustomFileItem {
     name: string
@@ -60,7 +61,7 @@ export const getTypeAndNameByPath = (path) => {
     const fileName = newPath.split("\\").pop()
     return {fileType, fileName}
 }
-export const CustomFile = () => {
+export const CustomFile: React.FC = () => {
     const {node, contentRef, selected, setAttrs, view} = useNodeViewContext()
     const {attrs} = node
     const [fileInfo, setFileInfo] = useState<CustomFileItem>({
@@ -83,7 +84,6 @@ export const CustomFile = () => {
     useEffect(() => {
         const {fileId, path: initPath} = attrs
         const path = initPath.replace(/\\/g, "\\")
-        setAttrs({path})
         if (fileId !== "0") {
             getFileInfoByLink()
         } else if (path) {
@@ -101,7 +101,7 @@ export const CustomFile = () => {
             })
         }
     }, [])
-    const {onStart, onCancel: onUploadCancel} = useUploadOSSHooks({
+    const {onStart: onStartUpload, onCancel: onUploadCancel} = useUploadOSSHooks({
         taskToken: uploadTokenRef.current,
         onUploadData: (p) => {
             if (p >= 100) setLoading(false)
@@ -154,7 +154,12 @@ export const CustomFile = () => {
         setLoading(true)
         setErrorReason("")
         setPercent(0)
-        onStart(filePath)
+        const value: UploadOSSStartProps = {
+            filePath,
+            filedHash: attrs?.notepadHash || "",
+            type: uploadBigFileType.notepad
+        }
+        onStartUpload(value)
     }
     const onReloadUpload = useMemoizedFn((e) => {
         e.stopPropagation()

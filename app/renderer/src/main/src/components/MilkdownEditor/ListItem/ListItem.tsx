@@ -1,13 +1,10 @@
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {ListItemBlockConfig} from "@milkdown/kit/component/list-item-block"
-import {Attrs} from "@milkdown/kit/prose/model"
-import {useInstance} from "@milkdown/react"
 import {useNodeViewContext} from "@prosemirror-adapter/react"
-import React, {useEffect} from "react"
+import React from "react"
 import styles from "./ListItem.module.scss"
 import classNames from "classnames"
 
-export const ListItem = () => {
+export const ListItem: React.FC = () => {
     const {node, contentRef, setAttrs} = useNodeViewContext()
 
     const {label, checked, listType} = node.attrs
