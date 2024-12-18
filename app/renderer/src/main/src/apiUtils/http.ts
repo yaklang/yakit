@@ -22,7 +22,7 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest, string> = (req
             case "notepad":
                 if (!request.filedHash) {
                     enable = false
-                    yakitNotify("error", "type为notepad,filedHash必传")
+                    yakitNotify("error", "httpUploadImgPath:type为notepad,filedHash必传")
                 }
                 break
             default:
