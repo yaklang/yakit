@@ -1683,9 +1683,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             filterProps: {
                 filterKey: "Methods",
                 filtersType: "select",
-                filtersSelectAll: {
-                    isAll: true
-                },
+                filterMultiple: true,
                 filters: [
                     {
                         label: "GET",
