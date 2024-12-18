@@ -36,7 +36,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
-import {usePageInfo} from "@/store/pageInfo"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
@@ -53,6 +53,42 @@ const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadS
 const timeMap = {
     created_at: "最近创建时间",
     updated_at: "最近更新时间"
+}
+/**
+ * @description 去笔记本编辑页面，存在就切换页面，不存在就新打开页面
+ * @param notepadHash
+ * @param notepadPageList
+ */
+export const toEditNotepad = (params?: {notepadHash: string; notepadPageList?: PageNodeItemProps[]}) => {
+    const {notepadHash = "", notepadPageList = []} = params || {notepadHash: ""}
+    const current =
+        notepadHash &&
+        notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
+    if (current) {
+        emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId, forceRefresh: true}))
+        emiter.emit("switchMenuItem", JSON.stringify({route: YakitRoute.Modify_Notepad}))
+    } else if (notepadHash) {
+        const info = {
+            route: YakitRoute.Modify_Notepad,
+            params: {
+                notepadHash
+            }
+        }
+        emiter.emit("openPage", JSON.stringify(info))
+    }
+}
+
+/**
+ * @description 新建笔记本
+ */
+const toAddNotepad = () => {
+    const info = {
+        route: YakitRoute.Modify_Notepad,
+        params: {
+            notepadHash: ""
+        }
+    }
+    emiter.emit("openPage", JSON.stringify(info))
 }
 
 const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
@@ -175,7 +211,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     <YakitButton
                         type='text2'
                         icon={<OutlinePencilaltIcon />}
-                        onClick={() => toModifyNotepad(record.hash)}
+                        onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
                     />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
                     <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => onShare(record)} />
@@ -279,23 +315,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             setSelectedRowKeys(newSelectedRowKeys)
         }
     })
-    const toModifyNotepad = useMemoizedFn((notepadHash?: string) => {
-        const current =
-            notepadHash &&
-            notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
-        if (current) {
-            emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId, forceRefresh: true}))
-            emiter.emit("switchMenuItem", JSON.stringify({route: YakitRoute.Modify_Notepad}))
-        } else {
-            const info = {
-                route: YakitRoute.Modify_Notepad,
-                params: {
-                    notepadHash
-                }
-            }
-            emiter.emit("openPage", JSON.stringify(info))
-        }
-    })
+
     const onShare = useMemoizedFn((record: API.GetNotepadList) => {
         const m = showYakitModal({
             hiddenHeader: true,
@@ -456,7 +476,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             批量下载
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
-                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toModifyNotepad()}>
+                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toAddNotepad()}>
                             新建
                         </YakitButton>
                     </div>
