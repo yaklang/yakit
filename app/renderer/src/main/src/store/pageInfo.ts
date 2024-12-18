@@ -243,7 +243,8 @@ export const defPage: PageProps = {
 const pageInfoToRuntimeIdMap = {
     [YakitRoute.BatchExecutorPage]: "pluginBatchExecutorPageInfo",
     [YakitRoute.SimpleDetect]: "simpleDetectPageInfo",
-    [YakitRoute.PoC]: "pocPageInfo"
+    [YakitRoute.PoC]: "pocPageInfo",
+    [YakitRoute.YakRunner_Code_Scan]: "codeScanPageInfo"
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(

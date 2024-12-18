@@ -409,8 +409,6 @@ const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
             ipcRenderer
                 .invoke("QuerySyntaxFlowScanTask", finalParams)
                 .then((res: QuerySyntaxFlowScanTaskResponse) => {
-                    console.log("nixx", finalParams, res)
-
                     const newPage = +res.Pagination.Page
                     const d = newPage === 1 ? res.Data : (response?.Data || []).concat(res.Data)
                     setResponse({

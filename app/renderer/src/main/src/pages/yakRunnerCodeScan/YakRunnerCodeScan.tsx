@@ -263,8 +263,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.YakRunner_Code_Scan, pageId)
         if (currentItem && currentItem.pageParamsInfo.codeScanPageInfo) {
-            console.log("initPageInfo---", currentItem.pageParamsInfo.codeScanPageInfo)
-
             return currentItem.pageParamsInfo.codeScanPageInfo
         }
         return {...defaultCodeScanPageInfo}
@@ -783,9 +781,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             try {
                 const value = JSON.parse(res)
                 const {runtimeId, codeScanMode, pageId: pId} = value
-
-                console.log("onSetCodeScanTaskStatusFun---", value)
-
                 if (pageId !== pId) return
                 if (!runtimeId) {
                     yakitNotify("error", "未设置正常得 runtimeId")
@@ -814,7 +809,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Keyword: ""
                 }
             }
-            console.log("onMultipleTask---", params, token)
             apiSyntaxFlowScan(params, token).then(() => {
                 setIsExpand(false)
                 setExecuteStatus("process")
@@ -851,7 +845,6 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         )
 
         const [runtimeId, setRuntimeId] = useState<string>("")
-        const runTimeIdRef = useRef<string>()
 
         const [pauseLoading, setPauseLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
@@ -988,8 +981,10 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 break
                         }
                     }
-                    if (!!data?.RuntimeID) {
-                        runTimeIdRef.current = data.RuntimeID
+                    if (!!data?.RuntimeID && runtimeId !== data.RuntimeID) {
+                        setRuntimeId(data.RuntimeID)
+                        /**更新该页面最新的runtimeId */
+                        onUpdateExecutorPageInfo(data.RuntimeID)
                     }
                     if (data && data.IsMessage) {
                         try {
@@ -1046,15 +1041,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 setTimeout(() => {
                     setPauseLoading(false)
                     setContinueLoading(false)
-                    if (runTimeIdRef.current && runTimeIdRef.current !== runtimeId) {
-                        setRuntimeId(runTimeIdRef.current)
-                        /**更新该页面最新的runtimeId */
-                        onUpdateExecutorPageInfo(runTimeIdRef.current)
-                    }
                 }, 200)
             })
             return () => {
-                ipcRenderer.invoke("cancel-ConvertPayloadGroupToDatabase", token)
                 ipcRenderer.removeAllListeners(`${token}-data`)
                 ipcRenderer.removeAllListeners(`${token}-error`)
                 ipcRenderer.removeAllListeners(`${token}-end`)
@@ -1363,7 +1352,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         }, [plugin?.Params])
 
         const tokenRef = useRef<string>(randomString(40))
-        const [runtimeId, setRuntimeId] = useState<string>("")
         const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
             taskName: "debug-plugin",
             apiKey: "DebugPlugin",
@@ -1380,7 +1368,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             },
             setRuntimeId: (rId) => {
                 yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-                setRuntimeId(rId)
             }
         })
         const runnerProject = useRef<string>()

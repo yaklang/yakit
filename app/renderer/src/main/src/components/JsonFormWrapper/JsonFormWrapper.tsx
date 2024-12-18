@@ -147,7 +147,6 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
             schema,
             uiSchema
         } = props
-        console.log("schema.type---", props, uiSchema, schema, schema.type, schema.style)
         const uiStyle = uiSchema?.["ui:component_style"] || {}
         if (schema.type === "number") {
             return (
@@ -319,12 +318,12 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         const {id, required, readonly, disabled, value, onFocus, onBlur, onChange, options, autofocus, uiSchema} = props
         const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
-            <YakitInput
+            <YakitInput.Password
+                allowClear
                 style={uiStyle}
                 autoFocus={autofocus}
                 required={required}
                 disabled={disabled || readonly}
-                type='password'
                 value={value}
                 onChange={(event) => {
                     onChange(event.target.value === "" ? options.emptyValue : event.target.value)
