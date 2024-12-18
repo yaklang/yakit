@@ -671,7 +671,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
         FromPlugin: "",
-        Full: true
+        Full: false
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")

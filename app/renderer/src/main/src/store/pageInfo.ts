@@ -11,6 +11,7 @@ import {createWithEqualityFn} from "zustand/traditional"
 import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/HybridScan"
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 
 /**
  * @description 页面暂存数据
@@ -485,7 +486,7 @@ export const saveFuzzerCache = debounce(
                 pageList: []
             }
             const cache = getFuzzerProcessedCacheData(pageList)
-            setRemoteProjectValue(RemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
+            setRemoteProjectValue(FuzzerRemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
         } catch (error) {
             yakitNotify("error", "webFuzzer缓存数据失败:" + error)
         }

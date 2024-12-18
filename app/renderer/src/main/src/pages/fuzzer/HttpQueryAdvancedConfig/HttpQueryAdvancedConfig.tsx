@@ -55,6 +55,7 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
+import { DefFuzzerConcurrent } from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -500,6 +501,12 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
+                            <Form.Item label={"禁用代理池"} name={"disableUseConnPool"} valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item label={"禁用热加载"} name={"disableHotPatch"} valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
                             <Form.Item label='响应数量限制' name='resNumlimit' style={{marginBottom: 12}}>
                                 <YakitInputNumber
                                     type='horizontal'
@@ -666,7 +673,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         onClick={(e) => {
                                             e.stopPropagation()
                                             const restValue = {
-                                                concurrent: 20,
+                                                concurrent: DefFuzzerConcurrent,
                                                 minDelaySeconds: undefined,
                                                 maxDelaySeconds: undefined,
                                                 repeatTimes: 0

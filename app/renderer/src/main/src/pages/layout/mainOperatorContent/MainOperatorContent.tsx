@@ -114,7 +114,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerConcurrent, DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     defPluginBatchExecuteExtraFormValue,
     defaultPluginBatchExecutorPageInfo
@@ -139,6 +139,7 @@ import {
 } from "./utils"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {closeWebSocket, startWebSocket} from "@/utils/webSocket/webSocket"
+import { FuzzerRemoteGV } from "@/enums/fuzzer"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -818,7 +819,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dnsServers: [],
                 etcHosts: [],
                 advancedConfigShow: null,
-                resNumlimit: DefFuzzerTableMaxData
+                resNumlimit: DefFuzzerTableMaxData,
+                repeatTimes: 0,
+                concurrent: DefFuzzerConcurrent,
+                minDelaySeconds: 0,
+                maxDelaySeconds: 0,
             }
             let newAdvancedConfigValue = {
                 ...advancedConfigValue
@@ -828,6 +833,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.dnsServers = cacheData.dnsServers
                 newAdvancedConfigValue.etcHosts = cacheData.etcHosts
                 newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
+                newAdvancedConfigValue.repeatTimes = cacheData.repeatTimes
+                newAdvancedConfigValue.concurrent = +cacheData.concurrent
+                newAdvancedConfigValue.minDelaySeconds = cacheData.minDelaySeconds
+                newAdvancedConfigValue.maxDelaySeconds = cacheData.maxDelaySeconds
             }
             let newAdvancedConfigShow = cacheData.advancedConfigShow
             let newIsHttps = !!isHttps
@@ -1597,7 +1606,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 // 触发获取web-fuzzer的缓存
                 try {
                     setLoading(true)
-                    const res = await getRemoteProjectValue(RemoteGV.FuzzerCache)
+                    const res = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerCache)
                     const cache = JSON.parse(res || "[]")
                     await fetchFuzzerList(cache)
                     await getFuzzerSequenceCache()
@@ -1610,7 +1619,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     const getFuzzerSequenceCache = useMemoizedFn(() => {
-        getRemoteProjectValue(RemoteGV.FuzzerSequenceCache).then((res: any) => {
+        getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache).then((res: any) => {
             try {
                 const cache = JSON.parse(res || "[]")
                 onSetFuzzerSequenceCacheData(cache)
@@ -1634,13 +1643,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dnsServers: [],
                 etcHosts: [],
                 advancedConfigShow: null,
-                resNumlimit: DefFuzzerTableMaxData
+                resNumlimit: DefFuzzerTableMaxData,
+                repeatTimes: 0,
+                concurrent: DefFuzzerConcurrent,
+                minDelaySeconds: 0,
+                maxDelaySeconds: 0,
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
                 dnsServers: cacheData.dnsServers,
                 etcHosts: cacheData.etcHosts,
-                resNumlimit: cacheData.resNumlimit
+                resNumlimit: cacheData.resNumlimit,
+                repeatTimes: cacheData.repeatTimes,
+                concurrent: +cacheData.concurrent,
+                minDelaySeconds: cacheData.minDelaySeconds,
+                maxDelaySeconds: cacheData.maxDelaySeconds,
             }
             clearAllData()
             // 菜单在代码内的名字
@@ -2008,7 +2025,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     if (pageList.length > 0) {
                         await fetchFuzzerList(pageList)
                         // FuzzerSequence
-                        const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList)
+                        const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList)
                         if (!!resSequence) {
                             const listSequence = JSON.parse(resSequence)
                             if (listSequence?.length > 0) {
@@ -2052,11 +2069,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         apiSaveFuzzerConfig(params)
             .then(async () => {
                 // FuzzerSequence
-                const resSequence = await getRemoteProjectValue(RemoteGV.FuzzerSequenceCache)
+                const resSequence = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCache)
                 const cacheSequence = JSON.parse(resSequence || "[]")
                 if (cacheSequence.length > 0) {
                     const historySequenceList = [cacheSequence]
-                    setRemoteProjectValue(RemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+                    setRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
                 }
             })
             .finally(() => setTimeout(() => setLoading(false), 200))

@@ -23,9 +23,9 @@ import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
 import {v4 as uuidv4} from "uuid"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
 import {getRemoteValue} from "@/utils/kv"
-import {RemoteGV} from "@/yakitGV"
 import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
 import {setClipboardText} from "@/utils/clipboard"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -289,7 +289,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             const {advancedConfigValue, request} = pageInfo.pageParamsInfo.webFuzzerPageInfo
                             let advancedConfigShow = defaultAdvancedConfigShow
                             try {
-                                const resShow = await getRemoteValue(RemoteGV.WebFuzzerAdvancedConfigShow)
+                                const resShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
                                 advancedConfigShow = JSON.parse(resShow)
                             } catch (error) {}
                             const params: ShareValueProps = {

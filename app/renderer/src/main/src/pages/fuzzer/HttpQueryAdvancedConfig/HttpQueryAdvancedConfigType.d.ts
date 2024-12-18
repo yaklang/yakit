@@ -15,6 +15,8 @@ export interface AdvancedConfigValueProps {
     /**@name 不修复长度 */
     noFixContentLength: boolean
     noSystemProxy: boolean
+    disableHotPatch: boolean
+    disableUseConnPool: boolean
     resNumlimit: number
     sNI: string
     overwriteSNI: string

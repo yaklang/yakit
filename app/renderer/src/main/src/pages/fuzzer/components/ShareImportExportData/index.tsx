@@ -41,6 +41,8 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         maxBodySize: value.MaxBodySize,
         proxy: value.Proxy ? value.Proxy.split(",") : [],
         noSystemProxy: value.NoSystemProxy,
+        disableUseConnPool: value.DisableUseConnPool,
+        disableHotPatch: value.DisableHotPatch,
         resNumlimit: DefFuzzerTableMaxData,
         fuzzTagMode: value.FuzzTagMode,
         sNI: value.SNI,

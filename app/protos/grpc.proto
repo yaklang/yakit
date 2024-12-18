@@ -4508,6 +4508,11 @@ message FuzzerRequest {
 
   string SNI = 56;
   bool OverwriteSNI = 57;
+
+  // use tcp conn pool
+  bool DisableUseConnPool = 58;
+  // disable hotPatch
+  bool DisableHotPatch = 59;
 }
 
 message MutateMethod {
