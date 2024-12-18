@@ -1,5 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {useEffect} from "react"
+import {uploadBigFileType} from "./constants"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -10,6 +11,19 @@ interface useUploadOSSHooks {
     onUploadEnd?: () => void
     onUploadSuccess?: () => void
     onUploadError?: (error: string) => void
+}
+
+export interface UploadBigFileTypeProps {
+    notepad: "notepad"
+}
+
+type UploadBigFileType = UploadBigFileTypeProps[keyof UploadBigFileTypeProps]
+
+export interface UploadOSSStartProps {
+    filePath: string
+    /**type为notepad,该值必传 */
+    filedHash: string
+    type: UploadBigFileType
 }
 
 export default function useUploadOSSHooks(props: useUploadOSSHooks) {
@@ -43,12 +57,29 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
             ipcRenderer.removeAllListeners(`oss-split-upload-${taskToken}-end`)
         }
     }, [])
-    const onStart = (filePath: string) => {
-        ipcRenderer.invoke("oss-split-upload", {
-            url: "upload/bigfile",
-            path: filePath,
-            token: taskToken
-        })
+    const onStart = (value: UploadOSSStartProps) => {
+        const {filePath, filedHash, type} = value
+        let enable = true
+        switch (type) {
+            case uploadBigFileType.notepad:
+                if (!filedHash) {
+                    enable = false
+                    yakitNotify("error", "useUploadOSSHooks:type为notepad,filedHash必传")
+                }
+                break
+            default:
+                break
+        }
+        if (enable) {
+            const params = {
+                url: "upload/bigfile",
+                path: filePath,
+                filedHash,
+                type,
+                token: taskToken
+            }
+            ipcRenderer.invoke("oss-split-upload", params)
+        }
     }
     const onCancel = () => {
         return new Promise((resolve, reject) => {
