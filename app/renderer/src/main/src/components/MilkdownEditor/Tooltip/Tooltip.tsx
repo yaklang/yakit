@@ -95,21 +95,24 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 }
             })
         }
-
+    }, [loading])
+    useEffect(() => {
         return () => {
+            // 单独的Effect中卸载，避免报错
             tooltipProvider.current?.destroy()
         }
-    }, [loading])
+    }, [])
 
     useDebounceEffect(
         () => {
+            if (loading || !tooltipProvider.current) return
             if (isSelectFile() || isSelectImg()) {
                 tooltipProvider.current?.hide()
                 return
             }
             tooltipProvider.current?.update(view, prevState)
         },
-        [view, prevState],
+        [loading, view, prevState],
         {wait: 200, leading: true}
     )
     /**判断选中节点是否为文件 */
@@ -122,8 +125,8 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         const {state} = view
         const selectedNode = getSelectNode()
         switch (selectedNode?.type.name) {
-            case state.schema.nodes.image.name:
-            case state.schema.nodes["image-block"].name:
+            case state.schema.nodes.image?.name:
+            case state.schema.nodes["image-block"]?.name:
                 return true
             default:
                 return false
