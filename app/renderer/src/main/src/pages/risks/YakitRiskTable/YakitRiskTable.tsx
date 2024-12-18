@@ -1506,6 +1506,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
         const extraParams = {
             originValue: currentSelectShowType === "request" ? requestString(info) : responseString(info),
+            originalPackage: currentSelectShowType === "request" ? info.Request : info.Response,
             webFuzzerValue: currentSelectShowType === "request" ? "" : requestString(info)
         }
         return (

@@ -14,7 +14,7 @@ import {showDrawer} from "./showModal"
 import {HTTPFlowBodyByIdRequest, HTTPPacketFuzzable} from "../components/HTTPHistory"
 import ReactResizeDetector from "react-resize-detector"
 
-import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {Buffer} from "buffer"
 import {StringToUint8Array, Uint8ArrayToString} from "./str"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
@@ -493,6 +493,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     /** 扩展属性 */
     originValue: string
+    // 接口返回原始包
+    originalPackage?: Uint8Array
     defaultStringValue?: string
     onChange?: (i: string) => any
     disableFullscreen?: boolean
@@ -577,6 +579,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const isResponse = props.isResponse
     const {
         originValue,
+        originalPackage,
         isShowBeautifyRender = true,
         showDefaultExtra = true,
         dataCompare,
@@ -820,7 +823,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             const mb = bytes.length / 1024 / 1024
             // 0.5mb 及以下内容才可美化
             if (isResponse) {
-                formatPacketRender(StringToUint8Array(originValue), (packet) => {
+                formatPacketRender(originalPackage || StringToUint8Array(originValue), (packet) => {
                     if (packet) {
                         if (mb > 0.5) {
                             setTypeOptions([
@@ -863,7 +866,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else {
             setTypeOptions([])
         }
-    }, [originValue])
+    }, [originValue, originalPackage])
 
     const isShowBeautifyRenderRef = useRef<boolean>()
     useEffect(() => {
@@ -905,7 +908,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         useMemoizedFn(async () => {
             if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === "render") === -1) return
             setTypeLoading(true)
-            let renderValue = await prettifyPacketRender(StringToUint8Array(originValue))
+            let renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
             setRenderHTML(
                 <iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />
             )
