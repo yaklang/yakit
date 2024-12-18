@@ -28,6 +28,11 @@ export declare namespace API {
          */
         messageType: string
         params: object
+        /**
+         * 文档协作参数
+         */
+        yjsParams?: string
+        token?: string
     }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
@@ -61,6 +66,7 @@ export declare namespace API {
         appid: string
         head_img: string
         role: string
+        uid?: string
     }
     export interface UserInfoByToken {
         token: string
@@ -444,6 +450,7 @@ export declare namespace API {
          *  'view', 'edit' 读写权限 '' 默认移除
          */
         permissionType: string
+        description?: string
     }
     export interface PluginTypeListResponse {
         data: PluginTypeList[]
@@ -1223,8 +1230,9 @@ export declare namespace API {
         /**
          * 协作者
          */
-        collaborator: CollaboratorInfo[]
+        collaborator?: CollaboratorInfo[]
         hash: string
+        notepadUserId?: number
     }
     export interface FuzzableParam {
         position?: string
