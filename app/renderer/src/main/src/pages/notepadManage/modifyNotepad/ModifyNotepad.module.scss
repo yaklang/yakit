@@ -163,9 +163,12 @@
             }
         }
     }
-    .notepad-catalogue-hidden {
+    .notepad-catalogue-overflow-hidden {
         overflow-y: hidden;
     }
+}
+.notepad-catalogue-wrapper-hidden {
+    display: none;
 }
 .notepad {
     @extend %display-flex-center;
@@ -179,7 +182,7 @@
     .notepad-content {
         width: 820px;
         flex-shrink: 0;
-        overflow-y: hidden;
+        overflow: hidden;
         margin: 0 auto;
         padding: 0 48px 24px 96px;
         .notepad-heard {
