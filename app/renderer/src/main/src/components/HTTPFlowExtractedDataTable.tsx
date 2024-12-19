@@ -1,21 +1,22 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Typography, Table} from "antd"
+import {Typography, Table, Tooltip} from "antd"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import styles from "./hTTPFlowDetail.module.scss"
-import {HighLightText} from "./HTTPFlowDetail"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlinePositionIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {HTTPFlowsFieldGroupResponse, MultipleSelect} from "./HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import {yakitNotify} from "@/utils/notification"
 import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
+import { HistoryHighLightText } from "./HTTPFlowDetail"
 const {Text} = Typography
 export interface HTTPFlowExtractedDataTableProp {
     title: React.ReactNode
     hiddenIndex: string
-    onSetHighLightText: (highLightText: HighLightText[]) => void
+    onSetHighLightText: (highLightText: HistoryHighLightText[]) => void
     onSetExportMITMRuleFilter: (filter: ExtractedDataFilter) => void
+    onSetHighLightItem: (highLightItem: HistoryHighLightText) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -132,6 +133,11 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             })
     })
 
+    // 定位高亮位置
+    const handleHighLightFind = (highLightItem: HistoryHighLightText) => {
+        props.onSetHighLightItem(highLightItem)
+    }
+
     return (
         <div className={styles["httpFlow-data-table"]}>
             <Table<HTTPFlowExtractedData>
@@ -232,12 +238,34 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                                 {i.Data}
                             </Text>
                         ),
-                        width: 210
+                        width: 200
+                    },
+                    {
+                        title: "操作",
+                        width: 40,
+                        align: "center",
+                        render: (i: HTTPFlowExtractedData) => {
+                            return (
+                                <Tooltip title='定位'>
+                                    <OutlinePositionIcon
+                                        className={styles["position-icon"]}
+                                        onClick={() =>
+                                            handleHighLightFind({
+                                                startOffset: i.Index,
+                                                highlightLength: i.Length,
+                                                hoverVal: i.RuleName,
+                                                IsMatchRequest: i.IsMatchRequest
+                                            })
+                                        }
+                                    />
+                                </Tooltip>
+                            )
+                        }
                     }
                 ]}
                 loading={loading}
                 size={"small"}
-                style={{margin: 0, padding: 0}}
+                style={{margin: 0, padding: 0, maxWidth: '100%'}}
                 pagination={{
                     pageSize: pagination.Limit,
                     showSizeChanger: true,

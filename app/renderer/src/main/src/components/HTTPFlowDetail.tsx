@@ -42,6 +42,7 @@ import YakitCollapse from "./yakitUI/YakitCollapse/YakitCollapse"
 import PluginTabs from "./businessUI/PluginTabs/PluginTabs"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {asynSettingState} from "@/utils/optimizeRender"
+import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -552,10 +553,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
-export interface HighLightText {
-    startOffset: number
-    highlightLength: number
-    hoverVal: string
+export interface HistoryHighLightText extends HighLightText {
     IsMatchRequest?: boolean
 }
 
@@ -570,7 +568,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(defaultFold)
     const lastIdRef = useRef<number>()
-    const [highLightText, setHighLightText] = useState<HighLightText[]>([])
+    const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
+    const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
     useEffect(() => {
         update()
@@ -603,6 +602,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setFlowRequestLoad(false)
         setFlowResponseLoad(false)
         setFlow(selectedFlow)
+
+        setHighLightItem(undefined)
 
         // 是否获取Request
         let isGetRequest: boolean = true
@@ -733,11 +734,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             highLightText={highLightText}
+                            highLightItem={highLightItem}
                             {...props}
                         />
                     )
                 }
-                firstMinSize='850px'
+                firstMinSize='650px'
                 firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
                 secondNode={
                     <div style={{paddingRight: 2, height: "100%"}}>
@@ -877,6 +879,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             </div>
                                         }
                                         onSetHighLightText={setHighLightText}
+                                        onSetHighLightItem={setHighLightItem}
                                     />
                                 )}
                                 {existedInfoType.length === 0 && (
@@ -913,7 +916,8 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
     pageType?: HTTPHistorySourcePageType
-    highLightText?: HighLightText[]
+    highLightText?: HistoryHighLightText[]
+    highLightItem?: HistoryHighLightText
 }
 
 interface HTTPFlowBareProps {
@@ -931,6 +935,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         id,
         Tags,
         highLightText,
+        highLightItem,
         flowRequestLoad,
         flowResponseLoad,
         historyId,
@@ -1325,6 +1330,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             }
                         }}
                         highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
+                        highLightFind={
+                            flow.InvalidForUTF8Request ? [] : highLightItem?.IsMatchRequest ? [highLightItem] : []
+                        }
+                        highLightFindClass='hight-light-rule-color'
+                        isPositionHighLightCursor={flow.InvalidForUTF8Request ? false : !!highLightItem?.IsMatchRequest}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: true}}
                     />
@@ -1438,6 +1448,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         highLightText={
                             flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
                         }
+                        highLightFind={highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []}
+                        highLightFindClass='hight-light-rule-color'
+                        isPositionHighLightCursor={!highLightItem?.IsMatchRequest}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: false}}
                     />

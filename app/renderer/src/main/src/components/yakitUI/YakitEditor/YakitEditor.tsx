@@ -881,30 +881,29 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
                 }
             })()
-            ;(() => {
-                //all
-                highLightTextFun().forEach((item) => {
-                    const {
-                        startOffset = 0,
-                        highlightLength = 0,
-                        hoverVal = "",
-                        startLineNumber,
-                        startColumn,
-                        endLineNumber,
-                        endColumn
-                    } = item
-                    let range = {
-                        startLineNumber: 0,
-                        startColumn: 0,
-                        endLineNumber: 0,
-                        endColumn: 0
-                    }
-                    if (typeof startLineNumber === "number") {
-                        range.startLineNumber = startLineNumber
-                        range.startColumn = startColumn
-                        range.endLineNumber = endLineNumber
-                        range.endColumn = endColumn
-                    } else {
+
+            function highLightRange(item) {
+                const {
+                    startOffset = 0,
+                    highlightLength = 0,
+                    startLineNumber,
+                    startColumn,
+                    endLineNumber,
+                    endColumn
+                } = item
+                let range = {
+                    startLineNumber: 0,
+                    startColumn: 0,
+                    endLineNumber: 0,
+                    endColumn: 0
+                }
+                if (typeof startLineNumber === "number") {
+                    range.startLineNumber = startLineNumber
+                    range.startColumn = startColumn
+                    range.endLineNumber = endLineNumber
+                    range.endColumn = endColumn
+                } else {
+                    if (model) {
                         // 获取偏移量对应的位置
                         const startPosition = model.getPositionAt(Number(startOffset))
                         const endPosition = model.getPositionAt(Number(startOffset) + Number(highlightLength))
@@ -913,7 +912,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         range.endLineNumber = endPosition.lineNumber
                         range.endColumn = endPosition.column
                     }
+                }
+                return range
+            }
 
+            ;(() => {
+                //all
+                highLightTextFun().forEach((item) => {
+                    const range = highLightRange(item)
                     // 创建装饰选项
                     dec.push({
                         id:
@@ -935,27 +941,26 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         options: {
                             isWholeLine: false,
                             className: highLightClass ? highLightClass : "hight-light-default-bg-color",
-                            hoverMessage: [{value: hoverVal, isTrusted: true}]
+                            hoverMessage: [{value: item.hoverVal, isTrusted: true}]
                         }
                     } as IModelDecoration)
                 })
 
                 highLightFindFun().forEach((item) => {
-                    const {startLineNumber, startColumn, endLineNumber, endColumn} = item
-
+                    const range = highLightRange(item)
                     // 创建装饰选项
                     dec.push({
                         id:
                             "hight-light-find_" +
-                            startLineNumber +
+                            range.startLineNumber +
                             "_" +
-                            startColumn +
+                            range.startColumn +
                             "_" +
-                            endLineNumber +
+                            range.endLineNumber +
                             "_" +
-                            endColumn,
+                            range.endColumn,
                         ownerId: 3,
-                        range: new monaco.Range(startLineNumber, startColumn, endLineNumber, endColumn),
+                        range: new monaco.Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn),
                         options: {
                             isWholeLine: false,
                             className: highLightFindClass ? highLightFindClass : "hight-light-find-default-bg-color",
