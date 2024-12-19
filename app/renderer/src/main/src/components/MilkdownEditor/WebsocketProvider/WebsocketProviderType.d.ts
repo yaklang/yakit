@@ -73,24 +73,39 @@ export type WSConnectedStatusType = WSConnectedStatusProps[keyof WSConnectedStat
 export interface WebsocketProviderEmitOfStatus {
     status: WSConnectedStatusType
 }
+export interface WebsocketProviderEmitOfSaveStatus {
+    saveStatus: NotepadSaveStatusType
+}
 export type ObservableEvents = {
     /**文档是否同步完成 */
     synced: (text: boolean) => void // synced 事件，接收一个 boolean 类型的参数
-    /*STUB - 暂不知*/
+    /*NOTE - 暂不知*/
     sync: (text: boolean) => void // sync 事件
     /**ws链接状态 */
-    status: (s: WebsocketProviderEmitOfStatus) => void // error事件，接收一个Error对象
+    status: (s: WebsocketProviderEmitOfStatus) => void
     /***ws 链接报错 */
     "connection-error": (event: Event, provider: WebsocketProvider) => void
     /***ws 关闭链接 */
     "connection-close": (event: CloseEvent, provider: WebsocketProvider) => void
+    /**文档保存状态 */
+    saveStatus: (s: WebsocketProviderEmitOfSaveStatus) => void
 }
+
+export interface NotepadSaveStatusProps {
+    saveProgress: "saveProgress"
+    saveSuccess: "saveSuccess"
+    saveError: "saveError"
+}
+export type NotepadSaveStatusType = NotepadSaveStatusProps[keyof NotepadSaveStatusProps]
 
 interface NotepadWsRequestParams {
     hash: string
     /**不传得话就是前端传什么给后端，后端原封不动传回；传的话后悔会在次基础上做历史记录保存和更新最新的文档 */
     content?: string
+    /**文档标题，传content就会传title */
+    title?: string
     docType: NotepadActionType
+    saveStatus: NotepadSaveStatusType
 }
 export interface NotepadWsRequest extends Omit<API.WsRequest, "params"> {
     params: NotepadWsRequestParams

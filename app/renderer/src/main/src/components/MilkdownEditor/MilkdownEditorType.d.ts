@@ -4,7 +4,11 @@ import {React, ReactNode} from "react"
 import {CollabManager, CollabUserInfo} from "./CollabManager"
 import {CloseEvent} from "ws"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {NotepadActionType, WSConnectedStatusType} from "./WebsocketProvider/WebsocketProviderType"
+import {
+    NotepadActionType,
+    NotepadSaveStatusType,
+    WSConnectedStatusType
+} from "./WebsocketProvider/WebsocketProviderType"
 
 export type EditorMilkdownProps = Editor
 
@@ -18,10 +22,12 @@ export interface CollabStatus {
     /**文档是否同步 */
     isSynced: boolean
     /**文档是否保存 */
-    isSave?: boolean
+    saveStatus: NotepadSaveStatusType
 }
 
 export interface MilkdownCollabProps {
+    /**文档标题 */
+    title: string
     /**启用协作文档 默认不启用 */
     enableCollab: boolean
     /**enableCollab为true，该字段必传,协作文档得唯一标识 */
@@ -34,8 +40,12 @@ export interface MilkdownCollabProps {
     onChangeWSLinkStatus: (v: CollabStatus) => void
     /**在线用户数据变化 */
     onChangeOnlineUser: (v: CollabUserInfo[]) => void
+    /**同步标题 */
+    onSetTitle: (s: string) => void
 }
 export interface CustomMilkdownProps {
+    /**编辑器使用的模块名称，目前只有记事本中使用 */
+    type: "notepad"
     ref?: React.ForwardedRef<MilkdownRefProps>
     /**设置为只读 */
     readonly?: boolean
@@ -49,7 +59,7 @@ export interface CustomMilkdownProps {
     /**协作文档相关参数 */
     collabProps?: MilkdownCollabProps
     /**编辑器内容的变化 */
-    onMarkdownUpdated: (next: string, per: string) => void
+    onMarkdownUpdated?: (next: string, per: string) => void
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
 

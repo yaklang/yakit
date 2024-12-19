@@ -13,10 +13,10 @@ import * as syncProtocol from "y-protocols/sync"
 import * as authProtocol from "y-protocols/auth"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as math from "lib0/math"
-import * as url from "lib0/url"
 import * as env from "lib0/environment"
 import {
     MessageHandlersProps,
+    NotepadSaveStatusProps,
     NotepadWsRequest,
     ObservableEvents,
     WebsocketProviderAwarenessUpdateHandler,
@@ -79,6 +79,7 @@ const readMessage = (provider: WebsocketProvider, buf: Uint8Array, emitSynced: b
     const decoder = decoding.createDecoder(buf)
     const encoder = encoding.createEncoder()
     const messageType = decoding.readVarUint(decoder)
+    console.log("websocket-readMessage-messageType", messageType)
     const messageHandler = provider.messageHandlers[messageType]
     if (/** @type {any} */ messageHandler) {
         messageHandler(encoder, decoder, provider, emitSynced, messageType)
@@ -102,8 +103,9 @@ const setupWS = (provider: WebsocketProvider) => {
 
         websocket.onmessage = (event) => {
             try {
-                const bytes = new TextDecoder().decode(event.data)
-                const data = JSON.parse(bytes)
+                const bytes = Buffer.from(event.data).toString()
+                const data: NotepadWsRequest = JSON.parse(bytes)
+                console.log("websocket.onmessage", data)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
                 provider.wsLastMessageReceived = time.getUnixTime()
                 const encoder = readMessage(provider, yjsParams, true)
@@ -112,12 +114,21 @@ const setupWS = (provider: WebsocketProvider) => {
                     const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
                     websocket.send(value)
                 }
+                if (data?.params?.saveStatus) {
+                    provider.emit("saveStatus", [
+                        {
+                            saveStatus: data.params.saveStatus
+                        }
+                    ])
+                }
             } catch (error) {}
         }
         websocket.onerror = (event) => {
+            console.log("websocket.onerror", event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
+            console.log("websocket.onclose", event, provider.wsconnected)
             provider.emit("connection-close", [event, provider])
             provider.ws = null
             provider.wsconnecting = false
@@ -362,12 +373,15 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     params: {
                         hash,
                         content: "",
-                        docType
+                        title: "",
+                        docType,
+                        saveStatus: "saveProgress"
                     },
                     yjsParams: buf ? Buffer.from(buf).toString("base64") : "",
                     token
                 }
                 const jsonString = JSON.stringify(value)
+                console.log("getSendData", jsonString)
                 const finalArrayBuffer = Buffer.from(jsonString)
                 return finalArrayBuffer
             } catch (error) {
@@ -402,7 +416,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         }
         this.doc.on("update", this._updateHandler)
         /**
-         * @param {any} changed
+         * @param {added: number[]; updated: number[]; removed: number[]} changed
          * @param {any} _origin
          */
         this._awarenessUpdateHandler = ({added, updated, removed}, _origin) => {
@@ -413,6 +427,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             broadcastMessage(this, encoding.toUint8Array(encoder))
         }
         this._exitHandler = () => {
+            console.log("env-doc.clientID", doc.clientID)
             awarenessProtocol.removeAwarenessStates(this.awareness, [doc.clientID], "app closed")
         }
         if (env.isNode && typeof process !== "undefined") {
@@ -433,8 +448,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     }
 
     get url() {
-        const encodedParams = url.encodeQueryParams(this.params)
-        return this.serverUrl + "/" + (encodedParams.length === 0 ? "" : "?" + encodedParams)
+        return this.serverUrl
     }
 
     /**
@@ -517,12 +531,12 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     disconnect(): void {
         this.shouldConnect = false
         this.disconnectBc()
+        console.log("disconnect-this.ws", this.ws)
         if (!!this.ws && this.ws?.readyState === WebSocket.OPEN) {
             const value = this.getSendData({buf: new Uint8Array(), docType: notepadActions.leave})
+            console.log("disconnect-value", value)
             this.ws?.send(value)
-            setTimeout(() => {
-                this.ws?.close()
-            }, 200)
+            this.ws?.close()
         }
     }
 

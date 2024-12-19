@@ -1,5 +1,5 @@
 import {CollabService} from "@milkdown/plugin-collab"
-import {Doc} from "yjs"
+import Y, {Doc} from "yjs"
 import {WebsocketProvider} from "./WebsocketProvider/WebsocketProvider"
 import {ObservableV2} from "lib0/observable"
 import isEqual from "lodash/isEqual"
@@ -8,6 +8,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
 import {NotepadWsRequest} from "./WebsocketProvider/WebsocketProviderType"
+import {notepadActions, notepadSaveStatus} from "./WebsocketProvider/constants"
 
 export interface CollabUserInfo {
     userId: number
@@ -20,11 +21,13 @@ interface CollabManagerEvents {
     "offline-after": (event: CloseEvent) => void
     "link-status-onchange": (s: CollabStatus) => void
     "online-users": (s: CollabUserInfo[]) => void
+    "sync-title": (s: string) => void
 }
 
 interface CollabNotepadWsRequest {
     token: string
     hash: string
+    title: string
 }
 const getWSUrl = async () => {
     const res = await getRemoteValue(getRemoteHttpSettingGV())
@@ -50,6 +53,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
     private collabStatus: CollabStatus
     private users: CollabUserInfo[]
+    private title: string
 
     constructor(
         private collabService: CollabService,
@@ -59,9 +63,11 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         super()
         this.collabStatus = {
             status: "disconnected",
-            isSynced: false
+            isSynced: false,
+            saveStatus: notepadSaveStatus.saveProgress
         }
         this.users = []
+        this.title = wsRequest.title || ""
     }
 
     flush = async (template: string) => {
@@ -79,6 +85,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         this.wsProvider?.destroy()
 
         this.doc = new Doc()
+
         const url = wsUrl + "api/notepad/ws"
         // const url = "ws://localhost:1880/ws/my-room"
         this.wsProvider = new WebsocketProvider(url, this.doc, {
@@ -88,7 +95,8 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
                 messageType: "notepad",
                 params: {
                     hash: this.wsRequest.hash,
-                    docType: "joinDoc"
+                    docType: notepadActions.join,
+                    saveStatus: notepadSaveStatus.saveProgress
                 },
                 yjsParams: ""
             }
@@ -119,6 +127,10 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
                 this.collabService.applyTemplate(template).connect()
             }
         })
+
+        this.wsProvider.on("saveStatus", async ({saveStatus}) => {
+            this.setCollabStatus({...this.collabStatus, saveStatus})
+        })
         // 监听在线用户数据
         this.wsProvider?.awareness?.on("change", (payload) => {
             // 获取当前所有用户的状态
@@ -127,10 +139,23 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
     }
 
+    private docObserveTitle() {
+        const titleString = this.doc.getText("title").toString()
+        this.onSetTitle(titleString)
+    }
+
     private getOnlineUser() {
         const awarenessMap = this.wsProvider.awareness.getStates()
         const users = Array.from(awarenessMap, ([key, value]) => value.user)
         return users
+    }
+
+    private onSetTitle(newTitle: string) {
+        if (!isEqual(this.title, newTitle)) {
+            this.title = newTitle
+            // 触发'状态变化'事件
+            this.emit("sync-title", [newTitle])
+        }
     }
 
     // 用于更新collabStatus并触发事件
@@ -151,13 +176,27 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
     }
 
-    sendContent(content: string) {
+    setTitle(value) {
+        const textLength = this.doc.getText("title").length
+        if (textLength) {
+            // 清空当前内容
+            this.doc.getText("title").delete(0, this.doc.getText("title").length)
+        }
+        // 插入新内容
+        this.doc.getText("title").insert(0, value)
+        // this.doc.getText("title").applyDelta([{insert: value}])
+    }
+
+    sendContent(value: {content: string; title: string}) {
+        const {content, title} = value
         const v: NotepadWsRequest = {
             messageType: "notepad",
             params: {
                 hash: this.wsRequest.hash,
                 content,
-                docType: "editDoc"
+                title,
+                docType: "editDoc",
+                saveStatus: "saveProgress"
             },
             yjsParams: "",
             token: this.wsRequest.token
