@@ -214,22 +214,26 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                         onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
                     />
                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => onShare(record)} />
-                    <Divider type='vertical' style={{margin: "0 8px"}} />
                     <YakitButton
                         type='text2'
                         icon={<OutlineClouddownloadIcon />}
                         onClick={() => onSingleDown(record)}
                         loading={actionItemRef.current === record && downItemLoading}
                     />
-                    <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton
-                        danger
-                        type='text'
-                        icon={<OutlineTrashIcon />}
-                        onClick={() => onSingleRemove(record)}
-                        loading={actionItemRef.current === record && removeItemLoading}
-                    />
+                    {record.notepadUserId === userInfo.user_id ? (
+                        <>
+                            <Divider type='vertical' style={{margin: "0 8px"}} />
+                            <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => onShare(record)} />
+                            <Divider type='vertical' style={{margin: "0 8px"}} />
+                            <YakitButton
+                                danger
+                                type='text'
+                                icon={<OutlineTrashIcon />}
+                                onClick={() => onSingleRemove(record)}
+                                loading={actionItemRef.current === record && removeItemLoading}
+                            />
+                        </>
+                    ) : null}
                 </div>
             )
         }
