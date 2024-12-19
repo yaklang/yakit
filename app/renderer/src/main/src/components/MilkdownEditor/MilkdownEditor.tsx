@@ -1,4 +1,4 @@
-import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx, serializer} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import React, {useEffect, useRef, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
@@ -34,7 +34,7 @@ import {alterCustomPlugin} from "./utils/alertPlugin"
 import {commentCustomPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
-import {useCreation, useDebounceFn, useMemoizedFn, useRafInterval, useThrottleFn} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useRafInterval, useThrottleFn, useUpdateEffect} from "ahooks"
 import {underlineCustomPlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
@@ -68,104 +68,8 @@ import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
 import {isBoolean} from "lodash"
+import {notepadSaveStatus} from "./WebsocketProvider/constants"
 
-const markdown = `
-
-:u[This text will be underlined]
-
-***
-
-:comment[fdsfdsfds]{commentId="111"}
-
-~~what is Milkdown? Please~~
-
-# 1-1  Milkdown React Commonmark
-
-## 1-2  Milkdown React Commonmark
-### 1-3  Milkdown React Commonmark
-
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-# 2-1  Milkdown React Commonmark
-## 2-2  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-### 2-3  Milkdown React Commonmark
-
-> \[!NOTE]
-> Useful information that users should know, even when skimming content.
-
-> fdsfdsf
-
-:::note
-markdown
-:::
-:::tip
-markdown
-:::
-:::danger
-markdown
-:::
-:::caution
-markdown
-:::
-
-Maybe more? ![]()
-
-This is a demo for using [Milkdown](https://milkdown.dev) link tooltip component
-
-> You're scared of a world where you're needed.
-
-This is a demo for using Milkdown with **React**.
-
-\`\`\`ts
-import { Editor } from '@milkdown/kit/core';
-import { commonmark } from '@milkdown/kit/preset/commonmark';
-
-import { nord } from '@milkdown/theme-nord';
-import '@milkdown/theme-nord/style.css';
-
-Editor
-  .make()
-  .config(nord)
-  .use(commonmark)
-  .create();
-\`\`\`
-
-- [ ] Todo list item 1
-    - [ ] Todo List item 1.1
-    - [ ] Todo List item 1.2
-- [ ] Todo list item 2
-  1. List item 1
-     1. List item 1.1
-     2. List item 1.2
-  2. List item 2
-  3. List item 3
-- [ ] Todo list item 3
-  - List item 1
-    - List item 1.1
-    - List item 1.2
-- List item 2
-- List item 3
-
-`
 const markdown1 = `
 
 1. 5565
@@ -205,7 +109,7 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     return difference > 1000 * 30
 }
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {readonly, defaultValue, collabProps, setEditor, customPlugin, onMarkdownUpdated} = props
+    const {type, readonly, defaultValue, collabProps, setEditor, customPlugin, onMarkdownUpdated} = props
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -219,7 +123,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             (ctx: Ctx) => () => {
                 ctx.set(block.key, {
                     view: pluginViewFactory({
-                        component: BlockView
+                        component: () => <BlockView type={type} notepadHash={collabProps?.milkdownHash} />
                     })
                 })
             },
@@ -234,7 +138,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [pluginViewFactory])
+    }, [pluginViewFactory, type, collabProps?.milkdownHash])
 
     const placeholder = useCreation(() => {
         return [placeholderConfig, placeholderPlugin].flat()
@@ -450,6 +354,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const collabParams: MilkdownCollabProps = useCreation(() => {
         if (!collabProps) {
             const def: MilkdownCollabProps = {
+                title: "",
                 enableCollab: false,
                 milkdownHash: "",
                 routeInfo: {
@@ -457,109 +362,101 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     route: null
                 },
                 onChangeWSLinkStatus: () => {},
-                onChangeOnlineUser: () => {}
+                onChangeOnlineUser: () => {},
+                onSetTitle: () => {}
             }
             return def
         }
         return collabProps
     }, [collabProps])
-    const {get, loading} = useEditor((root) => {
-        return (
-            Editor.make()
-                .config((ctx) => {
-                    ctx.set(rootCtx, root)
-                    ctx.set(defaultValueCtx, defaultValue || "")
-                    ctx.set(tooltip.key, {
-                        view: pluginViewFactory({
-                            component: TooltipView
+
+    //#region 编辑器初始
+    const {get, loading} = useEditor(
+        (root) => {
+            return (
+                Editor.make()
+                    .config((ctx) => {
+                        ctx.set(rootCtx, root)
+                        ctx.set(tooltip.key, {
+                            view: pluginViewFactory({
+                                component: TooltipView
+                            })
+                        })
+                        // 配置为只读
+                        ctx.set(editorViewOptionsCtx, {
+                            editable: () => !readonly
+                        })
+                        ctx.set(defaultValueCtx, defaultValue || "")
+                        onCollab(ctx)
+                        const listener = ctx.get(listenerCtx)
+                        listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
+                            const isSave = nextMarkdown !== prevMarkdown
+                            if (collabParams.enableCollab && isSave) {
+                                onSaveHistory(nextMarkdown)
+                            }
+                            onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
                         })
                     })
-                    // 配置为只读
-                    ctx.update(editorViewOptionsCtx, (prev) => ({
-                        ...prev,
-                        editable: () => !readonly
-                    }))
-                    if (collabParams.enableCollab) {
-                        onCollab(ctx)
-                    }
-
-                    const listener = ctx.get(listenerCtx)
-                    listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
-                        const isSave = nextMarkdown !== prevMarkdown
-                        if (collabParams.enableCollab && isSave) {
-                            onSaveHistory(nextMarkdown)
-                        }
-                        onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
-                    })
-                })
-                .use(serializer)
-                .use(commonmark)
-                .use(gfm)
-                .use(cursor)
-                .use(tooltip)
-                .use(history)
-                .use(clipboard)
-                // trailing
-                .use(trailing)
-                // collab
-                .use(collab)
-                // listener
-                .use(listener)
-                // blockquote
-                .use(blockquotePlugin)
-                // block
-                .use(blockPlugins)
-                // upload
-                .use(uploadPlugins)
-                // image
-                .use(imagePlugin)
-                // listItem
-                .use(listPlugin)
-                .use(headingPlugin)
-                // code
-                .use(codePlugin)
-                // linkTooltip
-                .use(linkTooltip)
-                // placeholder
-                .use(placeholder)
-                // table
-                .use(tableBlock)
-                // alterCustomPlugin
-                .use(alterPlugin)
-                // underlinePlugin
-                .use(underlinePlugin)
-                // commentPlugin
-                .use(commentPlugin)
-                // hrPlugin
-                .use(hrPlugin)
-                // trackDeletePlugin
-                .use(trackDeletePlugin())
-                .use(customPlugin || [])
-        )
-    }, [])
+                    .use(commonmark)
+                    .use(gfm)
+                    .use(cursor)
+                    .use(tooltip)
+                    .use(history)
+                    .use(clipboard)
+                    // trailing
+                    .use(trailing)
+                    // collab
+                    .use(collab)
+                    // listener
+                    .use(listener)
+                    // blockquote
+                    .use(blockquotePlugin)
+                    // block
+                    .use(blockPlugins)
+                    // upload
+                    .use(uploadPlugins)
+                    // image
+                    .use(imagePlugin)
+                    // listItem
+                    .use(listPlugin)
+                    .use(headingPlugin)
+                    // code
+                    .use(codePlugin)
+                    // linkTooltip
+                    .use(linkTooltip)
+                    // placeholder
+                    .use(placeholder)
+                    // table
+                    .use(tableBlock)
+                    // alterCustomPlugin
+                    .use(alterPlugin)
+                    // underlinePlugin
+                    .use(underlinePlugin)
+                    // commentPlugin
+                    .use(commentPlugin)
+                    // hrPlugin
+                    .use(hrPlugin)
+                    // trackDeletePlugin
+                    .use(trackDeletePlugin())
+                    .use(customPlugin || [])
+            )
+        },
+        [readonly, defaultValue, type, collabParams.enableCollab, collabProps?.milkdownHash]
+    )
     /**更新最新的editor */
     useEffect(() => {
-        if (!loading) return
+        if (loading) return
         const editor = get()
         if (editor && setEditor) {
             setEditor(editor)
+            // DeletedFiles
+            editor?.action(onSetDeletedFiles)
+        }
+        return () => {
+            clearRemove()
+            onDeleteAllFiles()
         }
     }, [loading, get])
-
-    //#region 保存历史
-    const historyIntervalTime = useCreation(() => {
-        if (!isBoolean(collabParams.enableSaveHistory)) {
-            return collabParams.enableSaveHistory?.interval || saveHistoryIntervalTime
-        }
-        return saveHistoryIntervalTime
-    }, [collabParams.enableSaveHistory])
-    /**每隔1min 保存历史 */
-    const onSaveHistory = useThrottleFn(
-        useMemoizedFn((value: string) => {
-            collabManagerRef.current?.sendContent(value)
-        }),
-        {wait: historyIntervalTime}
-    ).run
     //#endregion
 
     //#region 删除资源
@@ -568,18 +465,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const clearRemove = useRafInterval(() => {
         onDeleteFiles()
     }, interval)
-    useEffect(() => {
-        const editor = get()
-        // DeletedFiles
-        //TODO - 会被重复触发
-        editor?.action((ctx) => {
-            onSetDeletedFiles(ctx)
-        })
-        return () => {
-            clearRemove()
-            onDeleteAllFiles()
-        }
-    }, [get])
     /** 设置当前文档中被删除的文件名称 */
     const onSetDeletedFiles = useDebounceFn(
         useMemoizedFn((ctx) => {
@@ -616,7 +501,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }
         if (fileName.length > 0) {
             setInterval(undefined)
-
             httpDeleteOSSResource({file_name: fileName}).finally(() => {
                 // 暂不考虑删除失败的情况
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
@@ -630,48 +514,64 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const wsStatusRef = useRef<CollabStatus>({
         status: "disconnected",
         isSynced: false,
-        isSave: true
-    })
-    useEffect(() => {
-        if (collabParams.milkdownHash) get()?.action(onCollab)
-    }, [collabParams.milkdownHash])
+        saveStatus: notepadSaveStatus.saveProgress
+    }) // 记录当前链接状态
+    useUpdateEffect(() => {
+        if (collabManagerRef.current) {
+            collabManagerRef.current.setTitle(collabParams.title)
+        }
+    }, [collabParams.title])
     useEffect(() => {
         return () => {
-            collabManagerRef.current && collabManagerRef.current.disconnect()
+            collabDisconnect()
         }
     }, [])
-    const onCollab = useDebounceFn(
-        (ctx) => {
-            const {milkdownHash} = collabParams
-            if (!collabParams.enableCollab) return
-            if (!milkdownHash) {
-                // enableCollab true,启用协作文档时,hash值必须存在
-                return
-            }
-            if (collabManagerRef.current) return
-            const user = {
-                userId: userInfo.user_id || 0,
-                name: userInfo.companyName || "",
-                color: `${randomUserColor()}`,
-                heardImg: userInfo.companyHeadImg || ""
-            }
-            const collabService = ctx.get(collabServiceCtx)
-            collabManagerRef.current = new CollabManager(collabService, user, {
-                token: userInfo.token,
-                hash: milkdownHash
-            })
-            collabManagerRef.current.flush(defaultValue || "")
-            collabManagerRef.current.on("offline-after", onLinkError)
-            collabManagerRef.current.on("online-users", onSetOnlineUsers)
-            collabManagerRef.current.on("link-status-onchange", onLineStatus)
-        },
-        {wait: 500, leading: true}
+    const collabDisconnect = useMemoizedFn(() => {
+        collabManagerRef.current && collabManagerRef.current.disconnect()
+    })
+    const onCollab = useMemoizedFn((ctx) => {
+        const {milkdownHash, title} = collabParams
+        if (!collabParams.enableCollab) {
+            collabDisconnect()
+            return
+        }
+        if (!milkdownHash) {
+            yakitNotify("error", "enableCollab true,启用协作文档时,hash值必须存在")
+            return
+        }
+        if (collabManagerRef.current) return
+        const user = {
+            userId: userInfo.user_id || 0,
+            name: userInfo.companyName || "",
+            color: `${randomUserColor()}`,
+            heardImg: userInfo.companyHeadImg || ""
+        }
+        const collabService = ctx.get(collabServiceCtx)
+        collabManagerRef.current = new CollabManager(collabService, user, {
+            token: userInfo.token,
+            hash: milkdownHash,
+            title
+        })
+        collabManagerRef.current.flush(defaultValue || "")
+        collabManagerRef.current.on("offline-after", onLinkError)
+        collabManagerRef.current.on("online-users", onSetOnlineUsers)
+        collabManagerRef.current.on("link-status-onchange", onLineStatus)
+        collabManagerRef.current.on("sync-title", onSetTitle)
+    })
+
+    /**同步标题 */
+    const onSetTitle = useDebounceFn(
+        useMemoizedFn((value: string) => {
+            collabParams?.onSetTitle(value)
+        }),
+        {wait: 200, leading: true}
     ).run
 
+    /**在线链接状态 */
     const onLineStatus = useDebounceFn(
         useMemoizedFn((value: CollabStatus) => {
             wsStatusRef.current = value
-            collabProps?.onChangeWSLinkStatus(value)
+            collabParams?.onChangeWSLinkStatus(value)
         }),
         {wait: 200, leading: true}
     ).run
@@ -679,7 +579,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     /**获取到所有的在线用户，然后设置在线用户数据 */
     const onSetOnlineUsers = useDebounceFn(
         useMemoizedFn((userList: CollabUserInfo[]) => {
-            collabProps?.onChangeOnlineUser(userList)
+            collabParams?.onChangeOnlineUser(userList)
         }),
         {wait: 200, leading: true}
     ).run
@@ -689,7 +589,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         useMemoizedFn((event: CloseEvent) => {
             const {routeInfo} = collabParams
             if (!routeInfo) {
-                console.error("当enableCollab为true,routeInfo必传")
+                yakitNotify("error", "当enableCollab为true,routeInfo必传")
                 return
             }
             switch (event.code) {
@@ -748,8 +648,37 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const onDisConnect = useMemoizedFn(() => {
         collabManagerRef.current?.disconnect()
     })
+
+    //#region 保存历史
+    //是否保存历史,开启协作文档后,才有保存历史
+    const isSaveHistory = useCreation(() => {
+        if (!collabParams.enableCollab) {
+            return false
+        }
+        if (isBoolean(collabParams.enableSaveHistory)) {
+            return collabParams.enableSaveHistory
+        }
+        return !!collabParams.enableSaveHistory?.enable
+    }, [collabParams.enableCollab, collabParams.enableSaveHistory])
+    // 保存历史的间隔时间 默认每隔1min
+    const historyIntervalTime = useCreation(() => {
+        if (isBoolean(collabParams.enableSaveHistory)) {
+            return saveHistoryIntervalTime
+        }
+        return collabParams.enableSaveHistory?.interval || saveHistoryIntervalTime
+    }, [collabParams.enableSaveHistory])
+    /**默认每隔1min 保存历史 */
+    const onSaveHistory = useThrottleFn(
+        useMemoizedFn((value: string) => {
+            if (isSaveHistory) collabManagerRef.current?.sendContent({content: value, title: collabParams.title})
+        }),
+        {wait: historyIntervalTime}
+    ).run
+    //#endregion
+
     //#endregion 协作文档 end
 
+    /*TODO - 历史文档差异对比 */
     const onDifferences = useMemoizedFn((ctx) => {
         // 获取两个文档的差异
         const differences = diffLines(markdown1, markdown2)

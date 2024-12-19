@@ -3,7 +3,7 @@ import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
 import {CollabStatus, EditorMilkdownProps, MilkdownCollabProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import styles from "./ModifyNotepad.module.scss"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
-import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps} from "./ModifyNotepadType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider, Tooltip, Tree} from "antd"
@@ -41,6 +41,8 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CollabUserInfo} from "@/components/MilkdownEditor/CollabManager"
 import {notepadRole} from "../NotepadShareModal/constants"
+import {notepadSaveStatus} from "@/components/MilkdownEditor/WebsocketProvider/constants"
+import emiter from "@/utils/eventBus/eventBus"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -76,7 +78,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         return cloneDeep(defaultModifyNotepadPageInfo)
     })
 
-    const [loading, setLoading] = useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(false) // 编辑器ws是否连接上
+    const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
     const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [expand, setExpand] = useState<boolean>(true)
@@ -89,21 +92,23 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
     const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
         id: 0,
-        created_at: moment().valueOf(),
-        updated_at: moment().valueOf(),
+        created_at: moment().unix(),
+        updated_at: moment().unix(),
         title: initTabName(),
         content: "",
-        userName: userInfo.companyName || "-",
-        headImg: userInfo.companyHeadImg || "",
+        userName: "",
+        headImg: "",
         collaborator: [],
         hash: ""
     })
 
     const [documentLinkStatus, setDocumentLinkStatus] = useState<CollabStatus>({
         status: "disconnected",
-        isSynced: false
+        isSynced: false,
+        saveStatus: notepadSaveStatus.saveProgress
     })
 
+    const notepadContentRef = useRef<string>("")
     const notepadRef = useRef<HTMLDivElement>(null)
     const treeKeysRef = useRef<string[]>([])
 
@@ -111,42 +116,58 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const clientWidthRef = useRef(document.body.clientWidth)
     const clientHeightRef = useRef(document.body.clientHeight)
     const avatarColor = useRef<string>(randomAvatarColor())
+    const perTabName = useRef<string>(initTabName())
+    const [inViewport = true] = useInViewport(notepadRef)
 
     useEffect(() => {
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
-            apiGetNotepadDetail(pageInfo.notepadHash).then((res) => {
-                setNotepadDetail(res)
-            })
+            setNotepadLoading(true)
+            apiGetNotepadDetail(pageInfo.notepadHash)
+                .then((res) => {
+                    perTabName.current = res.title
+                    notepadContentRef.current = res.content
+                    setNotepadDetail(res)
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setNotepadLoading(false)
+                    }, 200)
+                )
         } else {
             // 新建笔记本并保存
             const params: API.PostNotepadRequest = {
                 title: initTabName(),
                 content: ""
             }
-            setLoading(true)
+            perTabName.current = params.title
+            setNotepadLoading(true)
             apiSaveNotepadList(params)
                 .then((hash) => {
-                    setNotepadDetail({...(notepadDetail || {}), hash})
+                    setNotepadDetail({
+                        ...(notepadDetail || {}),
+                        notepadUserId: userInfo.user_id || 0,
+                        headImg: userInfo.companyHeadImg || "",
+                        userName: userInfo.companyName || "",
+                        hash
+                    })
                 })
                 .finally(() =>
                     setTimeout(() => {
-                        setLoading(false)
+                        setNotepadLoading(false)
                     }, 200)
                 )
         }
         return () => {
-            try {
-                const markdownContent = editor?.action(getMarkdown())
-                onSaveNewContent(markdownContent)
-            } catch (error) {}
-            onRemoveEmptyNotepad()
+            const notepadContent = notepadContentRef.current
+            onSaveNewContent(notepadContent)
+            onRemoveEmptyNotepad(notepadContent)
         }
     }, [pageInfo])
 
     /**新建进来，然后退出时文档为空，需要删除文档 */
-    const onRemoveEmptyNotepad = useMemoizedFn(() => {
-        const markdownContent = editor?.action(getMarkdown())
+    const onRemoveEmptyNotepad = useMemoizedFn((notepadContent) => {
+        const markdownContent = notepadContent
         const isRemove = !pageInfo.notepadHash && !markdownContent && notepadDetail.hash
         if (!!isRemove) {
             apiDeleteNotepadDetail({hash: notepadDetail.hash})
@@ -162,13 +183,33 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         apiSaveNotepadList(params)
     })
 
-    /**TODO -  编辑器内容的变化，更新数据 */
+    /** 编辑器内容的变化，更新数据 */
     const onMarkdownUpdated = useDebounceFn(
         (value) => {
-            // onSaveNewContent(value)
+            notepadContentRef.current = value
+            const time = moment().unix()
+            setNotepadDetail((v) => ({...v, updated_at: time}))
         },
-        {wait: 1000 * 60, leading: true}
+        {wait: 200, leading: true}
     ).run
+
+    const authorAvatar = useCreation(() => {
+        return judgeAvatar(userInfo, 28, avatarColor.current)
+    }, [userInfo.companyName, userInfo.companyHeadImg])
+
+    //#region 标题
+    useEffect(() => {
+        if (inViewport) {
+            emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
+        }
+        return () => {
+            emiter.off("secondMenuTabDataChange", onSecondMenuDataChange)
+        }
+    }, [inViewport])
+
+    const onSecondMenuDataChange = useMemoizedFn(() => {
+        setTabName(initTabName())
+    })
 
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
@@ -182,16 +223,14 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             if (!currentItem) return
             const newCurrentItem: PageNodeItemProps = {
                 ...currentItem,
-                pageName: tabName
+                pageName: tabName || perTabName.current
             }
             updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
         }),
         {wait: 200, leading: true}
     ).run
+    //#endregion
 
-    const authorAvatar = useCreation(() => {
-        return judgeAvatar(userInfo, 28, avatarColor.current)
-    }, [userInfo.companyName])
     //#region 目录
     useEffect(() => {
         clientWidthRef.current = document.body.clientWidth
@@ -268,6 +307,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         return (notepadWidth - 820 - 32) / 2
     }, [notepadWidth, clientWidthRef.current])
     //#endregion
+
     //#region  编辑器相关
     const onSetDocumentLinkStatus = useMemoizedFn((val: CollabStatus) => {
         setDocumentLinkStatus(val)
@@ -278,18 +318,26 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const onSetOnlineUsers = useMemoizedFn((users: CollabUserInfo[]) => {
         setOnlineUsers(users.filter((ele) => ele.userId !== userInfo.user_id))
     })
+    /**当前登录人的笔记本权限 */
     const currentRole = useCreation(() => {
-        /**TODO 需要增加是否是本人的判断 */
-        // const owner = notepadDetail.collaborator.find((ele) => ele.user_id === userInfo.user_id)
-        // return owner ? owner.role : ""
-        return notepadRole.editPermission
-    }, [notepadDetail.collaborator, userInfo.user_id])
+        if (userInfo.user_id === notepadDetail.notepadUserId) return notepadRole.adminPermission
+        const owner = notepadDetail.collaborator?.find((ele) => ele.user_id === userInfo.user_id)
+        return owner ? owner.role : ""
+    }, [notepadDetail.collaborator, userInfo.user_id, notepadDetail.notepadUserId])
+    /**作者和赋予了编辑权限的协作者才有编辑权限，其余为只读 */
     const readonly = useCreation(() => {
-        return currentRole !== notepadRole.editPermission
+        switch (currentRole) {
+            case notepadRole.adminPermission:
+            case notepadRole.editPermission:
+                return false
+            default:
+                return true
+        }
     }, [currentRole])
     const collabProps: MilkdownCollabProps = useCreation(() => {
-        const enableCollab = currentRole === notepadRole.editPermission
+        const enableCollab = !readonly
         const collabValue: MilkdownCollabProps = {
+            title: tabName,
             enableCollab,
             milkdownHash: notepadDetail.hash,
             routeInfo: {
@@ -298,22 +346,23 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             },
             enableSaveHistory: true,
             onChangeWSLinkStatus: onSetDocumentLinkStatus,
-            // onChangeOnlineUser: setOnlineUsers
-            onChangeOnlineUser: onSetOnlineUsers // 过滤了作者本人
+            onChangeOnlineUser: onSetOnlineUsers, // 过滤了作者本人
+            onSetTitle: onSetTabName
         }
         return collabValue
-    }, [notepadDetail.hash, pageId, currentRole, YakitRoute.Modify_Notepad])
+    }, [notepadDetail.hash, pageId, readonly, YakitRoute.Modify_Notepad, tabName])
     //#endregion
+
     /**在线链接&&文档保存状态 */
     const renderOnlineStatus = useCreation(() => {
-        const {status, isSynced = true, isSave = true} = documentLinkStatus
+        const {status, saveStatus = notepadSaveStatus.saveProgress} = documentLinkStatus
         switch (status) {
             case "connected":
                 return (
                     <>
                         <YakitTag color='green'>在线</YakitTag>
-                        <span>{isSave ? "已经保存到云端" : "保存中..."}</span>
-                        {isSynced && "已同步"}
+                        {/* 暂时不显示保存失败的显示文案 */}
+                        <span>{saveStatus === notepadSaveStatus.saveSuccess ? "已经保存到云端" : "保存中..."}</span>
                     </>
                 )
             case "connecting":
@@ -322,9 +371,16 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                 return collabProps.enableCollab ? <YakitTag color='red'>离线</YakitTag> : <></>
         }
     }, [documentLinkStatus, collabProps.enableCollab])
+
+    /**如果当前用户没有编辑权限,没有启动协作，阅读权限的人不能查看最新的编辑过程的文件 */
+    const spinning = useCreation(() => {
+        const enableCollab = currentRole === notepadRole.editPermission
+        if (enableCollab) return loading
+        return false
+    }, [loading, currentRole])
     return (
-        <YakitSpin spinning={collabProps.enableCollab && loading}>
-            <div className={styles["modify-notepad"]}>
+        <div className={styles["modify-notepad"]}>
+            <YakitSpin spinning={notepadLoading}>
                 <div className={styles["modify-notepad-heard"]}>
                     <div className={styles["modify-notepad-heard-title"]}>{tabName}</div>
                     <div className={styles["modify-notepad-heard-extra"]}>
@@ -388,11 +444,15 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     </div>
                 </div>
                 <div className={classNames(styles["notepad"])} ref={notepadRef}>
-                    <div className={styles["notepad-catalogue-wrapper"]}>
+                    <div
+                        className={classNames(styles["notepad-catalogue-wrapper"], {
+                            [styles["notepad-catalogue-wrapper-hidden"]]: !catalogue.length
+                        })}
+                    >
                         <div
                             className={classNames(styles["notepad-catalogue"], {
                                 [styles["notepad-catalogue-hover"]]: notepadWidth < notepadMixWidth,
-                                [styles["notepad-catalogue-hidden"]]: !expand
+                                [styles["notepad-catalogue-overflow-hidden"]]: !expand
                             })}
                             style={{
                                 top: catalogueTop,
@@ -443,16 +503,18 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 bordered={false}
                                 className={styles["notepad-input"]}
                                 value={tabName}
-                                onChange={(e) => onSetTabName(e.target.value)}
+                                onChange={(e) => {
+                                    onSetTabName(e.target.value)
+                                }}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
                                 {notepadDetail?.headImg ? <AuthorImg src={notepadDetail?.headImg} /> : authorAvatar}
-                                <span>{notepadDetail?.userName}</span>
+                                <span>{notepadDetail?.userName || "-"}</span>
                                 <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
                                 <span>
-                                    创建时间:
-                                    {moment(notepadDetail?.updated_at).format("YYYY-MM-DD HH:mm")}
+                                    最近修改时间:
+                                    {moment.unix(notepadDetail?.updated_at).format("YYYY-MM-DD HH:mm")}
                                 </span>
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
                                 {renderOnlineStatus}
@@ -469,19 +531,22 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                             </div>
                         </div>
                         <div className={styles["notepad-editor"]}>
-                            <MilkdownEditor
-                                readonly={readonly}
-                                defaultValue={notepadDetail.content}
-                                setEditor={setEditor}
-                                customPlugin={cataloguePlugin(getCatalogue)}
-                                collabProps={collabProps}
-                                onMarkdownUpdated={onMarkdownUpdated}
-                            />
+                            <YakitSpin spinning={spinning}>
+                                <MilkdownEditor
+                                    type='notepad'
+                                    readonly={readonly}
+                                    defaultValue={notepadDetail.content}
+                                    setEditor={setEditor}
+                                    customPlugin={cataloguePlugin(getCatalogue)}
+                                    collabProps={collabProps}
+                                    onMarkdownUpdated={onMarkdownUpdated}
+                                />
+                            </YakitSpin>
                         </div>
                     </div>
                 </div>
-            </div>
-        </YakitSpin>
+            </YakitSpin>
+        </div>
     )
 })
 
