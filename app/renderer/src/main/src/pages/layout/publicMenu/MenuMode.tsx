@@ -1,6 +1,7 @@
 import React from "react"
 import {
     PublicAuditCodeIcon,
+    PublicAuditHoleIcon,
     PublicBasicCrawlerIcon,
     PublicBatchPluginIcon,
     PublicBruteIcon,
@@ -387,6 +388,18 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                             </div>
                         </div>
                         <div className={styles["title-style"]}>规则管理</div>
+                    </div>
+                    <div className={styles["divider-style"]}></div>
+                    <div
+                        className={styles["vertical-menu-wrapper"]}
+                        onClick={() => onMenu(YakitRoute.YakRunner_Audit_Hole)}
+                    >
+                        <div className={styles["menu-icon-wrapper"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <PublicAuditHoleIcon />
+                            </div>
+                        </div>
+                        <div className={styles["title-style"]}>漏洞管理</div>
                     </div>
                 </>
             )}
