@@ -1,9 +1,8 @@
-import { ReactElement } from "react"
+import {ReactElement} from "react"
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
-import { EditorMenuItemType } from "./EditorMenu"
-import { EditorDetailInfoProps } from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-import { HighLightText } from "@/components/HTTPFlowDetail"
-import { Selection } from "@/pages/yakRunner/RunnerTabs/RunnerTabsType";
+import {EditorMenuItemType} from "./EditorMenu"
+import {EditorDetailInfoProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
 
 /** monaco-editor 相关接口 */
 export type YakitSelection = monacoEditor.Selection
@@ -15,6 +14,11 @@ export type YakitIModelDecoration = monacoEditor.editor.IModelDecoration
 /** @name 自带的菜单组可选项 */
 export type YakitEditorExtraRightMenuType = "code" | "decode" | "http" | "customcontextmenu" | "aiplugin"
 
+export interface HighLightText {
+    startOffset: number
+    highlightLength: number
+    hoverVal: string
+}
 export interface YakitEditorProps {
     /** @name 是否每次更新菜单 */
     forceRenderMenu?: boolean
@@ -33,7 +37,7 @@ export interface YakitEditorProps {
     theme?: string
 
     /** @name 编辑器加载完成后的回调 */
-    editorDidMount?: (editor: YakitIMonacoEditor,monaco: any) => any
+    editorDidMount?: (editor: YakitIMonacoEditor, monaco: any) => any
 
     /** @name 自定义额外的右键菜单组 */
     contextMenu?: OtherMenuListProps
@@ -78,8 +82,9 @@ export interface YakitEditorProps {
     highLightText?: HighLightText[] | Selection[]
     highLightClass?: string
     /** @name 配置项-关联高亮显示配置 */
-    highLightFind?: Selection[]
+    highLightFind?: HighLightText[] | Selection[]
     highLightFindClass?: string
+    isPositionHighLightCursor?: boolean
 }
 
 /**

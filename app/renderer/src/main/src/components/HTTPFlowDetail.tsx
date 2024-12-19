@@ -42,6 +42,7 @@ import YakitCollapse from "./yakitUI/YakitCollapse/YakitCollapse"
 import PluginTabs from "./businessUI/PluginTabs/PluginTabs"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {asynSettingState} from "@/utils/optimizeRender"
+import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -552,10 +553,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
 type HTTPFlowInfoType = "domains" | "json" | "rules"
 
-export interface HighLightText {
-    startOffset: number
-    highlightLength: number
-    hoverVal: string
+export interface HistoryHighLightText extends HighLightText {
     IsMatchRequest?: boolean
 }
 
@@ -570,7 +568,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
     const [isFold, setFold] = useState<boolean>(defaultFold)
     const lastIdRef = useRef<number>()
-    const [highLightText, setHighLightText] = useState<HighLightText[]>([])
+    const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
+    const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
     useEffect(() => {
         update()
@@ -582,6 +581,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
     useUpdateEffect(() => {
         setRemoteValue("HISTORY_FOLD", JSON.stringify(isFold))
+        if (isFold) {
+            setHighLightItem(undefined)
+            setCurrId(undefined)
+        }
     }, [isFold])
 
     const update = useMemoizedFn((isSkip: boolean = false) => {
@@ -655,18 +658,26 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
+                setHighLightItem(undefined)
+                setCurrId(undefined)
+
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
-                    // 当侧边栏为关闭的时候，需要重新设置一下更新一下高亮
-                    if (isFold) {
-                        setHighLightText(
-                            rsp.Data.map((i) => ({
-                                startOffset: i.Index,
-                                highlightLength: i.Length,
-                                hoverVal: i.RuleName,
-                                IsMatchRequest: i.IsMatchRequest
-                            }))
-                        )
+                    
+                    if (i?.InvalidForUTF8Request || i?.InvalidForUTF8Response) {
+                        setHighLightText([])
+                    } else {
+                        // 当侧边栏为关闭的时候，需要重新设置一下更新一下高亮
+                        if (isFold) {
+                            setHighLightText(
+                                rsp.Data.map((i) => ({
+                                    startOffset: i.Index,
+                                    highlightLength: i.Length,
+                                    hoverVal: i.RuleName,
+                                    IsMatchRequest: i.IsMatchRequest
+                                }))
+                            )
+                        }
                     }
                 } else {
                     setHighLightText([])
@@ -702,6 +713,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
 
+    const httpFlowTableRef = useRef<any>(null)
+    const [currId, setCurrId] = useState<number | undefined>()
+    const [extractedData, setExtractedData] = useState<HTTPFlowExtractedData[]>([])
     const [exportMITMRuleFilter, setExportMITMRuleFilter] = useState<ExtractedDataFilter>({
         TraceID: [],
         RuleVerbose: []
@@ -719,6 +733,36 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 yakitNotify("error", "导出失败：" + err)
             })
     })
+    const disablePrev = useMemo(() => {
+        if (flow?.InvalidForUTF8Request || flow?.InvalidForUTF8Response) {
+            return true
+        }
+        if (extractedData.length === 0) {
+            return true
+        }
+        if (currId === undefined) {
+            return true
+        }
+        const currIndex = extractedData.findIndex((item) => item.Id == currId)
+        if (currIndex <= 0) {
+            return true
+        }
+    }, [flow, currId, extractedData])
+    const disableNext = useMemo(() => {
+        if (flow?.InvalidForUTF8Request || flow?.InvalidForUTF8Response) {
+            return true
+        }
+        if (extractedData.length === 0) {
+            return true
+        }
+        if (currId === undefined) {
+            return true
+        }
+        const currIndex = extractedData.findIndex((item) => item.Id == currId)
+        if (currIndex >= extractedData.length - 1) {
+            return true
+        }
+    }, [flow, currId, extractedData])
 
     return isSelect ? (
         <div className={styles["http-history-box"]}>
@@ -733,11 +777,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             highLightText={highLightText}
+                            highLightItem={highLightItem}
                             {...props}
                         />
                     )
                 }
-                firstMinSize='850px'
+                firstMinSize='650px'
                 firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
                 secondNode={
                     <div style={{paddingRight: 2, height: "100%"}}>
@@ -829,26 +874,58 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 )}
                                 {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
                                     <HTTPFlowExtractedDataTable
+                                        ref={httpFlowTableRef}
                                         hiddenIndex={flow?.HiddenIndex || ""}
+                                        invalidForUTF8Request={!!flow?.InvalidForUTF8Request}
+                                        InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
                                         onSetExportMITMRuleFilter={setExportMITMRuleFilter}
                                         title={
                                             <div className={styles["table-header"]}>
-                                                <Button.Group size={"small"}>
-                                                    {existedInfoType.map((i) => {
-                                                        return (
-                                                            <YakitButton
-                                                                size='small'
-                                                                type={infoType === i ? "primary" : "outline2"}
-                                                                onClick={() => {
-                                                                    setInfoType(i)
-                                                                }}
-                                                                key={i}
-                                                            >
-                                                                {infoTypeVerbose(i)}
-                                                            </YakitButton>
-                                                        )
-                                                    })}
-                                                </Button.Group>
+                                                <Space>
+                                                    <Button.Group size={"small"}>
+                                                        {existedInfoType.map((i) => {
+                                                            return (
+                                                                <YakitButton
+                                                                    size='small'
+                                                                    type={infoType === i ? "primary" : "outline2"}
+                                                                    onClick={() => {
+                                                                        setInfoType(i)
+                                                                    }}
+                                                                    key={i}
+                                                                >
+                                                                    {infoTypeVerbose(i)}
+                                                                </YakitButton>
+                                                            )
+                                                        })}
+                                                    </Button.Group>
+                                                    <Tooltip title={"上一个规则"}>
+                                                        <YakitButton
+                                                            type='text'
+                                                            size='small'
+                                                            icon={<LeftOutlined />}
+                                                            disabled={disablePrev}
+                                                            onClick={() => {
+                                                                httpFlowTableRef.current.jumpDataProjectHighLight(
+                                                                    "prev"
+                                                                )
+                                                            }}
+                                                        ></YakitButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={"下一个规则"}>
+                                                        <YakitButton
+                                                            type='text'
+                                                            size='small'
+                                                            icon={<RightOutlined />}
+                                                            disabled={disableNext}
+                                                            onClick={() => {
+                                                                httpFlowTableRef.current.jumpDataProjectHighLight(
+                                                                    "next"
+                                                                )
+                                                            }}
+                                                        ></YakitButton>
+                                                    </Tooltip>
+                                                </Space>
+
                                                 <Space>
                                                     <YakitButton
                                                         type='primary'
@@ -877,6 +954,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                             </div>
                                         }
                                         onSetHighLightText={setHighLightText}
+                                        onSetHighLightItem={setHighLightItem}
+                                        currId={currId}
+                                        onSetCurrId={setCurrId}
+                                        onSetExtractedData={setExtractedData}
                                     />
                                 )}
                                 {existedInfoType.length === 0 && (
@@ -913,7 +994,8 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     flowRequestLoad?: boolean
     flowResponseLoad?: boolean
     pageType?: HTTPHistorySourcePageType
-    highLightText?: HighLightText[]
+    highLightText?: HistoryHighLightText[]
+    highLightItem?: HistoryHighLightText
 }
 
 interface HTTPFlowBareProps {
@@ -931,6 +1013,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         id,
         Tags,
         highLightText,
+        highLightItem,
         flowRequestLoad,
         flowResponseLoad,
         historyId,
@@ -1108,15 +1191,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         if (flow?.Url) {
             try {
                 let url = new URL(flow.Url)
-                // let path: string[] = url.pathname.split("/").filter((item) => item)
-                // path.unshift(url.origin)
-
-                // let str = ""
-                // let arr: string[] = []
-                // for (let i = 0; i < path.length; i++) {
-                //     str += (i !== 0 ? "/" : "") + path[i]
-                //     arr.push(str)
-                // }
                 emiter.emit("onHistoryJumpWebTree", JSON.stringify({host: url.host}))
             } catch (error) {
                 return ""
@@ -1232,7 +1306,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                     return <Empty description={"选择想要查看的 HTTP 记录请求"} />
                 }
                 if (flow?.IsWebsocket) {
-                    return <HTTPFlowForWebsocketViewer flow={flow} historyId={historyId} pageType={pageType} />
+                    return (
+                        <HTTPFlowForWebsocketViewer
+                            flow={flow}
+                            historyId={historyId}
+                            pageType={pageType}
+                            highLightText={highLightText}
+                            highLightItem={highLightItem}
+                            highLightFindClass='hight-light-rule-color'
+                        />
+                    )
                 }
                 return (
                     <NewHTTPPacketEditor
@@ -1324,7 +1407,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
-                        highLightText={flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => i.IsMatchRequest)}
+                        highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
+                        highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
+                        highLightFindClass='hight-light-rule-color'
+                        isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: true}}
                     />
@@ -1435,9 +1521,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         onEditor={(Editor) => {
                             setResEditor(Editor)
                         }}
-                        highLightText={
-                            flow.InvalidForUTF8Request ? [] : highLightText?.filter((i) => !i.IsMatchRequest)
-                        }
+                        highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
+                        highLightFind={highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []}
+                        highLightFindClass='hight-light-rule-color'
+                        isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: false}}
                     />
