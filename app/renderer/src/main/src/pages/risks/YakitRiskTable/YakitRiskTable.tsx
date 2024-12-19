@@ -517,7 +517,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 dataKey: "Url"
             },
             {
-                title: "Tag",
+                title: "处置状态",
                 dataKey: "Tags",
                 filterProps: {
                     filterKey: "TagList",
