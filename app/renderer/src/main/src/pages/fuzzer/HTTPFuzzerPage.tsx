@@ -983,10 +983,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes, JSON.stringify(advancedConfigValue.repeatTimes))
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent, JSON.stringify(advancedConfigValue.concurrent))
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, JSON.stringify(advancedConfigValue.minDelaySeconds))
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, JSON.stringify(advancedConfigValue.maxDelaySeconds))
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes, `${advancedConfigValue.repeatTimes}`)
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent, `${advancedConfigValue.concurrent}`)
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, `${advancedConfigValue.minDelaySeconds}`)
+        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, `${advancedConfigValue.maxDelaySeconds}`)
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
 
         if (retryRef.current) {

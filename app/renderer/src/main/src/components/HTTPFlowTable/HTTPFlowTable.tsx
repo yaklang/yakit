@@ -3306,109 +3306,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     })
 
-    const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
-    const [searchType, setSearchType] = useState<HistoryPluginSearchType>("all")
-    const [searchAll, setSearchAll] = useState<string>("")
-    const [searchRequest, setSearchRequest] = useState<string>("")
-    const [searchResponse, setSearchResponse] = useState<string>("")
-    const onSelectBeforeOption = useMemoizedFn((o: string) => {
-        if (o === "all") {
-            setSearchRequest("")
-            setSearchResponse("")
-        }
-        if (o === "request") {
-            setSearchAll("")
-            setSearchResponse("")
-        }
-        if (o === "response") {
-            setSearchAll("")
-            setSearchRequest("")
-        }
-        setSearchType(o as HistoryPluginSearchType)
-    })
-    const onInputUpadte = useMemoizedFn((e: any) => {
-        if (searchType === "all") setSearchAll(e.target.value)
-        if (searchType === "request") setSearchRequest(e.target.value)
-        if (searchType === "response") setSearchResponse(e.target.value)
-        return
-    })
-    const searchValue = useMemo(() => {
-        if (searchType === "all") return searchAll
-        if (searchType === "request") return searchRequest
-        if (searchType === "response") return searchResponse
-        return ""
-    }, [searchType, searchAll, searchRequest, searchResponse])
-    const handleSearch = useDebounceFn(
-        () => {
-            setParams({...params, Keyword: searchValue, KeywordType: searchType})
-            setTimeout(() => {
-                updateData()
-            }, 20)
-        },
-        {wait: 300}
-    ).run
-    const handleSearchBlur = useMemoizedFn(() => {
-        if (searchValue === "") {
-            handleSearch()
-        }
-    })
-    const searchNode = useMemoizedFn(() => {
-        return (
-            <YakitCombinationSearch
-                wrapperClassName={style["http-history-table-right-search"]}
-                afterModuleType='input'
-                valueBeforeOption={searchType}
-                onSelectBeforeOption={onSelectBeforeOption}
-                selectProps={{size: "small"}}
-                beforeOptionWidth={80}
-                addonBeforeOption={[
-                    {
-                        label: "关键字",
-                        value: "all"
-                    },
-                    {
-                        label: "请求",
-                        value: "request"
-                    },
-                    {
-                        label: "响应",
-                        value: "response"
-                    }
-                ]}
-                inputSearchModuleTypeProps={{
-                    size: "small",
-                    value: searchValue,
-                    onChange: onInputUpadte,
-                    onSearch: handleSearch,
-                    onBlur: handleSearchBlur,
-                    wrapperClassName: style["inputSearchModule"]
-                }}
-            ></YakitCombinationSearch>
-        )
-    })
-    const searchEle = useMemoizedFn(() => {
-        return (
-            <>
-                {size?.width && size?.width < 1100 ? (
-                    <YakitPopover
-                        overlayClassName={style["http-history-search-drop-down-popover"]}
-                        trigger='click'
-                        placement='bottomRight'
-                        content={searchNode}
-                        visible={isHoverSearch}
-                        onVisibleChange={setIsHoverSearch}
-                    >
-                        <YakitButton
-                            icon={<OutlineSearchIcon />}
-                            type='outline2'
-                            isHover={isHoverSearch || !!searchValue}
-                        />
-                    </YakitPopover>
-                ) : (
-                    searchNode()
-                )}
-            </>
-        )
+    const handleSearch = useMemoizedFn((searchValue, searchType) => {
+        setParams({...params, Keyword: searchValue, KeywordType: searchType})
+        setTimeout(() => {
+            updateData()
+        }, 20)
     })
 
     const getBatchContextMenu = useMemoizedFn(() => {
@@ -3830,7 +3732,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         <div className={style["http-history-table-right"]}>
                                             {onlyShowSearch ? (
                                                 <>
-                                                    {searchEle()}
+                                                    <HistorySearch
+                                                        showPopoverSearch={size?.width ? size?.width <= 1100 : true}
+                                                        handleSearch={handleSearch}
+                                                    />
                                                     {showBatchActions && (
                                                         <div style={{marginLeft: 8}}>{batchActions()}</div>
                                                     )}
@@ -3881,7 +3786,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                             </YakitSelect.Option>
                                                         </YakitSelect>
                                                     </div>
-                                                    {searchEle()}
+                                                    <HistorySearch
+                                                        showPopoverSearch={size?.width ? size?.width <= 1100 : true}
+                                                        handleSearch={handleSearch}
+                                                    />
                                                     <div className={style["http-history-table-color-swatch"]}>
                                                         <YakitPopover
                                                             overlayClassName={style["http-history-table-color-popover"]}
@@ -4513,3 +4421,110 @@ const onBatchExecPacketScan = (params: {
         verbose: currentPacketScan.Verbose
     })
 }
+
+interface HistorySearchProps {
+    showPopoverSearch: boolean
+    handleSearch: (searchValue: string, searchType: HistoryPluginSearchType) => void
+}
+export const HistorySearch = React.memo<HistorySearchProps>((props) => {
+    const {showPopoverSearch, handleSearch} = props
+    const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
+    const [searchType, setSearchType] = useState<HistoryPluginSearchType>("all")
+    const [searchAll, setSearchAll] = useState<string>("")
+    const [searchRequest, setSearchRequest] = useState<string>("")
+    const [searchResponse, setSearchResponse] = useState<string>("")
+    const onSelectBeforeOption = useMemoizedFn((o: string) => {
+        if (o === "all") {
+            setSearchRequest("")
+            setSearchResponse("")
+        }
+        if (o === "request") {
+            setSearchAll("")
+            setSearchResponse("")
+        }
+        if (o === "response") {
+            setSearchAll("")
+            setSearchRequest("")
+        }
+        setSearchType(o as HistoryPluginSearchType)
+    })
+    const onInputUpadte = useMemoizedFn((e: any) => {
+        if (searchType === "all") setSearchAll(e.target.value)
+        if (searchType === "request") setSearchRequest(e.target.value)
+        if (searchType === "response") setSearchResponse(e.target.value)
+        return
+    })
+    const searchValue = useMemo(() => {
+        if (searchType === "all") return searchAll
+        if (searchType === "request") return searchRequest
+        if (searchType === "response") return searchResponse
+        return ""
+    }, [searchType, searchAll, searchRequest, searchResponse])
+    const onSearch = useDebounceFn(
+        () => {
+            handleSearch(searchValue, searchType)
+        },
+        {wait: 300}
+    ).run
+    const handleSearchBlur = useMemoizedFn(() => {
+        if (searchValue === "") {
+            onSearch()
+        }
+    })
+    const searchNode = useMemoizedFn(() => {
+        return (
+            <YakitCombinationSearch
+                wrapperClassName={style["http-history-table-right-search"]}
+                afterModuleType='input'
+                valueBeforeOption={searchType}
+                onSelectBeforeOption={onSelectBeforeOption}
+                selectProps={{size: "small"}}
+                beforeOptionWidth={80}
+                addonBeforeOption={[
+                    {
+                        label: "关键字",
+                        value: "all"
+                    },
+                    {
+                        label: "请求",
+                        value: "request"
+                    },
+                    {
+                        label: "响应",
+                        value: "response"
+                    }
+                ]}
+                inputSearchModuleTypeProps={{
+                    size: "small",
+                    value: searchValue,
+                    onChange: onInputUpadte,
+                    onSearch: onSearch,
+                    onBlur: handleSearchBlur,
+                    wrapperClassName: style["inputSearchModule"]
+                }}
+            ></YakitCombinationSearch>
+        )
+    })
+    return (
+        <>
+            {showPopoverSearch ? (
+                <YakitPopover
+                    overlayClassName={style["http-history-search-drop-down-popover"]}
+                    trigger='click'
+                    placement='bottomRight'
+                    content={searchNode}
+                    visible={isHoverSearch}
+                    onVisibleChange={setIsHoverSearch}
+                >
+                    <YakitButton
+                        icon={<OutlineSearchIcon />}
+                        type='outline2'
+                        isHover={isHoverSearch || !!searchValue}
+                    />
+                </YakitPopover>
+            ) : (
+                searchNode()
+            )}
+        </>
+    )
+})

@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
-import {HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HistorySearch, HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {useDebounceFn, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -15,8 +15,6 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
 import {SolidCheckIcon} from "@/assets/icon/solid"
-import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
-import {HistoryPluginSearchType} from "@/utils/yakQueryHTTPFlow"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -136,82 +134,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
 
     const headerRef = useRef<HTMLDivElement>(null)
     const headerSize = useSize(headerRef)
-    const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
-    const [searchType, setSearchType] = useState<HistoryPluginSearchType>("all")
-    const [searchAll, setSearchAll] = useState<string>("")
-    const [searchRequest, setSearchRequest] = useState<string>("")
-    const [searchResponse, setSearchResponse] = useState<string>("")
-    const onSelectBeforeOption = useMemoizedFn((o: string) => {
-        if (o === "all") {
-            setSearchRequest("")
-            setSearchResponse("")
-        }
-        if (o === "request") {
-            setSearchAll("")
-            setSearchResponse("")
-        }
-        if (o === "response") {
-            setSearchAll("")
-            setSearchRequest("")
-        }
-        setSearchType(o as HistoryPluginSearchType)
-    })
-    const onInputUpadte = useMemoizedFn((e: any) => {
-        if (searchType === "all") setSearchAll(e.target.value)
-        if (searchType === "request") setSearchRequest(e.target.value)
-        if (searchType === "response") setSearchResponse(e.target.value)
-        return
-    })
-    const searchValue = useMemo(() => {
-        if (searchType === "all") return searchAll
-        if (searchType === "request") return searchRequest
-        if (searchType === "response") return searchResponse
-        return ""
-    }, [searchType, searchAll, searchRequest, searchResponse])
-    const handleSearch = useDebounceFn(
-        () => {
-            emiter.emit("onMitmSearchInputVal", JSON.stringify({KeywordType: searchType, Keyword: searchValue}))
-        },
-        {wait: 300}
-    ).run
-    const handleSearchBlur = useMemoizedFn(() => {
-        if (searchValue === "") {
-            handleSearch()
-        }
-    })
-    const searchNode = useMemoizedFn(() => {
-        return (
-            <YakitCombinationSearch
-                wrapperClassName={styles["mitm-log-heard-right-search"]}
-                afterModuleType='input'
-                valueBeforeOption={searchType}
-                onSelectBeforeOption={onSelectBeforeOption}
-                selectProps={{size: "small"}}
-                beforeOptionWidth={80}
-                addonBeforeOption={[
-                    {
-                        label: "关键字",
-                        value: "all"
-                    },
-                    {
-                        label: "请求",
-                        value: "request"
-                    },
-                    {
-                        label: "响应",
-                        value: "response"
-                    }
-                ]}
-                inputSearchModuleTypeProps={{
-                    size: "small",
-                    value: searchValue,
-                    onChange: onInputUpadte,
-                    onSearch: handleSearch,
-                    onBlur: handleSearchBlur,
-                    wrapperClassName: styles["inputSearchModule"]
-                }}
-            ></YakitCombinationSearch>
-        )
+
+    const handleSearch = useMemoizedFn((searchValue, searchType) => {
+        emiter.emit("onMitmSearchInputVal", JSON.stringify({KeywordType: searchType, Keyword: searchValue}))
     })
 
     return (
@@ -308,26 +233,10 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         <YakitButton type='outline1'>进程筛选</YakitButton>
                     )}
                 </YakitPopover>
-                <>
-                    {headerSize?.width && headerSize.width < 700 ? (
-                        <YakitPopover
-                            overlayClassName={styles["http-history-search-drop-down-popover"]}
-                            trigger='click'
-                            placement='bottomRight'
-                            content={searchNode}
-                            visible={isHoverSearch}
-                            onVisibleChange={setIsHoverSearch}
-                        >
-                            <YakitButton
-                                icon={<OutlineSearchIcon />}
-                                type='outline2'
-                                isHover={isHoverSearch || !!searchValue}
-                            />
-                        </YakitPopover>
-                    ) : (
-                        searchNode()
-                    )}
-                </>
+                <HistorySearch
+                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 700 : true}
+                    handleSearch={handleSearch}
+                />
                 <YakitButton
                     type='outline1'
                     colors='danger'

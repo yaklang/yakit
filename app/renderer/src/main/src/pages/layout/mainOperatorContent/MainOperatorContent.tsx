@@ -823,11 +823,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.dnsServers = cacheData.dnsServers
                 newAdvancedConfigValue.etcHosts = cacheData.etcHosts
                 newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
-                newAdvancedConfigValue.repeatTimes = cacheData.repeatTimes
+                newAdvancedConfigValue.repeatTimes = +cacheData.repeatTimes
                 newAdvancedConfigValue.concurrent = +cacheData.concurrent
-                newAdvancedConfigValue.minDelaySeconds = cacheData.minDelaySeconds
-                newAdvancedConfigValue.maxDelaySeconds = cacheData.maxDelaySeconds
+                newAdvancedConfigValue.minDelaySeconds = +cacheData.minDelaySeconds
+                newAdvancedConfigValue.maxDelaySeconds = +cacheData.maxDelaySeconds
             }
+            
             let newAdvancedConfigShow = cacheData.advancedConfigShow
             let newIsHttps = !!isHttps
             let newIsGmTLS = !!isGmTLS
@@ -1644,10 +1645,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 dnsServers: cacheData.dnsServers,
                 etcHosts: cacheData.etcHosts,
                 resNumlimit: cacheData.resNumlimit,
-                repeatTimes: cacheData.repeatTimes,
+                repeatTimes: +cacheData.repeatTimes,
                 concurrent: +cacheData.concurrent,
-                minDelaySeconds: cacheData.minDelaySeconds,
-                maxDelaySeconds: cacheData.maxDelaySeconds,
+                minDelaySeconds: +cacheData.minDelaySeconds,
+                maxDelaySeconds: +cacheData.maxDelaySeconds,
             }
             clearAllData()
             // 菜单在代码内的名字
