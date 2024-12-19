@@ -1415,6 +1415,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         noMinimap={originRspValue.length < 1024 * 2}
                         loading={resEditorLoading}
                         originValue={codeKey === "utf-8" ? originRspValue : codeValue}
+                        originalPackage={flow.Response}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}

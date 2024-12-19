@@ -1023,6 +1023,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             loading={codeLoading}
                             // noHeader={true}
                             originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
+                            originalPackage={currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw}
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}

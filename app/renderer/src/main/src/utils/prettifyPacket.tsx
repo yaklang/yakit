@@ -247,7 +247,7 @@ export const formatPacketRender = (packet: Uint8Array, onFormatted: (packet?: st
     if (packet.length > 0) {
         ipcRenderer
             .invoke("PacketPrettifyHelper", {
-                Packet: typeof packet == "string" ? StringToUint8Array(packet) : packet
+                Packet: packet
             })
             .then((rsp: PacketPrettifyHelperResponse) => {
                 const contentType = rsp.ContentType.toLowerCase()

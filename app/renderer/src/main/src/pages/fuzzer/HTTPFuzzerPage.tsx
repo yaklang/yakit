@@ -3163,6 +3163,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             defaultSearchKeyword={defaultResponseSearch}
                             system={props.system}
                             originValue={codeKey === "utf-8" ? responseRawString : codeValue}
+                            originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
                             hideSearch={true}
                             isResponse={true}
