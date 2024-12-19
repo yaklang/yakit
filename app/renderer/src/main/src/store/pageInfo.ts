@@ -12,6 +12,7 @@ import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/Hybrid
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import { SyntaxFlowScanModeType } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 
 /**
  * @description 页面暂存数据
@@ -185,7 +186,7 @@ export interface AuditCodePageInfoProps {
 export interface CodeScanPageInfoProps {
     projectName?: string[]
     selectGroupListByKeyWord?: string[]
-    codeScanMode?: HybridScanModeType
+    codeScanMode?: SyntaxFlowScanModeType
     runtimeId?: string
 }
 

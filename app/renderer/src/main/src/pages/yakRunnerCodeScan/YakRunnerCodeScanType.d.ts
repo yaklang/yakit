@@ -70,6 +70,8 @@ export interface CodeScaMainExecuteContentProps {
     pageId: string
     pauseLoading: boolean
     setPauseLoading: (v:boolean) => void
+    stopLoading: boolean
+    setStopLoading: (v:boolean) => void
     continueLoading: boolean
     setContinueLoading: (v:boolean) => void
 }
@@ -189,6 +191,7 @@ export interface SyntaxFlowResult {
     Language: string
     RiskCount: number
     RuleContent: string
+    Kind: "query" | "debug" | "scan"
 }
 
 export interface QuerySyntaxFlowResultResponse {

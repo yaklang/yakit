@@ -400,6 +400,17 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
 })
 
 const TopId = "top-message"
+const defaultQuery: QuerySyntaxFlowResultRequest = {
+    Filter: {
+        TaskIDs: [],
+        ResultIDs: [],
+        RuleNames: [],
+        ProgramNames: [],
+        Keyword: "",
+        OnlyRisk: false
+    },
+    Pagination: genDefaultPagination(20)
+}
 
 export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const {setOnlyFileTree, onOpenEditorDetails} = props
@@ -781,6 +792,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
         if (node.ResourceType === "value") {
             setBugId(undefined)
+            emiter.emit("onCodeAuditOpenBugDetail", "")
             let rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
                 Location: projectName || "",
@@ -801,17 +813,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     })
 
-    const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>({
-        Filter: {
-            TaskIDs: [],
-            ResultIDs: [],
-            RuleNames: [],
-            ProgramNames: [],
-            Keyword: "",
-            OnlyRisk: false
-        },
-        Pagination: genDefaultPagination(20)
-    })
+    const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>(defaultQuery)
 
     return (
         <YakitSpin spinning={loading}>
@@ -824,6 +826,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                             onChange={(e) => {
                                 const value = e.target.value
                                 setAuditType(value as "result" | "history")
+                                setQuery(defaultQuery)
                             }}
                             buttonStyle='solid'
                             options={[
@@ -993,7 +996,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
 
         useEffect(() => {
             update(1)
-        }, [])
+        }, [projectName])
 
         const update = useMemoizedFn((page: number) => {
             setLoading(true)
@@ -1066,6 +1069,19 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                 })
                 .catch(() => {})
         })
+
+        const getTagByKind = useMemoizedFn((kind: "query" | "debug" | "scan") => {
+            switch (kind) {
+                case "debug":
+                    return <YakitTag color='purple'>规则调试</YakitTag>
+                case "query":
+                    return <YakitTag color='blue'>手动审计</YakitTag>
+                case "scan":
+                    return <YakitTag color='green'>代码扫描</YakitTag>
+                default:
+                    return <></>
+            }
+        })
         return (
             <div className={styles["audit-history-list"]}>
                 <div className={styles["header"]}>
@@ -1105,7 +1121,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                         wrapperStyle={{flex: 2}}
                         mode='multiple'
                         maxTagCount='responsive'
-                        placeholder='请选择任务类型'
+                        placeholder='请选择历史来源'
                     >
                         <YakitSelect.Option value='query'>手动审计</YakitSelect.Option>
                         <YakitSelect.Option value='scan'>代码扫描</YakitSelect.Option>
@@ -1191,6 +1207,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                                                     </YakitTag>
                                                 </div>
                                             </div>
+                                            <div className={styles["extra"]}>{getTagByKind(rowData.Kind)}</div>
                                         </div>
                                     </YakitPopover>
                                 </div>
