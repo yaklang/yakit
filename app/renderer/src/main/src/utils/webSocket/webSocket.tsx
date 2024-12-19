@@ -41,6 +41,10 @@ export const startWebSocket = () => {
 
 export const closeWebSocket = () => {
     ipcRenderer.invoke("socket-close")
+    ipcRenderer.removeAllListeners("client-socket-message")
+    ipcRenderer.removeAllListeners("client-socket-open")
+    ipcRenderer.removeAllListeners("client-socket-close")
+    ipcRenderer.removeAllListeners("client-socket-error")
 }
 
 export const sendWebSocket = (data:API.WsRequest) => {

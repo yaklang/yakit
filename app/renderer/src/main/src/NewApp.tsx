@@ -18,6 +18,7 @@ import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
+import { closeWebSocket, startWebSocket } from "./utils/webSocket/webSocket"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -305,6 +306,15 @@ function NewApp() {
             ipcRenderer.invoke("socket-close")
         }
     }, [userInfo.isLogin])
+
+    // 在页面打开时，执行一次，用于初始化WebSocket推送（DuplexConnection）
+    useEffect(()=>{
+        startWebSocket()
+        return () => {
+            // 当组件销毁的时候，关闭WebSocket
+            closeWebSocket()
+        }
+    },[])
 
     if (!agreed) {
         return (
