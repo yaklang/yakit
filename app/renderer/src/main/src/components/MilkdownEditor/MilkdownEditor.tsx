@@ -20,7 +20,7 @@ import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
 import "./css/index.scss"
 import {yakitInfo, yakitNotify} from "@/utils/notification"
 import {placeholderConfig, placeholderPlugin} from "./Placeholder"
-import {$view} from "@milkdown/kit/utils"
+import {$view, getMarkdown} from "@milkdown/kit/utils"
 import {CustomCodeComponent} from "./CodeBlock/CodeBlock"
 import {Blockquote} from "./Blockquote"
 import {
@@ -69,6 +69,9 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
 import {isBoolean} from "lodash"
 import {notepadSaveStatus} from "./WebsocketProvider/constants"
+import {toAddNotepad, toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
+import {API} from "@/services/swagger/resposeType"
+import {apiSaveNotepadList} from "@/pages/notepadManage/notepadManage/utils"
 
 const markdown1 = `
 
@@ -593,48 +596,17 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 return
             }
             switch (event.code) {
-                // 401是指没有传token或者token过期
-                case 401:
-                    // 退出登录
-                    tokenOverdue({
-                        code: 401,
-                        message: event.reason,
-                        userInfo
-                    })
-                    // 关闭笔记本编辑一级菜单
-                    setTimeout(() => {
-                        emiter.emit(
-                            "onCloseFirstMenu",
-                            JSON.stringify({
-                                route: routeInfo.route
-                            })
-                        )
-                    }, 1000)
+                case 401: // 401是指没有传token或者token过期
+                    loginOut(event)
                     break
-                //没有编辑或者阅读的权限
-                case 403:
-                // 209 这种可以能处理出错，例如没传messageType
-                case 209:
-                // 就可能是后端从http升级websocket失败啊，这种服务相关的
-                case 500:
-                    // 弹出框，显示网络异常，关闭/保存按钮
-                    const m = showYakitModal({
-                        title: "网络异常",
-                        content: (
-                            <span>
-                                错误原因:{event.code}:{event.reason}
-                            </span>
-                        ),
-                        closable: false,
-                        onOkText: "关闭页面",
-                        cancelButtonProps: {style: {display: "none"}},
-                        onOk: () => {
-                            emiter.emit("onCloseCurrentPage", routeInfo.pageId)
-                            m.destroy()
-                        },
-                        bodyStyle: {padding: 24}
-                    })
-                    yakitNotify("error", event.reason)
+
+                case 404: // 文档不存在/已经被删除
+                    onShowSave(event)
+                    break
+                case 403: //没有编辑或者阅读的权限
+                case 209: // 209 这种可以能处理出错，例如没传messageType
+                case 500: // 就可能是后端从http升级websocket失败啊，这种服务相关的
+                    onShowErrorModal(event)
                     break
                 default:
                     break
@@ -642,6 +614,81 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }),
         {wait: 200, leading: true}
     ).run
+    const loginOut = useMemoizedFn((event: CloseEvent) => {
+        const {routeInfo} = collabParams
+        if (!routeInfo) return
+        // 退出登录
+        tokenOverdue({
+            code: 401,
+            message: event.reason,
+            userInfo
+        })
+        // 关闭笔记本编辑一级菜单
+        setTimeout(() => {
+            emiter.emit(
+                "onCloseFirstMenu",
+                JSON.stringify({
+                    route: routeInfo.route
+                })
+            )
+        }, 1000)
+    })
+    const onShowSave = useMemoizedFn((event: CloseEvent) => {
+        const {title} = collabParams
+        // 弹出框，显示网络异常，关闭/保存按钮
+        const s = showYakitModal({
+            title: "文档不存在/已经被删除",
+            content: <span>错误原因:{event.reason}</span>,
+            closable: false,
+            onOkText: "保存当前文档",
+            cancelText: "不保存",
+            onOk: () => {
+                const markdownContent = get()?.action(getMarkdown()) || ""
+                // 有内容才保存，没有内容新建
+                if (markdownContent) {
+                    const params: API.PostNotepadRequest = {
+                        title: title,
+                        content: markdownContent
+                    }
+                    apiSaveNotepadList(params).then((hash) => {
+                        toEditNotepad({notepadHash: hash})
+                    })
+                } else {
+                    toAddNotepad()
+                }
+            },
+            onCancel: () => {
+                onCloseCurrentPage()
+                s.destroy()
+            },
+            bodyStyle: {padding: 24}
+        })
+    })
+    const onShowErrorModal = useMemoizedFn((event: CloseEvent) => {
+        // 弹出框，显示网络异常，关闭/保存按钮
+        const m = showYakitModal({
+            title: "网络异常",
+            content: (
+                <span>
+                    错误原因:{event.code}:{event.reason}
+                </span>
+            ),
+            closable: false,
+            onOkText: "关闭页面",
+            cancelButtonProps: {style: {display: "none"}},
+            onOk: () => {
+                onCloseCurrentPage()
+                m.destroy()
+            },
+            bodyStyle: {padding: 24}
+        })
+        yakitNotify("error", event.reason)
+    })
+    const onCloseCurrentPage = useMemoizedFn(() => {
+        const {routeInfo} = collabParams
+        if (!routeInfo) return
+        emiter.emit("onCloseCurrentPage", routeInfo.pageId)
+    })
     const onConnect = useMemoizedFn(() => {
         collabManagerRef.current?.connect()
     })
