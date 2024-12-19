@@ -3094,6 +3094,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                             title={`扩充到 ${group}`}
                                             type='payload'
                                             onQueryGroup={() => emiter.emit("refreshListEvent")}
+                                            folder={folder}
                                             group={group}
                                             onClose={() => {
                                                 m.destroy()

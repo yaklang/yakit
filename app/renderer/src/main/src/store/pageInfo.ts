@@ -12,6 +12,7 @@ import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/Hybrid
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import { SyntaxFlowScanModeType } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 
 /**
  * @description 页面暂存数据
@@ -183,8 +184,10 @@ export interface AuditCodePageInfoProps {
 }
 
 export interface CodeScanPageInfoProps {
-    projectName?: string
+    projectName?: string[]
     selectGroupListByKeyWord?: string[]
+    codeScanMode?: SyntaxFlowScanModeType
+    runtimeId?: string
 }
 
 interface PageInfoStoreProps {
@@ -241,7 +244,8 @@ export const defPage: PageProps = {
 const pageInfoToRuntimeIdMap = {
     [YakitRoute.BatchExecutorPage]: "pluginBatchExecutorPageInfo",
     [YakitRoute.SimpleDetect]: "simpleDetectPageInfo",
-    [YakitRoute.PoC]: "pocPageInfo"
+    [YakitRoute.PoC]: "pocPageInfo",
+    [YakitRoute.YakRunner_Code_Scan]: "codeScanPageInfo"
 }
 export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
     subscribeWithSelector(

@@ -25,6 +25,22 @@
         .ant-form {
             overflow: hidden;
         }
+        .json-schema-form {
+            display: block;
+            .json-schema-row-form {
+                .ant-form-item-label {
+                    flex: 0 0 25% !important;
+                }
+                .ant-form-item-label + .ant-form-item-control {
+                    flex: 0 0 50% !important;
+                }
+                // 需询问后端是否可从schema中移除
+                #root_auth__error,
+                #root_proxy__error {
+                    display: none;
+                }
+            }
+        }
     }
     .plugin-execute-form-operate {
         @extend %display-flex-center;

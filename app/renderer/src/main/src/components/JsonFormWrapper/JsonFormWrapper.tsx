@@ -2,26 +2,20 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import styles from "./JsonFormWrapper.module.scss"
 import validator from "@rjsf/validator-ajv8" // 添加这行
 import JsonForm from "@rjsf/antd"
-import {
-    ErrorSchema,
-    FieldProps,
-    labelValue,
-    RegistryFieldsType,
-    RegistryWidgetsType,
-    UiSchema,
-    WidgetProps
-} from "@rjsf/utils"
+import {RJSFSchema, UiSchema, WidgetProps} from "@rjsf/utils"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitDragger} from "../yakitUI/YakitForm/YakitForm"
 import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
-import {Checkbox, Form, FormInstance} from "antd"
+import {Checkbox, Form, FormInstance, Grid} from "antd"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
+import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
+import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -63,6 +57,10 @@ export interface JsonFormSchemaListWrapper {
     jsonSchemaListRef?: React.MutableRefObject<{
         [key: string]: any
     }>
+    /** JsonSchema 默认值(PS:此值为对象 key值用于寻找对应默认值) */
+    jsonSchemaInitial?: {
+        [key: string]: any
+    }
 }
 
 export interface JsonFormWrapperProps {
@@ -72,13 +70,14 @@ export interface JsonFormWrapperProps {
     field: string
     value?: string
     onChange?: (v: string) => void
-    schema: any
+    schema: RJSFSchema
+    uiSchema: UiSchema
     disabled?: boolean
 }
 
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
-    const {jsonSchemaListRef, field, value, schema, disabled} = props
+    const {jsonSchemaListRef, field, value, schema, uiSchema, disabled} = props
 
     const [formData, setFormData, getFormData] = useGetState<any>(value || {})
     const jsonSchemaRef = useRef<any>()
@@ -117,7 +116,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         }
     }
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         // 当外部 value 变化时更新内部状态
         setFormData(value)
     }, [value])
@@ -133,20 +132,26 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     //     "/test": UploadFolderPath,
     // }
 
-    const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
-        // 是否显示字段的 label
-        acc[key] = {
-            "ui:label": true
-        }
-        return acc
-    }, {})
-
     const getTextWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema} = props
+        const {
+            id,
+            required,
+            readonly,
+            disabled,
+            value,
+            onChange,
+            onBlur,
+            onFocus,
+            autofocus,
+            options,
+            schema,
+            uiSchema
+        } = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         if (schema.type === "number") {
             return (
                 <YakitInputNumber
-                    style={{width: "100%"}}
+                    style={{width: "100%", ...uiStyle}}
                     id={id}
                     {...options}
                     autoFocus={autofocus}
@@ -164,38 +169,18 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     }}
                 />
             )
-        } else if (schema.yakit_type === "upload-folder-path") {
-            return (
-                <YakitDragger
-                    value={value}
-                    isShowPathNumber={false}
-                    selectType='folder'
-                    multiple={false}
-                    help='可将文件夹拖入框内或点击此处'
-                    disabled={disabled}
-                    onChange={(value) => {
-                        onChange(value === "" ? options.emptyValue : value)
-                    }}
-                />
-            )
-        } else if (schema.yakit_type === "upload-path") {
-            return (
-                <YakitDragger
-                    value={value}
-                    isShowPathNumber={false}
-                    selectType='file'
-                    multiple={false}
-                    disabled={disabled}
-                    onChange={(value) => {
-                        onChange(value === "" ? options.emptyValue : value)
-                    }}
-                />
-            )
+        } else if (schema.yakit_type === "file") {
+            return getFileWidget(props)
+        } else if (schema.yakit_type === "files") {
+            return getFilesWidget(props)
+        } else if (schema.yakit_type === "folder") {
+            return getFolderWidget(props)
         }
 
         return (
             <YakitInput
                 {...options}
+                style={{width: "100%", ...uiStyle}}
                 type='text'
                 autoFocus={autofocus}
                 required={required}
@@ -215,11 +200,24 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getTextareaWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, placeholder, value, required, disabled, autofocus, readonly, onBlur, onFocus, onChange, options} =
-            props
-
+        const {
+            id,
+            placeholder,
+            value,
+            required,
+            disabled,
+            autofocus,
+            readonly,
+            onBlur,
+            onFocus,
+            onChange,
+            options,
+            uiSchema
+        } = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
             <YakitInput.TextArea
+                style={uiStyle}
                 placeholder={placeholder}
                 disabled={disabled || readonly}
                 value={value}
@@ -240,8 +238,9 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getSelectWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, options, multiple, disabled, readonly, value, autofocus, onChange, onBlur, onFocus} = props
+        const {id, options, multiple, disabled, readonly, value, autofocus, onChange, onBlur, onFocus, uiSchema} = props
         const {enumOptions = [], enumDisabled} = options
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         let mode: any = multiple ? "multiple" : "default"
         mode = options.mode || mode
         return (
@@ -253,6 +252,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 onChange={(value) => onChange(value)}
                 onBlur={(value) => onBlur(id, value)}
                 onFocus={(value) => onFocus(id, value)}
+                style={uiStyle}
             >
                 {enumOptions.map(({value, label}: any, i: number) => {
                     const disabled: any = enumDisabled && enumDisabled.indexOf(value) !== -1
@@ -269,7 +269,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     // 应后端要求 此处替换控件为switch
     const getSwitchWidget = useMemoizedFn((props: WidgetProps) => {
-        const {label, value, disabled, readonly, autofocus, onChange}: WidgetProps = props
+        const {label, value, disabled, readonly, autofocus, onChange, uiSchema}: WidgetProps = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
             <div className='ant-form-item' style={{alignItems: "center"}}>
                 <div className='ant-form-item-label'>
@@ -277,6 +278,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 </div>
                 <div className='ant-form-item-control'>
                     <YakitSwitch
+                        style={uiStyle}
                         checked={value}
                         disabled={disabled || readonly}
                         autoFocus={autofocus}
@@ -288,10 +290,11 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getCheckboxesWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, options, value, disabled, readonly, autofocus, onChange}: WidgetProps = props
+        const {id, options, value, disabled, readonly, autofocus, onChange, uiSchema}: WidgetProps = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         const {enumOptions, enumDisabled} = options
         return (
-            <Checkbox.Group onChange={(value) => onChange(value)}>
+            <Checkbox.Group onChange={(value) => onChange(value)} style={uiStyle}>
                 {(enumOptions as any[]).map((option: any, index: number) => {
                     const checked: boolean = value.indexOf(option.value) !== -1
                     const itemDisabled: any = enumDisabled && (enumDisabled as string[]).indexOf(option.value) !== -1
@@ -312,13 +315,15 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getPasswordWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, required, readonly, disabled, value, onFocus, onBlur, onChange, options, autofocus} = props
+        const {id, required, readonly, disabled, value, onFocus, onBlur, onChange, options, autofocus, uiSchema} = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
-            <YakitInput
+            <YakitInput.Password
+                allowClear
+                style={uiStyle}
                 autoFocus={autofocus}
                 required={required}
                 disabled={disabled || readonly}
-                type='password'
                 value={value}
                 onChange={(event) => {
                     onChange(event.target.value === "" ? options.emptyValue : event.target.value)
@@ -334,10 +339,12 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getRadioWidget = useMemoizedFn((props: WidgetProps) => {
-        const {options, value, disabled, readonly, onChange} = props
+        const {options, value, disabled, onChange, uiSchema} = props
         const {enumOptions, enumDisabled} = options
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
             <YakitRadioButtons
+                style={uiStyle}
                 disabled={disabled}
                 value={value}
                 onChange={(e) => {
@@ -358,7 +365,21 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getUpDownWidget = useMemoizedFn((props: WidgetProps) => {
-        const {id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema} = props
+        const {
+            id,
+            required,
+            readonly,
+            disabled,
+            value,
+            onChange,
+            onBlur,
+            onFocus,
+            autofocus,
+            options,
+            schema,
+            uiSchema
+        } = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
         if (schema.multipleOf) {
             options.step = schema.multipleOf
         }
@@ -381,23 +402,119 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 onChange={(value) => onChange(value)}
                 onBlur={(value) => onBlur(id, value)}
                 onFocus={(value) => onFocus(id, value)}
+                style={uiStyle}
             />
         )
     })
 
-    const AntdForm = useMemoizedFn((props) => {
-        return <Form {...props} />
+    const getFileWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options, uiSchema} = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
+        return (
+            <YakitDragger
+                inputProps={{style: uiStyle}}
+                value={value}
+                isShowPathNumber={false}
+                selectType='file'
+                multiple={false}
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
     })
 
+    const getFilesWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options, uiSchema} = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
+        return (
+            <YakitDragger
+                inputProps={{style: uiStyle}}
+                value={value}
+                isShowPathNumber={false}
+                selectType='file'
+                renderType='textarea'
+                multiple={false}
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
+    const getFolderWidget = useMemoizedFn((props: WidgetProps) => {
+        const {disabled, value, onChange, options,uiSchema} = props
+        const uiStyle = uiSchema?.["ui:component_style"] || {}
+        return (
+            <YakitDragger
+                inputProps={{style: uiStyle}}
+                value={value}
+                isShowPathNumber={false}
+                selectType='folder'
+                multiple={false}
+                help='可将文件夹拖入框内或点击此处'
+                disabled={disabled}
+                onChange={(value) => {
+                    onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
+    // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
+    //     // 是否显示字段的 label
+    //     acc[key] = {
+    //         "ui:label": true
+    //     }
+    //     return acc
+    // }, {})
+    // const uiSchema: UiSchema = {
+    //     "ui:grid": [
+    //         {
+    //             firstName: 7,
+    //             lastName: 7,
+    //             companyName: 7,
+    //             b: 3
+    //         }
+    //     ]
+    // }
+
+    // {
+    //     type: "object",
+    //     properties: {
+    //         firstName: {
+    //             type: "string"
+    //         },
+    //         lastName: {
+    //             type: "string"
+    //         },
+    //         companyName: {
+    //             type: "string"
+    //         },
+    //         b: {
+    //             type: "boolean"
+    //         }
+    //     }
+    // }
+
+    /* 字段名 */
+    // unremovable: {
+    /* 全局 className*/
+    // "ui:classNames": "json-schema-row-form"
+    // }
     return (
         <>
             <JsonForm
                 ref={jsonSchemaRef}
                 // tagName={AntdForm}
-                className={classNames(styles["json-schema-box"],"json-schema-form")}
+                // 此处的json-schema-form应用于特殊页面的另类布局处理
+                className={classNames(styles["json-schema-box"], "json-schema-form")}
                 schema={schema}
                 // 使用自定义的UI控件映射
                 validator={validator} // 添加空的验证器
+                templates={{ArrayFieldTemplate, ObjectFieldTemplate}}
                 widgets={{
                     // 将默认控件替换为自定义控件
                     TextWidget: getTextWidget,
@@ -407,19 +524,15 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     CheckboxesWidget: getCheckboxesWidget,
                     PasswordWidget: getPasswordWidget,
                     RadioWidget: getRadioWidget,
-                    UpDownWidget: getUpDownWidget
+                    UpDownWidget: getUpDownWidget,
+                    FileWidget: getFileWidget,
+                    // uiSchema 自定义控件
+                    files: getFilesWidget,
+                    folder: getFolderWidget
                 }}
                 // 自定义控件
                 // fields={fields}
-                uiSchema={
-                    {
-                        /* 字段名 */
-                        // unremovable: {
-                        /* 全局 className*/
-                        // "ui:classNames": "test-task-title test-foo-bar"
-                        // }
-                    }
-                }
+                uiSchema={uiSchema}
                 disabled={disabled}
                 formData={formData}
                 onChange={(e) => {
