@@ -24,6 +24,7 @@ import {CVEViewer} from "@/pages/cve/CVEViewer"
 import {PageLoading} from "./PageLoading"
 import {
     PrivateOutlineAuditCodeIcon,
+    PrivateOutlineAuditHoleIcon,
     PrivateOutlineBasicCrawlerIcon,
     PrivateOutlineBatchPluginIcon,
     PrivateOutlineBruteIcon,
@@ -55,6 +56,7 @@ import {
     PrivateOutlineWebFuzzerIcon,
     PrivateOutlineWebsocketFuzzerIcon,
     PrivateSolidAuditCodeIcon,
+    PrivateSolidAuditHoleIcon,
     PrivateSolidBasicCrawlerIcon,
     PrivateSolidBatchPluginIcon,
     PrivateSolidBruteIcon,
@@ -143,6 +145,7 @@ import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {YakRunnerProjectManager} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
 import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
+import { YakRunnerAuditHole } from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -229,7 +232,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-code-scan": {label: "代码扫描"},
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
-    "rule-management": {label: "规则管理"}
+    "rule-management": {label: "规则管理"},
+    "yakrunner-audit-hole" : {label:"漏洞管理"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -265,7 +269,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Data_Statistics,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.YakRunner_Audit_Hole
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -300,7 +305,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.YakRunner_Audit_Hole
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -540,6 +546,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerProjectManager />
         case YakitRoute.Rule_Management:
             return <RuleManagement />
+        case YakitRoute.YakRunner_Audit_Hole:
+            return <YakRunnerAuditHole />
         default:
             return <div />
     }
@@ -795,6 +803,10 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {
                 page: YakitRoute.Rule_Management,
                 ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
+            },
+            {
+                page: YakitRoute.YakRunner_Audit_Hole,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
             }
         ]
     },
@@ -1000,6 +1012,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineAuditCodeIcon />,
         hoverIcon: <PrivateSolidAuditCodeIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
+    },
+    [YakitRoute.YakRunner_Audit_Hole]: {
+        page: YakitRoute.YakRunner_Audit_Hole,
+        icon: <PrivateOutlineAuditHoleIcon />,
+        hoverIcon: <PrivateSolidAuditHoleIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
     },
     [YakitRoute.YakRunner_Project_Manager]: {
         page: YakitRoute.YakRunner_Project_Manager,

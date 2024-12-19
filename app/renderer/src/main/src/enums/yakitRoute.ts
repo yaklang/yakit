@@ -83,5 +83,7 @@ export enum YakitRoute {
     // YakRunner项目管理
     YakRunner_Project_Manager = "yakrunner-project-manager",
     /** 规则管理 */
-    Rule_Management = "rule-management"
+    Rule_Management = "rule-management",
+    // YakRunner漏洞管理
+    YakRunner_Audit_Hole = "yakrunner-audit-hole"
 }
