@@ -155,6 +155,7 @@ const setupWS = (provider: WebsocketProvider) => {
             switch (event.code) {
                 case 401:
                 case 403:
+                case 404:
                 case 209:
                 case 500:
                     break

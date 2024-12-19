@@ -81,7 +81,7 @@ export const toEditNotepad = (params?: {notepadHash: string; notepadPageList?: P
 /**
  * @description 新建笔记本
  */
-const toAddNotepad = () => {
+export const toAddNotepad = () => {
     const info = {
         route: YakitRoute.Modify_Notepad,
         params: {
