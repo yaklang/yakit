@@ -3,6 +3,7 @@ import React from "react"
 // @ts-ignore
 const {ipcRenderer} = window.require("electron")
 
+export type HistoryPluginSearchType = "all" | "request" | "response"
 export interface YakQueryHTTPFlowRequest {
     SourceType?: string
     Pagination?: Paging
@@ -14,6 +15,7 @@ export interface YakQueryHTTPFlowRequest {
     SearchContentType?: string
     ExcludeContentType?: string[]
     Keyword?: string
+    KeywordType?: HistoryPluginSearchType
     OnlyWebsocket?: boolean
     IncludeInUrl?: string[]
     ExcludeInUrl?: string[]

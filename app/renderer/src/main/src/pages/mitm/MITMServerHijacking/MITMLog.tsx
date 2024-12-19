@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
-import {HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {HistorySearch, HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {useDebounceFn, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -132,8 +132,15 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
         }
     }, [processVisible])
 
+    const headerRef = useRef<HTMLDivElement>(null)
+    const headerSize = useSize(headerRef)
+
+    const handleSearch = useMemoizedFn((searchValue, searchType) => {
+        emiter.emit("onMitmSearchInputVal", JSON.stringify({KeywordType: searchType, Keyword: searchValue}))
+    })
+
     return (
-        <div className={styles["mitm-log-heard"]}>
+        <div ref={headerRef} className={styles["mitm-log-heard"]}>
             <div style={{whiteSpace: "nowrap"}}>
                 {SourceType.map((tag) => (
                     <YakitCheckableTag
@@ -226,15 +233,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         <YakitButton type='outline1'>进程筛选</YakitButton>
                     )}
                 </YakitPopover>
-                <YakitInput.Search
-                    className={styles["http-history-table-right-search"]}
-                    placeholder='请输入关键词搜索'
-                    onSearch={(value) => {
-                        emiter.emit("onMitmSearchInputVal", value)
-                    }}
-                    onBlur={(e) => {
-                        emiter.emit("onMitmSearchInputVal", e.target.value)
-                    }}
+                <HistorySearch
+                    showPopoverSearch={headerSize?.width ? headerSize?.width <= 700 : true}
+                    handleSearch={handleSearch}
                 />
                 <YakitButton
                     type='outline1'
