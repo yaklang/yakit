@@ -484,6 +484,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
         let w = (width - columnsAllWidth) / (cLength - total || 1)
         const cw = w - scrollBarWidth / (cLength - total || 1) + 32
+        
         const newColumns = getColumns().map((ele, index) => {
             if (ele.isDefWidth) {
                 return {
@@ -491,6 +492,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     width: cw
                 }
             }
+
             if (cLength - total === 0 && index === getColumns().length - 2) {
                 // 倒数第二个 外界div宽度变宽，多出的宽度加在倒数第二列
                 return {
