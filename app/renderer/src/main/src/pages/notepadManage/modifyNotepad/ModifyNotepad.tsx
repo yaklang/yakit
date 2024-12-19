@@ -183,6 +183,21 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         apiSaveNotepadList(params)
     })
 
+    // 删除文档
+    const onSingleRemove = useMemoizedFn(() => {
+        if (!notepadDetail.hash) return
+        setNotepadLoading(true)
+        apiDeleteNotepadDetail({hash: notepadDetail.hash})
+            .then(() => {
+                emiter.emit("onCloseCurrentPage", pageId)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setNotepadLoading(false)
+                }, 200)
+            })
+    })
+
     /** 编辑器内容的变化，更新数据 */
     const onMarkdownUpdated = useDebounceFn(
         (value) => {
@@ -402,42 +417,51 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 </Tooltip>
                             ))}
                         </div>
-                        <YakitPopover
-                            content={
-                                <React.Suspense fallback={"loading"}>
-                                    <NotepadShareModal
-                                        notepadInfo={notepadDetail}
-                                        onClose={() => setShareVisible(false)}
-                                    />
-                                </React.Suspense>
-                            }
-                            visible={shareVisible}
-                            onVisibleChange={setShareVisible}
-                            overlayClassName={styles["share-popover"]}
-                            placement='bottom'
-                        >
-                            <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large'>
-                                分享
-                            </YakitButton>
-                        </YakitPopover>
+                        {currentRole === notepadRole.adminPermission && (
+                            <YakitPopover
+                                content={
+                                    <React.Suspense fallback={"loading"}>
+                                        <NotepadShareModal
+                                            notepadInfo={notepadDetail}
+                                            onClose={() => setShareVisible(false)}
+                                        />
+                                    </React.Suspense>
+                                }
+                                visible={shareVisible}
+                                onVisibleChange={setShareVisible}
+                                overlayClassName={styles["share-popover"]}
+                                placement='bottom'
+                            >
+                                <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large'>
+                                    分享
+                                </YakitButton>
+                            </YakitPopover>
+                        )}
                         <YakitButton type='primary' icon={<OutlineClouddownloadIcon />} size='large'>
                             下载
                         </YakitButton>
-                        <FuncFilterPopover
-                            icon={<OutlineDotshorizontalIcon />}
-                            button={{type: "text2", size: "large"}}
-                            menu={{
-                                type: "primary",
-                                data: [{key: "remove", label: "删除", type: "danger", itemIcon: <OutlineTrashIcon />}],
-                                onClick: ({key}) => {
-                                    switch (key) {
-                                        default:
-                                            break
+                        {currentRole === notepadRole.adminPermission && (
+                            <FuncFilterPopover
+                                icon={<OutlineDotshorizontalIcon />}
+                                button={{type: "text2", size: "large"}}
+                                menu={{
+                                    type: "primary",
+                                    data: [
+                                        {key: "remove", label: "删除", type: "danger", itemIcon: <OutlineTrashIcon />}
+                                    ],
+                                    onClick: ({key}) => {
+                                        switch (key) {
+                                            case "remove":
+                                                onSingleRemove()
+                                                break
+                                            default:
+                                                break
+                                        }
                                     }
-                                }
-                            }}
-                            placement='bottomRight'
-                        />
+                                }}
+                                placement='bottomRight'
+                            />
+                        )}
                         <Divider type='vertical' style={{margin: 0}} />
 
                         <Tooltip title={userInfo.companyName}>{authorAvatar}</Tooltip>
