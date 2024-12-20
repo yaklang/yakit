@@ -35,7 +35,14 @@ import {randomAvatarColor} from "@/components/layout/FuncDomain"
 import {cloneDeep} from "lodash"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {API} from "@/services/swagger/resposeType"
-import {apiDeleteNotepadDetail, apiGetNotepadDetail, apiSaveNotepadList} from "../notepadManage/utils"
+import {
+    SaveDialogResponse,
+    apiDeleteNotepadDetail,
+    apiGetNotepadDetail,
+    apiSaveNotepadList,
+    onBaseNotepadDown,
+    onOpenLocalFileByPath
+} from "../notepadManage/utils"
 import moment from "moment"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -43,6 +50,11 @@ import {CollabUserInfo} from "@/components/MilkdownEditor/CollabManager"
 import {notepadRole} from "../NotepadShareModal/constants"
 import {notepadSaveStatus} from "@/components/MilkdownEditor/WebsocketProvider/constants"
 import emiter from "@/utils/eventBus/eventBus"
+import {yakitNotify} from "@/utils/notification"
+import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
+import {getFileNameByUrl} from "@/components/MilkdownEditor/utils/trackDeletePlugin"
+import {httpDeleteOSSResource} from "@/apiUtils/http"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -77,6 +89,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         }
         return cloneDeep(defaultModifyNotepadPageInfo)
     })
+
+    const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
+    const [batchDownInfo, setBatchDownInfo] = useState<SaveDialogResponse>()
 
     const [loading, setLoading] = useState<boolean>(false) // 编辑器ws是否连接上
     const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
@@ -198,6 +213,51 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             })
     })
 
+    // 下载文档
+    const onDownNotepad = useMemoizedFn(() => {
+        const params: API.PostNotepadRequest = {
+            hash: notepadDetail.hash,
+            title: tabName,
+            content: notepadContentRef.current
+        }
+        setDownItemLoading(true)
+        apiSaveNotepadList(params).then(() => {
+            const downParams: API.NotepadDownloadRequest = {
+                hash: notepadDetail.hash
+            }
+            onBaseNotepadDown(downParams)
+                .then((res) => {
+                    const m = showYakitModal({
+                        hiddenHeader: true,
+                        footer: <></>,
+                        mask: false,
+                        content: (
+                            <DownFilesModal
+                                isDeleteOOSAfterEnd={true}
+                                url={res.url}
+                                path={res.path}
+                                visible={true}
+                                setVisible={() => m.destroy()}
+                                onCancelDownload={() => m.destroy()}
+                                onSuccess={() => {
+                                    onOpenLocalFileByPath(res?.path)
+                                    setBatchDownInfo(undefined)
+                                    m.destroy()
+                                }}
+                            />
+                        ),
+                        bodyStyle: {padding: 0}
+                    })
+                    setBatchDownInfo(res)
+                    yakitNotify("success", "获取下载链接成功")
+                })
+                .finally(() =>
+                    setTimeout(() => {
+                        setDownItemLoading(false)
+                    }, 200)
+                )
+        })
+    })
     /** 编辑器内容的变化，更新数据 */
     const onMarkdownUpdated = useDebounceFn(
         (value) => {
@@ -437,7 +497,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 </YakitButton>
                             </YakitPopover>
                         )}
-                        <YakitButton type='primary' icon={<OutlineClouddownloadIcon />} size='large'>
+                        <YakitButton
+                            type='primary'
+                            icon={<OutlineClouddownloadIcon />}
+                            size='large'
+                            onClick={onDownNotepad}
+                            loading={downItemLoading}
+                        >
                             下载
                         </YakitButton>
                         {currentRole === notepadRole.adminPermission && (

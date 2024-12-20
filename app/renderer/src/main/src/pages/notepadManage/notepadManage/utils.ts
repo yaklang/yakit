@@ -154,6 +154,21 @@ export const apiDownloadNotepad: APIFunc<API.NotepadDownloadRequest, string> = (
     })
 }
 
+export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogResponse> = (value) => {
+    return new Promise((resolve, reject) => {
+        const params: API.NotepadDownloadRequest = {
+            ...value
+        }
+        apiDownloadNotepad(params)
+            .then((res) => {
+                saveDialogAndGetLocalFileInfo((res as string) || "")
+                    .then(resolve)
+                    .catch(reject)
+            })
+            .catch(reject)
+    })
+}
+
 export interface SaveDialogResponse {
     /**线上链接 */
     url: string
