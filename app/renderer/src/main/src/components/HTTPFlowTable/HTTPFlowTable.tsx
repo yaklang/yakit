@@ -1694,7 +1694,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     }, [])
     // 表格可配置列
-    const [configColumn, setConfigColumn] = useState<ColumnAllInfoItem[]>([])
+    const configColumnRef = useRef<ColumnAllInfoItem[]>([])
     // 表格的key值
     const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
     // 序号是否固定
@@ -2115,11 +2115,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 title: item.title,
                 isChecked: !excludeColumnsKey.includes(item.dataKey)
             }))
-        setConfigColumn(arr)
+        configColumnRef.current = arr
 
         const realColumns = columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
         setIdFixed(realColumns.length !== 2)
-        
+
         return realColumns
     }, [
         tags,
@@ -2386,7 +2386,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 header.push(item)
                 filterVal.push("Response")
             } else {
-                const itemData = configColumn.filter((itemIn) => itemIn.title === item)[0]
+                const itemData = configColumnRef.current.filter((itemIn) => itemIn.title === item)[0]
                 header.push(item)
                 filterVal.push(itemData.dataKey)
             }
@@ -2535,7 +2535,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const onExcelExport = (list) => {
-        const titleValue = configColumn.map((item) => item.title)
+        const titleValue = configColumnRef.current.map((item) => item.title)
         const exportValue = [...titleValue, "请求包", "响应包"]
         const m = showYakitModal({
             title: "导出字段",
@@ -3961,40 +3961,41 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     containerClassName={containerClassName}
                 />
             </div>
+            {drawerFormVisible && (
+                <HTTPFlowTableFormConfiguration
+                    responseType={contentType}
+                    visible={drawerFormVisible}
+                    setVisible={setDrawerFormVisible}
+                    onSave={(filters, setting, excludeColKeywords) => {
+                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
+                        setFilterMode(filterMode)
+                        setHostName(hostName)
+                        setUrlPath(urlPath)
+                        setFileSuffix(fileSuffix)
+                        setSearchContentType(searchContentType)
+                        setExcludeKeywords(excludeKeywords)
+                        setDrawerFormVisible(false)
 
-            <HTTPFlowTableFormConfiguration
-                responseType={contentType}
-                visible={drawerFormVisible}
-                setVisible={setDrawerFormVisible}
-                onSave={(filters, setting, excludeColKeywords) => {
-                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
-                    setFilterMode(filterMode)
-                    setHostName(hostName)
-                    setUrlPath(urlPath)
-                    setFileSuffix(fileSuffix)
-                    setSearchContentType(searchContentType)
-                    setExcludeKeywords(excludeKeywords)
-                    setDrawerFormVisible(false)
+                        const {backgroundRefresh: newBackgroundRefresh} = setting
+                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
 
-                    const {backgroundRefresh: newBackgroundRefresh} = setting
-                    if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-
-                    const newExcludeColumnsKey = [...noColumnsKey, ...excludeColKeywords]
-                    if (JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey)) {
-                        setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, excludeColKeywords + "")
-                        setExcludeColumnsKey(newExcludeColumnsKey)
-                        // 表格列宽度需要重新计算
-                        setTableKeyNumber(uuidv4())
-                    }
-                }}
-                filterMode={filterMode}
-                hostName={hostName}
-                urlPath={urlPath}
-                fileSuffix={fileSuffix}
-                searchContentType={searchContentType}
-                excludeKeywords={excludeKeywords}
-                columnsAll={JSON.stringify(configColumn)}
-            />
+                        const newExcludeColumnsKey = [...noColumnsKey, ...excludeColKeywords]
+                        if (JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey)) {
+                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, excludeColKeywords + "")
+                            setExcludeColumnsKey(newExcludeColumnsKey)
+                            // 表格列宽度需要重新计算
+                            setTableKeyNumber(uuidv4())
+                        }
+                    }}
+                    filterMode={filterMode}
+                    hostName={hostName}
+                    urlPath={urlPath}
+                    fileSuffix={fileSuffix}
+                    searchContentType={searchContentType}
+                    excludeKeywords={excludeKeywords}
+                    columnsAll={JSON.stringify(configColumnRef.current)}
+                />
+            )}
         </div>
     )
 })
