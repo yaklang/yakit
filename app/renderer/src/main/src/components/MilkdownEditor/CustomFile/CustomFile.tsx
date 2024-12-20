@@ -36,6 +36,8 @@ import useUploadOSSHooks, {UploadOSSStartProps} from "@/hook/useUploadOSS/useUpl
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {uploadBigFileType} from "@/hook/useUploadOSS/constants"
+import {getFileNameByUrl} from "../utils/trackDeletePlugin"
+import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 interface CustomFileItem {
     name: string
@@ -251,6 +253,7 @@ export const CustomFile: React.FC = () => {
     const onCancelDownload = useMemoizedFn(() => {
         setFileInfo({...fileInfo, path: ""})
         setVisibleDownFiles(false)
+        setDownFileInfo(undefined)
     })
     const onRefreshFileInfo = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -374,9 +377,10 @@ export const CustomFile: React.FC = () => {
                     url={downFileInfo.url}
                     fileName={downFileInfo.fileName}
                     path={downFileInfo.path}
-                    visible={visibleDownFiles}
-                    setVisible={setVisibleDownFiles}
+                    visible={!!downFileInfo.url}
+                    setVisible={() => setDownFileInfo(undefined)}
                     onCancelDownload={onCancelDownload}
+                    onSuccess={onOpenFile}
                 />
             )}
         </>
@@ -384,16 +388,21 @@ export const CustomFile: React.FC = () => {
 }
 
 interface DownFilesModalProps {
+    /**是否在流结束后删除oss上的资源。默认不删除 */
+    isDeleteOOSAfterEnd?: boolean
     visible: boolean
     setVisible: (b: boolean) => void
     url: string
     fileName?: string
     path: string
     onCancelDownload: () => void
+    onSuccess?: () => void
     yakitHintProps?: Omit<YakitHintProps, "visible" | "onCancel">
 }
+/**下载文件到本地 */
 export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
-    const {visible, setVisible, fileName, path, url, onCancelDownload, yakitHintProps} = props
+    const {isDeleteOOSAfterEnd, visible, setVisible, fileName, path, url, yakitHintProps, onCancelDownload, onSuccess} =
+        props
 
     const [percent, setPercent] = useState<number>(0)
 
@@ -402,19 +411,26 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     const onProgressData = useMemoizedFn((newState) => {
         const newPercent = Math.trunc(newState.percent * 100)
         setPercent(newPercent)
-        if (newState.percent >= 1) {
+    })
+
+    const onUploadEnd = useMemoizedFn(() => {
+        setTimeout(() => {
             setVisible(false)
             setPercent(0)
-        }
+            if (isDeleteOOSAfterEnd) {
+                onDeleteOSSFile()
+            }
+        }, 1000)
     })
 
     const {onStart, onCancel: onNotepadDownCancel} = useDownloadUrlToLocalHooks({
         path,
         taskToken: taskTokenRef.current,
         onUploadData: onProgressData,
-        onUploadEnd: () => {
-            setVisible(false)
+        onUploadEnd,
+        onUploadSuccess: () => {
             setPercent(0)
+            onSuccess && onSuccess()
         }
     })
     useEffect(() => {
@@ -429,10 +445,18 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             setPercent(0)
         }
     }, [visible])
+
     const onCancel = useMemoizedFn(() => {
         onNotepadDownCancel().then(() => {
             onCancelDownload()
         })
+    })
+    // 删除oss资源
+    const onDeleteOSSFile = useMemoizedFn(() => {
+        const fileName = getFileNameByUrl(url)
+        if (fileName) {
+            httpDeleteOSSResource({file_name: [fileName]}, false)
+        }
     })
     return (
         <YakitHint
