@@ -29,6 +29,7 @@ export interface CodeScanExecuteContentProps {
     selectGroupList: string[]
     pageInfo: CodeScanPageInfoProps
     pageId: string
+    onSetSelectGroupListByKeyWord: (v: string[]) => void
 }
 
 export interface CodeScanByGroupProps {
@@ -58,13 +59,21 @@ export interface CodeScaMainExecuteContentProps {
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
-    auditCodeList: {label: string; value: string}[]
+    auditCodeList: {label: string; value: string; language: string}[]
     getAduitList: () => void
     pageInfo: CodeScanPageInfoProps
     executeType: "new" | "old"
     isAuditExecuting: boolean
     setAuditsExecuting: (v: boolean) => void
     setExecuteType: (v: "new" | "old") => void
+    onSetSelectGroupListByKeyWord: (v: string[]) => void
+    pageId: string
+    pauseLoading: boolean
+    setPauseLoading: (v:boolean) => void
+    stopLoading: boolean
+    setStopLoading: (v:boolean) => void
+    continueLoading: boolean
+    setContinueLoading: (v:boolean) => void
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -139,7 +148,8 @@ export type SyntaxFlowScanModeType = "start" | "pause" | "resume" | "status"
 export interface SyntaxFlowScanRequest {
     ControlMode: SyntaxFlowScanModeType
     Filter?: SyntaxFlowRuleFilter
-    ProgramName: string[]
+    ProgramName?: string[]
+    ResumeTaskId?: string
 }
 
 export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
@@ -147,7 +157,6 @@ export type SyntaxFlowScanStatus = "executing" | "done" | "paused" | "error"
 export interface SyntaxFlowScanResponse {
     TaskID: string
     Status: SyntaxFlowScanStatus
-    CurrentRuleName: string
     ExecResult: ExecResult
 }
 
@@ -161,6 +170,7 @@ export interface SyntaxFlowResultFilter {
     AfterID?: number
     BeforeID?: number
     Severity?: string[]
+    Kind?: string[]
 }
 
 export interface QuerySyntaxFlowResultRequest {
@@ -181,6 +191,7 @@ export interface SyntaxFlowResult {
     Language: string
     RiskCount: number
     RuleContent: string
+    Kind: "query" | "debug" | "scan"
 }
 
 export interface QuerySyntaxFlowResultResponse {
@@ -188,6 +199,16 @@ export interface QuerySyntaxFlowResultResponse {
     DbMessage: DbOperateMessage
     Results: SyntaxFlowResult[]
     Total: number
+}
+
+export interface DeleteSyntaxFlowResultResponse {
+    Message: DbOperateMessage
+}
+
+export interface DeleteSyntaxFlowResultRequest {
+    DeleteContainRisk?: boolean
+    DeleteAll?: boolean
+    Filter?: SyntaxFlowResultFilter
 }
 
 export interface CodeScanExecuteExtraParamsDrawerProps {
@@ -207,7 +228,7 @@ export interface CodeScanAuditExecuteFormProps {
     ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
     selectGroupList: string[]
     plugin?: YakScript
-    onStartExecute: (v: {project: string},is?: boolean) => void
+    onStartExecute: (v: {project: string}, is?: boolean) => void
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     pushNewLogs: (log: StreamResult.Message[]) => void

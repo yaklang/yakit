@@ -48,6 +48,38 @@ module.exports = (win, getClient) => {
         handlerHelper.registerHandler(win, stream, streamSyntaxFlowScanMap, token)
     })
 
+    // 规则执行-任务列表
+    const asyncQuerySyntaxFlowScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QuerySyntaxFlowScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QuerySyntaxFlowScanTask", async (e, params) => {
+        return await asyncQuerySyntaxFlowScanTask(params)
+    })
+
+    // 规则执行-任务列表/删除
+    const asyncDeleteSyntaxFlowScanTask = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSyntaxFlowScanTask(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteSyntaxFlowScanTask", async (e, params) => {
+        return await asyncDeleteSyntaxFlowScanTask(params)
+    })
+
     const asyncQuerySyntaxFlowResult = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QuerySyntaxFlowResult(params, (err, data) => {
@@ -62,6 +94,22 @@ module.exports = (win, getClient) => {
     // 获取审计结果
     ipcMain.handle("QuerySyntaxFlowResult", async (e, params) => {
         return await asyncQuerySyntaxFlowResult(params)
+    })
+
+    const asyncDeleteSyntaxFlowResult = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteSyntaxFlowResult(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 删除审计结果
+    ipcMain.handle("DeleteSyntaxFlowResult", async (e, params) => {
+        return await asyncDeleteSyntaxFlowResult(params)
     })
 
     const asyncQuerySSAPrograms = (params) => {

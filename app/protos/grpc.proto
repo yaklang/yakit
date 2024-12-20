@@ -727,8 +727,9 @@ service Yak {
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
   rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
-  // query result 
+  // query result
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
+  rpc DeleteSyntaxFlowResult (DeleteSyntaxFlowResultRequest) returns (DeleteSyntaxFlowResultResponse);
   //query ssa program
   rpc QuerySSAPrograms(QuerySSAProgramRequest)returns(QuerySSAProgramResponse);
   rpc UpdateSSAProgram(UpdateSSAProgramRequest)returns(DbOperateMessage);
@@ -3063,6 +3064,9 @@ message QueryRisksRequest {
   repeated int64 Ids = 14;
 
   string RuntimeId = 15;
+
+  // ssa program 
+  repeated string SSAProgramNames = 16;
 }
 
 message QueryRisksResponse {
@@ -3963,6 +3967,7 @@ message YakScriptParam {
   string JsonSchema = 10;
 
   string SuggestionDataExpression = 11;
+  string UISchema = 12;
 }
 
 message YakScript {
@@ -5580,9 +5585,9 @@ message SSAProgram{
   string Language = 6;
   string EngineVersion = 7;
 
-  // need re-compile 
+  // need re-compile
   bool Recompile = 8;
-  // risk number 
+  // risk number
   int64 HighRiskNumber = 9;
   int64 CriticalRiskNumber = 10;
   int64 WarnRiskNumber = 11;
@@ -5591,19 +5596,19 @@ message SSAProgram{
 }
 
 message SSAProgramInput {
-  string Name = 1; // index 
-  string Description = 2; 
+  string Name = 1; // index
+  string Description = 2;
 }
 
 message SSAProgramFilter{
-  repeated string ProgramNames =  1; 
-  repeated string Languages =  2; 
-  repeated int64 Ids =  3; 
+  repeated string ProgramNames =  1;
+  repeated string Languages =  2;
+  repeated int64 Ids =  3;
 
   // update range
   int64 BeforeUpdatedAt = 5;
   int64 AfterUpdatedAt = 6;
-  // fuzz search 
+  // fuzz search
   string Keyword =  7 ;
   // id range
   int64 AfterID =  8;
@@ -5677,14 +5682,16 @@ message SyntaxFlowScanRequest{
 
   // 启动扫描任务
   SyntaxFlowRuleFilter Filter = 2; // 用于指定扫描的规则
-  repeated string ProgramName = 3; // 用于指定扫描的程序 
+  repeated string ProgramName = 3; // 用于指定扫描的程序
   // 恢复扫描任务
   string ResumeTaskId = 5;         // 恢复任务ID
 
   // 其他参数 
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
-}
 
+  // for new rule scan task 
+  SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
+}
 
 message QuerySyntaxFlowScanTaskRequest{
   Paging Pagination = 1;
@@ -5697,6 +5704,8 @@ message SyntaxFlowScanTaskFilter{
   repeated string TaskIds = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
+  string keyword = 6; // fuzz search program-name 
+  repeated string Kind = 7; // "debug" | "scan";
 }
 
 message QuerySyntaxFlowScanTaskResponse{
@@ -5723,6 +5732,9 @@ message SyntaxFlowScanTask {
     int64 RiskCount =12;
     // query process
     int64 TotalQuery =13;
+
+    SyntaxFlowScanRequest Config = 14;
+    string Kind =  15; // "debug" | "scan"
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
@@ -5758,6 +5770,7 @@ message SyntaxFlowResultFilter {
   int64 BeforeID = 8;
 
   repeated string Severity = 9;  //  "info", "low", "middle", "critical", "high"
+  repeated string Kind = 10 ; //   "query" | "debug" | "scan"
 }
 
 message QuerySyntaxFlowResultRequest{
@@ -5794,6 +5807,17 @@ message SyntaxFlowResult {
   uint64 RiskCount = 11;
 
   string RuleContent = 12;
+  string Kind =  13; // "query" | "debug" | "scan"
+}
+
+message DeleteSyntaxFlowResultRequest{
+  bool DeleteContainRisk = 1;  //  是否删除带风险的结果
+  bool DeleteAll = 2;  // DeleteAll 的保护
+  SyntaxFlowResultFilter Filter = 3;
+}
+
+message DeleteSyntaxFlowResultResponse{
+  DbOperateMessage Message = 1;
 }
 
 message QueryPluginEnvRequest {

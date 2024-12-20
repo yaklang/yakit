@@ -95,6 +95,7 @@ import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditC
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -1713,8 +1714,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra} = props
-
-    const [activeKey, setActiveKey] = useState<string | string[]>()
+    const [loading, setLoading] = useState<boolean>(false)
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
 
     useEffect(() => {
@@ -1733,35 +1733,43 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         try {
+            setLoading(true)
             const {Body, ...auditYakUrl} = params
             const body = Body ? StringToUint8Array(Body) : undefined
             const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
+
             if (result && result.Resources.length > 0) {
-                let arr: YakURLDataItemProps[] = []
-                result.Resources.filter((item) => item.ResourceType === "value").forEach((item) => {
-                    let obj: any = {
-                        index: "",
-                        source: "",
-                        ResourceName: item.ResourceName
-                    }
-                    item.Extra.forEach((itemIn) => {
-                        if (["index", "source"].includes(itemIn.Key)) {
-                            obj[itemIn.Key] = itemIn.Value
+                const ResultID = result.Resources.find((item) => item.ResourceType === "result_id")?.ResourceName
+                if (ResultID === info.ResultID) {
+                    setLoading(false)
+                    let arr: YakURLDataItemProps[] = []
+                    result.Resources.filter((item) => item.ResourceType === "value").forEach((item) => {
+                        let obj: any = {
+                            index: "",
+                            source: "",
+                            ResourceName: item.ResourceName
                         }
-                        if (itemIn.Key === "code_range") {
-                            try {
-                                obj[itemIn.Key] = JSON.parse(itemIn.Value)
-                            } catch (error) {}
-                        }
+                        item.Extra.forEach((itemIn) => {
+                            if (["index", "source"].includes(itemIn.Key)) {
+                                obj[itemIn.Key] = itemIn.Value
+                            }
+                            if (itemIn.Key === "code_range") {
+                                try {
+                                    obj[itemIn.Key] = JSON.parse(itemIn.Value)
+                                } catch (error) {}
+                            }
+                        })
+                        arr.push(obj)
                     })
-                    arr.push(obj)
-                })
-                setYakURLData(arr)
-                setIsShowCollapse(true)
+                    setYakURLData(arr)
+                    setIsShowCollapse(true)
+                }
             } else {
+                setLoading(false)
                 setIsShowCollapse(false)
             }
         } catch (error) {
+            setLoading(false)
             setIsShowCollapse(false)
         }
     })
@@ -1913,13 +1921,13 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 firstNode={
                     <div className={styles["content-resize-collapse"]}>
                         <div className={styles["main-title"]}>相关代码段</div>
-                        {
+                        <YakitSpin spinning={loading}>
                             <AuditResultCollapse
                                 data={yakURLData}
                                 jumpCodeScanPage={jumpCodeScanPage}
                                 isShowExtra={isShowExtra}
                             />
-                        }
+                        </YakitSpin>
                     </div>
                 }
                 secondNode={<AuditResultDescribe info={info} />}
@@ -2100,7 +2108,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
 
     const renderItem = (info: YakURLDataItemProps) => {
         const filename = info.code_range.url.split("/").pop()
-        const {start_line,end_line,source_code_line,start_column,end_column} = info.code_range
+        const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
         return (
             <YakCodemirror
                 readOnly={true}

@@ -1,5 +1,7 @@
 import {info, yakitNotify} from "@/utils/notification"
 import {
+    DeleteSyntaxFlowResultRequest,
+    DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
     QuerySyntaxFlowResultResponse,
     QuerySyntaxFlowRuleGroupRequest,
@@ -10,6 +12,7 @@ import {
     SyntaxFlowScanModeType,
     SyntaxFlowScanRequest
 } from "./YakRunnerCodeScanType"
+import {APIOptionalFunc} from "@/apiUtils/type"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -57,10 +60,7 @@ export const apiFetchQuerySyntaxFlowRule: (
 /**
  * @description SyntaxFlowScan 规则执行
  */
-export const apiSyntaxFlowScan: (params: SyntaxFlowScanRequest, token: string) => Promise<null> = (
-    params,
-    token
-) => {
+export const apiSyntaxFlowScan: (params: SyntaxFlowScanRequest, token: string) => Promise<null> = (params, token) => {
     return new Promise((resolve, reject) => {
         try {
             ipcRenderer
@@ -115,6 +115,27 @@ export const apiFetchQuerySyntaxFlowResult: (
             .catch((e) => {
                 reject(e)
                 yakitNotify("error", "获取审计结果：" + e)
+            })
+    })
+}
+
+/** 删除审计结果 */
+export const apiDeleteQuerySyntaxFlowResult: APIOptionalFunc<
+    DeleteSyntaxFlowResultRequest,
+    DeleteSyntaxFlowResultResponse
+> = (params) => {
+    return new Promise((resolve, reject) => {
+        const queryParams: DeleteSyntaxFlowResultRequest = {
+            ...params
+        }
+        ipcRenderer
+            .invoke("DeleteSyntaxFlowResult", queryParams)
+            .then((res: DeleteSyntaxFlowResultResponse) => {
+                resolve(res)
+            })
+            .catch((e) => {
+                reject(e)
+                yakitNotify("error", "删除审计结果：" + e)
             })
     })
 }

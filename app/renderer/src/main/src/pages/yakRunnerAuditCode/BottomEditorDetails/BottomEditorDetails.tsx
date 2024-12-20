@@ -30,10 +30,21 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // monaco输入内容
     const [ruleEditor, setRuleEditor] = useState<string>("")
     // 展示所需的BugHash
-    const [bugHash, setBugHash] = useState<string>()
+    const [bugHash, setBugHash] = useState<string>("")
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+    const onResetAuditRuleFun = useMemoizedFn((v:string)=>{
+        setRuleEditor(v)
+    })
+
+    useEffect(()=>{
+        emiter.on("onResetAuditRule", onResetAuditRuleFun)
+        return () => {
+            emiter.off("onResetAuditRule", onResetAuditRuleFun)
+        }
+    },[])
 
     useEffect(() => {
         if (showItem && isShowEditorDetails) {
