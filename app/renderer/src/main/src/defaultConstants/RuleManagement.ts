@@ -1,26 +1,16 @@
-import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-
-interface RuleLevelInfo {
-    key: string
-    name: string
-    color: YakitTagColor
+/** 规则类型渲染 tag */
+export const RuleType: Record<string, {key: string; name: string}> = {
+    audit: {key: "audit", name: "Code Audit"},
+    vuln: {key: "vuln", name: "Vulnerability"},
+    config: {key: "config", name: "Config"},
+    security: {key: "security", name: "Security Hotspot"}
 }
-
-/** 规则等级渲染 tag */
-export const RuleLevel: Record<string, RuleLevelInfo> = {
-    critical: {key: "critical", name: "严重", color: "serious"},
-    high: {key: "high", name: "高危", color: "danger"},
-    middle: {key: "middle", name: "中危", color: "info"},
-    low: {key: "low", name: "低危", color: "warning"},
-    info: {key: "info", name: "信息", color: "success"}
-}
-/** 规则可选等级 */
-export const RuleLevelList: {value: string; label: string}[] = [
-    {value: "critical", label: "严重"},
-    {value: "high", label: "高危"},
-    {value: "middle", label: "中危"},
-    {value: "low", label: "低危"},
-    {value: "info", label: "信息"}
+/** 规则可选类型 */
+export const RuleTypeList: {value: string; label: string}[] = [
+    {value: "audit", label: "Code Audit"},
+    {value: "vuln", label: "Vulnerability"},
+    {value: "config", label: "Config"},
+    {value: "security", label: "Security Hotspot"}
 ]
 
 /** 规则可选语言 */
@@ -29,7 +19,7 @@ export const RuleLanguageList: {value: string; label: string}[] = [
     {value: "php", label: "PHP"},
     {value: "yak", label: "Yaklang"},
     {value: "js", label: "JavaScript"},
-    {value: "go", label: "Golang"},
+    {value: "golang", label: "Golang"},
     {value: "general", label: "通用"}
 ]
 
