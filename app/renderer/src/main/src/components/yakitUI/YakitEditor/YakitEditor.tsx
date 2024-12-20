@@ -12,7 +12,7 @@ import ReactResizeDetector from "react-resize-detector"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 // 编辑器 注册
 import "@/utils/monacoSpec/theme"
-import "@/utils/monacoSpec/fuzzHTTP"
+import "@/utils/monacoSpec/fuzzHTTPMonacoSpec"
 import "@/utils/monacoSpec/yakEditor"
 import "@/utils/monacoSpec/html"
 
