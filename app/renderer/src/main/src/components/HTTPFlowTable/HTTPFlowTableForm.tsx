@@ -16,18 +16,20 @@ import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./HTTPFlowTableForm.module.scss"
+import {ColumnAllInfoItem} from "./HTTPFlowTable"
 
 export interface HTTPFlowTableFormConfigurationProps {
     visible: boolean
     setVisible: (b: boolean) => void
     responseType: FiltersItemProps[]
-    onSave: (v: HTTPFlowTableFromValue, setting: HTTPFlowSettingValue) => void
+    onSave: (v: HTTPFlowTableFromValue, setting: HTTPFlowSettingValue, excludeColKeywords: string[]) => void
     filterMode: "shield" | "show"
     hostName: string[]
     urlPath: string[]
     fileSuffix: string[]
     searchContentType: string
     excludeKeywords: string[]
+    columnsAll: string
 }
 
 export interface HTTPFlowTableFromValue {
@@ -62,7 +64,8 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         urlPath,
         fileSuffix,
         searchContentType,
-        excludeKeywords
+        excludeKeywords,
+        columnsAll
     } = props
 
     /** ---------- 高级筛选 Start ---------- */
@@ -166,7 +169,11 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? "true" : "")
             }
 
-            onSave(cloneDeep(advancedFilters), {backgroundRefresh})
+            onSave(
+                cloneDeep(advancedFilters),
+                {backgroundRefresh},
+                curColumnsAll.filter((item) => !item.isChecked).map((item) => item.dataKey)
+            )
         } catch (error) {
             yakitNotify("error", `${error}`)
         }
@@ -234,6 +241,15 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             setVisible(false)
         }
     })
+
+    // 自定义列
+    const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
+    useEffect(() => {
+        try {
+            setCurColumnsAll(JSON.parse(columnsAll))
+        } catch (error) {
+        }
+    }, [columnsAll])
 
     return (
         <YakitDrawer
@@ -341,6 +357,42 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                                 </Tooltip>
                             </div>
                         </div>
+                    </div>
+                </div>
+                {/* 列表显示字段 */}
+                <div className={styles["config-item-wrapper"]}>
+                    <div className={styles["item-header"]}>
+                        <div className={styles["header-title"]}>列表显示字段</div>
+                        <YakitButton
+                            type='text'
+                            onClick={() => {
+                                const newCurColumnsAll = curColumnsAll.map((item) => ({...item, isChecked: true}))
+                                setCurColumnsAll(newCurColumnsAll)
+                            }}
+                        >
+                            重置
+                        </YakitButton>
+                    </div>
+                    <div>勾选则代表展示，不勾选则不进行展示，该配置对插件执行流量表，webfuzzer流量表全部生效</div>
+                    <div className={styles["columns-cols"]}>
+                        {curColumnsAll.map((item, index) => (
+                            <YakitCheckbox
+                                wrapperClassName={styles["columns-cols-item"]}
+                                key={index}
+                                checked={item.isChecked}
+                                onChange={(e) => {
+                                    const arr = [...curColumnsAll]
+                                    arr.forEach((i) => {
+                                        if (i.dataKey === item.dataKey) {
+                                            i.isChecked = e.target.checked
+                                        }
+                                    })
+                                    setCurColumnsAll(arr)
+                                }}
+                            >
+                                {item.title}
+                            </YakitCheckbox>
+                        ))}
                     </div>
                 </div>
             </div>

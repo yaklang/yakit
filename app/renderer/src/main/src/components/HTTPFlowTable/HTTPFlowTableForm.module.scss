@@ -88,4 +88,16 @@
             }
         }
     }
+
+    .columns-cols {
+        display: flex;
+        flex-wrap: wrap;
+        .columns-cols-item {
+            width: 25%;
+            margin-bottom: 8px;
+            overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+        }
+    }
 }

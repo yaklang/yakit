@@ -9,7 +9,15 @@ import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTime, formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
+import {
+    useCreation,
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useMemoizedFn,
+    useUpdateEffect,
+    useVirtualList
+} from "ahooks"
 import ReactResizeDetector from "react-resize-detector"
 import {
     generateCSRFPocByRequest,
@@ -77,6 +85,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {setClipboardText} from "@/utils/clipboard"
 import {RemoteHistoryGV} from "@/enums/history"
 import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombinationSearch"
+import {v4 as uuidv4} from "uuid"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -641,6 +650,12 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 }
 
 export const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
+
+export interface ColumnAllInfoItem {
+    dataKey: string
+    title: string
+    isChecked: boolean
+}
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {
@@ -1665,452 +1680,458 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         },
         {wait: 200}
     ).run
-    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        const ID: ColumnsTypeProps = {
-            title: "序号",
-            dataKey: "Id",
-            fixed: "left",
-            ellipsis: false,
-            width: 96,
-            enableDrag: false,
-            sorterProps: {
-                sorter: true
+
+    // 需要完全排除列字段，表格不可能出现的列
+    const noColumnsKey = toWebFuzzer ? [] : ["Payloads"]
+    // 排除展示的列
+    const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
+    useEffect(() => {
+        getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey).then((res) => {
+            if (res) {
+                const arr = res.split(",")
+                setExcludeColumnsKey([...arr, ...noColumnsKey])
             }
-        }
-        const Method: ColumnsTypeProps = {
-            title: "方法",
-            dataKey: "Method",
-            width: 80,
-            filterProps: {
-                filterKey: "Methods",
-                filtersType: "select",
-                filterMultiple: true,
-                filters: [
-                    {
-                        label: "GET",
-                        value: "GET"
-                    },
-                    {
-                        label: "POST",
-                        value: "POST"
-                    },
-                    {
-                        label: "HEAD",
-                        value: "HEAD"
-                    },
-                    {
-                        label: "PUT",
-                        value: "PUT"
-                    },
-                    {
-                        label: "DELETE",
-                        value: "DELETE"
+        })
+    }, [])
+    // 表格可配置列
+    const configColumnRef = useRef<ColumnAllInfoItem[]>([])
+    // 表格的key值
+    const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
+    // 序号是否固定
+    const [idFixed, setIdFixed] = useState<boolean>(true)
+    const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        const columnArr: ColumnsTypeProps[] = [
+            {
+                title: "序号",
+                dataKey: "Id",
+                fixed: idFixed ? "left" : undefined,
+                ellipsis: false,
+                width: 96,
+                enableDrag: false,
+                sorterProps: {
+                    sorter: true
+                }
+            },
+            {
+                title: "方法",
+                dataKey: "Method",
+                width: 80,
+                filterProps: {
+                    filterKey: "Methods",
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filters: [
+                        {
+                            label: "GET",
+                            value: "GET"
+                        },
+                        {
+                            label: "POST",
+                            value: "POST"
+                        },
+                        {
+                            label: "HEAD",
+                            value: "HEAD"
+                        },
+                        {
+                            label: "PUT",
+                            value: "PUT"
+                        },
+                        {
+                            label: "DELETE",
+                            value: "DELETE"
+                        }
+                    ]
+                }
+            },
+            {
+                title: "状态码",
+                dataKey: "StatusCode",
+                width: 100,
+                filterProps: {
+                    filterKey: "StatusCode",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
+                    filterInputProps: {
+                        placeholder: "支持输入200,200-204格式，多个用逗号分隔",
+                        wrapperStyle: {width: 270},
+                        onRegular: (value) => {
+                            // 只允许输入数字、逗号和连字符，去掉所有其他字符
+                            return value.replace(/[^0-9,-]/g, "")
+                        }
                     }
-                ]
-            }
-        }
-        const StatusCode: ColumnsTypeProps = {
-            title: "状态码",
-            dataKey: "StatusCode",
-            width: 100,
-            filterProps: {
-                filterKey: "StatusCode",
-                filtersType: "input",
-                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
-                filterInputProps: {
-                    placeholder: "支持输入200,200-204格式，多个用逗号分隔",
-                    wrapperStyle: {width: 270},
-                    onRegular: (value) => {
-                        // 只允许输入数字、逗号和连字符，去掉所有其他字符
-                        return value.replace(/[^0-9,-]/g, "")
+                },
+                render: (text, rowData) => {
+                    return (
+                        <div
+                            className={classNames({
+                                [style["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)
+                            })}
+                        >
+                            {text}
+                        </div>
+                    )
+                }
+            },
+            {
+                title: "URL",
+                dataKey: "Url",
+                width: 400,
+                filterProps: {
+                    filterKey: "SearchURL",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
+                }
+            },
+            {
+                title: "Payloads",
+                dataKey: "Payloads",
+                width: 300,
+                render: (v) => {
+                    return v ? v.join(",") : "-"
+                }
+            },
+            {
+                title: "相关插件",
+                dataKey: "FromPlugin",
+                width: 200,
+                filterProps: {
+                    filterKey: "FromPlugin",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
+                }
+            },
+            {
+                title: "Tags",
+                dataKey: "Tags",
+                width: 150,
+                render: (text) => {
+                    return text
+                        ? `${text}`
+                              .split("|")
+                              .filter((i) => !i.startsWith("YAKIT_COLOR_"))
+                              .join(", ")
+                        : ""
+                },
+                filterProps: {
+                    filterKey: "Tags",
+                    filterMultiple: true,
+                    filterIcon: (
+                        <OutlineSearchIcon
+                            className={style["filter-icon"]}
+                            onClick={() => getHTTPFlowsFieldGroup(true)}
+                        />
+                    ),
+                    filterRender: (closePopover: () => void) => {
+                        return (
+                            <MultipleSelect
+                                filterProps={{
+                                    filterSearch: true,
+                                    filterSearchInputProps: {
+                                        prefix: <OutlineSearchIcon className='search-icon' />,
+                                        allowClear: true
+                                    }
+                                }}
+                                originalList={tags}
+                                searchVal={tagSearchVal}
+                                onChangeSearchVal={setTagSearchVal}
+                                value={tagsFilter}
+                                onSelect={(v, item) => {
+                                    if (Array.isArray(v)) {
+                                        setTagsFilter(v)
+                                        if (pageType === "MITM") {
+                                            emiter.emit("onHistoryTagToMitm", v.join(","))
+                                        }
+                                    }
+                                }}
+                                onClose={() => {
+                                    closePopover()
+                                }}
+                                onQuery={() => {
+                                    // 这里重置过后的 tagsFilter 不一定是最新的
+                                    setParams({
+                                        ...getParams(),
+                                        Tags: []
+                                    })
+                                    setTimeout(() => {
+                                        updateData()
+                                    }, 100)
+                                }}
+                                selectContainerStyle={{
+                                    maxHeight: "40vh"
+                                }}
+                            ></MultipleSelect>
+                        )
                     }
                 }
             },
-            render: (text, rowData) => {
-                return (
-                    <div
-                        className={classNames({
-                            [style["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)
-                        })}
-                    >
-                        {text}
-                    </div>
-                )
-            }
-        }
-        const Url: ColumnsTypeProps = {
-            title: "URL",
-            dataKey: "Url",
-            width: 400,
-            filterProps: {
-                filterKey: "SearchURL",
-                filtersType: "input",
-                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
-            }
-        }
-        const WebPayloads: ColumnsTypeProps = {
-            title: "Payloads",
-            dataKey: "Payloads",
-            width: 300,
-            render: (v) => {
-                return v ? v.join(",") : "-"
-            }
-        }
-        const FromPlugin: ColumnsTypeProps = {
-            title: "相关插件",
-            dataKey: "FromPlugin",
-            width: 200,
-            filterProps: {
-                filterKey: "FromPlugin",
-                filtersType: "input",
-                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
-            }
-        }
-        const Tags: ColumnsTypeProps = {
-            title: "Tags",
-            dataKey: "Tags",
-            width: 150,
-            render: (text) => {
-                return text
-                    ? `${text}`
-                          .split("|")
-                          .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                          .join(", ")
-                    : ""
+            {
+                title: "IP",
+                dataKey: "IPAddress",
+                width: 200
             },
-            filterProps: {
-                filterKey: "Tags",
-                filterMultiple: true,
-                filterIcon: (
-                    <OutlineSearchIcon className={style["filter-icon"]} onClick={() => getHTTPFlowsFieldGroup(true)} />
+            {
+                title: "响应长度",
+                dataKey: "BodyLength",
+                width: 200,
+                minWidth: 140,
+                beforeIconExtra: (
+                    <div className={classNames(style["body-length-checkbox"])}>
+                        <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
+                        <span className={style["tip"]}>大于0</span>
+                    </div>
                 ),
-                filterRender: (closePopover: () => void) => {
-                    return (
-                        <MultipleSelect
-                            filterProps={{
-                                filterSearch: true,
-                                filterSearchInputProps: {
-                                    prefix: <OutlineSearchIcon className='search-icon' />,
-                                    allowClear: true
-                                }
-                            }}
-                            originalList={tags}
-                            searchVal={tagSearchVal}
-                            onChangeSearchVal={setTagSearchVal}
-                            value={tagsFilter}
-                            onSelect={(v, item) => {
-                                if (Array.isArray(v)) {
-                                    setTagsFilter(v)
-                                    if (pageType === "MITM") {
-                                        emiter.emit("onHistoryTagToMitm", v.join(","))
-                                    }
-                                }
-                            }}
-                            onClose={() => {
-                                closePopover()
-                            }}
-                            onQuery={() => {
-                                // 这里重置过后的 tagsFilter 不一定是最新的
+                filterProps: {
+                    filterKey: "bodyLength",
+                    filterRender: () => (
+                        <RangeInputNumberTable
+                            minNumber={getAfterBodyLength()}
+                            setMinNumber={setAfterBodyLength}
+                            maxNumber={getBeforeBodyLength()}
+                            setMaxNumber={setBeforeBodyLength}
+                            onReset={() => {
                                 setParams({
                                     ...getParams(),
-                                    Tags: []
+                                    AfterBodyLength: checkBodyLength ? 1 : undefined,
+                                    BeforeBodyLength: undefined
+                                })
+                                setBeforeBodyLength(undefined)
+                                setAfterBodyLength(undefined)
+                                setBodyLengthUnit("B")
+                            }}
+                            onSure={() => {
+                                const afterBodyLen = getAfterBodyLength()
+                                const beforeBodyLen = getBeforeBodyLength()
+
+                                setParams({
+                                    ...getParams(),
+                                    AfterBodyLength:
+                                        checkBodyLength && !afterBodyLen
+                                            ? 1
+                                            : afterBodyLen
+                                            ? onConvertBodySizeByUnit(afterBodyLen, getBodyLengthUnit())
+                                            : undefined,
+                                    BeforeBodyLength: beforeBodyLen
+                                        ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
+                                        : undefined
                                 })
                                 setTimeout(() => {
                                     updateData()
                                 }, 100)
                             }}
-                            selectContainerStyle={{
-                                maxHeight: "40vh"
-                            }}
-                        ></MultipleSelect>
+                            extra={
+                                <YakitSelect
+                                    value={getBodyLengthUnit()}
+                                    onSelect={(val) => {
+                                        setBodyLengthUnit(val)
+                                    }}
+                                    wrapperClassName={style["unit-select"]}
+                                    size='small'
+                                >
+                                    <YakitSelect value='B'>B</YakitSelect>
+                                    <YakitSelect value='K'>K</YakitSelect>
+                                    <YakitSelect value='M'>M</YakitSelect>
+                                </YakitSelect>
+                            }
+                        />
+                    )
+                },
+                render: (_, rowData) => {
+                    return (
+                        <>
+                            {/* 1M 以上的话，是红色*/}
+                            {rowData.BodyLength !== -1 && (
+                                <div
+                                    className={classNames({
+                                        [style["body-length-text-red"]]:
+                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
+                                    })}
+                                >
+                                    {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
+                                </div>
+                            )}
+                        </>
+                    )
+                }
+            },
+            {
+                title: "Title",
+                dataKey: "HtmlTitle",
+                width: 200
+            },
+            {
+                title: "参数",
+                dataKey: "GetParamsTotal",
+                width: 100,
+                filterProps: {
+                    filterKey: "HaveParamsTotal",
+                    filtersType: "select",
+                    filtersSelectAll: {
+                        isAll: true
+                    },
+                    filters: [
+                        {
+                            label: "有",
+                            value: "true"
+                        },
+                        {
+                            label: "无",
+                            value: "false"
+                        }
+                    ]
+                },
+                render: (_, rowData) => (
+                    <div className={style["check-circle"]}>
+                        {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
+                            <CheckCircleIcon
+                                className={classNames({
+                                    [style["check-circle-icon"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                })}
+                            />
+                        )}
+                    </div>
+                )
+            },
+            {
+                title: "响应类型",
+                dataKey: "ContentType",
+                width: 150,
+                render: (text) => {
+                    let contentTypeFixed =
+                        text
+                            .split(";")
+                            .map((el: any) => el.trim())
+                            .filter((i: any) => !i.startsWith("charset"))
+                            .join(",") || "-"
+                    if (contentTypeFixed.includes("/")) {
+                        const contentTypeFixedNew = contentTypeFixed.split("/").pop()
+                        if (!!contentTypeFixedNew) {
+                            contentTypeFixed = contentTypeFixedNew
+                        }
+                    }
+                    return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
+                },
+                filterProps: {
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filterSearchInputProps: {
+                        size: "small"
+                    },
+                    filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
+                    filters: contentType
+                }
+            },
+            {
+                title: "延迟(ms)",
+                dataKey: "DurationMs",
+                width: 200,
+                render: (text, rowData) => {
+                    let timeMs: number = parseInt(text)
+                    return (
+                        <div
+                            className={classNames({
+                                [style["duration-ms"]]: !hasRedOpacityBg(rowData.cellClassName)
+                            })}
+                        >
+                            {timeMs}
+                        </div>
+                    )
+                }
+                // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
+                // sorterProps: {
+                //     sorter: true
+                // }
+            },
+            {
+                title: "请求时间",
+                dataKey: "UpdatedAt",
+                // sorterProps: {
+                //     sorterKey: "updated_at",
+                //     sorter: true
+                // },
+                filterProps: {
+                    filterKey: "UpdatedAt",
+                    filtersType: "dateTime"
+                },
+                width: 200,
+                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
+            },
+            {
+                title: "请求大小",
+                dataKey: "RequestSizeVerbose",
+                enableDrag: false,
+                width: 200
+            },
+            {
+                title: "操作",
+                dataKey: "action",
+                width: 80,
+                fixed: "right",
+                render: (_, rowData) => {
+                    if (!rowData.Hash) return <></>
+                    return (
+                        <div className={style["action-btn-group"]}>
+                            <ChromeFrameSvgIcon
+                                className={classNames(style["icon-hover"], {
+                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    ipcRenderer
+                                        .invoke("GetHTTPFlowById", {Id: rowData?.Id})
+                                        .then((i: HTTPFlow) => {
+                                            i.Url && openExternalWebsite(i.Url)
+                                        })
+                                        .catch((e: any) => {
+                                            yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                                        })
+                                }}
+                            />
+                            <div className={style["divider-style"]}></div>
+
+                            <ArrowCircleRightSvgIcon
+                                className={classNames(style["icon-hover"], {
+                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                })}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    let m = showDrawer({
+                                        width: "80%",
+                                        content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr),
+                                        bodyStyle: {paddingTop: 5}
+                                    })
+                                }}
+                            />
+                        </div>
                     )
                 }
             }
-        }
-        const IPAddress: ColumnsTypeProps = {
-            title: "IP",
-            dataKey: "IPAddress",
-            width: 200
-        }
-        const BodyLength: ColumnsTypeProps = {
-            title: "响应长度",
-            dataKey: "BodyLength",
-            width: 200,
-            minWidth: 140,
-            beforeIconExtra: (
-                <div className={classNames(style["body-length-checkbox"])}>
-                    <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-                    <span className={style["tip"]}>大于0</span>
-                </div>
-            ),
-            filterProps: {
-                filterKey: "bodyLength",
-                filterRender: () => (
-                    <RangeInputNumberTable
-                        minNumber={getAfterBodyLength()}
-                        setMinNumber={setAfterBodyLength}
-                        maxNumber={getBeforeBodyLength()}
-                        setMaxNumber={setBeforeBodyLength}
-                        onReset={() => {
-                            setParams({
-                                ...getParams(),
-                                AfterBodyLength: checkBodyLength ? 1 : undefined,
-                                BeforeBodyLength: undefined
-                            })
-                            setBeforeBodyLength(undefined)
-                            setAfterBodyLength(undefined)
-                            setBodyLengthUnit("B")
-                        }}
-                        onSure={() => {
-                            const afterBodyLen = getAfterBodyLength()
-                            const beforeBodyLen = getBeforeBodyLength()
-
-                            setParams({
-                                ...getParams(),
-                                AfterBodyLength:
-                                    checkBodyLength && !afterBodyLen
-                                        ? 1
-                                        : afterBodyLen
-                                        ? onConvertBodySizeByUnit(afterBodyLen, getBodyLengthUnit())
-                                        : undefined,
-                                BeforeBodyLength: beforeBodyLen
-                                    ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
-                                    : undefined
-                            })
-                            setTimeout(() => {
-                                updateData()
-                            }, 100)
-                        }}
-                        extra={
-                            <YakitSelect
-                                value={getBodyLengthUnit()}
-                                onSelect={(val) => {
-                                    setBodyLengthUnit(val)
-                                }}
-                                wrapperClassName={style["unit-select"]}
-                                size='small'
-                            >
-                                <YakitSelect value='B'>B</YakitSelect>
-                                <YakitSelect value='K'>K</YakitSelect>
-                                <YakitSelect value='M'>M</YakitSelect>
-                            </YakitSelect>
-                        }
-                    />
-                )
-            },
-            render: (_, rowData) => {
-                return (
-                    <>
-                        {/* 1M 以上的话，是红色*/}
-                        {rowData.BodyLength !== -1 && (
-                            <div
-                                className={classNames({
-                                    [style["body-length-text-red"]]:
-                                        rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
-                                })}
-                            >
-                                {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
-                            </div>
-                        )}
-                    </>
-                )
-            }
-        }
-        const HtmlTitle: ColumnsTypeProps = {
-            title: "Title",
-            dataKey: "HtmlTitle",
-            width: 200
-        }
-        const GetParamsTotal: ColumnsTypeProps = {
-            title: "参数",
-            dataKey: "GetParamsTotal",
-            width: 100,
-            filterProps: {
-                filterKey: "HaveParamsTotal",
-                filtersType: "select",
-                filtersSelectAll: {
-                    isAll: true
-                },
-                filters: [
-                    {
-                        label: "有",
-                        value: "true"
-                    },
-                    {
-                        label: "无",
-                        value: "false"
-                    }
-                ]
-            },
-            render: (_, rowData) => (
-                <div className={style["check-circle"]}>
-                    {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
-                        <CheckCircleIcon
-                            className={classNames({
-                                [style["check-circle-icon"]]: !hasRedOpacityBg(rowData.cellClassName)
-                            })}
-                        />
-                    )}
-                </div>
-            )
-        }
-        const ContentType: ColumnsTypeProps = {
-            title: "响应类型",
-            dataKey: "ContentType",
-            width: 150,
-            render: (text) => {
-                let contentTypeFixed =
-                    text
-                        .split(";")
-                        .map((el: any) => el.trim())
-                        .filter((i: any) => !i.startsWith("charset"))
-                        .join(",") || "-"
-                if (contentTypeFixed.includes("/")) {
-                    const contentTypeFixedNew = contentTypeFixed.split("/").pop()
-                    if (!!contentTypeFixedNew) {
-                        contentTypeFixed = contentTypeFixedNew
-                    }
-                }
-                return <div>{contentTypeFixed === "null" ? "" : contentTypeFixed}</div>
-            },
-            filterProps: {
-                filtersType: "select",
-                filterMultiple: true,
-                filterSearchInputProps: {
-                    size: "small"
-                },
-                filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />,
-                filters: contentType
-            }
-        }
-        const DurationMs: ColumnsTypeProps = {
-            title: "延迟(ms)",
-            dataKey: "DurationMs",
-            width: 200,
-            render: (text, rowData) => {
-                let timeMs: number = parseInt(text)
-                return (
-                    <div
-                        className={classNames({
-                            [style["duration-ms"]]: !hasRedOpacityBg(rowData.cellClassName)
-                        })}
-                    >
-                        {timeMs}
-                    </div>
-                )
-            }
-            // 此处排序会使偏移量新数据进入时乱序(ps：后续处理，考虑此处排序时偏移量新增数据在页面上不更新)
-            // sorterProps: {
-            //     sorter: true
-            // }
-        }
-        const UpdatedAt: ColumnsTypeProps = {
-            title: "请求时间",
-            dataKey: "UpdatedAt",
-            // sorterProps: {
-            //     sorterKey: "updated_at",
-            //     sorter: true
-            // },
-            filterProps: {
-                filterKey: "UpdatedAt",
-                filtersType: "dateTime"
-            },
-            // fixed: "right",
-            width: 200,
-            render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
-        }
-        const RequestSizeVerbose: ColumnsTypeProps = {
-            title: "请求大小",
-            dataKey: "RequestSizeVerbose",
-            // fixed: "right",
-            enableDrag: false,
-            width: 200
-        }
-        const action: ColumnsTypeProps = {
-            title: "操作",
-            dataKey: "action",
-            width: 80,
-            fixed: "right",
-            render: (_, rowData) => {
-                if (!rowData.Hash) return <></>
-                return (
-                    <div className={style["action-btn-group"]}>
-                        <ChromeFrameSvgIcon
-                            className={classNames(style["icon-hover"], {
-                                [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
-                            })}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                ipcRenderer
-                                    .invoke("GetHTTPFlowById", {Id: rowData?.Id})
-                                    .then((i: HTTPFlow) => {
-                                        i.Url && openExternalWebsite(i.Url)
-                                    })
-                                    .catch((e: any) => {
-                                        yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                                    })
-                            }}
-                        />
-                        <div className={style["divider-style"]}></div>
-
-                        <ArrowCircleRightSvgIcon
-                            className={classNames(style["icon-hover"], {
-                                [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
-                            })}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                let m = showDrawer({
-                                    width: "80%",
-                                    content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr),
-                                    bodyStyle: {paddingTop: 5}
-                                })
-                            }}
-                        />
-                    </div>
-                )
-            }
-        }
-
-        // toWebFuzzer
-        if (toWebFuzzer) {
-            return [
-                ID,
-                Method,
-                StatusCode,
-                Url,
-                WebPayloads,
-                FromPlugin,
-                Tags,
-                IPAddress,
-                DurationMs,
-                BodyLength,
-                HtmlTitle,
-                GetParamsTotal,
-                ContentType,
-                UpdatedAt,
-                RequestSizeVerbose,
-                action
-            ]
-        }
-
-        return [
-            ID,
-            Method,
-            StatusCode,
-            Url,
-            FromPlugin,
-            Tags,
-            IPAddress,
-            DurationMs,
-            BodyLength,
-            HtmlTitle,
-            GetParamsTotal,
-            ContentType,
-            UpdatedAt,
-            RequestSizeVerbose,
-            action
         ]
-    }, [tags, tagsFilter, tagSearchVal, checkBodyLength, toWebFuzzer, downstreamProxyStr, pageType, queryParams])
+
+        const arr = columnArr
+            .filter((item) => !["Id", "action", ...noColumnsKey].includes(item.dataKey))
+            .map((item) => ({
+                dataKey: item.dataKey,
+                title: item.title,
+                isChecked: !excludeColumnsKey.includes(item.dataKey)
+            }))
+        configColumnRef.current = arr
+
+        const realColumns = columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+        setIdFixed(realColumns.length !== 2)
+
+        return realColumns
+    }, [
+        tags,
+        tagsFilter,
+        tagSearchVal,
+        checkBodyLength,
+        downstreamProxyStr,
+        pageType,
+        queryParams,
+        excludeColumnsKey,
+        idFixed
+    ])
 
     // 背景颜色是否标注为红色
     const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
@@ -2365,7 +2386,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 header.push(item)
                 filterVal.push("Response")
             } else {
-                const itemData = columns.filter((itemIn) => itemIn.title === item)[0]
+                const itemData = configColumnRef.current.filter((itemIn) => itemIn.title === item)[0]
                 header.push(item)
                 filterVal.push(itemData.dataKey)
             }
@@ -2514,7 +2535,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     const onExcelExport = (list) => {
-        const titleValue = columns.filter((item) => !["序号", "操作"].includes(item.title)).map((item) => item.title)
+        const titleValue = configColumnRef.current.map((item) => item.title)
         const exportValue = [...titleValue, "请求包", "响应包"]
         const m = showYakitModal({
             title: "导出字段",
@@ -3644,6 +3665,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             />
             <div className={classNames(style["table-virtual-resize"])}>
                 <TableVirtualResize<HTTPFlow>
+                    key={tableKeyNumber}
                     ref={tableRef}
                     currentIndex={currentIndex}
                     setCurrentIndex={setCurrentIndex}
@@ -3750,7 +3772,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     >
                                                         高级配置
                                                     </YakitButton>
-                                                    {isFilter && (
+                                                    {(isFilter || excludeColumnsKey.length > noColumnsKey.length) && (
                                                         <YakitTag color={"success"}>
                                                             已配置
                                                             <CheckedSvgIcon style={{marginLeft: 8}} />
@@ -3939,31 +3961,41 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     containerClassName={containerClassName}
                 />
             </div>
+            {drawerFormVisible && (
+                <HTTPFlowTableFormConfiguration
+                    responseType={contentType}
+                    visible={drawerFormVisible}
+                    setVisible={setDrawerFormVisible}
+                    onSave={(filters, setting, excludeColKeywords) => {
+                        const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
+                        setFilterMode(filterMode)
+                        setHostName(hostName)
+                        setUrlPath(urlPath)
+                        setFileSuffix(fileSuffix)
+                        setSearchContentType(searchContentType)
+                        setExcludeKeywords(excludeKeywords)
+                        setDrawerFormVisible(false)
 
-            <HTTPFlowTableFormConfiguration
-                responseType={contentType}
-                visible={drawerFormVisible}
-                setVisible={setDrawerFormVisible}
-                onSave={(filters, setting) => {
-                    const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
-                    setFilterMode(filterMode)
-                    setHostName(hostName)
-                    setUrlPath(urlPath)
-                    setFileSuffix(fileSuffix)
-                    setSearchContentType(searchContentType)
-                    setExcludeKeywords(excludeKeywords)
-                    setDrawerFormVisible(false)
+                        const {backgroundRefresh: newBackgroundRefresh} = setting
+                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
 
-                    const {backgroundRefresh: newBackgroundRefresh} = setting
-                    if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-                }}
-                filterMode={filterMode}
-                hostName={hostName}
-                urlPath={urlPath}
-                fileSuffix={fileSuffix}
-                searchContentType={searchContentType}
-                excludeKeywords={excludeKeywords}
-            />
+                        const newExcludeColumnsKey = [...noColumnsKey, ...excludeColKeywords]
+                        if (JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey)) {
+                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, excludeColKeywords + "")
+                            setExcludeColumnsKey(newExcludeColumnsKey)
+                            // 表格列宽度需要重新计算
+                            setTableKeyNumber(uuidv4())
+                        }
+                    }}
+                    filterMode={filterMode}
+                    hostName={hostName}
+                    urlPath={urlPath}
+                    fileSuffix={fileSuffix}
+                    searchContentType={searchContentType}
+                    excludeKeywords={excludeKeywords}
+                    columnsAll={JSON.stringify(configColumnRef.current)}
+                />
+            )}
         </div>
     )
 })
