@@ -11,7 +11,8 @@ import {
     YaklangLanguageSuggestionRequest,
     YaklangLanguageSuggestionResponse
 } from "@/utils/monacoSpec/yakCompletionSchema";
-import {getModelContext, setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {getModelContext, setEditorContext, YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor";
+import IWordAtPosition = editor.IWordAtPosition;
 const { ipcRenderer } = window.require("electron");
 
 const httpHeaderSuggestions = [
@@ -102,6 +103,8 @@ const httpHeaderSuggestions = [
     }),
 ];
 
+export const fuzzHTTPMonacoSpec= "http";
+
 
 export const getWordAtPositionWithSep = (model: monaco.editor.ITextModel, position: monaco.Position, sep:string='.'): editor.IWordAtPosition => {
     let iWord = model.getWordAtPosition(position);
@@ -123,6 +126,15 @@ const getLastString = (model: monaco.editor.ITextModel,iWord: editor.IWordAtPosi
         endLineNumber: position.lineNumber,
         startColumn: iWord.startColumn - len,
         endColumn: iWord.startColumn,
+    });
+}
+
+const getNextString = (model: monaco.editor.ITextModel,iWord: editor.IWordAtPosition, position: monaco.Position , len :number): string => {
+    return model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: iWord.startColumn + iWord.word.length,
+        endColumn: iWord.startColumn + iWord.word.length + len,
     });
 }
 
@@ -204,9 +216,9 @@ export const newFuzztagCompletionHandlerProvider = (model: editor.ITextModel,pos
 }
 
 // https://microsoft.github.io/monaco-editor/playground.html#extending-language-services-custom-languages
-monaco.languages.register({ id: "http" })
+monaco.languages.register({ id: fuzzHTTPMonacoSpec })
 // Register a completion item provider for the new language
-monaco.languages.registerCompletionItemProvider('http', {
+monaco.languages.registerCompletionItemProvider(fuzzHTTPMonacoSpec, {
     triggerCharacters: ["{"],
     // @ts-ignore
     provideCompletionItems: (model, position, context, token) => {
@@ -250,7 +262,7 @@ monaco.languages.registerCompletionItemProvider('http', {
 } as any);
 
 
-monaco.languages.setMonarchTokensProvider("http", {
+monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
     brackets: [],
     defaultToken: "",
     ignoreCase: true,
@@ -450,3 +462,74 @@ monaco.languages.setMonarchTokensProvider("http", {
     }
 })
 
+
+
+monaco.languages.registerHoverProvider(fuzzHTTPMonacoSpec, {
+    provideHover: function (model: monaco.editor.ITextModel, position: monaco.Position, cancellationToken: monaco.CancellationToken): languages.ProviderResult<languages.Hover> {
+        return new Promise(async (resolve, reject) => {
+            let secondWord:IWordAtPosition|null = null
+            let firstWord = model.getWordAtPosition(position);
+            if (firstWord === null) {
+                firstWord = { word: "", startColumn: position.column, endColumn: position.column };
+            }
+
+            if(getLastString(model, firstWord, position, 1) === ":"){
+                secondWord = firstWord
+                firstWord = model.getWordAtPosition({
+                    lineNumber: position.lineNumber,
+                    column: firstWord.startColumn - 1,
+                });
+                if (firstWord === null) {
+                    firstWord = { word: "", startColumn: position.column, endColumn: position.column };
+                }
+            }else if (getNextString(model, firstWord, position, 1) === ":"){
+                secondWord = model.getWordAtPosition({
+                    lineNumber: position.lineNumber,
+                    column: firstWord.endColumn + 1,
+                });
+            }
+            if(getLastString(model, firstWord, position, 2) !== "{{"){
+                resolve(null);
+                return
+            }
+
+            let rangeCode = firstWord.word
+            if (secondWord !== null) {
+                rangeCode = firstWord.word + ":" +secondWord.word
+            }
+            console.log(rangeCode)
+
+            let desc = "";
+            await ipcRenderer.invoke("YaklangLanguageSuggestion", {
+                InspectType: "hover",
+                YakScriptType: "fuzztag",
+                YakScriptCode: "",
+                ModelID: model.id,
+                Range: {
+                    Code: rangeCode,
+                } as Range,
+            } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
+                if (r.SuggestionMessage.length > 0) {
+                    r.SuggestionMessage.forEach(v => {
+                        desc += v.Label ?? "" + "\n";
+                    })
+                    resolve({
+                        range: new monaco.Range(position.lineNumber, firstWord!.startColumn, position.lineNumber, firstWord!.endColumn),
+                        contents: [
+                            {
+                                value: desc,
+                                isTrusted: true
+                            },
+                        ],
+                    });
+                    return
+                }
+            })
+
+
+            resolve(null);
+        })
+
+
+    }
+})

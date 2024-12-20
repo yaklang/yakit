@@ -4,7 +4,7 @@ import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api"
 import HexEditor from "react-hex-editor"
 // yak register
 import "./monacoSpec/theme"
-import "./monacoSpec/fuzzHTTP"
+import "./monacoSpec/fuzzHTTPMonacoSpec"
 import "./monacoSpec/yakEditor"
 import "./monacoSpec/html"
 import {Card, Form, Input, Popover, Tag, Tooltip, Row, Col} from "antd"
