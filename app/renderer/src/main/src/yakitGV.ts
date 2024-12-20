@@ -106,6 +106,8 @@ export enum RemoteGV {
     SinglePluginExecTabs = "single-plugin-exec-tabs",
     /**@name 启用webSocket压缩 */
     MITMDisableWebsocketCompression = "mitm_disable_Websocket_Compression",
+    /**@name 漏洞管理页面中,高级查询内容的显/隐 */
+    AuditHoleShow = "audit-hole-show",
 }
 
 /** 项目逻辑全局变量 */

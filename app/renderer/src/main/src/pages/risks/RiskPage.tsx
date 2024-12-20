@@ -103,7 +103,7 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
     )
 }
 
-const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
+export const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
     const [ipList, setIpList] = useState<FieldGroup[]>([])
     const [levelList, setLevelList] = useState<FieldName[]>([])
