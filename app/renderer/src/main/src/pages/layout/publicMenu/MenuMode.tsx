@@ -399,7 +399,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                                 <PublicAuditHoleIcon />
                             </div>
                         </div>
-                        <div className={styles["title-style"]}>漏洞管理</div>
+                        <div className={styles["title-style"]}>审计漏洞</div>
                     </div>
                 </>
             )}
