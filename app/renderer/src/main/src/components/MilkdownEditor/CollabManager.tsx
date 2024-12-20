@@ -86,7 +86,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
         this.doc = new Doc()
 
-        const url = wsUrl + "api/notepad/ws"
+        const url = wsUrl + "api/handle/tow/way/ws"
         // const url = "ws://localhost:1880/ws/my-room"
         this.wsProvider = new WebsocketProvider(url, this.doc, {
             connect: true,
