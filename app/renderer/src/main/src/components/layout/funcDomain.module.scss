@@ -765,3 +765,19 @@
         }
     }
 }
+
+.crash-log-wrapper {
+    height: 600px;
+    .crash-log-progress {
+        display: flex;
+        align-items: center;
+        height: 50px;
+    }
+    .plugin-execute-result-wrapper {
+        height: calc(100% - 50px);
+    }
+}
+.crash-log-footer {
+    width: 100%;
+    text-align: right;
+}

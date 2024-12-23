@@ -61,9 +61,16 @@ import {DebugPluginRequest, apiDebugPlugin} from "@/pages/plugins/utils"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {PerformanceSamplingLog, usePerformanceSampling} from "@/store/performanceSampling"
-import {isShowCodeScanDetail, YakitCodeScanRiskDetails, YakitRiskDetails} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {
+    isShowCodeScanDetail,
+    YakitCodeScanRiskDetails,
+    YakitRiskDetails
+} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {SolidPlayIcon} from "@/assets/icon/solid"
-import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {
+    ExecuteEnterNodeByPluginParams,
+    PluginExecuteProgress
+} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {getValueByType, getYakExecutorParam} from "@/pages/plugins/editDetails/utils"
@@ -82,9 +89,13 @@ import YakitLogo from "@/assets/yakitLogo.png"
 import yakitImg from "../../assets/yakit.jpg"
 import classNames from "classnames"
 import styles from "./funcDomain.module.scss"
-import { MessageCenter } from "../MessageCenter/MessageCenter"
-import { apiFetchMessageRead, apiFetchQueryMessage } from "../MessageCenter/utils"
-import { YakitRadioButtons } from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {MessageCenter} from "../MessageCenter/MessageCenter"
+import {apiFetchMessageRead, apiFetchQueryMessage} from "../MessageCenter/utils"
+import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {randomString} from "@/utils/randomUtil"
+import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -471,7 +482,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
                             onYakEngineVersionList={onYakEngineVersionList}
-                            onLogin={()=>setLoginShow(true)}
+                            onLogin={() => setLoginShow(true)}
                         />
                     )}
                     {!showProjectManage && (
@@ -1519,7 +1530,7 @@ interface UIOpNoticeProp {
     isEngineLink: boolean
     isRemoteMode: boolean
     onYakEngineVersionList: (versionList: string[]) => void
-    onLogin: ()=>void
+    onLogin: () => void
 }
 
 export interface UpdateContentProp {
@@ -1810,9 +1821,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             })
     })
 
-    const [messageList,setMessageList] = useState<API.MessageLogDetail[]>([])
+    const [messageList, setMessageList] = useState<API.MessageLogDetail[]>([])
     const isUpdate = useMemo(() => {
-        const unRead = messageList.filter((item)=>!item.isRead).length > 0
+        const unRead = messageList.filter((item) => !item.isRead).length > 0
         return (
             (yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
             lowerYaklangLastVersion ||
@@ -1820,62 +1831,61 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         )
     }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
-    const [noticeType,setNoticeType] = useState<"message"|"update">("update")
-    useUpdateEffect(()=>{
-        if(userInfo.isLogin){
+    const [noticeType, setNoticeType] = useState<"message" | "update">("update")
+    useUpdateEffect(() => {
+        if (userInfo.isLogin) {
             setNoticeType("message")
-        }
-        else{
+        } else {
             setNoticeType("update")
         }
-    },[userInfo.isLogin])
+    }, [userInfo.isLogin])
 
-    const getAllMessage = useMemoizedFn(()=>{
+    const getAllMessage = useMemoizedFn(() => {
         setShow(false)
         emiter.emit("openAllMessageNotification")
     })
 
-    const onFetchMessage = useMemoizedFn(()=>{
+    const onFetchMessage = useMemoizedFn(() => {
         apiFetchQueryMessage({
             page: 1,
             limit: 20
-        }).then((res)=>{
-            setMessageList(res.data||[])
+        }).then((res) => {
+            setMessageList(res.data || [])
         })
     })
 
     // 初始化获取消息中心
-    useEffect(()=>{
-        if(userInfo.isLogin){
-            onFetchMessage()   
+    useEffect(() => {
+        if (userInfo.isLogin) {
+            onFetchMessage()
         }
-    },[userInfo.isLogin,show])
+    }, [userInfo.isLogin, show])
 
-    const onRefreshMessageSocketFun = useMemoizedFn((data:string)=>{
+    const onRefreshMessageSocketFun = useMemoizedFn((data: string) => {
         try {
-            const obj:API.MessageLogDetail = JSON.parse(data)
-            setMessageList((prev)=>{
-                return [obj,...prev]
+            const obj: API.MessageLogDetail = JSON.parse(data)
+            setMessageList((prev) => {
+                return [obj, ...prev]
             })
         } catch (error) {}
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("onRefreshMessageSocket", onRefreshMessageSocketFun)
         return () => {
             emiter.off("onRefreshMessageSocket", onRefreshMessageSocketFun)
         }
-    },[])
+    }, [])
 
-    const onRedAllMessage = useMemoizedFn(()=>{
+    const onRedAllMessage = useMemoizedFn(() => {
         apiFetchMessageRead({
             isAll: true,
             hash: ""
-        }).then((ok)=>{
-            if(ok){
-                setMessageList((prev)=>{
-                    return prev.map((item)=>{
-                        return {...item,isRead:true}
+        }).then((ok) => {
+            if (ok) {
+                setMessageList((prev) => {
+                    return prev.map((item) => {
+                        return {...item, isRead: true}
                     })
                 })
             }
@@ -1891,62 +1901,64 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             value={noticeType}
                             onChange={(e) => {
                                 const value = e.target.value
-                                setNoticeType(value as "message"|"update")
+                                setNoticeType(value as "message" | "update")
                             }}
                             buttonStyle='solid'
                             options={[
                                 {
                                     label: "消息中心",
-                                    value: "message",
+                                    value: "message"
                                 },
                                 {
                                     label: "更新通知",
-                                    value: "update",
-                                },
+                                    value: "update"
+                                }
                             ]}
-                            />
-                        {noticeType==="update" ?
-                        <div className={styles["switch-title"]}>
-                            启动检测更新
-                            <YakitSwitch
-                                style={{marginLeft: 4}}
-                                showInnerText={true}
-                                size='large'
-                                checked={!isCheck}
-                                onChange={(val: boolean) => {
-                                    setLocalValue(LocalGV.NoAutobootLatestVersionCheck, !val)
-                                    setIsCheck(!val)
-                                }}
-                            />
-                        </div>:
-                        <div className={styles['message-title']}>
-                            {userInfo.isLogin&&<>
-                            {messageList.length>0&&
-                            <>
-                            <YakitButton
-                                type='text'
-                                style={{fontWeight: 400}}
-                                onClick={onRedAllMessage}
-                            >
-                                全部已读
-                            </YakitButton>
-                            <Divider type={"vertical"} style={{margin: "0px 8px 0px"}} />
-                            </>
-                            }
-                            <YakitButton
-                                type='text'
-                                style={{fontWeight: 400,color:"#85899E"}}
-                                onClick={getAllMessage}
-                            >
-                                查看全部
-                            </YakitButton>
-                            </>}
-                            
-                        </div>
-                        }
+                        />
+                        {noticeType === "update" ? (
+                            <div className={styles["switch-title"]}>
+                                启动检测更新
+                                <YakitSwitch
+                                    style={{marginLeft: 4}}
+                                    showInnerText={true}
+                                    size='large'
+                                    checked={!isCheck}
+                                    onChange={(val: boolean) => {
+                                        setLocalValue(LocalGV.NoAutobootLatestVersionCheck, !val)
+                                        setIsCheck(!val)
+                                    }}
+                                />
+                            </div>
+                        ) : (
+                            <div className={styles["message-title"]}>
+                                {userInfo.isLogin && (
+                                    <>
+                                        {messageList.length > 0 && (
+                                            <>
+                                                <YakitButton
+                                                    type='text'
+                                                    style={{fontWeight: 400}}
+                                                    onClick={onRedAllMessage}
+                                                >
+                                                    全部已读
+                                                </YakitButton>
+                                                <Divider type={"vertical"} style={{margin: "0px 8px 0px"}} />
+                                            </>
+                                        )}
+                                        <YakitButton
+                                            type='text'
+                                            style={{fontWeight: 400, color: "#85899E"}}
+                                            onClick={getAllMessage}
+                                        >
+                                            查看全部
+                                        </YakitButton>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    {noticeType==="update"? 
+                    {noticeType === "update" ? (
                         <div className={styles["notice-version-wrapper"]}>
                             <div className={styles["version-wrapper"]}>
                                 <UIOpUpdateYakit
@@ -1980,15 +1992,20 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     <GithubSvgIcon className={styles["icon-style"]} /> 历史版本
                                 </div>
                             </div>
-                        </div>:
-                        <div className={styles['notice-info-wrapper']}>
-                            <MessageCenter messageList={messageList} getAllMessage={getAllMessage} onLogin={()=>{
-                                setShow(false)
-                                onLogin()
-                            }} onClose={()=>setShow(false)}/>
                         </div>
-                    }
-                    
+                    ) : (
+                        <div className={styles["notice-info-wrapper"]}>
+                            <MessageCenter
+                                messageList={messageList}
+                                getAllMessage={getAllMessage}
+                                onLogin={() => {
+                                    setShow(false)
+                                    onLogin()
+                                }}
+                                onClose={() => setShow(false)}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
         )
@@ -2009,7 +2026,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         isRemoteMode,
         communityYaklang,
         noticeType,
-        messageList,
+        messageList
     ])
 
     return (
@@ -2056,7 +2073,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     ></YakitInput.TextArea>
                 </div>
             </YakitModal>
-        </YakitPopover>)
+        </YakitPopover>
+    )
 })
 
 interface UIOpRiskProp {
@@ -2228,10 +2246,12 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                     width: "80%",
                     title: "详情",
                     content: (
-                        <div style={{overflow: "auto",maxHeight:'70vh'}}>
-                            {
-                                isShowCodeScanDetail(res)?<YakitCodeScanRiskDetails info={res}/>:<YakitRiskDetails info={res} />
-                            }
+                        <div style={{overflow: "auto", maxHeight: "70vh"}}>
+                            {isShowCodeScanDetail(res) ? (
+                                <YakitCodeScanRiskDetails info={res} />
+                            ) : (
+                                <YakitRiskDetails info={res} />
+                            )}
                         </div>
                     )
                 })
@@ -2363,6 +2383,10 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     key: "performance-sampling"
                 },
                 {
+                    label: "崩溃日志收集",
+                    key: "crash-log"
+                },
+                {
                     label: isRecording ? (
                         <div
                             className={styles["stop-screen-menu-item"]}
@@ -2455,6 +2479,9 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         switch (type) {
             case "performance-sampling":
                 handlePerformanceSampling()
+                break
+            case "crash-log":
+                handleCrashLog()
                 break
             case "screenCap":
                 if (isRecording) {
@@ -2600,6 +2627,34 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         }
     }, [])
 
+    // 崩溃日志收集
+    const [crashLogVisible, setCrashLogVisible] = useState<boolean>(false)
+    const crashLogParamsRef = useRef<{
+        params: DebugPluginRequest
+        pluginCustomParams?: YakParamProps[]
+    }>()
+    const handleCrashLog = () => {
+        grpcFetchLocalPluginDetail({Name: "崩溃日志收集"}, true)
+            .then((res) => {
+                const executeParams: DebugPluginRequest = {
+                    Code: "",
+                    PluginType: res.Type,
+                    Input: "",
+                    HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+                    ExecParams: [],
+                    PluginName: res.ScriptName
+                }
+                crashLogParamsRef.current = {
+                    params: executeParams,
+                    pluginCustomParams: res.Params
+                }
+                setCrashLogVisible(true)
+            })
+            .catch(() => {
+                yakitNotify("info", "找不到Yak 原生插件：崩溃日志收集")
+            })
+    }
+
     const menu = (
         <YakitMenu
             width={142}
@@ -2630,9 +2685,110 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     </div>
                 </div>
             </YakitPopover>
+            {crashLogVisible && (
+                <CrashLogModal
+                    crashLogParams={crashLogParamsRef.current}
+                    onClose={() => {
+                        setCrashLogVisible(false)
+                    }}
+                ></CrashLogModal>
+            )}
         </>
     )
 })
+
+interface CrashLogModalProps {
+    crashLogParams?: {
+        params: DebugPluginRequest
+        pluginCustomParams?: YakParamProps[]
+    }
+    onClose: () => void
+}
+const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
+    const {crashLogParams, onClose} = props
+
+    const tokenRef = useRef<string>(randomString(40))
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    const [runtimeId, setRuntimeId] = useState<string>("")
+
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => {
+                setExecuteStatus("finished")
+            }, 300)
+        },
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            setRuntimeId(rId)
+        }
+    })
+
+    const isExecuting = useCreation(() => {
+        if (executeStatus === "process") return true
+        return false
+    }, [executeStatus])
+
+    const onStartExecute = useMemoizedFn(() => {
+        if (crashLogParams) {
+            debugPluginStreamEvent.reset()
+            apiDebugPlugin({
+                params: crashLogParams.params,
+                token: tokenRef.current,
+                pluginCustomParams: crashLogParams.pluginCustomParams
+            }).then(() => {
+                debugPluginStreamEvent.start()
+                setExecuteStatus("process")
+            })
+        }
+    })
+
+    useEffect(() => {
+        onStartExecute()
+    }, [])
+
+    const onCancel = useMemoizedFn(() => {
+        debugPluginStreamEvent.stop()
+        setRuntimeId("")
+        onClose()
+    })
+
+    return (
+        <YakitModal
+            title='崩溃日志采集'
+            width={"70%"}
+            visible={!!runtimeId}
+            destroyOnClose
+            onCancel={onCancel}
+            footer={
+                <div className={styles["crash-log-footer"]}>
+                    <YakitButton onClick={onCancel}>取消</YakitButton>
+                </div>
+            }
+        >
+            <div className={styles["crash-log-wrapper"]}>
+                {streamInfo.progressState.length === 1 && (
+                    <div className={styles["crash-log-progress"]}>
+                        <PluginExecuteProgress
+                            percent={streamInfo.progressState[0].progress}
+                            name={streamInfo.progressState[0].id}
+                        />
+                    </div>
+                )}
+                <PluginExecuteResult
+                    streamInfo={streamInfo}
+                    runtimeId={runtimeId}
+                    loading={isExecuting}
+                    defaultActiveKey='日志'
+                    pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
+                />
+            </div>
+        </YakitModal>
+    )
+}
 
 interface PerformanceSampleFormProp {
     onPerformanceParams: (params: {timeout: string}) => void
