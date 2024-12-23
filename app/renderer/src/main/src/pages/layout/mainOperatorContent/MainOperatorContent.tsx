@@ -143,6 +143,7 @@ import { FuzzerRemoteGV } from "@/enums/fuzzer"
 import {closeWebSocket, startWebSocket} from "@/utils/webSocket/webSocket"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
+import {APIFunc} from "@/apiUtils/type"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -381,11 +382,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }, [])
 
     /** ---------- 新逻辑 start ---------- */
-   
+
     useEffect(() => {
-         /**切换一级菜单选中key */
+        /**切换一级菜单选中key */
         emiter.on("switchMenuItem", onSwitchMenuItem)
-         /**关闭一级菜单 */
+        /**关闭一级菜单 */
         emiter.on("onCloseFirstMenu", onCloseFirstMenu)
         return () => {
             emiter.off("switchMenuItem", onSwitchMenuItem)
@@ -402,18 +403,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             yakitNotify("error", `切换一级菜单选中key失败:${error}`)
         }
     })
-    const onCloseFirstMenu=useMemoizedFn((res)=>{
+    const onCloseFirstMenu = useMemoizedFn((res) => {
         try {
-            const value:OnlyPageCache=JSON.parse(res)
-            const data:OnlyPageCache={
+            const value: OnlyPageCache = JSON.parse(res)
+            const data: OnlyPageCache = {
                 menuName: "",
-                route:value.route
+                route: value.route
             }
             removeMenuPage(data)
-        } catch (error) {
-            
-        }
-        
+        } catch (error) {}
     })
     /**
      * @name 渲染端通信-从顶部菜单里打开一个指定页面
@@ -2866,8 +2864,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         useEffect(() => {
             getIsCloseGroupTip()
             emiter.on("onCloseCurrentPage", onCloseCurrentPage)
+            emiter.on("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
             return () => {
                 emiter.off("onCloseCurrentPage", onCloseCurrentPage)
+                emiter.off("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
             }
         }, [])
 
@@ -3549,7 +3549,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     onClick: ({key, keyPath}) => {
                         switch (key) {
                             case "rename":
-                                onRename(item)
+                                onShowRenameModal(item)
                                 break
                             case "removeFromGroup":
                                 onRemoveFromGroup(item)
@@ -3579,7 +3579,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /**重命名 */
-        const onRename = useMemoizedFn((item: MultipleNodeInfo) => {
+        const onShowRenameModal = useMemoizedFn((item: MultipleNodeInfo) => {
             const m = showYakitModal({
                 footer: null,
                 closable: false,
@@ -3593,37 +3593,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             }}
                             name={item.verbose}
                             onOk={(val) => {
-                                if (val.length > 50) {
-                                    yakitNotify("error", "不能超过50个字符")
-                                    return
-                                }
-
-                                const {index, subIndex} = getPageItemById(subPage, item.id)
-                                if (index === -1) return
-                                if (subIndex === -1) {
-                                    // 当前情况说明item是游离的页面,没有在其他组内
-                                    subPage[index] = {...subPage[index], verbose: val}
-                                    onUpdatePageCache(subPage)
-                                } else {
-                                    // 当前情况说明item在subPage[index]的组内
-                                    const groupChildrenList = subPage[index].groupChildren || []
-                                    if (groupChildrenList.length > 0) {
-                                        groupChildrenList[subIndex] = {
-                                            ...groupChildrenList[subIndex],
-                                            verbose: val
-                                        }
-                                        subPage[index] = {
-                                            ...subPage[index],
-                                            groupChildren: [...groupChildrenList]
-                                        }
-                                        onUpdatePageCache(subPage)
-                                    }
-                                }
-                                const updateItem = {
-                                    ...item,
-                                    verbose: val
-                                }
-                                onUpdatePageName(currentTabKey, updateItem)
+                                onRenameAndUpdatePageNameAndSendEmiter(val, item)
                                 m.destroy()
                             }}
                         />
@@ -3631,14 +3601,80 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 )
             })
         })
-        /**更新数据中心得页面名称数据 */
-        const onUpdatePageName = useMemoizedFn((currentTabKey: string, param: MultipleNodeInfo) => {
-            const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, param.id)
-            if (!current) return
-            current.pageName = param.verbose
-            updatePagesDataCacheById(currentTabKey, current)
-            emiter.emit("secondMenuTabDataChange", "")
+        /**
+         * 从页面中修改菜单名，不需要再发送修改的信号
+         */
+        const onUpdateSubMenuNameFormPage = useMemoizedFn((val) => {
+            try {
+                const data = JSON.parse(val)
+                const {value, pageId} = data
+                const {index, subIndex} = getPageItemById(subPage, pageId)
+                if (index === -1) return
+                let item
+                if (subIndex === -1) {
+                    item = subPage[index]
+                } else {
+                    item = subPage[index][subIndex]
+                }
+                onRenameAndUpdatePageName(value, item)
+            } catch (error) {}
         })
+        const onRename = useMemoizedFn((val: string, item: MultipleNodeInfo) => {
+            if (val.length > 50) {
+                yakitNotify("error", "不能超过50个字符")
+                return
+            }
+            const {index, subIndex} = getPageItemById(subPage, item.id)
+            if (index === -1) return
+            if (subIndex === -1) {
+                // 当前情况说明item是游离的页面,没有在其他组内
+                subPage[index] = {...subPage[index], verbose: val}
+                onUpdatePageCache(subPage)
+            } else {
+                // 当前情况说明item在subPage[index]的组内
+                const groupChildrenList = subPage[index].groupChildren || []
+                if (groupChildrenList.length > 0) {
+                    groupChildrenList[subIndex] = {
+                        ...groupChildrenList[subIndex],
+                        verbose: val
+                    }
+                    subPage[index] = {
+                        ...subPage[index],
+                        groupChildren: [...groupChildrenList]
+                    }
+                    onUpdatePageCache(subPage)
+                }
+            }
+        })
+        /**修改名称，更新数据中心得页面名称数据并发送数据修改的信号 */
+        const onRenameAndUpdatePageNameAndSendEmiter = useMemoizedFn(
+            (currentTabKey: string, updateItem: MultipleNodeInfo) => {
+                onRename(currentTabKey, updateItem)
+                onUpdatePageName({currentTabKey, updateItem}).then(() => {
+                    emiter.emit("secondMenuTabDataChange", "")
+                })
+            }
+        )
+        /**修改名称，更新数据中心得页面名称数据 */
+        const onRenameAndUpdatePageName = useMemoizedFn((currentTabKey: string, updateItem: MultipleNodeInfo) => {
+            onRename(currentTabKey, updateItem)
+            onUpdatePageName({currentTabKey, updateItem})
+        })
+        /**仅更新数据中心得页面名称数据 */
+        const onUpdatePageName: APIFunc<{currentTabKey: string; updateItem: MultipleNodeInfo}, null> = (data) => {
+            return new Promise((resolve, reject) => {
+                const {currentTabKey, updateItem} = data
+                const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, updateItem.id)
+                if (!current) {
+                    reject("当前页面不存在")
+                    return
+                }
+                current.pageName = updateItem.verbose
+                updatePagesDataCacheById(currentTabKey, current)
+                resolve(null)
+            })
+        }
+
         /**将页面添加到新建组 */
         const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
             const {index, subIndex} = getPageItemById(subPage, item.id)
