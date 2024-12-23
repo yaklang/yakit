@@ -34,7 +34,15 @@ import {alterCustomPlugin} from "./utils/alertPlugin"
 import {commentCustomPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
-import {useCreation, useDebounceFn, useMemoizedFn, useRafInterval, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useCreation,
+    useDebounceFn,
+    useInViewport,
+    useMemoizedFn,
+    useRafInterval,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import {underlineCustomPlugin} from "./utils/underline"
 import {ListItem} from "./ListItem/ListItem"
 import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
@@ -113,6 +121,9 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
 }
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const {type, readonly, defaultValue, collabProps, setEditor, customPlugin, onMarkdownUpdated} = props
+
+    const milkdownRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(milkdownRef)
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -525,17 +536,17 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }
     }, [collabParams.title])
     useEffect(() => {
-        return () => {
-            collabDisconnect()
+        if (inViewport) {
+            onCollabConnect()
+            return () => {
+                onCollabDisconnect()
+            }
         }
-    }, [])
-    const collabDisconnect = useMemoizedFn(() => {
-        collabManagerRef.current && collabManagerRef.current.disconnect()
-    })
+    }, [inViewport])
     const onCollab = useMemoizedFn((ctx) => {
         const {milkdownHash, title} = collabParams
         if (!collabParams.enableCollab) {
-            collabDisconnect()
+            onCollabDisconnect()
             return
         }
         if (!milkdownHash) {
@@ -552,7 +563,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         const collabService = ctx.get(collabServiceCtx)
         collabManagerRef.current = new CollabManager(collabService, user, {
             token: userInfo.token,
-            hash: milkdownHash,
+            notepadHash: milkdownHash,
             title
         })
         collabManagerRef.current.flush(defaultValue || "")
@@ -689,12 +700,13 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         if (!routeInfo) return
         emiter.emit("onCloseCurrentPage", routeInfo.pageId)
     })
-    const onConnect = useMemoizedFn(() => {
+    const onCollabConnect = useMemoizedFn(() => {
         collabManagerRef.current?.connect()
     })
-    const onDisConnect = useMemoizedFn(() => {
+    const onCollabDisconnect = useMemoizedFn(() => {
         collabManagerRef.current?.disconnect()
     })
+    //#endregion
 
     //#region 保存历史
     //是否保存历史,开启协作文档后,才有保存历史
@@ -723,8 +735,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     ).run
     //#endregion
 
-    //#endregion 协作文档 end
-
     /*TODO - 历史文档差异对比 */
     const onDifferences = useMemoizedFn((ctx) => {
         // 获取两个文档的差异
@@ -745,11 +755,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ctx.set(defaultValueCtx, content)
     })
     return (
-        <div>
-            <YakitButton onClick={onConnect}>链接</YakitButton>
-            <YakitButton onClick={onDisConnect}>断开</YakitButton>
+        <>
+            <div ref={milkdownRef} />
             <Milkdown />
-        </div>
+        </>
     )
 })
 

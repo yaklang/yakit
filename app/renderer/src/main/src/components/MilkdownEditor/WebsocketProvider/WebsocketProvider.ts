@@ -26,7 +26,14 @@ import {
     WebsocketProviderOptions,
     WebsocketProviderUpdateHandler
 } from "./WebsocketProviderType"
-import {messageAwareness, messageSync, messageQueryAwareness, messageAuth, notepadActions} from "./constants"
+import {
+    messageAwareness,
+    messageSync,
+    messageQueryAwareness,
+    messageAuth,
+    notepadActions,
+    notepadSaveStatus
+} from "./constants"
 import {ObservableV2} from "lib0/observable"
 
 /**
@@ -79,7 +86,6 @@ const readMessage = (provider: WebsocketProvider, buf: Uint8Array, emitSynced: b
     const decoder = decoding.createDecoder(buf)
     const encoder = encoding.createEncoder()
     const messageType = decoding.readVarUint(decoder)
-    console.log("websocket-readMessage-messageType", messageType)
     const messageHandler = provider.messageHandlers[messageType]
     if (/** @type {any} */ messageHandler) {
         messageHandler(encoder, decoder, provider, emitSynced, messageType)
@@ -100,19 +106,17 @@ const setupWS = (provider: WebsocketProvider) => {
         provider.wsconnecting = true
         provider.wsconnected = false
         provider.synced = false
+        provider.onlineUserCount = 0
 
         websocket.onmessage = (event) => {
             try {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
-                console.log("websocket.onmessage", data)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
-                provider.wsLastMessageReceived = time.getUnixTime()
-                const encoder = readMessage(provider, yjsParams, true)
-                if (encoding.length(encoder) > 1) {
-                    const messageUint8Array = encoding.toUint8Array(encoder)
-                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
-                    websocket.send(value)
+
+                if (!!data.params.userCount && data.params.docType === notepadActions.join) {
+                    // 目前加入类型的消息会修改在线人数，用来做连接文档的初始化内容
+                    provider.onlineUserCount = data.params.userCount
                 }
                 if (data?.params?.saveStatus) {
                     provider.emit("saveStatus", [
@@ -121,20 +125,27 @@ const setupWS = (provider: WebsocketProvider) => {
                         }
                     ])
                 }
+                provider.wsLastMessageReceived = time.getUnixTime()
+                const encoder = readMessage(provider, yjsParams, true)
+
+                if (encoding.length(encoder) > 1) {
+                    const messageUint8Array = encoding.toUint8Array(encoder)
+                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
+                    websocket.send(value)
+                }
             } catch (error) {}
         }
         websocket.onerror = (event) => {
-            console.log("websocket.onerror", event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
-            console.log("websocket.onclose", event, provider.wsconnected)
             provider.emit("connection-close", [event, provider])
             provider.ws = null
             provider.wsconnecting = false
             if (provider.wsconnected) {
                 provider.wsconnected = false
                 provider.synced = false
+                provider.onlineUserCount = 0
                 // update awareness (all users except local left)
                 awarenessProtocol.removeAwarenessStates(
                     provider.awareness,
@@ -267,6 +278,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
      */
     public _synced: boolean
     public wsLastMessageReceived: number
+    public _onlineUserCount: number
 
     public serverUrl: string
     public bcChannel: string
@@ -339,6 +351,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         this.messageHandlers = messageHandlers.slice()
 
         this._synced = false
+        this._onlineUserCount = 0
 
         this.ws = null
         this.wsLastMessageReceived = 0
@@ -365,18 +378,18 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
          */
         this.getSendData = (sendData) => {
             if (!this.data) return Buffer.from("")
-            const {params, messageType, token} = this.data
-            const {hash} = params
+            const {messageType, token, notepadHash, params} = this.data
             const {buf, docType} = sendData
             try {
                 const value: NotepadWsRequest = {
                     messageType,
+                    notepadHash,
                     params: {
-                        hash,
                         content: "",
                         title: "",
                         docType,
-                        saveStatus: "saveProgress"
+                        saveStatus: notepadSaveStatus.saveProgress,
+                        userName: params.userName
                     },
                     yjsParams: buf ? Buffer.from(buf).toString("base64") : "",
                     token
@@ -428,7 +441,6 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             broadcastMessage(this, encoding.toUint8Array(encoder))
         }
         this._exitHandler = () => {
-            console.log("env-doc.clientID", doc.clientID)
             awarenessProtocol.removeAwarenessStates(this.awareness, [doc.clientID], "app closed")
         }
         if (env.isNode && typeof process !== "undefined") {
@@ -451,7 +463,6 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     get url() {
         return this.serverUrl
     }
-
     /**
      * @type {boolean}
      */
@@ -464,6 +475,19 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             this._synced = state
             this.emit("synced", [state])
             this.emit("sync", [state])
+        }
+    }
+    /**
+     * @type {number}
+     */
+    get onlineUserCount() {
+        return this._onlineUserCount
+    }
+
+    set onlineUserCount(count) {
+        if (this._onlineUserCount !== count) {
+            this._onlineUserCount = count
+            this.emit("online-user-count", [count])
         }
     }
 
@@ -532,10 +556,8 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     disconnect(): void {
         this.shouldConnect = false
         this.disconnectBc()
-        console.log("disconnect-this.ws", this.ws)
         if (!!this.ws && this.ws?.readyState === WebSocket.OPEN) {
             const value = this.getSendData({buf: new Uint8Array(), docType: notepadActions.leave})
-            console.log("disconnect-value", value)
             this.ws?.send(value)
             this.ws?.close()
         }

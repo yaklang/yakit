@@ -26,7 +26,7 @@ interface CollabManagerEvents {
 
 interface CollabNotepadWsRequest {
     token: string
-    hash: string
+    notepadHash: string
     title: string
 }
 const getWSUrl = async () => {
@@ -83,8 +83,13 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
         this.doc?.destroy()
         this.wsProvider?.destroy()
+        this.collabService?.disconnect()
 
         this.doc = new Doc()
+
+        // const docTitle = this.doc.getText("title") // 使用 Y.Text 存储标题
+        // console.log("yTitle-docTitle", docTitle)
+        // docTitle.observe(() => this.docObserveTitle())
 
         const url = wsUrl + "api/handle/tow/way/ws"
         // const url = "ws://localhost:1880/ws/my-room"
@@ -93,10 +98,11 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             data: {
                 token: this.wsRequest.token,
                 messageType: "notepad",
+                notepadHash: this.wsRequest.notepadHash,
                 params: {
-                    hash: this.wsRequest.hash,
                     docType: notepadActions.join,
-                    saveStatus: notepadSaveStatus.saveProgress
+                    saveStatus: notepadSaveStatus.saveProgress,
+                    userName: this.user.name
                 },
                 yjsParams: ""
             }
@@ -117,18 +123,23 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
                 this.setCollabStatus({...this.collabStatus, status: payload.status})
             }
         })
-        this.wsProvider.on("connection-close", (payload, provider) => {
+        this.wsProvider.on("connection-close", (payload) => {
             this.emit("offline-after", [payload])
         })
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
-        this.wsProvider.once("synced", async (isSynced: boolean) => {
+        this.wsProvider.once("synced", (isSynced: boolean) => {
             this.setCollabStatus({...this.collabStatus, isSynced})
-            if (isSynced) {
+        })
+
+        this.wsProvider.once("online-user-count", (onlineUserCount: number) => {
+            if (onlineUserCount < 2 && this.collabStatus.isSynced) {
                 this.collabService.applyTemplate(template).connect()
+            } else if (this.collabStatus.isSynced) {
+                this.collabService.connect()
             }
         })
 
-        this.wsProvider.on("saveStatus", async ({saveStatus}) => {
+        this.wsProvider.on("saveStatus", ({saveStatus}) => {
             this.setCollabStatus({...this.collabStatus, saveStatus})
         })
         // 监听在线用户数据
@@ -177,26 +188,26 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     }
 
     setTitle(value) {
-        const textLength = this.doc.getText("title").length
-        if (textLength) {
-            // 清空当前内容
-            this.doc.getText("title").delete(0, this.doc.getText("title").length)
-        }
-        // 插入新内容
-        this.doc.getText("title").insert(0, value)
-        // this.doc.getText("title").applyDelta([{insert: value}])
+        // const textLength = this.doc.getText("title").length
+        // if (textLength) {
+        //     // 清空当前内容
+        //     this.doc.getText("title").delete(0, this.doc.getText("title").length)
+        // }
+        // // 插入新内容
+        // this.doc.getText("title").insert(0, value)
+        this.doc.getText("title").applyDelta([{insert: value}])
     }
 
     sendContent(value: {content: string; title: string}) {
         const {content, title} = value
         const v: NotepadWsRequest = {
             messageType: "notepad",
+            notepadHash: this.wsRequest.notepadHash,
             params: {
-                hash: this.wsRequest.hash,
                 content,
                 title,
                 docType: "editDoc",
-                saveStatus: "saveProgress"
+                saveStatus: notepadSaveStatus.saveProgress
             },
             yjsParams: "",
             token: this.wsRequest.token

@@ -89,6 +89,8 @@ export type ObservableEvents = {
     "connection-close": (event: CloseEvent, provider: WebsocketProvider) => void
     /**文档保存状态 */
     saveStatus: (s: WebsocketProviderEmitOfSaveStatus) => void
+    /**文档在线用户数 */
+    "online-user-count": (n: number) => void
 }
 
 export interface NotepadSaveStatusProps {
@@ -99,16 +101,19 @@ export interface NotepadSaveStatusProps {
 export type NotepadSaveStatusType = NotepadSaveStatusProps[keyof NotepadSaveStatusProps]
 
 interface NotepadWsRequestParams {
-    hash: string
     /**不传得话就是前端传什么给后端，后端原封不动传回；传的话后悔会在次基础上做历史记录保存和更新最新的文档 */
     content?: string
     /**文档标题，传content就会传title */
     title?: string
     docType: NotepadActionType
     saveStatus: NotepadSaveStatusType
+    userName?: string
+    /**文档在线用户数 */
+    userCount?: number
 }
 export interface NotepadWsRequest extends Omit<API.WsRequest, "params"> {
     params: NotepadWsRequestParams
     yjsParams: string
     token: string
+    notepadHash: string
 }
