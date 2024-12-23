@@ -113,10 +113,10 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
 /**
  * @description 删除记事本
  * @param params
- * @param hiddenError
+ * @param hiddenNotify
  * @returns
  */
-export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.ActionFailed> = (params, hiddenError) => {
+export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.ActionFailed> = (params, hiddenNotify) => {
     return new Promise((resolve, reject) => {
         NetWorkApi<API.DeleteNotepadRequest, API.ActionFailed>({
             method: "delete",
@@ -126,14 +126,14 @@ export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.Actio
             .then((res) => {
                 // 后端返回的结构API.ActionFailed，根据ok判断失败还是成功
                 if (res.ok) {
-                    yakitNotify("success", res.reason)
+                    if (!hiddenNotify) yakitNotify("success", res.reason)
                 } else {
-                    if (!hiddenError) yakitNotify("error", res.from)
+                    if (!hiddenNotify) yakitNotify("error", res.from)
                 }
                 resolve(res)
             })
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "删除记事本失败:" + err)
+                if (!hiddenNotify) yakitNotify("error", "删除记事本失败:" + err)
                 reject(err)
             })
     })
