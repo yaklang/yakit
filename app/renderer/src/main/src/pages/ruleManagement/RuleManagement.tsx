@@ -8,7 +8,6 @@ import {
 } from "./RuleManagementType"
 import {EditRuleDrawer, LocalRuleGroupList, RuleImportExportModal, UpdateRuleToGroup} from "./template"
 import {
-    OutlineExclamationIcon,
     OutlineExportIcon,
     OutlineEyeIcon,
     OutlineImportIcon,
@@ -27,7 +26,7 @@ import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/Table
 import cloneDeep from "lodash/cloneDeep"
 import {genDefaultPagination} from "../invoker/schema"
 import {grpcDeleteLocalRule, grpcFetchLocalRuleList} from "./api"
-import {RuleLanguageList, RuleLevel, RuleLevelList} from "@/defaultConstants/RuleManagement"
+import {RuleLanguageList, RuleType, RuleTypeList} from "@/defaultConstants/RuleManagement"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {Tooltip} from "antd"
 
@@ -86,10 +85,10 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     })
 
     const onTableFilterChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, tableFilters: any) => {
-        const {Severity = undefined, Language = undefined} = tableFilters
+        const {Purpose = undefined, Language = undefined} = tableFilters
         setFilters((filters) => {
             const info = {...filters}
-            if (Severity && Array.isArray(Severity)) info.Severity = [...Severity]
+            if (Purpose && Array.isArray(Purpose)) info.Purpose = [...Purpose]
             if (Language && Array.isArray(Language)) info.Language = [...Language]
             return info
         })
@@ -153,30 +152,44 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 }
             },
             {
-                title: "风险等级",
-                dataKey: "Severity",
+                title: "规则类型",
+                dataKey: "Purpose",
                 width: 100,
                 render: (text) => {
-                    const setting = RuleLevel[text]
+                    const setting = RuleType[text]
                     if (!setting) return "-"
                     return (
-                        <YakitTag color={setting.color} className={styles["col-level-tag"]}>
-                            <OutlineExclamationIcon />
+                        <div className={classNames(styles["base-col"], "yakit-content-single-ellipsis")} title={text}>
                             {setting.name}
-                        </YakitTag>
+                        </div>
                     )
                 },
                 filterProps: {
-                    filterKey: "Severity",
+                    filterKey: "Purpose",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: RuleLevelList
+                    filters: RuleTypeList
                 }
             },
             {
-                title: "描述",
-                dataKey: "Description",
-                ellipsis: true
+                title: "语言",
+                dataKey: "Language",
+                width: 130,
+                render: (text) => {
+                    const language = RuleLanguageList.find((item) => item.value === text)
+                    if (!language) return "-"
+                    return (
+                        <div className={classNames(styles["base-col"], "yakit-content-single-ellipsis")} title={text}>
+                            {language.label}
+                        </div>
+                    )
+                },
+                filterProps: {
+                    filterKey: "Language",
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filters: RuleLanguageList
+                }
             },
             {
                 title: "分组",
@@ -190,13 +203,14 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 }
             },
             {
-                title: "语言",
-                dataKey: "Language",
-                filterProps: {
-                    filterKey: "Language",
-                    filtersType: "select",
-                    filterMultiple: true,
-                    filters: RuleLanguageList
+                title: "描述",
+                dataKey: "Description",
+                render: (text) => {
+                    return (
+                        <div className={classNames(styles["base-col"], "yakit-content-single-ellipsis")} title={text}>
+                            {text}
+                        </div>
+                    )
                 }
             },
             {
@@ -342,7 +356,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         if (delLoading) return
 
         let request: SyntaxFlowRuleFilter = {}
-        if (allCheck) {
+        if (allCheck || selectNum === 0) {
             request = cloneDeep(filters)
         }
         if (!allCheck && selectList.length > 0) {
@@ -352,6 +366,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         setDelLoading(true)
         grpcDeleteLocalRule({Filter: request})
             .then(() => {
+                handleAllCheck([], [], false)
                 fetchList()
             })
             .catch(() => {})
@@ -412,7 +427,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                 onClick={handleBatchDelRule}
                                             />
 
-                                            <YakitButton
+                                            {/* <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineExportIcon />}
                                                 onClick={handleOpenExportHint}
@@ -422,7 +437,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                                             <YakitButton type='outline2' icon={<OutlineImportIcon />}>
                                                 导入
-                                            </YakitButton>
+                                            </YakitButton> */}
 
                                             <YakitButton
                                                 icon={<OutlinePlusIcon />}

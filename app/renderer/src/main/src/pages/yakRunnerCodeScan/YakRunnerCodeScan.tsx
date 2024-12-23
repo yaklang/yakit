@@ -27,8 +27,9 @@ import {
     useUpdateEffect
 } from "ahooks"
 import styles from "./YakRunnerCodeScan.module.scss"
-import {failed, info, warn, yakitNotify} from "@/utils/notification"
+import {failed, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowscollapseIcon,
@@ -81,7 +82,7 @@ import {
     SyntaxFlowGroup,
     SyntaxFlowRule
 } from "../ruleManagement/RuleManagementType"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+
 const {ipcRenderer} = window.require("electron")
 
 export interface CodeScanStreamInfo {

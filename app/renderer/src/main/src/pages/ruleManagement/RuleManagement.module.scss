@@ -329,7 +329,7 @@
         }
     }
     .rule-info-show {
-        width: 402px;
+        width: 372px;
         opacity: 1;
     }
     .rule-info-hidden {
@@ -339,6 +339,7 @@
 
     .rule-code {
         flex: 1;
+        overflow: hidden;
         padding-bottom: 12px;
         display: flex;
         flex-direction: column;
@@ -354,61 +355,85 @@
                 align-items: center;
                 gap: 8px;
             }
+            .header-extra {
+                display: flex;
+                align-items: center;
+                justify-content: right;
+                gap: 8px;
+                .extra-btns {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+            }
         }
 
         .code-body {
             flex: 1;
+            overflow: hidden;
             padding: 0px 12px;
+            display: flex;
 
-            .tab-pane-show {
-                width: 100%;
-                height: 100%;
-            }
-            .tab-pane-hidden {
-                display: none;
-            }
-
-            .tab-pane-code {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                border-radius: 4px;
+            .code-tab {
+                flex: 1;
                 overflow: hidden;
-                border: 1px solid #eaecf3;
-
-                .code-editor {
-                    flex: 1;
-                    overflow: hidden;
+                .tab-pane-show {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                }
+                .tab-pane-hidden {
+                    display: none;
                 }
 
-                .code-params {
-                    width: 301px;
+                .tab-pane-code {
+                    width: 100%;
+                    height: 100%;
                     display: flex;
-                    flex-direction: column;
-                    border-left: 1px solid #eaecf3;
-                    background: #f8f8f8;
-                    .params-header {
-                        padding: 12px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        border-bottom: 1px solid #eaecf3;
-                        .header-title {
-                            color: #31343f;
-                            font-size: 12px;
-                            font-weight: 500;
-                            line-height: 16px;
-                        }
-                    }
+                    border-radius: 4px;
+                    overflow: hidden;
+                    border: 1px solid #eaecf3;
 
-                    .params-container {
+                    .code-editor {
                         flex: 1;
                         overflow: hidden;
-                        padding: 8px 12px 0 12px;
-                        .params-form {
-                            height: 100%;
-                            overflow: hidden auto;
-                        }
+                    }
+                }
+
+                .tab-pane-empty {
+                    flex: 1;
+                    display: flex;
+                    justify-content: center;
+                }
+            }
+
+            .code-params {
+                width: 301px;
+                display: flex;
+                flex-direction: column;
+                border-left: 1px solid #eaecf3;
+                background: #f8f8f8;
+                .params-header {
+                    padding: 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #eaecf3;
+                    .header-title {
+                        color: #31343f;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 16px;
+                    }
+                }
+
+                .params-container {
+                    flex: 1;
+                    overflow: hidden;
+                    padding: 8px 12px 0 12px;
+                    .params-form {
+                        height: 100%;
+                        overflow: hidden auto;
                     }
                 }
             }
