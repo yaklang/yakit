@@ -427,8 +427,8 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         }
     }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
     return (
-        <div className={styles["notepad-manage"]} ref={notepadRef}>
-            <YakitSpin spinning={pageLoading}>
+        <YakitSpin spinning={pageLoading}>
+            <div className={styles["notepad-manage"]} ref={notepadRef}>
                 <div className={styles["notepad-manage-heard"]}>
                     <div className={styles["heard-title"]}>
                         <span>记事本管理</span>
@@ -513,8 +513,8 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                         setVisible={onCancelDownload}
                     />
                 )}
-            </YakitSpin>
-        </div>
+            </div>
+        </YakitSpin>
     )
 })
 
