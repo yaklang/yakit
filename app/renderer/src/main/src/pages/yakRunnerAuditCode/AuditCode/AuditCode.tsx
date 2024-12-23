@@ -118,6 +118,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1173,6 +1174,7 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                                                     noMinimap={true}
                                                     noHeader={true}
                                                     showDownBodyMenu={false}
+                                                    language={SyntaxFlowMonacoSpec}
                                                 />
                                             </div>
                                         }
