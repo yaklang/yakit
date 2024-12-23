@@ -80,7 +80,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
-        return YakitRouteToPageInfo[YakitRoute.Modify_Notepad].label || "未命名文档"
+        return "未命名文档"
     })
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
@@ -91,7 +91,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     })
 
     const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
-    const [batchDownInfo, setBatchDownInfo] = useState<SaveDialogResponse>()
 
     const [loading, setLoading] = useState<boolean>(false) // 编辑器ws是否连接上
     const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
@@ -185,7 +184,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         const markdownContent = notepadContent
         const isRemove = !pageInfo.notepadHash && !markdownContent && notepadDetail.hash
         if (!!isRemove) {
-            apiDeleteNotepadDetail({hash: notepadDetail.hash})
+            apiDeleteNotepadDetail({hash: notepadDetail.hash}, true)
         }
     })
     /**保存最新的文档内容 */
@@ -241,14 +240,12 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 onCancelDownload={() => m.destroy()}
                                 onSuccess={() => {
                                     onOpenLocalFileByPath(res?.path)
-                                    setBatchDownInfo(undefined)
                                     m.destroy()
                                 }}
                             />
                         ),
                         bodyStyle: {padding: 0}
                     })
-                    setBatchDownInfo(res)
                     yakitNotify("success", "获取下载链接成功")
                 })
                 .finally(() =>
@@ -276,9 +273,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     useEffect(() => {
         if (inViewport) {
             emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
-        }
-        return () => {
-            emiter.off("secondMenuTabDataChange", onSecondMenuDataChange)
+            return () => {
+                emiter.off("secondMenuTabDataChange", onSecondMenuDataChange)
+            }
         }
     }, [inViewport])
 
@@ -294,15 +291,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     /**标题更改与页面菜单名称同步 */
     const onSetPageTabName = useDebounceFn(
         useMemoizedFn((tabName: string) => {
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
-            if (!currentItem) return
-            const newCurrentItem: PageNodeItemProps = {
-                ...currentItem,
-                pageName: tabName || perTabName.current
-            }
-            updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
+            emiter.emit("onUpdateSubMenuNameFormPage", JSON.stringify({value: tabName, pageId}))
         }),
-        {wait: 200, leading: true}
+        {wait: 500}
     ).run
     //#endregion
 
@@ -413,7 +404,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         const enableCollab = !readonly
         const collabValue: MilkdownCollabProps = {
             title: tabName,
-            enableCollab,
+            enableCollab: !!tabName ? enableCollab : false,
             milkdownHash: notepadDetail.hash,
             routeInfo: {
                 pageId,
@@ -596,6 +587,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 onChange={(e) => {
                                     onSetTabName(e.target.value)
                                 }}
+                                maxLength={100}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
                                 {notepadDetail?.headImg ? <AuthorImg src={notepadDetail?.headImg} /> : authorAvatar}

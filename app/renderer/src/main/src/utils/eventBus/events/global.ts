@@ -26,4 +26,10 @@ export type GlobalEventProps = {
      * @param {OnlyPageCache}assignPage 删除页面后指定某个页面展示 //LINK app\renderer\src\main\src\pages\layout\mainOperatorContent\MainOperatorContent.tsx#remove-menuPage
      */
     onCloseFirstMenu: string
+    /**
+     * 更新二级菜单的名字，从页面上发送的信号
+     * @param {string} value tab名称
+     * @param {string} pageId 修改的页面id
+     */
+    onUpdateSubMenuNameFormPage: string
 }
