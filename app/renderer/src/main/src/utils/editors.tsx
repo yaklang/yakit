@@ -555,7 +555,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     typeOptionVal?: RenderTypeOptionVal
     onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
     /** 编码按钮 */
-    codingBtn?: ReactElement
+    AfterBeautifyRenderBtn?: ReactElement
     url?: string
     pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
@@ -1021,7 +1021,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     ))}
                                 </div>
                             )}
-                            {props.codingBtn}
+                            {props.AfterBeautifyRenderBtn}
                             {dataCompare && dataCompare.rightCode.length > 0 && (
                                 <YakitButton
                                     size={"small"}

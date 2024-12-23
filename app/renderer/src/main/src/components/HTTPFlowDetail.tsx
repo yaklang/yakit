@@ -31,7 +31,7 @@ import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import {OutlineLog2Icon} from "@/assets/icon/outline"
+import {OutlineLog2Icon, OutlinePencilaltIcon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {RemoteGV} from "@/yakitGV"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
@@ -1398,17 +1398,24 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             ...sendCodeCompareMenuItem("response")
                         }}
                         extra={secondNodeResExtraBtn()}
-                        codingBtn={
-                            <CodingPopover
-                                key='coding'
-                                originValue={flow.Response}
-                                onSetCodeLoading={setCodeLoading}
-                                codeKey={codeKey}
-                                onSetCodeKey={(codeKey) => {
-                                    setCodeKey(codeKey)
-                                }}
-                                onSetCodeValue={setCodeValue}
-                            />
+                        AfterBeautifyRenderBtn={
+                            <>
+                                <YakitButton size='small' icon={<OutlinePencilaltIcon />} onClick={() => {
+                                    emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
+                                }}>
+                                    tag
+                                </YakitButton>
+                                <CodingPopover
+                                    key='coding'
+                                    originValue={flow.Response}
+                                    onSetCodeLoading={setCodeLoading}
+                                    codeKey={codeKey}
+                                    onSetCodeKey={(codeKey) => {
+                                        setCodeKey(codeKey)
+                                    }}
+                                    onSetCodeValue={setCodeValue}
+                                />
+                            </>
                         }
                         isResponse={true}
                         noHex={true}
