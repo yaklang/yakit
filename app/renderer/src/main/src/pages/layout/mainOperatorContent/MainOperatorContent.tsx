@@ -3593,7 +3593,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             }}
                             name={item.verbose}
                             onOk={(val) => {
-                                onRenameAndUpdatePageNameAndSendEmiter(val, item)
+                                onRenameAndUpdatePageNameAndSendEmiter({
+                                    route: currentTabKey,
+                                    updateItem: {
+                                        ...item,
+                                        verbose: val
+                                    }
+                                })
                                 m.destroy()
                             }}
                         />
@@ -3607,7 +3613,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const onUpdateSubMenuNameFormPage = useMemoizedFn((val) => {
             try {
                 const data = JSON.parse(val)
-                const {value, pageId} = data
+                const {route, value, pageId} = data
                 const {index, subIndex} = getPageItemById(subPage, pageId)
                 if (index === -1) return
                 let item
@@ -3616,7 +3622,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 } else {
                     item = subPage[index][subIndex]
                 }
-                onRenameAndUpdatePageName(value, item)
+                item.verbose = value
+                onRenameAndUpdatePageName({route, updateItem: {...item}})
             } catch (error) {}
         })
         const onRename = useMemoizedFn((val: string, item: MultipleNodeInfo) => {
@@ -3648,29 +3655,31 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         /**修改名称，更新数据中心得页面名称数据并发送数据修改的信号 */
         const onRenameAndUpdatePageNameAndSendEmiter = useMemoizedFn(
-            (currentTabKey: string, updateItem: MultipleNodeInfo) => {
-                onRename(currentTabKey, updateItem)
-                onUpdatePageName({currentTabKey, updateItem}).then(() => {
+            (data: {route: YakitRoute; updateItem: MultipleNodeInfo}) => {
+                const {route, updateItem} = data
+                onRename(updateItem.verbose, updateItem)
+                onUpdatePageName({route, updateItem}).then(() => {
                     emiter.emit("secondMenuTabDataChange", "")
                 })
             }
         )
         /**修改名称，更新数据中心得页面名称数据 */
-        const onRenameAndUpdatePageName = useMemoizedFn((currentTabKey: string, updateItem: MultipleNodeInfo) => {
-            onRename(currentTabKey, updateItem)
-            onUpdatePageName({currentTabKey, updateItem})
+        const onRenameAndUpdatePageName = useMemoizedFn((data: {route: YakitRoute; updateItem: MultipleNodeInfo}) => {
+            const {route, updateItem} = data
+            onRename(updateItem.verbose, updateItem)
+            onUpdatePageName({route, updateItem})
         })
         /**仅更新数据中心得页面名称数据 */
-        const onUpdatePageName: APIFunc<{currentTabKey: string; updateItem: MultipleNodeInfo}, null> = (data) => {
+        const onUpdatePageName: APIFunc<{route: YakitRoute; updateItem: MultipleNodeInfo}, null> = (data) => {
             return new Promise((resolve, reject) => {
-                const {currentTabKey, updateItem} = data
-                const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, updateItem.id)
+                const {route, updateItem} = data
+                const current: PageNodeItemProps | undefined = queryPagesDataById(route, updateItem.id)
                 if (!current) {
                     reject("当前页面不存在")
                     return
                 }
                 current.pageName = updateItem.verbose
-                updatePagesDataCacheById(currentTabKey, current)
+                updatePagesDataCacheById(route, current)
                 resolve(null)
             })
         }
