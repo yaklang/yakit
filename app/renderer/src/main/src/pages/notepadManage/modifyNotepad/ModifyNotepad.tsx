@@ -587,7 +587,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 className={styles["notepad-input"]}
                                 value={tabName}
                                 onChange={(e) => {
-                                    onSetTabName(e.target.value)
+                                    if (currentRole === notepadRole.adminPermission) {
+                                        onSetTabName(e.target.value)
+                                    } else {
+                                        yakitNotify("error", "仅支持作者修改标题")
+                                    }
                                 }}
                                 maxLength={100}
                             />
@@ -602,16 +606,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 </span>
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
                                 {renderOnlineStatus}
-                                <YakitButton
-                                    onClick={() => {
-                                        if (editor) {
-                                            const markdownContent = editor.action(getMarkdown())
-                                            console.log("当前 Markdown 内容:", markdownContent)
-                                        }
-                                    }}
-                                >
-                                    保存
-                                </YakitButton>
                             </div>
                         </div>
                         <div className={styles["notepad-editor"]}>
