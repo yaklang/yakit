@@ -246,7 +246,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         ),
                         bodyStyle: {padding: 0}
                     })
-                    yakitNotify("success", "获取下载链接成功")
                 })
                 .finally(() =>
                     setTimeout(() => {

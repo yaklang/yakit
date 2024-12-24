@@ -56,17 +56,16 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
 
     useDebounceEffect(
         () => {
-            if (!hasMore) return
-            if (!containerRef || !wrapperRef) return
             // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+            if (!containerRef || !wrapperRef) return
             const containerHeight = containerRef.current?.clientHeight || 0
+            const scrollHeight = containerRef.current?.scrollHeight || 0
+            const isScroll = scrollHeight > containerHeight
+            setScroll(isScroll)
+            if (!hasMore) return
             const wrapperHeight = wrapperRef.current?.clientHeight
-            // console.log("wrapperHeight", wrapperHeight, containerHeight)
             if (wrapperHeight && wrapperHeight <= containerHeight) {
                 loadMoreData()
-                setScroll(false)
-            } else {
-                setScroll(true)
             }
         },
         [vlistHeigth, wrapperRef.current?.clientHeight, refresh, hasMore],
