@@ -140,7 +140,6 @@ import {
 } from "./utils"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import { FuzzerRemoteGV } from "@/enums/fuzzer"
-import {closeWebSocket, startWebSocket} from "@/utils/webSocket/webSocket"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {APIFunc} from "@/apiUtils/type"

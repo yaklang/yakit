@@ -40,7 +40,6 @@ import {shallow} from "zustand/shallow"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {yakitNotify} from "@/utils/notification"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
@@ -96,7 +95,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         shallow
     )
 
-    const [loading, setLoading] = useState<boolean>(true)
+    const [listLoading, setListLoading] = useState<boolean>(true)
     const [pageLoading, setPageLoading] = useState<boolean>(false)
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
@@ -132,108 +131,123 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 
     const [inViewPort = true] = useInViewport(notepadRef)
 
-    const columns: VirtualListColumns<API.GetNotepadList>[] = [
-        {
-            title: "文件名称",
-            dataIndex: "title"
-        },
-        {
-            title: "作者",
-            dataIndex: "userName"
-        },
-        {
-            title: "协作人",
-            dataIndex: "collaborator",
-            render: (text, record) =>
-                (!!record.collaborator?.length && (
-                    <YakitPopover
-                        content={
-                            <div className={styles["collaborators-popover-content"]}>
-                                {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
-                            </div>
-                        }
-                        destroyTooltipOnHide={true}
-                        overlayClassName={styles["collaborators-popover"]}
-                    >
-                        <span className='content-ellipsis'>
-                            {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
-                        </span>
-                    </YakitPopover>
-                )) ||
-                "-"
-        },
-        {
-            title: "最近更新时间",
-            dataIndex: sorterKey,
-            render: (text) => <div className={styles["time-cell"]}>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</div>,
-            filterProps: {
-                filterRender: () => (
-                    <YakitDropdownMenu
-                        menu={{
-                            data: [
-                                {
-                                    key: "updated_at",
-                                    label: "最近更新时间"
-                                },
-                                {
-                                    key: "created_at",
-                                    label: "最近创建时间"
-                                }
-                            ],
-                            onClick: ({key}) => {
-                                setSorterKey(key)
-                                setTimeSortVisible(false)
+    const columns: VirtualListColumns<API.GetNotepadList>[] = useCreation(() => {
+        return [
+            {
+                title: "文件名称",
+                dataIndex: "title"
+            },
+            {
+                title: "作者",
+                dataIndex: "userName"
+            },
+            {
+                title: "协作人",
+                dataIndex: "collaborator",
+                render: (text, record) =>
+                    (!!record.collaborator?.length && (
+                        <YakitPopover
+                            content={
+                                <div className={styles["collaborators-popover-content"]}>
+                                    {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
+                                </div>
                             }
-                        }}
-                        dropdown={{
-                            visible: timeSortVisible,
-                            onVisibleChange: setTimeSortVisible
-                        }}
-                    >
-                        <YakitButton type='text2'>
-                            <span style={{marginRight: 8}}>{timeMap[sorterKey]}</span>
-                            {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
-                        </YakitButton>
-                    </YakitDropdownMenu>
-                )
-            }
-        },
-        {
-            title: "操作",
-            dataIndex: "action",
-            width: 180,
-            render: (text, record) => (
-                <div>
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlinePencilaltIcon />}
-                        onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
-                    />
-                    <Divider type='vertical' style={{margin: "0 8px"}} />
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlineClouddownloadIcon />}
-                        onClick={() => onSingleDown(record)}
-                        loading={actionItemRef.current === record && downItemLoading}
-                    />
-                    {record.notepadUserId === userInfo.user_id ? (
-                        <>
-                            <Divider type='vertical' style={{margin: "0 8px"}} />
-                            <YakitButton type='text2' icon={<OutlineShareIcon />} onClick={() => onShare(record)} />
+                            destroyTooltipOnHide={true}
+                            overlayClassName={styles["collaborators-popover"]}
+                        >
+                            <span className='content-ellipsis'>
+                                {(record.collaborator || []).map((ele) => ele.user_name).join(",")}
+                            </span>
+                        </YakitPopover>
+                    )) ||
+                    "-"
+            },
+            {
+                title: "最近更新时间",
+                dataIndex: sorterKey,
+                render: (text) => (
+                    <div className={styles["time-cell"]}>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</div>
+                ),
+                filterProps: {
+                    filterRender: () => (
+                        <YakitDropdownMenu
+                            menu={{
+                                data: [
+                                    {
+                                        key: "updated_at",
+                                        label: "最近更新时间"
+                                    },
+                                    {
+                                        key: "created_at",
+                                        label: "最近创建时间"
+                                    }
+                                ],
+                                onClick: ({key}) => {
+                                    setSorterKey(key)
+                                    setTimeSortVisible(false)
+                                    getList()
+                                }
+                            }}
+                            dropdown={{
+                                visible: timeSortVisible,
+                                onVisibleChange: setTimeSortVisible
+                            }}
+                        >
+                            <YakitButton type='text2'>
+                                <span style={{marginRight: 8}}>{timeMap[sorterKey]}</span>
+                                {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+                            </YakitButton>
+                        </YakitDropdownMenu>
+                    )
+                }
+            },
+            {
+                title: "操作",
+                dataIndex: "action",
+                width: 180,
+                render: (text, record) => {
+                    const removeDisabled = actionItemRef.current === record && removeItemLoading
+                    return (
+                        <div>
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlinePencilaltIcon />}
+                                onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
+                                disabled={removeDisabled}
+                            />
                             <Divider type='vertical' style={{margin: "0 8px"}} />
                             <YakitButton
-                                danger
-                                type='text'
-                                icon={<OutlineTrashIcon />}
-                                onClick={() => onSingleRemove(record)}
-                                loading={actionItemRef.current === record && removeItemLoading}
+                                type='text2'
+                                icon={<OutlineClouddownloadIcon />}
+                                onClick={() => onSingleDown(record)}
+                                loading={actionItemRef.current === record && downItemLoading}
+                                disabled={removeDisabled}
                             />
-                        </>
-                    ) : null}
-                </div>
-            )
-        }
-    ]
+                            {record.notepadUserId === userInfo.user_id ? (
+                                <>
+                                    <Divider type='vertical' style={{margin: "0 8px"}} />
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineShareIcon />}
+                                        onClick={() => onShare(record)}
+                                        disabled={removeDisabled}
+                                    />
+                                    <Divider type='vertical' style={{margin: "0 8px"}} />
+                                    <YakitButton
+                                        danger
+                                        type='text'
+                                        icon={<OutlineTrashIcon />}
+                                        onClick={() => onSingleRemove(record)}
+                                        loading={actionItemRef.current === record && removeItemLoading}
+                                    />
+                                </>
+                            ) : null}
+                        </div>
+                    )
+                }
+            }
+        ]
+    }, [downItemLoading, removeItemLoading, actionItemRef.current, sorterKey, timeSortVisible])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()
@@ -251,7 +265,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
     })
     const getList = useDebounceFn(
         useMemoizedFn(async (page?: number) => {
-            setLoading(true)
+            setListLoading(true)
             const params: PluginListPageMeta = !page
                 ? {page: 1, limit: 20, order_by: sorterKey, order: "desc"}
                 : {
@@ -278,10 +292,15 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                 setResponse(newRes)
                 if (+res.pagemeta.page === 1) {
                     onSelectAll([], [], false)
+                } else {
+                    if (isAllSelect) {
+                        const newSelectedRowKeys: string[] = response.data.map((ele) => `${ele.id}`)
+                        setSelectedRowKeys((v) => [...v, ...newSelectedRowKeys])
+                    }
                 }
             } catch (error) {}
             setTimeout(() => {
-                setLoading(false)
+                setListLoading(false)
             }, 300)
         }),
         {wait: 200, leading: true}
@@ -379,7 +398,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         onBaseNotepadDown(downParams)
             .then((res) => {
                 setBatchDownInfo(res)
-                yakitNotify("success", "获取下载链接成功")
             })
             .finally(() =>
                 setTimeout(() => {
@@ -395,15 +413,14 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             ...filter,
             hash: isAllSelect ? "" : selectedRowKeys?.join(",")
         }
-        setLoading(true)
+        setPageLoading(true)
         onBaseNotepadDown(downParams)
             .then((res) => {
                 setBatchDownInfo(res)
-                yakitNotify("success", "获取下载链接成功")
             })
             .finally(() =>
                 setTimeout(() => {
-                    setLoading(false)
+                    setPageLoading(false)
                 }, 200)
             )
     })
@@ -450,7 +467,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             danger
                             icon={<OutlineTrashIcon />}
                             disabled={totalRef.current === 0}
-                            onClick={() => onBatchRemove()}
+                            onClick={onBatchRemove}
                             loading={pageLoading}
                         >
                             删除
@@ -459,12 +476,13 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             type='outline2'
                             icon={<OutlineClouddownloadIcon />}
                             disabled={totalRef.current === 0}
-                            onClick={() => onBatchDown()}
+                            onClick={onBatchDown}
+                            loading={pageLoading}
                         >
                             批量下载
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
-                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => toAddNotepad()}>
+                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={toAddNotepad}>
                             新建
                         </YakitButton>
                     </div>
@@ -481,7 +499,8 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                     )
                 ) : (
                     <YakitVirtualList<API.GetNotepadList>
-                        loading={loading}
+                        refresh={refresh}
+                        loading={listLoading}
                         hasMore={hasMore}
                         columns={columns}
                         data={response.data}

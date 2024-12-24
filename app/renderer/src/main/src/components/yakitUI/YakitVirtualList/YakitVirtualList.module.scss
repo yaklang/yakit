@@ -35,8 +35,8 @@
         font-weight: 600;
         line-height: 16px;
         gap: 8px;
-
         border-bottom: 1px solid var(--yakit-border-color);
+        transition: padding-right 0.3s ease;
         .columns-item {
             align-items: center;
             display: flex;
