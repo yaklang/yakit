@@ -1,3 +1,5 @@
+import {YakitRoute} from "@/enums/yakitRoute"
+
 export type GlobalEventProps = {
     /** 打开引擎日志终端 */
     openEngineLogTerminal?: boolean
@@ -28,6 +30,7 @@ export type GlobalEventProps = {
     onCloseFirstMenu: string
     /**
      * 更新二级菜单的名字，从页面上发送的信号
+     * @param {YakitRoute} route
      * @param {string} value tab名称
      * @param {string} pageId 修改的页面id
      */

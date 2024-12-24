@@ -291,7 +291,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     /**标题更改与页面菜单名称同步 */
     const onSetPageTabName = useDebounceFn(
         useMemoizedFn((tabName: string) => {
-            emiter.emit("onUpdateSubMenuNameFormPage", JSON.stringify({value: tabName, pageId}))
+            emiter.emit(
+                "onUpdateSubMenuNameFormPage",
+                JSON.stringify({route: YakitRoute.Modify_Notepad, value: tabName, pageId})
+            )
         }),
         {wait: 500}
     ).run
