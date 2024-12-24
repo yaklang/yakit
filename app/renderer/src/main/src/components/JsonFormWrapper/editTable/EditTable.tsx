@@ -1,0 +1,332 @@
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {useGetState, useMemoizedFn} from "ahooks"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
+import styles from "./EditTable.module.scss"
+import {failed, success, warn, info} from "@/utils/notification"
+import classNames from "classnames"
+import {Form, Input, InputNumber, Table, Tooltip, Typography} from "antd"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {v4 as uuidv4} from "uuid"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {DefaultOptionType} from "antd/lib/select"
+import {CheckCircleIcon} from "@/assets/newIcon"
+
+interface Item {
+    _id: string
+    [key: string]: string
+}
+
+type CellTypeProps = "string" | "boolean"
+
+interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+    editing: boolean
+    required: boolean
+    type?: CellTypeProps
+    selectOption: DefaultOptionType[]
+    dataIndex: string
+    title: any
+    inputType: "number" | "text"
+    record: Item
+    index: number
+    children: React.ReactNode
+}
+
+const EditableCell: React.FC<EditableCellProps> = ({
+    editing,
+    required,
+    type,
+    selectOption,
+    dataIndex,
+    title,
+    inputType,
+    record,
+    index,
+    children,
+    ...restProps
+}) => {
+    const getNode = useMemoizedFn(() => {
+        switch (type) {
+            case "string":
+                return selectOption.length > 0 ? <YakitSelect options={selectOption} /> : <YakitInput />
+            case "boolean":
+                return <YakitSwitch />
+            default:
+                return <YakitInput />
+        }
+    })
+
+    return (
+        <td {...restProps}>
+            {editing ? (
+                <Form.Item
+                    name={dataIndex}
+                    style={{margin: 0}}
+                    rules={[
+                        {
+                            required,
+                            message: `未处理 ${title}!`
+                        }
+                    ]}
+                    valuePropName={type === "boolean" ? "checked" : undefined}
+                >
+                    {getNode()}
+                </Form.Item>
+            ) : (
+                children
+            )}
+        </td>
+    )
+}
+
+interface itemsProps {
+    properties: {
+        [key: string]: {
+            type: CellTypeProps
+            title: string
+            default?: string
+            enum?: string[]
+            description?: string
+        }
+    }
+    require: string[]
+}
+
+export interface columnSchemaProps {
+    minItems?: number
+    maxItems?: number
+    items: itemsProps
+}
+
+export interface EditTableProps {
+    columnSchema: columnSchemaProps
+    onChange?: (v: any) => void
+    // 默认值
+    value?: any
+}
+export const EditTable: React.FC<EditTableProps> = (props) => {
+    const {columnSchema, onChange, value} = props
+    const [form] = Form.useForm()
+    const [data, setData] = useState<Item[]>([])
+    const [cacheData, setCacheData] = useState<Item[]>([])
+    const [editingId, setEditingId] = useState<string>("")
+    const [columns, setColumns] = useState<any[]>([])
+    const [requireList, setRequireList] = useState<string[]>([])
+    const [maxItems, setMaxItems] = useState<number>()
+    useEffect(() => {
+        try {
+            const {minItems, maxItems = 50, items} = columnSchema
+            const {require, properties} = items
+            const newColumns: any[] = []
+            const newData: any[] = []
+            Object.keys(properties).forEach((key) => {
+                const {type, title, description} = properties[key]
+                newColumns.push({
+                    title: description ? (
+                        <div>
+                            <span style={{marginRight: 4}}>{title || key}</span>
+                            <Tooltip title={description}>
+                                <InfoCircleOutlined />
+                            </Tooltip>
+                        </div>
+                    ) : (
+                        title || key
+                    ),
+                    dataIndex: key,
+                    editable: true,
+                    type,
+                    enum: properties[key]?.enum,
+                    default: properties[key]?.default,
+                    render: (text) => {
+                        if (type === "boolean") {
+                            return text ? (
+                                <CheckCircleIcon className={classNames(styles["check-circle-icon"])} />
+                            ) : (
+                                <></>
+                            )
+                        }
+                        return text || "-"
+                    }
+                })
+
+                newData.push({
+                    _id: uuidv4()
+                })
+            })
+            setRequireList(require)
+            setColumns([...newColumns])
+            setMaxItems(maxItems)
+        } catch (error) {
+            failed("解析表格失败")
+        }
+    }, [])
+
+    const isEditing = useMemoizedFn((rowItem: Item) => rowItem._id === editingId)
+
+    const onEdit = useMemoizedFn((record: Partial<Item> & {_id: React.Key}) => {
+        form.setFieldsValue({...record})
+        setEditingId(record._id)
+    })
+
+    const onCancel = useMemoizedFn(() => {
+        setEditingId("")
+        setCacheData([])
+    })
+
+    const onDelete = useMemoizedFn((record: Item) => {
+        const newData = [...data].filter((item) => item._id !== record._id)
+        setData(newData)
+        onSubmit(newData)
+        if (record._id === editingId) {
+            setEditingId("")
+        }
+    })
+
+    // 数据提交
+    const onSubmit = useMemoizedFn((arr:Item[])=>{
+        const data = arr.map(({_id,...obj})=>obj)
+        onChange && onChange(data)
+    })
+
+    const onSave = useMemoizedFn(async (record: Item) => {
+        try {
+            const row = (await form.validateFields()) as Item
+
+            const newData = [...data]
+            const index = newData.findIndex((item) => record._id === item._id)
+            // 修改
+            if (index > -1) {
+                const item = newData[index]
+                newData.splice(index, 1, {
+                    ...item,
+                    ...row
+                })
+                setData(newData)
+                setEditingId("")
+                onSubmit(newData)
+                
+            }
+            // 新增
+            else if (cacheData.length > 0 && record._id === cacheData[0]._id) {
+                newData.push({...cacheData[0], ...row})
+                setCacheData([])
+                setData(newData)
+                setEditingId("")
+                onSubmit(newData)
+            }
+        } catch (errInfo) {
+            console.log("Validate Failed:", errInfo)
+        }
+    })
+
+    const addCell = useMemoizedFn(() => {
+        if (typeof maxItems === "number" && data.length >= maxItems) {
+            warn(`已达最大数量${maxItems}`)
+            return
+        }
+        if (cacheData.length !== 0) {
+            warn("只能新增一行")
+            return
+        }
+        form.resetFields()
+        const _id = uuidv4()
+        setCacheData([{_id}])
+        setEditingId(_id)
+    })
+
+    const realData = useMemo(() => {
+        return [...data, ...cacheData]
+    }, [data, cacheData])
+
+    const realColumns = useMemo(() => {
+        return [
+            ...columns,
+            {
+                title: "操作",
+                dataIndex: "operation",
+                width: 150,
+                fixed: "right",
+                render: (_: any, record: Item) => {
+                    const editable = isEditing(record)
+                    return editable ? (
+                        <div className={styles["operation"]}>
+                            <YakitButton type='text' size='small' onClick={() => onSave(record)}>
+                                保存
+                            </YakitButton>
+                            <YakitButton type='text' size='small' onClick={onCancel}>
+                                取消
+                            </YakitButton>
+                            {Object.keys(record).length > 1 && (
+                                <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
+                                    删除
+                                </YakitButton>
+                            )}
+                        </div>
+                    ) : (
+                        <div className={styles["operation"]}>
+                            <YakitButton
+                                size='small'
+                                type='text'
+                                disabled={editingId !== ""}
+                                onClick={() => onEdit(record)}
+                            >
+                                编辑
+                            </YakitButton>
+                            <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
+                                删除
+                            </YakitButton>
+                        </div>
+                    )
+                }
+            }
+        ]
+    }, [columns, editingId])
+
+    const mergedColumns = realColumns.map((col) => {
+        if (!col.editable) {
+            return col
+        }
+        return {
+            ...col,
+            onCell: (record: Item) => ({
+                record,
+                inputType: col.dataIndex === "age" ? "number" : "text",
+                dataIndex: col.dataIndex,
+                title: col.title,
+                editing: isEditing(record),
+                required: requireList.includes(col.dataIndex),
+                type: col.type,
+                selectOption: (col.enum || []).map((item) => ({label: item, value: item}))
+            })
+        }
+    })
+
+    return (
+        <Form form={form} component={false}>
+            <Table
+                components={{
+                    body: {
+                        cell: EditableCell
+                    }
+                }}
+                dataSource={realData}
+                columns={mergedColumns}
+                rowClassName='editable-row'
+                pagination={false}
+                scroll={{x: "auto", y: undefined}}
+            />
+            <YakitButton
+                onClick={addCell}
+                size='large'
+                style={{width: "100%", marginTop: 12}}
+                icon={<PlusOutlined />}
+                type='outline1'
+            >
+                添加一行数据
+            </YakitButton>
+        </Form>
+    )
+}

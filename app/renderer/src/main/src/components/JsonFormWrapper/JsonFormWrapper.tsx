@@ -16,6 +16,7 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
 import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
 import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
+import {columnSchemaProps, EditTable} from "./editTable/EditTable"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -463,6 +464,19 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         )
     })
 
+    const getTableWidget = useMemoizedFn((props: WidgetProps) => {
+        const {value, onChange, options} = props
+        return (
+            <EditTable
+                columnSchema={props.schema as columnSchemaProps}
+                value={value}
+                onChange={(arr: any[]) => {
+                    onChange(arr.length === 0 ? options.emptyValue : arr)
+                }}
+            />
+        )
+    })
+
     // const uiSchema: UiSchema = Object.keys(schema.properties || {}).reduce((acc, key) => {
     //     // 是否显示字段的 label
     //     acc[key] = {
@@ -528,7 +542,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     FileWidget: getFileWidget,
                     // uiSchema 自定义控件
                     files: getFilesWidget,
-                    folder: getFolderWidget
+                    folder: getFolderWidget,
+                    table: getTableWidget
                 }}
                 // 自定义控件
                 // fields={fields}
