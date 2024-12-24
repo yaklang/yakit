@@ -13,6 +13,7 @@ import * as syncProtocol from "y-protocols/sync"
 import * as authProtocol from "y-protocols/auth"
 import * as awarenessProtocol from "y-protocols/awareness"
 import * as math from "lib0/math"
+import * as url from "lib0/url"
 import * as env from "lib0/environment"
 import {
     MessageHandlersProps,
@@ -113,7 +114,6 @@ const setupWS = (provider: WebsocketProvider) => {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
-
                 if (!!data.params.userCount && data.params.docType === notepadActions.join) {
                     // 目前加入类型的消息会修改在线人数，用来做连接文档的初始化内容
                     provider.onlineUserCount = data.params.userCount
@@ -139,47 +139,7 @@ const setupWS = (provider: WebsocketProvider) => {
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
-            provider.emit("connection-close", [event, provider])
-            provider.ws = null
-            provider.wsconnecting = false
-            if (provider.wsconnected) {
-                provider.wsconnected = false
-                provider.synced = false
-                provider.onlineUserCount = 0
-                // update awareness (all users except local left)
-                awarenessProtocol.removeAwarenessStates(
-                    provider.awareness,
-                    //@ts-ignore
-                    Array.from(provider.awareness.getStates().keys()).filter(
-                        (client) => client !== provider.doc.clientID
-                    ),
-                    provider
-                )
-                provider.emit("status", [
-                    {
-                        status: "disconnected"
-                    }
-                ])
-            } else {
-                provider.wsUnsuccessfulReconnects++
-            }
-            switch (event.code) {
-                case 401:
-                case 403:
-                case 404:
-                case 209:
-                case 500:
-                    break
-                default:
-                    // Start with no reconnect timeout and increase timeout by
-                    // using exponential backoff starting with 100ms
-                    setTimeout(
-                        setupWS,
-                        math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
-                        provider
-                    )
-                    break
-            }
+            closeWebsocketConnection(provider, websocket, event)
         }
         websocket.onopen = () => {
             provider.wsLastMessageReceived = time.getUnixTime()
@@ -196,7 +156,6 @@ const setupWS = (provider: WebsocketProvider) => {
             encoding.writeVarUint(encoder, messageSync)
             syncProtocol.writeSyncStep1(encoder, provider.doc)
             const encoderUint8Array = encoding.toUint8Array(encoder)
-
             websocket.send(provider?.getSendData({buf: encoderUint8Array, docType: notepadActions.join}))
 
             // broadcast local awareness state
@@ -218,6 +177,60 @@ const setupWS = (provider: WebsocketProvider) => {
                 status: "connecting"
             }
         ])
+    }
+}
+
+/**
+ * Outsource this function so that a new websocket connection is created immediately.
+ * I suspect that the `ws.onclose` event is not always fired if there are network issues.
+ *
+ * @param {WebsocketProvider} provider
+ * @param {WebSocket} ws
+ * @param {CloseEvent} event
+ */
+const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, event?: CloseEvent) => {
+    if (ws === provider.ws) {
+        if (event) provider.emit("connection-close", [event, provider])
+        provider.ws = null
+        ws.close()
+        provider.wsconnecting = false
+        if (provider.wsconnected) {
+            provider.wsconnected = false
+            provider.synced = false
+            provider.onlineUserCount = 0
+            // update awareness (all users except local left)
+            awarenessProtocol.removeAwarenessStates(
+                provider.awareness,
+                //@ts-ignore
+                Array.from(provider.awareness.getStates().keys()).filter((client) => client !== provider.doc.clientID),
+                provider
+            )
+            provider.emit("status", [
+                {
+                    status: "disconnected"
+                }
+            ])
+        } else {
+            provider.wsUnsuccessfulReconnects++
+        }
+        switch (event?.code) {
+            case 401:
+            case 403:
+            case 404:
+            case 200:
+            case 209:
+            case 500:
+                break
+            default:
+                // Start with no reconnect timeout and increase timeout by
+                // using exponential backoff starting with 100ms
+                setTimeout(
+                    setupWS,
+                    math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
+                    provider
+                )
+                break
+        }
     }
 }
 
@@ -315,7 +328,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     private _exitHandler: WebsocketProviderExitHandler
     private _checkInterval: NodeJS.Timeout | number
 
-    constructor(serverUrl: string, doc: Y.Doc, options: WebsocketProviderOptions = {}) {
+    constructor(serverUrl: string, room: string, doc: Y.Doc, options: WebsocketProviderOptions = {}) {
         super()
         // Destructure options and assign default values
         const {
@@ -334,7 +347,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             serverUrl = serverUrl.slice(0, serverUrl.length - 1)
         }
         this.serverUrl = serverUrl
-        this.bcChannel = serverUrl
+        this.bcChannel = serverUrl + "/" + room
         this.maxBackoffTime = maxBackoffTime
 
         this.params = params
@@ -378,7 +391,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
          */
         this.getSendData = (sendData) => {
             if (!this.data) return Buffer.from("")
-            const {messageType, token, notepadHash, params} = this.data
+            const {messageType, token, params, notepadHash} = this.data
             const {buf, docType} = sendData
             try {
                 const value: NotepadWsRequest = {
@@ -395,7 +408,6 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     token
                 }
                 const jsonString = JSON.stringify(value)
-                console.log("getSendData", jsonString)
                 const finalArrayBuffer = Buffer.from(jsonString)
                 return finalArrayBuffer
             } catch (error) {
@@ -451,8 +463,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
             if (this.wsconnected && messageReconnectTimeout < time.getUnixTime() - this.wsLastMessageReceived) {
                 // no message received in a long time - not even your own awareness
                 // updates (which are updated every 15 seconds)
-                /** @type {WebSocket} */
-                this.ws?.close()
+                if (this.ws) closeWebsocketConnection(this, /** @type {WebSocket} */ this.ws)
             }
         }, messageReconnectTimeout / 10)
         if (connect) {
@@ -461,7 +472,8 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     }
 
     get url() {
-        return this.serverUrl
+        const encodedParams = url.encodeQueryParams(this.params)
+        return this.serverUrl + "/" + (encodedParams.length === 0 ? "" : "?" + encodedParams)
     }
     /**
      * @type {boolean}
@@ -559,7 +571,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         if (!!this.ws && this.ws?.readyState === WebSocket.OPEN) {
             const value = this.getSendData({buf: new Uint8Array(), docType: notepadActions.leave})
             this.ws?.send(value)
-            this.ws?.close()
+            closeWebsocketConnection(this, this.ws)
         }
     }
 
