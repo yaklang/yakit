@@ -384,6 +384,16 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         return collabProps
     }, [collabProps])
 
+    useEffect(() => {
+        return () => {
+            // 统一
+            collabManagerRef.current?.destroy()
+            collabManagerRef.current = undefined
+            clearRemove()
+            onDeleteAllFiles()
+        }
+    }, [])
+
     //#region 编辑器初始
     const {get, loading} = useEditor(
         (root) => {
@@ -466,10 +476,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             // DeletedFiles
             editor?.action(onSetDeletedFiles)
         }
-        return () => {
-            clearRemove()
-            onDeleteAllFiles()
-        }
     }, [loading, get])
     //#endregion
 
@@ -497,7 +503,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     /**删除文档中被删除的所有文件 */
     const onDeleteAllFiles = useMemoizedFn(() => {
         if (deletedFiles.length > 0) {
-            httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)})
+            httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
         }
     })
     /**删除在文档中被删除30s的文件 */
@@ -515,7 +521,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         }
         if (fileName.length > 0) {
             setInterval(undefined)
-            httpDeleteOSSResource({file_name: fileName}).finally(() => {
+            httpDeleteOSSResource({file_name: fileName}, true).finally(() => {
                 // 暂不考虑删除失败的情况
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
             })
@@ -607,6 +613,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 return
             }
             switch (event.code) {
+                case 200: // 正常关闭
+                    break
                 case 401: // 401是指没有传token或者token过期
                     loginOut(event)
                     break

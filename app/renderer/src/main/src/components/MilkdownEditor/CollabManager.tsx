@@ -83,7 +83,6 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
         this.doc?.destroy()
         this.wsProvider?.destroy()
-        this.collabService?.disconnect()
 
         this.doc = new Doc()
 
@@ -93,7 +92,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
         const url = wsUrl + "api/handle/tow/way/ws"
         // const url = "ws://localhost:1880/ws/my-room"
-        this.wsProvider = new WebsocketProvider(url, this.doc, {
+        this.wsProvider = new WebsocketProvider(url, this.wsRequest.notepadHash, this.doc, {
             connect: true,
             data: {
                 token: this.wsRequest.token,
@@ -217,6 +216,10 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
     }
 
+    destroy(): void {
+        this.wsProvider?.destroy()
+        super.destroy()
+    }
     connect() {
         this.wsProvider?.connect()
         this.collabService?.connect()
