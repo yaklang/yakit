@@ -1,4 +1,5 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
 
 export interface RuleManagementProps {}
 
@@ -31,6 +32,15 @@ export interface UpdateRuleToGroupProps {
     callback: () => void
 }
 
+export interface RuleDebugAuditDetailProps {
+    auditData: SyntaxFlowResult[]
+    info: SyntaxFlowResult
+}
+
+export interface RuleDebugAuditListProps {
+    auditData: SyntaxFlowResult[]
+    onDetail: (info: SyntaxFlowResult) => void
+}
 /** ---------- 规则组相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleGroupFilter {

@@ -1,4 +1,4 @@
-import {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {
     EditRuleDrawerProps,
     QuerySyntaxFlowRuleGroupRequest,
@@ -8,12 +8,15 @@ import {
     SyntaxFlowRuleInput,
     UpdateRuleToGroupProps,
     SyntaxFlowRuleFilter,
-    UpdateSyntaxFlowRuleAndGroupRequest
+    UpdateSyntaxFlowRuleAndGroupRequest,
+    RuleDebugAuditDetailProps,
+    RuleDebugAuditListProps
 } from "./RuleManagementType"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn, useSize, useVirtualList} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouduploadIcon,
+    OutlineLightbulbIcon,
     OutlineOpenIcon,
     OutlinePencilaltIcon,
     OutlinePluscircleIcon,
@@ -22,7 +25,7 @@ import {
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidFolderopenIcon, SolidPlayIcon} from "@/assets/icon/solid"
+import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
 import {Form, InputRef, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -45,7 +48,7 @@ import {
 import cloneDeep from "lodash/cloneDeep"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -53,12 +56,28 @@ import {DefaultRuleContent, RuleLanguageList} from "@/defaultConstants/RuleManag
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
-import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {
+    AuditNodeMapProps,
+    AuditNodeProps,
+    AuditYakUrlProps,
+    SSAProgramResponse
+} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {randomString} from "@/utils/randomUtil"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import useRuleDebug from "./useRuleDebug"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
+import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
+import {AuditTree} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import {loadAuditFromYakURLRaw} from "../yakRunnerAuditCode/utils"
+import {AuditCodeDetailTopId} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/defaultConstant"
+import {v4 as uuidv4} from "uuid"
+import {AuditEmiterYakUrlProps} from "../yakRunnerAuditCode/YakRunnerAuditCodeType"
+import {HoleBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -539,6 +558,10 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 // 重置执行结果数据
                 token.current = randomString(20)
                 onReset()
+                // 审计详情
+                handleCancelDetail()
+                // 重置审计结果表格数据
+                setAuditData([])
             }
         }
     }, [visible])
@@ -688,18 +711,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         return isExecuting || runtimeId
     }, [isExecuting, runtimeId])
 
-    const getTabsState = useMemo(() => {
-        const tabsState = [
-            {tabName: "漏洞与风险", type: "risk"},
-            {tabName: "日志", type: "log"},
-            {tabName: "Console", type: "console"}
-        ]
-        if (runtimeId) {
-            return [{tabName: "审计结果", type: "result"}, ...tabsState]
-        }
-        return tabsState
-    }, [runtimeId])
-
     const handleExecute = useMemoizedFn(async () => {
         try {
             await form.validateFields()
@@ -745,7 +756,63 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const handleStop = useMemoizedFn(() => {
         onStop()
     })
+
+    // 审计结果表格数据
+    const [auditData, setAuditData] = useState<SyntaxFlowResult[]>([])
+    const handleUpdateAuditData = useMemoizedFn((data: SyntaxFlowResult[]) => {
+        setAuditData(data)
+    })
     /** ---------- 规则代码调试 End ---------- */
+
+    /** ---------- 审计详情 Start ---------- */
+    const auditInfo = useRef<SyntaxFlowResult>()
+    const [auditDetailShow, setAuditDetailShow] = useState<boolean>(false)
+    const handleShowDetail = useMemoizedFn((info: SyntaxFlowResult) => {
+        if (auditDetailShow) return
+        auditInfo.current = cloneDeep(info)
+        setAuditDetailShow(true)
+    })
+    const handleCancelDetail = useMemoizedFn(() => {
+        auditInfo.current = undefined
+        setAuditDetailShow(false)
+    })
+
+    /** ---------- 审计详情 End ---------- */
+
+    const getTabsState = useMemo(() => {
+        const tabsState: HoldGRPCStreamProps.InfoTab[] = [
+            {tabName: "漏洞与风险", type: "risk"},
+            {tabName: "日志", type: "log"},
+            {tabName: "Console", type: "console"}
+        ]
+        if (runtimeId) {
+            return [
+                {
+                    tabName: "审计结果",
+                    type: "result",
+                    customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
+                },
+                ...tabsState
+            ]
+        }
+        return tabsState
+    }, [runtimeId])
+
+    const drawerTitle = useMemo(() => {
+        if (auditDetailShow)
+            return (
+                <div className={styles["drawer-title"]}>
+                    <YakitButton type='outline2' size='large' icon={<SolidReplyIcon />} onClick={handleCancelDetail}>
+                        返回
+                    </YakitButton>
+
+                    <div className={styles["title-style"]}>
+                        {`${isEdit ? "编辑" : "新建"}规则`} / <span className={styles["active-title"]}>审计详情</span>
+                    </div>
+                </div>
+            )
+        return `${isEdit ? "编辑" : "新建"}规则`
+    }, [isEdit, auditDetailShow])
 
     return (
         <YakitDrawer
@@ -757,7 +824,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             className={styles["edit-rule-drawer"]}
             bodyStyle={{padding: 0}}
             height={showHeight}
-            title={"新建规则"}
+            title={drawerTitle}
             extra={
                 <div className={styles["drawer-extra"]}>
                     {!isBuildInRule && (
@@ -773,7 +840,16 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             }
             visible={visible}
         >
-            <div className={styles["drawer-body"]}>
+            {/* 审计详情 */}
+            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: !auditDetailShow})}>
+                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                    {auditDetailShow && auditInfo.current && (
+                        <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
+                    )}
+                </React.Suspense>
+            </div>
+
+            <div className={classNames(styles["drawer-body"], {[styles["drawer-hidden"]]: auditDetailShow})}>
                 {/* 基础信息 */}
                 <div
                     className={classNames(styles["rule-info"], {
@@ -1311,6 +1387,435 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                     {oldGroup.length ? undefined : "添加分组"}
                 </YakitButton>
             </YakitPopover>
+        </div>
+    )
+})
+
+/** @name 规则编写-调试页面的审计详情 */
+const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) => {
+    const {auditData, info} = props
+
+    const currentInfo = useRef<SyntaxFlowResult>()
+
+    useEffect(() => {
+        if (info) {
+            currentInfo.current = info
+            handleFetchCodeTree()
+        }
+    }, [info])
+
+    /** ---------- 审计结果表格 Start ---------- */
+    const handleChangeInfo = useMemoizedFn((info: SyntaxFlowResult) => {
+        if (currentInfo.current?.ResultID === info.ResultID) {
+            return
+        }
+        currentInfo.current = info
+        handleFetchCodeTree()
+    })
+    /** ---------- 审计结果表格 End ---------- */
+
+    /** ---------- 代码树 Start ---------- */
+    const [loading, setLoading] = useState<boolean>(false)
+
+    const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
+    const [expandedKeys, setExpandedKeys] = useState<string[]>([])
+    const [foucsedKey, setFoucsedKey] = useState<string>("")
+    const [_AuditMap, {set: setAuditMap, get: getAuditMap, reset: resetAuditMap}] = useMap<string, AuditNodeMapProps>()
+    const [_AuditChildMap, {set: setAuditChildMap, get: getAuditChildMap, reset: resetAuditChildMap}] = useMap<
+        string,
+        string[]
+    >()
+
+    const getMapAuditChildDetail = (id: string) => {
+        return getAuditChildMap(id) || []
+    }
+    const getMapAuditDetail = (id: string): AuditNodeMapProps => {
+        return (
+            getAuditMap(id) || {
+                parent: null,
+                name: "读取失败",
+                isLeaf: true,
+                id: `${uuidv4()}-fail`,
+                ResourceType: "",
+                VerboseType: "",
+                Size: 0,
+                Extra: []
+            }
+        )
+    }
+    const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {
+        return ids.map((id) => {
+            const itemDetail = getMapAuditDetail(id)
+            let obj: AuditNodeProps = {...itemDetail, depth}
+            const childArr = getMapAuditChildDetail(id)
+
+            if (itemDetail.ResourceType === "variable" || itemDetail.ResourceType === AuditCodeDetailTopId) {
+                obj.children = initAuditTree(childArr, depth + 1)
+                // 数量为0时不展开 message除外
+                if (parseInt(obj.Size + "") === 0 && itemDetail.ResourceType !== AuditCodeDetailTopId) {
+                    obj.isLeaf = true
+                } else {
+                    obj.isLeaf = false
+                }
+            } else {
+                obj.isLeaf = true
+            }
+
+            return obj
+        })
+    })
+
+    const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const auditDetailTree = useMemo(() => {
+        const ids: string[] = getMapAuditChildDetail("/")
+        const initTree = initAuditTree(ids, 1)
+        // 归类排序
+        const initTreeLeaf = initTree.filter((item) => item.isLeaf)
+        const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
+        const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
+        if (newInitTree.length > 0) {
+            newInitTree.push({
+                parent: null,
+                name: "已经到底啦~",
+                id: "111",
+                depth: 1,
+                isBottom: true,
+                Extra: [],
+                ResourceType: "",
+                VerboseType: "",
+                Size: 0
+            })
+        }
+        return newInitTree
+    }, [refreshTree])
+
+    const handleResetCodeTree = useMemoizedFn(() => {
+        resetAuditChildMap()
+        resetAuditMap()
+        setExpandedKeys([])
+    })
+
+    const handleFetchCodeTree = useMemoizedFn(async () => {
+        if (!currentInfo.current) return
+        if (loading) return
+        try {
+            handleResetCodeTree()
+            handleResetAuditDetail()
+            setLoading(true)
+            setShowEmpty(false)
+            const path: string = "/"
+            const params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                ProgramName: currentInfo.current.ProgramName,
+                Path: "/",
+                Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
+            }
+            console.log("currentInfo.current", currentInfo.current)
+            const result = await loadAuditFromYakURLRaw(params)
+
+            if (result && result.Resources.length > 0) {
+                let messageIds: string[] = []
+                let variableIds: string[] = []
+                // 构造树结构
+                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                    // 警告信息（置顶显示）前端收集折叠
+                    if (ResourceType === "message") {
+                        const id = `${AuditCodeDetailTopId}${path}${VerboseName}-${index}`
+                        messageIds.push(id)
+                        setAuditMap(id, {
+                            parent: path,
+                            id,
+                            name: VerboseName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        })
+                    }
+                    // 变量
+                    if (ResourceType === "variable") {
+                        const id = `${path}${ResourceName}`
+                        variableIds.push(id)
+                        setAuditMap(id, {
+                            parent: path,
+                            id,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        })
+                    }
+                })
+                let topIds: string[] = []
+                if (messageIds.length > 0) {
+                    topIds.push(AuditCodeDetailTopId)
+                    setAuditMap(AuditCodeDetailTopId, {
+                        parent: path,
+                        id: AuditCodeDetailTopId,
+                        name: "message",
+                        ResourceType: AuditCodeDetailTopId,
+                        VerboseType: "",
+                        Size: 0,
+                        Extra: []
+                    })
+                    setAuditChildMap(AuditCodeDetailTopId, messageIds)
+                }
+                setAuditChildMap("/", [...topIds, ...variableIds])
+                setRefreshTree(!refreshTree)
+            } else {
+                setShowEmpty(true)
+            }
+            setLoading(false)
+        } catch (error: any) {
+            failed(`${error}`)
+            setShowEmpty(true)
+            setLoading(false)
+        }
+    })
+
+    const handleAuditLoadData = useMemoizedFn((id: string) => {
+        return new Promise(async (resolve, reject) => {
+            if (!currentInfo.current) {
+                reject("")
+                return
+            }
+            // 校验其子项是否存在
+            const childArr = getMapAuditChildDetail(id)
+            if (id === AuditCodeDetailTopId) {
+                resolve("")
+                return
+            }
+            if (childArr.length > 0) {
+                setRefreshTree(!refreshTree)
+                resolve("")
+            } else {
+                const path = id
+                const params: AuditYakUrlProps = {
+                    Schema: "syntaxflow",
+                    ProgramName: currentInfo.current.ProgramName,
+                    Path: path,
+                    Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
+                }
+                const result = await loadAuditFromYakURLRaw(params)
+                if (result) {
+                    let variableIds: string[] = []
+                    result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                        const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                        let value: string = `${index}`
+                        const arr = Extra.filter((item) => item.Key === "index")
+                        if (arr.length > 0) {
+                            value = arr[0].Value
+                        }
+                        const newId = `${id}/${value}`
+                        variableIds.push(newId)
+                        setAuditMap(newId, {
+                            parent: path,
+                            id: newId,
+                            name: ResourceName,
+                            ResourceType,
+                            VerboseType,
+                            Size,
+                            Extra
+                        })
+                    })
+                    setAuditChildMap(path, variableIds)
+                    setTimeout(() => {
+                        setRefreshTree(!refreshTree)
+                        resolve("")
+                    }, 300)
+                } else {
+                    reject()
+                }
+            }
+        })
+    })
+    const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
+        if (node.parent === null) return Promise.reject()
+        if (handleAuditLoadData) return handleAuditLoadData(node.id)
+        return Promise.reject()
+    })
+    /** ---------- 代码树 End ---------- */
+
+    /** ---------- 审计详情信息 Start ---------- */
+    const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
+    const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
+
+    const bugHash = useRef<string>()
+    const [bugId, setBugId] = useState<string>()
+    const onJump = useMemoizedFn((node: AuditNodeProps) => {
+        // 预留打开BUG详情
+        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
+            try {
+                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+                if (arr.length > 0) {
+                    const hash = arr[0].Value
+                    bugHash.current = hash
+                    setShowAuditDetail(true)
+                    setBugId(node.id)
+                }
+            } catch (error) {
+                failed(`打开错误${error}`)
+            }
+        }
+        if (node.ResourceType === "value") {
+            if (!currentInfo.current) return
+            setBugId(undefined)
+            setFoucsedKey(node.id)
+            const rightParams: AuditEmiterYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: currentInfo.current.ProgramName,
+                Path: node.id,
+                Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
+            }
+            setAuditRightParams(rightParams)
+            setShowAuditDetail(true)
+        }
+    })
+    const handleResetAuditDetail = useMemoizedFn(() => {
+        setAuditRightParams(undefined)
+        setShowAuditDetail(false)
+        bugHash.current = undefined
+        setBugId(undefined)
+    })
+    /** ---------- 审计详情信息 End ---------- */
+
+    return (
+        <div className={styles["rule-debug-audit-detail"]}>
+            <div className={styles["audit-list"]}>
+                <RuleDebugAuditList auditData={auditData} onDetail={handleChangeInfo} />
+            </div>
+
+            <div className={styles["code-tree"]}>
+                <div className={styles["code-tree-header"]}>
+                    <div className={styles["header-title"]}>
+                        <div className={styles["title-style"]}>{currentInfo.current?.Title || "-"}</div>
+
+                        <div className={styles["advice-icon"]}>
+                            <OutlineLightbulbIcon />
+                        </div>
+                    </div>
+                    {currentInfo.current?.Description && (
+                        <div className={styles["description-title"]}>{currentInfo.current.Description}</div>
+                    )}
+                </div>
+
+                {isShowEmpty ? (
+                    <div className={styles["no-data"]}>暂无数据</div>
+                ) : (
+                    <AuditTree
+                        data={auditDetailTree}
+                        expandedKeys={expandedKeys}
+                        setExpandedKeys={setExpandedKeys}
+                        onLoadData={onLoadData}
+                        foucsedKey={foucsedKey}
+                        setFoucsedKey={setFoucsedKey}
+                        onJump={onJump}
+                        onlyJump={true}
+                        wrapClassName={styles["code-tree-wrap"]}
+                        bugId={bugId}
+                    />
+                )}
+            </div>
+
+            <div className={styles["audit-detail"]}>
+                {isShowAuditDetail ? (
+                    <>
+                        {bugId && bugHash.current ? (
+                            <HoleBugDetail bugHash={bugHash.current} />
+                        ) : (
+                            <RightAuditDetail
+                                auditRightParams={auditRightParams}
+                                isShowAuditDetail={isShowAuditDetail}
+                                setShowAuditDetail={setShowAuditDetail}
+                            />
+                        )}
+                    </>
+                ) : (
+                    <div className={styles["no-audit"]}>
+                        <YakitEmpty title='暂无数据' description='请选择左边内容' />
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+})
+
+/** @name 规则编写-调试页面-审计结果列表 */
+const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
+    const {auditData, onDetail} = props
+
+    const dataLength = useMemo(() => {
+        return auditData.length
+    }, [auditData])
+
+    const [data, setData] = useState<SyntaxFlowResult[]>(auditData)
+    const [search, setSearch] = useState<string>("")
+    const handleSearch = useDebounceFn(
+        (value: string) => {
+            setData(auditData.filter((item) => item.Title.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) > -1))
+        },
+        {wait: 300}
+    ).run
+
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const bodyRef = useRef<HTMLDivElement>(null)
+    const [list] = useVirtualList(data, {
+        containerTarget: wrapperRef,
+        wrapperTarget: bodyRef,
+        itemHeight: 40,
+        overscan: 10
+    })
+
+    return (
+        <div className={styles["rule-debug-audit-list"]}>
+            <div className={styles["audit-list-header"]}>
+                <div className={styles["header-title"]}>
+                    <span className={styles["title-style"]}>审计结果列表</span>
+                    <YakitRoundCornerTag>{dataLength || 0}</YakitRoundCornerTag>
+                </div>
+            </div>
+
+            <div className={styles["audit-list-search"]}>
+                <YakitInput.Search
+                    placeholder='请输入关键词搜索'
+                    wrapperStyle={{width: "100%"}}
+                    size='large'
+                    onSearch={handleSearch}
+                    onPressEnter={() => {
+                        handleSearch(search)
+                    }}
+                    value={search}
+                    onChange={(e) => {
+                        const {value} = e.target
+                        setSearch(value)
+                    }}
+                />
+            </div>
+
+            <div ref={wrapperRef} className={styles["audit-list-wrapper"]}>
+                <div ref={bodyRef}>
+                    {list.map((item) => {
+                        const {ResultID, Title, Severity} = item.data
+                        const title = SeverityMapTag.find((item) => item.key.includes(Severity || ""))
+                        return (
+                            <div className={classNames(styles["audit-opt"])} onClick={() => onDetail(item.data)}>
+                                <YakitRoundCornerTag>{ResultID}</YakitRoundCornerTag>
+                                <div
+                                    className={classNames(styles["opt-title"], "yakit-content-single-ellipsis")}
+                                    title={Title || "-"}
+                                >
+                                    {Title || "-"}
+                                </div>
+                                <YakitTag color={title?.tag as YakitTagColor} className={styles["table-severity-tag"]}>
+                                    {title ? title.name : Severity || "-"}
+                                </YakitTag>
+                            </div>
+                        )
+                    })}
+                </div>
+            </div>
         </div>
     )
 })

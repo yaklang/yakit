@@ -51,7 +51,7 @@ import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/
 import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
-import { CodeScanResult } from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
+import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
 
 const {TabPane} = PluginTabs
 
@@ -143,7 +143,8 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 }
                 return <PluginExecuteCode content={textInfo.content} />
             case "result":
-                return <CodeScanResult isExecuting={loading} runtimeId={runtimeId} />
+                const {customProps} = ele
+                return <CodeScanResult {...(customProps || {})} isExecuting={loading} runtimeId={runtimeId} />
             default:
                 return <></>
         }
@@ -316,7 +317,7 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
 })
 /** 基础插件信息 / 日志 */
 export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((props) => {
-    const {loading, messageList,wrapperClassName} = props
+    const {loading, messageList, wrapperClassName} = props
     const [activeKey, setActiveKey] = useState<string>("plugin-log")
 
     const list: StreamResult.Log[] = useCreation(() => {
@@ -385,7 +386,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
                 activeKey={activeKey}
                 onChange={onTabChange}
                 type='line'
-                wrapperClassName={classNames(styles["plugin-execute-log"],wrapperClassName)}
+                wrapperClassName={classNames(styles["plugin-execute-log"], wrapperClassName)}
             >
                 {logTabs.map((ele) => (
                     <TabPane

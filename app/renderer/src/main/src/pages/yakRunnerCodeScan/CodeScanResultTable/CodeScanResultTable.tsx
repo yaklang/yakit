@@ -1,10 +1,8 @@
 import React, {Ref, useEffect, useRef, useState} from "react"
 import {Divider, Tooltip} from "antd"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import styles from "./CodeScanResultTable.module.scss"
-import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
+import {yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -15,9 +13,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {apiFetchQuerySyntaxFlowResult} from "../utils"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
+import {genDefaultPagination} from "@/pages/invoker/schema"
 import {OutlineArrowcirclerightIcon, OutlineRefreshIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import ReactResizeDetector from "react-resize-detector"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
@@ -26,13 +23,8 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {SeverityMapTag} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {addToTab} from "@/pages/MainTabs"
-import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {AuditTree} from "@/pages/yakRunnerAuditCode/AuditCode/AuditCode"
-import {AuditCodeDetailDrawer} from "../AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
-const {ipcRenderer} = window.require("electron")
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
@@ -52,10 +44,7 @@ export const verifyOrder = (pagination: Paging, AfterID?: number) => {
     return {pagination, isReverse}
 }
 
-export interface CodeScanResultTableProps {
-    runtimeId: string
-    isExecuting: boolean
-    onOpenCodeDetailDrawer: (v: SyntaxFlowResult) => void
+export interface CodeScanResultTableProps extends CodeScanResultProp {
     inViewport?: boolean
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?: (i: boolean) => void
@@ -66,13 +55,14 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
     const {
         runtimeId,
         isExecuting,
-        onOpenCodeDetailDrawer,
+        onDetail,
         inViewport,
         onlyShowFirstNode,
         setOnlyShowFirstNode,
-        refresh
+        refresh,
+        updateDataCallback
     } = props
-    const [data, setData, getData] = useGetState<SyntaxFlowResult[]>([])
+    const [data, setData] = useState<SyntaxFlowResult[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     // 最新一条数据ID
     const maxIdRef = useRef<number>(0)
@@ -136,6 +126,10 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
     useUpdateEffect(() => {
         setData([])
     }, [runtimeId])
+
+    useEffect(() => {
+        updateDataCallback && updateDataCallback(data)
+    }, [data])
 
     const getAddDataByGrpc = useMemoizedFn((query) => {
         if (!isLoop) return
@@ -521,7 +515,7 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
                             type='text2'
                             onClick={(e) => {
                                 e.stopPropagation()
-                                onOpenCodeDetailDrawer(rowData)
+                                onDetail && onDetail(rowData)
                             }}
                             icon={<OutlineArrowcirclerightIcon />}
                         />
@@ -727,60 +721,18 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
 interface CodeScanResultProp {
     runtimeId: string
     isExecuting: boolean
+    onDetail?: (info: SyntaxFlowResult) => void
+    /** data 更新后触发的 callback 方法 */
+    updateDataCallback?: (data: SyntaxFlowResult[]) => void
 }
 
 export const CodeScanResult: React.FC<CodeScanResultProp> = (props) => {
-    const {runtimeId, isExecuting} = props
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
-    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
-    // 审计详情抽屉
-    const [visibleAuditCode, setVisibleAuditCode] = useState<boolean>(false)
-    const [rowData, setRowData] = useState<SyntaxFlowResult>()
-    const onOpenCodeDetailDrawer = (row: SyntaxFlowResult) => {
-        setVisibleAuditCode(true)
-        setRowData(row)
-    }
 
     return (
         <div className={styles["code-scan-result"]} ref={ref}>
-            <YakitResizeBox
-                firstNode={() => (
-                    <div
-                        style={{
-                            height: "100%"
-                        }}
-                    >
-                        <CodeScanResultTable
-                            runtimeId={runtimeId}
-                            inViewport={inViewport}
-                            onlyShowFirstNode={onlyShowFirstNode}
-                            setOnlyShowFirstNode={setOnlyShowFirstNode}
-                            isExecuting={isExecuting}
-                            onOpenCodeDetailDrawer={onOpenCodeDetailDrawer}
-                        />
-                    </div>
-                )}
-                firstMinSize={160}
-                isVer={true}
-                freeze={!onlyShowFirstNode}
-                firstRatio={onlyShowFirstNode ? "100%" : undefined}
-                secondNodeStyle={{
-                    padding: onlyShowFirstNode ? 0 : undefined,
-                    display: onlyShowFirstNode ? "none" : ""
-                }}
-                secondMinSize={50}
-                secondNode={() => <></>}
-            />
-            <React.Suspense fallback={<>loading...</>}>
-                {visibleAuditCode && rowData && (
-                    <AuditCodeDetailDrawer
-                        rowData={rowData}
-                        visible={visibleAuditCode}
-                        setVisible={setVisibleAuditCode}
-                    />
-                )}
-            </React.Suspense>
+            <CodeScanResultTable {...props} inViewport={inViewport} onlyShowFirstNode={true} />
         </div>
     )
 }

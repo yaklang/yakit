@@ -1,10 +1,7 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMap, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import React, {useEffect, useMemo, useState} from "react"
+import {useMap, useMemoizedFn} from "ahooks"
 import styles from "./AuditCodeDetailDrawer.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
-import classNames from "classnames"
+import {failed} from "@/utils/notification"
 import {SyntaxFlowResult} from "../YakRunnerCodeScanType"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -19,18 +16,16 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {RightAuditDetail} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {Risk} from "@/pages/risks/schema"
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
-import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
+import {AuditCodeDetailTopId} from "./defaultConstant"
 const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
     visible: boolean
     setVisible: (b: boolean) => void
 }
-
-const TopId = "top-message-code-scan"
 
 export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (props) => {
     const {rowData, visible, setVisible} = props
@@ -77,10 +72,10 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
             let obj: AuditNodeProps = {...itemDetail, depth}
             const childArr = getMapAuditChildDetail(id)
 
-            if (itemDetail.ResourceType === "variable" || itemDetail.ResourceType === TopId) {
+            if (itemDetail.ResourceType === "variable" || itemDetail.ResourceType === AuditCodeDetailTopId) {
                 obj.children = initAuditTree(childArr, depth + 1)
                 // 数量为0时不展开 message除外
-                if (parseInt(obj.Size + "") === 0 && itemDetail.ResourceType !== TopId) {
+                if (parseInt(obj.Size + "") === 0 && itemDetail.ResourceType !== AuditCodeDetailTopId) {
                     obj.isLeaf = true
                 } else {
                     obj.isLeaf = false
@@ -120,7 +115,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
         return new Promise(async (resolve, reject) => {
             // 校验其子项是否存在
             const childArr = getMapAuditChildDetail(id)
-            if (id === TopId) {
+            if (id === AuditCodeDetailTopId) {
                 resolve("")
                 return
             }
@@ -204,7 +199,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                     const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
                     // 警告信息（置顶显示）前端收集折叠
                     if (ResourceType === "message") {
-                        const id = `${TopId}${path}${VerboseName}-${index}`
+                        const id = `${AuditCodeDetailTopId}${path}${VerboseName}-${index}`
                         messageIds.push(id)
                         setAuditMap(id, {
                             parent: path,
@@ -233,17 +228,17 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                 })
                 let topIds: string[] = []
                 if (messageIds.length > 0) {
-                    topIds.push(TopId)
-                    setAuditMap(TopId, {
+                    topIds.push(AuditCodeDetailTopId)
+                    setAuditMap(AuditCodeDetailTopId, {
                         parent: path,
-                        id: TopId,
+                        id: AuditCodeDetailTopId,
                         name: "message",
-                        ResourceType: TopId,
+                        ResourceType: AuditCodeDetailTopId,
                         VerboseType: "",
                         Size: 0,
                         Extra: []
                     })
-                    setAuditChildMap(TopId, messageIds)
+                    setAuditChildMap(AuditCodeDetailTopId, messageIds)
                 }
                 setAuditChildMap("/", [...topIds, ...variableIds])
                 setRefreshTree(!refreshTree)

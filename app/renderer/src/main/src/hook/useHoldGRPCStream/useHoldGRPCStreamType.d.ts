@@ -34,6 +34,7 @@ export declare namespace HoldGRPCStreamProps {
     export interface InfoTab {
         tabName: string
         type: string
+        customProps?: Record<string, any>
     }
 
     /** @name hook输出数据信息-自定义table */
