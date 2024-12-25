@@ -1600,17 +1600,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             updateData()
         }, 100)
     })
-    useEffect(() => {
-        /**
-         * 清空log表格数据
-         */
-        pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
-        pageType === "MITM" && emiter.on("cleanMitmLogEvent", cleanLogTableData)
-        return () => {
-            emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
-            emiter.off("cleanMitmLogEvent", cleanLogTableData)
-        }
-    }, [])
 
     const onColorSure = useMemoizedFn(() => {
         if (isShowColor) {
@@ -3660,6 +3649,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
             emiter.on("onMitmSearchInputVal", onMitmSearchInputVal)
             emiter.on("onMitmCurProcess", onMitmCurProcess)
+            emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+            emiter.on("cleanMitmLogEvent", cleanLogTableData)
         }
         return () => {
             if (pageType === "MITM") {
@@ -3667,6 +3658,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("onMitmClearFromPlugin", onMitmClearFromPlugin)
                 emiter.off("onMitmSearchInputVal", onMitmSearchInputVal)
                 emiter.off("onMitmCurProcess", onMitmCurProcess)
+                emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+                emiter.off("cleanMitmLogEvent", cleanLogTableData)
             }
         }
     }, [pageType])
