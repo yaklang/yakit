@@ -294,19 +294,15 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 case "codec":
                     return isHiddenCustomParams ? null : (
                         <>
-                            {!isHiddenCustomParams ? (
-                                <>
-                                    <div className={styles["additional-params-divider"]}>
-                                        <div className={styles["text-style"]}>自定义参数 (非必填)</div>
-                                        <div className={styles["divider-style"]}></div>
-                                    </div>
-                                    <ExtraParamsNodeByType
-                                        extraParamsGroup={groupParams}
-                                        pluginType={type}
-                                        jsonSchemaListRef={jsonSchemaListRef}
-                                    />
-                                </>
-                            ) : null}
+                            <div className={styles["additional-params-divider"]}>
+                                <div className={styles["text-style"]}>自定义参数 (非必填)</div>
+                                <div className={styles["divider-style"]}></div>
+                            </div>
+                            <ExtraParamsNodeByType
+                                extraParamsGroup={groupParams}
+                                pluginType={type}
+                                jsonSchemaListRef={jsonSchemaListRef}
+                            />
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </>
                     )
