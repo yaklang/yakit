@@ -24,11 +24,11 @@ const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
     visible: boolean
-    setVisible: (b: boolean) => void
+    handleCancelDetail: () => void
 }
 
 export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (props) => {
-    const {rowData, visible, setVisible} = props
+    const {rowData, visible, handleCancelDetail} = props
 
     const [value, setValue] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -63,7 +63,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     }
 
     const onClose = useMemoizedFn(() => {
-        setVisible(false)
+        handleCancelDetail()
     })
 
     const initAuditTree = useMemoizedFn((ids: string[], depth: number) => {

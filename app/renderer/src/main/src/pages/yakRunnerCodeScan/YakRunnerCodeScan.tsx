@@ -10,6 +10,7 @@ import {
     CodeScanGroupByKeyWordItemProps,
     CodeScanGroupByKeyWordProps,
     FlowRuleDetailsListItemProps,
+    SyntaxFlowResult,
     SyntaxFlowScanExecuteState,
     SyntaxFlowScanModeType,
     SyntaxFlowScanRequest,
@@ -82,6 +83,8 @@ import {
     SyntaxFlowGroup,
     SyntaxFlowRule
 } from "../ruleManagement/RuleManagementType"
+import cloneDeep from "lodash/cloneDeep"
+import { AuditCodeDetailDrawer } from "./AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1173,6 +1176,19 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             })
         })
 
+        // 审计详情抽屉
+        const auditInfo = useRef<SyntaxFlowResult>()
+        const [auditDetailShow, setAuditDetailShow] = useState<boolean>(false)
+        const handleShowDetail = useMemoizedFn((info: SyntaxFlowResult)=>{
+            if (auditDetailShow) return
+            auditInfo.current = cloneDeep(info)
+            setAuditDetailShow(true)
+        })
+        const handleCancelDetail = useMemoizedFn(() => {
+            auditInfo.current = undefined
+            setAuditDetailShow(false)
+        })
+
         const getTabsState = useMemo(() => {
             const tabsState = [
                 {tabName: "漏洞与风险", type: "risk"},
@@ -1180,7 +1196,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 {tabName: "Console", type: "console"}
             ]
             if (runtimeId) {
-                return [{tabName: "审计结果", type: "result"}, ...tabsState]
+                return [{tabName: "审计结果", type: "result",customProps: {onDetail: handleShowDetail}}, ...tabsState]
             }
             return tabsState
         }, [runtimeId])
@@ -1333,6 +1349,16 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         defaultActiveKey={undefined}
                     />
                 )}
+
+            <React.Suspense fallback={<>loading...</>}>
+                {auditDetailShow && auditInfo.current && (
+                    <AuditCodeDetailDrawer
+                        rowData={auditInfo.current}
+                        visible={auditDetailShow}
+                        handleCancelDetail={handleCancelDetail}
+                    />
+                )}
+            </React.Suspense>
             </>
         )
     })
