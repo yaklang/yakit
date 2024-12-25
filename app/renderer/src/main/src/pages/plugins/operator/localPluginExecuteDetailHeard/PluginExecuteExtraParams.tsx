@@ -85,6 +85,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                         onSave({customValue: formValue, fixedValue: {...defPluginExecuteFormValue}})
                     })
                     break
+                case "codec":
                 case "mitm":
                     form.validateFields().then((formValue: HTTPRequestBuilderParams) => {
                         if (formValue.Path) {
@@ -107,7 +108,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
             }
         })
 
-        /**yak/lua根据后端返的生成;mitm/port-scan/nuclei前端固定;codec没有额外参数*/
+        /**yak/lua根据后端返的生成;mitm/port-scan/nuclei/codec前端固定;*/
         const pluginParamsNodeByPluginType = (type: string) => {
             switch (type) {
                 case "yak":
@@ -118,6 +119,7 @@ const PluginExecuteExtraParams: React.FC<PluginExecuteExtraParamsProps> = React.
                             <div className={styles["to-end"]}>已经到底啦～</div>
                         </Form>
                     )
+                case "codec":
                 case "mitm":
                     return (
                         <Form size='small' labelWrap={true} labelCol={{span: 8}} wrapperCol={{span: 16}} form={form}>
