@@ -135,8 +135,8 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
                     oldBase.current = oldInfo
                     newBase.current = newInfo
 
-                    //获取参数信息(yak 和 mitm 插件类型独有)
-                    const paramsList = ["yak", "mitm"].includes(res.type)
+                    //获取参数信息(yak 和 mitm, codec插件类型独有)
+                    const paramsList = ["yak", "mitm", "codec"].includes(res.type)
                         ? await onCodeToInfo({type: res.type, code: res.content})
                         : {CliParameter: []}
                     setPlugin({
@@ -230,7 +230,7 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
                         )
                     }
                     // 源码-获取参数信息
-                    if (["yak", "mitm"].includes(data.Type) && codeAnalysis) {
+                    if (["yak", "mitm", "codec"].includes(data.Type) && codeAnalysis) {
                         data.Params = codeAnalysis.CliParameter || []
                         data.PluginEnvKey = codeAnalysis.PluginEnvKey || []
                     }
