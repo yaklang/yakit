@@ -2385,6 +2385,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             } else if (item === "响应包") {
                 header.push(item)
                 filterVal.push("Response")
+            } else if (item === "序号") {
+                header.push(item)
+                filterVal.push("Id")
             } else {
                 const itemData = configColumnRef.current.filter((itemIn) => itemIn.title === item)[0]
                 header.push(item)
