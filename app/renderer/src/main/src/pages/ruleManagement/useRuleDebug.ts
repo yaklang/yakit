@@ -82,7 +82,6 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
             if (res) {
-                console.log("res", res?.Status)
                 const data = res.ExecResult
 
                 if (!!res.Status) {
@@ -163,7 +162,7 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
             ipcRenderer.removeAllListeners(`${token}-error`)
             ipcRenderer.removeAllListeners(`${token}-end`)
         }
-    }, [])
+    }, [token])
 
     /** 当前执行的参数数据 */
     const currentRequest = useRef<SyntaxFlowScanRequest>()
@@ -173,7 +172,6 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
         return new Promise<undefined>((resolve, reject) => {
             handleReset()
             currentRequest.current = cloneDeep(request)
-            console.log("SyntaxFlowScan-start", JSON.stringify(request))
             apiSyntaxFlowScan(request, token)
                 .then(() => {
                     setExecuteStatus("process")
@@ -193,10 +191,6 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
                 reject("暂停失败，请求参数为空!")
                 return
             }
-            console.log(
-                "SyntaxFlowScan-pause",
-                JSON.stringify({...currentRequest.current, ControlMode: "pause", ResumeTaskId: runtimeId})
-            )
             apiSyntaxFlowScan({...currentRequest.current, ControlMode: "pause", ResumeTaskId: runtimeId}, token)
                 .then(() => {
                     resolve(undefined)

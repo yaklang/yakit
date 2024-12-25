@@ -29,6 +29,7 @@ import {grpcDeleteLocalRule, grpcFetchLocalRuleList} from "./api"
 import {RuleLanguageList, RuleType, RuleTypeList} from "@/defaultConstants/RuleManagement"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {Tooltip} from "antd"
+import useGetSetState from "../pluginHub/hooks/useGetSetState"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -50,7 +51,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     /** ---------- 搜索/获取表格数据 Start ---------- */
     const [loading, setLoading] = useState<boolean>(false)
-    const [filters, setFilters] = useState<SyntaxFlowRuleFilter>({})
+    const [filters, setFilters, getFilters] = useGetSetState<SyntaxFlowRuleFilter>({})
     const [data, setData] = useState<QuerySyntaxFlowRuleResponse>({
         Rule: [],
         Pagination: {...genDefaultPagination(20)},
@@ -100,10 +101,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
             const pagination: Paging = {...DefaultPaging, Page: page || 1}
             setLoading(true)
-            grpcFetchLocalRuleList({Pagination: pagination, Filter: cloneDeep(filters)})
+            grpcFetchLocalRuleList({Pagination: pagination, Filter: cloneDeep(getFilters())})
                 .then((res) => {
                     const {Pagination, Rule, Total} = res
-                    console.log("QuerySyntaxFlowRule-response", res)
                     const rules = pagination.Page === 1 ? Rule : (data?.Rule || []).concat(Rule)
                     setData({
                         Pagination: {
@@ -378,7 +378,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     })
 
     return (
-        <WaterMark content={waterMarkStr} className={styles["water-mark"]}>
+        <WaterMark content={waterMarkStr || ""} className={styles["water-mark"]}>
             <div ref={wrapperRef} className={styles["rule-management-page"]}>
                 <div className={styles["rule-management-group"]}>
                     <div className={styles["group-list"]}>

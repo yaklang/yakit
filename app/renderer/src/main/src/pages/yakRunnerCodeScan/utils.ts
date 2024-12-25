@@ -16,6 +16,7 @@ const {ipcRenderer} = window.require("electron")
 export const apiSyntaxFlowScan: (params: SyntaxFlowScanRequest, token: string) => Promise<null> = (params, token) => {
     return new Promise((resolve, reject) => {
         try {
+            console.log("apiSyntaxFlowScan", params, token)
             ipcRenderer
                 .invoke(
                     "SyntaxFlowScan",
@@ -40,6 +41,7 @@ export const apiSyntaxFlowScan: (params: SyntaxFlowScanRequest, token: string) =
  */
 export const apiCancelSyntaxFlowScan: (token: string) => Promise<null> = (token) => {
     return new Promise((resolve, reject) => {
+        console.log("apiCancelSyntaxFlowScan", token)
         ipcRenderer
             .invoke(`cancel-SyntaxFlowScan`, token)
             .then(() => {

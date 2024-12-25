@@ -304,12 +304,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
             </div>
 
             <div className={styles["list-search"]}>
-                <YakitInput.Search
-                    size='large'
-                    allowClear={true}
-                    placeholder='请输入规则关键词'
-                    onSearch={handleSearch}
-                />
+                <YakitInput.Search size='large' allowClear={true} placeholder='请输入组名' onSearch={handleSearch} />
             </div>
 
             <div className={styles["list-container"]}>
@@ -362,7 +357,15 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
                                                         }}
                                                     />
                                                     <SolidFolderopenIcon />
-                                                    <span className={styles["title-style"]}>{data.GroupName}</span>
+                                                    <span
+                                                        className={classNames(
+                                                            styles["title-style"],
+                                                            "yakit-content-single-ellipsis"
+                                                        )}
+                                                        title={data.GroupName}
+                                                    >
+                                                        {data.GroupName}
+                                                    </span>
                                                 </div>
 
                                                 <div className={styles["total-style"]}>{data.Count}</div>
@@ -594,6 +597,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             })
             .catch(() => {})
             .finally(() => {})
+    })
+    const [groupSearch, setGroupSearch] = useState<string>("")
+    const handleGroupSearchChange = useMemoizedFn((val: string) => {
+        if (val.trim().length > 50) return
+        setGroupSearch(val)
     })
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -875,7 +883,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 name={"RuleName"}
                                 rules={[{required: true, message: "规则名必填"}]}
                             >
-                                <YakitInput placeholder='请输入规则名' disabled={isEdit || isBuildInRule} />
+                                <YakitInput
+                                    maxLength={100}
+                                    placeholder='请输入规则名'
+                                    disabled={isEdit || isBuildInRule}
+                                />
                             </Form.Item>
 
                             <Form.Item
@@ -899,8 +911,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 <YakitSelect
                                     mode='tags'
                                     placeholder='请选择分组'
+                                    allowClear={true}
                                     disabled={isBuildInRule}
                                     options={groups}
+                                    searchValue={groupSearch}
+                                    onSearch={handleGroupSearchChange}
+                                    onChange={() => {
+                                        setGroupSearch("")
+                                    }}
                                 />
                             </Form.Item>
 
@@ -908,6 +926,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 <YakitInput.TextArea
                                     disabled={isBuildInRule}
                                     isShowResize={false}
+                                    maxLength={200}
+                                    showCount={true}
                                     autoSize={{minRows: 2, maxRows: 4}}
                                 />
                             </Form.Item>
@@ -983,7 +1003,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
                             <div
                                 tabIndex={activeTab === "debug" ? 1 : -1}
-                                className={classNames(styles["tab-pane-show"], {
+                                className={classNames(styles["tab-pane-show"], styles["tab-pane-execute"], {
                                     [styles["tab-pane-hidden"]]: activeTab !== "debug"
                                 })}
                             >
@@ -1330,6 +1350,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                         <div className={styles["search-input"]}>
                             <YakitInput
                                 placeholder='输入关键字...'
+                                maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
                                 allowClear={true}
@@ -1349,7 +1370,12 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                             {showGroup.length === 0 && search && (
                                 <div className={styles["group-list-item"]}>
                                     <YakitCheckbox onChange={handleCheckboxCreate} />
-                                    <span className={styles["title-style"]}>新增分组"{search}"</span>
+                                    <span
+                                        className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
+                                        title={search}
+                                    >
+                                        新增分组 "{search}"
+                                    </span>
                                 </div>
                             )}
                             {showGroup.map((item) => {
@@ -1357,10 +1383,17 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                                 const isCheck =
                                     [...addGroup, ...removeGroup].findIndex((item) => item.GroupName === GroupName) > -1
                                 return (
-                                    <div key={item.GroupName} className={styles["group-list-item"]}>
+                                    <div
+                                        key={item.GroupName}
+                                        className={styles["group-list-item"]}
+                                        onClick={() => {
+                                            handleCheck(!isCheck, item)
+                                        }}
+                                    >
                                         <YakitCheckbox
                                             checked={isCheck}
                                             onChange={(e) => {
+                                                e.stopPropagation()
                                                 handleCheck(e.target.checked, item)
                                             }}
                                         />

@@ -83,7 +83,10 @@ export const grpcFetchLocalRuleList: APIFunc<QuerySyntaxFlowRuleRequest, QuerySy
         console.log(`QuerySyntaxFlowRule-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("QuerySyntaxFlowRule", request)
-            .then(resolve)
+            .then((res) => {
+                console.log("QuerySyntaxFlowRule-response", res)
+                resolve(res)
+            })
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "查询本地规则组失败:" + e)
                 reject(e)

@@ -162,6 +162,9 @@
         cursor: pointer;
 
         .info-wrapper {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 6px;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -171,6 +174,8 @@
                 color: #ffb660;
             }
             .title-style {
+                flex: 1;
+                overflow: hidden;
                 color: #31343f;
                 font-size: 12px;
                 font-weight: 600;
@@ -342,6 +347,10 @@
                             display: none;
                         }
                     }
+
+                    .ant-select-selector {
+                        overflow: hidden;
+                    }
                 }
             }
         }
@@ -389,8 +398,10 @@
         .code-body {
             flex: 1;
             overflow: hidden;
-            padding: 0px 12px;
+            margin: 0px 12px;
             display: flex;
+            border: 1px solid #eaecf3;
+            border-radius: 4px;
 
             .code-tab {
                 flex: 1;
@@ -418,6 +429,9 @@
                     }
                 }
 
+                .tab-pane-execute {
+                    padding: 0 12px 6px 12px;
+                }
                 .tab-pane-empty {
                     flex: 1;
                     display: flex;
@@ -538,6 +552,8 @@
                 overflow: hidden;
                 cursor: pointer;
                 .title-style {
+                    flex: 1;
+                    overflow: hidden;
                     font-size: 12px;
                     color: #31343f;
                     line-height: 16px;
