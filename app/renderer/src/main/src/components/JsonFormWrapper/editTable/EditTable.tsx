@@ -1,19 +1,18 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useMemoizedFn} from "ahooks"
 import styles from "./EditTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {Form, Input, InputNumber, Table, Tooltip, Typography} from "antd"
+import {Form, FormInstance, Input, InputNumber, Table, Tooltip, Typography} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
+import {ArrowsAltOutlined, InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {v4 as uuidv4} from "uuid"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
 import {CheckCircleIcon} from "@/assets/newIcon"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 interface Item {
     _id: string
@@ -27,12 +26,13 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     required: boolean
     type?: CellTypeProps
     selectOption: DefaultOptionType[]
+    UiStyle?: UiKeyProps
     dataIndex: string
     title: any
-    inputType: "number" | "text"
     record: Item
     index: number
     children: React.ReactNode
+    form: FormInstance<any>
 }
 
 const EditableCell: React.FC<EditableCellProps> = ({
@@ -40,22 +40,64 @@ const EditableCell: React.FC<EditableCellProps> = ({
     required,
     type,
     selectOption,
+    UiStyle,
     dataIndex,
     title,
-    inputType,
     record,
     index,
     children,
+    form,
     ...restProps
 }) => {
     const getNode = useMemoizedFn(() => {
-        switch (type) {
-            case "string":
-                return selectOption.length > 0 ? <YakitSelect options={selectOption} /> : <YakitInput />
-            case "boolean":
-                return <YakitSwitch />
-            default:
-                return <YakitInput />
+        if (UiStyle && UiStyle?.["ui:widget"]) {
+            switch (UiStyle["ui:widget"]) {
+                case "textarea":
+                    return (
+                        <YakitInput
+                            className={styles["input-textarea"]}
+                            suffix={
+                                <ArrowsAltOutlined
+                                    onClick={() => {
+                                        const str = form.getFieldValue(dataIndex)
+                                        let val = form.getFieldValue(dataIndex)
+                                        const m = showYakitModal({
+                                            title: `编辑 ${title}`,
+                                            centered: true,
+                                            content: (
+                                                <YakitInput.TextArea
+                                                    defaultValue={str}
+                                                    placeholder={`请输入 ${title}`}
+                                                    onChange={(e) => {
+                                                        val = e.target.value
+                                                    }}
+                                                />
+                                            ),
+                                            bodyStyle: {padding: 24},
+                                            onOk: () => {
+                                                form.setFieldsValue({
+                                                    [dataIndex]: val
+                                                })
+                                                m.destroy()
+                                            }
+                                        })
+                                    }}
+                                />
+                            }
+                        />
+                    )
+                default:
+                    return <YakitInput />
+            }
+        } else {
+            switch (type) {
+                case "string":
+                    return selectOption.length > 0 ? <YakitSelect options={selectOption} /> : <YakitInput />
+                case "boolean":
+                    return <YakitSwitch />
+                default:
+                    return <YakitInput />
+            }
         }
     })
 
@@ -95,20 +137,37 @@ interface itemsProps {
     require: string[]
 }
 
-export interface columnSchemaProps {
+interface UiKeyProps {
+    // 目前支持的替换控件
+    "ui:widget": "textarea"
+    "ui:grid": string | number
+}
+
+interface UiKeysProps {
+    [key: string]: UiKeyProps
+}
+
+export interface ColumnSchemaProps {
     minItems?: number
     maxItems?: number
     items: itemsProps
 }
 
+export interface UiSchemaTableProps {
+    items?: any
+    x?: number
+    y?: number
+}
+
 export interface EditTableProps {
-    columnSchema: columnSchemaProps
+    columnSchema: ColumnSchemaProps
+    uiSchema: UiSchemaTableProps
     onChange?: (v: any) => void
     // 默认值
     value?: any
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
-    const {columnSchema, onChange, value} = props
+    const {columnSchema, uiSchema, onChange, value} = props
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])
@@ -116,12 +175,17 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     const [columns, setColumns] = useState<any[]>([])
     const [requireList, setRequireList] = useState<string[]>([])
     const [maxItems, setMaxItems] = useState<number>()
+    const [uiKeys, setUiKeys] = useState<UiKeysProps>()
+
     useEffect(() => {
         try {
+            // columnSchema
             const {minItems, maxItems = 50, items} = columnSchema
             const {require, properties} = items
             const newColumns: any[] = []
             const newData: any[] = []
+            // uiSchema
+            const newUiKeys = uiSchema?.items as UiKeysProps
             Object.keys(properties).forEach((key) => {
                 const {type, title, description} = properties[key]
                 newColumns.push({
@@ -148,21 +212,39 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                 <></>
                             )
                         }
-                        return text || "-"
-                    }
+                        if (newUiKeys?.[key]?.["ui:widget"] === "textarea") {
+                            return (
+                                <Tooltip title={text}>
+                                    <div
+                                        style={{overflow: "hidden"}}
+                                        className={classNames("yakit-content-single-ellipsis")}
+                                    >
+                                        {text}
+                                    </div>
+                                </Tooltip>
+                            )
+                        }
+                        return (
+                            <div style={{overflow: "hidden"}} className={classNames("yakit-content-single-ellipsis")}>
+                                {text || "-"}
+                            </div>
+                        )
+                    },
+                    width: newUiKeys?.[key]?.["ui:grid"]
                 })
 
                 newData.push({
                     _id: uuidv4()
                 })
             })
+            setUiKeys(newUiKeys)
             setRequireList(require)
             setColumns([...newColumns])
             setMaxItems(maxItems)
         } catch (error) {
-            failed("解析表格失败")
+            failed(`解析表格失败:${error}`)
         }
-    }, [])
+    }, [columnSchema, uiSchema])
 
     const isEditing = useMemoizedFn((rowItem: Item) => rowItem._id === editingId)
 
@@ -186,8 +268,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     })
 
     // 数据提交
-    const onSubmit = useMemoizedFn((arr:Item[])=>{
-        const data = arr.map(({_id,...obj})=>obj)
+    const onSubmit = useMemoizedFn((arr: Item[]) => {
+        const data = arr.map(({_id, ...obj}) => obj)
         onChange && onChange(data)
     })
 
@@ -207,7 +289,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 setData(newData)
                 setEditingId("")
                 onSubmit(newData)
-                
             }
             // 新增
             else if (cacheData.length > 0 && record._id === cacheData[0]._id) {
@@ -293,13 +374,14 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             ...col,
             onCell: (record: Item) => ({
                 record,
-                inputType: col.dataIndex === "age" ? "number" : "text",
                 dataIndex: col.dataIndex,
                 title: col.title,
                 editing: isEditing(record),
                 required: requireList.includes(col.dataIndex),
                 type: col.type,
-                selectOption: (col.enum || []).map((item) => ({label: item, value: item}))
+                selectOption: (col.enum || []).map((item) => ({label: item, value: item})),
+                UiStyle: uiKeys?.[col.dataIndex],
+                form
             })
         }
     })
@@ -316,7 +398,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 columns={mergedColumns}
                 rowClassName='editable-row'
                 pagination={false}
-                scroll={{x: "auto", y: undefined}}
+                scroll={{x: uiSchema?.x, y: uiSchema?.y}}
             />
             <YakitButton
                 onClick={addCell}
