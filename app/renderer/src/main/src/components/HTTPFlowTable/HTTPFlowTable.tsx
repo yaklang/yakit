@@ -2810,7 +2810,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         {
             key: "数据包扫描",
             label: "数据包扫描",
-            number: 10,
+            number: 200,
             default: true,
             webSocket: false,
             toWebFuzzer: true,
@@ -3075,10 +3075,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: "编辑tag",
             label: "编辑tag",
             default: true,
-            webSocket: false,
-            toWebFuzzer: false,
-            onClickSingle: (v) => onEditTags(v),
-            onClickBatch: () => {}
+            webSocket: true,
+            toWebFuzzer: true,
+            onClickSingle: (v) => onEditTags(v)
         }
     ]
     /** 菜单自定义快捷键渲染处理事件 */
@@ -3435,16 +3434,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         if (keyPath.includes("数据包扫描")) {
+            let sendIds: string[] = selectedRowKeys
             if (isAllSelect) {
-                yakitNotify("warning", "该批量操作不支持全选")
-                return
+                if (total > 200) {
+                    yakitNotify("warning", `最多同时只能发送${200}条数据`)
+                    return
+                } else {
+                    sendIds = data.map(item => item.Id + "")
+                }
+            } else {
+                if (sendIds.length > 200) {
+                    yakitNotify("warning", `最多同时只能发送${200}条数据`)
+                    return
+                }
             }
             const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === "数据包扫描")
             const currentItemPacketScan = packetScanDefaultValue.find((f) => f.Verbose === key)
             if (!currentItemScan || !currentItemPacketScan) return
 
             onBatchExecPacketScan({
-                httpFlowIds: selectedRowKeys,
+                httpFlowIds: sendIds,
                 maxLength: currentItemScan.number || 0,
                 currentPacketScan: currentItemPacketScan
             })
