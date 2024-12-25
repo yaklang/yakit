@@ -33,6 +33,14 @@ export interface YaklangLanguageSuggestionRequest {
 }
 
 
+export interface FuzzTagSuggestionRequest {
+    InspectType: "completion" | "hover"
+    HotPatchCode: string
+    FuzztagCode: string
+}
+
+
+
 export interface YaklangLanguageSuggestionResponse {
     SuggestionMessage: SuggestionDescription[]
 }
