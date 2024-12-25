@@ -131,6 +131,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
 
         this.wsProvider.once("online-user-count", (onlineUserCount: number) => {
+            console.log("wsProvider-online-user-count", onlineUserCount)
             if (onlineUserCount < 2 && this.collabStatus.isSynced) {
                 this.collabService.applyTemplate(template).connect()
             } else if (this.collabStatus.isSynced) {
@@ -139,12 +140,14 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
 
         this.wsProvider.on("saveStatus", ({saveStatus}) => {
+            console.log("wsProvider-saveStatus", saveStatus)
             this.setCollabStatus({...this.collabStatus, saveStatus})
         })
         // 监听在线用户数据
         this.wsProvider?.awareness?.on("change", (payload) => {
             // 获取当前所有用户的状态
             const users = this.getOnlineUser()
+            console.log("wsProvider-awareness-change", users)
             this.setOnlineUsers([...users])
         })
     }
@@ -212,7 +215,9 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             token: this.wsRequest.token
         }
         if (this.wsProvider && this.wsProvider?.ws && this.wsProvider.ws?.readyState === WebSocket.OPEN) {
-            this.wsProvider?.ws?.send(Buffer.from(JSON.stringify(v)))
+            const sendValueString = JSON.stringify(v)
+            console.log("sendContent-valueString", sendValueString)
+            this.wsProvider?.ws?.send(Buffer.from(sendValueString))
         }
     }
 

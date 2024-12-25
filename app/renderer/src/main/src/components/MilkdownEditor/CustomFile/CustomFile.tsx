@@ -77,7 +77,6 @@ export const CustomFile: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false)
     const [errorReason, setErrorReason] = useState<string>("")
     const [downFileInfo, setDownFileInfo] = useState<DownFileInfoProps>()
-    const [visibleDownFiles, setVisibleDownFiles] = useState<boolean>(false)
     const [queryFileErrorInfo, setQueryFileErrorInfo] = useState<string>("")
     const [loadingRefresh, setLoadingRefresh] = useState<boolean>(false)
 
@@ -198,7 +197,6 @@ export const CustomFile: React.FC = () => {
         saveDialogAndGetLocalFileInfo(fileId).then((v) => {
             setDownFileInfo(v)
             setFileInfo({...fileInfo, path: v.path})
-            setVisibleDownFiles(true)
         })
     }
     const onCopyLink = useMemoizedFn((e) => {
@@ -252,7 +250,6 @@ export const CustomFile: React.FC = () => {
     })
     const onCancelDownload = useMemoizedFn(() => {
         setFileInfo({...fileInfo, path: ""})
-        setVisibleDownFiles(false)
         setDownFileInfo(undefined)
     })
     const onRefreshFileInfo = useMemoizedFn((e) => {

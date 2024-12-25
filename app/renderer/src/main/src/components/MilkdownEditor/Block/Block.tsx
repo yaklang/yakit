@@ -150,49 +150,49 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
                     command(state, dispatch)
                 })
                 break
-            case "上传文件":
-                ipcRenderer
-                    .invoke("openDialog", {
-                        title: "请选择文件",
-                        properties: ["openFile"]
-                    })
-                    .then((data: {filePaths: string[]}) => {
-                        const filesLength = data.filePaths.length
-                        if (filesLength) {
-                            const path = data.filePaths[0].replace(/\\/g, "\\")
-                            getLocalFileLinkInfo(path).then((res) => {
-                                if (res.size > FileMaxSize) {
-                                    yakitNotify("error", "文件大小不能超过1G")
-                                    return
-                                }
-                                const index = path.lastIndexOf(".")
-                                const fileType = path.substring(index, path.length)
-                                if (imgTypes.includes(fileType)) {
-                                    if (res.size > ImgMaxSize) {
-                                        yakitNotify("error", "图片大小不能超过1M")
-                                        return
-                                    }
-                                    httpUploadImgPath({path, type, filedHash: notepadHash})
-                                        .then((src) => {
-                                            action(
-                                                callCommand(insertImageBlockCommand.key, {
-                                                    src,
-                                                    alt: path,
-                                                    title: ""
-                                                })
-                                            )
-                                        })
-                                        .catch((e) => {
-                                            yakitNotify("error", `上传图片失败:${e}`)
-                                        })
-                                } else {
-                                    action(callCommand(fileCommand.key, {id: "0", path, notepadHash}))
-                                }
-                            })
-                        }
-                    })
+            // case "上传文件":
+            //     ipcRenderer
+            //         .invoke("openDialog", {
+            //             title: "请选择文件",
+            //             properties: ["openFile"]
+            //         })
+            //         .then((data: {filePaths: string[]}) => {
+            //             const filesLength = data.filePaths.length
+            //             if (filesLength) {
+            //                 const path = data.filePaths[0].replace(/\\/g, "\\")
+            //                 getLocalFileLinkInfo(path).then((res) => {
+            //                     if (res.size > FileMaxSize) {
+            //                         yakitNotify("error", "文件大小不能超过1G")
+            //                         return
+            //                     }
+            //                     const index = path.lastIndexOf(".")
+            //                     const fileType = path.substring(index, path.length)
+            //                     if (imgTypes.includes(fileType)) {
+            //                         if (res.size > ImgMaxSize) {
+            //                             yakitNotify("error", "图片大小不能超过1M")
+            //                             return
+            //                         }
+            //                         httpUploadImgPath({path, type, filedHash: notepadHash})
+            //                             .then((src) => {
+            //                                 action(
+            //                                     callCommand(insertImageBlockCommand.key, {
+            //                                         src,
+            //                                         alt: path,
+            //                                         title: ""
+            //                                     })
+            //                                 )
+            //                             })
+            //                             .catch((e) => {
+            //                                 yakitNotify("error", `上传图片失败:${e}`)
+            //                             })
+            //                     } else {
+            //                         action(callCommand(fileCommand.key, {id: "0", path, notepadHash}))
+            //                     }
+            //                 })
+            //             }
+            //         })
 
-                break
+            //     break
             case "分割线":
                 action((ctx) => {
                     const command = clearContentAndAddBlockType(hrSchema.type(ctx))

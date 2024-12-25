@@ -71,6 +71,7 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
  */
 export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
+        console.log("apiSaveNotepadList", params)
         NetWorkApi<API.PostNotepadRequest, string>({
             method: "post",
             url: "notepad",
@@ -159,8 +160,10 @@ export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogRe
         const params: API.NotepadDownloadRequest = {
             ...value
         }
+        console.log("onBaseNotepadDown-params", params)
         apiDownloadNotepad(params)
             .then((res) => {
+                console.log("onBaseNotepadDown-res", res)
                 saveDialogAndGetLocalFileInfo((res as string) || "")
                     .then(resolve)
                     .catch(reject)

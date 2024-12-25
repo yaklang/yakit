@@ -71,7 +71,6 @@ import {useStore} from "@/store"
 import {CollabManager, CollabUserInfo} from "./CollabManager"
 import emiter from "@/utils/eventBus/eventBus"
 
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
@@ -87,8 +86,6 @@ const markdown1 = `
 2. 665fdsf
 
 #ggg
-
-:file[]{fileId="https://yakit-online.oss-accelerate.aliyuncs.com/notepade/2e80f8894f904134fb795f0731bed428-1732088835089&*&app.zip"}
 
 ![1.00](
 
@@ -192,6 +189,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             images.map(async (image) => {
                                 const alt = image.name
                                 try {
+                                    console.log("uploadConfig-image", image)
                                     const src = await uploadImg(image)
                                     return schema.nodes["image-block"].createAndFill({
                                         src,
@@ -232,6 +230,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         </svg>
                     `,
                     onUpload: async (image: File) => {
+                        console.log("imageBlockConfig-image", image)
                         const url = uploadImg(image)
                         return url
                     }
@@ -258,6 +257,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             <circle cx="14" cy="8" r="1" fill="currentColor" />
                         </svg> `,
                     onUpload: async (image: File) => {
+                        console.log("inlineImageConfig-image", image)
                         const url = uploadImg(image)
                         return url
                     }
@@ -356,7 +356,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     filename: image.name || "image.png",
                     contentType: image.type || "image/png"
                 },
-                type: "notepad"
+                type: collabParams.enableCollab ? "notepad" : "img",
+                filedHash: collabParams.milkdownHash
             })
             return src
         } catch (error) {
@@ -490,6 +491,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         useMemoizedFn((ctx) => {
             // 获取 trackDeletePlugin 插件共享的值
             const urls = ctx.get(deletedFileUrlsCtx)
+            console.log("onDeleteFiles", urls)
             if (urls.length > 0) {
                 setInterval(1000)
             } else {
@@ -519,8 +521,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 newDeletedFiles.push(element)
             }
         }
+        console.log("onDeleteFiles-deletedFiles", deletedFiles)
         if (fileName.length > 0) {
             setInterval(undefined)
+            console.log("onDeleteFiles-fileName", fileName)
             httpDeleteOSSResource({file_name: fileName}, true).finally(() => {
                 // 暂不考虑删除失败的情况
                 get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))

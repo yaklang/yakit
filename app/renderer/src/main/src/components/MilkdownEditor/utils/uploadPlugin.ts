@@ -1,6 +1,10 @@
 import {$command, $nodeSchema, $nodeAttr} from "@milkdown/utils"
 import {Attrs} from "@milkdown/kit/prose/model"
 import {TextSelection} from "@milkdown/kit/prose/state"
+import { getTypeAndNameByPath } from "../CustomFile/CustomFile"
+import { getLocalFileLinkInfo } from "../CustomFile/utils"
+import { UploadOSSStartProps } from "@/hook/useUploadOSS/useUploadOSS"
+import { uploadBigFileType } from "@/hook/useUploadOSS/constants"
 
 export const fileCustomId = "file-custom"
 export const fileCustomAttr = $nodeAttr("file-custom", () => ({
@@ -77,12 +81,25 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
     }
 }))
 
-export const fileCommand = $command(`command-${fileCustomId}`, (ctx) => (props) => (state, dispatch) => {
+export const fileCommand = $command(`command-${fileCustomId}`, (ctx) => (props: any) => (state, dispatch) => {
     const {selection, tr} = state
     if (!(selection instanceof TextSelection)) return false
 
     const {from, to} = selection
     const fragment = state.doc.slice(from, to).content // 获取 Fragment
+
+    const path = props.path.replace(/\\/g, "\\")
+
+    // if (props.path) {
+    //     getLocalFileLinkInfo(path).then((fileInfo) => {
+    //         const value: UploadOSSStartProps = {
+    //             filePath:path,
+    //             filedHash: props?.notepadHash || "",
+    //             type: uploadBigFileType.notepad
+    //         }
+    //         // onStartUpload(value)
+    //     })
+    // }
     dispatch?.(
         tr
             .setMeta(fileCustomId, true)

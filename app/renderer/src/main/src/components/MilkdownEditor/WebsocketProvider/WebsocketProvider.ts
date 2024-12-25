@@ -114,6 +114,7 @@ const setupWS = (provider: WebsocketProvider) => {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
+                console.log("websocket.onmessage-data", data)
                 if (!!data.params.userCount && data.params.docType === notepadActions.join) {
                     // 目前加入类型的消息会修改在线人数，用来做连接文档的初始化内容
                     provider.onlineUserCount = data.params.userCount
@@ -136,12 +137,15 @@ const setupWS = (provider: WebsocketProvider) => {
             } catch (error) {}
         }
         websocket.onerror = (event) => {
+            console.log("websocket.onerror-event", event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
+            console.log("websocket.onclose-event", event)
             closeWebsocketConnection(provider, websocket, event)
         }
         websocket.onopen = () => {
+            console.log("websocket.onopen")
             provider.wsLastMessageReceived = time.getUnixTime()
             provider.wsconnecting = false
             provider.wsconnected = true
@@ -189,7 +193,9 @@ const setupWS = (provider: WebsocketProvider) => {
  * @param {CloseEvent} event
  */
 const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, event?: CloseEvent) => {
+    console.log("closeWebsocketConnection------1", ws, provider.ws)
     if (ws === provider.ws) {
+        console.log("closeWebsocketConnection------2", event)
         if (event) provider.emit("connection-close", [event, provider])
         provider.ws = null
         ws.close()
@@ -375,6 +381,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         if (resyncInterval > 0) {
             this._resyncInterval = setInterval(() => {
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    console.log("_resyncInterval")
                     // resend sync step 1
                     const encoder = encoding.createEncoder()
                     encoding.writeVarUint(encoder, messageSync)
@@ -408,6 +415,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     token
                 }
                 const jsonString = JSON.stringify(value)
+                console.log("getSendData", jsonString)
                 const finalArrayBuffer = Buffer.from(jsonString)
                 return finalArrayBuffer
             } catch (error) {

@@ -68,12 +68,12 @@ export const defaultBlockList: BlockListProps[] = [
         label: "高亮",
         description: "高亮: :::success空格"
     },
-    {
-        id: 10,
-        icon: <OutlinePaperclipIcon />,
-        label: "上传文件",
-        description: "上传文件"
-    },
+    // {
+    //     id: 10,
+    //     icon: <OutlinePaperclipIcon />,
+    //     label: "上传文件",
+    //     description: "上传文件"
+    // },
     {
         id: 11,
         icon: <IconFlipVertical />,
