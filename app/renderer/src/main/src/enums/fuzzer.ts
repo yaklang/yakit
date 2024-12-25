@@ -20,4 +20,6 @@ export enum FuzzerRemoteGV {
     FuzzerConcurrent = "Fuzzer_concurrent",
     FuzzerMinDelaySeconds = "Fuzzer_minDelaySeconds",
     FuzzerMaxDelaySeconds = "Fuzzer_maxDelaySeconds",
+    FuzzerNoSystemProxy = "Fuzzer_NoSystemProxy",
+    FuzzerDisableUseConnPool = "Fuzzer_DisableUseConnPool"
 }

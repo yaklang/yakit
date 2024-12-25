@@ -814,6 +814,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 concurrent: DefFuzzerConcurrent,
                 minDelaySeconds: 0,
                 maxDelaySeconds: 0,
+                noSystemProxy: false,
+                disableUseConnPool: false
             }
             let newAdvancedConfigValue = {
                 ...advancedConfigValue
@@ -827,6 +829,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.concurrent = +cacheData.concurrent
                 newAdvancedConfigValue.minDelaySeconds = +cacheData.minDelaySeconds
                 newAdvancedConfigValue.maxDelaySeconds = +cacheData.maxDelaySeconds
+                newAdvancedConfigValue.noSystemProxy = cacheData.noSystemProxy
+                newAdvancedConfigValue.disableUseConnPool = cacheData.disableUseConnPool
             }
             
             let newAdvancedConfigShow = cacheData.advancedConfigShow
@@ -1639,6 +1643,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 concurrent: DefFuzzerConcurrent,
                 minDelaySeconds: 0,
                 maxDelaySeconds: 0,
+                noSystemProxy: false,
+                disableUseConnPool: false
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
@@ -1649,6 +1655,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 concurrent: +cacheData.concurrent,
                 minDelaySeconds: +cacheData.minDelaySeconds,
                 maxDelaySeconds: +cacheData.maxDelaySeconds,
+                noSystemProxy: cacheData.noSystemProxy,
+                disableUseConnPool: cacheData.disableUseConnPool,
             }
             clearAllData()
             // 菜单在代码内的名字
