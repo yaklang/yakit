@@ -1447,7 +1447,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             if (progress === 1) {
                 setTimeout(() => {
                     setExecuteType("old")
-                    runnerProject.current && onStartExecute({project: runnerProject.current}, true)
+                    runnerProject.current && onStartExecute({project: [runnerProject.current]}, true)
                 }, 300)
             }
 
