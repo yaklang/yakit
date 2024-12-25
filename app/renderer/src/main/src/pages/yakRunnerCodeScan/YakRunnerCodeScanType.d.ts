@@ -228,7 +228,7 @@ export interface CodeScanAuditExecuteFormProps {
     ref?: React.ForwardedRef<CodeScanAuditExecuteRefProps>
     selectGroupList: string[]
     plugin?: YakScript
-    onStartExecute: (v: {project: string}, is?: boolean) => void
+    onStartExecute: (v: {project: string[]}, is?: boolean) => void
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     pushNewLogs: (log: StreamResult.Message[]) => void
