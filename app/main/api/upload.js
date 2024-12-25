@@ -194,8 +194,14 @@ module.exports = (win, getClient) => {
         readable.push(null)
 
         const formData = new FormData()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (key !== 'base64' && key !== 'imgInfo') {
+                    formData.append(key, value || undefined)
+                }
+            })
+        }
         formData.append("file_name", readable, { ...imgInfo })
-        if (type) formData.append("type", type || undefined)
         const res = await httpApi(
             "post",
             "upload/img",
