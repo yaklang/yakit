@@ -501,7 +501,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label={"禁用代理池"} name={"disableUseConnPool"} valuePropName='checked'>
+                            <Form.Item label={"禁用连接池"} name={"disableUseConnPool"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
                             <Form.Item label={"禁用热加载"} name={"disableHotPatch"} valuePropName='checked'>

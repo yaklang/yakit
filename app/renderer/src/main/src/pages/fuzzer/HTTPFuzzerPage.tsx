@@ -1524,7 +1524,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     })
                                     ipcRenderer
                                         .invoke("Codec", {
-                                            ...v
+                                            ...v,
+                                            Text: v.Text.trim()
                                         })
                                         .then((e) => {
                                             if (e?.Result) {
