@@ -190,7 +190,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             const defObj: DefaultObjProps = {}
             // uiSchema
             const newUiKeys = uiSchema?.items as UiKeysProps
-            const newGrid = (newUiKeys?.["ui:grid"]||[]) as DefaultObjProps[]
+            const newGrid = (newUiKeys?.["ui:grid"] || []) as DefaultObjProps[]
             let widthObj = {}
             newGrid.forEach((item) => {
                 widthObj = {...widthObj, ...item}
@@ -415,7 +415,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 dataSource={realData}
                 columns={mergedColumns}
                 pagination={false}
-                scroll={{x: uiSchema?.x, y: uiSchema?.y}}
+                scroll={{x: uiSchema?.x || "max-content", y: uiSchema?.y}}
             />
             <YakitButton
                 onClick={addCell}
