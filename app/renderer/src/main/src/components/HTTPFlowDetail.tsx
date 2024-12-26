@@ -31,7 +31,7 @@ import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
-import {OutlineLog2Icon, OutlinePencilaltIcon} from "@/assets/icon/outline"
+import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import {RemoteGV} from "@/yakitGV"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
@@ -1400,10 +1400,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={secondNodeResExtraBtn()}
                         AfterBeautifyRenderBtn={
                             <>
-                                <YakitButton size='small' icon={<OutlinePencilaltIcon />} onClick={() => {
+                                <YakitButton size='small' onClick={() => {
                                     emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
                                 }}>
-                                    tag
+                                    编辑tag
                                 </YakitButton>
                                 <CodingPopover
                                     key='coding'
