@@ -18,6 +18,7 @@ import {
     ExtractedDataFilter,
     HTTPFlowExtractedData,
     HTTPFlowExtractedDataTable,
+    HTTPFlowExtractedDataTableRefProps,
     QueryMITMRuleExtractedDataRequest
 } from "@/components/HTTPFlowExtractedDataTable"
 import {ChevronDownIcon, ChevronUpIcon, ChromeSvgIcon, SideBarCloseIcon, SideBarOpenIcon} from "@/assets/newIcon"
@@ -663,7 +664,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
-                    
+
                     if (i?.InvalidForUTF8Request || i?.InvalidForUTF8Response) {
                         setHighLightText([])
                     } else {
@@ -713,7 +714,10 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
 
-    const httpFlowTableRef = useRef<any>(null)
+    const httpFlowTableRef: React.MutableRefObject<HTTPFlowExtractedDataTableRefProps> =
+        useRef<HTTPFlowExtractedDataTableRefProps>({
+            jumpDataProjectHighLight: (direction: "next" | "prev") => {}
+        })
     const [currId, setCurrId] = useState<number | undefined>()
     const [extractedData, setExtractedData] = useState<HTTPFlowExtractedData[]>([])
     const [exportMITMRuleFilter, setExportMITMRuleFilter] = useState<ExtractedDataFilter>({

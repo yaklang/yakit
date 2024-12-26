@@ -12,8 +12,12 @@ import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
 const {Text} = Typography
+
+export interface HTTPFlowExtractedDataTableRefProps {
+    jumpDataProjectHighLight: (direction: "next" | "prev") => void
+}
 export interface HTTPFlowExtractedDataTableProp {
-    ref?: React.Ref<any>
+    ref?: React.ForwardedRef<HTTPFlowExtractedDataTableRefProps>
     title: React.ReactNode
     invalidForUTF8Request: boolean
     InvalidForUTF8Response: boolean
