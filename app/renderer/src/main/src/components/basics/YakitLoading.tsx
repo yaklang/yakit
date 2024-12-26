@@ -267,15 +267,6 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         [yakitStatus]
     )
 
-
-    const [yakitEEImg, setyYakitEEImg] = useState<string>()
-    useEffect(() => {
-        if (isEnpriTrace()) {
-            ipcRenderer.invoke("GetStaticImgEEByType", {type: "loginImg"}).then((res) => {
-                setyYakitEEImg(res)
-            })
-        }
-    }, [])
     return (
         <div className={styles["yakit-loading-wrapper"]}>
             <div className={styles["yakit-loading-body"]}>
@@ -302,7 +293,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {isEnpriTrace() && (
                         <div className={styles["yakit-loading-icon-wrapper"]}>
                             <div className={styles["white-icon"]}>
-                                <img src={yakitEEImg} alt='暂无图片' />
+                                <img src={yakitEE} />
                             </div>
                         </div>
                     )}
