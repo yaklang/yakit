@@ -500,16 +500,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     const [pprofFileAutoAnalyze, setPprofFileAutoAnalyze] = useState<boolean>(false)
     useEffect(() => {
-        getRemoteValue(GlobalConfigRemoteGV.PprofFileAutoAnalyze).then((setting) => {
+        getRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze).then((setting) => {
             setPprofFileAutoAnalyze(setting === "true")
         })
     }, [])
     const onSetPprofFileAutoAnalyze = () => {
-        setRemoteValue(GlobalConfigRemoteGV.PprofFileAutoAnalyze, pprofFileAutoAnalyze + "")
+        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, pprofFileAutoAnalyze + "")
     }
     const onResetPprofFileAutoAnalyze = () => {
         setPprofFileAutoAnalyze(false)
-        setRemoteValue(GlobalConfigRemoteGV.PprofFileAutoAnalyze, false + "")
+        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, false + "")
     }
 
     return (
