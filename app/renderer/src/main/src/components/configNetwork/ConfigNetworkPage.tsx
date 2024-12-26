@@ -37,6 +37,7 @@ import {RemoteGV} from "@/yakitGV"
 import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
 import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} from "./NewThirdPartyApplicationConfig"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 
 export interface ConfigNetworkPageProp {}
 
@@ -197,7 +198,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     value: item.Name
                 }))
                 if (SynScanNetInterface.length === 0 && data?.DefaultPublicNetInterface) {
-                    setParams((v) => ({...v, SynScanNetInterface: data.DefaultPublicNetInterface?.NetInterfaceName || ""}))
+                    setParams((v) => ({
+                        ...v,
+                        SynScanNetInterface: data.DefaultPublicNetInterface?.NetInterfaceName || ""
+                    }))
                 }
                 setNetInterfaceList(interfaceList)
             })
@@ -289,6 +293,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
         // 更新 免配置启动路径
         onSetChromePath()
+
+        // 更新 自动性能采样
+        onSetPprofFileAutoAnalyze()
 
         if (format === 1) {
             // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
@@ -490,6 +497,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path))
             })
     })
+
+    const [pprofFileAutoAnalyze, setPprofFileAutoAnalyze] = useState<boolean>(false)
+    useEffect(() => {
+        getRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze).then((setting) => {
+            setPprofFileAutoAnalyze(setting === "true")
+        })
+    }, [])
+    const onSetPprofFileAutoAnalyze = () => {
+        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, pprofFileAutoAnalyze + "")
+    }
+    const onResetPprofFileAutoAnalyze = () => {
+        setPprofFileAutoAnalyze(false)
+        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, false + "")
+    }
 
     return (
         <>
@@ -907,6 +928,22 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }}
                                     />
                                 </Form.Item>
+                                <Form.Item
+                                    label={"自动性能采样"}
+                                    tooltip={
+                                        <>
+                                            开启后cpu、内存过高则会自动触发性能采样，采集到的文件会存在
+                                            "~yakit-projects/pprof-log"文件夹里
+                                        </>
+                                    }
+                                >
+                                    <YakitSwitch
+                                        checked={pprofFileAutoAnalyze}
+                                        onChange={(pprofFileAutoAnalyze) =>
+                                            setPprofFileAutoAnalyze(pprofFileAutoAnalyze)
+                                        }
+                                    />
+                                </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     SYN 扫描网卡配置
                                 </Divider>
@@ -942,6 +979,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             onConfirm={() => {
                                                 onResetDelPrivatePlugin()
                                                 onResetChromePath()
+                                                onResetPprofFileAutoAnalyze()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
                                                     update()
                                                     yakitInfo("重置配置成功")
