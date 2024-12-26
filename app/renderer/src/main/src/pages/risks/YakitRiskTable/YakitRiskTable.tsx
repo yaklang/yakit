@@ -105,6 +105,7 @@ import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import {onCreateRiskReportModal} from "../CreatRiskReport/CreatRiskReport"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -122,6 +123,10 @@ const batchExportMenuData: YakitMenuItemProps[] = [
     {
         key: "export-html",
         label: "导出 html"
+    },
+    {
+        key: "export-report",
+        label: "导出 报告"
     }
 ]
 const batchRefreshMenuData: YakitMenuItemProps[] = [
@@ -770,6 +775,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             case "export-html":
                 onExportHTML()
                 break
+            case "export-report":
+                onExportReport()
+                break
             default:
                 break
         }
@@ -925,6 +933,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         setTimeout(() => {
             setRiskLoading(false)
         }, 200)
+    })
+    // 导出漏洞报告
+    const onExportReport = useMemoizedFn(() => {
+        onCreateRiskReportModal({
+            ids: allCheck || selectedRowKeys.length === 0 ? [] : selectedRowKeys,
+            riskTableQuery: query
+        })
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
