@@ -16,10 +16,6 @@ export enum FuzzerRemoteGV {
     WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show",
     /**@name WebFuzzer最大前端渲染数量 */
     FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
-    FuzzerRepeatTimes = "Fuzzer_repeat_times",
-    FuzzerConcurrent = "Fuzzer_concurrent",
-    FuzzerMinDelaySeconds = "Fuzzer_minDelaySeconds",
-    FuzzerMaxDelaySeconds = "Fuzzer_maxDelaySeconds",
     FuzzerNoSystemProxy = "Fuzzer_NoSystemProxy",
     FuzzerDisableUseConnPool = "Fuzzer_DisableUseConnPool"
 }
