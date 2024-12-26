@@ -1950,12 +1950,16 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
-                            setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", code)
+                            if (webFuzzerNewEditorRef.current.reqEditor) {
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
-                            setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCodeWithParam", code)
+                            if (webFuzzerNewEditorRef.current.reqEditor) {
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCodeWithParam", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
                         onCancel={() => m.destroy()}
