@@ -293,7 +293,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                 freeze={pageType === "History" && openTabsFlag}
                 isRecalculateWH={pageType === "History" ? openTabsFlag : true}
                 firstMinSize={pageType === "History" ? (openTabsFlag ? "325px" : "24px") : 0}
-                firstRatio={pageType === "History" ? (openTabsFlag ? "30%" : "24px") : "0px"}
+                firstRatio={pageType === "History" ? (openTabsFlag ? "25%" : "24px") : "0px"}
                 firstNode={() => {
                     if (pageType === "History") {
                         return (
@@ -363,7 +363,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     return <></>
                 }}
                 secondMinSize={pageType === "History" ? "720px" : "100%"}
-                secondRatio={pageType === "History" ? "70%" : "100%"}
+                secondRatio={pageType === "History" ? "75%" : "100%"}
                 secondNode={() => (
                     <YakitResizeBox
                         style={{paddingBottom: pageType === "History" ? 13 : 0}}

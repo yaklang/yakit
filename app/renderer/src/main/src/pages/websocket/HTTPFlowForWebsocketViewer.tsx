@@ -4,7 +4,7 @@ import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ThunderboltOutlined} from "@ant-design/icons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {HighLightText, OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -14,16 +14,20 @@ import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistorySourcePageType} from "@/components/HTTPHistory"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {newWebsocketFuzzerTab} from "./WebsocketFuzzer"
+import {HistoryHighLightText} from "@/components/HTTPFlowDetail"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
     flow: HTTPFlow
+    highLightText?: HistoryHighLightText[]
+    highLightItem?: HistoryHighLightText
+    highLightFindClass?: string
 }
 
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
     const [mode, setMode] = useState<"request" | "response">("request")
-    const {flow, historyId, pageType} = props
+    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass} = props
 
     const onScrollTo = useMemoizedFn(() => {
         if (historyId) {
@@ -94,8 +98,26 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
             }
         >
             <div style={{flex: 1, overflow: "hidden", height: "100%"}}>
-                {mode === "request" && <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Request)} />}
-                {mode === "response" && <WebSocketEditor flow={flow} value={Uint8ArrayToString(flow.Response)} />}
+                {mode === "request" && (
+                    <WebSocketEditor
+                        flow={flow}
+                        value={Uint8ArrayToString(flow.Request)}
+                        highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
+                        highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
+                        highLightFindClass={highLightFindClass}
+                        isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
+                    />
+                )}
+                {mode === "response" && (
+                    <WebSocketEditor
+                        flow={flow}
+                        value={Uint8ArrayToString(flow.Response)}
+                        highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
+                        highLightFind={highLightItem ? (highLightItem.IsMatchRequest ? [] : [highLightItem]) : []}
+                        highLightFindClass={highLightFindClass}
+                        isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
+                    />
+                )}
             </div>
         </Card>
     )
@@ -105,9 +127,13 @@ interface WebSocketEditorProps {
     value: string
     flow: HTTPFlow
     contextMenu?: OtherMenuListProps
+    highLightText?: HighLightText[]
+    highLightFind?: HighLightText[]
+    highLightFindClass?: string
+    isPositionHighLightCursor?: boolean
 }
 export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
-    const {flow, value, contextMenu = {}} = props
+    const {flow, value, contextMenu = {}, highLightText, highLightFind, highLightFindClass, isPositionHighLightCursor} = props
 
     // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
@@ -161,6 +187,10 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
             value={value}
             readOnly={true}
             noMiniMap={true}
+            highLightText={highLightText}
+            highLightFind={highLightFind}
+            highLightFindClass={highLightFindClass}
+            isPositionHighLightCursor={isPositionHighLightCursor}
             contextMenu={{
                 ...contextMenu,
                 ...sendWebSocketMenuItem

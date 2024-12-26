@@ -1,21 +1,33 @@
-import React, {useEffect, useRef, useState} from "react"
-import {Typography, Table} from "antd"
+import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import {Typography, Table, Tooltip} from "antd"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse} from "@/pages/invoker/schema"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./hTTPFlowDetail.module.scss"
-import {HighLightText} from "./HTTPFlowDetail"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlinePositionIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {HTTPFlowsFieldGroupResponse, MultipleSelect} from "./HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import {yakitNotify} from "@/utils/notification"
 import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
+import {HistoryHighLightText} from "./HTTPFlowDetail"
+import {ColumnsType} from "antd/lib/table"
 const {Text} = Typography
+
+export interface HTTPFlowExtractedDataTableRefProps {
+    jumpDataProjectHighLight: (direction: "next" | "prev") => void
+}
 export interface HTTPFlowExtractedDataTableProp {
+    ref?: React.ForwardedRef<HTTPFlowExtractedDataTableRefProps>
     title: React.ReactNode
+    invalidForUTF8Request: boolean
+    InvalidForUTF8Response: boolean
     hiddenIndex: string
-    onSetHighLightText: (highLightText: HighLightText[]) => void
+    onSetHighLightText: (highLightText: HistoryHighLightText[]) => void
     onSetExportMITMRuleFilter: (filter: ExtractedDataFilter) => void
+    onSetHighLightItem: (highLightItem?: HistoryHighLightText) => void
+    currId?: number
+    onSetCurrId: (currIndex: number | undefined) => void
+    onSetExtractedData: (extractedData: HTTPFlowExtractedData[]) => void
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -41,10 +53,14 @@ export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
     Filter: ExtractedDataFilter
 }
 
-export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = (props) => {
+export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp> = React.forwardRef((props, ref) => {
     const [pagination, setPagination] = useState<Paging>(genDefaultPagination())
     const [loading, setLoading] = useState(false)
-    const [data, setData] = useState<HTTPFlowExtractedData[]>([])
+    const [data, setData] = useControllableValue<HTTPFlowExtractedData[]>(props, {
+        defaultValue: [],
+        valuePropName: "extractedData",
+        trigger: "onSetExtractedData"
+    })
     const [params, setParams] = useState<QueryMITMRuleExtractedDataRequest>({
         Filter: {
             TraceID: [props.hiddenIndex],
@@ -57,6 +73,19 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     const ruleVerboseOpenRef = useRef<boolean>(false)
     const clickOpenRef = useRef<boolean>(false)
+    const [currId, setCurrId] = useControllableValue<number | undefined>(props, {
+        defaultValue: props.currId,
+        valuePropName: "currId",
+        trigger: "onSetCurrId"
+    })
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            jumpDataProjectHighLight
+        }),
+        []
+    )
 
     useDebounceEffect(
         () => {
@@ -83,14 +112,27 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
-                props.onSetHighLightText(
-                    r.Data.map((i) => ({
-                        startOffset: i.Index,
-                        highlightLength: i.Length,
-                        hoverVal: i.RuleName,
-                        IsMatchRequest: i.IsMatchRequest
-                    }))
-                )
+                if (r.Data.length && !props.invalidForUTF8Request && !props.InvalidForUTF8Response) {
+                    setCurrId(r.Data[0].Id)
+                    props.onSetHighLightItem({
+                        startOffset: r.Data[0].Index,
+                        highlightLength: r.Data[0].Length,
+                        hoverVal: r.Data[0].RuleName,
+                        IsMatchRequest: r.Data[0].IsMatchRequest
+                    })
+                    props.onSetHighLightText(
+                        r.Data.map((i) => ({
+                            startOffset: i.Index,
+                            highlightLength: i.Length,
+                            hoverVal: i.RuleName,
+                            IsMatchRequest: i.IsMatchRequest
+                        }))
+                    )
+                } else {
+                    setCurrId(undefined)
+                    props.onSetHighLightItem(undefined)
+                    props.onSetHighLightText([])
+                }
                 setPagination(r.Pagination)
                 setTotal(r.Total)
             })
@@ -132,6 +174,152 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             })
     })
 
+    const jumpDataProjectHighLight = useMemoizedFn((direction: "next" | "prev") => {
+        if (currId !== undefined) {
+            const currIndex = data.findIndex((item) => item.Id == currId)
+            let index = currIndex
+            if (direction === "next") {
+                index = currIndex + 1 >= data.length ? data.length - 1 : currIndex + 1
+            } else {
+                index = currIndex - 1 < 0 ? 0 : currIndex - 1
+            }
+            if (index !== -1) {
+                setCurrId(+data[index].Id)
+                props.onSetHighLightItem({
+                    startOffset: data[index].Index,
+                    highlightLength: data[index].Length,
+                    hoverVal: data[index].RuleName,
+                    IsMatchRequest: data[index].IsMatchRequest
+                })
+            }
+        }
+    })
+
+    const columns: ColumnsType<HTTPFlowExtractedData> = [
+        {
+            title: "规则名",
+            ellipsis: {
+                showTitle: false
+            },
+            render: (i: HTTPFlowExtractedData) => (
+                <Text
+                    ellipsis={{
+                        tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.RuleName}</div>
+                    }}
+                >
+                    {i.RuleName}
+                </Text>
+            ),
+            width: 100,
+            filterIcon: () => {
+                return (
+                    <OutlineSearchIcon
+                        className={classNames(styles["filter-icon"], {
+                            [styles["filter-icon-color"]]:
+                                !ruleVerboseOpenRef.current && !!params.Filter.RuleVerbose.length
+                        })}
+                        onClick={getHTTPFlowsFieldGroup}
+                    />
+                )
+            },
+            filterDropdown: ({confirm}) => {
+                return (
+                    <div style={{paddingTop: 5}}>
+                        <MultipleSelect
+                            filterProps={{
+                                filterSearch: true,
+                                filterSearchInputProps: {
+                                    prefix: <OutlineSearchIcon className='search-icon' />,
+                                    allowClear: true
+                                }
+                            }}
+                            originalList={tags}
+                            searchVal={ruleVerboseSearchVal}
+                            onChangeSearchVal={setRuleVerboseSearchVal}
+                            value={params.Filter.RuleVerbose}
+                            onSelect={(v, item) => {
+                                if (Array.isArray(v)) {
+                                    const newParams = {
+                                        ...params,
+                                        Filter: {
+                                            TraceID: [props.hiddenIndex],
+                                            RuleVerbose: v
+                                        }
+                                    }
+                                    setParams(newParams)
+                                }
+                            }}
+                            onClose={() => {
+                                clickOpenRef.current = true
+                                confirm({closeDropdown: true})
+                                update()
+                            }}
+                            onQuery={() => {
+                                // 重置
+                                clickOpenRef.current = true
+                                resetUpdate()
+                            }}
+                        ></MultipleSelect>
+                    </div>
+                )
+            },
+            onFilterDropdownVisibleChange: (visible) => {
+                ruleVerboseOpenRef.current = visible
+                if (visible) {
+                    clickOpenRef.current = false
+                } else {
+                    if (!clickOpenRef.current) {
+                        update()
+                    }
+                }
+            }
+        },
+        {
+            title: "规则数据",
+            ellipsis: {
+                showTitle: false
+            },
+            render: (i: HTTPFlowExtractedData) => (
+                <Text
+                    ellipsis={{
+                        tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
+                    }}
+                >
+                    {i.Data}
+                </Text>
+            )
+        },
+        {
+            title: "操作",
+            width: 55,
+            align: "center",
+            render: (i: HTTPFlowExtractedData, record) => {
+                return (
+                    <Tooltip title='定位'>
+                        <OutlinePositionIcon
+                            className={classNames(styles["position-icon"], {
+                                [styles["position-icon-active"]]: currId == i.Id
+                            })}
+                            onClick={() => {
+                                if (props.invalidForUTF8Request || props.InvalidForUTF8Response) {
+                                    yakitNotify("info", "含有二进制流的数据包无法定位")
+                                    return
+                                }
+                                setCurrId(+i.Id)
+                                props.onSetHighLightItem({
+                                    startOffset: i.Index,
+                                    highlightLength: i.Length,
+                                    hoverVal: i.RuleName,
+                                    IsMatchRequest: i.IsMatchRequest
+                                })
+                            }}
+                        />
+                    </Tooltip>
+                )
+            }
+        }
+    ]
+
     return (
         <div className={styles["httpFlow-data-table"]}>
             <Table<HTTPFlowExtractedData>
@@ -139,105 +327,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 title={() => <>{props.title}</>}
                 dataSource={data}
                 key={"Id"}
-                columns={[
-                    {
-                        title: "规则名",
-                        ellipsis: {
-                            showTitle: false
-                        },
-                        render: (i: HTTPFlowExtractedData) => (
-                            <Text
-                                ellipsis={{
-                                    tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.RuleName}</div>
-                                }}
-                            >
-                                {i.RuleName}
-                            </Text>
-                        ),
-                        width: 100,
-                        filterIcon: () => {
-                            return (
-                                <OutlineSearchIcon
-                                    className={classNames(styles["filter-icon"], {
-                                        [styles["filter-icon-color"]]:
-                                            !ruleVerboseOpenRef.current && !!params.Filter.RuleVerbose.length
-                                    })}
-                                    onClick={getHTTPFlowsFieldGroup}
-                                />
-                            )
-                        },
-                        filterDropdown: ({confirm}) => {
-                            return (
-                                <div style={{paddingTop: 5}}>
-                                    <MultipleSelect
-                                        filterProps={{
-                                            filterSearch: true,
-                                            filterSearchInputProps: {
-                                                prefix: <OutlineSearchIcon className='search-icon' />,
-                                                allowClear: true
-                                            }
-                                        }}
-                                        originalList={tags}
-                                        searchVal={ruleVerboseSearchVal}
-                                        onChangeSearchVal={setRuleVerboseSearchVal}
-                                        value={params.Filter.RuleVerbose}
-                                        onSelect={(v, item) => {
-                                            if (Array.isArray(v)) {
-                                                const newParams = {
-                                                    ...params,
-                                                    Filter: {
-                                                        TraceID: [props.hiddenIndex],
-                                                        RuleVerbose: v
-                                                    }
-                                                }
-                                                setParams(newParams)
-                                            }
-                                        }}
-                                        onClose={() => {
-                                            clickOpenRef.current = true
-                                            confirm({closeDropdown: true})
-                                            update()
-                                        }}
-                                        onQuery={() => {
-                                            // 重置
-                                            clickOpenRef.current = true
-                                            resetUpdate()
-                                        }}
-                                    ></MultipleSelect>
-                                </div>
-                            )
-                        },
-                        onFilterDropdownVisibleChange: (visible) => {
-                            ruleVerboseOpenRef.current = visible
-                            if (visible) {
-                                clickOpenRef.current = false
-                            } else {
-                                if (!clickOpenRef.current) {
-                                    update()
-                                }
-                            }
-                        }
-                    },
-                    {
-                        title: "规则数据",
-                        ellipsis: {
-                            showTitle: false
-                        },
-                        render: (i: HTTPFlowExtractedData) => (
-                            <Text
-                                ellipsis={{
-                                    tooltip: <div style={{maxHeight: 300, overflowY: "auto"}}>{i.Data}</div>
-                                }}
-                            >
-                                {i.Data}
-                            </Text>
-                        ),
-                        width: 210
-                    }
-                ]}
+                columns={columns}
                 loading={loading}
                 size={"small"}
-                style={{margin: 0, padding: 0}}
+                style={{margin: 0, padding: 0, maxWidth: "100%"}}
                 pagination={{
                     pageSize: pagination.Limit,
                     showSizeChanger: true,
@@ -253,4 +346,4 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             ></Table>
         </div>
     )
-}
+})

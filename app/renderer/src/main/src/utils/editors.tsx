@@ -24,6 +24,7 @@ import ITextModel = editor.ITextModel
 import {YAK_FORMATTER_COMMAND_ID, setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import IModelDecoration = editor.IModelDecoration
 import {
+    HighLightText,
     OperationRecordRes,
     OtherMenuListProps,
     YakitEditorProps,
@@ -41,7 +42,7 @@ import {DataCompareModal} from "@/pages/compare/DataCompare"
 import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
-import {HighLightText} from "@/components/HTTPFlowDetail"
+import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -489,7 +490,11 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
     extraEditorProps?: YakitEditorProps | any
 
-    highLightText?: HighLightText[]
+    highLightText?: HighLightText[] | Selection[]
+    highLightFind?: HighLightText[] | Selection[]
+    highLightFindClass?: string
+    // 是否定位高亮光标位置
+    isPositionHighLightCursor?: boolean
 
     /** 扩展属性 */
     originValue: string
@@ -587,6 +592,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         typeOptionVal,
         onTypeOptionVal,
         highLightText,
+        highLightFind,
+        highLightFindClass,
+        isPositionHighLightCursor,
         downstreamProxyStr = ""
     } = props
     const [mode, setMode] = useState("text")
@@ -604,6 +612,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     const editorHighLightText = useMemo(() => {
         return type === undefined ? highLightText || [] : []
     }, [type, highLightText])
+    const editorHighLightFind = useMemo(() => {
+        return type === undefined ? highLightFind || [] : []
+    }, [type, highLightFind])
 
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<string>(originValue)
@@ -1187,6 +1198,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             webFuzzerCallBack={props.webFuzzerCallBack}
                             editorId={editorId}
                             highLightText={editorHighLightText}
+                            highLightFind={editorHighLightFind}
+                            isPositionHighLightCursor={isPositionHighLightCursor}
+                            highLightFindClass={highLightFindClass}
                             downstreamProxyStr={downstreamProxyStr}
                             url={props.url}
                             downbodyParams={props.downbodyParams}
