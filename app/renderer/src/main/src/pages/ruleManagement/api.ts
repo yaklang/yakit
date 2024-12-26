@@ -80,11 +80,9 @@ export const grpcFetchLocalRuleList: APIFunc<QuerySyntaxFlowRuleRequest, QuerySy
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log(`QuerySyntaxFlowRule-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("QuerySyntaxFlowRule", request)
             .then((res) => {
-                console.log("QuerySyntaxFlowRule-response", res)
                 resolve(res)
             })
             .catch((e) => {
@@ -100,7 +98,6 @@ export const grpcCreateLocalRule: APIFunc<CreateSyntaxFlowRuleRequest, {Rule: Sy
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log(`CreateSyntaxFlowRule-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("CreateSyntaxFlowRuleEx", request)
             .then(resolve)
@@ -117,7 +114,6 @@ export const grpcUpdateLocalRule: APIFunc<UpdateSyntaxFlowRuleRequest, {Rule: Sy
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log(`UpdateSyntaxFlowRule-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("UpdateSyntaxFlowRuleEx", request)
             .then(resolve)
@@ -144,7 +140,6 @@ export const grpcDeleteLocalRule: APIFunc<DeleteSyntaxFlowRuleRequest, any> = (r
 /** @name 更新规则里的本地组 */
 export const grpcUpdateRuleToGroup: APIFunc<UpdateSyntaxFlowRuleAndGroupRequest, any> = (request, hiddenError) => {
     return new Promise(async (resolve, reject) => {
-        console.log(`UpdateSyntaxFlowRuleAndGroup-request`, JSON.stringify(request))
         ipcRenderer
             .invoke("UpdateSyntaxFlowRuleAndGroup", request)
             .then(resolve)

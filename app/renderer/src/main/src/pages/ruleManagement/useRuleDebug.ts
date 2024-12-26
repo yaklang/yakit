@@ -219,10 +219,6 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
                 reject("继续失败，请求参数为空!")
                 return
             }
-            console.log(
-                "SyntaxFlowScan-resume",
-                JSON.stringify({...currentRequest.current, ControlMode: "resume", ResumeTaskId: runtimeId})
-            )
             apiSyntaxFlowScan({...currentRequest.current, ControlMode: "resume", ResumeTaskId: runtimeId}, token)
                 .then(() => {
                     // 清空暂停前的数据
