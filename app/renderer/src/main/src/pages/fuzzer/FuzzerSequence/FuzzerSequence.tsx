@@ -103,6 +103,7 @@ import {
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {WebsiteGV} from "@/enums/website"
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1949,10 +1950,16 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
+                            if (webFuzzerNewEditorRef.current.reqEditor) {
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
+                            if (webFuzzerNewEditorRef.current.reqEditor) {
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCodeWithParam", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
                         onCancel={() => m.destroy()}

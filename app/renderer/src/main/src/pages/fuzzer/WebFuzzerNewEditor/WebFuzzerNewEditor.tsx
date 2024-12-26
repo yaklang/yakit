@@ -14,6 +14,7 @@ import {yakitNotify} from "@/utils/notification"
 import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {setClipboardText} from "@/utils/clipboard"
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -83,10 +84,16 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
+                            if (reqEditor) {
+                                setEditorContext(reqEditor,"hotPatchCode", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
+                            if (reqEditor) {
+                                setEditorContext(reqEditor,"hotPatchCodeWithParam", code)
+                            }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
                         onCancel={() => m.destroy()}

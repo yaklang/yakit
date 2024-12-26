@@ -325,6 +325,10 @@ service Yak {
   // LSP
   rpc YaklangLanguageSuggestion(YaklangLanguageSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
   rpc YaklangLanguageFind(YaklangLanguageSuggestionRequest) returns (YaklangLanguageFindResponse);
+
+  //fuzztag suggestion
+  rpc FuzzTagSuggestion(FuzzTagSuggestionRequest) returns (YaklangLanguageSuggestionResponse);
+
   // 从代码中提取yaklang数据
   rpc YaklangInspectInformation(YaklangInspectInformationRequest) returns (YaklangInspectInformationResponse);
   // 进行数据迁移使用
@@ -5866,4 +5870,10 @@ message GenerateFuzztagRequest{
 message GenerateFuzztagResponse{
   GeneralResponse Status = 1;
   string Result = 2;
+}
+
+message FuzzTagSuggestionRequest{
+  string HotPatchCode = 1;
+  string FuzztagCode = 2;
+  string InspectType = 3;
 }

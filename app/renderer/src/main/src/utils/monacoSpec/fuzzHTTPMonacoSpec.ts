@@ -3,6 +3,7 @@ import { editor, languages, Position } from "monaco-editor";
 import { CancellationToken } from "typescript";
 import "./spaceengine";
 import {
+    FuzzTagSuggestionRequest,
     getCompletionItemKindByName,
     getSortTextByKindAndLabel,
     getWordWithPointAtPosition,
@@ -103,6 +104,17 @@ const httpHeaderSuggestions = [
     }),
 ];
 
+export const getHTTPHeaderSuggestions= (position: monaco.Position) => {
+   return httpHeaderSuggestions.map(
+       i => {
+              return {
+                ...i,
+                range: new monaco.Range(position.lineNumber, position.column-1, position.lineNumber, position.column-1),
+              } as languages.CompletionItem
+       }
+   )
+}
+
 export const fuzzHTTPMonacoSpec= "http";
 
 
@@ -150,11 +162,6 @@ export const newFuzztagCompletionHandlerProvider = (model: editor.ITextModel,pos
             return
         }
 
-        if ((position?.column || 0) <= 0) {
-            resolve({ incomplete: false, suggestions: httpHeaderSuggestions });
-            return
-        }
-
         let parenthesesWord = ""
         let iWord = getWordAtPositionWithSep(model, position, "(")
         if (iWord.word.includes("(")){
@@ -162,7 +169,7 @@ export const newFuzztagCompletionHandlerProvider = (model: editor.ITextModel,pos
         }
         iWord = getWordAtPositionWithSep(model, new monaco.Position(position.lineNumber, iWord.startColumn - parenthesesWord.length), "{{");
         if (!iWord.word.includes("{{")) {
-            resolve({ incomplete: false, suggestions: httpHeaderSuggestions });
+            resolve({ incomplete: false, suggestions: getHTTPHeaderSuggestions(position)});
             return
         }
 
@@ -171,19 +178,11 @@ export const newFuzztagCompletionHandlerProvider = (model: editor.ITextModel,pos
             rangeFix = iWord.word.length + 1
         }
         iWord = { word: iWord.word + parenthesesWord, startColumn: iWord.startColumn, endColumn: iWord.endColumn + parenthesesWord.length };
-        await ipcRenderer.invoke("YaklangLanguageSuggestion", {
+        await ipcRenderer.invoke("FuzzTagSuggestion", {
             InspectType: "completion",
-            YakScriptType: "fuzztag",
-            YakScriptCode: model.getValue(),
-            ModelID: model.id,
-            Range: {
-                Code: iWord.word,
-                StartLine: position.lineNumber,
-                EndLine: position.lineNumber,
-                StartColumn: iWord.startColumn,
-                EndColumn: iWord.endColumn,
-            } as Range,
-        } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
+            HotPatchCode: getModelContext(model,"hotPatchCode"),
+            FuzztagCode: iWord.word,
+        } as FuzzTagSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
             if (r.SuggestionMessage.length > 0) {
                 let range = {
                     startLineNumber: position.lineNumber,
@@ -224,38 +223,10 @@ monaco.languages.registerCompletionItemProvider(fuzzHTTPMonacoSpec, {
     provideCompletionItems: (model, position, context, token) => {
         return new Promise(async (resolve, reject) => {
             await newFuzztagCompletionHandlerProvider(model, position, context, token as any).then((data) => {
-                if (data.suggestions.length > 0) {
-                    let items = data.suggestions;
-                    for (const item of items) {
-                    }
-                    if (position.column < model.getLineMaxColumn(position.lineNumber)) {
-                        // get next character
-                        let nextValue = model.getValueInRange({
-                            startLineNumber: position.lineNumber,
-                            startColumn: position.column,
-                            endLineNumber: position.lineNumber,
-                            endColumn: position.column + 1,
-                        })
-
-                        // if next character is "(", remove the "(" and after content in the insertText
-                        if (nextValue === "(") {
-                            items = items.map(item => {
-                                    let index = item.insertText.indexOf("(");
-                                    if (index !== -1) {
-                                        item.insertText = item.insertText.slice(0, index);
-                                    }
-                                    return item;
-                                }
-                            )
-                        }
-                    }
-                    resolve({
-                        suggestions: items,
-                        incomplete: data.incomplete,
-                    })
-                } else {
-                    resolve({ suggestions: httpHeaderSuggestions})
-                }
+                resolve({
+                    suggestions: data.suggestions,
+                    incomplete: data.incomplete,
+                })
             })
         })
     }
@@ -497,18 +468,12 @@ monaco.languages.registerHoverProvider(fuzzHTTPMonacoSpec, {
             if (secondWord !== null) {
                 rangeCode = firstWord.word + ":" +secondWord.word
             }
-            console.log(rangeCode)
 
             let desc = "";
-            await ipcRenderer.invoke("YaklangLanguageSuggestion", {
+            await ipcRenderer.invoke("FuzzTagSuggestion", {
                 InspectType: "hover",
-                YakScriptType: "fuzztag",
-                YakScriptCode: "",
-                ModelID: model.id,
-                Range: {
-                    Code: rangeCode,
-                } as Range,
-            } as YaklangLanguageSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
+                FuzztagCode: rangeCode,
+            } as FuzzTagSuggestionRequest).then((r: YaklangLanguageSuggestionResponse) => {
                 if (r.SuggestionMessage.length > 0) {
                     r.SuggestionMessage.forEach(v => {
                         desc += v.Label ?? "" + "\n";

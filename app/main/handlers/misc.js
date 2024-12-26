@@ -713,6 +713,23 @@ module.exports = (win, getClient) => {
     })
 
 
+    const asyncFuzzTagSuggestion = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().FuzzTagSuggestion(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    ipcMain.handle("FuzzTagSuggestion", async (e, params) => {
+        return await asyncFuzzTagSuggestion(params)
+    })
+
+
     const asyncVerifySystemCertificate = (params) => {
         return new Promise((resolve, reject) => {
             getClient().VerifySystemCertificate(params, (err, data) => {

@@ -147,6 +147,7 @@ import {
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -1423,6 +1424,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     })
     const setHotPatchCode = useMemoizedFn((v: string) => {
+        if (webFuzzerNewEditorRef.current.reqEditor) {
+            setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", v)
+        }
         hotPatchCodeRef.current = v
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
