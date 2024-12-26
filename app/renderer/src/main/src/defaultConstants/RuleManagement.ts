@@ -25,68 +25,19 @@ export const RuleLanguageList: {value: string; label: string}[] = [
 
 /** 默认的规则源码 */
 export const DefaultRuleContent = `desc(
-    title: "PHP Filtered Path Command Injection",
-    title_zh: "用户输入被过滤的命令注入代码（需额外检查过滤是否充分）",
-    type: audit,
-    level: mid,
-    risk:'rce'
+  // risk/risk_type表示风险类型 如：xss/rce/sqlinjection等
+
+  // type/purpose 表示规则目的: (audit 审计位置/vuln 漏洞点/config 配置项/security 安全信息)
+  type: audit,
+
+  // level/serverity 表示规则默认risk等级，如果在alert中没有指定等级则会使用这个
+  // (info 信息/low 低危/middle 中危/high 高危/critical 严重)
+  level:info,
 )
-<include('php-os-exec')>(* as $sink);
-<include('php-param')> as $params;
-<include('php-filter-function')> as $filter;
 
-check $sink;
+// write your SyntaxFlow Rule, please see: https://ssa.to/syntaxflow-guide/intro, like:
+//     DocumentBuilderFactory.newInstance()...parse(* #-> * as $source) as $sink; // find some call chain for parse
+//     check $sink then 'find sink point' else 'No Found' // if not found sink, the rule will stop here and report error
+//     alert $source // record $source
 
-$sink #{
-    include: \`<self> & $params\`,
-    exclude: \`<self>?{opcode: call}\`
-}-> as $high
-
-check $high
-alert $high for{
-    title_zh: '检测到命令执行，且没有经过任何函数',
-    type: 'vuln',
-    level: 'high'
-}
-
-$sink#{
-    include: \`<self> & $params\`,
-    exclude: \`<self>?{opcode: call && <self><getCaller> & $filter}\`
-}-> as $middle
-
-alert $middle for{
-    title_zh: '检测到命令执行，经过函数过滤，但未检出过滤函数',
-    type: 'vuln',
-    level: 'mid'
-}
-
-$sink #{
-include: \`<self> & $params\`,
-include: \`<self>?{opcode: call && <self><getCaller> & $filter}\`
-       }-> as $low
-alert $low for{
-    title_zh: '检测到命令执行，但是经过函数过滤',
-    type:   'info',
-    level: 'low'
-}
-
-desc(
-    lang: 'php',
-    alert_min: 3,
-    alert_low: 1,
-    alert_mid: 1,
-    alert_high: 1,
-    'file://test.php': <<<CODE
-<?php
-    $a = $_GET[1];
-    system($a); //high
-
-    $b = trim($a);
-    system($b);
-
-    $c = filter($a);
-    system($c); //low
-
-CODE
-)
 `
