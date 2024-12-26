@@ -113,6 +113,7 @@ import MDEditor from "@uiw/react-md-editor"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {onCreateRiskReportModal} from "../CreatRiskReport/CreatRiskReport"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -131,6 +132,10 @@ const batchExportMenuData: (t: (text: string) => string) => YakitMenuItemProps[]
         {
             key: "export-html",
             label: t("YakitRiskTable.export_html")
+        },
+        {
+            key: "export-report",
+            label: "导出 报告"
         }
     ]
 }
@@ -797,6 +802,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             case "export-html":
                 onExportHTML()
                 break
+            case "export-report":
+                onExportReport()
+                break
             default:
                 break
         }
@@ -961,6 +969,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         setTimeout(() => {
             setRiskLoading(false)
         }, 200)
+    })
+    // 导出漏洞报告
+    const onExportReport = useMemoizedFn(() => {
+        onCreateRiskReportModal({
+            ids: allCheck || selectedRowKeys.length === 0 ? [] : selectedRowKeys,
+            riskTableQuery: query
+        })
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {

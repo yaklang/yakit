@@ -67,6 +67,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {usePluginToId} from "@/store/publicMenu"
+import {defMenuDataString} from "@/defaultConstants/Menu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -200,93 +201,105 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
 
     /**
-     * @name 初始化菜单
+     * @name 初始化菜单 nfdw 菜单固定
      * @description 获取模式菜单 如果获取的菜单数据为空，则新增默认菜单数据
      */
     const init = useMemoizedFn((menuMode: string) => {
         setLoading(true)
+        const {menus: menusArr, isError} = jsonDataConvertMenus(defMenuDataString as DatabaseMenuItemProps[])
+        function handleInitMenuData(menusData: DatabaseFirstMenuProps[]) {
+            const database = databaseConvertData(menusData || [])
 
-        ipcRenderer
-            .invoke("GetAllNavigationItem", {Mode: menuMode})
-            .then((res: {Data: DatabaseFirstMenuProps[]}) => {
-                const database = databaseConvertData(res.Data || [])
+            // 过滤掉代码中无效菜单项后的用户数据
+            const caches: DatabaseMenuItemProps[] = []
+            for (let item of database) {
+                // 过滤代码中无效的一级菜单项
+                if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
-                // 过滤掉代码中无效菜单项后的用户数据
-                const caches: DatabaseMenuItemProps[] = []
-                for (let item of database) {
-                    // 过滤代码中无效的一级菜单项
-                    if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
-
-                    const menus: DatabaseMenuItemProps = {...item}
-                    if (item.children && item.children.length > 0) {
-                        menus.children = item.children.filter(
-                            // 过滤代码中无效的二级菜单项
-                            (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
-                        )
-                    }
-                    caches.push(menus)
+                const menus: DatabaseMenuItemProps = {...item}
+                if (item.children && item.children.length > 0) {
+                    menus.children = item.children.filter(
+                        // 过滤代码中无效的二级菜单项
+                        (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
+                    )
                 }
+                caches.push(menus)
+            }
 
-                let filterLocal: EnhancedPrivateRouteMenuProps[] = []
-                getRemoteValue(RemoteGV.UserDeleteMenu)
-                    .then((val) => {
-                        if (val !== "{}") {
-                            let filters: string[] = []
-                            try {
-                                filters = (JSON.parse(val) || {})[menuMode] || []
-                            } catch (error) {}
-                            for (let item of DefaultMenu) {
-                                if (filters.includes(item.menuName)) continue
-                                const menu: EnhancedPrivateRouteMenuProps = {...item, children: []}
-                                if (item.children && item.children.length > 0) {
-                                    for (let subitem of item.children) {
-                                        if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
-                                            menu.children?.push({...subitem})
-                                        }
-                                    }
+            let filterLocal: EnhancedPrivateRouteMenuProps[] = []
+            // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
+            const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
+            if (isInitRef.current) {
+                isInitRef.current = false
+                if (pluginName.length > 0) batchFetchPlugin(menus, pluginName)
+                else {
+                    setRouteMenu(menus)
+                    setSubMenuData(menus[0]?.children || [])
+                    setMenuId(menus[0]?.label || "")
+                    setTimeout(() => setLoading(false), 300)
+                }
+                if (isUpdate) updateMenus(menus)
+            } else {
+                if (isUpdate) updateMenus(menus)
+                else setTimeout(() => setLoading(false), 300)
+                setRouteMenu(menus)
+                setSubMenuData(menus[0]?.children || [])
+                setMenuId(menus[0]?.label || "")
+            }
+        }
+        if (isError) {
+            ipcRenderer
+                .invoke("GetAllNavigationItem", {Mode: menuMode})
+                .then((res: {Data: DatabaseFirstMenuProps[]}) => {
+                    handleInitMenuData(res.Data || [])
+                })
+                .catch((err) => {
+                    failed(t("Layout.HeardMenu.getMenuFailed") + err)
+                    setTimeout(() => setLoading(false), 300)
+                })
+        } else {
+            const menuLists = privateConvertDatabase(menusArr, patternMenu)
+            handleInitMenuData(menuLists as DatabaseFirstMenuProps[])
+        }
+    })
+    const batchFetchPlugin = useMemoizedFn((menus: EnhancedPrivateRouteMenuProps[], pluginName: string[]) => {
+        ipcRenderer
+            .invoke("QueryYakScriptByNames", {YakScriptName: pluginName})
+            .then((res: {Data: YakScript[]}) => {
+                if (res.Data.length > 0) {
+                    // 整理插件名和插件内容的对应关系
+                    const pluginToinfo: Record<string, {ScriptName: string; Id: string; HeadImg: string}> = {}
+                    for (let item of res.Data)
+                        pluginToinfo[item.ScriptName] = {
+                            ScriptName: item.ScriptName,
+                            Id: item.Id + "",
+                            HeadImg: item.HeadImg || ""
+                        }
+                    // 更新菜单数据里的id
+                    menus.forEach((item) => {
+                        if (item.children && item.children.length > 0) {
+                            item.children.forEach((subItem) => {
+                                if (
+                                    subItem.page === YakitRoute.Plugin_OP &&
+                                    pluginToinfo[subItem.yakScripName || subItem.menuName]
+                                ) {
+                                    subItem.yakScriptId =
+                                        +pluginToinfo[subItem.yakScripName || subItem.menuName].Id || 0
                                 }
-                                filterLocal.push(menu)
-                            }
-                        } else {
-                            filterLocal = [...DefaultMenu]
+                            })
                         }
                     })
-                    .catch(() => {
-                        filterLocal = [...DefaultMenu]
-                    })
-                    .finally(async () => {
-                        let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-                        try {
-                            allowModify = JSON.parse(allowModify) || {}
-                        } catch (error) {
-                            allowModify = {}
-                        }
-                        if (!!allowModify[menuMode]) filterLocal = []
-
-                        // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
-                        const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
-
-                        if (isInitRef.current) {
-                            isInitRef.current = false
-                            if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
-                            else {
-                                setRouteMenu(menus)
-                                setSubMenuData(menus[0]?.children || [])
-                                setMenuId(menus[0]?.label || "")
-                                setTimeout(() => setLoading(false), 300)
-                            }
-                            if (isUpdate) updateMenus(menus)
-                        } else {
-                            if (isUpdate) updateMenus(menus)
-                            else setTimeout(() => setLoading(false), 300)
-                            setRouteMenu(menus)
-                            setSubMenuData(menus[0]?.children || [])
-                            setMenuId(menus[0]?.label || "")
-                        }
-                    })
+                }
+                setRouteMenu(menus)
+                setSubMenuData(menus[0]?.children || [])
+                setMenuId(menus[0]?.label || "")
             })
             .catch((err) => {
-                failed(t("Layout.HeardMenu.getMenuFailed") + err)
+                setRouteMenu(menus)
+                setSubMenuData(menus[0]?.children || [])
+                setMenuId(menus[0]?.label || "")
+            })
+            .finally(() => {
                 setTimeout(() => setLoading(false), 300)
             })
     })
