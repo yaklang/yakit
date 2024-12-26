@@ -382,7 +382,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     }, [])
 
-    const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
+    const [isShowEditorDetails, setEditorDetails] = useState<boolean>(true)
     // 当前展示项
     const [showItem, setShowItem] = useState<ShowItemType>("ruleEditor")
     // 最后焦点聚集编辑器输出
