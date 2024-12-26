@@ -501,7 +501,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='响应数量限制' name='resNumlimit' style={{marginBottom: 12}}>
+                            <Form.Item
+                                label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        前端渲染数量
+                                        <Tooltip
+                                            title='不影响发包数量，只影响前端渲染展示数量，超出的数量可通过点击表格的查看全部进行查看'
+                                            overlayStyle={{width: 150}}
+                                        >
+                                            <InformationCircleIcon className={styles["info-icon"]} />
+                                        </Tooltip>
+                                    </span>
+                                }
+                                name='resNumlimit'
+                                style={{marginBottom: 12}}
+                            >
                                 <YakitInputNumber
                                     type='horizontal'
                                     size='small'
