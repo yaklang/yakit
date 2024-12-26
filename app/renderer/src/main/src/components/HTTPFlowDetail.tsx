@@ -714,10 +714,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         setTimeout(() => setInfoTypeLoading(false), 300)
     }, [infoType])
 
-    const httpFlowTableRef: React.MutableRefObject<HTTPFlowExtractedDataTableRefProps> =
-        useRef<HTTPFlowExtractedDataTableRefProps>({
-            jumpDataProjectHighLight: (direction: "next" | "prev") => {}
-        })
+    const httpFlowTableRef = useRef<HTTPFlowExtractedDataTableRefProps>(null)
     const [currId, setCurrId] = useState<number | undefined>()
     const [extractedData, setExtractedData] = useState<HTTPFlowExtractedData[]>([])
     const [exportMITMRuleFilter, setExportMITMRuleFilter] = useState<ExtractedDataFilter>({
@@ -909,7 +906,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             icon={<LeftOutlined />}
                                                             disabled={disablePrev}
                                                             onClick={() => {
-                                                                httpFlowTableRef.current.jumpDataProjectHighLight(
+                                                                httpFlowTableRef.current?.jumpDataProjectHighLight(
                                                                     "prev"
                                                                 )
                                                             }}
@@ -922,7 +919,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             icon={<RightOutlined />}
                                                             disabled={disableNext}
                                                             onClick={() => {
-                                                                httpFlowTableRef.current.jumpDataProjectHighLight(
+                                                                httpFlowTableRef.current?.jumpDataProjectHighLight(
                                                                     "next"
                                                                 )
                                                             }}

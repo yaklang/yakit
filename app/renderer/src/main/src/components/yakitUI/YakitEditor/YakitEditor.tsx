@@ -999,7 +999,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useDebounceEffect(
         () => {
             try {
-                if (editor && isPositionHighLightCursor && highLightFind) {
+                if (editor && isPositionHighLightCursor && highLightFind?.length) {
                     const model = editor.getModel()
                     if ("startOffset" in highLightFind[0]) {
                         const startPosition = model?.getPositionAt(Number(highLightFind[0].startOffset))
