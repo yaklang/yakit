@@ -465,7 +465,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getTableWidget = useMemoizedFn((props: WidgetProps) => {
-        const {value, onChange, options,uiSchema} = props
+        const {value, onChange, options, uiSchema} = props
         return (
             <EditTable
                 columnSchema={props.schema as ColumnSchemaProps}

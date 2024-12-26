@@ -16,3 +16,10 @@
     }
 }
 
+.edit-table{
+    :global {
+        .ant-table-placeholder{
+            display: none;
+        }
+    }
+}

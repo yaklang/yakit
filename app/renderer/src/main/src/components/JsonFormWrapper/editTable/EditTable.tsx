@@ -11,7 +11,6 @@ import {v4 as uuidv4} from "uuid"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
-import {CheckCircleIcon} from "@/assets/newIcon"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 interface Item {
@@ -140,11 +139,15 @@ interface itemsProps {
 interface UiKeyProps {
     // 目前支持的替换控件
     "ui:widget": "textarea"
-    "ui:grid": string | number
+    // "ui:grid": string | number
 }
 
 interface UiKeysProps {
-    [key: string]: UiKeyProps
+    [key: string]: UiKeyProps | DefaultObjProps[]
+}
+
+interface DefaultObjProps {
+    [key: string]: any
 }
 
 export interface ColumnSchemaProps {
@@ -176,7 +179,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     const [requireList, setRequireList] = useState<string[]>([])
     const [maxItems, setMaxItems] = useState<number>()
     const [uiKeys, setUiKeys] = useState<UiKeysProps>()
-
+    const [defaultObj, setDefaultObj] = useState<DefaultObjProps>({})
     useEffect(() => {
         try {
             // columnSchema
@@ -184,8 +187,14 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             const {require, properties} = items
             const newColumns: any[] = []
             const newData: any[] = []
+            const defObj: DefaultObjProps = {}
             // uiSchema
             const newUiKeys = uiSchema?.items as UiKeysProps
+            const newGrid = (newUiKeys?.["ui:grid"]||[]) as DefaultObjProps[]
+            let widthObj = {}
+            newGrid.forEach((item) => {
+                widthObj = {...widthObj, ...item}
+            })
             Object.keys(properties).forEach((key) => {
                 const {type, title, description} = properties[key]
                 newColumns.push({
@@ -203,14 +212,9 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     editable: true,
                     type,
                     enum: properties[key]?.enum,
-                    default: properties[key]?.default,
                     render: (text) => {
                         if (type === "boolean") {
-                            return text ? (
-                                <CheckCircleIcon className={classNames(styles["check-circle-icon"])} />
-                            ) : (
-                                <></>
-                            )
+                            return <YakitSwitch checked={text} />
                         }
                         if (newUiKeys?.[key]?.["ui:widget"] === "textarea") {
                             return (
@@ -230,13 +234,18 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             </div>
                         )
                     },
-                    width: newUiKeys?.[key]?.["ui:grid"]
+                    width: widthObj?.[key]
                 })
 
                 newData.push({
                     _id: uuidv4()
                 })
+                // 默认值赋值
+                if (properties[key]?.default) {
+                    defObj[key] = properties[key]?.default
+                }
             })
+            setDefaultObj(defObj)
             setUiKeys(newUiKeys)
             setRequireList(require)
             setColumns([...newColumns])
@@ -273,46 +282,52 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         onChange && onChange(data)
     })
 
-    const onSave = useMemoizedFn(async (record: Item) => {
-        try {
-            const row = (await form.validateFields()) as Item
-
-            const newData = [...data]
-            const index = newData.findIndex((item) => record._id === item._id)
-            // 修改
-            if (index > -1) {
-                const item = newData[index]
-                newData.splice(index, 1, {
-                    ...item,
-                    ...row
-                })
-                setData(newData)
-                setEditingId("")
-                onSubmit(newData)
+    const onSave = useMemoizedFn((record: Item) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const row = (await form.validateFields()) as Item
+                console.log("111")
+                const newData = [...data]
+                const index = newData.findIndex((item) => record._id === item._id)
+                // 修改
+                if (index > -1) {
+                    const item = newData[index]
+                    newData.splice(index, 1, {
+                        ...item,
+                        ...row
+                    })
+                    setData(newData)
+                    setEditingId("")
+                    onSubmit(newData)
+                }
+                // 新增
+                else if (cacheData.length > 0 && record._id === cacheData[0]._id) {
+                    newData.push({...cacheData[0], ...row})
+                    setCacheData([])
+                    setData(newData)
+                    setEditingId("")
+                    onSubmit(newData)
+                }
+                resolve(null)
+            } catch (errInfo) {
+                console.log("Validate Failed:", errInfo)
+                reject()
             }
-            // 新增
-            else if (cacheData.length > 0 && record._id === cacheData[0]._id) {
-                newData.push({...cacheData[0], ...row})
-                setCacheData([])
-                setData(newData)
-                setEditingId("")
-                onSubmit(newData)
-            }
-        } catch (errInfo) {
-            console.log("Validate Failed:", errInfo)
-        }
+        })
     })
 
-    const addCell = useMemoizedFn(() => {
+    const addCell = useMemoizedFn(async () => {
         if (typeof maxItems === "number" && data.length >= maxItems) {
             warn(`已达最大数量${maxItems}`)
             return
         }
         if (cacheData.length !== 0) {
-            warn("只能新增一行")
-            return
+            await onSave(cacheData[0])
         }
         form.resetFields()
+        if (Object.keys(defaultObj).length !== 0) {
+            form.setFieldsValue({...defaultObj})
+        }
         const _id = uuidv4()
         setCacheData([{_id}])
         setEditingId(_id)
@@ -389,6 +404,9 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     return (
         <Form form={form} component={false}>
             <Table
+                className={classNames({
+                    [styles["edit-table"]]: realData.length === 0
+                })}
                 components={{
                     body: {
                         cell: EditableCell
@@ -396,7 +414,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 }}
                 dataSource={realData}
                 columns={mergedColumns}
-                rowClassName='editable-row'
                 pagination={false}
                 scroll={{x: uiSchema?.x, y: uiSchema?.y}}
             />
