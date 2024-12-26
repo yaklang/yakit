@@ -126,6 +126,11 @@
             font-weight: 500;
             line-height: 16px;
         }
+        .header-extra {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
     }
 
     .list-search {

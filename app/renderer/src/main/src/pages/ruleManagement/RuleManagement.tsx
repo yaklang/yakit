@@ -1,5 +1,5 @@
-import React, {memo, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {
     QuerySyntaxFlowRuleResponse,
     RuleManagementProps,
@@ -21,7 +21,6 @@ import {isCommunityEdition} from "@/utils/envfile"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
 import {genDefaultPagination} from "../invoker/schema"
@@ -29,7 +28,7 @@ import {grpcDeleteLocalRule, grpcFetchLocalRuleList} from "./api"
 import {RuleLanguageList, RuleType, RuleTypeList} from "@/defaultConstants/RuleManagement"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {Tooltip} from "antd"
-import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -50,8 +49,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     }, [])
 
     /** ---------- 搜索/获取表格数据 Start ---------- */
+    const initLoading = useRef<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [filters, setFilters, getFilters] = useGetSetState<SyntaxFlowRuleFilter>({})
+    const [filters, setFilters] = useState<SyntaxFlowRuleFilter>({})
     const [data, setData] = useState<QuerySyntaxFlowRuleResponse>({
         Rule: [],
         Pagination: {...genDefaultPagination(20)},
@@ -79,8 +79,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     // 清空选中并刷新列表和规则组数据
     const handleRefreshGroup = useMemoizedFn(() => {
-        setAllCheck(false)
-        setSelectList([])
         setGroupRefresh((v) => !v)
         fetchList()
     })
@@ -100,8 +98,13 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             if (loading) return
 
             const pagination: Paging = {...DefaultPaging, Page: page || 1}
+            if (pagination.Page === 1) {
+                handleAllCheck([], [], false)
+                initLoading.current = true
+            }
+
             setLoading(true)
-            grpcFetchLocalRuleList({Pagination: pagination, Filter: cloneDeep(getFilters())})
+            grpcFetchLocalRuleList({Pagination: pagination, Filter: cloneDeep(filters)})
                 .then((res) => {
                     const {Pagination, Rule, Total} = res
                     const rules = pagination.Page === 1 ? Rule : (data?.Rule || []).concat(Rule)
@@ -121,6 +124,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 .catch(() => {})
                 .finally(() => {
                     setTimeout(() => {
+                        initLoading.current = false
                         setLoading(false)
                     }, 200)
                 })
@@ -128,13 +132,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         {wait: 300}
     ).run
 
-    useDebounceEffect(
-        () => {
-            fetchList()
-        },
-        [filters],
-        {wait: 300}
-    )
+    useEffect(() => {
+        fetchList()
+    }, [filters])
 
     /** ---------- 搜索/获取表格数据 End ---------- */
 
@@ -319,7 +319,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const handleCallbackEditHint = useMemoizedFn((result: boolean, info?: SyntaxFlowRule) => {
         if (result) {
             if (!info) return
-            fetchList()
+            handleRefreshGroup()
         }
         handleCancelEditHint()
     })
@@ -378,56 +378,58 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     })
 
     return (
-        <WaterMark content={waterMarkStr || ""} className={styles["water-mark"]}>
-            <div ref={wrapperRef} className={styles["rule-management-page"]}>
-                <div className={styles["rule-management-group"]}>
-                    <div className={styles["group-list"]}>
-                        <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
-                    </div>
+        <WaterMark content={waterMarkStr || ""} className={styles["water-mark"]} zIndex={99999}>
+            <YakitSpin spinning={initLoading.current}>
+                <div ref={wrapperRef} className={styles["rule-management-page"]}>
+                    <div className={styles["rule-management-group"]}>
+                        <div className={styles["group-list"]}>
+                            <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
+                        </div>
 
-                    {/* <div className={styles["group-divider"]}></div>
+                        {/* <div className={styles["group-divider"]}></div>
 
                 <div className={styles["group-list"]}></div> */}
-                </div>
+                    </div>
 
-                <div className={styles["rule-management-body"]}>
-                    <TableVirtualResize<SyntaxFlowRule>
-                        titleHeight={68}
-                        renderTitle={
-                            <div className={styles["table-header"]}>
-                                <div className={styles["header-body"]}>
-                                    <div className={styles["header-title"]}>
-                                        <Tooltip placement='bottom' title={tableHeaderTitle}>
-                                            <span
-                                                className={classNames(
-                                                    styles["title-style"],
-                                                    "yakit-content-single-ellipsis"
-                                                )}
-                                            >
-                                                {tableHeaderTitle}
-                                            </span>
-                                        </Tooltip>
-                                    </div>
+                    <div className={styles["rule-management-body"]}>
+                        <TableVirtualResize<SyntaxFlowRule>
+                            titleHeight={68}
+                            isHiddenLoadingUI={true}
+                            renderTitle={
+                                <div className={styles["table-header"]}>
+                                    <div className={styles["header-body"]}>
+                                        <div className={styles["header-title"]}>
+                                            <Tooltip placement='bottom' title={tableHeaderTitle}>
+                                                <span
+                                                    className={classNames(
+                                                        styles["title-style"],
+                                                        "yakit-content-single-ellipsis"
+                                                    )}
+                                                >
+                                                    {tableHeaderTitle}
+                                                </span>
+                                            </Tooltip>
+                                        </div>
 
-                                    <div className={styles["header-extra"]}>
-                                        <YakitInput.Search
-                                            size='large'
-                                            allowClear={true}
-                                            placeholder='请输入关键词搜索'
-                                            onSearch={handleSearch}
-                                        />
-                                        <div className={styles["divider-style"]}></div>
-
-                                        <div className={styles["btns-group"]}>
-                                            <YakitButton
-                                                type='outline1'
-                                                colors='danger'
-                                                icon={<OutlineTrashIcon />}
-                                                loading={delLoading}
-                                                onClick={handleBatchDelRule}
+                                        <div className={styles["header-extra"]}>
+                                            <YakitInput.Search
+                                                size='large'
+                                                allowClear={true}
+                                                placeholder='请输入关键词搜索'
+                                                onSearch={handleSearch}
                                             />
+                                            <div className={styles["divider-style"]}></div>
 
-                                            {/* <YakitButton
+                                            <div className={styles["btns-group"]}>
+                                                <YakitButton
+                                                    type='outline1'
+                                                    colors='danger'
+                                                    icon={<OutlineTrashIcon />}
+                                                    loading={delLoading}
+                                                    onClick={handleBatchDelRule}
+                                                />
+
+                                                {/* <YakitButton
                                                 type='outline2'
                                                 icon={<OutlineExportIcon />}
                                                 onClick={handleOpenExportHint}
@@ -439,69 +441,70 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                 导入
                                             </YakitButton> */}
 
-                                            <YakitButton
-                                                icon={<OutlinePlusIcon />}
-                                                onClick={() => {
-                                                    handleOpenEditHint()
-                                                }}
-                                            >
-                                                新建
-                                            </YakitButton>
+                                                <YakitButton
+                                                    icon={<OutlinePlusIcon />}
+                                                    onClick={() => {
+                                                        handleOpenEditHint()
+                                                    }}
+                                                >
+                                                    新建
+                                                </YakitButton>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className={styles["header-body"]}>
-                                    <div className={styles["header-title"]}>
-                                        <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
+                                    <div className={styles["header-body"]}>
+                                        <div className={styles["header-title"]}>
+                                            <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
+                                        </div>
+
+                                        <UpdateRuleToGroup
+                                            allCheck={allCheck}
+                                            rules={selectList}
+                                            filters={filters}
+                                            callback={handleRefreshGroup}
+                                        />
                                     </div>
-
-                                    <UpdateRuleToGroup
-                                        allCheck={allCheck}
-                                        rules={selectList}
-                                        filters={filters}
-                                        callback={handleRefreshGroup}
-                                    />
                                 </div>
-                            </div>
-                        }
-                        rowSelection={{
-                            isAll: allCheck,
-                            type: "checkbox",
-                            selectedRowKeys: selectKeys,
-                            onSelectAll: handleAllCheck,
-                            onChangeCheckboxSingle: handleCheckboxChange
-                        }}
-                        isRefresh={isRefresh}
-                        pagination={{
-                            total: data.Total,
-                            limit: data.Pagination.Limit,
-                            page: data.Pagination.Page,
-                            onChange: fetchList
-                        }}
-                        containerClassName={styles["table-body"]}
-                        loading={loading}
-                        renderKey='RuleName'
-                        data={data.Rule}
-                        columns={columns}
-                        query={filters}
-                        onChange={onTableFilterChange}
+                            }
+                            rowSelection={{
+                                isAll: allCheck,
+                                type: "checkbox",
+                                selectedRowKeys: selectKeys,
+                                onSelectAll: handleAllCheck,
+                                onChangeCheckboxSingle: handleCheckboxChange
+                            }}
+                            isRefresh={isRefresh}
+                            pagination={{
+                                total: data.Total,
+                                limit: data.Pagination.Limit,
+                                page: data.Pagination.Page,
+                                onChange: fetchList
+                            }}
+                            containerClassName={styles["table-body"]}
+                            loading={loading}
+                            renderKey='RuleName'
+                            data={data.Rule}
+                            columns={columns}
+                            query={filters}
+                            onChange={onTableFilterChange}
+                        />
+                    </div>
+
+                    <RuleImportExportModal
+                        getContainer={wrapperRef.current || undefined}
+                        visible={exportHint}
+                        onCallback={handleCallbackExportHint}
+                    />
+
+                    <EditRuleDrawer
+                        getContainer={wrapperRef.current || undefined}
+                        info={editInfo.current}
+                        visible={editHint}
+                        onCallback={handleCallbackEditHint}
                     />
                 </div>
-
-                <RuleImportExportModal
-                    getContainer={wrapperRef.current || undefined}
-                    visible={exportHint}
-                    onCallback={handleCallbackExportHint}
-                />
-
-                <EditRuleDrawer
-                    getContainer={wrapperRef.current || undefined}
-                    info={editInfo.current}
-                    visible={editHint}
-                    onCallback={handleCallbackEditHint}
-                />
-            </div>
+            </YakitSpin>
         </WaterMark>
     )
 })

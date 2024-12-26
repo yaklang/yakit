@@ -75,6 +75,16 @@ export default function useRuleDebug(params: {token: string; errorCallback?: () 
             return () => {
                 clearInterval(id)
                 id = null
+                setTimeout(() => {
+                    const logs: StreamResult.Log[] = messages.current
+                        .filter((i) => i.type === "log")
+                        .map((i) => i.content as StreamResult.Log)
+                        .filter((i) => i.data !== "null")
+                    setStreamInfo({
+                        cardState: convertCardInfo(cardKVPair.current),
+                        logState: logs
+                    })
+                }, 500)
             }
         }
     }, [isStart])

@@ -130,7 +130,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         onMoveRowEnd,
         useUpAndDown,
         containerClassName,
-        isRightClickBatchOperate
+        isRightClickBatchOperate,
+        isHiddenLoadingUI = false
     } = props
     const defItemHeight = useCreation(() => {
         if (size === "middle") return 32
@@ -1024,7 +1025,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </>
             )}
             {(width === 0 && <YakitSpin spinning={true} tip='加载中...'></YakitSpin>) || (
-                <YakitSpin spinning={loading !== undefined ? loading && pagination?.page == 1 : false}>
+                <YakitSpin spinning={isHiddenLoadingUI ? false : (loading !== undefined ? loading && pagination?.page == 1 : false)}>
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{

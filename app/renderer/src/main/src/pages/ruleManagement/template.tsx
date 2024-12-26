@@ -12,10 +12,11 @@ import {
     RuleDebugAuditDetailProps,
     RuleDebugAuditListProps
 } from "./RuleManagementType"
-import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useVirtualList} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouduploadIcon,
+    OutlineExclamationcircleIcon,
     OutlineLightbulbIcon,
     OutlineOpenIcon,
     OutlinePencilaltIcon,
@@ -26,7 +27,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
-import {Form, InputRef, Tooltip} from "antd"
+import {Form, InputRef, Modal, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -142,14 +143,19 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
     /** ---------- 多选逻辑 ---------- */
     const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
     const selectGroups = useMemo(() => {
+        return select.map((item) => item.GroupName)
+    }, [select])
+    useUpdateEffect(() => {
         // 这里的延时触发搜索由外层去控制
         onGroupChange(select.map((item) => item.GroupName))
-        return select.map((item) => item.GroupName)
     }, [select])
     const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
         const isExist = select.includes(info)
         if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
         else setSelect((arr) => [...arr, info])
+    })
+    const handleReset = useMemoizedFn(() => {
+        setSelect([])
     })
 
     // 更新数据
@@ -300,7 +306,12 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
                 <div className={styles["title-body"]}>
                     规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
                 </div>
-                <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
+                <div className={styles["header-extra"]}>
+                    <YakitButton type='text' onClick={handleReset}>
+                        重置
+                    </YakitButton>
+                    <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
+                </div>
             </div>
 
             <div className={styles["list-search"]}>
@@ -525,7 +536,66 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     }, [getContainerSize])
 
     const handleCancel = useMemoizedFn(() => {
-        onCallback(false)
+        let isModify: boolean = false
+
+        const formData = handleGetFormData()
+        if (!formData) {
+            yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
+            return
+        }
+        if (isEdit) {
+            isModify = content !== info?.Content
+            isModify =
+                isModify ||
+                info?.RuleName !== formData.RuleName ||
+                info?.Language !== formData.Language ||
+                info?.Description !== formData.Description
+            const oldFilters = (info?.GroupName || []).filter((item) => !formData.GroupNames.includes(item))
+            const newFilters = formData.GroupNames.filter((item) => !(info?.GroupName || []).includes(item))
+            isModify = isModify || oldFilters.length > 0 || newFilters.length > 0
+        } else {
+            isModify = DefaultRuleContent !== content
+            isModify =
+                isModify ||
+                !!formData.RuleName ||
+                !!formData.Language ||
+                !!formData.Description ||
+                formData.GroupNames.length > 0
+        }
+
+        if (isModify) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <OutlineExclamationcircleIcon />,
+                content: "请问是否要保存规则并关闭弹框？",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <OutlineXIcon />
+                    </div>
+                ),
+                onOk: () => {
+                    handleFormSubmit()
+                    Modal.destroyAll()
+                },
+                onCancel: () => {
+                    onCallback(false)
+                    Modal.destroyAll()
+                },
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
+            })
+        } else {
+            onCallback(false)
+        }
     })
 
     const isEdit = useMemo(() => !!info, [info])
@@ -703,10 +773,9 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     ).run
 
     const token = useRef<string>(randomString(20))
-    const [{executeStatus, progress, runtimeId, streamInfo}, {onStart, onPause, onContinue, onStop, onReset}] =
-        useRuleDebug({
-            token: token.current
-        })
+    const [{executeStatus, progress, runtimeId, streamInfo}, {onStart, onStop, onReset}] = useRuleDebug({
+        token: token.current
+    })
 
     // 是否正在执行中
     const isExecuting = useMemo(() => {
@@ -751,14 +820,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         } catch (error) {
             if (!expand) handleSetExpand()
         }
-    })
-
-    const handlePause = useMemoizedFn(() => {
-        onPause()
-    })
-
-    const handleContinue = useMemoizedFn(() => {
-        onContinue()
     })
 
     const handleStop = useMemoizedFn(() => {
@@ -964,11 +1025,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                             {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
                             {isExecuting ? (
                                 <div className={styles["extra-btns"]}>
-                                    {executeStatus === "paused" ? (
-                                        <YakitButton onClick={handleContinue}>继续</YakitButton>
-                                    ) : (
-                                        <YakitButton onClick={handlePause}>暂停</YakitButton>
-                                    )}
                                     <YakitButton danger onClick={handleStop}>
                                         停止
                                     </YakitButton>
@@ -1833,7 +1889,11 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
                         const {ResultID, Title, Severity} = item.data
                         const title = SeverityMapTag.find((item) => item.key.includes(Severity || ""))
                         return (
-                            <div className={classNames(styles["audit-opt"])} onClick={() => onDetail(item.data)}>
+                            <div
+                                key={ResultID}
+                                className={classNames(styles["audit-opt"])}
+                                onClick={() => onDetail(item.data)}
+                            >
                                 <YakitRoundCornerTag>{ResultID}</YakitRoundCornerTag>
                                 <div
                                     className={classNames(styles["opt-title"], "yakit-content-single-ellipsis")}
