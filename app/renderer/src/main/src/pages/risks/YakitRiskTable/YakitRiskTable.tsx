@@ -97,6 +97,8 @@ import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {onCreateRiskReportModal} from "../CreatRiskReport/CreatRiskReport"
+import {isEnpriTrace} from "@/utils/envfile"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -114,6 +116,10 @@ const batchExportMenuData: YakitMenuItemProps[] = [
     {
         key: "export-html",
         label: "导出 html"
+    },
+    {
+        key: "export-report",
+        label: "导出 报告"
     }
 ]
 const batchRefreshMenuData: YakitMenuItemProps[] = [
@@ -720,6 +726,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             case "export-html":
                 onExportHTML()
                 break
+            case "export-report":
+                onExportReport()
+                break
             default:
                 break
         }
@@ -875,6 +884,13 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         setTimeout(() => {
             setRiskLoading(false)
         }, 200)
+    })
+    // 导出漏洞报告
+    const onExportReport = useMemoizedFn(() => {
+        onCreateRiskReportModal({
+            ids: allCheck || selectedRowKeys.length === 0 ? [] : selectedRowKeys,
+            riskTableQuery: query
+        })
     })
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
@@ -1260,7 +1276,17 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                         />
                                         <YakitDropdownMenu
                                             menu={{
-                                                data: batchExportMenuData,
+                                                data: batchExportMenuData.filter((item) => {
+                                                    if (isEnpriTrace()) {
+                                                        return true
+                                                    } else {
+                                                        if (["export-report"].includes(item.key)) {
+                                                            return false
+                                                        } else {
+                                                            return true
+                                                        }
+                                                    }
+                                                }),
                                                 onClick: ({key}) => {
                                                     onExportMenuSelect(key)
                                                 }
