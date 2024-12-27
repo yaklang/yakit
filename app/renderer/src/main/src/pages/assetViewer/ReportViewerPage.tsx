@@ -116,15 +116,19 @@ const ReportList: React.FC<ReportListProp> = (props) => {
 
     useEffect(() => {
         ipcRenderer.on("fetch-simple-open-report", (e, reportId: number) => {
-            update(1)
-            reportId && onSetSelectReportId(reportId)
+            if (reportId) {
+                update(1)
+                onSetSelectReportId(reportId)
+            } else {
+                update(1, true)
+            }
         })
         return () => {
             ipcRenderer.removeAllListeners("fetch-simple-open-report")
         }
     }, [])
 
-    const update = (page: number) => {
+    const update = (page: number, selectFirst?: boolean) => {
         setLoading(true)
         const paginationProps = {
             ...query.Pagination,
@@ -156,6 +160,11 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                     ...res,
                     Data: d
                 })
+
+                if (selectFirst && d.length) {
+                    onSetSelectReportId(d[0].Id)
+                }
+
                 if (isInit) {
                     setIsRefresh((prevIsRefresh) => !prevIsRefresh)
                     setSelectList([])
