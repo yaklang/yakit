@@ -119,7 +119,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     useEffect(() => {
         // 当外部 value 变化时更新内部状态
-        setFormData(value)
+        value && setFormData(value)
     }, [value])
 
     // const UploadFolderPath = useMemoizedFn((props: FieldProps) => {

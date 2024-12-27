@@ -1,5 +1,5 @@
 import React, {ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Card, Col, Form, Typography, Row, Statistic, Tooltip} from "antd"
+import {Card, Col, Form, Typography, Row, Statistic, Tooltip, Space} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
@@ -34,7 +34,9 @@ import {SolidDotsverticalIcon, SolidLightningboltIcon} from "@/assets/icon/solid
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
-import { getJsonSchemaListResult } from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 const {Text} = Typography
 
 const {ipcRenderer} = window.require("electron")
@@ -102,24 +104,61 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         submitFlag: boolean
     ) => {
         if (requiredParams.length || groupParams.length) {
-            let m = showYakitModal({
+            let m = showYakitDrawer({
                 title: (
-                    <div>
-                        参数设置：
-                        <Text
-                            style={{maxWidth: 400}}
-                            ellipsis={{
-                                tooltip: true
-                            }}
-                        >
-                            {`${i.ScriptName}`}
-                        </Text>
+                    <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
+                        <div>
+                            参数设置：
+                            <Text
+                                style={{maxWidth: 400}}
+                                ellipsis={{
+                                    tooltip: true
+                                }}
+                            >
+                                {`${i.ScriptName}`}
+                            </Text>
+                        </div>
+                        <Space>
+                            <YakitButton
+                                type='outline2'
+                                onClick={() => {
+                                    m.destroy()
+                                }}
+                            >
+                                取消
+                            </YakitButton>
+                            <YakitButton
+                                onClick={() => {
+                                    if (mitmHasParamsPluginFormRef.current) {
+                                        mitmHasParamsPluginFormRef.current.onSubmit().then((values) => {
+                                            if (values) {
+                                                const saveParams: CustomPluginExecuteFormValue = {...values}
+                                                const saveParasmArr: YakExecutorParam[] = []
+                                                Object.keys(saveParams).forEach((key) => {
+                                                    if (saveParams[key] !== false) {
+                                                        saveParasmArr.push({Key: key, Value: saveParams[key]})
+                                                    }
+                                                })
+                                                setRemoteValue(
+                                                    "mitm_has_params_" + i.ScriptName,
+                                                    JSON.stringify(saveParasmArr)
+                                                )
+                                                if (submitFlag) {
+                                                    clearMITMPluginCache()
+                                                    onSubmitYakScriptId(script.Id, saveParasmArr)
+                                                    setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
+                                                }
+                                                m.destroy()
+                                            }
+                                        })
+                                    }
+                                }}
+                            >
+                                确定
+                            </YakitButton>
+                        </Space>
                     </div>
                 ),
-                width: 600,
-                closable: true,
-                centered: true,
-                maskClosable: false,
                 content: (
                     <div className={style["mitm-params-set"]}>
                         <MitmHasParamsForm
@@ -130,30 +169,11 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         />
                     </div>
                 ),
-                onOkText: "确定",
-                onOk: () => {
-                    if (mitmHasParamsPluginFormRef.current) {
-                        mitmHasParamsPluginFormRef.current.onSubmit().then((values) => {
-                            if (values) {
-                                const saveParams: CustomPluginExecuteFormValue = {...values}
-                                const saveParasmArr: YakExecutorParam[] = []
-                                Object.keys(saveParams).forEach((key) => {
-                                    if (saveParams[key] !== false) {
-                                        saveParasmArr.push({Key: key, Value: saveParams[key]})
-                                    }
-                                })
-                                setRemoteValue("mitm_has_params_" + i.ScriptName, JSON.stringify(saveParasmArr))
-                                if (submitFlag) {
-                                    clearMITMPluginCache()
-                                    onSubmitYakScriptId(script.Id, saveParasmArr)
-                                    setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
-                                }
-                                m.destroy()
-                            }
-                        })
-                    }
-                },
-                onCancel: () => {
+                width: "40%",
+                placement: "left",
+                mask: true,
+                closable: false,
+                onClose: () => {
                     m.destroy()
                 }
             })
@@ -468,7 +488,7 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
     const {initFormValue, requiredParams, groupParams} = props
     const [form] = Form.useForm()
     const jsonSchemaListRef = useRef<{
-        [key: string]: any; 
+        [key: string]: any
     }>({})
 
     useImperativeHandle(
@@ -485,12 +505,12 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             form.validateFields()
                 .then((values) => {
                     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                    if(result.jsonSchemaError.length>0) {
+                    if (result.jsonSchemaError.length > 0) {
                         failed(`jsonSchema校验失败`)
                         return
                     }
-                    result.jsonSchemaSuccess.forEach((item)=>{
-                        values[item.key] = JSON.stringify(item.value) 
+                    result.jsonSchemaSuccess.forEach((item) => {
+                        values[item.key] = JSON.stringify(item.value)
                     })
                     resolve(values)
                 })
@@ -508,7 +528,13 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             wrapperCol={{span: 16}}
             initialValues={initFormValue}
         >
-            <ExecuteEnterNodeByPluginParams paramsList={requiredParams} pluginType={"mitm"} isExecuting={false} jsonSchemaListRef={jsonSchemaListRef} jsonSchemaInitial={initFormValue}/>
+            <ExecuteEnterNodeByPluginParams
+                paramsList={requiredParams}
+                pluginType={"mitm"}
+                isExecuting={false}
+                jsonSchemaListRef={jsonSchemaListRef}
+                jsonSchemaInitial={initFormValue}
+            />
             <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={"mitm"} />
         </Form>
     )
