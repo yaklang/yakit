@@ -98,7 +98,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         try {
             const result = jsonSchemaRef.current?.validate(getFormData())
             // console.log("result?.errors", result?.errors)
-            // console.log("formData---", field, getFormData())
+            console.log("formData---", field, getFormData())
 
             return {
                 pass: (result?.errors || []).length === 0,

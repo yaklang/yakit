@@ -1387,14 +1387,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         // 是否表单校验中
         const [isVerifyForm, setVerifyForm] = useState<boolean>(false)
         const [activeKey, setActiveKey] = useState<string | string[]>()
-        // 必要参数
-        // const requiredParams = useMemo(() => {
-        //     return (
-        //         plugin?.Params.filter((item) => !!item.Required).map((item) => {
-        //             return item
-        //         }) || []
-        //     )
-        // }, [plugin?.Params])
+        const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
+        // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
+        const isRealStartRef = useRef<boolean>(false)
 
         /** 选填参数 */
         const groupParams = useMemo(() => {
@@ -1425,11 +1420,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     double: false,
                     data: []
                 }
-                console.log("customParams---", customArr, {
-                    peepholeArr,
-                    languageArr
-                })
-
                 return {
                     peepholeArr,
                     languageArr
@@ -1448,8 +1438,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             apiKey: "DebugPlugin",
             token: tokenRef.current,
             onEnd: () => {
-                console.log("onEnd---")
-
                 debugPluginStreamEvent.stop()
                 setTimeout(() => {
                     setAuditsExecuting(false)
@@ -1465,8 +1453,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         })
         const runnerProject = useRef<string>()
 
-        // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
-        const isRealStartRef = useRef<boolean>(false)
         // 执行审计
         const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
             debugPluginStreamEvent.reset()
@@ -1501,16 +1487,15 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
         )
 
         useUpdateEffect(() => {
-            console.log("ooo", streamInfo)
             // 此处为真正的启动
             if (!isRealStartRef.current) {
                 const startLog = streamInfo.logState.find((item) => item.level === "code")
                 if (startLog && startLog.data) {
                     try {
-                        const {error} = JSON.parse(startLog?.data) as VerifyStartProps
-                        const {kind, msg} = error
-                        console.log("error---", error)
+                        const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
+                        const {kind, msg} = verifyStart.error
                         setVerifyForm(false)
+                        runnerProject.current = verifyStart.program_name
                         switch (kind) {
                             // 链接错误
                             case "connectFailException":
@@ -1532,12 +1517,32 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 break
                             // 文件类型错误
                             case "fileTypeException":
+                                form.setFields([
+                                    {
+                                        name: "proxy",
+                                        errors: []
+                                    },
+                                    {
+                                        name: "language",
+                                        errors: []
+                                    }
+                                ])
                                 warn(
                                     "输入文件无法解析，请检查输入的路径为文件夹或jar/war/zip文件，或链接是否包含http/https/git协议头"
                                 )
                                 break
                             // 文件不存在错误
                             case "fileNotFoundException":
+                                form.setFields([
+                                    {
+                                        name: "proxy",
+                                        errors: []
+                                    },
+                                    {
+                                        name: "language",
+                                        errors: []
+                                    }
+                                ])
                                 warn(
                                     "路径错误或者输入的内容无法识别，请检查输入的路径是否存在文件或文件夹或链接是否有http/https/git协议头。"
                                 )
@@ -1576,8 +1581,12 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                 // 当任务结束时 跳转打开编译列表
                 if (progress === 1) {
                     setTimeout(() => {
-                        setExecuteType("old")
-                        runnerProject.current && onStartExecute({project: [runnerProject.current]}, true)
+                        if (runnerProject.current) {
+                            setExecuteType("old")
+                            onStartExecute({project: [runnerProject.current]}, true)
+                        } else {
+                            failed("项目名获取失败")
+                        }
                     }, 300)
                 }
 
@@ -1621,14 +1630,9 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     return item
                 })
             }
-
-            runnerProject.current = value["programName"]
-            console.log("requestParams---", requestParams)
-
             onStartAudit(requestParams)
         })
 
-        const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
         return (
             <div className={styles["code-scan-audit-execute-form"]}>
                 <Form
@@ -1663,13 +1667,14 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     /> */}
 
                     {groupParams.length > 0 && (
-                        <>
-                            <div className={styles["additional-params-divider"]}>
+                        <Row>
+                            <Col span={18}>
+                            <div className={styles["additional-params-divider"]} style={{marginLeft: "calc(33% - 98px)"}}>
                                 <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                                <div className={styles["divider-style"]}></div>
+                                <div className={styles["divider-style"]} />
                             </div>
                             <YakitCollapse
-                                className={styles["extra-params-node-type"]}
+                                className={styles["extra-params-collapse"]}
                                 activeKey={activeKey}
                                 onChange={(v) => {
                                     setActiveKey(v)
@@ -1695,6 +1700,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                     </Form.Item>
                                     <Form.Item name='peephole' label='项目分片'>
                                         <Slider
+                                            style={{width: 300}}
                                             dots
                                             min={0}
                                             max={3}
@@ -1720,8 +1726,10 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                                 extraParamsGroup={groupParams}
                                 pluginType={"yak"}
                                 isDefaultActiveKey={false}
+                                wrapperClassName={styles["extra-node-collapse"]}
                             />
-                        </>
+                            </Col>
+                        </Row>
                     )}
 
                     <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
@@ -1742,8 +1750,6 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     agentConfigModalVisible={agentConfigModalVisible}
                     onCloseModal={() => setAgentConfigModalVisible(false)}
                     generateURL={(url) => {
-                        console.log("wawawa", url)
-
                         form.setFieldsValue({proxy: url})
                     }}
                 />

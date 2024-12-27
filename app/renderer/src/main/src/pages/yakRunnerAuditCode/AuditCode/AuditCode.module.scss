@@ -407,7 +407,7 @@
         flex-direction: row;
         gap: 4px;
     }
-    .onlyRisk-box{
+    .onlyRisk-box {
         padding: 4px 8px;
     }
     .audit-history-list-container {
@@ -438,4 +438,34 @@
             }
         }
     }
+}
+
+.additional-params-divider {
+    margin: 16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    .text-style {
+        color: #b4bbca;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .divider-style {
+        flex: 1;
+        overflow: hidden;
+        height: 1px;
+        border-top: 1px dashed #eaecf3;
+    }
+}
+
+.agent-down-stream-proxy {
+    color: var(--yakit-primary-5);
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.extra-params-divider {
+    border-bottom: 1px solid #eaecf3;
 }
