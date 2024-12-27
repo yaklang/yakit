@@ -182,12 +182,15 @@ export default PluginExecuteExtraParams
 interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper{
     extraParamsGroup: YakExtraParamProps[]
     pluginType: string
+    // 是否应用默认值
+    isDefaultActiveKey?: boolean
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-    const {extraParamsGroup, pluginType,jsonSchemaListRef} = props
+    const {extraParamsGroup, pluginType,jsonSchemaListRef,isDefaultActiveKey= true} = props
     const defaultActiveKey = useMemo(() => {
+        if(!isDefaultActiveKey) return undefined
         return extraParamsGroup.map((ele) => ele.group)
-    }, [extraParamsGroup])
+    }, [extraParamsGroup,isDefaultActiveKey])
     return (
         <YakitCollapse defaultActiveKey={defaultActiveKey} className={styles["extra-params-node-type"]}>
             {extraParamsGroup.map((item, index) => (

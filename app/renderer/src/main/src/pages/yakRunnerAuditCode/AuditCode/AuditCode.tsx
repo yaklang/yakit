@@ -1402,8 +1402,6 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         PluginName: ""
                     }
 
-                    const request: Record<string, any> = {}
-                    for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
                     requestParams.ExecParams = getYakExecutorParam({...value})
                     // 缓存项目路径
                     if (value?.ProgramPath) {
