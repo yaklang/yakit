@@ -286,7 +286,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         return new Promise(async (resolve, reject) => {
             try {
                 const row = (await form.validateFields()) as Item
-                console.log("111")
                 const newData = [...data]
                 const index = newData.findIndex((item) => record._id === item._id)
                 // 修改
@@ -310,7 +309,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 }
                 resolve(null)
             } catch (errInfo) {
-                console.log("Validate Failed:", errInfo)
                 reject()
             }
         })
