@@ -723,11 +723,19 @@ service Yak {
   // SyntaxFlow Rule
   rpc QuerySyntaxFlowRule(QuerySyntaxFlowRuleRequest) returns (QuerySyntaxFlowRuleResponse);
   rpc CreateSyntaxFlowRule(CreateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc CreateSyntaxFlowRuleEx(CreateSyntaxFlowRuleRequest) returns (CreateSyntaxFlowRuleResponse);
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (UpdateSyntaxFlowRuleResponse);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
-
-  // syntaxflow scan 
+  rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
+  rpc CreateSyntaxFlowRuleGroup(CreateSyntaxFlowGroupRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleGroup(UpdateSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
+  rpc UpdateSyntaxFlowRuleAndGroup(UpdateSyntaxFlowRuleAndGroupRequest) returns (DbOperateMessage);
+  // 查找多个规则的交集组，一个规则则为其组本身
+  rpc QuerySyntaxFlowSameGroup(QuerySyntaxFlowSameGroupRequest)returns (QuerySyntaxFlowSameGroupResponse);
+  // syntaxflow scan
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
   rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
@@ -4732,6 +4740,7 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeHash = 41;
   repeated string HiddenIndex = 42;
+  
   repeated string ProcessName = 43;
   repeated string ExcludeKeywords = 44;
   string KeywordType = 45; // <empty> = all/response/request
@@ -5052,6 +5061,7 @@ message MITMRequest {
   // random JA3 fingerprint
   bool RandomJA3 = 62;
 
+  // disable websocket compression
   bool DisableWebsocketCompression = 64;
 }
 
@@ -5537,6 +5547,8 @@ message QuerySyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRule{
+  int64 Id = 18;
+
   string RuleName = 1;
   string Content = 2;
 
@@ -5561,10 +5573,12 @@ message SyntaxFlowRule{
 }
 
 message  SyntaxFlowRuleInput{
-  string RuleName = 1;
+  string RuleName = 1; // RuleName作为索引，因此不能update RuleName
   string Content = 2;
   string Language = 3;
   repeated string Tags = 4;
+  repeated string GroupNames = 5;
+  string Description = 6;
 }
 
 message SyntaxFlowRuleFilter {
@@ -5576,7 +5590,12 @@ message SyntaxFlowRuleFilter {
   repeated string Tag = 6;
   string Keyword = 7;
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-  bool includeLibraryRule = 8; // default false 
+  bool includeLibraryRule = 8; // default false
+  // for infinite list
+  int64 FromId = 9; // 废弃
+  int64  UntilId = 10;  // 废弃
+  int64 AfterId = 11;
+  int64 BeforeId = 12;
 }
 
 message SSAProgram{
@@ -5626,14 +5645,6 @@ message QuerySSAProgramRequest{
   SSAProgramFilter Filter = 3;
 }
 
-message QuerySSAProgramResponse{
-  Paging Paging = 1; // abort 
-  Paging Pagination = 5;
-  repeated SSAProgram Programs = 2; // abort
-  repeated SSAProgram Data = 4;
-  int64 Total = 3;
-}
-
 message UpdateSSAProgramRequest{
   SSAProgramInput ProgramInput = 1;
 }
@@ -5643,13 +5654,30 @@ message DeleteSSAProgramRequest{
   SSAProgramFilter Filter = 2;
 }
 
+message QuerySSAProgramResponse{
+  Paging Paging = 1; // abort 
+  Paging Pagination = 5;
+  repeated SSAProgram Programs = 2; // abort
+  repeated SSAProgram Data = 4;
+  int64 Total = 3;
+}
 
 message CreateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
 }
 
+message CreateSyntaxFlowRuleResponse {
+  DbOperateMessage Message = 1; 
+  SyntaxFlowRule Rule = 2;
+}
+
 message UpdateSyntaxFlowRuleRequest{
   SyntaxFlowRuleInput SyntaxFlowInput = 1;
+}
+
+message UpdateSyntaxFlowRuleResponse{
+  DbOperateMessage Message = 1; 
+  SyntaxFlowRule Rule = 2;
 }
 
 message QuerySyntaxFlowRuleResponse{
@@ -5664,13 +5692,16 @@ message DeleteSyntaxFlowRuleRequest{
 }
 
 message SyntaxFlowRuleGroupFilter {
+  repeated string GroupNames = 2;
   // for fuzzing search
   string KeyWord = 1;
+  string  FilterGroupKind = 3; // "buildIn"内置组，"unBuildIn"非内置组, 空为所有
 }
 
 message SyntaxFlowGroup{
   string GroupName = 1;
   int32  Count = 2;
+  bool  IsBuildIn =3;
 }
 
 message QuerySyntaxFlowRuleGroupRequest{
@@ -5679,6 +5710,34 @@ message QuerySyntaxFlowRuleGroupRequest{
 
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
+}
+
+message CreateSyntaxFlowGroupRequest{
+  string GroupName = 1;
+}
+
+message UpdateSyntaxFlowRuleGroupRequest {
+  string OldGroupName = 1;
+  string NewGroupName = 2;
+}
+
+message UpdateSyntaxFlowRuleAndGroupRequest{
+  SyntaxFlowRuleFilter Filter = 1;
+  repeated string AddGroups= 2;
+  repeated string RemoveGroups = 3;
+  bool All = 4; // abort
+}
+
+message QuerySyntaxFlowSameGroupRequest{
+  SyntaxFlowRuleFilter Filter = 1;
+}
+
+message QuerySyntaxFlowSameGroupResponse{
+  repeated SyntaxFlowGroup Group = 1;
+}
+
+message DeleteSyntaxFlowRuleGroupRequest{
+  SyntaxFlowRuleGroupFilter Filter = 1;
 }
 
 message SyntaxFlowScanRequest{

@@ -139,7 +139,8 @@ import {YakRunnerCodeScan} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScan"
 import {YakRunnerAuditCode} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCode"
 import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin"
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
-import { YakRunnerProjectManager } from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
+import {YakRunnerProjectManager} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
+import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -226,6 +227,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-code-scan": {label: "代码扫描"},
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
+    "rule-management": {label: "规则管理"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -260,7 +262,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Beta_WebShellManager,
     YakitRoute.Data_Statistics,
     YakitRoute.YakRunner_Audit_Code,
-    YakitRoute.YakRunner_Project_Manager
+    YakitRoute.YakRunner_Project_Manager,
+    YakitRoute.Rule_Management
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -294,7 +297,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.ShellReceiver,
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
-    YakitRoute.YakRunner_Project_Manager
+    YakitRoute.YakRunner_Project_Manager,
+    YakitRoute.Rule_Management
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -532,6 +536,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
         case YakitRoute.YakRunner_Project_Manager:
             return <YakRunnerProjectManager />
+        case YakitRoute.Rule_Management:
+            return <RuleManagement />
         default:
             return <div />
     }
@@ -783,6 +789,10 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = [
             {
                 page: YakitRoute.YakRunner_Code_Scan,
                 ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
+            },
+            {
+                page: YakitRoute.Rule_Management,
+                ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
             }
         ]
     },
@@ -1114,7 +1124,11 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
     {
         page: undefined,
         label: "代码审计",
-        children: [PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],PrivateAllMenus[YakitRoute.YakRunner_Audit_Code], PrivateAllMenus[YakitRoute.YakRunner_Code_Scan]]
+        children: [
+            PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
+            PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
+            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan]
+        ]
     },
     {
         page: undefined,

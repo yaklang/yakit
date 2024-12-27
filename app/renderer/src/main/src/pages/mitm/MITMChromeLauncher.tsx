@@ -777,6 +777,7 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
                         </div>
                     </YakitButton>
                 }
+                isRefresh={false}
                 renderKey='id'
                 data={searchVal ? searchData : data}
                 columns={columns}

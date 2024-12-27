@@ -137,6 +137,7 @@ export const ReverseTable: React.FC<ReverseTableProps> = (props) => {
                 firstNode={
                     <div style={{padding: isPayload ? "0 12px" : 0}}>
                         <TableVirtualResize<ReverseNotification>
+                            isRefresh={false}
                             renderTitle={
                                 <div
                                     className={`reverse-table-header ${

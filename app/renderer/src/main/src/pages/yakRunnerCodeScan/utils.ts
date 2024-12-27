@@ -4,58 +4,11 @@ import {
     DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
     QuerySyntaxFlowResultResponse,
-    QuerySyntaxFlowRuleGroupRequest,
-    QuerySyntaxFlowRuleGroupResponse,
-    QuerySyntaxFlowRuleRequest,
-    QuerySyntaxFlowRuleResponse,
-    SyntaxFlowGroup,
-    SyntaxFlowScanModeType,
     SyntaxFlowScanRequest
 } from "./YakRunnerCodeScanType"
 import {APIOptionalFunc} from "@/apiUtils/type"
 
 const {ipcRenderer} = window.require("electron")
-
-/** 获取规则组数据 */
-export const apiFetchQuerySyntaxFlowRuleGroup: (
-    params: QuerySyntaxFlowRuleGroupRequest
-) => Promise<SyntaxFlowGroup[]> = (params) => {
-    return new Promise((resolve, reject) => {
-        const queryParams: QuerySyntaxFlowRuleGroupRequest = {
-            ...params
-        }
-
-        ipcRenderer
-            .invoke("QuerySyntaxFlowRuleGroup", queryParams)
-            .then((res: QuerySyntaxFlowRuleGroupResponse) => {
-                resolve(res.Group)
-            })
-            .catch((e) => {
-                reject(e)
-                yakitNotify("error", "获取规则组失败：" + e)
-            })
-    })
-}
-
-/** 获取规则组所含规则 */
-export const apiFetchQuerySyntaxFlowRule: (
-    params: QuerySyntaxFlowRuleRequest
-) => Promise<QuerySyntaxFlowRuleResponse> = (params) => {
-    return new Promise((resolve, reject) => {
-        const queryParams: QuerySyntaxFlowRuleRequest = {
-            ...params
-        }
-        ipcRenderer
-            .invoke("QuerySyntaxFlowRule", queryParams)
-            .then((res: QuerySyntaxFlowRuleResponse) => {
-                resolve(res)
-            })
-            .catch((e) => {
-                reject(e)
-                yakitNotify("error", "获取规则失败：" + e)
-            })
-    })
-}
 
 /**
  * @description SyntaxFlowScan 规则执行
