@@ -98,7 +98,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         try {
             const result = jsonSchemaRef.current?.validate(getFormData())
             // console.log("result?.errors", result?.errors)
-            console.log("formData---", field, getFormData())
+            // console.log("formData---", field, getFormData())
 
             return {
                 pass: (result?.errors || []).length === 0,
@@ -107,7 +107,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 value: getFormData()
             } as JsonFormValidateProps
         } catch (error) {
-            console.error("JsonForm validation error:", error)
+            // console.error("JsonForm validation error:", error)
             return {
                 pass: false,
                 key: field,
@@ -445,7 +445,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getFolderWidget = useMemoizedFn((props: WidgetProps) => {
-        const {disabled, value, onChange, options} = props
+        const {disabled, value, onChange, options, uiSchema} = props
         const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
             <YakitDragger
