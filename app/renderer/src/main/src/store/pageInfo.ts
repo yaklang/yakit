@@ -515,7 +515,11 @@ export const getFuzzerProcessedCacheData = (pageList) => {
                 request: ele.pageParamsInfo?.webFuzzerPageInfo?.request || defaultPostTemplate,
                 params: advancedConfigValue.params,
                 extractors: advancedConfigValue.extractors,
-                matchers: advancedConfigValue.matchers
+                matchers: advancedConfigValue.matchers,
+                repeatTimes: advancedConfigValue.repeatTimes,
+                concurrent: advancedConfigValue.concurrent,
+                minDelaySeconds: advancedConfigValue.minDelaySeconds,
+                maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
             },
             sortFieId: ele.sortFieId,
             verbose: ele.pageName,

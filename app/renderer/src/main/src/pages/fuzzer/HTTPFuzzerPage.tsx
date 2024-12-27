@@ -546,10 +546,8 @@ export interface FuzzerCacheDataProps {
     etcHosts: KVPair[]
     advancedConfigShow: AdvancedConfigShowProps | null
     resNumlimit: number
-    repeatTimes: number
-    concurrent: number
-    minDelaySeconds: number
-    maxDelaySeconds: number
+    noSystemProxy: boolean
+    disableUseConnPool: boolean
 }
 /**获取fuzzer高级配置中得 proxy dnsServers etcHosts resNumlimit*/
 export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
@@ -560,10 +558,8 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
             const etcHosts = await getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config)
             const advancedConfigShow = await getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow)
             const resNumlimit = await getRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit)
-            const repeatTimes = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes)
-            const concurrent = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent)
-            const minDelaySeconds = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds)
-            const maxDelaySeconds = await getRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds)
+            const noSystemProxy = await getRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy)
+            const disableUseConnPool = await getRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool)
 
             const value: FuzzerCacheDataProps = {
                 proxy: !!proxy ? proxy.split(",") : [],
@@ -571,10 +567,8 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
                 etcHosts: !!etcHosts ? JSON.parse(etcHosts) : [],
                 advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
                 resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData,
-                repeatTimes: !!repeatTimes ? repeatTimes : 0,
-                concurrent: !!concurrent ? concurrent : DefFuzzerConcurrent,
-                minDelaySeconds: !!minDelaySeconds ? minDelaySeconds : 0,
-                maxDelaySeconds: !!maxDelaySeconds ? maxDelaySeconds : 0
+                noSystemProxy: noSystemProxy === "true",
+                disableUseConnPool: disableUseConnPool === "true",
             }
             resolve(value)
         } catch (error) {
@@ -984,10 +978,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
         setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))
         setRemoteValue(FuzzerRemoteGV.FuzzerResMaxNumLimit, JSON.stringify(advancedConfigValue.resNumlimit))
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerRepeatTimes, `${advancedConfigValue.repeatTimes}`)
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerConcurrent, `${advancedConfigValue.concurrent}`)
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMinDelaySeconds, `${advancedConfigValue.minDelaySeconds}`)
-        setRemoteProjectValue(FuzzerRemoteGV.FuzzerMaxDelaySeconds, `${advancedConfigValue.maxDelaySeconds}`)
+        setRemoteValue(FuzzerRemoteGV.FuzzerNoSystemProxy, advancedConfigValue.noSystemProxy + "")
+        setRemoteValue(FuzzerRemoteGV.FuzzerDisableUseConnPool, advancedConfigValue.disableUseConnPool + "")
         setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
 
         if (retryRef.current) {
@@ -1528,7 +1520,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     })
                                     ipcRenderer
                                         .invoke("Codec", {
-                                            ...v
+                                            ...v,
+                                            Text: v.Text.trim()
                                         })
                                         .then((e) => {
                                             if (e?.Result) {

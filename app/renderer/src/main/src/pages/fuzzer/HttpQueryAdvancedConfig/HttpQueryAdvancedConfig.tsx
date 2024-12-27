@@ -55,7 +55,7 @@ import {
     filterModeOptions,
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
-import { DefFuzzerConcurrent } from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -501,13 +501,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label={"禁用系统代理"} name={"noSystemProxy"} valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label={"禁用代理池"} name={"disableUseConnPool"} valuePropName='checked'>
-                                <YakitSwitch />
-                            </Form.Item>
-                            <Form.Item label={"禁用热加载"} name={"disableHotPatch"} valuePropName='checked'>
-                                <YakitSwitch />
-                            </Form.Item>
-                            <Form.Item label='响应数量限制' name='resNumlimit' style={{marginBottom: 12}}>
+                            <Form.Item
+                                label={
+                                    <span className={styles["advanced-config-form-label"]}>
+                                        前端渲染数量
+                                        <Tooltip
+                                            title='不影响发包数量，只影响前端渲染展示数量，超出的数量可通过点击表格的查看全部进行查看'
+                                            overlayStyle={{width: 150}}
+                                        >
+                                            <InformationCircleIcon className={styles["info-icon"]} />
+                                        </Tooltip>
+                                    </span>
+                                }
+                                name='resNumlimit'
+                                style={{marginBottom: 12}}
+                            >
                                 <YakitInputNumber
                                     type='horizontal'
                                     size='small'
@@ -574,7 +582,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 noFixContentLength: false,
                                                 actualHost: "",
                                                 timeout: 30,
-                                                batchTarget: new Uint8Array()
+                                                batchTarget: new Uint8Array(),
+                                                disableHotPatch: false
                                             }
                                             onReset(restValue)
                                         }}
@@ -621,6 +630,10 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                         options={fuzzTagSyncOptions}
                                         size={"small"}
                                     />
+                                </Form.Item>
+
+                                <Form.Item label={"禁用热加载"} name={"disableHotPatch"} valuePropName='checked'>
+                                    <YakitSwitch />
                                 </Form.Item>
 
                                 <Form.Item label='不修复长度' name='noFixContentLength' valuePropName='checked'>
@@ -676,7 +689,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 concurrent: DefFuzzerConcurrent,
                                                 minDelaySeconds: undefined,
                                                 maxDelaySeconds: undefined,
-                                                repeatTimes: 0
+                                                repeatTimes: 0,
+                                                disableUseConnPool: false
                                             }
                                             onReset(restValue)
                                         }}
@@ -686,6 +700,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     </YakitButton>
                                 }
                             >
+                                <Form.Item label={"禁用连接池"} name={"disableUseConnPool"} valuePropName='checked'>
+                                    <YakitSwitch />
+                                </Form.Item>
                                 <Form.Item
                                     label='重复发包'
                                     name='repeatTimes'

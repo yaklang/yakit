@@ -810,10 +810,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 etcHosts: [],
                 advancedConfigShow: null,
                 resNumlimit: DefFuzzerTableMaxData,
-                repeatTimes: 0,
-                concurrent: DefFuzzerConcurrent,
-                minDelaySeconds: 0,
-                maxDelaySeconds: 0,
+                noSystemProxy: false,
+                disableUseConnPool: false
             }
             let newAdvancedConfigValue = {
                 ...advancedConfigValue
@@ -823,10 +821,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.dnsServers = cacheData.dnsServers
                 newAdvancedConfigValue.etcHosts = cacheData.etcHosts
                 newAdvancedConfigValue.resNumlimit = cacheData.resNumlimit
-                newAdvancedConfigValue.repeatTimes = +cacheData.repeatTimes
-                newAdvancedConfigValue.concurrent = +cacheData.concurrent
-                newAdvancedConfigValue.minDelaySeconds = +cacheData.minDelaySeconds
-                newAdvancedConfigValue.maxDelaySeconds = +cacheData.maxDelaySeconds
+                newAdvancedConfigValue.noSystemProxy = cacheData.noSystemProxy
+                newAdvancedConfigValue.disableUseConnPool = cacheData.disableUseConnPool
             }
             
             let newAdvancedConfigShow = cacheData.advancedConfigShow
@@ -1635,20 +1631,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 etcHosts: [],
                 advancedConfigShow: null,
                 resNumlimit: DefFuzzerTableMaxData,
-                repeatTimes: 0,
-                concurrent: DefFuzzerConcurrent,
-                minDelaySeconds: 0,
-                maxDelaySeconds: 0,
+                noSystemProxy: false,
+                disableUseConnPool: false
             }
             const defaultCache = {
                 proxy: cacheData.proxy,
                 dnsServers: cacheData.dnsServers,
                 etcHosts: cacheData.etcHosts,
                 resNumlimit: cacheData.resNumlimit,
-                repeatTimes: +cacheData.repeatTimes,
-                concurrent: +cacheData.concurrent,
-                minDelaySeconds: +cacheData.minDelaySeconds,
-                maxDelaySeconds: +cacheData.maxDelaySeconds,
+                noSystemProxy: cacheData.noSystemProxy,
+                disableUseConnPool: cacheData.disableUseConnPool,
             }
             clearAllData()
             // 菜单在代码内的名字
