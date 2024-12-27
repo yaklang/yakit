@@ -669,9 +669,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     }
                     apiSaveNotepadList(params).then((hash) => {
                         toEditNotepad({notepadHash: hash})
+                        s.destroy()
                     })
                 } else {
                     toAddNotepad()
+                    s.destroy()
                 }
             },
             onCancel: () => {

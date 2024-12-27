@@ -33,7 +33,7 @@ import {HttpUploadImgBaseRequest, httpUploadImgPath} from "@/apiUtils/http"
 import {yakitNotify} from "@/utils/notification"
 import {getLocalFileLinkInfo} from "../CustomFile/utils"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
-import {EditorStatus} from "@milkdown/kit/core"
+import {useStore} from "@/store"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -47,6 +47,9 @@ interface BlockViewProps {
 }
 export const BlockView: React.FC<BlockViewProps> = (props) => {
     const {notepadHash, type} = props
+
+    const userInfo = useStore((s) => s.userInfo)
+
     const ref = useRef<HTMLDivElement>(null)
     const tooltipProvider = useRef<BlockProvider>()
 
@@ -186,7 +189,14 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
                                             yakitNotify("error", `上传图片失败:${e}`)
                                         })
                                 } else {
-                                    action(callCommand(fileCommand.key, {id: "0", path, notepadHash}))
+                                    action(
+                                        callCommand(fileCommand.key, {
+                                            fileId: "0",
+                                            path,
+                                            notepadHash,
+                                            uploadUserId: userInfo.user_id
+                                        })
+                                    )
                                 }
                             })
                         }
