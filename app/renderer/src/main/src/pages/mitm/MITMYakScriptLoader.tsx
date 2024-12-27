@@ -169,9 +169,10 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         />
                     </div>
                 ),
-                width: "70%",
+                width: "40%",
+                placement: "left",
                 mask: true,
-                closable: true,
+                closable: false,
                 onClose: () => {
                     m.destroy()
                 }
