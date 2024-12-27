@@ -46,6 +46,7 @@ import {
     PrivateOutlineReportIcon,
     PrivateOutlineReverseServerIcon,
     PrivateOutlineRiskIcon,
+    PrivateOutlineRuleManagementIcon,
     PrivateOutlineScanPortIcon,
     PrivateOutlineShellReceiverIcon,
     PrivateOutlineSpaceEngineIcon,
@@ -76,6 +77,7 @@ import {
     PrivateSolidReportIcon,
     PrivateSolidReverseServerIcon,
     PrivateSolidRiskIcon,
+    PrivateSolidRuleManagementIcon,
     PrivateSolidScanPortIcon,
     PrivateSolidShellReceiverIcon,
     PrivateSolidSpaceEngineIcon,
@@ -1011,6 +1013,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidCodeScanIcon />,
         ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
     },
+    [YakitRoute.Rule_Management]: {
+        page: YakitRoute.Rule_Management,
+        icon: <PrivateOutlineRuleManagementIcon />,
+        hoverIcon: <PrivateSolidRuleManagementIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
+    },
     [YakitRoute.DB_Report]: {
         page: YakitRoute.DB_Report,
         icon: <PrivateOutlineReportIcon />,
@@ -1127,7 +1135,8 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
         children: [
             PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
             PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
-            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan]
+            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
+            PrivateAllMenus[YakitRoute.Rule_Management]
         ]
     },
     {
