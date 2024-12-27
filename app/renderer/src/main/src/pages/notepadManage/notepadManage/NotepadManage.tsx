@@ -247,7 +247,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                 }
             }
         ]
-    }, [downItemLoading, removeItemLoading, actionItemRef.current, sorterKey, timeSortVisible])
+    }, [downItemLoading, removeItemLoading, actionItemRef.current, sorterKey, timeSortVisible, notepadPageList])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()

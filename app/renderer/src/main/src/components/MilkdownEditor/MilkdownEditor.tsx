@@ -71,7 +71,6 @@ import {useStore} from "@/store"
 import {CollabManager, CollabUserInfo} from "./CollabManager"
 import emiter from "@/utils/eventBus/eventBus"
 
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
@@ -87,8 +86,6 @@ const markdown1 = `
 2. 665fdsf
 
 #ggg
-
-:file[]{fileId="https://yakit-online.oss-accelerate.aliyuncs.com/notepade/2e80f8894f904134fb795f0731bed428-1732088835089&*&app.zip"}
 
 ![1.00](
 
@@ -164,7 +161,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             upload,
             $view(fileCustomSchema.node, () =>
                 nodeViewFactory({
-                    component: CustomFile
+                    component: () => <CustomFile type={type} />
                 })
             ),
             (ctx: Ctx) => () => {
@@ -210,7 +207,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [nodeViewFactory])
+    }, [nodeViewFactory, type])
 
     const imagePlugin = useCreation(() => {
         return [
@@ -356,7 +353,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     filename: image.name || "image.png",
                     contentType: image.type || "image/png"
                 },
-                type: "notepad"
+                type: collabParams.enableCollab ? "notepad" : "img",
+                filedHash: collabParams.milkdownHash
             })
             return src
         } catch (error) {

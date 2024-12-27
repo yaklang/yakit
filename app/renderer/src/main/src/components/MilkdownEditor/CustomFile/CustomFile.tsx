@@ -2,7 +2,7 @@ import {useNodeViewContext} from "@prosemirror-adapter/react"
 import styles from "./CustomFile.module.scss"
 import {useEffect, useRef, useState, ReactNode} from "react"
 import {randomString} from "@/utils/randomUtil"
-import {failed, yakitNotify} from "@/utils/notification"
+import {yakitNotify} from "@/utils/notification"
 import {
     IconNotepadFileTypeWord,
     IconNotepadFileTypeCompress,
@@ -15,7 +15,6 @@ import {Progress, Tooltip} from "antd"
 import {
     OutlineDocumentduplicateIcon,
     OutlineDownloadIcon,
-    OutlineFolderIcon,
     OutlineRefreshIcon,
     OutlineUploadIcon,
     OutlineXIcon
@@ -32,12 +31,13 @@ import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
 import {onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
 import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
-import useUploadOSSHooks, {UploadOSSStartProps} from "@/hook/useUploadOSS/useUploadOSS"
+import useUploadOSSHooks, {UploadFileTypeProps, UploadOSSStartProps} from "@/hook/useUploadOSS/useUploadOSS"
 import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 import {setClipboardText} from "@/utils/clipboard"
-import {uploadBigFileType} from "@/hook/useUploadOSS/constants"
 import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
+import {useInstance} from "@milkdown/react"
+import {useStore} from "@/store"
 
 interface CustomFileItem {
     name: string
@@ -63,8 +63,14 @@ export const getTypeAndNameByPath = (path) => {
     const fileName = newPath.split("\\").pop()
     return {fileType, fileName}
 }
-export const CustomFile: React.FC = () => {
-    const {node, contentRef, selected, setAttrs, view} = useNodeViewContext()
+interface CustomFileProps {
+    type: UploadFileTypeProps
+}
+export const CustomFile: React.FC<CustomFileProps> = (props) => {
+    const {type} = props
+    const {node, contentRef, selected, view, getPos, setAttrs} = useNodeViewContext()
+    const [loadingInstance, get] = useInstance()
+
     const {attrs} = node
     const [fileInfo, setFileInfo] = useState<CustomFileItem>({
         name: "",
@@ -77,15 +83,17 @@ export const CustomFile: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false)
     const [errorReason, setErrorReason] = useState<string>("")
     const [downFileInfo, setDownFileInfo] = useState<DownFileInfoProps>()
-    const [visibleDownFiles, setVisibleDownFiles] = useState<boolean>(false)
     const [queryFileErrorInfo, setQueryFileErrorInfo] = useState<string>("")
     const [loadingRefresh, setLoadingRefresh] = useState<boolean>(false)
 
     const uploadTokenRef = useRef(randomString(40))
 
+    const userInfo = useStore((s) => s.userInfo)
+
     useEffect(() => {
-        const {fileId, path: initPath} = attrs
+        const {fileId, path: initPath, uploadUserId = ""} = attrs
         const path = initPath.replace(/\\/g, "\\")
+        if (uploadUserId && uploadUserId !== userInfo.user_id) return
         if (fileId !== "0") {
             getFileInfoByLink()
         } else if (path) {
@@ -102,7 +110,7 @@ export const CustomFile: React.FC = () => {
                 onUpload(path)
             })
         }
-    }, [])
+    }, [attrs.fileId, attrs.uploadUserId])
     const {onStart: onStartUpload, onCancel: onUploadCancel} = useUploadOSSHooks({
         taskToken: uploadTokenRef.current,
         onUploadData: (p) => {
@@ -117,7 +125,7 @@ export const CustomFile: React.FC = () => {
             setErrorReason(reason || "")
         },
         setUrl: (url) => {
-            setAttrs({fileId: url})
+            setAttrs({fileId: url, uploadUserId: 0, path: ""})
             setFileInfo((v) => ({...v, url}))
         }
     })
@@ -159,7 +167,7 @@ export const CustomFile: React.FC = () => {
         const value: UploadOSSStartProps = {
             filePath,
             filedHash: attrs?.notepadHash || "",
-            type: uploadBigFileType.notepad
+            type
         }
         onStartUpload(value)
     }
@@ -198,7 +206,6 @@ export const CustomFile: React.FC = () => {
         saveDialogAndGetLocalFileInfo(fileId).then((v) => {
             setDownFileInfo(v)
             setFileInfo({...fileInfo, path: v.path})
-            setVisibleDownFiles(true)
         })
     }
     const onCopyLink = useMemoizedFn((e) => {
@@ -252,7 +259,6 @@ export const CustomFile: React.FC = () => {
     })
     const onCancelDownload = useMemoizedFn(() => {
         setFileInfo({...fileInfo, path: ""})
-        setVisibleDownFiles(false)
         setDownFileInfo(undefined)
     })
     const onRefreshFileInfo = useMemoizedFn((e) => {
@@ -324,13 +330,20 @@ export const CustomFile: React.FC = () => {
                                         </div>
                                     ) : (
                                         <div className={styles["success-action"]}>
-                                            {fileInfo.path ? (
+                                            {/* {fileInfo.path ? (
                                                 <TooltipIcon
                                                     title='查看文件'
                                                     icon={<OutlineFolderIcon />}
                                                     onClick={onOpenFile}
                                                 />
                                             ) : (
+                                                <TooltipIcon
+                                                    title='下载文件'
+                                                    icon={<OutlineDownloadIcon />}
+                                                    onClick={onDown}
+                                                />
+                                            )} */}
+                                            {fileInfo.url && (
                                                 <TooltipIcon
                                                     title='下载文件'
                                                     icon={<OutlineDownloadIcon />}

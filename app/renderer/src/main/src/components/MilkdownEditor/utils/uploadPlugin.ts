@@ -23,7 +23,8 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
                 return {
                     fileId: dom.getAttribute("data-file-id"),
                     path: dom.getAttribute("data-path"),
-                    notepadHash: dom.getAttribute("data-notepad-hash")
+                    notepadHash: dom.getAttribute("data-notepad-hash"),
+                    uploadUserId: dom.getAttribute("data-upload-user-id") || 0
                 }
             }
         }
@@ -57,27 +58,31 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
         },
         runner: (state, node) => {
             // console.log("toMarkdown-runner", node)
-            state
-                .openNode("textDirective", undefined, {
-                    name: "file",
-                    attributes: {
-                        fileId: node.attrs.fileId,
-                        path: node.attrs.path,
-                        notepadHash: node.attrs.notepadHash
-                    }
-                })
-                .next(node.content)
-                .closeNode()
+            if (node.attrs.fileId) {
+                state
+                    .openNode("textDirective", undefined, {
+                        name: "file",
+                        attributes: {
+                            fileId: node.attrs.fileId,
+                            notepadHash: node.attrs.notepadHash,
+                            path: node.attrs.path,
+                            uploadUserId: node.attrs.uploadUserId
+                        }
+                    })
+                    .next(node.content)
+                    .closeNode()
+            }
         }
     },
     attrs: {
         fileId: {default: "0"},
         path: {default: ""},
-        notepadHash: {default: ""}
+        notepadHash: {default: ""},
+        uploadUserId: {default: 0}
     }
 }))
 
-export const fileCommand = $command(`command-${fileCustomId}`, (ctx) => (props) => (state, dispatch) => {
+export const fileCommand = $command(`command-${fileCustomId}`, (ctx) => (props: any) => (state, dispatch) => {
     const {selection, tr} = state
     if (!(selection instanceof TextSelection)) return false
 
