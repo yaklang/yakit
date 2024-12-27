@@ -86,6 +86,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {RemoteHistoryGV} from "@/enums/history"
 import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombinationSearch"
 import {v4 as uuidv4} from "uuid"
+import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -1599,17 +1600,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             updateData()
         }, 100)
     })
-    useEffect(() => {
-        /**
-         * 清空log表格数据
-         */
-        pageType === "MITM" && emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
-        pageType === "MITM" && emiter.on("cleanMitmLogEvent", cleanLogTableData)
-        return () => {
-            emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
-            emiter.off("cleanMitmLogEvent", cleanLogTableData)
-        }
-    }, [])
 
     const onColorSure = useMemoizedFn(() => {
         if (isShowColor) {
@@ -2731,6 +2721,49 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
 
+    const [editTagsVisible, setEditTagsVisible] = useState<boolean>(false)
+    const editTagsRef = useRef<EditTagsInfo>()
+    const onEditTags = useMemoizedFn((flow: HTTPFlow) => {
+        editTagsRef.current = {Id: flow.Id, Hash: flow.Hash, Tags: flow.Tags?.split("|").filter((tag) => tag) || []}
+        setEditTagsVisible(true)
+    })
+    const editTagsSuccess = useMemoizedFn((params: EditTagsInfo) => {
+        ipcRenderer
+            .invoke("SetTagForHTTPFlow", params)
+            .then(() => {
+                yakitNotify("success", `编辑tag成功`)
+                let newData: HTTPFlow[] = []
+                const l = data.length
+                for (let index = 0; index < l; index++) {
+                    const item = {...data[index]}
+                    if (item.Hash === params.Hash) {
+                        item.Tags = params.Tags.join("|")
+                    }
+                    newData.push(item)
+                }
+                setData(newData)
+            })
+            .catch((e) => {
+                yakitFailed(e + "")
+            })
+    })
+    const onEditTagEvent = useMemoizedFn((infos) => {
+        try {
+            const info = JSON.parse(infos) || {}
+            const tagItem = data.find(item => item.Id == info.id)
+            if (tagItem && info.historyId === historyId) {
+                onEditTags(tagItem)
+            }
+        } catch (error) {
+        }
+    })
+    useEffect(() => {
+        emiter.on("onEditTag", onEditTagEvent)
+        return () => {
+            emiter.off("onEditTag", onEditTagEvent)
+        }
+    }, [])
+
     const menuData = [
         {
             key: "发送到 Web Fuzzer",
@@ -3037,6 +3070,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             toWebFuzzer: true,
             onClickSingle: (v) => onExcelExport([v]),
             onClickBatch: (list, n) => onExcelExport(list)
+        },
+        {
+            key: "编辑tag",
+            label: "编辑tag",
+            default: true,
+            webSocket: false,
+            toWebFuzzer: false,
+            onClickSingle: (v) => onEditTags(v),
+            onClickBatch: () => {}
         }
     ]
     /** 菜单自定义快捷键渲染处理事件 */
@@ -3607,6 +3649,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             emiter.on("onMitmClearFromPlugin", onMitmClearFromPlugin)
             emiter.on("onMitmSearchInputVal", onMitmSearchInputVal)
             emiter.on("onMitmCurProcess", onMitmCurProcess)
+            emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+            emiter.on("cleanMitmLogEvent", cleanLogTableData)
         }
         return () => {
             if (pageType === "MITM") {
@@ -3614,6 +3658,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("onMitmClearFromPlugin", onMitmClearFromPlugin)
                 emiter.off("onMitmSearchInputVal", onMitmSearchInputVal)
                 emiter.off("onMitmCurProcess", onMitmCurProcess)
+                emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+                emiter.off("cleanMitmLogEvent", cleanLogTableData)
             }
         }
     }, [pageType])
@@ -3999,6 +4045,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     columnsAll={JSON.stringify(configColumnRef.current)}
                 />
             )}
+            <EditTagsModal
+                visible={editTagsVisible}
+                editTagsInfo={editTagsRef.current}
+                onCancel={() => setEditTagsVisible(false)}
+                onOk={editTagsSuccess}
+            ></EditTagsModal>
         </div>
     )
 })
@@ -4214,7 +4266,7 @@ export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
     useDebounceEffect(
         () => {
             if (searchVal) {
-                const newData = getRealOriginalList().filter((ele) => ele.label.includes(searchVal || ""))
+                const newData = getRealOriginalList().filter((ele) => ele.label.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase() || ""))
                 setData(newData)
             } else {
                 setData(getRealOriginalList())
@@ -4561,5 +4613,64 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
                 searchNode()
             )}
         </>
+    )
+})
+
+interface EditTagsInfo {
+    Id: number
+    Hash: string
+    Tags: string[]
+}
+interface EditTagsModalProps {
+    visible: boolean
+    editTagsInfo?: EditTagsInfo
+    onCancel: () => void
+    onOk: (params: EditTagsInfo) => void
+}
+const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
+    const {visible, editTagsInfo, onCancel, onOk} = props
+    const [form] = Form.useForm()
+
+    useEffect(() => {
+        if (editTagsInfo) {
+            const tagsStr = editTagsInfo.Tags?.filter((tag) => !tag.startsWith("YAKIT_")).join(",") || ""
+            form.setFieldsValue({tags: tagsStr})
+        }
+    }, [editTagsInfo])
+
+    const handleOk = useMemoizedFn(() => {
+        form.validateFields().then((res) => {
+            if (editTagsInfo) {
+                const {tags} = res
+                const formTags = tags.split(",")
+                const colorTags = editTagsInfo.Tags.filter((item) => item.startsWith("YAKIT_"))
+                const existedTags = [...new Set([...formTags, ...colorTags])].filter((item) => item)
+                onOk({
+                    Id: editTagsInfo.Id,
+                    Hash: editTagsInfo.Hash,
+                    Tags: existedTags
+                })
+            }
+
+            onCancel()
+        })
+    })
+
+    return (
+        <YakitModal
+            visible={visible}
+            title='编辑tag'
+            width={600}
+            destroyOnClose={true}
+            okText='保存'
+            onCancel={onCancel}
+            onOk={handleOk}
+        >
+            <Form form={form} colon={false} labelCol={{span: 3}} wrapperCol={{span: 21}}>
+                <Form.Item label='Tag' name='tags'>
+                    <YakitInput.TextArea placeholder='多个tag请用逗号分割' rows={5}></YakitInput.TextArea>
+                </Form.Item>
+            </Form>
+        </YakitModal>
     )
 })

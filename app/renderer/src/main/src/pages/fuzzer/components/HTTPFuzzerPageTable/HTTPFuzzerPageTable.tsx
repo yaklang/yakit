@@ -1097,7 +1097,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     提取数据
                                 </YakitButton>
                             ]}
-                            codingBtn={
+                            AfterBeautifyRenderBtn={
                                 <CodingPopover
                                     key='coding'
                                     originValue={

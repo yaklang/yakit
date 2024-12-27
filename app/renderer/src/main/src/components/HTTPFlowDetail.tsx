@@ -1485,17 +1485,24 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             ...sendCodeCompareMenuItem("response")
                         }}
                         extra={secondNodeResExtraBtn()}
-                        codingBtn={
-                            <CodingPopover
-                                key='coding'
-                                originValue={flow.Response}
-                                onSetCodeLoading={setCodeLoading}
-                                codeKey={codeKey}
-                                onSetCodeKey={(codeKey) => {
-                                    setCodeKey(codeKey)
-                                }}
-                                onSetCodeValue={setCodeValue}
-                            />
+                        AfterBeautifyRenderBtn={
+                            <>
+                                <YakitButton size='small' onClick={() => {
+                                    emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
+                                }}>
+                                    编辑tag
+                                </YakitButton>
+                                <CodingPopover
+                                    key='coding'
+                                    originValue={flow.Response}
+                                    onSetCodeLoading={setCodeLoading}
+                                    codeKey={codeKey}
+                                    onSetCodeKey={(codeKey) => {
+                                        setCodeKey(codeKey)
+                                    }}
+                                    onSetCodeValue={setCodeValue}
+                                />
+                            </>
                         }
                         isResponse={true}
                         noHex={true}
