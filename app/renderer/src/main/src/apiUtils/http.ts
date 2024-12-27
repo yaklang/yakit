@@ -2,11 +2,12 @@ import {yakitNotify} from "@/utils/notification"
 import {APIFunc} from "./type"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import {UploadImgTypeProps} from "@/hook/useUploadOSS/useUploadOSS"
 
 const {ipcRenderer} = window.require("electron")
 
 export interface HttpUploadImgBaseRequest {
-    type?: "img" | "headImg" | "comment" | "plugins" | "notepad"
+    type?: UploadImgTypeProps
     filedHash?: string
 }
 

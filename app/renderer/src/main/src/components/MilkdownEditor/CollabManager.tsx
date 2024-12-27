@@ -212,7 +212,8 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             token: this.wsRequest.token
         }
         if (this.wsProvider && this.wsProvider?.ws && this.wsProvider.ws?.readyState === WebSocket.OPEN) {
-            this.wsProvider?.ws?.send(Buffer.from(JSON.stringify(v)))
+            const sendValueString = JSON.stringify(v)
+            this.wsProvider?.ws?.send(Buffer.from(sendValueString))
         }
     }
 

@@ -1,5 +1,11 @@
-import {UploadBigFileTypeProps} from "./useUploadOSS"
+export enum UploadImgType {
+    Img = "img",
+    HeadImg = "headImg",
+    Comment = "comment",
+    Plugins = "plugins",
+    Notepad = "notepad"
+}
 
-export const uploadBigFileType: UploadBigFileTypeProps = {
-    notepad: "notepad"
+export enum UploadFileType {
+    Notepad = "notepad"
 }

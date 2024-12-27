@@ -1,6 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {useEffect} from "react"
-import {uploadBigFileType} from "./constants"
+import {UploadImgType, UploadFileType} from "./constants"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -13,19 +13,17 @@ interface useUploadOSSHooks {
     onUploadError?: (error: string) => void
 }
 
-export interface UploadBigFileTypeProps {
-    notepad: "notepad"
-}
-
-type UploadBigFileType = UploadBigFileTypeProps[keyof UploadBigFileTypeProps]
+export type UploadImgTypeProps = `${UploadImgType}`
+export type UploadFileTypeProps = `${UploadFileType}`
 
 export interface UploadOSSStartProps {
     filePath: string
     /**type为notepad,该值必传 */
     filedHash: string
-    type: UploadBigFileType
+    type: UploadFileTypeProps
 }
 
+// 大文件上传,目前文件上传和图片上传分开的
 export default function useUploadOSSHooks(props: useUploadOSSHooks) {
     const {taskToken, setUrl, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
 
@@ -61,7 +59,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
         const {filePath, filedHash, type} = value
         let enable = true
         switch (type) {
-            case uploadBigFileType.notepad:
+            case UploadFileType.Notepad:
                 if (!filedHash) {
                     enable = false
                     yakitNotify("error", "useUploadOSSHooks:type为notepad,filedHash必传")
