@@ -98,7 +98,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         try {
             const result = jsonSchemaRef.current?.validate(getFormData())
             // console.log("result?.errors", result?.errors)
-            // console.log("formData---", field, getFormData())
+            console.log("formData---", field, getFormData())
 
             return {
                 pass: (result?.errors || []).length === 0,
@@ -118,7 +118,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
 
     useEffect(() => {
         // 当外部 value 变化时更新内部状态
-        setFormData(value)
+        value && setFormData(value)
     }, [value])
 
     // const UploadFolderPath = useMemoizedFn((props: FieldProps) => {

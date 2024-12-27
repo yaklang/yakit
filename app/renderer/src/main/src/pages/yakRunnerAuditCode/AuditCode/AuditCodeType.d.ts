@@ -96,16 +96,17 @@ export interface AuditMainItemFormProps {}
 
 export interface AuditModalFormProps {
     onCancel: () => void
-    // 拆分后不在有默认值
-    isInitDefault?: boolean
     isExecuting: boolean
-    onStartAudit: (path: string, v: DebugPluginRequest) => void
+    onStartAudit: (v: DebugPluginRequest) => void
+    form: FormInstance<any>
+    isVerifyForm: boolean
+    activeKey: string | string[] | undefined
+    setActiveKey: (v: string | string[] | undefined) => void
 }
 
 export interface AuditModalFormModalProps {
     onCancel: () => void
     onSuccee: (path: string) => void
-    isInitDefault?: boolean
     title?: string
     // 绑定容器
     warrpId?: HTMLElement | null
@@ -163,7 +164,7 @@ export interface ProjectManagerEditFormProps {
 
 export interface AuditHistoryListRefProps {
     onRefresh: () => void
-    onDeleteAuditHistory: (v:boolean) => void
+    onDeleteAuditHistory: (v: boolean) => void
 }
 
 export interface AuditHistoryListProps {
@@ -178,5 +179,5 @@ export interface AuditHistoryListProps {
     ) => void
     onOpenEditorDetails: (v: ShowItemType) => void
     query: QuerySyntaxFlowResultRequest
-    setQuery: (v:QuerySyntaxFlowResultRequest) => void
+    setQuery: (v: QuerySyntaxFlowResultRequest) => void
 }

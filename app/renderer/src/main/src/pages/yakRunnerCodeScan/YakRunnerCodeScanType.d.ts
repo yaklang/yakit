@@ -247,4 +247,5 @@ interface ErrorProps {
 
 export interface VerifyStartProps {
     error: ErrorProps
+    program_name: string
 }
