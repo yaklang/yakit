@@ -1,0 +1,25 @@
+.operation {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.check-circle-icon {
+    color: var(--yakit-success-5);
+}
+.input-textarea {
+    :global {
+        .ant-input-suffix {
+            &:hover {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+
+.edit-table{
+    :global {
+        .ant-table-placeholder{
+            display: none;
+        }
+    }
+}

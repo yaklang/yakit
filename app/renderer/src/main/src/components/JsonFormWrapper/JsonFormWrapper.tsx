@@ -16,6 +16,7 @@ import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import classNames from "classnames"
 import ArrayFieldTemplate from "./templates/ArrayFieldTemplate"
 import ObjectFieldTemplate from "./templates/ObjectFieldTemplate"
+import {ColumnSchemaProps, EditTable, UiSchemaTableProps} from "./editTable/EditTable"
 
 export const getJsonSchemaListResult = (obj: {[key: string]: any}) => {
     // 此处的key用于筛选重复的表单数据
@@ -445,7 +446,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     })
 
     const getFolderWidget = useMemoizedFn((props: WidgetProps) => {
-        const {disabled, value, onChange, options,uiSchema} = props
+        const {disabled, value, onChange, options} = props
         const uiStyle = uiSchema?.["ui:component_style"] || {}
         return (
             <YakitDragger
@@ -458,6 +459,20 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 disabled={disabled}
                 onChange={(value) => {
                     onChange(value === "" ? options.emptyValue : value)
+                }}
+            />
+        )
+    })
+
+    const getTableWidget = useMemoizedFn((props: WidgetProps) => {
+        const {value, onChange, options, uiSchema} = props
+        return (
+            <EditTable
+                columnSchema={props.schema as ColumnSchemaProps}
+                uiSchema={uiSchema as UiSchemaTableProps}
+                value={value}
+                onChange={(arr: any[]) => {
+                    onChange(arr.length === 0 ? options.emptyValue : arr)
                 }}
             />
         )
@@ -528,7 +543,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                     FileWidget: getFileWidget,
                     // uiSchema 自定义控件
                     files: getFilesWidget,
-                    folder: getFolderWidget
+                    folder: getFolderWidget,
+                    table: getTableWidget
                 }}
                 // 自定义控件
                 // fields={fields}
