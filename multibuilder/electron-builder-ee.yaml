@@ -1,7 +1,7 @@
-appId: "io.yaklang.CSPG"
+appId: "io.yaklang.CSG"
 extraMetadata:
-    name: cspg
-productName: "CSPG"
+    name: CSG
+productName: "CSG"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
