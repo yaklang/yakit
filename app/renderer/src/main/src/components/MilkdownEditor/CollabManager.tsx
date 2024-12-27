@@ -1,5 +1,5 @@
 import {CollabService} from "@milkdown/plugin-collab"
-import Y, {Doc} from "yjs"
+import {Doc, Transaction, YTextEvent} from "yjs"
 import {WebsocketProvider} from "./WebsocketProvider/WebsocketProvider"
 import {ObservableV2} from "lib0/observable"
 import isEqual from "lodash/isEqual"
@@ -86,9 +86,8 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
         this.doc = new Doc()
 
-        // const docTitle = this.doc.getText("title") // 使用 Y.Text 存储标题
-        // console.log("yTitle-docTitle", docTitle)
-        // docTitle.observe(() => this.docObserveTitle())
+        const docTitle = this.doc.getText("title") // 使用 Y.Text 存储标题
+        docTitle.observe((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
 
         const url = wsUrl + "api/handle/tow/way/ws"
         // const url = "ws://localhost:1880/ws/my-room"
@@ -149,9 +148,10 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
     }
 
-    private docObserveTitle() {
-        const titleString = this.doc.getText("title").toString()
-        this.onSetTitle(titleString)
+    private docObserveTitle(yarrayEvent: YTextEvent, tr: Transaction) {
+        if (tr.local) return
+        const value = (yarrayEvent.delta[0]?.insert as string) || ""
+        this.onSetTitle(value)
     }
 
     private getOnlineUser() {
@@ -187,13 +187,8 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     }
 
     setTitle(value) {
-        // const textLength = this.doc.getText("title").length
-        // if (textLength) {
-        //     // 清空当前内容
-        //     this.doc.getText("title").delete(0, this.doc.getText("title").length)
-        // }
-        // // 插入新内容
-        // this.doc.getText("title").insert(0, value)
+        const oldValue = this.doc.getText("title").toString()
+        if (isEqual(oldValue, value)) return
         this.doc.getText("title").applyDelta([{insert: value}])
     }
 

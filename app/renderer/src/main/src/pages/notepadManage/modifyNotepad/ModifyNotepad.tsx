@@ -52,8 +52,6 @@ import {notepadSaveStatus} from "@/components/MilkdownEditor/WebsocketProvider/c
 import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
-import {getFileNameByUrl} from "@/components/MilkdownEditor/utils/trackDeletePlugin"
-import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
@@ -181,20 +179,24 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     /**新建进来，然后退出时文档为空，需要删除文档 */
     const onRemoveEmptyNotepad = useMemoizedFn((notepadContent) => {
-        const markdownContent = notepadContent
-        const isRemove = !pageInfo.notepadHash && !markdownContent && notepadDetail.hash
-        if (!!isRemove) {
-            apiDeleteNotepadDetail({hash: notepadDetail.hash}, true)
+        if (userInfo.isLogin) {
+            const markdownContent = notepadContent
+            const isRemove = !pageInfo.notepadHash && !markdownContent && notepadDetail.hash
+            if (!!isRemove) {
+                apiDeleteNotepadDetail({hash: notepadDetail.hash}, true)
+            }
         }
     })
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
-        const params: API.PostNotepadRequest = {
-            hash: notepadDetail.hash,
-            title: tabName,
-            content: markdownContent || ""
+        if (userInfo.isLogin) {
+            const params: API.PostNotepadRequest = {
+                hash: notepadDetail.hash,
+                title: tabName || perTabName.current,
+                content: markdownContent || ""
+            }
+            apiSaveNotepadList(params)
         }
-        apiSaveNotepadList(params)
     })
 
     // 删除文档
@@ -284,6 +286,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
+        if (title.length > 100) {
+            yakitNotify("error", "标题不超过100个字符")
+            return
+        }
+        if (title) {
+            perTabName.current = title
+        }
         setTabName(title)
         onSetPageTabName(title)
     })
@@ -587,11 +596,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 className={styles["notepad-input"]}
                                 value={tabName}
                                 onChange={(e) => {
-                                    if (currentRole === notepadRole.adminPermission) {
-                                        onSetTabName(e.target.value)
-                                    } else {
-                                        yakitNotify("error", "仅支持作者修改标题")
-                                    }
+                                    onSetTabName(e.target.value)
                                 }}
                                 maxLength={100}
                             />
