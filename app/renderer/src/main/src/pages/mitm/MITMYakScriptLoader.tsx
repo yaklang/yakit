@@ -485,8 +485,6 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             form.validateFields()
                 .then((values) => {
                     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                    console.log("wlala",result.jsonSchemaError);
-                    
                     if(result.jsonSchemaError.length>0) {
                         failed(`jsonSchema校验失败`)
                         return
