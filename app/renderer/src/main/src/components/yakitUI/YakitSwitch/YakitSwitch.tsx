@@ -25,7 +25,8 @@ import "./yakitSwitchAnimation.scss"
  * @param {string} wrapperClassName Switch装饰div的className
  */
 
-const showExtraSize: string[] = ["large", "middle"]
+const showExtraSize: string[] = ["large", "middle"];
+
 export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
     const {size = "middle", showInnerText, showInnerIcon, className = "", wrapperClassName = "",...reset} = props
     let children = {}

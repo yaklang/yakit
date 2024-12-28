@@ -3,15 +3,17 @@ import {useMemoizedFn} from "ahooks"
 import styles from "./EditTable.module.scss"
 import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {Form, FormInstance, Input, InputNumber, Table, Tooltip, Typography} from "antd"
+import {Empty, Form, FormInstance, Input, InputNumber, Table, Tooltip, Typography} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {ArrowsAltOutlined, InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
+import {ArrowsAltOutlined, CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, EllipsisOutlined, InfoCircleOutlined, PlusOutlined, SettingOutlined} from "@ant-design/icons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {v4 as uuidv4} from "uuid"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
 
 interface Item {
     _id: string
@@ -109,7 +111,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     rules={[
                         {
                             required,
-                            message: `未处理 ${title}!`
+                            message: `请填写${typeof title === 'object' ? '该字段' : title}`
                         }
                     ]}
                     valuePropName={type === "boolean" ? "checked" : undefined}
@@ -180,6 +182,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     const [maxItems, setMaxItems] = useState<number>()
     const [uiKeys, setUiKeys] = useState<UiKeysProps>()
     const [defaultObj, setDefaultObj] = useState<DefaultObjProps>({})
+
+    // 初始化表格数据
     useEffect(() => {
         try {
             // columnSchema
@@ -199,14 +203,14 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 const {type, title, description} = properties[key]
                 newColumns.push({
                     title: description ? (
-                        <div>
+                        <div style={{fontSize: 12}}>
                             <span style={{marginRight: 4}}>{title || key}</span>
                             <Tooltip title={description}>
                                 <InfoCircleOutlined />
                             </Tooltip>
                         </div>
                     ) : (
-                        title || key
+                        <div style={{fontSize: 12}}>{title || key}</div>
                     ),
                     dataIndex: key,
                     editable: true,
@@ -254,6 +258,20 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             failed(`解析表格失败:${error}`)
         }
     }, [columnSchema, uiSchema])
+
+    // 如果表格为空,自动触发新增
+    useEffect(() => {
+        if(data.length === 0 && cacheData.length === 0) {
+            // 遍历 columns 获取 enum 字段的默认值
+            const defaultValues = {}
+            columns.forEach(col => {
+                if(col.enum?.length > 0) {
+                    defaultValues[col.dataIndex] = col.enum[0]
+                }
+            })
+            addCell(defaultValues)
+        }
+    }, [data, cacheData])
 
     const isEditing = useMemoizedFn((rowItem: Item) => rowItem._id === editingId)
 
@@ -314,7 +332,14 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         })
     })
 
-    const addCell = useMemoizedFn(async () => {
+    // 失焦自动保存
+    const onBlur = useMemoizedFn(async (record: Item) => {
+        if(editingId) {
+            await onSave(record)
+        }
+    })
+
+    const addCell = useMemoizedFn(async (defaultValues: DefaultObjProps) => {
         if (typeof maxItems === "number" && data.length >= maxItems) {
             warn(`已达最大数量${maxItems}`)
             return
@@ -339,40 +364,66 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         return [
             ...columns,
             {
-                title: "操作",
+                title: <div style={{fontSize: 12}}>操作</div>,
                 dataIndex: "operation",
-                width: 150,
-                fixed: "right",
+                width: 45,
+                fixed: "right", 
                 render: (_: any, record: Item) => {
                     const editable = isEditing(record)
                     return editable ? (
-                        <div className={styles["operation"]}>
-                            <YakitButton type='text' size='small' onClick={() => onSave(record)}>
-                                保存
-                            </YakitButton>
-                            <YakitButton type='text' size='small' onClick={onCancel}>
-                                取消
-                            </YakitButton>
-                            {Object.keys(record).length > 1 && (
-                                <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
-                                    删除
-                                </YakitButton>
-                            )}
-                        </div>
-                    ) : (
-                        <div className={styles["operation"]}>
+                        <YakitPopover
+                            trigger={["click", "hover"]}
+                            placement="bottom"
+                            content={
+                                <div>
+                                    <div onClick={() => onSave(record)} style={{cursor:"pointer", padding: "4px 12px"}}>
+                                        <CheckOutlined /> 保存
+                                    </div>
+                                    <div onClick={onCancel} style={{cursor:"pointer", padding: "4px 12px"}}>
+                                        <CloseOutlined /> 取消
+                                    </div>
+                                    {Object.keys(record).length > 1 && (
+                                        <div onClick={() => onDelete(record)} style={{cursor:"pointer", padding: "4px 12px", color: "#f5222d"}}>
+                                            <DeleteOutlined /> 删除
+                                        </div>
+                                    )}
+                                </div>
+                            }
+                        >
                             <YakitButton
-                                size='small'
                                 type='text'
-                                disabled={editingId !== ""}
-                                onClick={() => onEdit(record)}
-                            >
-                                编辑
-                            </YakitButton>
-                            <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
-                                删除
-                            </YakitButton>
-                        </div>
+                                size='small'
+                                icon={<EllipsisOutlined />}
+                            />
+                        </YakitPopover>
+                    ) : (
+                        <YakitPopover
+                            trigger={["click", "hover"]} 
+                            placement="bottom"
+                            content={
+                                <div>
+                                    <div 
+                                        onClick={() => onEdit(record)} 
+                                        style={{
+                                            cursor: editingId !== "" ? "not-allowed" : "pointer",
+                                            padding: "4px 12px",
+                                            color: editingId !== "" ? "#00000040" : "inherit"
+                                        }}
+                                    >
+                                        <EditOutlined /> 编辑
+                                    </div>
+                                    <div onClick={() => onDelete(record)} style={{cursor:"pointer", padding: "4px 12px", color: "#f5222d"}}>
+                                        <DeleteOutlined /> 删除
+                                    </div>
+                                </div>
+                            }
+                        >
+                            <YakitButton
+                                type='text'
+                                size='small'
+                                icon={<SettingOutlined />}
+                            />
+                        </YakitPopover>
                     )
                 }
             }
@@ -394,7 +445,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 type: col.type,
                 selectOption: (col.enum || []).map((item) => ({label: item, value: item})),
                 UiStyle: uiKeys?.[col.dataIndex],
-                form
+                form,
+                onBlur: () => onBlur(record)
             })
         }
     })
@@ -402,6 +454,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     return (
         <Form form={form} component={false}>
             <Table
+                size='small'
                 className={classNames({
                     [styles["edit-table"]]: realData.length === 0
                 })}
@@ -414,6 +467,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 columns={mergedColumns}
                 pagination={false}
                 scroll={{x: uiSchema?.x || "max-content", y: uiSchema?.y}}
+                bordered={true}
             />
             <YakitButton
                 onClick={addCell}
