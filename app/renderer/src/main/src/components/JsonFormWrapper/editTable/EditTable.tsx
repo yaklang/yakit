@@ -14,6 +14,7 @@ import {DefaultOptionType} from "antd/lib/select"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import { YakitDropdownMenu } from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
+import { showByCursorMenu } from "@/utils/showByCursor"
 
 interface Item {
     _id: string
@@ -55,36 +56,9 @@ const EditableCell: React.FC<EditableCellProps> = ({
             switch (UiStyle["ui:widget"]) {
                 case "textarea":
                     return (
-                        <YakitInput
-                            className={styles["input-textarea"]}
-                            suffix={
-                                <ArrowsAltOutlined
-                                    onClick={() => {
-                                        const str = form.getFieldValue(dataIndex)
-                                        let val = form.getFieldValue(dataIndex)
-                                        const m = showYakitModal({
-                                            title: `编辑 ${title}`,
-                                            centered: true,
-                                            content: (
-                                                <YakitInput.TextArea
-                                                    defaultValue={str}
-                                                    placeholder={`请输入 ${title}`}
-                                                    onChange={(e) => {
-                                                        val = e.target.value
-                                                    }}
-                                                />
-                                            ),
-                                            bodyStyle: {padding: 24},
-                                            onOk: () => {
-                                                form.setFieldsValue({
-                                                    [dataIndex]: val
-                                                })
-                                                m.destroy()
-                                            }
-                                        })
-                                    }}
-                                />
-                            }
+                        <YakitInput.TextArea
+                            className={styles["input-textarea"]} 
+                            placeholder={`请输入 ${typeof title === 'object' ? '该字段' : title}`}
                         />
                     )
                 default:
@@ -241,9 +215,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     width: widthObj?.[key]
                 })
 
-                newData.push({
-                    _id: uuidv4()
-                })
                 // 默认值赋值
                 if (properties[key]?.default) {
                     defObj[key] = properties[key]?.default
@@ -254,24 +225,22 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             setRequireList(require)
             setColumns([...newColumns])
             setMaxItems(maxItems)
+
+            // 如果表格为空，初始化一条新数据
+            if (data.length === 0) {
+                const newItem = {
+                    _id: uuidv4(),
+                    ...defObj
+                }
+                setData([newItem])
+                setEditingId(newItem._id)
+                form.setFieldsValue({...newItem})
+                onSubmit([newItem])
+            }
         } catch (error) {
             failed(`解析表格失败:${error}`)
         }
     }, [columnSchema, uiSchema])
-
-    // 如果表格为空,自动触发新增
-    useEffect(() => {
-        if(data.length === 0 && cacheData.length === 0) {
-            // 遍历 columns 获取 enum 字段的默认值
-            const defaultValues = {}
-            columns.forEach(col => {
-                if(col.enum?.length > 0) {
-                    defaultValues[col.dataIndex] = col.enum[0]
-                }
-            })
-            addCell(defaultValues)
-        }
-    }, [data, cacheData])
 
     const isEditing = useMemoizedFn((rowItem: Item) => rowItem._id === editingId)
 
@@ -334,8 +303,13 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
 
     // 失焦自动保存
     const onBlur = useMemoizedFn(async (record: Item) => {
-        if(editingId) {
-            await onSave(record)
+        if (editingId) {
+            try {
+                await onSave(record)
+                setEditingId("")
+            } catch (error) {
+                // 保存失败时不退出编辑状态
+            }
         }
     })
 
@@ -468,6 +442,80 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 pagination={false}
                 scroll={{x: uiSchema?.x || "max-content", y: uiSchema?.y}}
                 bordered={true}
+                onRow={(record) => ({
+                    onDoubleClick: () => {
+                        // 如果当前没有编辑中的行,直接编辑
+                        if (editingId === "") {
+                            onEdit(record)
+                            return
+                        }
+                        
+                        // 如果点击的是当前编辑行,不做处理
+                        if (editingId === record._id) {
+                            return
+                        }
+                        
+                        // 如果有其他行在编辑,先保存再编辑新行
+                        const editingRecord = data.find(item => item._id === editingId)
+                        if (editingRecord) {
+                            onSave(editingRecord)
+                            onEdit(record)
+                        }
+                    },
+                    onContextMenu: (e) => {
+                        e.preventDefault()
+                        const menu = [
+                            {
+                                id: "edit",
+                                title: "编辑",
+                                onClick: () => {
+                                    // 如果当前没有编辑中的行,直接编辑
+                                    if (editingId === "") {
+                                        onEdit(record)
+                                        return
+                                    }
+                                    
+                                    // 如果点击的是当前编辑行,不做处理
+                                    if (editingId === record._id) {
+                                        return
+                                    }
+                                    
+                                    // 如果有其他行在编辑,先保存再编辑新行
+                                    const editingRecord = data.find(item => item._id === editingId)
+                                    if (editingRecord) {
+                                        onSave(editingRecord)
+                                        onEdit(record)
+                                    }
+                                }
+                            },
+                            {
+                                id: "copy",
+                                title: "复制", 
+                                onClick: () => {
+                                    const newRecord = {
+                                        ...record,
+                                        _id: uuidv4()
+                                    }
+                                    setData([...data, newRecord])
+                                }
+                            },
+                            {
+                                id: "save",
+                                title: "保存",
+                                onClick: () => onSave(record)
+                            },
+                            {
+                                id: "delete",
+                                title: "删除",
+                                onClick: () => {
+                                    const newData = data.filter(item => item._id !== record._id)
+                                    setData(newData)
+                                }
+                            }
+                        ]
+                        showByCursorMenu({content: menu}, e.clientX, e.clientY)
+                    }
+                })}
             />
             <YakitButton
                 onClick={addCell}
