@@ -346,7 +346,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     const editable = isEditing(record)
                     return editable ? (
                         <YakitPopover
-                            trigger={["click", "hover"]}
+                            trigger={["click"]}
                             placement="bottom"
                             content={
                                 <div>
@@ -372,7 +372,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                         </YakitPopover>
                     ) : (
                         <YakitPopover
-                            trigger={["click", "hover"]} 
+                            trigger={["click"]}
                             placement="bottom"
                             content={
                                 <div>
@@ -382,7 +382,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                             cursor: editingId !== "" ? "not-allowed" : "pointer",
                                             padding: "4px 12px",
                                             color: editingId !== "" ? "#00000040" : "inherit"
-                                        }}
+                                        } as React.CSSProperties}
                                     >
                                         <EditOutlined /> 编辑
                                     </div>
@@ -395,7 +395,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             <YakitButton
                                 type='text'
                                 size='small'
-                                icon={<SettingOutlined />}
+                                icon={<EllipsisOutlined />}
                             />
                         </YakitPopover>
                     )
