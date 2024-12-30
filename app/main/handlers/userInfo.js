@@ -316,5 +316,9 @@ module.exports = {
         ipcMain.handle("reset-password", (event, arg) => {
             win.webContents.send("reset-password-callback")
         })
+
+        ipcMain.handle('get-ws-url', (event, arg) => {
+            return HttpSetting.wsBaseURL;
+        });
     }
 }

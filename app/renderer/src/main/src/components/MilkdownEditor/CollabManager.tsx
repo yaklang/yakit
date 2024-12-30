@@ -4,12 +4,11 @@ import {WebsocketProvider} from "./WebsocketProvider/WebsocketProvider"
 import {ObservableV2} from "lib0/observable"
 import isEqual from "lodash/isEqual"
 import {CollabStatus} from "./MilkdownEditorType"
-import {getRemoteValue} from "@/utils/kv"
-import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import {yakitNotify} from "@/utils/notification"
 import {NotepadWsRequest} from "./WebsocketProvider/WebsocketProviderType"
 import {notepadActions, notepadSaveStatus} from "./WebsocketProvider/constants"
 
+const {ipcRenderer} = window.require("electron")
 export interface CollabUserInfo {
     userId: number
     name: string
@@ -29,24 +28,7 @@ interface CollabNotepadWsRequest {
     notepadHash: string
     title: string
 }
-const getWSUrl = async () => {
-    const res = await getRemoteValue(getRemoteHttpSettingGV())
-    if (!res) return ""
-    const value = JSON.parse(res)
-    const inputUrl = value.BaseUrl
-    // 解析 URL
-    const parsedUrl = new URL(inputUrl)
-    // 获取协议
-    const protocol = parsedUrl.protocol
-    // 根据协议转换为 WebSocket URL
-    let wsUrl = ""
-    if (protocol === "https:") {
-        wsUrl = "wss://" + parsedUrl.host + parsedUrl.pathname
-    } else if (protocol === "http:") {
-        wsUrl = "ws://" + parsedUrl.host + parsedUrl.pathname
-    }
-    return wsUrl
-}
+
 export class CollabManager extends ObservableV2<CollabManagerEvents> {
     private doc!: Doc
     private wsProvider!: WebsocketProvider
@@ -73,7 +55,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     flush = async (template: string) => {
         let wsUrl = ""
         try {
-            wsUrl = await getWSUrl()
+            wsUrl = await ipcRenderer.invoke("get-ws-url")
         } catch (error) {
             yakitNotify("error", `getWSUrl错误:${error}`)
         }
