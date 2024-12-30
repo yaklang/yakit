@@ -2,7 +2,7 @@ const axios = require("axios")
 const https = require("https")
 const {ipcMain} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
-const {getSocketUrl} = require("./handlers/userInfo")
+const url = require("url")
 
 // 请求超时时间
 const DefaultTimeOut = 30 * 1000
@@ -12,6 +12,21 @@ ipcMain.handle("is-enpritrace-to-domain", (event, flag) => {
     HttpSetting.httpBaseURL = flag ? "https://vip.yaklang.com" : "https://www.yaklang.com"
     return true
 })
+
+const getSocketUrl = (inputUrl) => {
+    // 解析 URL
+    const parsedUrl = new url.URL(inputUrl)
+    // 获取协议
+    const protocol = parsedUrl.protocol
+    // 根据协议转换为 WebSocket URL
+    let wsUrl
+    if (protocol === "https:") {
+        wsUrl = "wss://" + parsedUrl.host + parsedUrl.pathname
+    } else if (protocol === "http:") {
+        wsUrl = "ws://" + parsedUrl.host + parsedUrl.pathname
+    }
+    return wsUrl
+}
 
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
@@ -123,5 +138,6 @@ function httpApi(method, url, params, headers, isAddParams = true, timeout = Def
 
 module.exports = {
     service,
-    httpApi
+    httpApi,
+    getSocketUrl
 }

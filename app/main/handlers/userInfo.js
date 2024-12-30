@@ -1,30 +1,13 @@
 const {ipcMain, BrowserWindow, shell} = require("electron")
-const {httpApi} = require("../httpServer")
+const {httpApi,getSocketUrl} = require("../httpServer")
 const {USER_INFO, HttpSetting} = require("../state")
 const {templateStr} = require("./wechatWebTemplate/index")
 const urltt = require("url")
 const http = require("http")
-const url = require("url")
-
-const getSocketUrl = (inputUrl) => {
-    // 解析 URL
-    const parsedUrl = new url.URL(inputUrl)
-    // 获取协议
-    const protocol = parsedUrl.protocol
-    // 根据协议转换为 WebSocket URL
-    let wsUrl
-    if (protocol === "https:") {
-        wsUrl = "wss://" + parsedUrl.host + parsedUrl.pathname
-    } else if (protocol === "http:") {
-        wsUrl = "ws://" + parsedUrl.host + parsedUrl.pathname
-    }
-    return wsUrl
-}
 
 // http 服务
 let server = null
 module.exports = {
-    getSocketUrl,
     register: (win, getClient) => {
         const commonSignIn = (res) => {
             const info = res.data
