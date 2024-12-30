@@ -173,20 +173,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         return () => {
             const notepadContent = notepadContentRef.current
             onSaveNewContent(notepadContent)
-            onRemoveEmptyNotepad(notepadContent)
         }
     }, [pageInfo])
 
-    /**新建进来，然后退出时文档为空，需要删除文档 */
-    const onRemoveEmptyNotepad = useMemoizedFn((notepadContent) => {
-        if (userInfo.isLogin) {
-            const markdownContent = notepadContent
-            const isRemove = !pageInfo.notepadHash && !markdownContent && notepadDetail.hash
-            if (!!isRemove) {
-                apiDeleteNotepadDetail({hash: notepadDetail.hash}, true)
-            }
-        }
-    })
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
         if (userInfo.isLogin) {
