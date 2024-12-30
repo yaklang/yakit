@@ -469,3 +469,11 @@
 .extra-params-divider {
     border-bottom: 1px solid #eaecf3;
 }
+
+.tooltip-line-feed{
+    :global {
+        .ant-tooltip-inner{
+            white-space: pre-wrap;
+        }
+    }
+}
