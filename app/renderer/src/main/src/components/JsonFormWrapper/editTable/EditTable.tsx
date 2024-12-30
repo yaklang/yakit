@@ -185,6 +185,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             newGrid.forEach((item) => {
                 widthObj = {...widthObj, ...item}
             })
+
             Object.keys(properties).forEach((key) => {
                 const {type, title, description} = properties[key]
                 newColumns.push({
@@ -210,7 +211,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             return (
                                 <Tooltip title={text}>
                                     <div
-                                        style={{overflow: "hidden"}}
+                                        // scroll为max-content时将会根据内容自适应宽度 为减轻后端写入x轴压力（默认不写） 因此传入widthObj
+                                        style={{overflow: "hidden", fontSize: 12, maxWidth: widthObj?.[key]}}
                                         className={classNames("yakit-content-single-ellipsis")}
                                     >
                                         {text}
@@ -219,7 +221,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             )
                         }
                         return (
-                            <div style={{overflow: "hidden"}} className={classNames("yakit-content-single-ellipsis")}>
+                            <div
+                                style={{overflow: "hidden", fontSize: 12, maxWidth: widthObj?.[key]}}
+                                className={classNames("yakit-content-single-ellipsis")}
+                            >
                                 {text || "-"}
                             </div>
                         )
@@ -321,6 +326,29 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         })
     })
 
+    // 复制
+    const onCopy = useMemoizedFn(async (record: Item) => {
+        // 校验复制行 如若为编辑状态且无法通过校验则无法复制
+        if (record._id === editingId) {
+            try {
+                const item = await onSave(record)
+                const newRecord = {
+                    ...item,
+                    _id: uuidv4()
+                }
+                setData([...data, newRecord])
+            } catch (error) {
+                warn("当前行校验未通过")
+            }
+        } else {
+            const newRecord = {
+                ...record,
+                _id: uuidv4()
+            }
+            setData([...data, newRecord])
+        }
+    })
+
     // 失焦自动保存
     const onBlur = useMemoizedFn(async (record: Item) => {
         if (editingId) {
@@ -395,7 +423,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                         default:
                                             break
                                     }
-                                }
+                                },
+                                width: 80
                             }}
                             dropdown={{
                                 trigger: ["click"],
@@ -413,22 +442,31 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                         label: "编辑"
                                     },
                                     {
+                                        key: "copy",
+                                        label: "复制"
+                                    },
+                                    {
                                         key: "delete",
                                         label: "删除"
                                     }
                                 ],
-                                onClick: ({key}) => {
+                                onClick: async ({key}) => {
                                     switch (key) {
                                         case "edit":
                                             onEdit(record)
                                             break
+                                        case "copy":
+                                            onCopy(record)
+                                            break
                                         case "delete":
                                             onDelete(record)
                                             break
+
                                         default:
                                             break
                                     }
-                                }
+                                },
+                                width: 80
                             }}
                             dropdown={{
                                 trigger: ["click"],
@@ -468,6 +506,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         <Form form={form} component={false}>
             <div className={styles["edit-table-box"]}>
                 <Table
+                    rowKey={(e) => e._id}
                     size='small'
                     className={classNames({
                         [styles["edit-table"]]: realData.length === 0
@@ -511,6 +550,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                     {label: "保存", key: "save"},
                                     {label: "删除", key: "delete"}
                                 ],
+                                width: 80,
                                 onClick: async (e) => {
                                     switch (e.key) {
                                         case "edit":
@@ -533,25 +573,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                             }
                                             return
                                         case "copy":
-                                            // 校验复制行 如若为编辑状态且无法通过校验则无法复制
-                                            if (record._id === editingId) {
-                                                try {
-                                                    const item = await onSave(record)
-                                                    const newRecord = {
-                                                        ...item,
-                                                        _id: uuidv4()
-                                                    }
-                                                    setData([...data, newRecord])
-                                                } catch (error) {
-                                                    warn("当前行校验未通过")
-                                                }
-                                            } else {
-                                                const newRecord = {
-                                                    ...record,
-                                                    _id: uuidv4()
-                                                }
-                                                setData([...data, newRecord])
-                                            }
+                                            onCopy(record)
                                             return
                                         case "save":
                                             try {
