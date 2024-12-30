@@ -2,6 +2,7 @@ const axios = require("axios")
 const https = require("https")
 const {ipcMain} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
+const {getSocketUrl} = require("./handlers/userInfo")
 
 // 请求超时时间
 const DefaultTimeOut = 30 * 1000
@@ -14,6 +15,8 @@ ipcMain.handle("is-enpritrace-to-domain", (event, flag) => {
 
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
+    HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
+    USER_INFO.token = ''
     event.returnValue = arg
 })
 
