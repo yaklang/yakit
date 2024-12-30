@@ -1,22 +1,6 @@
 const {ipcMain} = require("electron")
 const WebSocket = require("ws")
-const url = require("url")
 const {HttpSetting, USER_INFO} = require("../state")
-
-const getSocketUrl = (inputUrl) => {
-    // 解析 URL
-    const parsedUrl = new url.URL(inputUrl)
-    // 获取协议
-    const protocol = parsedUrl.protocol
-    // 根据协议转换为 WebSocket URL
-    let wsUrl
-    if (protocol === "https:") {
-        wsUrl = "wss://" + parsedUrl.host + parsedUrl.pathname
-    } else if (protocol === "http:") {
-        wsUrl = "ws://" + parsedUrl.host + parsedUrl.pathname
-    }
-    return wsUrl
-}
 
 module.exports = (win, getClient) => {
     let ws = null
@@ -58,7 +42,7 @@ module.exports = (win, getClient) => {
             onCloseSocket()
         }
         const {token} = USER_INFO
-        const socketUrl = `${getSocketUrl(HttpSetting.httpBaseURL)}api/ws`
+        const socketUrl = `${HttpSetting.wsBaseURL}api/ws`
         // console.log("USER_INFO--------------------", socketUrl, token)
         ws = new WebSocket(socketUrl, {
             headers: {
