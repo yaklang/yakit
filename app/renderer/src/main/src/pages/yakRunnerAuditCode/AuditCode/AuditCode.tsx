@@ -1954,9 +1954,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             dataIndex: "Name",
             render: (text, record) => {
                 return (
-                    <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-                        {record.Name}
-                    </div>
+                    <Tooltip title={record.Name}>
+                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
+                            {record.Name}
+                        </div>
+                    </Tooltip>
                 )
             }
         },
@@ -1970,7 +1972,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             dataIndex: "Description",
             render: (text, record) => {
                 return (
-                    <Tooltip title={text}>
+                    <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
                         <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{text}</div>
                     </Tooltip>
                 )
