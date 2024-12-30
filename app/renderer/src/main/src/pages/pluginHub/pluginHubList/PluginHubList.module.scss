@@ -161,6 +161,18 @@
 .hub-list-header-right-extra {
     display: flex;
     align-items: center;
+    .divider-style {
+        width: 1px;
+        height: 12px;
+        background-color: #eaecf3;
+    }
+    .exclamationcircleIcon {
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #b4bbca;
+        }
+    }
 }
 
 .hub-list-empty {

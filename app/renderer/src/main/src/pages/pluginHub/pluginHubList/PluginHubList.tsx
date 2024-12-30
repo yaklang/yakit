@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useControllableValue, useMemoizedFn} from "ahooks"
 import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {HubListRecycle} from "./HubListRecycle"
 import {HubListOwn} from "./HubListOwn"
@@ -20,6 +20,8 @@ import styles from "./PluginHubList.module.scss"
 interface PluginHubListProps {
     /** 根元素的id */
     rootElementId?: string
+    active?: PluginSourceType
+    setActive: (active: PluginSourceType) => void
     isDetail: boolean
     /** 进入指定插件的详情页 */
     toPluginDetail: (info: PluginToDetailInfo) => void
@@ -99,7 +101,10 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const noDetailTabs = useRef<PluginSourceType[]>(["recycle", "setting"])
     // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
     const rendered = useRef<Set<string>>(new Set())
-    const [active, setActive] = useState<PluginSourceType>()
+    const [active, setActive] = useControllableValue<PluginSourceType>(props, {
+        valuePropName: "active",
+        trigger: "setActive"
+    })
     const [activeHidden, setActiveHidden] = useState<boolean>(false)
     const onSetActive = useMemoizedFn((type: PluginSourceType, isSwitchExpand = true) => {
         setHintShow((val) => {
