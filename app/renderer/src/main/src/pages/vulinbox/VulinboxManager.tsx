@@ -154,7 +154,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
 
                     }}>启动靶场</YakitButton>
             )}
-        </Space>} bodyStyle={{ padding: 0 }} extra={(
+        </Space>} bodyStyle={{ padding: 0, overflow: "hidden", height: "100%", display: "flex", flexDirection: "row" }} extra={(
             <Space>
                 <YakitPopconfirm title={"将从互联网下载靶场程序并安装"} onConfirm={() => {
                     const m = showYakitModal({
@@ -235,118 +235,115 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
 
         )}
         >
-            <div style={{ height: "100%", overflow: "auto", maxHeight: "100%" }}>
+            <div style={{ flex: 1, overflow: "hidden", maxHeight: "100%" }}>
                 <YakitResizeBox
                     isVer={false}
                     firstNode={
-                        <div style={{ marginBottom: 8 }}>
+                        <div style={{ marginBottom: 8, overflow: "auto", height: "100%" }}>
                             <Alert type="info" message={<div>
-                                靶场信息:
-                                <div style={{ padding: "12px 0" }}>
-                                    <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Vulinbox Agent - Web安全漏洞靶场</h2>
-                                    <p style={{ marginBottom: 16 }}>Vulinbox 是一个精心设计的 Web 安全漏洞靶场，它模拟了各类真实场景中可能出现的安全漏洞，为安全研究人员和渗透测试工程师提供了一个理想的学习和实践平台。</p>
+                                <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Vulinbox Agent - Web安全漏洞靶场</h2>
+                                <p style={{ marginBottom: 16 }}>Vulinbox 是一个精心设计的 Web 安全漏洞靶场，它模拟了各类真实场景中可能出现的安全漏洞，为安全研究人员和渗透测试工程师提供了一个理想的学习和实践平台。</p>
 
-                                    <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>漏洞类型覆盖</h3>
-                                    <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-                                        <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
-                                            <div style={{ marginBottom: 16 }}>
-                                                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>1. 注入类漏洞</h4>
-                                                <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                                    <li>SQL 注入漏洞环境</li>
-                                                    <li>XSS 跨站脚本演练场景</li>
-                                                    <li>SSRF 服务器端请求伪造环境</li>
-                                                    <li>命令注入漏洞复现</li>
-                                                </ul>
-                                            </div>
-
-                                            <div style={{ marginBottom: 16 }}>
-                                                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>2. 身份认证漏洞</h4>
-                                                <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                                    <li>Cookie 安全问题模拟</li>
-                                                    <li>JWT 令牌安全场景</li>
-                                                    <li>会话管理缺陷演示</li>
-                                                </ul>
-                                            </div>
-
-                                            <div style={{ marginBottom: 16 }}>
-                                                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>3. 协议层漏洞</h4>
-                                                <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                                    <li>WebSocket 安全问题模拟</li>
-                                                    <li>HTTP 协议缺陷环境</li>
-                                                    <li>DNS 安全问题演示</li>
-                                                </ul>
-                                            </div>
+                                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>漏洞类型覆盖</h3>
+                                <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                                    <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>1. 注入类漏洞</h4>
+                                            <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                                <li>SQL 注入漏洞环境</li>
+                                                <li>XSS 跨站脚本演练场景</li>
+                                                <li>SSRF 服务器端请求伪造环境</li>
+                                                <li>命令注入漏洞复现</li>
+                                            </ul>
                                         </div>
 
-                                        <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
-                                            <div style={{ marginBottom: 16 }}>
-                                                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>4. 加密算法缺陷</h4>
-                                                <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                                    <li>AES/ECB 模式安全问题</li>
-                                                    <li>RSA 算法应用缺陷</li>
-                                                    <li>Base64 编码滥用场景</li>
-                                                </ul>
-                                            </div>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>2. 身份认证漏洞</h4>
+                                            <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                                <li>Cookie 安全问题模拟</li>
+                                                <li>JWT 令牌安全场景</li>
+                                                <li>会话管理缺陷演示</li>
+                                            </ul>
+                                        </div>
 
-                                            <div style={{ marginBottom: 16 }}>
-                                                <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>5. API 接口漏洞</h4>
-                                                <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                                    <li>OpenAPI/Swagger 相关漏洞</li>
-                                                    <li>RESTful API 安全问题</li>
-                                                    <li>JSON 解析漏洞</li>
-                                                </ul>
-                                            </div>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>3. 协议层漏洞</h4>
+                                            <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                                <li>WebSocket 安全问题模拟</li>
+                                                <li>HTTP 协议缺陷环境</li>
+                                                <li>DNS 安全问题演示</li>
+                                            </ul>
                                         </div>
                                     </div>
 
-                                    <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>平台特色</h3>
-                                    <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-                                        <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
-                                            <div style={{ marginBottom: 8 }}>
-                                                <b>1. 教学性</b>
-                                                <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
-                                                    <li>每个漏洞场景都有详细说明</li>
-                                                    <li>提供漏洞原理和利用方法</li>
-                                                </ul>
-                                            </div>
-                                            <div style={{ marginBottom: 8 }}>
-                                                <b>2. 真实性</b>
-                                                <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
-                                                    <li>模拟真实业务场景</li>
-                                                    <li>还原实际漏洞环境</li>
-                                                </ul>
-                                            </div>
+                                    <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>4. 加密算法缺陷</h4>
+                                            <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                                <li>AES/ECB 模式安全问题</li>
+                                                <li>RSA 算法应用缺陷</li>
+                                                <li>Base64 编码滥用场景</li>
+                                            </ul>
                                         </div>
 
-                                        <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
-                                            <div style={{ marginBottom: 8 }}>
-                                                <b>3. 系统性</b>
-                                                <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
-                                                    <li>漏洞类型覆盖全面</li>
-                                                    <li>难度梯度合理</li>
-                                                </ul>
-                                            </div>
-                                            <div style={{ marginBottom: 8 }}>
-                                                <b>4. 实践性</b>
-                                                <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
-                                                    <li>支持动手操作</li>
-                                                    <li>即时反馈结果</li>
-                                                </ul>
-                                            </div>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>5. API 接口漏洞</h4>
+                                            <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                                <li>OpenAPI/Swagger 相关漏洞</li>
+                                                <li>RESTful API 安全问题</li>
+                                                <li>JSON 解析漏洞</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>平台特色</h3>
+                                <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
+                                    <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
+                                        <div style={{ marginBottom: 8 }}>
+                                            <b>1. 教学性</b>
+                                            <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
+                                                <li>每个漏洞场景都有详细说明</li>
+                                                <li>提供漏洞原理和利用方法</li>
+                                            </ul>
+                                        </div>
+                                        <div style={{ marginBottom: 8 }}>
+                                            <b>2. 真实性</b>
+                                            <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
+                                                <li>模拟真实业务场景</li>
+                                                <li>还原实际漏洞环境</li>
+                                            </ul>
                                         </div>
                                     </div>
 
-                                    <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>适用人群</h3>
-                                    <ul style={{ paddingLeft: 24, margin: 0 }}>
-                                        <li>网络安全初学者</li>
-                                        <li>安全测试工程师</li>
-                                        <li>开发人员安全意识培训</li>
-                                        <li>安全研究人员</li>
-                                    </ul>
-
-                                    <div style={{ marginTop: 16, padding: 12, backgroundColor: "#f5f5f5", borderRadius: 4 }}>
-                                        这是一个非常实用的安全学习平台，它不仅提供了丰富的漏洞环境，还能帮助使用者系统地理解和掌握各类 Web 安全漏洞。对于想要提升安全测试能力或加深安全理解的人来说，这是一个理想的练习环境。
+                                    <div style={{ width: "calc(50% - 8px)", backgroundColor: "#f7f7f7", padding: 16, borderRadius: 8 }}>
+                                        <div style={{ marginBottom: 8 }}>
+                                            <b>3. 系统性</b>
+                                            <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
+                                                <li>漏洞类型覆盖全面</li>
+                                                <li>难度梯度合理</li>
+                                            </ul>
+                                        </div>
+                                        <div style={{ marginBottom: 8 }}>
+                                            <b>4. 实践性</b>
+                                            <ul style={{ paddingLeft: 24, margin: "4px 0" }}>
+                                                <li>支持动手操作</li>
+                                                <li>即时反馈结果</li>
+                                            </ul>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>适用人群</h3>
+                                <ul style={{ paddingLeft: 24, margin: 0 }}>
+                                    <li>网络安全初学者</li>
+                                    <li>安全测试工程师</li>
+                                    <li>开发人员安全意识培训</li>
+                                    <li>安全研究人员</li>
+                                </ul>
+
+                                <div style={{ marginTop: 16, padding: 12, backgroundColor: "#f5f5f5", borderRadius: 4 }}>
+                                    这是一个非常实用的安全学习平台，它不仅提供了丰富的漏洞环境，还能帮助使用者系统地理解和掌握各类 Web 安全漏洞。对于想要提升安全测试能力或加深安全理解的人来说，这是一个理想的练习环境。
                                 </div>
                             </div>} />
                         </div>
@@ -420,7 +417,7 @@ const VulinboxStart: React.FC<VulinboxStartProp> = (props) => {
         </Form.Item>
 
         <Form.Item colon={false} label={" "}>
-            <YakitButton type="primary" htmlType="submit"> 启动靶场 </YakitButton>
+            <YakitButton style={{ marginBottom: 8 }} type="primary" htmlType="submit"> 启动靶场 </YakitButton>
         </Form.Item>
     </Form>
 };
