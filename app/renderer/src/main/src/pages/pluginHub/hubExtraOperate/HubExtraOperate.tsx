@@ -4,6 +4,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
+    OutlineExclamationcircleIcon,
     OutlineExportIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
@@ -43,6 +44,9 @@ import {setClipboardText} from "@/utils/clipboard"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
+import { PluginSourceType } from "../type"
+import { YakitCheckbox } from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import { Tooltip } from "antd"
 
 export interface HubExtraOperateRef {
     downloadedNext: (flag: boolean) => void
@@ -52,6 +56,7 @@ export interface HubExtraOperateProps {
     ref?: ForwardedRef<HubExtraOperateRef>
     /** 上层元素的id */
     getContainer?: string
+    active?: PluginSourceType
     online?: YakitPluginOnlineDetail
     local?: YakScript
     /** 下载loading状态 */
@@ -66,7 +71,7 @@ export interface HubExtraOperateProps {
 
 export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     forwardRef((props, ref) => {
-        const {getContainer, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
+        const {getContainer, active, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
 
         useImperativeHandle(
             ref,
@@ -541,6 +546,14 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
 
         return (
             <div className={styles["hub-extra-operate"]}>
+                {active === "local" && !!local && (
+                    <YakitCheckbox>
+                        不下载{" "}
+                        <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
+                            <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                        </Tooltip>
+                    </YakitCheckbox>
+                )}
                 {!isCorePlugin && (
                     <div className={styles["btn-group"]}>
                         <HubButton
