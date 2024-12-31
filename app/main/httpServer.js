@@ -31,7 +31,6 @@ const getSocketUrl = (inputUrl) => {
 ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     HttpSetting.httpBaseURL = arg.baseUrl
     HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
-    USER_INFO.token = ''
     event.returnValue = arg
 })
 
