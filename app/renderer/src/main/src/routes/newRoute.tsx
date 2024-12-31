@@ -234,7 +234,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-project-manager": {label: "项目管理"},
     "rule-management": {label: "规则管理"},
     "yakrunner-audit-hole" : {label:"漏洞管理"},
-    "yakrunner-audit-hole" : {label:"审计漏洞"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
