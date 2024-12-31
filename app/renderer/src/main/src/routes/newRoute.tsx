@@ -319,6 +319,7 @@ export interface ComponentParams {
     system?: string
     advancedConfigValue?: AdvancedConfigValueProps
     advancedConfigShow?: AdvancedConfigShowProps | null
+    hotPatchCode?: string
     // Route.HTTPFuzzer 参数---end
 
     // order?: string

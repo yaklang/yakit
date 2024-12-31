@@ -109,6 +109,8 @@ export interface WebFuzzerPageInfoProps {
     advancedConfigShow?: AdvancedConfigShowProps | null
     //高级配置中变量的二级Panel 展开项
     variableActiveKeys?: string[]
+    // 热加载代码
+    hotPatchCode: string
 }
 
 export interface PocPageInfoProps {
@@ -504,6 +506,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
     const cache = pageList.map((ele) => {
         const advancedConfigValue =
             ele.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue || defaultAdvancedConfigValue
+        const hotPatchCode = ele.pageParamsInfo?.webFuzzerPageInfo?.hotPatchCode
         return {
             groupChildren: [],
             groupId: ele.pageGroupId,
@@ -520,6 +523,7 @@ export const getFuzzerProcessedCacheData = (pageList) => {
                 concurrent: advancedConfigValue.concurrent,
                 minDelaySeconds: advancedConfigValue.minDelaySeconds,
                 maxDelaySeconds: advancedConfigValue.maxDelaySeconds,
+                hotPatchCode: hotPatchCode
             },
             sortFieId: ele.sortFieId,
             verbose: ele.pageName,

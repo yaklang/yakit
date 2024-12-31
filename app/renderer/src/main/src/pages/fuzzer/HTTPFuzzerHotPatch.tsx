@@ -1,6 +1,5 @@
-import React, {useEffect, useState} from "react"
-import {Form, Space} from "antd"
-import {YakEditor} from "../../utils/editors"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {Dropdown, Form, Space} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
@@ -13,52 +12,30 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
-import {OutlineXIcon} from "@/assets/icon/outline"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {WEB_FUZZ_HOTPATCH_CODE} from "@/defaultConstants/HTTPFuzzerPage"
+import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
 import {setClipboardText} from "@/utils/clipboard"
-
-export interface HTTPFuzzerHotPatchProp {
-    onInsert?: (s: string) => any
-    onSaveCode?: (code: string) => any
-    onSaveHotPatchCodeWithParamGetterCode?: (code: string) => any
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {shallow} from "zustand/shallow"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {cloneDeep} from "lodash"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import classNames from "classnames"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
+interface HTTPFuzzerHotPatchProp {
+    pageId: string
+    onInsert: (s: string) => any
+    onSaveCode: (code: string) => any
+    onSaveHotPatchCodeWithParamGetterCode: (code: string) => any
     onCancel: () => void
-    initialHotPatchCode?: string
+    initialHotPatchCode: string
     initialHotPatchCodeWithParamGetter?: string
 }
-
-const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可触发热加载调用
-handle = func(param) {
-    // 在这里可以直接返回一个字符串
-    return codec.EncodeBase64("base64-prefix" + param) + sprintf("_origin(%v)", param)
-}
-
-// 使用标签 {{yak(handle1|...)}} 可触发热加载调用
-handle1 = func(param) {
-    // 这个特殊的 Hook 也支持返回数组
-    return ["12312312", "abc", "def"]
-}
-
-// beforeRequest 允许发送数据包前再做一次处理，定义为 func(origin []byte) []byte
-beforeRequest = func(req) {
-    /*
-        // 我们可以提供一些基础用法，比如说单纯就是替换一个时间戳～
-        req = str.ReplaceAll(req, "TIMESTAMP_INT64", sprint(time.Now().Unix()))
-    */ 
-    return []byte(req)
-}
-
-// afterRequest 允许对每一个请求的响应做处理，定义为 func(origin []byte) []byte
-afterRequest = func(rsp) {
-    return []byte(rsp)
-}
-
-// mirrorHTTPFlow 允许对每一个请求的响应做处理，定义为 func(req []byte, rsp []byte, params map[string]any) map[string]any
-// 返回值会作为下一个请求的参数，或者提取的数据，如果你需要解密响应内容，在这里操作是最合适的
-mirrorHTTPFlow = func(req, rsp, params) {
-    return params
-}
-`
 
 const HotPatchParamsGetterDefault = `__getParams__ = func() {
     /*
@@ -76,13 +53,25 @@ const HotPatchParamsGetterDefault = `__getParams__ = func() {
 
 const {ipcRenderer} = window.require("electron")
 
-const HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG = "HTTPFuzzerHotPatch_DYNAMICPARAMS_FLAG"
-const HTTPFuzzerHotPatch_TEMPLATE_DEMO = "HTTPFuzzerHotPatch_TEMPLATE_DEMO"
-
 export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+    const initWebFuzzerPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.pageId)
+        if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            return currentItem.pageParamsInfo.webFuzzerPageInfo
+        } else {
+            return cloneDeep(defaultWebFuzzerPageInfo)
+        }
+    })
+
     const [params, setParams, getParams] = useGetState({
         Template: `{{yak(handle|{{params(test)}})}}`,
-        HotPatchCode: !!props.initialHotPatchCode ? props.initialHotPatchCode : HotPatchDefaultContent,
+        HotPatchCode: props.initialHotPatchCode,
         HotPatchCodeWithParamGetter: !!props.initialHotPatchCodeWithParamGetter
             ? props.initialHotPatchCodeWithParamGetter
             : HotPatchParamsGetterDefault,
@@ -91,22 +80,22 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     })
     const [loading, setLoading] = useState(false)
     const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(400)
-    const [paramEditorHeight, setParamEditorHeight] = useState(250)
+    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
+    const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
 
     useEffect(() => {
-        getRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
+        getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
             if (!!e) {
                 setParams({...params, Template: e})
             }
         })
         return () => {
-            setRemoteValue(HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
+            setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
         }
     }, [])
 
     const onClose = useMemoizedFn(async () => {
-        const remoteData = await getRemoteValue(WEB_FUZZ_HOTPATCH_CODE)
-        if (remoteData !== params.HotPatchCode) {
+        if (initWebFuzzerPageInfo().hotPatchCode !== params.HotPatchCode) {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
@@ -115,7 +104,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 icon: <ExclamationCircleOutlined />,
                 style: {top: "20%"},
                 onOk: () => {
-                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
+                    props.onSaveCode(params.HotPatchCode)
                     props.onCancel()
                     m.destroy()
                 },
@@ -140,9 +129,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
-                    if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                    if (props.onSaveHotPatchCodeWithParamGetterCode)
-                        props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
+                    props.onSaveCode(params.HotPatchCode)
+                    props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
                     setLoading(true)
                     ipcRenderer
@@ -181,7 +169,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                             </Space>
                                         }
                                     >
-                                        <YakEditor value={data.join("\r\n")} readOnly={true} />
+                                        <YakitEditor value={data.join("\r\n")} readOnly={true} />
                                     </AutoCard>
                                 )
                             })
@@ -191,122 +179,132 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 layout={"vertical"}
                 className={styles["http-fuzzer-hotPatch-form"]}
             >
-                <Form.Item
-                    label={
-                        <Space>
-                            模版内容
+                <div className={styles["http-fuzzer-hotPatch-label"]}>
+                    <Space>
+                        模版内容
+                        <YakitButton
+                            type='text'
+                            onClick={(e) => {
+                                e.stopPropagation() // 阻止事件冒泡
+                                setClipboardText(params.Template)
+                            }}
+                        >
+                            点击复制
+                        </YakitButton>
+                        {props.onInsert && (
                             <YakitButton
-                                type='text'
+                                type={"primary"}
                                 onClick={() => {
-                                    setClipboardText(params.Template)
+                                    props.onInsert(params.Template)
+                                    props.onSaveCode(params.HotPatchCode)
                                 }}
                             >
-                                点击复制
+                                插入编辑器位置
                             </YakitButton>
-                            {props.onInsert && (
-                                <YakitButton
-                                    type={"primary"}
-                                    onClick={() => {
-                                        if (props.onInsert) props.onInsert(params.Template)
-                                        if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                                    }}
-                                >
-                                    插入编辑器位置
-                                </YakitButton>
-                            )}
-                            {/*<Tooltip title={<>{`支持：{{params(...)}} 标签`}</>}>*/}
-                            {/*    <YakitCheckbox*/}
-                            {/*        checked={dynamicParam}*/}
-                            {/*        onChange={(e) => {*/}
-                            {/*            setDynamicParam(e.target.checked)*/}
-                            {/*        }}*/}
-                            {/*    >*/}
-                            {/*        预加载参数展开*/}
-                            {/*    </YakitCheckbox>*/}
-                            {/*</Tooltip>*/}
-                        </Space>
-                    }
-                >
+                        )}
+                    </Space>
+                </div>
+                <Form.Item>
                     <div style={{height: 60}}>
-                        <YakEditor
-                            type={"http"}
+                        <YakitEditor
+                            type='http'
                             value={params.Template}
                             setValue={(Template) => setParams({...getParams(), Template})}
-                        />
+                        ></YakitEditor>
                     </div>
                 </Form.Item>
-                <Form.Item
-                    label={
-                        <Space style={{lineHeight: "16px"}}>
-                            热加载代码
-                            {props.onSaveCode && (
-                                <YakitButton
-                                    type={"primary"}
-                                    onClick={() => {
-                                        try {
-                                            if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-                                            setTimeout(() => {
-                                                yakitNotify("success", "保存成功")
-                                            }, 100)
-                                        } catch (error) {
-                                            yakitNotify("error", "保存失败:" + error)
-                                        }
-                                    }}
-                                >
-                                    保存
-                                </YakitButton>
-                            )}
-                            <div>
-                                <YakitPopconfirm
-                                    title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
-                                    onConfirm={() => {
-                                        if (props.onSaveCode) props.onSaveCode(params.HotPatchCode)
-
-                                        setParams({...params, HotPatchCode: HotPatchDefaultContent})
-                                    }}
-                                >
-                                    <YakitButton icon={<RefreshIcon />} type='text' />
-                                </YakitPopconfirm>
-                                <YakitPopover
-                                    title={"扩大编辑器"}
-                                    content={
-                                        <>
-                                            <YakitRadioButtons
-                                                value={hotPatchEditorHeight}
-                                                onChange={(e) => {
-                                                    setHotPatchEditorHeight(e.target.value)
-                                                }}
-                                                buttonStyle='solid'
-                                                options={[
-                                                    {
-                                                        value: 250,
-                                                        label: "小"
-                                                    },
-                                                    {
-                                                        value: 400,
-                                                        label: "中"
-                                                    },
-                                                    {
-                                                        value: 600,
-                                                        label: "大"
-                                                    }
-                                                ]}
-                                            />
-                                        </>
-                                    }
-                                >
-                                    <YakitButton icon={<FullscreenOutlined />} type='text' />
-                                </YakitPopover>
-                            </div>
-                        </Space>
-                    }
-                >
+                <div className={styles["http-fuzzer-hotPatch-label"]}>
+                    <Space style={{lineHeight: "16px"}}>
+                        热加载代码
+                        <YakitPopconfirm
+                            title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
+                            onConfirm={(e) => {
+                                props.onSaveCode(HotPatchDefaultContent)
+                                setParams({...params, HotPatchCode: HotPatchDefaultContent})
+                            }}
+                        >
+                            <YakitButton icon={<RefreshIcon />} type='text' />
+                        </YakitPopconfirm>
+                        <YakitPopover
+                            title={"扩大编辑器"}
+                            content={
+                                <>
+                                    <YakitRadioButtons
+                                        value={hotPatchEditorHeight}
+                                        onChange={(e) => {
+                                            setHotPatchEditorHeight(e.target.value)
+                                        }}
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: 250,
+                                                label: "小"
+                                            },
+                                            {
+                                                value: 400,
+                                                label: "中"
+                                            },
+                                            {
+                                                value: 600,
+                                                label: "大"
+                                            }
+                                        ]}
+                                    />
+                                </>
+                            }
+                        >
+                            <YakitButton icon={<FullscreenOutlined />} type='text' />
+                        </YakitPopover>
+                        <div>
+                            <HotCodeTemplate
+                                type='fuzzer'
+                                hotPatchTempLocal={hotPatchTempLocal}
+                                onSetHotPatchTempLocal={setHotPatchTempLocal}
+                                onClickHotCode={(temp) => {
+                                    setParams({...getParams(), HotPatchCode: temp})
+                                }}
+                            ></HotCodeTemplate>
+                        </div>
+                    </Space>
+                    <Space style={{lineHeight: "16px"}}>
+                        <YakitButton
+                            disabled={!params.HotPatchCode}
+                            type='outline1'
+                            onClick={() => setAddHotCodeTemplateVisible(true)}
+                        >
+                            保存模板
+                        </YakitButton>
+                        <AddHotCodeTemplate
+                            type='fuzzer'
+                            hotPatchTempLocal={hotPatchTempLocal}
+                            hotPatchCode={params.HotPatchCode}
+                            visible={addHotCodeTemplateVisible}
+                            onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                        ></AddHotCodeTemplate>
+                        <YakitButton
+                            type={"primary"}
+                            onClick={() => {
+                                try {
+                                    props.onSaveCode(params.HotPatchCode)
+                                    setTimeout(() => {
+                                        yakitNotify("success", "保存成功")
+                                    }, 100)
+                                } catch (error) {
+                                    yakitNotify("error", "保存失败:" + error)
+                                }
+                            }}
+                        >
+                            保存
+                        </YakitButton>
+                    </Space>
+                </div>
+                <Form.Item>
                     <div style={{height: hotPatchEditorHeight}}>
-                        <YakEditor
-                            type={"yak"}
+                        <YakitEditor
+                            type='yak'
                             value={params.HotPatchCode}
                             setValue={(HotPatchCode) => setParams({...getParams(), HotPatchCode})}
-                        />
+                        ></YakitEditor>
                     </div>
                 </Form.Item>
                 <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
@@ -318,3 +316,268 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
         </div>
     )
 }
+
+interface QueryHotPatchTemplateListResponse {
+    Pagination: Paging
+    Name: string[]
+    Total: number
+}
+
+interface HotPatchTemplateRequest {
+    Name: string[]
+    Type: HotCodeType
+}
+
+interface QueryHotPatchTemplateResponse {
+    Message: DbOperateMessage
+    Data: HotPatchTemplate[]
+}
+
+export interface HotPatchTempItem {
+    name: string
+    temp: string
+    isDefault: boolean
+}
+
+interface DeleteHotPatchTemplateRequest {
+    condition: HotPatchTemplateRequest
+}
+
+type HotCodeType = "fuzzer" | "mitm"
+interface HotCodeTemplateProps {
+    type: HotCodeType
+    hotPatchTempLocal: HotPatchTempItem[]
+    onSetHotPatchTempLocal: (hotPatchTempLocal: HotPatchTempItem[]) => void
+    onClickHotCode: (temp: string) => void
+}
+export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props) => {
+    const {type, hotPatchTempLocal, onSetHotPatchTempLocal, onClickHotCode} = props
+    const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
+    const [tab, setTab] = useState<"local" | "online">("local")
+
+    useEffect(() => {
+        if (hotCodeTempVisible) {
+            if (tab === "local") {
+                ipcRenderer
+                    .invoke("QueryHotPatchTemplateList", {
+                        Type: type
+                    })
+                    .then((res: QueryHotPatchTemplateListResponse) => {
+                        const nameArr = res.Name
+                        const newHotPatchTempLocal = hotPatchTempLocal.slice()
+                        nameArr.forEach((name) => {
+                            const index = newHotPatchTempLocal.findIndex((item) => item.name === name)
+                            if (index === -1) {
+                                newHotPatchTempLocal.push({
+                                    name,
+                                    temp: "",
+                                    isDefault: false
+                                })
+                            }
+                        })
+                        onSetHotPatchTempLocal(newHotPatchTempLocal)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", error + "")
+                    })
+            } else {
+            }
+        }
+    }, [hotCodeTempVisible, tab])
+
+    const onClickHotCodeName = (item: HotPatchTempItem) => {
+        if (item.isDefault) {
+            onClickHotCode(item.temp)
+            setHotCodeTempVisible(false)
+        } else {
+            if (tab === "local") {
+                const params: HotPatchTemplateRequest = {
+                    Type: type,
+                    Name: [item.name]
+                }
+                ipcRenderer
+                    .invoke("QueryHotPatchTemplate", params)
+                    .then((res: QueryHotPatchTemplateResponse) => {
+                        onClickHotCode(res.Data[0].Content)
+                        setHotCodeTempVisible(false)
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", error + "")
+                    })
+            } else {
+            }
+        }
+    }
+
+    const deleteHotPatchTemplate = (item: HotPatchTempItem) => {
+        if (tab === "local") {
+            const params: DeleteHotPatchTemplateRequest = {
+                condition: {
+                    Type: type,
+                    Name: [item.name]
+                }
+            }
+            ipcRenderer
+                .invoke("DeleteHotPatchTemplate", params)
+                .then((res: {Message: DbOperateMessage}) => {
+                    onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
+                    yakitNotify("success", "删除成功")
+                })
+                .catch((error) => {
+                    yakitNotify("error", error + "")
+                })
+        } else {
+        }
+    }
+
+    const renderHotPatchTemp = useMemo(() => {
+        if (tab === "local") return hotPatchTempLocal
+        return []
+    }, [hotPatchTempLocal, tab])
+
+    return (
+        <Dropdown
+            overlayStyle={{borderRadius: 4, width: 250}}
+            visible={hotCodeTempVisible}
+            onVisibleChange={setHotCodeTempVisible}
+            trigger={["click"]}
+            overlay={
+                <div className={styles["hotCode-list"]}>
+                    {/* <YakitRadioButtons
+                        wrapClassName={styles["hotCode-tab-btns"]}
+                        value={tab}
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                value: "local",
+                                label: "本地模板"
+                            }
+                            {
+                                value: "online",
+                                label: "线上模板"
+                            }
+                        ]}
+                        onChange={(e) => {
+                            setTab(e.target.value)
+                        }}
+                    /> */}
+                    {renderHotPatchTemp.map((item) => (
+                        <div className={styles["hotCode-item"]} key={item.name}>
+                            <div
+                                className={classNames(styles["hotCode-item-cont"])}
+                                onClick={() => {
+                                    onClickHotCodeName(item)
+                                }}
+                            >
+                                <div
+                                    className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
+                                    title={item.name}
+                                >
+                                    {item.name}
+                                </div>
+                                <div className={styles["extra-opt-btns"]}>
+                                    {false && (
+                                        <YakitButton
+                                            icon={<OutlineTrashIcon />}
+                                            type='text2'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                            }}
+                                        ></YakitButton>
+                                    )}
+                                    {!item.isDefault && (
+                                        <YakitButton
+                                            icon={<OutlineTrashIcon />}
+                                            type='text'
+                                            colors='danger'
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                deleteHotPatchTemplate(item)
+                                            }}
+                                        ></YakitButton>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            }
+        >
+            <YakitButton type='text'>代码模板</YakitButton>
+        </Dropdown>
+    )
+})
+
+interface HotPatchTemplate {
+    Name: string
+    Content: string
+    Type: string
+}
+interface AddHotCodeTemplateProps {
+    type: HotCodeType
+    hotPatchTempLocal: HotPatchTempItem[]
+    hotPatchCode: string
+    visible: boolean
+    onSetAddHotCodeTemplateVisible: (visible: boolean) => void
+}
+export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
+    const {type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible} = props
+    const addHotPatchTempNameRef = useRef<string>("")
+
+    const onCancel = useMemoizedFn(() => {
+        addHotPatchTempNameRef.current = ""
+        onSetAddHotCodeTemplateVisible(false)
+    })
+
+    const onOk = useMemoizedFn(() => {
+        if (!addHotPatchTempNameRef.current) {
+            yakitNotify("info", "热加载模板名为空")
+            return
+        }
+
+        const index = hotPatchTempLocal.findIndex((item) => item.name === addHotPatchTempNameRef.current)
+        if (index !== -1) {
+            yakitNotify("info", "热加载模板名已存在")
+            return
+        }
+
+        const params: HotPatchTemplate = {
+            Type: type,
+            Content: hotPatchCode,
+            Name: addHotPatchTempNameRef.current
+        }
+        ipcRenderer
+            .invoke("CreateHotPatchTemplate", params)
+            .then((res) => {
+                yakitNotify("success", "保存成功")
+                addHotPatchTempNameRef.current = ""
+                onSetAddHotCodeTemplateVisible(false)
+            })
+            .catch((error) => {
+                yakitNotify("error", error + "")
+            })
+    })
+
+    return (
+        <YakitModal
+            visible={visible}
+            title='保存热加载模板'
+            width={400}
+            onCancel={onCancel}
+            okText='保存'
+            onOk={onOk}
+            destroyOnClose
+        >
+            <div className={styles["hotCodeTemp-save"]}>
+                <YakitInput.TextArea
+                    placeholder='请为热加载模板取个名字...'
+                    showCount
+                    maxLength={50}
+                    onChange={(e) => {
+                        addHotPatchTempNameRef.current = e.target.value
+                    }}
+                />
+            </div>
+        </YakitModal>
+    )
+})

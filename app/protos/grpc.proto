@@ -755,6 +755,13 @@ service Yak {
 
   rpc GetAllFuzztagInfo (GetAllFuzztagInfoRequest) returns (GetAllFuzztagInfoResponse);
   rpc GenerateFuzztag (GenerateFuzztagRequest) returns (GenerateFuzztagResponse);
+
+  // hot-patch template
+  rpc CreateHotPatchTemplate(HotPatchTemplate) returns (CreateHotPatchTemplateResponse);
+  rpc DeleteHotPatchTemplate(DeleteHotPatchTemplateRequest) returns (DeleteHotPatchTemplateResponse);
+  rpc UpdateHotPatchTemplate(UpdateHotPatchTemplateRequest) returns (UpdateHotPatchTemplateResponse);
+  rpc QueryHotPatchTemplate(HotPatchTemplateRequest) returns (QueryHotPatchTemplateResponse);
+  rpc QueryHotPatchTemplateList(QueryHotPatchTemplateListRequest) returns (QueryHotPatchTemplateListResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -5935,4 +5942,55 @@ message FuzzTagSuggestionRequest{
   string HotPatchCode = 1;
   string FuzztagCode = 2;
   string InspectType = 3;
+}
+
+// hot-patch template
+message HotPatchTemplate {
+  string Name = 1;
+  string Content = 2;
+  string Type = 3;
+}
+
+message HotPatchTemplateRequest {
+  repeated int64 Id = 1;
+  repeated string Name = 2;
+  repeated string ContentKeyword = 3;
+  string Type = 4;
+}
+
+message UpdateHotPatchTemplateRequest {
+  HotPatchTemplateRequest condition = 1;
+  HotPatchTemplate data = 2;
+}
+
+message DeleteHotPatchTemplateRequest {
+  HotPatchTemplateRequest condition = 1;
+  bool All = 2;
+}
+
+message CreateHotPatchTemplateResponse {
+  DbOperateMessage Message = 1;
+}
+
+message DeleteHotPatchTemplateResponse {
+  DbOperateMessage Message = 1;
+}
+
+message UpdateHotPatchTemplateResponse {
+  DbOperateMessage Message = 1;
+}
+
+message QueryHotPatchTemplateResponse {
+  DbOperateMessage Message = 1;
+  repeated HotPatchTemplate Data = 2;
+}
+
+message QueryHotPatchTemplateListRequest {
+  string Type = 1;
+}
+
+message QueryHotPatchTemplateListResponse {
+  Paging Pagination = 1;
+  repeated string Name = 2;
+  int64 Total = 3;
 }

@@ -114,7 +114,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {DefFuzzerConcurrent, DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerTableMaxData, HotPatchDefaultContent, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     defPluginBatchExecuteExtraFormValue,
     defaultPluginBatchExecutorPageInfo
@@ -1682,7 +1682,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                     ...nodeItem.pageParams
                                 },
                                 advancedConfigShow: cacheData.advancedConfigShow,
-                                request: nodeItem.pageParams?.request || ""
+                                request: nodeItem.pageParams?.request || "",
+                                hotPatchCode: nodeItem.pageParams?.hotPatchCode || ""
                             }
                         },
                         sortFieId: nodeItem.sortFieId,
@@ -1716,7 +1717,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 ...parentItem.pageParams
                             },
                             advancedConfigShow: cacheData.advancedConfigShow,
-                            request: parentItem.pageParams?.request || ""
+                            request: parentItem.pageParams?.request || "",
+                            hotPatchCode: parentItem.pageParams?.hotPatchCode || ""
                         }
                     },
                     sortFieId: parentItem.sortFieId,
@@ -1760,7 +1762,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
     // 新增缓存数据
-    /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose */
+    /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose hotPatchCode */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
@@ -1776,7 +1778,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         ...node.pageParams?.advancedConfigValue
                     },
                     advancedConfigShow: node.pageParams?.advancedConfigShow,
-                    request: node.pageParams?.request || defaultPostTemplate
+                    request: node.pageParams?.request || defaultPostTemplate,
+                    hotPatchCode: node.pageParams?.hotPatchCode || HotPatchDefaultContent
                 }
             },
             sortFieId: order
@@ -1823,7 +1826,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                     ...defaultAdvancedConfigValue,
                                     ...nodeItem.pageParams?.advancedConfigValue
                                 },
-                                request: nodeItem.pageParams?.request || ""
+                                request: nodeItem.pageParams?.request || "",
+                                hotPatchCode: nodeItem.pageParams?.hotPatchCode || ""
                             }
                         },
                         sortFieId: nodeItem.sortFieId

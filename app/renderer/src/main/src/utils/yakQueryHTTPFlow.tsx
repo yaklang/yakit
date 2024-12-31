@@ -46,6 +46,7 @@ export interface Paging {
     Limit: number
     Order?: "asc" | "desc" | string
     OrderBy?: "created_at" | "updated_at" | string
+    RawOrder?: string
 }
 
 export const yakQueryHTTPFlow = (
