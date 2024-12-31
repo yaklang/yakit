@@ -146,218 +146,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         return collabProps
     }, [collabProps])
 
-    //#region 编辑器引用的相关插件 start
-    const blockPlugins: MilkdownPlugin[] = useCreation(() => {
-        return [
-            block,
-            (ctx: Ctx) => () => {
-                ctx.set(block.key, {
-                    view: pluginViewFactory({
-                        component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
-                    })
-                })
-            },
-            (ctx: Ctx) => () => {
-                ctx.update(blockConfig.key, () => ({
-                    filterNodes: (pos, node) => {
-                        if (node.type.name === "paragraph" && !node.content.size) {
-                            return true
-                        }
-                        return false
-                    }
-                }))
-            }
-        ].flat()
-    }, [type, collabParams?.milkdownHash])
-    const placeholder = useCreation(() => {
-        return [placeholderConfig, placeholderPlugin].flat()
-    }, [])
-
-    const uploadPlugins = useCreation(() => {
-        return [
-            ...uploadCustomPlugin(),
-            upload,
-            $view(fileCustomSchema.node, () =>
-                nodeViewFactory({
-                    component: () => <CustomFile type={type} />
-                })
-            ),
-            (ctx: Ctx) => () => {
-                ctx.update(uploadConfig.key, (prev) => ({
-                    ...prev,
-                    uploader: async (files, schema) => {
-                        const images: File[] = []
-                        for (let i = 0; i < files.length; i++) {
-                            const file = files.item(i)
-                            if (!file) {
-                                continue
-                            }
-
-                            // You can handle whatever the file type you want, we handle image here.
-                            if (!file.type.includes("image")) {
-                                continue
-                            }
-                            if (file.size > ImgMaxSize) {
-                                yakitNotify("error", "图片大小不能超过1M")
-                                continue
-                            }
-                            images.push(file)
-                        }
-                        const nodes: Node[] = await Promise.all(
-                            images.map(async (image) => {
-                                const alt = image.name
-                                try {
-                                    const src = await uploadImg(image)
-                                    return schema.nodes["image-block"].createAndFill({
-                                        src,
-                                        alt
-                                    }) as Node
-                                } catch (error) {
-                                    return schema.nodes.image.createAndFill({
-                                        src: "",
-                                        alt
-                                    }) as Node
-                                }
-                            })
-                        )
-                        return nodes
-                    }
-                }))
-            }
-        ].flat()
-    }, [type])
-
-    const imagePlugin = useCreation(() => {
-        return [
-            imageBlockComponent,
-            imageInlineComponent,
-            insertImageBlockCommand,
-            (ctx: Ctx) => () => {
-                ctx.update(imageBlockConfig.key, (value) => ({
-                    ...value,
-                    captionIcon: () => html`
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path
-                                d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                    `,
-                    onUpload: async (image: File) => {
-                        const url = uploadImg(image)
-                        return url
-                    }
-                }))
-            },
-            (ctx: Ctx) => () => {
-                ctx.update(inlineImageConfig.key, (value) => ({
-                    ...value,
-                    imageIcon: () =>
-                        html`<svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M4 16L8.58579 11.4142C9.36683 10.6332 10.6332 10.6332 11.4142 11.4142L16 16M14 14L15.5858 12.4142C16.3668 11.6332 17.6332 11.6332 18.4142 12.4142L20 14M14 8H14.01M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <circle cx="14" cy="8" r="1" fill="currentColor" />
-                        </svg> `,
-                    onUpload: async (image: File) => {
-                        const url = uploadImg(image)
-                        return url
-                    }
-                }))
-            }
-        ].flat()
-    }, [])
-
-    const linkTooltip = useCreation(() => {
-        return [
-            linkTooltipPlugin,
-            (ctx: Ctx) => () => {
-                ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
-                    ...defaultConfig,
-                    linkIcon: () => "🔗",
-                    editButton: () => "✎",
-                    removeButton: () => "❌",
-                    confirmButton: () => "✔️",
-                    onCopyLink: (link: string) => {
-                        yakitInfo("Link copied")
-                    }
-                }))
-            }
-        ].flat()
-    }, [])
-
-    const listPlugin = useCreation(() => {
-        return [
-            ...listCustomPlugin(),
-            $view(listItemSchema.node, () =>
-                nodeViewFactory({
-                    component: ListItem
-                })
-            )
-        ].flat()
-    }, [])
-
-    const headingPlugin = useCreation(() => {
-        return [...headingCustomPlugin()].flat()
-    }, [])
-
-    const codePlugin = useCreation(() => {
-        return [
-            ...codeCustomPlugin(),
-            $view(codeBlockSchema.node, () => {
-                return nodeViewFactory({
-                    component: CustomCodeComponent,
-                    stopEvent: (e) => true
-                })
-            })
-        ].flat()
-    }, [])
-
-    const blockquotePlugin = useCreation(() => {
-        return [
-            $view(blockquoteSchema.node, () =>
-                nodeViewFactory({
-                    component: Blockquote
-                })
-            )
-        ].flat()
-    }, [])
-
-    const alterPlugin = useCreation(() => {
-        return [...alterCustomPlugin()].flat()
-    }, [])
-
-    const underlinePlugin = useCreation(() => {
-        return [...underlineCustomPlugin()].flat()
-    }, [])
-
-    const commentPlugin = useCreation(() => {
-        return [...commentCustomPlugin()].flat()
-    }, [])
-
-    const hrPlugin = useCreation(() => {
-        return [
-            $view(hrSchema.node, () =>
-                nodeViewFactory({
-                    component: MilkdownHr
-                })
-            )
-        ].flat()
-    }, [])
-
     const uploadImg = useMemoizedFn(async (image) => {
         if (image.size > ImgMaxSize) {
             yakitNotify("error", "图片大小不能超过1M")
@@ -379,7 +167,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             return ""
         }
     })
-    //#endregion
 
     useEffect(() => {
         return () => {
@@ -395,6 +182,194 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     //#region 编辑器初始
     const {get, loading} = useEditor(
         (root) => {
+            //#region 编辑器引用的相关插件 start
+            const blockPlugins = [
+                block,
+                (ctx: Ctx) => () => {
+                    ctx.set(block.key, {
+                        view: pluginViewFactory({
+                            component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
+                        })
+                    })
+                },
+                (ctx: Ctx) => () => {
+                    ctx.update(blockConfig.key, () => ({
+                        filterNodes: (pos, node) => {
+                            if (node.type.name === "paragraph" && !node.content.size) {
+                                return true
+                            }
+                            return false
+                        }
+                    }))
+                }
+            ].flat()
+            const placeholder = [placeholderConfig, placeholderPlugin]
+            const uploadPlugins = [
+                ...uploadCustomPlugin(),
+                upload,
+                $view(fileCustomSchema.node, () =>
+                    nodeViewFactory({
+                        component: () => <CustomFile type={type} />
+                    })
+                ),
+                (ctx: Ctx) => () => {
+                    ctx.update(uploadConfig.key, (prev) => ({
+                        ...prev,
+                        uploader: async (files, schema) => {
+                            const images: File[] = []
+                            for (let i = 0; i < files.length; i++) {
+                                const file = files.item(i)
+                                if (!file) {
+                                    continue
+                                }
+
+                                // You can handle whatever the file type you want, we handle image here.
+                                if (!file.type.includes("image")) {
+                                    continue
+                                }
+                                if (file.size > ImgMaxSize) {
+                                    yakitNotify("error", "图片大小不能超过1M")
+                                    continue
+                                }
+                                images.push(file)
+                            }
+                            const nodes: Node[] = await Promise.all(
+                                images.map(async (image) => {
+                                    const alt = image.name
+                                    try {
+                                        const src = await uploadImg(image)
+                                        return schema.nodes["image-block"].createAndFill({
+                                            src,
+                                            alt
+                                        }) as Node
+                                    } catch (error) {
+                                        return schema.nodes.image.createAndFill({
+                                            src: "",
+                                            alt
+                                        }) as Node
+                                    }
+                                })
+                            )
+                            return nodes
+                        }
+                    }))
+                }
+            ].flat()
+
+            const imagePlugin = [
+                imageBlockComponent,
+                imageInlineComponent,
+                insertImageBlockCommand,
+                (ctx: Ctx) => () => {
+                    ctx.update(imageBlockConfig.key, (value) => ({
+                        ...value,
+                        captionIcon: () => html`
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <path
+                                    d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        `,
+                        onUpload: async (image: File) => {
+                            const url = uploadImg(image)
+                            return url
+                        }
+                    }))
+                },
+                (ctx: Ctx) => () => {
+                    ctx.update(inlineImageConfig.key, (value) => ({
+                        ...value,
+                        imageIcon: () =>
+                            html`<svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M4 16L8.58579 11.4142C9.36683 10.6332 10.6332 10.6332 11.4142 11.4142L16 16M14 14L15.5858 12.4142C16.3668 11.6332 17.6332 11.6332 18.4142 12.4142L20 14M14 8H14.01M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                                <circle cx="14" cy="8" r="1" fill="currentColor" />
+                            </svg> `,
+                        onUpload: async (image: File) => {
+                            const url = uploadImg(image)
+                            return url
+                        }
+                    }))
+                }
+            ].flat()
+
+            const linkTooltip = [
+                linkTooltipPlugin,
+                (ctx: Ctx) => () => {
+                    ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
+                        ...defaultConfig,
+                        linkIcon: () => "🔗",
+                        editButton: () => "✎",
+                        removeButton: () => "❌",
+                        confirmButton: () => "✔️",
+                        onCopyLink: (link: string) => {
+                            yakitInfo("Link copied")
+                        }
+                    }))
+                }
+            ].flat()
+
+            const listPlugin = [
+                ...listCustomPlugin(),
+                $view(listItemSchema.node, () =>
+                    nodeViewFactory({
+                        component: ListItem
+                    })
+                )
+            ].flat()
+            const headingPlugin = [...headingCustomPlugin()].flat()
+            const codePlugin = [
+                ...codeCustomPlugin(),
+                $view(codeBlockSchema.node, () => {
+                    return nodeViewFactory({
+                        component: CustomCodeComponent,
+                        stopEvent: (e) => true
+                    })
+                })
+            ].flat()
+            const blockquotePlugin = [
+                $view(blockquoteSchema.node, () =>
+                    nodeViewFactory({
+                        component: Blockquote
+                    })
+                )
+            ].flat()
+
+            const alterPlugin = [...alterCustomPlugin()].flat()
+
+            const underlinePlugin = [...underlineCustomPlugin()].flat()
+
+            const commentPlugin = [...commentCustomPlugin()].flat()
+
+            const hrPlugin = [
+                $view(hrSchema.node, () =>
+                    nodeViewFactory({
+                        component: MilkdownHr
+                    })
+                )
+            ].flat()
+            //#endregion
             return (
                 Editor.make()
                     .config((ctx) => {
@@ -768,10 +743,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         ctx.set(defaultValueCtx, content)
     })
     return (
-        <>
-            <div ref={milkdownRef} />
+        <div ref={milkdownRef}>
             <Milkdown />
-        </>
+        </div>
     )
 })
 
