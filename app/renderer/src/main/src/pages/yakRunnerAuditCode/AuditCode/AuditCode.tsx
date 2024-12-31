@@ -1376,7 +1376,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                 >
                                     <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
                                 </Form.Item>
-                                <Form.Item name='peephole' label='项目分片'>
+                                <Form.Item name='peephole' label='编译速度' help="小文件无需配置，大文件可根据需求选择，速度越快，精度越小">
                                     <Slider
                                         style={{width: 300}}
                                         dots
