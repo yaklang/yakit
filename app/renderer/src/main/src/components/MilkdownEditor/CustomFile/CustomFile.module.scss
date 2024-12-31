@@ -80,6 +80,11 @@ $fileDivHeight: 64px;
             }
         }
     }
+    .file-spinning {
+        align-items: center;
+        gap: 4px;
+        padding-top: 4px;
+    }
 }
 .file-custom-selected {
     border-color: var(--yakit-primary-5);
