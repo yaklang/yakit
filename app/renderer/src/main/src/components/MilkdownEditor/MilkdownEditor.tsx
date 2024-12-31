@@ -175,7 +175,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             collabManagerRef.current = undefined
             clearRemove()
             onDeleteAllFiles()
-            get()?.destroy()
         }
     }, [])
 
