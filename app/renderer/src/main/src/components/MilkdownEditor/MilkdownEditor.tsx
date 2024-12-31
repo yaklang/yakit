@@ -127,6 +127,25 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
     const userInfo = useStore((s) => s.userInfo)
 
+    const collabParams: MilkdownCollabProps = useCreation(() => {
+        if (!collabProps) {
+            const def: MilkdownCollabProps = {
+                title: "",
+                enableCollab: false,
+                milkdownHash: "",
+                routeInfo: {
+                    pageId: "",
+                    route: null
+                },
+                onChangeWSLinkStatus: () => {},
+                onChangeOnlineUser: () => {},
+                onSetTitle: () => {}
+            }
+            return def
+        }
+        return collabProps
+    }, [collabProps])
+
     //#region 编辑器引用的相关插件 start
     const blockPlugins: MilkdownPlugin[] = useCreation(() => {
         return [
@@ -134,7 +153,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             (ctx: Ctx) => () => {
                 ctx.set(block.key, {
                     view: pluginViewFactory({
-                        component: () => <BlockView type={type} notepadHash={collabProps?.milkdownHash} />
+                        component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
                     })
                 })
             },
@@ -149,7 +168,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [type, collabProps?.milkdownHash])
+    }, [type, collabParams?.milkdownHash])
     const placeholder = useCreation(() => {
         return [placeholderConfig, placeholderPlugin].flat()
     }, [])
@@ -362,25 +381,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     })
     //#endregion
 
-    const collabParams: MilkdownCollabProps = useCreation(() => {
-        if (!collabProps) {
-            const def: MilkdownCollabProps = {
-                title: "",
-                enableCollab: false,
-                milkdownHash: "",
-                routeInfo: {
-                    pageId: "",
-                    route: null
-                },
-                onChangeWSLinkStatus: () => {},
-                onChangeOnlineUser: () => {},
-                onSetTitle: () => {}
-            }
-            return def
-        }
-        return collabProps
-    }, [collabProps])
-
     useEffect(() => {
         return () => {
             // 统一
@@ -541,13 +541,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     }, [collabParams.title])
 
     useUpdateEffect(() => {
-        Promise.resolve().then(() => {
-            if (inViewport) {
-                onCollabConnect()
-            } else {
-                onCollabDisconnect()
-            }
-        })
+        if (inViewport) {
+            onCollabConnect()
+        } else {
+            onCollabDisconnect()
+        }
     }, [inViewport])
 
     const onCollab = useMemoizedFn((ctx) => {
@@ -712,10 +710,14 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         emiter.emit("onCloseCurrentPage", routeInfo.pageId)
     })
     const onCollabConnect = useMemoizedFn(() => {
-        collabManagerRef.current?.connect()
+        Promise.resolve().then(() => {
+            collabManagerRef.current?.connect()
+        })
     })
     const onCollabDisconnect = useMemoizedFn(() => {
-        collabManagerRef.current?.disconnect()
+        Promise.resolve().then(() => {
+            collabManagerRef.current?.disconnect()
+        })
     })
     //#endregion
 
