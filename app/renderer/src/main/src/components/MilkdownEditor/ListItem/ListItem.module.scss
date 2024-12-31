@@ -29,11 +29,13 @@
     .checked-dot-wrapper {
         @extend %dot-wrapper;
         color: var(--yakit-primary-5);
+        padding-bottom: 2px;
     }
 
     .list-item {
         line-height: 24px;
         flex: 1;
+        word-break: break-all;
     }
 
     .list-item-checked {
