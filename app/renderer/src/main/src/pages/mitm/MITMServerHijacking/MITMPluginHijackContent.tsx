@@ -1,4 +1,4 @@
-import {ArrowsExpandIcon, ArrowsRetractIcon, PlayIcon, RefreshIcon} from "@/assets/newIcon"
+import {ArrowsExpandIcon, ArrowsRetractIcon} from "@/assets/newIcon"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -9,8 +9,8 @@ import {YakScript, YakScriptHooks} from "@/pages/invoker/schema"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
-import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import {useCreation, useInViewport, useMap, useMemoizedFn} from "ahooks"
+import React, {ReactElement, useEffect, useRef, useState} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
@@ -28,6 +28,11 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import emiter from "@/utils/eventBus/eventBus"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
+import {cloneDeep} from "lodash"
+import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
+import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -117,7 +122,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory = "",
-        setTempShowPluginHistory,
+        setTempShowPluginHistory
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
@@ -212,7 +217,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                     i.Hooks.forEach((hook) => {
                         // 存的id其实没有用到
                         // console.log(hook)
-                        if (hook.YakScriptName) {
+                        if (hook.YakScriptName && hook.YakScriptName !== "@HotPatchCode") {
                             tmp.set(hook.YakScriptName, true)
                             tmpID.set(hook.YakScriptId + "", true)
                             cacheTmp = [...cacheTmp, hook.YakScriptName]
@@ -338,63 +343,100 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         }
     }, [curTabKey])
 
+    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
+    const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
+    const [hotStatus, setHotStatus] = useState<"success" | "failed" | "end">("end")
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (curTabKey) {
             case "hot-patch":
                 return (
-                    <div className={styles["hot-patch-heard-extra"]}>
-                        <YakitPopconfirm
-                            title={"确认重置热加载代码？"}
-                            onConfirm={() => {
-                                setScript(HotLoadDefaultData)
+                    <div className={styles["hot-patch-header-wrapper"]}>
+                        <HotCodeTemplate
+                            type='mitm'
+                            hotPatchTempLocal={hotPatchTempLocal}
+                            onSetHotPatchTempLocal={setHotPatchTempLocal}
+                            onClickHotCode={(temp) => {
+                                setScript({...HotLoadDefaultData, Content: temp})
                             }}
-                            placement='top'
-                        >
-                            <YakitButton type='text'>
-                                <RefreshIcon />
-                            </YakitButton>
-                        </YakitPopconfirm>
-                        {!script.Id && (
-                            <YakitButton
-                                type='outline1'
-                                onClick={() => {
-                                    setRemoteValue(RemoteGV.MITMHotPatchCodeSave, script.Content).then(() => {
-                                        yakitNotify("success", `保存成功`)
-                                    })
+                        ></HotCodeTemplate>
+                        <div className={styles["hot-patch-heard-extra"]}>
+                            <YakitPopconfirm
+                                title={"确认重置热加载代码？"}
+                                onConfirm={() => {
+                                    setScript(HotLoadDefaultData)
                                 }}
+                                placement='top'
                             >
-                                保存
+                                <YakitButton type='text'>
+                                    <OutlineRefreshIcon />
+                                </YakitButton>
+                            </YakitPopconfirm>
+                            <YakitButton type='outline1' onClick={() => setAddHotCodeTemplateVisible(true)}>
+                                保存模板
                             </YakitButton>
-                        )}
-                        <YakitButton
-                            type='outline1'
-                            onClick={() => {
-                                ipcRenderer
-                                    .invoke("mitm-exec-script-content", script.Content)
-                                    .then(() => {
-                                        info("加载成功")
-                                    })
-                                    .catch((e) => {
-                                        yakitFailed("加载失败：" + e)
-                                    })
-                            }}
-                        >
-                            <PlayIcon />
-                            热加载
-                        </YakitButton>
-                        {isFullScreen ? (
-                            <ArrowsRetractIcon
-                                className={styles["expand-icon"]}
-                                onClick={() => setIsFullScreen(false)}
-                            />
-                        ) : (
-                            <ArrowsExpandIcon
-                                className={styles["expand-icon"]}
-                                onClick={() => {
-                                    setIsFullScreen(true)
-                                }}
-                            />
-                        )}
+                            <AddHotCodeTemplate
+                                type='mitm'
+                                hotPatchTempLocal={hotPatchTempLocal}
+                                hotPatchCode={script.Content}
+                                visible={addHotCodeTemplateVisible}
+                                onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                            ></AddHotCodeTemplate>
+                            {hotStatus === "success" ? (
+                                <YakitButton
+                                    type='outline1'
+                                    colors='danger'
+                                    icon={<SolidStopIcon />}
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("mitm-remove-hook", {
+                                                HookName: [],
+                                                RemoveHookID: ["@HotPatchCode"]
+                                            } as any)
+                                            .then(() => {
+                                                setHotStatus("end")
+                                                info("停止成功")
+                                            })
+                                    }}
+                                >
+                                    停止
+                                </YakitButton>
+                            ) : (
+                                <YakitButton
+                                    type='outline1'
+                                    icon={<SolidPlayIcon />}
+                                    onClick={() => {
+                                        ipcRenderer
+                                            .invoke("mitm-exec-script-content", script.Content)
+                                            .then(() => {
+                                                setHotStatus("success")
+                                                info("加载成功")
+                                                if (!script.Id) {
+                                                    setRemoteValue(RemoteGV.MITMHotPatchCodeSave, script.Content)
+                                                }
+                                            })
+                                            .catch((e) => {
+                                                setHotStatus("failed")
+                                                yakitFailed("加载失败：" + e)
+                                            })
+                                    }}
+                                >
+                                    热加载
+                                </YakitButton>
+                            )}
+                            {isFullScreen ? (
+                                <ArrowsRetractIcon
+                                    className={styles["expand-icon"]}
+                                    onClick={() => setIsFullScreen(false)}
+                                />
+                            ) : (
+                                <ArrowsExpandIcon
+                                    className={styles["expand-icon"]}
+                                    onClick={() => {
+                                        setIsFullScreen(true)
+                                    }}
+                                />
+                            )}
+                        </div>
                     </div>
                 )
             case "loaded":
@@ -432,6 +474,13 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         }
     })
 
+    const onSetHotPatchCode = useMemoizedFn((value) => {
+        setScript({
+            ...script,
+            Content: value
+        })
+    })
+
     const onRenderContent = useMemoizedFn(() => {
         switch (curTabKey) {
             case "hot-patch":
@@ -452,12 +501,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             <YakitEditor
                                 type={"mitm"}
                                 value={script.Content}
-                                setValue={(value) => {
-                                    setScript({
-                                        ...script,
-                                        Content: value
-                                    })
-                                }}
+                                setValue={onSetHotPatchCode}
                                 noMiniMap={true}
                                 noWordWrap={true}
                             />

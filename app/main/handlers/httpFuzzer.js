@@ -586,4 +586,64 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteFuzzerConfig", async (e, params) => {
         return await asyncDeleteFuzzerConfig(params)
     })
+
+    const asyncQueryHotPatchTemplateList = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHotPatchTemplateList(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHotPatchTemplateList", async (e, params) => {
+        return await asyncQueryHotPatchTemplateList(params)
+    })
+
+    const asyncQueryHotPatchTemplate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryHotPatchTemplate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryHotPatchTemplate", async (e, params) => {
+        return await asyncQueryHotPatchTemplate(params)
+    })
+
+    const asyncCreateHotPatchTemplate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CreateHotPatchTemplate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("CreateHotPatchTemplate", async (e, params) => {
+        return await asyncCreateHotPatchTemplate(params)
+    })
+
+    const asyncDeleteHotPatchTemplate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteHotPatchTemplate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteHotPatchTemplate", async (e, params) => {
+        return await asyncDeleteHotPatchTemplate(params)
+    })
 }

@@ -341,6 +341,13 @@
     }
 }
 
+.hot-patch-header-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .hot-patch-heard-extra {
     display: flex;
     align-items: center;

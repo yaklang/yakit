@@ -11,10 +11,10 @@ import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
-import {WEB_FUZZ_HOTPATCH_CODE, WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE} from "@/defaultConstants/HTTPFuzzerPage"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {setClipboardText} from "@/utils/clipboard"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 const {ipcRenderer} = window.require("electron")
 
 export interface WebFuzzerNewEditorProps {
@@ -28,7 +28,7 @@ export interface WebFuzzerNewEditorProps {
     setHotPatchCode: (s: string) => void
     setHotPatchCodeWithParamGetter: (s: string) => void
     firstNodeExtra?: () => JSX.Element
-    pageId:string
+    pageId: string
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -71,11 +71,11 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 footer: null,
                 maskClosable: false,
                 closable: false,
-                style: {top: "10%"},
                 hiddenHeader: true,
                 keyboard: false,
                 content: (
                     <HTTPFuzzerHotPatch
+                        pageId={pageId}
                         initialHotPatchCode={hotPatchCode}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         onInsert={(tag) => {
@@ -84,17 +84,10 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
-                            if (reqEditor) {
-                                setEditorContext(reqEditor,"hotPatchCode", code)
-                            }
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
-                            if (reqEditor) {
-                                setEditorContext(reqEditor,"hotPatchCodeWithParam", code)
-                            }
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                            setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
                         onCancel={() => m.destroy()}
                     />
@@ -180,7 +173,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 editorOperationRecord='HTTP_FUZZER_PAGE_EDITOR_RECORF'
                 extraEditorProps={{
                     isShowSelectRangeMenu: true,
-                    pageId,
+                    pageId
                 }}
                 extraEnd={firstNodeExtra && firstNodeExtra()}
                 onClickUrlMenu={copyUrl}

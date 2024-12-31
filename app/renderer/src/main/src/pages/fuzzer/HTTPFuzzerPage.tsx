@@ -23,7 +23,7 @@ import {
     useSize,
     useUpdateEffect
 } from "ahooks"
-import {getRemoteProjectValue, getRemoteValue, setRemoteProjectValue, setRemoteValue} from "../../utils/kv"
+import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {HTTPFuzzerHistorySelector, HTTPFuzzerTaskDetail} from "./HTTPFuzzerHistory"
 import {HTTPFuzzerHotPatch} from "./HTTPFuzzerHotPatch"
 import {exportHTTPFuzzerResponse, exportPayloadResponse} from "./HTTPFuzzerPageExport"
@@ -129,11 +129,8 @@ import {
     defaultPostTemplate,
     emptyFuzzer,
     defaultWebFuzzerPageInfo,
-    WEB_FUZZ_HOTPATCH_CODE,
-    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE,
     defaultLabel,
-    defaultAdvancedConfigValue,
-    DefFuzzerConcurrent
+    defaultAdvancedConfigValue
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {KVPair} from "@/models/kv"
 import {FuncBtn} from "../plugins/funcTemplate"
@@ -147,7 +144,7 @@ import {
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -568,7 +565,7 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
                 advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
                 resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData,
                 noSystemProxy: noSystemProxy === "true",
-                disableUseConnPool: disableUseConnPool === "true",
+                disableUseConnPool: disableUseConnPool === "true"
             }
             resolve(value)
         } catch (error) {
@@ -657,7 +654,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(fuzzerRef)
 
-    const hotPatchCodeRef = useRef<string>("")
+    const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
 
     const proxyListRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
@@ -716,17 +713,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const onRefWebFuzzerValue = useMemoizedFn(() => {
         if (!inViewport) return
-        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
-            if (!remoteData) {
-                return
-            }
-            setHotPatchCode(`${remoteData}`)
-        })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
+        getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
             if (!!remoteData) {
                 setHotPatchCodeWithParamGetter(`${remoteData}`)
             }
         })
+        onUpdatePatchCode()
         onUpdateRequest()
         onUpdateAdvancedConfigValue()
     })
@@ -741,6 +733,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setAdvancedConfigShowType(value.type)
         } catch (error) {}
     })
+    /**更新热加载代码 */
+    const onUpdatePatchCode = useMemoizedFn(() => {
+        if (!inViewport) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
+        if (!currentItem) return
+        const hotPatchCode = currentItem.pageParamsInfo.webFuzzerPageInfo?.hotPatchCode
+        if (!hotPatchCode) return
+        setHotPatchCode(hotPatchCode)
+    })
     /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {
         if (!inViewport) return
@@ -752,7 +753,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         requestRef.current = newRequest || defaultPostTemplate
         refreshRequest()
     })
-    /**从数据中心获取页面最新得高级配置数据,目前只有提取器和匹配器相关数据 */
+    /**从数据中心获取页面最新得高级配置数据,目前有提取器、匹配器、重复发包、并发配置、随机延迟代码相关数据 */
     const onUpdateAdvancedConfigValue = useMemoizedFn(() => {
         if (!inViewport) return
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
@@ -1233,12 +1234,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const sendFuzzerSettingInfo = useDebounceFn(
         () => {
-            // 23.7.10 最新只保存 isHttps、actualHost和request
             const webFuzzerPageInfo: WebFuzzerPageInfoProps = {
                 pageId: props.id,
                 advancedConfigValue,
                 request: requestRef.current,
-                advancedConfigShow
+                advancedConfigShow,
+                hotPatchCode: hotPatchCodeRef.current
             }
             onUpdateFuzzerSequenceDueToDataChanges(props.id || "", webFuzzerPageInfo)
         },
@@ -1266,7 +1267,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     advancedConfigShow: {
                         ...(param.advancedConfigShow as AdvancedConfigShowProps)
                     },
-                    request: param.request
+                    request: param.request,
+                    hotPatchCode: param.hotPatchCode
                 }
             }
         }
@@ -1281,10 +1283,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             maskClosable: false,
             closable: false,
             hiddenHeader: true,
-            style: {top: "10%"},
             keyboard: false,
             content: (
                 <HTTPFuzzerHotPatch
+                    pageId={props.id}
                     initialHotPatchCode={hotPatchCodeRef.current}
                     initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
                     onInsert={(tag) => {
@@ -1294,11 +1296,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     }}
                     onSaveCode={(code) => {
                         setHotPatchCode(code)
-                        setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                     }}
                     onSaveHotPatchCodeWithParamGetterCode={(code) => {
                         setHotPatchCodeWithParamGetter(code)
-                        setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+                        setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                     }}
                     onCancel={() => m.destroy()}
                 />
@@ -1415,14 +1416,26 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 break
         }
     })
+    const setHotPatchCodeRef = (val) => {
+        hotPatchCodeRef.current = val
+        setTimeout(() => {
+            if (webFuzzerNewEditorRef.current?.reqEditor) {
+                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCode", val)
+            }
+        }, 500)
+    }
     const setHotPatchCode = useMemoizedFn((v: string) => {
-        if (webFuzzerNewEditorRef.current.reqEditor) {
-            setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", v)
-        }
-        hotPatchCodeRef.current = v
+        setHotPatchCodeRef(v)
+        setRefreshTrigger(!refreshTrigger)
+        sendFuzzerSettingInfo()
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((v: string) => {
         hotPatchCodeWithParamGetterRef.current = v
+        setTimeout(() => {
+            if (webFuzzerNewEditorRef.current?.reqEditor) {
+                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCodeWithParam", v)
+            }
+        }, 500)
     })
     const onSetRequest = useMemoizedFn((i: string) => {
         requestRef.current = i
