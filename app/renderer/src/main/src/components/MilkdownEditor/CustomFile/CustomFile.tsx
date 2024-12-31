@@ -38,6 +38,7 @@ import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {useInstance} from "@milkdown/react"
 import {useStore} from "@/store"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 interface CustomFileItem {
     name: string
@@ -330,19 +331,6 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                                         </div>
                                     ) : (
                                         <div className={styles["success-action"]}>
-                                            {/* {fileInfo.path ? (
-                                                <TooltipIcon
-                                                    title='查看文件'
-                                                    icon={<OutlineFolderIcon />}
-                                                    onClick={onOpenFile}
-                                                />
-                                            ) : (
-                                                <TooltipIcon
-                                                    title='下载文件'
-                                                    icon={<OutlineDownloadIcon />}
-                                                    onClick={onDown}
-                                                />
-                                            )} */}
                                             {fileInfo.url && (
                                                 <TooltipIcon
                                                     title='下载文件'
@@ -382,7 +370,12 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                         }
                     />
                 ) : (
-                    "文件加载中..."
+                    <YakitSpin
+                        size='small'
+                        spinning={true}
+                        tip='文件加载中...'
+                        wrapperClassName={styles["file-spinning"]}
+                    />
                 )}
             </div>
             {downFileInfo && (
