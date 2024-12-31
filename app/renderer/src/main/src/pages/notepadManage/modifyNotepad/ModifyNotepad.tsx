@@ -92,7 +92,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     const [loading, setLoading] = useState<boolean>(false) // 编辑器ws是否连接上
     const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
-    const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
     const [expand, setExpand] = useState<boolean>(true)
     const [onlineUsers, setOnlineUsers] = useState<CollabUserInfo[]>([])
@@ -163,6 +162,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         userName: userInfo.companyName || "",
                         hash
                     })
+                    onUpdatePageInfo({
+                        notepadHash: hash
+                    })
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -186,6 +188,23 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             }
             apiSaveNotepadList(params)
         }
+    })
+
+    /**更新该页面最新的数据 */
+    const onUpdatePageInfo = useMemoizedFn((value: ModifyNotepadPageInfoProps) => {
+        if (!pageId) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
+        if (!currentItem) return
+        const newCurrentItem: PageNodeItemProps = {
+            ...currentItem,
+            pageParamsInfo: {
+                modifyNotepadPageInfo: {
+                    ...defaultModifyNotepadPageInfo,
+                    ...value
+                }
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
     })
 
     // 删除文档
@@ -608,7 +627,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     type='notepad'
                                     readonly={readonly}
                                     defaultValue={notepadDetail.content}
-                                    setEditor={setEditor}
                                     customPlugin={cataloguePlugin(getCatalogue)}
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
