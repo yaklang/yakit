@@ -421,9 +421,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [currentRole])
     const collabProps: MilkdownCollabProps = useCreation(() => {
         const enableCollab = !readonly
+        const newTitle = tabName || perTabName.current
         const collabValue: MilkdownCollabProps = {
-            title: tabName,
-            enableCollab: !!tabName ? enableCollab : false,
+            title: newTitle,
+            enableCollab,
             milkdownHash: notepadDetail.hash,
             routeInfo: {
                 pageId,
