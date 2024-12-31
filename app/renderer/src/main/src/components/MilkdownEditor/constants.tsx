@@ -78,7 +78,7 @@ export const defaultBlockList: BlockListProps[] = [
         id: 11,
         icon: <IconFlipVertical />,
         label: "分割线",
-        description: "引用: ***"
+        description: "分割线: ***"
     }
 ]
 
