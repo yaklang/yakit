@@ -16,7 +16,9 @@ export const cataloguePlugin = (callback) =>
                 return {
                     update: (view) => {
                         // 每次内容变化时更新目录
-                        callback(view)
+                        Promise.resolve().then(() => {
+                            callback(view)
+                        })
                     }
                 }
             }

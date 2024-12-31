@@ -149,8 +149,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [pluginViewFactory, type, collabProps?.milkdownHash])
-
+    }, [type, collabProps?.milkdownHash])
     const placeholder = useCreation(() => {
         return [placeholderConfig, placeholderPlugin].flat()
     }, [])
@@ -207,7 +206,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [nodeViewFactory, type])
+    }, [type])
 
     const imagePlugin = useCreation(() => {
         return [
@@ -261,7 +260,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 }))
             }
         ].flat()
-    }, [nodeViewFactory])
+    }, [])
 
     const linkTooltip = useCreation(() => {
         return [
@@ -389,6 +388,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             collabManagerRef.current = undefined
             clearRemove()
             onDeleteAllFiles()
+            get()?.destroy()
         }
     }, [])
 
@@ -463,7 +463,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     .use(customPlugin || [])
             )
         },
-        [readonly, defaultValue, type, collabParams.enableCollab, collabProps?.milkdownHash]
+        [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash]
     )
     /**更新最新的editor */
     useEffect(() => {
@@ -539,14 +539,17 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             collabManagerRef.current.setTitle(collabParams.title)
         }
     }, [collabParams.title])
-    useEffect(() => {
-        if (inViewport) {
-            onCollabConnect()
-            return () => {
+
+    useUpdateEffect(() => {
+        Promise.resolve().then(() => {
+            if (inViewport) {
+                onCollabConnect()
+            } else {
                 onCollabDisconnect()
             }
-        }
+        })
     }, [inViewport])
+
     const onCollab = useMemoizedFn((ctx) => {
         const {milkdownHash, title} = collabParams
         if (!collabParams.enableCollab) {
@@ -554,7 +557,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             return
         }
         if (!milkdownHash) {
-            yakitNotify("error", "enableCollab true,启用协作文档时,hash值必须存在")
+            // yakitNotify("error", "enableCollab true,启用协作文档时,hash值必须存在")
             return
         }
         if (collabManagerRef.current) return
