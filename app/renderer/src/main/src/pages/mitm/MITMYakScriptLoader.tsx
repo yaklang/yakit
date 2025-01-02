@@ -542,7 +542,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                     </Space>
                 </div>
             }
-            bodyStyle={{paddingLeft: 0, paddingRight: 0}}
+            bodyStyle={{paddingLeft: 0, paddingRight: 0, overflowX: "clip"}}
             style={{position: "absolute"}}
         >
             <Resizable
@@ -567,7 +567,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                 }}
                 size={{
                     width: drawerWidth + "vw",
-                    height: "100%"
+                    height: "auto"
                 }}
             >
                 <div className={style["mitm-params-set"]}>

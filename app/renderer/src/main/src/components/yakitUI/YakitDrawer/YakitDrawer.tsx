@@ -16,7 +16,7 @@ const {ipcRenderer} = window.require("electron")
  * @augments DrawerProps 继承antd的 DrawerProps 默认属性
  */
 export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
-    const {visible, sendYakitHeaderDraggableEvent = true} = props
+    const {visible, sendYakitHeaderDraggableEvent = true, ...restProps} = props
     useEffect(() => {
         if (sendYakitHeaderDraggableEvent) {
             if (visible) {
@@ -28,7 +28,8 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     }, [visible, sendYakitHeaderDraggableEvent])
     return (
         <Drawer
-            {...props}
+            visible={visible}
+            {...restProps}
             closeIcon={<div className={styles["yakit-drawer-icon"]}>{props.closeIcon || <RemoveIcon className={styles["yakit-drawer-remove-icon"]}/>}</div>}
             className={classNames(
                 styles["yakit-drawer"],
