@@ -30,7 +30,7 @@ export const defaultBlockList: BlockListProps[] = [
         id: 3,
         icon: <IconHeading3 />,
         label: "三级标题",
-        description: "二级标题: ###空格"
+        description: "三级标题: ###空格"
     },
     {
         id: 4,
@@ -105,7 +105,7 @@ export const defaultTooltipList: TooltipListProps[] = [
         id: 4,
         icon: <IconHeading3 />,
         label: "三级标题",
-        description: "二级标题: ###空格"
+        description: "三级标题: ###空格"
     },
     {
         id: 5,
