@@ -54,6 +54,7 @@ export interface MITMServerHijackingProp {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory: string
     setTempShowPluginHistory: (t: string) => void
+    mitmPageRef: any
 }
 
 const {ipcRenderer} = window.require("electron")
@@ -86,7 +87,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        mitmPageRef
     } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -259,6 +261,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     setShowPluginHistoryList={setShowPluginHistoryList}
                     tempShowPluginHistory={tempShowPluginHistory}
                     setTempShowPluginHistory={setTempShowPluginHistory}
+                    mitmPageRef={mitmPageRef}
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>

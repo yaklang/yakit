@@ -96,6 +96,7 @@ interface MITMPluginLocalListProps {
     setTempShowPluginHistory?: (t: string) => void
     hasParamsCheckList: string[]
     curTabKey?: string
+    mitmPageRef: any
 }
 export interface YakFilterRemoteObj {
     name: string
@@ -127,7 +128,8 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setShowPluginHistoryList = () => {},
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey = ""
+        curTabKey = "",
+        mitmPageRef
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -290,6 +292,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
                                 defaultPlugins={noParamsCheckList}
                                 setDefaultPlugins={setNoParamsCheckList}
                                 curTabKey={curTabKey}
+                                mitmPageRef={mitmPageRef}
                             />
                         )
                     }}

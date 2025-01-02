@@ -1015,7 +1015,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }
             } catch (error) {}
         },
-        [editor, isPositionHighLightCursor, highLightFind],
+        [editor, isPositionHighLightCursor, JSON.stringify(highLightFind)],
         {wait: 300}
     )
 

@@ -68,6 +68,7 @@ interface MITMPluginHijackContentProps {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
+    mitmPageRef: any
 }
 const HotLoadDefaultData: YakScript = {
     Id: 0,
@@ -117,7 +118,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory = "",
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        mitmPageRef
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
@@ -510,6 +512,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         setShowPluginHistoryList={setShowPluginHistoryList}
                                         setTempShowPluginHistory={setTempShowPluginHistory}
                                         curTabKey={curTabKey}
+                                        mitmPageRef={mitmPageRef}
                                     />
                                 )}
                             />
@@ -609,6 +612,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 setShowPluginHistoryList={setShowPluginHistoryList}
                                 curTabKey={curTabKey}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
+                                mitmPageRef={mitmPageRef}
                             />
                         </YakitSpin>
                     </div>
