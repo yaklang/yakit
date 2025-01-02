@@ -65,7 +65,6 @@ import {openABSFileLocated} from "@/utils/openWebsite"
 import {ScrollProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {getMapFileDetail, removeMapFileDetail, setMapFileDetail} from "../FileTreeMap/FileMap"
 import {getMapFolderDetail, setMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
@@ -78,6 +77,7 @@ import {
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 import { openFolder } from "../RunnerFileTree/RunnerFileTree"
+import { JumpToEditorProps } from "../BottomEditorDetails/BottomEditorDetailsType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1141,8 +1141,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
         try {
             const obj: JumpToEditorProps = JSON.parse(data)
-            const {id, isSelect = true, selections} = obj
-            if (reqEditor && editorInfo?.path === id) {
+            const {path, isSelect = true, selections} = obj
+            if (reqEditor && editorInfo?.path === path) {
                 if (isSelect) {
                     reqEditor.setSelection(selections)
                 }

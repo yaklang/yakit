@@ -45,6 +45,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {Uint8ArrayToString} from "@/utils/str"
 import {setClipboardText} from "@/utils/clipboard"
+
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -98,7 +99,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         if (activeFile?.path) {
             const obj: JumpToEditorProps = {
                 selections,
-                id: activeFile?.path || ""
+                path: activeFile?.path || ""
             }
             emiter.emit("onJumpEditorDetail", JSON.stringify(obj))
         }

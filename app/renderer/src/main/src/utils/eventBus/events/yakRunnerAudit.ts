@@ -40,4 +40,6 @@ export type YakRunnerAuditEventProps = {
     onCodeAuditHistoryExpanded?: string
     // 重新设置审计规则
     onResetAuditRule: string
+    // 初始化 Widget
+    onInitWidget: string
 }

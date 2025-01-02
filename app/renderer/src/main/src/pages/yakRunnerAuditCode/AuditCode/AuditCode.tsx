@@ -104,7 +104,7 @@ import {
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {YakitDragger, YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -126,6 +126,7 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {Selection} from "../RunnerTabs/RunnerTabsType"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -344,7 +345,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 const {url, start_line, start_column, end_line, end_column} = item
                 const name = await getNameByPath(url)
                 // console.log("monaca跳转", item, name)
-                const highLightRange = {
+                const highLightRange: Selection = {
                     startLineNumber: start_line,
                     startColumn: start_column,
                     endLineNumber: end_line,
@@ -357,12 +358,14 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                         highLightRange
                     }
                 }
+                console.log("opopo",OpenFileByPathParams);
+                
                 emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 // 纯跳转行号
                 setTimeout(() => {
-                    const obj: JumpToEditorProps = {
+                    const obj: JumpToAuditEditorProps = {
                         selections: highLightRange,
-                        id: url,
+                        path: url,
                         isSelect: false
                     }
                     emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
@@ -535,7 +538,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                             ResourceType,
                             VerboseType,
                             Size,
-                            Extra
+                            Extra,
                         })
                     })
                     setMapAuditChildDetail(path, variableIds)
