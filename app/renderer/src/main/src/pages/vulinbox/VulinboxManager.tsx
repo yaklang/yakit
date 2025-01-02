@@ -1,26 +1,22 @@
-import React, {useEffect, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {AutoCard} from "@/components/AutoCard"
 import {EngineConsole} from "@/pages/engineConsole/EngineConsole"
-import {failed, info, success, yakitNotify} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {Alert, Form, Progress, Space, Tag} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream"
 import {randomString} from "@/utils/randomUtil"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {InputInteger, InputItem, SwitchItem} from "@/utils/inputUtil"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {PluginResultUI} from "@/pages/yakitStore/viewers/base"
 import {ExecResult} from "@/pages/invoker/schema"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {useGetState} from "ahooks"
+import {Uint8ArrayToString} from "@/utils/str"
+import {useGetState, useUpdateEffect} from "ahooks"
 import styles from "@/pages/screenRecorder/ScreenRecorderPage.module.scss"
-import {ChromeFrameSvgIcon, ChromeSvgIcon} from "@/assets/newIcon"
-import {CheckOutlined, ReloadOutlined} from "@ant-design/icons"
+import {ChromeSvgIcon} from "@/assets/newIcon"
+import {ReloadOutlined} from "@ant-design/icons"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {ResizeBox} from "@/components/ResizeBox"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {setClipboardText} from "@/utils/clipboard"
 
@@ -72,31 +68,44 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
             })
     }
 
+    const timer = useRef<NodeJS.Timeout | null>()
+
     useEffect(() => {
         // 初始检查
         checkVulinboxReady()
 
+        if (timer.current) {
+            clearInterval(timer.current)
+            timer.current = null
+        }
         // 设置定时器
-        let timer = setInterval(() => {
+        timer.current = setInterval(() => {
             checkVulinboxReady()
         }, 3000) // 每3秒检查一次
 
-        // 如果安装成功,切换到10秒检查一次
-        const successTimer = setInterval(() => {
-            if (available) {
-                clearInterval(timer)
-                timer = setInterval(() => {
-                    checkVulinboxReady()
-                }, 10000) // 每10秒检查一次
-            }
-        }, 3000)
-
         return () => {
-            clearInterval(timer)
-            clearInterval(successTimer)
+            timer.current && clearInterval(timer.current)
             ipcRenderer.invoke("cancel-StartVulinbox", token)
         }
     }, [])
+
+    useUpdateEffect(() => {
+        if (timer.current) {
+            clearInterval(timer.current)
+            timer.current = null
+        }
+        let wait: number = 3000
+        if (available) {
+            // 每10秒检查一次
+            wait = 10000
+        } else {
+            // 每3秒检查一次
+            wait = 3000
+        }
+        timer.current = setInterval(() => {
+            checkVulinboxReady()
+        }, wait)
+    }, [available])
 
     return (
         <div style={{height: "100%", width: "100%", overflow: "hidden"}}>
