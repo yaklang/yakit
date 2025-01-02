@@ -71,6 +71,7 @@ const commentCustomSchema = $nodeSchema(commentCustomId, (ctx) => ({
     }
 }))
 
+/**将选中内容替换为评论节点 */
 export const commentCommand = $command(`command-${commentCustomId}`, (ctx) => (id) => (state, dispatch) => {
     const {selection, tr} = state
     if (!(selection instanceof TextSelection)) return false

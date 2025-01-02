@@ -1,10 +1,10 @@
 import {$command} from "@milkdown/utils"
 import {convertSelectionByNode, setWrapInBlockType} from "./utils"
-import {listItemSchema} from "@milkdown/kit/preset/commonmark"
+import {listItemSchema, paragraphSchema} from "@milkdown/kit/preset/commonmark"
 
 export const listToParagraphCommand = $command(`listToParagraphCommand`, (ctx) => () => {
     return (state, dispatch) => {
-        const command = convertSelectionByNode(state.schema.nodes.paragraph)
+        const command = convertSelectionByNode(paragraphSchema.type(ctx))
         return command(state, dispatch)
     }
 })

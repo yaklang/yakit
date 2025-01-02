@@ -32,7 +32,7 @@ import {MilkdownBaseUtilProps} from "../MilkdownEditorType"
 import {cloneDeep} from "lodash"
 import {defaultTooltipList} from "../constants"
 import {convertToListBullet, listToParagraphCommand} from "../utils/listPlugin"
-import {listToHeadingCommand} from "../utils/headingPlugin"
+import {headingToParagraphCommand, listToHeadingCommand} from "../utils/headingPlugin"
 import {listToCodeCommand} from "../utils/codePlugin"
 import {fileCustomSchema} from "../utils/uploadPlugin"
 
@@ -225,6 +225,23 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             return false
         }
     })
+    /**选中的内容是否是heading */
+    const isHeadingSelection = useMemoizedFn(() => {
+        try {
+            const {state} = view
+            const {selection} = state
+            const {$from} = selection
+            /**
+             * 获取父节点类型
+             * 选中标题-1获取的父节点是doc,不适用
+             * 选中有序列表用$from.depth获取的父节点是paragraph不适用
+             */
+            const parentNode = $from.node($from.depth)
+            return parentNode.type.name === state.schema.nodes.heading.name
+        } catch (error) {
+            return false
+        }
+    })
     /**
      * 转为正文,目前除了常见的，还支持选中内容类型为list
      */
@@ -233,6 +250,9 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             const {dispatch, state} = view
             if (isListTypeSelection()) {
                 action(callCommand(listToParagraphCommand.key))
+            }
+            if (isHeadingSelection()) {
+                action(callCommand(headingToParagraphCommand.key))
             } else {
                 action((ctx) => {
                     const command = setWrapInBlockType(paragraphSchema.type(ctx))
