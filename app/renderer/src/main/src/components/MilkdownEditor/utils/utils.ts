@@ -77,7 +77,7 @@ export const clearContentAndWrapInBlockType = (nodeType: NodeType, attrs: Attrs 
 }
 
 /**
- * @description 将选区转换为指定节点类型
+ * @description 将选区转换为指定节点类型,未做更多的适配
  * @param nodeType
  * @param attrs
  * @returns {boolean}
