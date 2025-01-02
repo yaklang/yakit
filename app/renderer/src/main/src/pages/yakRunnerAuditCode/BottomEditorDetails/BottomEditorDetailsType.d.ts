@@ -1,20 +1,21 @@
-import { Selection } from "../RunnerTabs/RunnerTabsType";
+import {Selection} from "../RunnerTabs/RunnerTabsType"
+import {GraphInfoProps} from "../RightAuditDetail/RightAuditDetail.tsx"
 export interface BottomEditorDetailsProps {
     showItem?: ShowItemType
-    setShowItem:(v:ShowItemType)=>void
+    setShowItem: (v: ShowItemType) => void
     isShowEditorDetails: boolean
-    setEditorDetails:(v:boolean)=>void
+    setEditorDetails: (v: boolean) => void
 }
 
-export type ShowItemType =  "ruleEditor" | "holeDetail"
+export type ShowItemType = "ruleEditor" | "holeDetail"
 
-export interface JumpToEditorProps {
+export interface JumpToAuditEditorProps {
     isSelect?: boolean
     selections: Selection
-    id: string
+    path: string
 }
 
 export interface OutputInfoProps {
-    outputCahceRef:React.MutableRefObject<string>
+    outputCahceRef: React.MutableRefObject<string>
     xtermRef: React.MutableRefObject<any>
 }

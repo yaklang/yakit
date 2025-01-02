@@ -1,14 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Popover, Tooltip} from "antd"
-import {SettingOutlined} from "@ant-design/icons"
-import {useDebounceFn, useGetState, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import {useMemoizedFn} from "ahooks"
 import styles from "./BottomEditorDetails.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
-import {BottomEditorDetailsProps, JumpToEditorProps, OutputInfoProps, ShowItemType} from "./BottomEditorDetailsType"
-import {OutlineCogIcon, OutlineExitIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {BottomEditorDetailsProps, ShowItemType} from "./BottomEditorDetailsType"
+import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
@@ -17,7 +12,6 @@ import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
 import useDispatcher from "../hooks/useDispatcher"
 import {HoleBugDetail} from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 
@@ -35,16 +29,16 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
-    const onResetAuditRuleFun = useMemoizedFn((v:string)=>{
+    const onResetAuditRuleFun = useMemoizedFn((v: string) => {
         setRuleEditor(v)
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("onResetAuditRule", onResetAuditRuleFun)
         return () => {
             emiter.off("onResetAuditRule", onResetAuditRuleFun)
         }
-    },[])
+    }, [])
 
     useEffect(() => {
         if (showItem && isShowEditorDetails) {
@@ -111,11 +105,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     {showItem === "ruleEditor" && (
                         <>
                             {auditExecuting ? (
-                                <YakitButton
-                                    danger
-                                    icon={<PaperAirplaneIcon />}
-                                    onClick={onStopAuditRule}
-                                >
+                                <YakitButton danger icon={<PaperAirplaneIcon />} onClick={onStopAuditRule}>
                                     暂停执行
                                 </YakitButton>
                             ) : (
@@ -145,7 +135,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "ruleEditor"
                         })}
                     >
-                        <RuleEditorBox ruleEditor={ruleEditor} setRuleEditor={setRuleEditor} disabled={auditExecuting}/>
+                        <RuleEditorBox
+                            ruleEditor={ruleEditor}
+                            setRuleEditor={setRuleEditor}
+                            disabled={auditExecuting}
+                        />
                     </div>
                 )}
                 {showType.includes("holeDetail") && (
