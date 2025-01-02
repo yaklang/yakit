@@ -713,11 +713,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                             </div>
                                         }
                                         secondNode={
-                                            <RightAuditDetail
+                                            <>
+                                            {isShowAuditDetail&&<RightAuditDetail
                                                 auditRightParams={auditRightParams}
                                                 isShowAuditDetail={isShowAuditDetail}
                                                 setShowAuditDetail={setShowAuditDetail}
-                                            />
+                                            />}
+                                            </>
                                         }
                                     />
                                 }

@@ -9,8 +9,10 @@ import {
     RunnerTabsProps,
     SplitDirectionProps,
     YakitRunnerSaveModalProps,
-    RunYakParamsProps,
-    AuditCodeWelcomePageProps
+    AuditCodeWelcomePageProps,
+    WidgetClickTypeProps,
+    CodeScanMonacoWidgetProps,
+    WidgetControlProps
 } from "./RunnerTabsType"
 import {Droppable, Draggable} from "@hello-pangea/dnd"
 
@@ -23,19 +25,11 @@ import {
     OutlineChevrondoubleleftIcon,
     OutlineChevrondoublerightIcon,
     OutlineImportIcon,
-    OutlinePauseIcon,
-    OutlinePlayIcon,
-    OutlinePlusIcon,
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {RuleManagementAuditIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
-import {
-    YakRunnerNewFileIcon,
-    YakRunnerOpenAuditIcon,
-    YakRunnerOpenFileIcon,
-    YakRunnerOpenFolderIcon
-} from "@/pages/yakRunner/icon"
+import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
@@ -65,7 +59,6 @@ import {
     YaklangLanguageSuggestionRequest
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
-import {JumpToEditorProps} from "@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType"
 import {
     getDefaultActiveFile,
     getOpenFileInfo,
@@ -82,6 +75,13 @@ import {
     setYakRunnerHistory,
     updateAreaFileInfo
 } from "../utils"
+import {editor as newEditor} from "monaco-editor"
+import {YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {createRoot} from "react-dom/client"
+import MonacoEditor, {monaco} from "react-monaco-editor"
+import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {getMapResultDetail} from "../RightAuditDetail/ResultMap"
+import {GraphInfoProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -881,7 +881,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
-    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [editor, setEditor] = useState<IMonacoEditor>()
     // 是否允许展示二进制
     const [allowBinary, setAllowBinary] = useState<boolean>(false)
 
@@ -908,7 +908,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 }
             })
         })
-    }, [areaInfo, reqEditor])
+    }, [areaInfo, editor])
 
     // 光标位置信息
     const positionRef = useRef<CursorPosition>()
@@ -984,7 +984,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 获取编辑器中关联字符
     const getOtherRangeByPosition = useDebounceFn(
         async (position: Position) => {
-            const model = reqEditor?.getModel()
+            const model = editor?.getModel()
             if (!model || !editorInfo || editorInfo.fileSourceType === "file") return
             const iWord = getWordWithPointAtPosition(model, position)
             const type = getModelContext(model, "plugin") || "yak"
@@ -1032,12 +1032,12 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     })
 
     useEffect(() => {
-        if (!reqEditor) {
+        if (!editor) {
             return
         }
         let isFocus = false
         // 监听光标点击位置
-        const cursorPosition = reqEditor.onDidChangeCursorPosition((e) => {
+        const cursorPosition = editor.onDidChangeCursorPosition((e) => {
             if (!isFocus) return
             const {position} = e
             // console.log("当前光标位置：", position)
@@ -1046,7 +1046,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             updateBottomEditorDetails()
         })
         // 监听光标选中位置
-        const cursorSelection = reqEditor.onDidChangeCursorSelection((e) => {
+        const cursorSelection = editor.onDidChangeCursorSelection((e) => {
             if (!isFocus) return
             const selection = e.selection
             const {startLineNumber, startColumn, endLineNumber, endColumn} = selection
@@ -1056,13 +1056,13 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // updateBottomEditorDetails()
         })
         // 监听编辑器是否聚焦
-        const focusEditor = reqEditor.onDidFocusEditorWidget(() => {
+        const focusEditor = editor.onDidFocusEditorWidget(() => {
             isFocus = true
             // console.log("聚焦", reqEditor.getPosition())
             // 此处获取光标位置的原因是由于点击空白区域焦点获取时 onDidChangeCursorPosition 无法监听
-            if (reqEditor.getPosition()) {
-                const focusLineNumber = reqEditor.getPosition()?.lineNumber
-                const focusColumn = reqEditor.getPosition()?.column
+            if (editor.getPosition()) {
+                const focusLineNumber = editor.getPosition()?.lineNumber
+                const focusColumn = editor.getPosition()?.column
                 if (focusLineNumber && focusColumn) {
                     positionRef.current = {
                         lineNumber: focusLineNumber,
@@ -1074,7 +1074,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             onSetActiveFileByFocus()
         })
         // 监听编辑器是否失焦
-        const blurEditor = reqEditor.onDidBlurEditorWidget(() => {
+        const blurEditor = editor.onDidBlurEditorWidget(() => {
             isFocus = false
             // console.log("失焦")
         })
@@ -1086,18 +1086,18 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             focusEditor.dispose()
             blurEditor.dispose()
         }
-    }, [reqEditor])
+    }, [editor])
 
     // 更新光标位置
     const updatePosition = useMemoizedFn(() => {
         // console.log("更新光标位置", editorInfo)
-        if (reqEditor && editorInfo) {
+        if (editor && editorInfo) {
             // 如若没有记录 默认1行1列
             const {position = {lineNumber: 1, column: 1}, selections} = editorInfo
             const {lineNumber, column} = position
             if (lineNumber && column) {
-                reqEditor.setPosition({lineNumber, column})
-                reqEditor.focus()
+                editor.setPosition({lineNumber, column})
+                editor.focus()
             }
             // 记录以前缓存的值用于刷新
             if (position) {
@@ -1112,8 +1112,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     // 此处ref存在意义为清除ctrl + z缓存 同时更新光标位置
     useUpdateEffect(() => {
-        if (reqEditor && editorInfo) {
-            reqEditor.setValue(editorInfo.code)
+        if (editor && editorInfo) {
+            editor.setValue(editorInfo.code)
             updatePosition()
         }
     }, [editorInfo?.path])
@@ -1121,13 +1121,14 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 选中光标位置
     const onJumpEditorDetailFun = useMemoizedFn((data) => {
         try {
-            const obj: JumpToEditorProps = JSON.parse(data)
-            const {id, isSelect = true, selections} = obj
-            if (reqEditor && editorInfo?.path === id) {
+            const obj: JumpToAuditEditorProps = JSON.parse(data)
+            const {path, isSelect = true, selections} = obj
+
+            if (editor && editorInfo?.path === path) {
                 if (isSelect) {
-                    reqEditor.setSelection(selections)
+                    editor.setSelection(selections)
                 }
-                reqEditor.revealLineInCenter(selections.startLineNumber)
+                editor.revealLineInCenter(selections.startLineNumber)
             }
         } catch (error) {}
     })
@@ -1146,6 +1147,97 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         const newAreaInfo = updateAreaFileInfo(areaInfo, {...editorInfo, isPlainText: true}, editorInfo.path)
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
+
+    // 定时消失的定时器
+    const fizzRangeTimeoutId = useRef<NodeJS.Timeout>()
+    // 当前展示项
+    const nowShowRef = useRef<FileDetailInfo>()
+    // 代码扫描编辑器提示
+    const editerMenuFun = (editor: YakitIMonacoEditor) => {
+        if (!editorInfo?.highLightRange && !nowShowRef.current?.highLightRange?.source) return
+        // 编辑器选中弹窗的唯一Id
+        const rangeId: string = `monaco.range.code.scan.widget`
+        // 编辑器选中显示的内容
+        const fizzRangeWidget = {
+            isOpen: false,
+            getId: function () {
+                return rangeId
+            },
+            getDomNode: function () {
+                // 将TSX转换为DOM节点
+                const domNode = document.createElement("div")
+                // 解决弹窗内鼠标滑轮无法滚动的问题
+                domNode.onwheel = (e) => e.stopPropagation()
+                createRoot(domNode).render(
+                    <CodeScanMonacoWidget
+                        source={nowShowRef.current?.highLightRange?.source}
+                        closeFizzRangeWidget={closeFizzRangeWidget}
+                    />
+                )
+                return domNode
+            },
+            getPosition: function () {
+                return {
+                    position: {
+                        lineNumber: nowShowRef.current?.highLightRange?.endLineNumber || 0,
+                        column: nowShowRef.current?.highLightRange?.endColumn || 0
+                    },
+                    preference: [1, 2]
+                }
+            },
+            update: function () {
+                // 更新小部件的位置
+                this.getPosition()
+                editor.layoutContentWidget(this)
+            }
+        }
+        // 关闭选中的内容
+        const closeFizzRangeWidget = () => {
+            fizzRangeWidget.isOpen = false
+            fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
+            editor.removeContentWidget(fizzRangeWidget)
+        }
+
+        // 打开选中的内容
+        const openFizzRangeWidget = () => {
+            closeFizzRangeWidget()
+            editor.addContentWidget(fizzRangeWidget)
+            fizzRangeWidget.isOpen = true
+        }
+
+        // 编辑器更新 关闭之前展示
+        closeFizzRangeWidget()
+        openFizzRangeWidget()
+        editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
+    }
+
+    const onRefreshWidgetFun = useMemoizedFn((value) => {
+        try {
+            if (!editorInfo) return
+            const source: {
+                title: string
+                node_id: string
+            } = JSON.parse(value)
+            const {highLightRange} = editorInfo
+            if (highLightRange) {
+                nowShowRef.current = {...editorInfo, highLightRange: {...highLightRange, source}}
+            }
+            editor && editerMenuFun(editor)
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        emiter.on("onInitWidget", onRefreshWidgetFun)
+        return () => {
+            emiter.off("onInitWidget", onRefreshWidgetFun)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!editor) return
+        nowShowRef.current = editorInfo
+        editerMenuFun(editor)
+    }, [editor, editorInfo])
 
     return (
         <div className={styles["runner-tab-pane"]}>
@@ -1167,7 +1259,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     readOnly={editorInfo?.fileSourceType === "audit"}
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
-                        setReqEditor(editor)
+                        setEditor(editor)
                     }}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}
@@ -1229,7 +1321,10 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                             </div>
                             <OutlinCompileIcon className={styles["icon-style"]} />
                         </div>
-                        <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openHistoryExpanded}>
+                        <div
+                            className={classNames(styles["btn-style"], styles["btn-open-file"])}
+                            onClick={openHistoryExpanded}
+                        >
                             <div className={styles["btn-title"]}>
                                 <YakRunnerOpenFileIcon />
                                 打开已有项目
@@ -1447,6 +1542,85 @@ const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
                     setName(value)
                 }}
             />
+        </div>
+    )
+}
+
+const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
+    const {source, closeFizzRangeWidget} = props
+    const [widgetControl, setWidgetControl] = useState<WidgetControlProps | null>(null)
+    // 判断数组中某一项后面或者前面有没有值
+    const checkArrayValues = useMemoizedFn((arr: GraphInfoProps[], node_id: string) => {
+        // 查找值的索引
+        const index = arr.findIndex((item) => item.node_id === node_id)
+
+        if (index === -1) {
+            return null
+        }
+
+        const hasPrevious = index > 0 // 判断前面是否有值
+        const hasNext = index < arr.length - 1 // 判断后面是否有值
+
+        return {
+            hasPrevious: hasPrevious,
+            hasNext: hasNext,
+            previousValue: hasPrevious ? arr[index - 1] : null,
+            nextValue: hasNext ? arr[index + 1] : null
+        }
+    })
+
+    useEffect(() => {
+        if (source) {
+            const graphInfo = getMapResultDetail(source.title)
+            const result = checkArrayValues(graphInfo, source.node_id)
+
+            setWidgetControl(result)
+        }
+    }, [source])
+
+    // 监听 Monaco Widget 点击
+    const onWidgetClick = useMemoizedFn((type: WidgetClickTypeProps) => {
+        closeFizzRangeWidget()
+        switch (type) {
+            case "previous":
+                let previousItem = widgetControl?.previousValue as GraphInfoProps | null
+                if (previousItem) {
+                    onJumpRunnerFile(previousItem, source?.title)
+                }
+                break
+            case "next":
+                let nextItem = widgetControl?.nextValue as GraphInfoProps | null
+                if (nextItem) {
+                    onJumpRunnerFile(nextItem, source?.title)
+                }
+                break
+            default:
+                break
+        }
+    })
+    return (
+        <div className={styles["code-scan-monaco-widget"]}>
+            <div className={styles["header"]}>
+                <div className={styles["title"]}>这里的代码有点问题</div>
+                <div className={styles["extra"]} onClick={closeFizzRangeWidget}>
+                    <OutlineXIcon />
+                </div>
+            </div>
+            <div className={styles["option"]}>
+                {widgetControl?.hasPrevious && (
+                    <YakitButton onClick={() => onWidgetClick("previous")} size='small'>
+                        上一个
+                    </YakitButton>
+                )}
+                {widgetControl?.hasNext && (
+                    <YakitButton onClick={() => onWidgetClick("next")} size='small'>
+                        下一个
+                    </YakitButton>
+                )}
+                <YakitButton onClick={() => onWidgetClick("detail")} size='small'>
+                    查看详情
+                </YakitButton>
+            </div>
         </div>
     )
 }
