@@ -117,9 +117,9 @@ FunctionEnd
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
         ${Else}
-            ; 默认为 渗透测试平台V1.0
+            ; 默认为 渗透测试平台V2.0
             StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V1.0_InstallPath"
-            StrCpy $EXE_NAME "渗透测试平台V1.0"
+            StrCpy $EXE_NAME "渗透测试平台V2.0"
         ${EndIf}
     ${EndIf}
 
@@ -144,10 +144,10 @@ FunctionEnd
         ; EE版本
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
         StrCpy $EXE_NAME "EnpriTrace"
-    ${ElseIf} ${FileExists} "$INSTDIR\渗透测试平台V1.0.exe"
+    ${ElseIf} ${FileExists} "$INSTDIR\渗透测试平台V2.0.exe"
         ; 渗透测试平台版本
         StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V1.0_InstallPath"
-        StrCpy $EXE_NAME "渗透测试平台V1.0"
+        StrCpy $EXE_NAME "渗透测试平台V2.0"
     ${EndIf}
 
     !insertmacro checkInstalled
