@@ -1,0 +1,10 @@
+.hr-body {
+    padding: 12px 4px;
+    margin-bottom: 24px;
+    .hr {
+        border-top: 1px solid var(--yakit-border-color);
+    }
+    &:hover {
+        background-color: var(--yakit-card-background-color);
+    }
+}

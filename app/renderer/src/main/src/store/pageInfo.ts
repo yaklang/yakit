@@ -67,6 +67,8 @@ interface PageParamsInfoProps {
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
     auditCodePageInfo?: AuditCodePageInfoProps
     codeScanPageInfo?: CodeScanPageInfoProps
+    /**记事本编辑页面 */
+    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -190,6 +192,10 @@ export interface CodeScanPageInfoProps {
     runtimeId?: string
 }
 
+export interface ModifyNotepadPageInfoProps {
+    /**笔记本 hash */
+    notepadHash?: string
+}
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
 

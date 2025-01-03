@@ -178,7 +178,7 @@ export interface PluginSearchParams {
     /** 按作者 */
     userName: string
     /** 关键字 */
-    fieldKeywords: string
+    fieldKeywords?: string
     /** 搜索类型 */
     type: "keyword" | "userName" | "fieldKeywords"
     /**时间类型搜索 默认 为所有时间, 当天 day, 本周 week, 本月 month, 年 year */
