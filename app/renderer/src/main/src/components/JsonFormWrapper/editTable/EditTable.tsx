@@ -1,17 +1,18 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import styles from "./EditTable.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import classNames from "classnames"
-import {Form, FormInstance, Input, InputNumber, Table, Tooltip, Typography} from "antd"
+import {Form, FormInstance, Table, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {ArrowsAltOutlined, InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
+import {EllipsisOutlined, InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {v4 as uuidv4} from "uuid"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 interface Item {
     _id: string
@@ -53,36 +54,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
             switch (UiStyle["ui:widget"]) {
                 case "textarea":
                     return (
-                        <YakitInput
+                        <YakitInput.TextArea
                             className={styles["input-textarea"]}
-                            suffix={
-                                <ArrowsAltOutlined
-                                    onClick={() => {
-                                        const str = form.getFieldValue(dataIndex)
-                                        let val = form.getFieldValue(dataIndex)
-                                        const m = showYakitModal({
-                                            title: `编辑 ${title}`,
-                                            centered: true,
-                                            content: (
-                                                <YakitInput.TextArea
-                                                    defaultValue={str}
-                                                    placeholder={`请输入 ${title}`}
-                                                    onChange={(e) => {
-                                                        val = e.target.value
-                                                    }}
-                                                />
-                                            ),
-                                            bodyStyle: {padding: 24},
-                                            onOk: () => {
-                                                form.setFieldsValue({
-                                                    [dataIndex]: val
-                                                })
-                                                m.destroy()
-                                            }
-                                        })
-                                    }}
-                                />
-                            }
+                            rows={1}
+                            placeholder={`请输入 ${typeof title === "object" ? "该字段" : title}`}
                         />
                     )
                 default:
@@ -109,7 +84,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     rules={[
                         {
                             required,
-                            message: `未处理 ${title}!`
+                            message: `请填写${typeof title === "object" ? "该字段" : title}`
                         }
                     ]}
                     valuePropName={type === "boolean" ? "checked" : undefined}
@@ -171,6 +146,7 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
     const {columnSchema, uiSchema, onChange, value} = props
+
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])
@@ -180,13 +156,22 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     const [maxItems, setMaxItems] = useState<number>()
     const [uiKeys, setUiKeys] = useState<UiKeysProps>()
     const [defaultObj, setDefaultObj] = useState<DefaultObjProps>({})
+
+    // 默认数据注入
+    useEffect(() => {
+        if (Array.isArray(value) && value.length > 0) {
+            const newData = value.map((item) => ({...item, _id: uuidv4()}))
+            setData(newData)
+        }
+    }, [])
+
+    // 初始化表格数据
     useEffect(() => {
         try {
             // columnSchema
             const {minItems, maxItems = 50, items} = columnSchema
             const {require, properties} = items
             const newColumns: any[] = []
-            const newData: any[] = []
             const defObj: DefaultObjProps = {}
             // uiSchema
             const newUiKeys = uiSchema?.items as UiKeysProps
@@ -195,18 +180,19 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             newGrid.forEach((item) => {
                 widthObj = {...widthObj, ...item}
             })
+
             Object.keys(properties).forEach((key) => {
                 const {type, title, description} = properties[key]
                 newColumns.push({
                     title: description ? (
-                        <div>
+                        <div style={{fontSize: 12}}>
                             <span style={{marginRight: 4}}>{title || key}</span>
                             <Tooltip title={description}>
                                 <InfoCircleOutlined />
                             </Tooltip>
                         </div>
                     ) : (
-                        title || key
+                        <div style={{fontSize: 12}}>{title || key}</div>
                     ),
                     dataIndex: key,
                     editable: true,
@@ -220,7 +206,8 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             return (
                                 <Tooltip title={text}>
                                     <div
-                                        style={{overflow: "hidden"}}
+                                        // scroll为max-content时将会根据内容自适应宽度 为减轻后端写入x轴压力（默认不写） 因此传入widthObj
+                                        style={{overflow: "hidden", fontSize: 12, maxWidth: widthObj?.[key]}}
                                         className={classNames("yakit-content-single-ellipsis")}
                                     >
                                         {text}
@@ -229,7 +216,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             )
                         }
                         return (
-                            <div style={{overflow: "hidden"}} className={classNames("yakit-content-single-ellipsis")}>
+                            <div
+                                style={{overflow: "hidden", fontSize: 12, maxWidth: widthObj?.[key]}}
+                                className={classNames("yakit-content-single-ellipsis")}
+                            >
                                 {text || "-"}
                             </div>
                         )
@@ -237,9 +227,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     width: widthObj?.[key]
                 })
 
-                newData.push({
-                    _id: uuidv4()
-                })
                 // 默认值赋值
                 if (properties[key]?.default) {
                     defObj[key] = properties[key]?.default
@@ -250,6 +237,17 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             setRequireList(require)
             setColumns([...newColumns])
             setMaxItems(maxItems)
+
+            // 如果表格为空，初始化一条新数据 由于需要校验数据不可直接保存
+            if (data.length === 0 && !(Array.isArray(value) && value.length > 0)) {
+                const newItem = {
+                    _id: uuidv4(),
+                    ...defObj
+                }
+                setCacheData([newItem])
+                setEditingId(newItem._id)
+                form.setFieldsValue({...newItem})
+            }
         } catch (error) {
             failed(`解析表格失败:${error}`)
         }
@@ -268,6 +266,13 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     })
 
     const onDelete = useMemoizedFn((record: Item) => {
+        if (cacheData.length > 0 && record._id === cacheData[0]._id) {
+            if (record._id === editingId) {
+                setEditingId("")
+            }
+            setCacheData([])
+            return
+        }
         const newData = [...data].filter((item) => item._id !== record._id)
         setData(newData)
         onSubmit(newData)
@@ -283,7 +288,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     })
 
     const onSave = useMemoizedFn((record: Item) => {
-        return new Promise(async (resolve, reject) => {
+        return new Promise<Item>(async (resolve, reject) => {
             try {
                 const row = (await form.validateFields()) as Item
                 const newData = [...data]
@@ -291,13 +296,15 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 // 修改
                 if (index > -1) {
                     const item = newData[index]
-                    newData.splice(index, 1, {
+                    const newItem = {
                         ...item,
                         ...row
-                    })
+                    }
+                    newData.splice(index, 1, newItem)
                     setData(newData)
                     setEditingId("")
                     onSubmit(newData)
+                    resolve(newItem)
                 }
                 // 新增
                 else if (cacheData.length > 0 && record._id === cacheData[0]._id) {
@@ -306,12 +313,47 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     setData(newData)
                     setEditingId("")
                     onSubmit(newData)
+                    resolve(cacheData[0])
                 }
-                resolve(null)
             } catch (errInfo) {
                 reject()
             }
         })
+    })
+
+    // 复制
+    const onCopy = useMemoizedFn(async (record: Item) => {
+        // 校验复制行 如若为编辑状态且无法通过校验则无法复制
+        if (record._id === editingId) {
+            try {
+                const item = await onSave(record)
+                const newRecord = {
+                    ...item,
+                    _id: uuidv4()
+                }
+                setData([...data, newRecord])
+            } catch (error) {
+                warn("当前行校验未通过")
+            }
+        } else {
+            const newRecord = {
+                ...record,
+                _id: uuidv4()
+            }
+            setData([...data, newRecord])
+        }
+    })
+
+    // 失焦自动保存
+    const onBlur = useMemoizedFn(async (record: Item) => {
+        if (editingId) {
+            try {
+                await onSave(record)
+                setEditingId("")
+            } catch (error) {
+                // 保存失败时不退出编辑状态
+            }
+        }
     })
 
     const addCell = useMemoizedFn(async () => {
@@ -339,40 +381,72 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         return [
             ...columns,
             {
-                title: "操作",
+                title: <div style={{fontSize: 12}}>操作</div>,
                 dataIndex: "operation",
-                width: 150,
+                width: 45,
                 fixed: "right",
                 render: (_: any, record: Item) => {
-                    const editable = isEditing(record)
-                    return editable ? (
-                        <div className={styles["operation"]}>
-                            <YakitButton type='text' size='small' onClick={() => onSave(record)}>
-                                保存
-                            </YakitButton>
-                            <YakitButton type='text' size='small' onClick={onCancel}>
-                                取消
-                            </YakitButton>
-                            {Object.keys(record).length > 1 && (
-                                <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
-                                    删除
-                                </YakitButton>
-                            )}
-                        </div>
-                    ) : (
-                        <div className={styles["operation"]}>
-                            <YakitButton
-                                size='small'
-                                type='text'
-                                disabled={editingId !== ""}
-                                onClick={() => onEdit(record)}
-                            >
-                                编辑
-                            </YakitButton>
-                            <YakitButton danger type='text' size='small' onClick={() => onDelete(record)}>
-                                删除
-                            </YakitButton>
-                        </div>
+                    const editTable = isEditing(record)
+                    const editData = [
+                        {
+                            key: "save",
+                            label: "保存"
+                        },
+                        {
+                            key: "cancel",
+                            label: "取消"
+                        }
+                    ]
+                    const showData = [
+                        {
+                            key: "edit",
+                            label: "编辑"
+                        },
+                        {
+                            key: "copy",
+                            label: "复制"
+                        }
+                    ]
+                    const delData = [
+                        {
+                            key: "delete",
+                            label: "删除"
+                        }
+                    ]
+                    return (
+                        <YakitDropdownMenu
+                            menu={{
+                                data: editTable ? [...editData, ...delData] : [...showData, ...delData],
+                                onClick: ({key}) => {
+                                    switch (key) {
+                                        case "save":
+                                            onSave(record)
+                                            break
+                                        case "cancel":
+                                            onCancel()
+                                            break
+                                        case "edit":
+                                            onEdit(record)
+                                            break
+                                        case "copy":
+                                            onCopy(record)
+                                            break
+                                        case "delete":
+                                            onDelete(record)
+                                            break
+                                        default:
+                                            break
+                                    }
+                                },
+                                width: 80
+                            }}
+                            dropdown={{
+                                trigger: ["click"],
+                                placement: "bottom"
+                            }}
+                        >
+                            <YakitButton type='text' size='small' icon={<EllipsisOutlined />} />
+                        </YakitDropdownMenu>
                     )
                 }
             }
@@ -394,27 +468,105 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 type: col.type,
                 selectOption: (col.enum || []).map((item) => ({label: item, value: item})),
                 UiStyle: uiKeys?.[col.dataIndex],
-                form
+                form,
+                onBlur: () => onBlur(record)
             })
         }
     })
 
     return (
         <Form form={form} component={false}>
-            <Table
-                className={classNames({
-                    [styles["edit-table"]]: realData.length === 0
-                })}
-                components={{
-                    body: {
-                        cell: EditableCell
-                    }
-                }}
-                dataSource={realData}
-                columns={mergedColumns}
-                pagination={false}
-                scroll={{x: uiSchema?.x || "max-content", y: uiSchema?.y}}
-            />
+            <div className={styles["edit-table-box"]}>
+                <Table
+                    rowKey={(e) => e._id}
+                    size='small'
+                    className={classNames({
+                        [styles["edit-table"]]: realData.length === 0
+                    })}
+                    components={{
+                        body: {
+                            cell: EditableCell
+                        }
+                    }}
+                    dataSource={realData}
+                    columns={mergedColumns}
+                    pagination={false}
+                    scroll={{x: uiSchema?.x || "max-content", y: uiSchema?.y}}
+                    bordered={true}
+                    onRow={(record) => ({
+                        onDoubleClick: () => {
+                            // 如果当前没有编辑中的行,直接编辑
+                            if (editingId === "") {
+                                onEdit(record)
+                                return
+                            }
+
+                            // 如果点击的是当前编辑行,不做处理
+                            if (editingId === record._id) {
+                                return
+                            }
+
+                            // 如果有其他行在编辑,先保存再编辑新行
+                            const editingRecord = data.find((item) => item._id === editingId)
+                            if (editingRecord) {
+                                onSave(editingRecord)
+                                onEdit(record)
+                            }
+                        },
+                        onContextMenu: (e) => {
+                            e.preventDefault()
+                            showByRightContext({
+                                data: [
+                                    {label: "编辑", key: "edit"},
+                                    {label: "复制", key: "copy"},
+                                    {label: "保存", key: "save"},
+                                    {label: "删除", key: "delete"}
+                                ],
+                                width: 80,
+                                onClick: async (e) => {
+                                    switch (e.key) {
+                                        case "edit":
+                                            // 如果当前没有编辑中的行,直接编辑
+                                            if (editingId === "") {
+                                                onEdit(record)
+                                                return
+                                            }
+
+                                            // 如果点击的是当前编辑行,不做处理
+                                            if (editingId === record._id) {
+                                                return
+                                            }
+
+                                            // 如果有其他行在编辑,先保存再编辑新行
+                                            const editingRecord = data.find((item) => item._id === editingId)
+                                            if (editingRecord) {
+                                                onSave(editingRecord)
+                                                onEdit(record)
+                                            }
+                                            return
+                                        case "copy":
+                                            onCopy(record)
+                                            return
+                                        case "save":
+                                            try {
+                                                await onSave(record)
+                                            } catch (error) {
+                                                warn("当前行校验未通过")
+                                            }
+
+                                            return
+                                        case "delete":
+                                            const newData = data.filter((item) => item._id !== record._id)
+                                            setData(newData)
+                                            return
+                                    }
+                                }
+                            })
+                        }
+                    })}
+                />
+            </div>
+
             <YakitButton
                 onClick={addCell}
                 size='large'
