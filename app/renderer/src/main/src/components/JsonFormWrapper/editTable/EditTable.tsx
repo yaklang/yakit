@@ -1,30 +1,17 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import styles from "./EditTable.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, warn} from "@/utils/notification"
 import classNames from "classnames"
-import {Empty, Form, FormInstance, Input, InputNumber, Table, Tooltip, Typography} from "antd"
+import {Form, FormInstance, Table, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    ArrowsAltOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    DeleteOutlined,
-    EditOutlined,
-    EllipsisOutlined,
-    InfoCircleOutlined,
-    PlusOutlined,
-    SettingOutlined
-} from "@ant-design/icons"
+import {EllipsisOutlined, InfoCircleOutlined, PlusOutlined} from "@ant-design/icons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {v4 as uuidv4} from "uuid"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {showByCursorMenu} from "@/utils/showByCursor"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 
 interface Item {
@@ -159,6 +146,7 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
     const {columnSchema, uiSchema, onChange, value} = props
+
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])
