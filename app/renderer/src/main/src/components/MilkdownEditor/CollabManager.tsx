@@ -72,6 +72,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         docTitle.observe((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
 
         const url = wsUrl + "api/handle/tow/way/ws"
+        console.log("wsUrl", url)
         // const url = "ws://localhost:1880/ws/my-room"
         this.wsProvider = new WebsocketProvider(url, this.wsRequest.notepadHash, this.doc, {
             connect: true,
@@ -94,6 +95,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             heardImg: this.user.heardImg
         })
         this.wsProvider.on("status", (payload) => {
+            console.log("wsProvider-status", payload)
             // 获取当前所有用户的状态
             const users = this.getOnlineUser()
             this.setOnlineUsers([...users])
@@ -104,14 +106,17 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             }
         })
         this.wsProvider.on("connection-close", (payload) => {
+            console.log("wsProvider-close", payload)
             this.emit("offline-after", [payload])
         })
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
         this.wsProvider.once("synced", (isSynced: boolean) => {
+            console.log("wsProvider-synced", isSynced)
             this.setCollabStatus({...this.collabStatus, isSynced})
         })
 
         this.wsProvider.once("online-user-count", (onlineUserCount: number) => {
+            console.log("wsProvider-online-user-count", onlineUserCount)
             if (onlineUserCount < 2 && this.collabStatus.isSynced) {
                 this.collabService.applyTemplate(template).connect()
             } else if (this.collabStatus.isSynced) {
@@ -120,6 +125,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
 
         this.wsProvider.on("saveStatus", ({saveStatus}) => {
+            console.log("wsProvider-saveStatus", saveStatus)
             this.setCollabStatus({...this.collabStatus, saveStatus})
         })
         // 监听在线用户数据
@@ -131,6 +137,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     }
 
     private docObserveTitle(yarrayEvent: YTextEvent, tr: Transaction) {
+        console.log("docTitle-docObserveTitle", yarrayEvent, tr)
         if (tr.local) return
         const value = (yarrayEvent.delta[0]?.insert as string) || ""
         this.onSetTitle(value)
@@ -139,6 +146,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     private getOnlineUser() {
         const awarenessMap = this.wsProvider.awareness.getStates()
         const users = Array.from(awarenessMap, ([key, value]) => value.user)
+        console.log("wsProvider-getOnlineUser", users)
         return users
     }
 
@@ -171,6 +179,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     setTitle(value) {
         const oldValue = this.doc.getText("title").toString()
         if (isEqual(oldValue, value)) return
+        console.log("docTitle-setTitle", oldValue, value)
         this.doc.getText("title").applyDelta([{insert: value}])
     }
 
@@ -190,6 +199,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
         if (this.wsProvider && this.wsProvider?.ws && this.wsProvider.ws?.readyState === WebSocket.OPEN) {
             const sendValueString = JSON.stringify(v)
+            console.log("getSendData-sendContent", sendValueString)
             this.wsProvider?.ws?.send(Buffer.from(sendValueString))
         }
     }
@@ -199,12 +209,18 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         super.destroy()
     }
     connect() {
-        this.wsProvider?.connect()
-        this.collabService?.connect()
+        console.log("connect")
+        Promise.resolve().then(() => {
+            this.wsProvider?.connect()
+            this.collabService?.connect()
+        })
     }
 
     disconnect() {
-        this.collabService?.disconnect()
-        this.wsProvider?.disconnect()
+        console.log("disconnect")
+        Promise.resolve().then(() => {
+            this.collabService?.disconnect()
+            this.wsProvider?.disconnect()
+        })
     }
 }

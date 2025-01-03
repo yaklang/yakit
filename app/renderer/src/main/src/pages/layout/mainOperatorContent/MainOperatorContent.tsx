@@ -633,6 +633,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const addModifyNotepad = useMemoizedFn(async (data) => {
         try {
             let verbose = ""
+            console.log('addModifyNotepad',data?.notepadHash)
             if (!!data?.notepadHash) {
                 const res = await apiGetNotepadDetail(data.notepadHash)
                 verbose = res?.title || ""
@@ -646,7 +647,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     }
                 }
             )
-        } catch (error) {}
+        } catch (error) {
+            
+        }
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(

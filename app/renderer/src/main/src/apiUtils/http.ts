@@ -118,7 +118,7 @@ export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request,
 /** @name 删除 OSS 资源 */
 export const httpDeleteOSSResource: APIFunc<API.DeleteOssResource, API.ActionSucceeded> = (info, hiddenError) => {
     return new Promise((resolve, reject) => {
-        // console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
+        console.log("method:delete|api:oss/resource\n", JSON.stringify(info))
         NetWorkApi<API.DeleteOssResource, API.ActionSucceeded>({
             method: "delete",
             url: "oss/resource",

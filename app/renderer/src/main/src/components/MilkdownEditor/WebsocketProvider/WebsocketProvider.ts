@@ -114,6 +114,16 @@ const setupWS = (provider: WebsocketProvider) => {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
+                console.log("websocket.onmessage-data", data)
+
+                provider.wsLastMessageReceived = time.getUnixTime()
+                const encoder = readMessage(provider, yjsParams, true)
+
+                if (encoding.length(encoder) > 1) {
+                    const messageUint8Array = encoding.toUint8Array(encoder)
+                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
+                    websocket.send(value)
+                }
                 if (!!data.params.userCount && data.params.docType === notepadActions.join) {
                     // 目前加入类型的消息会修改在线人数，用来做连接文档的初始化内容
                     provider.onlineUserCount = data.params.userCount
@@ -125,23 +135,18 @@ const setupWS = (provider: WebsocketProvider) => {
                         }
                     ])
                 }
-                provider.wsLastMessageReceived = time.getUnixTime()
-                const encoder = readMessage(provider, yjsParams, true)
-
-                if (encoding.length(encoder) > 1) {
-                    const messageUint8Array = encoding.toUint8Array(encoder)
-                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
-                    websocket.send(value)
-                }
             } catch (error) {}
         }
         websocket.onerror = (event) => {
+            console.log("websocket.onerror-event", event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
+            console.log("websocket.onclose-event", event)
             closeWebsocketConnection(provider, websocket, event)
         }
         websocket.onopen = () => {
+            console.log("websocket.onopen")
             provider.wsLastMessageReceived = time.getUnixTime()
             provider.wsconnecting = false
             provider.wsconnected = true
@@ -189,7 +194,9 @@ const setupWS = (provider: WebsocketProvider) => {
  * @param {CloseEvent} event
  */
 const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, event?: CloseEvent) => {
+    console.log("closeWebsocketConnection------1", ws, provider.ws)
     if (ws === provider.ws) {
+        console.log("closeWebsocketConnection------2", event)
         if (event) provider.emit("connection-close", [event, provider])
         provider.ws = null
         ws.close()
@@ -375,6 +382,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         if (resyncInterval > 0) {
             this._resyncInterval = setInterval(() => {
                 if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    console.log("_resyncInterval")
                     // resend sync step 1
                     const encoder = encoding.createEncoder()
                     encoding.writeVarUint(encoder, messageSync)
@@ -408,6 +416,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     token
                 }
                 const jsonString = JSON.stringify(value)
+                console.log("getSendData", jsonString)
                 const finalArrayBuffer = Buffer.from(jsonString)
                 return finalArrayBuffer
             } catch (error) {
@@ -485,6 +494,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     set synced(state) {
         if (this._synced !== state) {
             this._synced = state
+            console.log("synced", state)
             this.emit("synced", [state])
             this.emit("sync", [state])
         }
@@ -499,6 +509,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     set onlineUserCount(count) {
         if (this._onlineUserCount !== count) {
             this._onlineUserCount = count
+            console.log("synced-_onlineUserCount", count)
             this.emit("online-user-count", [count])
         }
     }
@@ -571,6 +582,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
         if (!!this.ws && this.ws?.readyState === WebSocket.OPEN) {
             const value = this.getSendData({buf: new Uint8Array(), docType: notepadActions.leave})
             this.ws?.send(value)
+            console.log("closeWebsocketConnection-disconnect")
             closeWebsocketConnection(this, this.ws)
         }
     }
@@ -578,6 +590,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     connect(): void {
         this.shouldConnect = true
         if (!this.wsconnected && this.ws === null) {
+            console.log("connect-setupWS")
             setupWS(this)
             this.connectBc()
         }

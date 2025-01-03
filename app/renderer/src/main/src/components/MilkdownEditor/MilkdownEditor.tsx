@@ -181,6 +181,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     //#region 编辑器初始
     const {get, loading} = useEditor(
         (root) => {
+            console.log("blockProvider-------------", collabParams?.milkdownHash)
             //#region 编辑器引用的相关插件 start
             const blockPlugins = [
                 block,
@@ -194,6 +195,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 (ctx: Ctx) => () => {
                     ctx.update(blockConfig.key, () => ({
                         filterNodes: (pos, node) => {
+                            console.log("tooltipProvider-node", pos, node)
                             if (node.type.name === "paragraph" && !node.content.size) {
                                 return true
                             }
@@ -684,14 +686,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         emiter.emit("onCloseCurrentPage", routeInfo.pageId)
     })
     const onCollabConnect = useMemoizedFn(() => {
-        Promise.resolve().then(() => {
-            collabManagerRef.current?.connect()
-        })
+        collabManagerRef.current?.connect()
     })
     const onCollabDisconnect = useMemoizedFn(() => {
-        Promise.resolve().then(() => {
-            collabManagerRef.current?.disconnect()
-        })
+        collabManagerRef.current?.disconnect()
     })
     //#endregion
 

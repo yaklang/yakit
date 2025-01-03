@@ -71,6 +71,7 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
  */
 export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
+        console.log("apiSaveNotepadList", params)
         NetWorkApi<API.PostNotepadRequest, string>({
             method: "post",
             url: "notepad",
@@ -118,12 +119,14 @@ export const apiGetNotepadDetail: APIFunc<string, API.GetNotepadList> = (hash, h
  */
 export const apiDeleteNotepadDetail: APIFunc<API.DeleteNotepadRequest, API.ActionFailed> = (params, hiddenNotify) => {
     return new Promise((resolve, reject) => {
+        console.log("apiDeleteNotepadDetail-params", params)
         NetWorkApi<API.DeleteNotepadRequest, API.ActionFailed>({
             method: "delete",
             url: "notepad",
             data: params
         })
             .then((res) => {
+                console.log("apiDeleteNotepadDetail-res", res)
                 // 后端返回的结构API.ActionFailed，根据ok判断失败还是成功
                 if (res.ok) {
                     if (!hiddenNotify) yakitNotify("success", res.reason)
@@ -159,8 +162,10 @@ export const onBaseNotepadDown: APIFunc<API.NotepadDownloadRequest, SaveDialogRe
         const params: API.NotepadDownloadRequest = {
             ...value
         }
+        console.log("onBaseNotepadDown-params", params)
         apiDownloadNotepad(params)
             .then((res) => {
+                console.log("onBaseNotepadDown-res", res)
                 saveDialogAndGetLocalFileInfo((res as string) || "")
                     .then(resolve)
                     .catch(reject)

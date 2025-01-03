@@ -60,6 +60,7 @@ export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse
  */
 export const apiSetNotepadPermission: APIFunc<API.PostNotepadPermissionRequest, API.ActionSucceeded> = (query) => {
     return new Promise((resolve, reject) => {
+        console.log("apiSetNotepadPermission-query", query)
         try {
             NetWorkApi<API.PostNotepadPermissionRequest, API.ActionSucceeded>({
                 method: "post",

@@ -118,7 +118,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
                 </div>
             ) : (
                 <>
-                    {activateLicense ? (
+                    {true ? (
                         <div style={{width: 480, margin: "0 auto", paddingTop: 200, height: "100%"}}>
                             <ConfigPrivateDomain
                                 enterpriseLogin={true}

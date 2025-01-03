@@ -174,6 +174,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         }
         return () => {
             const notepadContent = notepadContentRef.current
+            console.log("notepadContent", notepadContent)
             onSaveNewContent(notepadContent)
         }
     }, [pageInfo])
@@ -349,6 +350,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     ).run
     const onCatalogueClick = useMemoizedFn((info: MilkdownCatalogueProps) => {
         const element = document.getElementById(info.id)
+        console.log("element", element)
         if (element) {
             element.scrollIntoView({behavior: "smooth"})
         }

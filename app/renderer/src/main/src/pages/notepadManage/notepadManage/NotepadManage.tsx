@@ -59,6 +59,7 @@ export const toEditNotepad = (params?: {notepadHash: string; notepadPageList?: P
     const current =
         notepadHash &&
         notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
+    console.log("toEditNotepad", current, notepadHash, notepadPageList)
     if (current) {
         emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId, forceRefresh: true}))
         emiter.emit("switchMenuItem", JSON.stringify({route: YakitRoute.Modify_Notepad}))
@@ -212,7 +213,10 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             <YakitButton
                                 type='text2'
                                 icon={<OutlinePencilaltIcon />}
-                                onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
+                                onClick={() => {
+                                    console.log("toEditNotepad-111", {notepadHash: record.hash, notepadPageList})
+                                    toEditNotepad({notepadHash: record.hash, notepadPageList})
+                                }}
                                 disabled={removeDisabled}
                             />
                             <Divider type='vertical' style={{margin: "0 8px"}} />
@@ -249,6 +253,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         ]
     }, [downItemLoading, removeItemLoading, actionItemRef.current, sorterKey, timeSortVisible, notepadPageList])
     useEffect(() => {
+        console.log("userInfo------1", userInfo)
         if (!userInfo.isLogin) return
         getList()
         fetchInitTotal()
@@ -276,8 +281,10 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                   }
             const newQuery: GetNotepadRequestProps = convertGetNotepadRequest(search, params)
             try {
+                console.log("cs-newQuery", newQuery)
                 const res = await apiGetNotepadList(newQuery)
                 if (!res.data) res.data = []
+                console.log("res", newQuery, res)
                 const length = +res.pagemeta.page === 1 ? res.data.length : res.data.length + response.data.length
                 setHasMore(length < +res.pagemeta.total)
                 let newRes: API.GetNotepadResponse = {
