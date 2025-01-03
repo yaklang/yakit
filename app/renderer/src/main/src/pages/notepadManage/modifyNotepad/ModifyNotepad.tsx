@@ -289,7 +289,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [inViewport])
 
     const onSecondMenuDataChange = useMemoizedFn(() => {
-        setTabName(initTabName())
+        const t = initTabName()
+        setNotepadDetail((v) => ({...v, title: t}))
+        setTabName(t)
     })
 
     /**设置标题 */
@@ -301,6 +303,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if (title) {
             perTabName.current = title
         }
+        setNotepadDetail((v) => ({...v, title}))
         setTabName(title)
         onSetPageTabName(title)
     })
