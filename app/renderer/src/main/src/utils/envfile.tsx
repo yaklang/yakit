@@ -21,7 +21,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
         default:
-            return "渗透测试平台V1.0"
+            return "渗透测试平台V2.0"
     }
 }
 /** EE */
