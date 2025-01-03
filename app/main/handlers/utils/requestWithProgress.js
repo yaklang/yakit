@@ -14,14 +14,17 @@ function encodeChineseCharacters(url) {
 
 let writer = null
 let downloadedLength = 0
-function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined) {
+function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined, isEncodeURI = true) {
     // 设置axios请求配置
     const config = {
         ...options, responseType: 'stream'
     };
 
+    let u = downloadUrl
+    if (isEncodeURI) {
+        u = encodeChineseCharacters(downloadUrl);
+    }
 
-    const u = encodeChineseCharacters(downloadUrl);
     console.info(`start download ${u} to ${dest}`)
     axios.get(u, config).then(response => {
         if (response.status === 404) {

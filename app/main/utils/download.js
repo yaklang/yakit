@@ -20,7 +20,7 @@ module.exports = {
          * @param {string} params.fileName 下载文件名
          */
         ipcMain.handle("download-url-to-path", (e, params) => {
-            const { url, path: destPath, token, fileName } = params
+            const { url, path: destPath, token, fileName,isEncodeURI=false } = params
 
             let dest = destPath ? destPath : ""
             if (!dest) {
@@ -39,7 +39,7 @@ module.exports = {
                 win.webContents.send(`download-url-to-path-progress-finished`)
             }, (error) => {
                 win.webContents.send(`download-url-to-path-progress-error`, error)
-            })
+            },isEncodeURI)
         })
         /**
          * @param {Object} params
