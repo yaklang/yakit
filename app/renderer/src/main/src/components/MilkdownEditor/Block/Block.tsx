@@ -1,6 +1,6 @@
 import {BlockProvider} from "@milkdown/kit/plugin/block"
 import {useInstance} from "@milkdown/react"
-import {ReactNode, useCallback, useEffect, useRef, useState} from "react"
+import {useCallback, useEffect, useRef, useState} from "react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
 import {
     blockquoteSchema,
@@ -51,12 +51,12 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
     const userInfo = useStore((s) => s.userInfo)
 
     const ref = useRef<HTMLDivElement>(null)
-    const tooltipProvider = useRef<BlockProvider>()
+    const blockProvider = useRef<BlockProvider>()
 
     const [visibleAdd, setVisibleAdd] = useState(false)
     const [blockList, setBlockList] = useState<BlockListProps[]>(cloneDeep(defaultBlockList)) // 后期选中某个类型的组件可能不会显示一些操作
 
-    const {view} = usePluginViewContext()
+    const {view, prevState} = usePluginViewContext()
 
     const [loading, get] = useInstance()
     const action = useCallback(
@@ -69,7 +69,6 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
 
     useEffect(() => {
         const div = ref.current
-
         if (loading || !div) {
             return
         }
@@ -78,18 +77,17 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         if (!editor) {
             return
         }
-
-        tooltipProvider.current = new BlockProvider({
+        blockProvider.current = new BlockProvider({
             ctx: editor.ctx,
             content: div
         })
-        tooltipProvider.current?.update()
+        blockProvider.current?.update()
     }, [loading])
 
     useEffect(() => {
         return () => {
             // 单独的Effect中卸载，避免在开发过程中热加载的时候报错
-            tooltipProvider.current?.destroy()
+            blockProvider.current?.destroy()
         }
     }, [])
 
@@ -215,7 +213,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         }
         view.focus()
         setVisibleAdd(false)
-        tooltipProvider.current?.hide()
+        blockProvider.current?.hide()
     })
     const onAdd = (e) => {
         e.preventDefault()
@@ -224,14 +222,14 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         if (!editor) return
         if (!view.hasFocus()) view.focus()
         const {state, dispatch} = view
-        const active = tooltipProvider.current?.active
+        const active = blockProvider.current?.active
         if (!active) return
         const $pos = active.$pos
         const pos = $pos.pos + active.node.nodeSize
         let tr = state.tr.insert(pos, paragraphSchema.type(editor.ctx).create())
         tr = tr.setSelection(TextSelection.near(tr.doc.resolve(pos)))
         dispatch(tr.scrollIntoView())
-        tooltipProvider.current?.hide()
+        blockProvider.current?.hide()
     }
     return (
         <div

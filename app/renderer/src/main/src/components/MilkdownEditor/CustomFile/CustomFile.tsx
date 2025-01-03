@@ -54,14 +54,14 @@ interface DownFileInfoProps {
 }
 /**上传文件后,后端拼接hash和文件名的字符:&*&;方便截取文件名 */
 export const getTypeAndNameByPath = (path) => {
-    let newPath = path
+    let newPath = decodeURIComponent(path.split("/").pop())
     const firstIndex = newPath.indexOf("&*&")
     if (firstIndex !== -1) {
-        newPath = path.substring(firstIndex + 3, path.length)
+        newPath = newPath.substring(firstIndex + 3, path.length)
     }
     const index = newPath.lastIndexOf(".")
     const fileType = newPath.substring(index, newPath.length)
-    const fileName = newPath.split("\\").pop()
+    const fileName = newPath.split("\\").pop() || "未知命名"
     return {fileType, fileName}
 }
 interface CustomFileProps {
@@ -70,7 +70,6 @@ interface CustomFileProps {
 export const CustomFile: React.FC<CustomFileProps> = (props) => {
     const {type} = props
     const {node, contentRef, selected, view, getPos, setAttrs} = useNodeViewContext()
-    const [loadingInstance, get] = useInstance()
 
     const {attrs} = node
     const [fileInfo, setFileInfo] = useState<CustomFileItem>({
@@ -94,10 +93,10 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     useEffect(() => {
         const {fileId, path: initPath, uploadUserId = ""} = attrs
         const path = initPath.replace(/\\/g, "\\")
-        if (uploadUserId && uploadUserId !== userInfo.user_id) return
         if (fileId !== "0") {
             getFileInfoByLink()
         } else if (path) {
+            if (uploadUserId === "0" || uploadUserId !== userInfo.user_id) return
             getLocalFileLinkInfo(path).then((fileInfo) => {
                 const {fileName, fileType} = getTypeAndNameByPath(path)
                 const item = {
