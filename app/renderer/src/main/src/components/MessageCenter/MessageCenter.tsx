@@ -23,22 +23,24 @@ import {
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "../RollingLoadList/RollingLoadList"
-import {PluginHubPageInfoProps} from "@/store/pageInfo"
+import {PageNodeItemProps, PluginHubPageInfoProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
 import IconNoLoginMessage from "@/assets/no_login_message.png"
 import LoginMessage from "@/assets/login_message.png"
 import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
+import {shallow} from "zustand/shallow"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
     onClose: () => void
     data: API.MessageLogDetail
     isEllipsis?: boolean
+    notepadPageList?: PageNodeItemProps[]
 }
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
-    const {onClose, data, isEllipsis} = props
+    const {onClose, data, isEllipsis, notepadPageList} = props
 
     const getDescription = useMemo(() => {
         switch (data.upPluginType) {
@@ -266,7 +268,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                                 yakitNotify("error", "未找到笔记本信息")
                                 break
                             }
-                            toEditNotepad({notepadHash: data.notepadHash})
+                            toEditNotepad({notepadHash: data.notepadHash, notepadPageList: notepadPageList || []})
                             break
                         // 其余跳转到插件日志
                         default:
@@ -330,7 +332,12 @@ export interface MessageCenterProps {
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
     const {messageList, getAllMessage, onLogin, onClose} = props
     const {userInfo} = useStore()
-
+    const {notepadPageList} = usePageInfo(
+        (s) => ({
+            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
+        }),
+        shallow
+    )
     return (
         <>
             {userInfo.isLogin ? (
@@ -338,7 +345,12 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                     {messageList.length > 0 ? (
                         <div className={styles["message-center"]}>
                             {messageList.map((item) => (
-                                <MessageItem data={item} key={item.hash} onClose={onClose} />
+                                <MessageItem
+                                    data={item}
+                                    key={item.hash}
+                                    onClose={onClose}
+                                    notepadPageList={notepadPageList}
+                                />
                             ))}
 
                             <div className={styles["footer-btn"]}>
@@ -349,14 +361,14 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                         </div>
                     ) : (
                         <div className={styles["meeage-no-data"]}>
-                            <img src={LoginMessage} alt="" />
+                            <img src={LoginMessage} alt='' />
                             <div className={styles["text"]}>暂无消息</div>
                         </div>
                     )}
                 </>
             ) : (
                 <div className={styles["meeage-no-login"]}>
-                    <img src={IconNoLoginMessage} alt="" />
+                    <img src={IconNoLoginMessage} alt='' />
                     <div className={styles["text"]}>登录后才可查看消息</div>
                     <div>
                         <YakitButton type='primary' onClick={onLogin}>
