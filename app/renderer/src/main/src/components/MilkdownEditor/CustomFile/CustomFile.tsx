@@ -469,7 +469,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
-            title={fileName ? <span className='content-ellipsis'>{`${fileName}下载中...`}</span> : "下载中"}
+            title={fileName ? <div className='content-ellipsis'>{`${fileName}下载中...`}</div> : "下载中"}
             {...(yakitHintProps || {})}
             onCancel={onCancel}
             visible={visible}
