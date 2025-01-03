@@ -608,7 +608,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 className={styles["notepad-input"]}
                                 value={tabName}
                                 onChange={(e) => {
-                                    onSetTabName(e.target.value)
+                                    if (readonly) {
+                                        yakitNotify("error", "无编辑权限")
+                                    } else {
+                                        onSetTabName(e.target.value)
+                                    }
                                 }}
                                 maxLength={100}
                             />
