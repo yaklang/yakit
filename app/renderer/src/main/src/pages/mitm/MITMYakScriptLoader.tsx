@@ -56,7 +56,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         setTempShowPluginHistory,
         hasParamsCheckList,
         curTabKey,
-        mitmPageRef
     } = p
     const [i, setI] = useState(script)
     useEffect(() => {
@@ -381,7 +380,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     onSubmitYakScriptId={onSubmitYakScriptId}
                     onSetTempShowPluginHistory={setTempShowPluginHistory}
                     onSetMitmParamsDrawer={setMitmParamsDrawer}
-                    mitmPageRef={mitmPageRef}
                 ></MitmHasParamsDrawer>
             )}
         </div>
@@ -429,7 +427,6 @@ export interface MITMYakScriptLoaderProps {
     setTempShowPluginHistory?: (l: string) => void
     hasParamsCheckList: string[]
     curTabKey: string
-    mitmPageRef: any
 }
 
 export function clearMITMPluginCache() {
@@ -449,7 +446,6 @@ interface MitmHasParamsDrawer {
     onSetTempShowPluginHistory?: (l: string) => void
     onSetDrawerWidth: (width: number) => void
     onSetMitmParamsDrawer: (visible: boolean) => void
-    mitmPageRef: any
 }
 const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
     const {
@@ -463,10 +459,15 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
         onSetTempShowPluginHistory,
         onSetDrawerWidth,
         onSetMitmParamsDrawer,
-        mitmPageRef
     } = props
     const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const [initWidth, setInitWidth] = useState<number>(drawerWidth)
+
+    useEffect(() => {
+        return () => {
+            emiter.emit("setYakitHeaderDraggable", true)
+        }
+    }, [])
 
     const vwToPx = (vw: number) => {
         const viewportWidth = window.innerWidth
@@ -488,8 +489,6 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
             closable={false}
             width={drawerWidth + "vw"}
             placement='left'
-            getContainer={mitmPageRef?.current || document.body}
-            sendYakitHeaderDraggableEvent={mitmPageRef?.current ? false : true}
             title={
                 <div className={style["mitmParamsDrawer-title"]}>
                     <div

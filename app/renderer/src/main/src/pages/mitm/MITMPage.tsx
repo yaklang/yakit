@@ -333,7 +333,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         onIsHasParams={setIsHasParams}
                         showPluginHistoryList={showPluginHistoryList}
                         setShowPluginHistoryList={setShowPluginHistoryList}
-                        mitmPageRef={mitmPageRef}
                     />
                 )
 
@@ -361,7 +360,6 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         tempShowPluginHistory={tempShowPluginHistory}
                         setTempShowPluginHistory={setTempShowPluginHistory}
-                        mitmPageRef={mitmPageRef}
                     />
                 )
         }
@@ -480,7 +478,6 @@ interface MITMServerProps {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
-    mitmPageRef: any
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const {
@@ -497,7 +494,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         tempShowPluginHistory,
         setShowPluginHistoryList,
         setTempShowPluginHistory,
-        mitmPageRef
     } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
@@ -867,7 +863,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                                 onSelectAll={onSelectAll}
                                 groupNames={groupNames}
                                 setGroupNames={setGroupNames}
-                                mitmPageRef={mitmPageRef}
                             />
                         </div>
                     </div>
@@ -907,7 +902,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         tempShowPluginHistory={tempShowPluginHistory}
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         setTempShowPluginHistory={setTempShowPluginHistory}
-                        mitmPageRef={mitmPageRef}
                     />
                 )
         }
