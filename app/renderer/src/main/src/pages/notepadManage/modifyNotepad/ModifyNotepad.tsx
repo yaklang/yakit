@@ -274,7 +274,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         {wait: 200, leading: true}
     ).run
 
-    const authorAvatar = useCreation(() => {
+    const userAvatar = useCreation(() => {
         return judgeAvatar(userInfo, 28, avatarColor.current)
     }, [userInfo.companyName, userInfo.companyHeadImg])
 
@@ -544,7 +544,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         )}
                         <Divider type='vertical' style={{margin: 0}} />
 
-                        <Tooltip title={userInfo.companyName}>{authorAvatar}</Tooltip>
+                        <Tooltip title={userInfo.companyName}>{userAvatar}</Tooltip>
                     </div>
                 </div>
                 <div className={classNames(styles["notepad"])} ref={notepadRef}>
@@ -617,7 +617,18 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 maxLength={100}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
-                                {notepadDetail?.headImg ? <AuthorImg src={notepadDetail?.headImg} /> : authorAvatar}
+                                {notepadDetail?.headImg ? (
+                                    <AuthorImg src={notepadDetail?.headImg} />
+                                ) : (
+                                    judgeAvatar(
+                                        {
+                                            companyName: notepadDetail?.userName || "-",
+                                            companyHeadImg: ""
+                                        },
+                                        28,
+                                        avatarColor.current
+                                    )
+                                )}
                                 <span>{notepadDetail?.userName || "-"}</span>
                                 <AuthorIcon />
                                 <Divider type='vertical' style={{margin: "0 8px"}} />
