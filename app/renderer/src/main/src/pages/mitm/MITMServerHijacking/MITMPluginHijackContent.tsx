@@ -117,7 +117,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory = "",
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
     } = props
 
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")

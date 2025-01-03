@@ -127,7 +127,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setShowPluginHistoryList = () => {},
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey = ""
+        curTabKey = "",
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)

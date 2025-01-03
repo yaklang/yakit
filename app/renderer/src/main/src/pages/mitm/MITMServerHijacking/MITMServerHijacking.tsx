@@ -86,7 +86,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
     } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(

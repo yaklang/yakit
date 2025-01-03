@@ -493,7 +493,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         showPluginHistoryList,
         tempShowPluginHistory,
         setShowPluginHistoryList,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
     } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)

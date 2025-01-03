@@ -518,7 +518,6 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     /* 全局 className*/
     // "ui:classNames": "json-schema-row-form"
     // }
-
     return (
         <>
             <JsonForm

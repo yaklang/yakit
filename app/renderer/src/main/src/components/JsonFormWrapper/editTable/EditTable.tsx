@@ -146,7 +146,6 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
     const {columnSchema, uiSchema, onChange, value} = props
-
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])

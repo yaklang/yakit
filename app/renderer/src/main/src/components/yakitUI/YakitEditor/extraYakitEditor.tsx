@@ -26,6 +26,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import { useWhyDidYouUpdate } from "ahooks"
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
@@ -463,7 +464,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerValue,
         webSocketToServer,
         downstreamProxyStr,
-        downbodyParams,
+        JSON.stringify(downbodyParams),
         onClickUrlMenu,
         onClickOpenBrowserMenu
     ])

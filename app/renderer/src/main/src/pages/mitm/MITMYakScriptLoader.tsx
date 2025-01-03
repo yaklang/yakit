@@ -1,10 +1,10 @@
 import React, {ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Card, Col, Form, Typography, Row, Statistic, Tooltip, Space} from "antd"
+import {Card, Col, Form, Row, Statistic, Tooltip, Space} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {useMemoizedFn} from "ahooks"
+import {useMemoizedFn, useThrottleEffect} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
@@ -17,12 +17,10 @@ import {
     YakExtraParamProps
 } from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {ExecuteEnterNodeByPluginParams} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {getValueByType, ParamsToGroupByGroupName} from "../plugins/editDetails/utils"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {
     OutlileHistoryIcon,
-    OutlineLightningboltIcon,
     OutlinePencilaltIcon,
     OutlineQuestionmarkcircleIcon,
     OutlineTerminalIcon
@@ -35,9 +33,9 @@ import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakEditor} from "@/utils/editors"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
-import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-const {Text} = Typography
+import {Resizable} from "re-resizable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -57,7 +55,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         setShowPluginHistoryList = () => {},
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey
+        curTabKey,
     } = p
     const [i, setI] = useState(script)
     useEffect(() => {
@@ -67,8 +65,12 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     /**
      * mitm处理带参
      */
-    const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
-    const handleMitmHasParams = (submitFlag = false) => {
+    const [mitmParamsDrawer, setMitmParamsDrawer] = useState<boolean>(false)
+    const mitmParamsInitFormValueRef = useRef<CustomPluginExecuteFormValue>({})
+    const mitmParamsRequiredParamsRef = useRef<YakParamProps[]>([])
+    const mitmParamsGroupParamsRef = useRef<YakExtraParamProps[]>([])
+    const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
+    const handleMitmHasParams = () => {
         const requiredParams = i.Params.filter((item) => item.Required)
         const norequiredParams = i.Params.filter((item) => !item.Required)
         const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
@@ -90,93 +92,36 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         }
                     })
                 } catch (error) {}
-                mitmParamsModal(initFormValue, requiredParams, groupParams, submitFlag)
+                mitmParamsModal(initFormValue, requiredParams, groupParams)
             } else {
                 // 带参插件参数本地不存在 采用默认值为初始值
-                mitmParamsModal(initFormValue, requiredParams, groupParams, submitFlag)
+                mitmParamsModal(initFormValue, requiredParams, groupParams)
             }
         })
     }
     const mitmParamsModal = (
         initFormValue: CustomPluginExecuteFormValue,
         requiredParams: YakParamProps[],
-        groupParams: YakExtraParamProps[],
-        submitFlag: boolean
+        groupParams: YakExtraParamProps[]
     ) => {
         if (requiredParams.length || groupParams.length) {
-            let m = showYakitDrawer({
-                title: (
-                    <div style={{display: "flex", alignItems: "center", justifyContent: "space-between"}}>
-                        <div>
-                            参数设置：
-                            <Text
-                                style={{maxWidth: 400}}
-                                ellipsis={{
-                                    tooltip: true
-                                }}
-                            >
-                                {`${i.ScriptName}`}
-                            </Text>
-                        </div>
-                        <Space>
-                            <YakitButton
-                                type='outline2'
-                                onClick={() => {
-                                    m.destroy()
-                                }}
-                            >
-                                取消
-                            </YakitButton>
-                            <YakitButton
-                                onClick={() => {
-                                    if (mitmHasParamsPluginFormRef.current) {
-                                        mitmHasParamsPluginFormRef.current.onSubmit().then((values) => {
-                                            if (values) {
-                                                const saveParams: CustomPluginExecuteFormValue = {...values}
-                                                const saveParasmArr: YakExecutorParam[] = []
-                                                Object.keys(saveParams).forEach((key) => {
-                                                    if (saveParams[key] !== false) {
-                                                        saveParasmArr.push({Key: key, Value: saveParams[key]})
-                                                    }
-                                                })
-                                                setRemoteValue(
-                                                    "mitm_has_params_" + i.ScriptName,
-                                                    JSON.stringify(saveParasmArr)
-                                                )
-                                                if (submitFlag) {
-                                                    clearMITMPluginCache()
-                                                    onSubmitYakScriptId(script.Id, saveParasmArr)
-                                                    setTempShowPluginHistory && setTempShowPluginHistory(i.ScriptName)
-                                                }
-                                                m.destroy()
-                                            }
-                                        })
-                                    }
-                                }}
-                            >
-                                确定
-                            </YakitButton>
-                        </Space>
-                    </div>
-                ),
-                content: (
-                    <div className={style["mitm-params-set"]}>
-                        <MitmHasParamsForm
-                            ref={mitmHasParamsPluginFormRef}
-                            initFormValue={initFormValue}
-                            requiredParams={requiredParams}
-                            groupParams={groupParams}
-                        />
-                    </div>
-                ),
-                width: "40%",
-                placement: "left",
-                mask: true,
-                closable: false,
-                onClose: () => {
-                    m.destroy()
-                }
-            })
+            mitmParamsInitFormValueRef.current = initFormValue
+            mitmParamsRequiredParamsRef.current = requiredParams
+            mitmParamsGroupParamsRef.current = groupParams
+            getRemoteValue("mitm_has_params_drawerWidth_" + i.ScriptName)
+                .then((width) => {
+                    if (width) {
+                        setDrawerWidth(Number(width))
+                    } else {
+                        setDrawerWidth(45)
+                    }
+                })
+                .catch(() => {
+                    setDrawerWidth(45)
+                })
+                .finally(() => {
+                    setMitmParamsDrawer(true)
+                })
         }
     }
 
@@ -213,10 +158,10 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
             return
         } else {
             if (isHasParams) {
-                handleMitmHasParams(true)
+                handleMitmHasParams()
             } else {
                 clearMITMPluginCache()
-                onSubmitYakScriptId(script.Id, [])
+                onSubmitYakScriptId(i.Id, [])
             }
         }
     })
@@ -347,7 +292,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                 <OutlinePencilaltIcon
                     className={style["mitm-params-edit-icon"]}
                     onClick={() => {
-                        handleMitmHasParams(true)
+                        handleMitmHasParams()
                     }}
                 />
             )}
@@ -423,6 +368,20 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     <SolidDotsverticalIcon className={style["extra-btns-icon"]} />
                 </YakitDropdownMenu>
             )}
+            {mitmParamsDrawer && (
+                <MitmHasParamsDrawer
+                    visible={mitmParamsDrawer}
+                    i={i}
+                    drawerWidth={drawerWidth}
+                    onSetDrawerWidth={setDrawerWidth}
+                    initFormValue={mitmParamsInitFormValueRef.current}
+                    requiredParams={mitmParamsRequiredParamsRef.current}
+                    groupParams={mitmParamsGroupParamsRef.current}
+                    onSubmitYakScriptId={onSubmitYakScriptId}
+                    onSetTempShowPluginHistory={setTempShowPluginHistory}
+                    onSetMitmParamsDrawer={setMitmParamsDrawer}
+                ></MitmHasParamsDrawer>
+            )}
         </div>
     )
 })
@@ -475,6 +434,153 @@ export function clearMITMPluginCache() {
         failed(`清除插件缓存失败: ${e}`)
     })
 }
+
+interface MitmHasParamsDrawer {
+    visible: boolean
+    i: YakScript
+    drawerWidth: number
+    initFormValue: CustomPluginExecuteFormValue
+    requiredParams: YakParamProps[]
+    groupParams: YakExtraParamProps[]
+    onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => void
+    onSetTempShowPluginHistory?: (l: string) => void
+    onSetDrawerWidth: (width: number) => void
+    onSetMitmParamsDrawer: (visible: boolean) => void
+}
+const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
+    const {
+        visible,
+        i,
+        drawerWidth,
+        initFormValue,
+        requiredParams,
+        groupParams,
+        onSubmitYakScriptId,
+        onSetTempShowPluginHistory,
+        onSetDrawerWidth,
+        onSetMitmParamsDrawer,
+    } = props
+    const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
+    const [initWidth, setInitWidth] = useState<number>(drawerWidth)
+
+    useEffect(() => {
+        return () => {
+            emiter.emit("setYakitHeaderDraggable", true)
+        }
+    }, [])
+
+    const vwToPx = (vw: number) => {
+        const viewportWidth = window.innerWidth
+        return (vw * viewportWidth) / 100
+    }
+
+    const pxToVw = (px: number) => {
+        const viewportWidth = window.innerWidth
+        return (px / viewportWidth) * 100
+    }
+
+    const minWidth = useMemo(() => {
+        return Math.min(40, initWidth)
+    }, [initWidth])
+
+    return (
+        <YakitDrawer
+            visible={visible}
+            closable={false}
+            width={drawerWidth + "vw"}
+            placement='left'
+            title={
+                <div className={style["mitmParamsDrawer-title"]}>
+                    <div
+                        className='content-ellipsis'
+                        style={{maxWidth: `calc(${vwToPx(Math.max(minWidth, drawerWidth))}px - 150px)`}}
+                    >
+                        参数设置：
+                        <Tooltip title={i.ScriptName}>{`${i.ScriptName}`}</Tooltip>
+                    </div>
+                    <Space>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                onSetMitmParamsDrawer(false)
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton
+                            onClick={() => {
+                                if (mitmHasParamsPluginFormRef.current) {
+                                    mitmHasParamsPluginFormRef.current.onSubmit().then((values) => {
+                                        if (values) {
+                                            const saveParams: CustomPluginExecuteFormValue = {...values}
+                                            const saveParasmArr: YakExecutorParam[] = []
+                                            Object.keys(saveParams).forEach((key) => {
+                                                if (saveParams[key] !== false) {
+                                                    saveParasmArr.push({Key: key, Value: saveParams[key]})
+                                                }
+                                            })
+                                            setRemoteValue(
+                                                "mitm_has_params_" + i.ScriptName,
+                                                JSON.stringify(saveParasmArr)
+                                            )
+                                            setRemoteValue(
+                                                "mitm_has_params_drawerWidth_" + i.ScriptName,
+                                                drawerWidth + ""
+                                            )
+                                            clearMITMPluginCache()
+                                            onSubmitYakScriptId(i.Id, saveParasmArr)
+                                            onSetTempShowPluginHistory && onSetTempShowPluginHistory(i.ScriptName)
+                                            onSetMitmParamsDrawer(false)
+                                        }
+                                    })
+                                }
+                            }}
+                        >
+                            确定
+                        </YakitButton>
+                    </Space>
+                </div>
+            }
+            bodyStyle={{paddingLeft: 0, paddingRight: 0, overflowX: "clip"}}
+            style={{position: "absolute"}}
+        >
+            <Resizable
+                minWidth={minWidth + "vw"}
+                maxWidth={"95vw"}
+                minHeight={"100%"}
+                onResizeStart={(e) => e.stopPropagation()}
+                onResize={(e, direction, ref, d) => {
+                    e.stopPropagation()
+                    const newWidth = Math.min(ref.offsetWidth, window.innerWidth * 0.95)
+                    onSetDrawerWidth(pxToVw(newWidth))
+                }}
+                enable={{
+                    right: true
+                }}
+                handleStyles={{
+                    right: {
+                        width: 15,
+                        cursor: "ew-resize",
+                        right: 0
+                    }
+                }}
+                size={{
+                    width: drawerWidth + "vw",
+                    height: "auto"
+                }}
+            >
+                <div className={style["mitm-params-set"]}>
+                    <MitmHasParamsForm
+                        ref={mitmHasParamsPluginFormRef}
+                        initFormValue={initFormValue}
+                        requiredParams={requiredParams}
+                        groupParams={groupParams}
+                    />
+                </div>
+            </Resizable>
+        </YakitDrawer>
+    )
+})
 interface MitmHasParamsFormPropsRefProps {
     onSubmit: () => Promise<CustomPluginExecuteFormValue | undefined>
 }
@@ -519,7 +625,6 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
                 })
         })
     })
-
     return (
         <Form
             form={form}
