@@ -386,24 +386,37 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 width: 45,
                 fixed: "right",
                 render: (_: any, record: Item) => {
-                    const editable = isEditing(record)
-                    return editable ? (
+                    const editTable = isEditing(record)
+                    const editData = [
+                        {
+                            key: "save",
+                            label: "保存"
+                        },
+                        {
+                            key: "cancel",
+                            label: "取消"
+                        }
+                    ]
+                    const showData = [
+                        {
+                            key: "edit",
+                            label: "编辑"
+                        },
+                        {
+                            key: "copy",
+                            label: "复制"
+                        }
+                    ]
+                    const delData = [
+                        {
+                            key: "delete",
+                            label: "删除"
+                        }
+                    ]
+                    return (
                         <YakitDropdownMenu
                             menu={{
-                                data: [
-                                    {
-                                        key: "save",
-                                        label: "保存"
-                                    },
-                                    {
-                                        key: "cancel",
-                                        label: "取消"
-                                    },
-                                    {
-                                        key: "delete",
-                                        label: "删除"
-                                    }
-                                ],
+                                data: editTable ? [...editData, ...delData] : [...showData, ...delData],
                                 onClick: ({key}) => {
                                     switch (key) {
                                         case "save":
@@ -412,41 +425,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                         case "cancel":
                                             onCancel()
                                             break
-                                        case "delete":
-                                            onDelete(record)
-                                            break
-                                        default:
-                                            break
-                                    }
-                                },
-                                width: 80
-                            }}
-                            dropdown={{
-                                trigger: ["click"],
-                                placement: "bottom"
-                            }}
-                        >
-                            <YakitButton type='text' size='small' icon={<EllipsisOutlined />} />
-                        </YakitDropdownMenu>
-                    ) : (
-                        <YakitDropdownMenu
-                            menu={{
-                                data: [
-                                    {
-                                        key: "edit",
-                                        label: "编辑"
-                                    },
-                                    {
-                                        key: "copy",
-                                        label: "复制"
-                                    },
-                                    {
-                                        key: "delete",
-                                        label: "删除"
-                                    }
-                                ],
-                                onClick: async ({key}) => {
-                                    switch (key) {
                                         case "edit":
                                             onEdit(record)
                                             break
@@ -456,7 +434,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                         case "delete":
                                             onDelete(record)
                                             break
-
                                         default:
                                             break
                                     }
