@@ -44,4 +44,6 @@ export type YakRunnerAuditEventProps = {
     onInitWidget: string
     // monaco查看详情 展开对应审计结果、审计过程
     onWidgetOpenRightAudit: string
+    // 展开对应路径信息
+    onExpendRightPath: string
 }

@@ -645,21 +645,29 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
-            console.log("onOpenAuditRightDetailFun",data);
-            
+            console.log("onOpenAuditRightDetailFun", data)
+
             setAuditRightParams(data)
             setShowAuditDetail(true)
-            emiter.emit("onCodeAuditRefreshAuditDetail")
+            setTimeout(() => {
+                emiter.emit("onCodeAuditRefreshAuditDetail")
+            }, 200)
         } catch (error) {}
     })
 
     const onWidgetOpenRightAuditFun = useMemoizedFn((value: string) => {
         try {
             const data: JumpSourceDataProps = JSON.parse(value)
-            console.log("onWidgetOpenRightAuditFun---",data);
-            setAuditRightParams(data.auditRightParams)
-            setShowAuditDetail(true)
-            emiter.emit("onCodeAuditRefreshAuditDetail")
+            if (!isShowAuditDetail) {
+                setAuditRightParams(data.auditRightParams)
+                setShowAuditDetail(true)
+            }
+            setTimeout(() => {
+                // 展开对应路径
+                emiter.emit("onExpendRightPath", value)
+                // 展开节点信息
+                emiter.emit("onCodeAuditRefreshAuditDetail", data.node_id)
+            }, 200)
         } catch (error) {}
     })
 

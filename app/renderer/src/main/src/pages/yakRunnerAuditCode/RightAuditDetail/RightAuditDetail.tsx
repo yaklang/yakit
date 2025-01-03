@@ -24,7 +24,7 @@ import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCode
 import {v4 as uuidv4} from "uuid"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
-import {setMapResultDetail} from "./ResultMap"
+import {getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 
 export interface JumpSourceDataProps {
@@ -172,6 +172,25 @@ interface InitDataProps {
 export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     const {nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
+
+    const onExpendRightPathFun = useMemoizedFn((value:string)=>{
+        try {
+            const data: JumpSourceDataProps = JSON.parse(value)
+            const index = getMapResultDetail(data.title).findIndex((item)=>item.node_id === data.node_id)
+            setActiveKey([data.title])
+            setResultKey([`${data.title}-${index}`])
+        } catch (error) {
+            
+        }
+    })
+
+    useEffect(()=>{
+        // 打开编译右侧详情
+        emiter.on("onExpendRightPath", onExpendRightPathFun)
+        return () => {
+            emiter.off("onExpendRightPath", onExpendRightPathFun)
+        }
+    },[])
 
     useUpdateEffect(() => {
         if (activeKey === undefined) {
@@ -351,7 +370,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                     setNodeId(undefined)
                     onChangeSvgStyle()
                 } else {
-                    console.log("wawawa", titleText, target.parentNode.id, graph)
+                    console.log("wawawa", titleText, target.parentNode.id)
 
                     setNodeId(titleText)
                     onChangeSvgStyle(target.parentNode.id)
@@ -362,8 +381,18 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
-    const onRefreshAuditDetailFun = useMemoizedFn(() => {
-        setNodeId(undefined)
+    const onRefreshAuditDetailFun = useMemoizedFn((newNodeId?:string) => {
+        if(newNodeId && svgBoxRef.current){
+            // 此处根据node_id染色
+            // 查找 title 为 n6 的元素
+            const targetElement = Array.from(svgBoxRef.current.getElementsByTagName('title')).find(el => el.innerHTML === newNodeId);
+            if (targetElement) {
+                // 获取父元素的 id
+                const parentId = targetElement?.parentElement?.id;
+                onChangeSvgStyle(parentId)
+            }
+        }
+        setNodeId(newNodeId)
     })
 
     useEffect(() => {

@@ -1578,8 +1578,10 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
         if (source) {
             const graphInfo = getMapResultDetail(source.title)
             const result = checkArrayValues(graphInfo, source.node_id)
-
             setWidgetControl(result)
+        }
+        else{
+            closeFizzRangeWidget()
         }
     }, [source])
 
@@ -1601,8 +1603,6 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
                 }
                 break
             default:
-                const graphInfo = getMapResultDetail(source?.title || "")
-                console.log("source---", source, graphInfo)
                 if (source) {
                     emiter.emit("onWidgetOpenRightAudit", JSON.stringify(source))
                 }
