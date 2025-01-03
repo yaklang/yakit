@@ -120,7 +120,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 }
 
                 setRemoteValue(RemoteGV.MITMUserDataSave, isSaveUserData + "")
-                userDataDirRef.current.onSetRemoteValues(userDataDir)
+                userDataDirRef.current?.onSetRemoteValues(userDataDir)
 
                 Promise.allSettled([
                     getRemoteValue(RemoteGV.GlobalChromePath),
