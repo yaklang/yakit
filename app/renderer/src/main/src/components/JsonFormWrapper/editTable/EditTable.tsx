@@ -169,6 +169,14 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
     const [uiKeys, setUiKeys] = useState<UiKeysProps>()
     const [defaultObj, setDefaultObj] = useState<DefaultObjProps>({})
 
+    // 默认数据注入
+    useEffect(() => {
+        if (Array.isArray(value) && value.length > 0) {
+            const newData = value.map((item) => ({...item, _id: uuidv4()}))
+            setData(newData)
+        }
+    }, [])
+
     // 初始化表格数据
     useEffect(() => {
         try {
@@ -176,7 +184,6 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             const {minItems, maxItems = 50, items} = columnSchema
             const {require, properties} = items
             const newColumns: any[] = []
-            const newData: any[] = []
             const defObj: DefaultObjProps = {}
             // uiSchema
             const newUiKeys = uiSchema?.items as UiKeysProps
@@ -244,7 +251,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
             setMaxItems(maxItems)
 
             // 如果表格为空，初始化一条新数据 由于需要校验数据不可直接保存
-            if (data.length === 0) {
+            if (data.length === 0 && !(Array.isArray(value) && value.length > 0)) {
                 const newItem = {
                     _id: uuidv4(),
                     ...defObj
