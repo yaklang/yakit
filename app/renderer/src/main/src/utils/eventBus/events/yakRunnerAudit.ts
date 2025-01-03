@@ -42,4 +42,6 @@ export type YakRunnerAuditEventProps = {
     onResetAuditRule: string
     // 初始化 Widget
     onInitWidget: string
+    // monaco查看详情 展开对应审计结果、审计过程
+    onWidgetOpenRightAudit: string
 }

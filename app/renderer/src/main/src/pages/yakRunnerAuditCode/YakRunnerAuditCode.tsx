@@ -47,7 +47,7 @@ import moment from "moment"
 import {WaterMark} from "@ant-design/pro-layout"
 import {isCommunityEdition} from "@/utils/envfile"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
+import {JumpSourceDataProps, RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import classNames from "classnames"
 import {DragDropContext, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import cloneDeep from "lodash/cloneDeep"
@@ -645,7 +645,19 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
+            console.log("onOpenAuditRightDetailFun",data);
+            
             setAuditRightParams(data)
+            setShowAuditDetail(true)
+            emiter.emit("onCodeAuditRefreshAuditDetail")
+        } catch (error) {}
+    })
+
+    const onWidgetOpenRightAuditFun = useMemoizedFn((value: string) => {
+        try {
+            const data: JumpSourceDataProps = JSON.parse(value)
+            console.log("onWidgetOpenRightAuditFun---",data);
+            setAuditRightParams(data.auditRightParams)
             setShowAuditDetail(true)
             emiter.emit("onCodeAuditRefreshAuditDetail")
         } catch (error) {}
@@ -654,8 +666,11 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     useEffect(() => {
         // 正常打开编译右侧详情
         emiter.on("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+        // monaco查看详情 展开对应审计结果、审计过程
+        emiter.on("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+            emiter.off("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
         }
     }, [])
 
@@ -688,7 +703,9 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 firstMinSize={200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
-                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails}/>}
+                                firstNode={
+                                    <LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails} />
+                                }
                                 secondNodeStyle={{overflow: "unset", padding: 0}}
                                 secondNode={
                                     <YakitResizeBox
@@ -714,11 +731,13 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                         }
                                         secondNode={
                                             <>
-                                            {isShowAuditDetail&&<RightAuditDetail
-                                                auditRightParams={auditRightParams}
-                                                isShowAuditDetail={isShowAuditDetail}
-                                                setShowAuditDetail={setShowAuditDetail}
-                                            />}
+                                                {isShowAuditDetail && (
+                                                    <RightAuditDetail
+                                                        auditRightParams={auditRightParams}
+                                                        isShowAuditDetail={isShowAuditDetail}
+                                                        setShowAuditDetail={setShowAuditDetail}
+                                                    />
+                                                )}
                                             </>
                                         }
                                     />
