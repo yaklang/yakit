@@ -52,9 +52,12 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
         setUserList([])
         setSelectUserList([])
     })
+    const onSetSearchValue = useMemoizedFn((value) => {
+        setSearchValue(value)
+        getUserOrdinary(value)
+    })
     const getUserOrdinary = useDebounceFn(
         useMemoizedFn((value: string) => {
-            setSearchValue(value)
             if (!value) {
                 setUserList([])
                 return
@@ -247,7 +250,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                             mode='multiple'
                             placeholder='可搜索用户名邀请协作者'
                             options={options}
-                            onSearch={getUserOrdinary}
+                            onSearch={onSetSearchValue}
                             searchValue={searchValue}
                             onClear={onClear}
                             allowClear={true}
