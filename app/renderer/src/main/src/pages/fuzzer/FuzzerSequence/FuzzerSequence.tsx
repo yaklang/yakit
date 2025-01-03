@@ -103,7 +103,8 @@ import {
     WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {WebsiteGV} from "@/enums/website"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {filterColorTag} from "@/components/TableVirtualResize/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -410,10 +411,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
                 Count: countRef.current.get(FuzzerIndex),
-                cellClassName: Response.MatchedByMatcher
-                    ? `color-opacity-bg-${Response.HitColor} color-text-${Response.HitColor} color-font-weight-${Response.HitColor}`
-                    : ""
+                cellClassName: ""
             } as FuzzerResponse
+
+            if (Response.MatchedByMatcher) {
+                let colors = filterColorTag(Response.HitColor) || undefined
+                r.cellClassName = colors
+            }
+
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
                 let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData
@@ -1951,14 +1956,14 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
                             if (webFuzzerNewEditorRef.current.reqEditor) {
-                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", code)
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCode", code)
                             }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
                             if (webFuzzerNewEditorRef.current.reqEditor) {
-                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCodeWithParam", code)
+                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCodeWithParam", code)
                             }
                             setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}

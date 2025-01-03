@@ -147,7 +147,8 @@ import {
 import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {filterColorTag} from "@/components/TableVirtualResize/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -568,7 +569,7 @@ export const getFuzzerCacheData: () => Promise<FuzzerCacheDataProps> = () => {
                 advancedConfigShow: !!advancedConfigShow ? JSON.parse(advancedConfigShow) : null,
                 resNumlimit: !!resNumlimit ? JSON.parse(resNumlimit) : DefFuzzerTableMaxData,
                 noSystemProxy: noSystemProxy === "true",
-                disableUseConnPool: disableUseConnPool === "true",
+                disableUseConnPool: disableUseConnPool === "true"
             }
             resolve(value)
         } catch (error) {
@@ -988,6 +989,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             if (retryTaskID) {
                 const params = {...httpParams, RetryTaskID: parseInt(retryTaskID + "")}
                 const retryParams = _.omit(params, ["Request", "RequestRaw"])
+                console.log("retryParams", retryParams)
                 ipcRenderer.invoke("HTTPFuzzer", retryParams, tokenRef.current)
                 setIsPause(true)
             }
@@ -996,8 +998,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const matchTaskID = successFuzzer.length > 0 ? successFuzzer[0].TaskId : undefined
             const params = {...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID}
             setLoadingText("匹配中")
+            console.log("matchParams", params)
             ipcRenderer.invoke("HTTPFuzzer", params, tokenRef.current)
         } else {
+            console.log("httpParams", httpParams)
             ipcRenderer.invoke("HTTPFuzzer", httpParams, tokenRef.current)
         }
         onSaveHTTPFuzzerByPageId()
@@ -1120,10 +1124,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Headers: data.Headers || [],
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
                 Count: count++,
-                cellClassName: data.MatchedByMatcher
-                    ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}`
-                    : ""
+                cellClassName: ""
             } as FuzzerResponse
+            console.log("data", data)
+            if (data.MatchedByMatcher) {
+                let colors = filterColorTag(data.HitColor) || undefined
+                r.cellClassName = colors
+            }
+
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -1417,7 +1425,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     const setHotPatchCode = useMemoizedFn((v: string) => {
         if (webFuzzerNewEditorRef.current.reqEditor) {
-            setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", v)
+            setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCode", v)
         }
         hotPatchCodeRef.current = v
     })
@@ -2519,7 +2527,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <YakitSelect
                                     size='small'
                                     mode='tags'
-                                    options={availableColors.map((i) => ({value: i.color, label: i.render}))}
+                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render}))}
                                     allowClear
                                     value={color}
                                     onChange={setColor}

@@ -1,5 +1,4 @@
-@use "../../assets/global.scss" as global;
-@use "../../theme/themeify.scss" as tools;
+@use "./styleFunction.scss" as tools;
 .virtual-table {
     height: 100%;
 
@@ -370,16 +369,28 @@
                     box-shadow: none !important;
                 }
 
+                .virtual-table-hover-row {
+                    background-color: var(--yakit-card-background-color);
+                    color: var(--yakit-table-text-color);
+                }
+
                 .virtual-table-active-row {
                     border-bottom: 1px solid var(--yakit-primary-3) !important;
                     border-top: 1px solid var(--yakit-primary-3) !important;
-                    background-color: var(--yakit-primary-1) !important;
+                    background-color: var(--yakit-primary-1);
+                    color: var(--yakit-table-text-color);
+                }
+                .virtual-table-active-row.virtual-table-hover-row {
+                    background-color: var(--yakit-primary-1);
                     color: var(--yakit-table-text-color);
                 }
 
                 .virtual-table-batch-active-row {
                     background-color: var(--yakit-primary-1);
                     position: relative;
+                }
+                .virtual-table-hover-row.virtual-table-batch-active-row {
+                    background-color: var(--yakit-primary-1);
                 }
                 .virtual-table-batch-active-row:not(.virtual-table-batch-active-row ~ .virtual-table-batch-active-row) {
                     border-top: 1px solid var(--yakit-primary-3) !important;
@@ -389,37 +400,9 @@
                     ) {
                     border-bottom: 1px solid var(--yakit-primary-3) !important;
                 }
-                .virtual-table-hover-row {
-                    background-color: var(--yakit-card-background-color);
-                    color: var(--yakit-table-text-color);
-                }
 
-                @each $color, $properties in global.$colors {
-                    $bgHoverColor: color-mix(in srgb, var(--yakit-tag-color-#{$color}) 30%, transparent);
-                        $bgActiveColor: color-mix(in srgb, var(--yakit-tag-color-#{$color}) 40%, transparent);
-
-                        .virtual-table-hover-row-#{$color} {
-                            background-color: $bgHoverColor;
-                            &:hover {
-                                background-color: $bgHoverColor;
-                            }
-                        }
-
-                        .virtual-table-active-row-#{$color} {
-                            background-color: $bgActiveColor !important;
-                        }
-                }
-
-                .virtual-table-hover-row-red {
-                    background-color: var(--yakit-table-hover-row-bg-color-red);
-                    &:hover {
-                        background-color: var(--yakit-table-hover-row-bg-color-red);
-                    }
-                }
-
-                .virtual-table-active-row-red {
-                    background-color: var(--yakit-table-active-row-bg-color-red) !important;
-                }
+                $allColorTypes: map-keys(tools.$allColors);
+                @include tools.generate-permutations-class-name($allColorTypes);
 
                 .virtual-table-active-row + .virtual-table-row-cell {
                     border-top: 0 !important;
