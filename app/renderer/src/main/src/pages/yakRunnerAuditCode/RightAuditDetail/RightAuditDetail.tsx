@@ -27,8 +27,20 @@ import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 
+export interface JumpSourceDataProps {
+    title: string
+    node_id: string
+    auditRightParams: AuditEmiterYakUrlProps
+}
+
 // 跳转详情
-export const onJumpRunnerFile = async (data: GraphInfoProps, title?: string) => {
+export const onJumpRunnerFile = async (
+    data: GraphInfoProps,
+    jumpData?: {
+        title: string
+        auditRightParams: AuditEmiterYakUrlProps
+    }
+) => {
     const {code_range, node_id} = data
     const {url, start_line, start_column, end_line, end_column} = code_range
     const name = await getNameByPath(url)
@@ -40,9 +52,9 @@ export const onJumpRunnerFile = async (data: GraphInfoProps, title?: string) => 
     }
 
     // 携带跳转项信息
-    if (title) {
+    if (jumpData) {
         highLightRange.source = {
-            title,
+            ...jumpData,
             node_id
         }
     }
@@ -148,6 +160,7 @@ interface AuditResultBoxProps {
     message: string
     activeKey?: string | string[]
     setActiveKey: (v: string | string[]) => void
+    auditRightParams: AuditEmiterYakUrlProps
 }
 
 interface InitDataProps {
@@ -157,7 +170,7 @@ interface InitDataProps {
 }
 
 export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
-    const {nodeId, graphLine, message, activeKey, setActiveKey} = props
+    const {nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
 
     useUpdateEffect(() => {
@@ -181,10 +194,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         return children
     })
 
-    const firstSource = useRef<{
-        title: string
-        node_id: string
-    }>()
+    const firstSource = useRef<JumpSourceDataProps>()
     const initData: InitDataProps[] = useMemo(() => {
         setResultKey(undefined)
         let newData: InitDataProps[] = []
@@ -193,10 +203,11 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
                 let title = `路径${index + 1}`
                 let children = getChildren(item)
                 // 将第一项默认值给入
-                if (index === 0 && children.length>0) {
+                if (index === 0 && children.length > 0) {
                     firstSource.current = {
                         title,
-                        node_id:children[0].node_id
+                        node_id: children[0].node_id,
+                        auditRightParams
                     }
                 }
                 setMapResultDetail(title, children)
@@ -211,10 +222,10 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     }, [graphLine])
 
     useUpdateEffect(() => {
-        if(!firstSource.current) return
+        if (!firstSource.current) return
         // 此处需通知runnerTab页更新Widget
         setTimeout(() => {
-            emiter.emit("onInitWidget",JSON.stringify(firstSource.current))
+            emiter.emit("onInitWidget", JSON.stringify(firstSource.current))
         }, 200)
     }, [initData])
 
@@ -226,7 +237,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         return (
             <AuditResultItem
                 data={info.children}
-                onDetail={(data) => onJumpRunnerFile(data, info.title)}
+                onDetail={(data) => onJumpRunnerFile(data, {title: info.title, auditRightParams})}
                 title={info.title}
                 nodeId={nodeId}
                 resultKey={resultKey}
@@ -340,6 +351,8 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                     setNodeId(undefined)
                     onChangeSvgStyle()
                 } else {
+                    console.log("wawawa", titleText, target.parentNode.id, graph)
+
                     setNodeId(titleText)
                     onChangeSvgStyle(target.parentNode.id)
                 }
@@ -668,13 +681,18 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     secondNodeStyle={{padding: 0}}
                     secondMinSize={350}
                     firstNode={
-                        <AuditResultBox
-                            activeKey={activeKey}
-                            setActiveKey={setActiveKey}
-                            graphLine={graphLine}
-                            message={message}
-                            nodeId={nodeId}
-                        />
+                        <>
+                            {auditRightParams && (
+                                <AuditResultBox
+                                    activeKey={activeKey}
+                                    setActiveKey={setActiveKey}
+                                    graphLine={graphLine}
+                                    message={message}
+                                    nodeId={nodeId}
+                                    auditRightParams={auditRightParams}
+                                />
+                            )}
+                        </>
                     }
                     secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
                 />

@@ -81,7 +81,7 @@ import {createRoot} from "react-dom/client"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {getMapResultDetail} from "../RightAuditDetail/ResultMap"
-import {GraphInfoProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
+import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1214,11 +1214,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onRefreshWidgetFun = useMemoizedFn((value) => {
         try {
             if (!editorInfo) return
-            const source: {
-                title: string
-                node_id: string
-            } = JSON.parse(value)
+            const source: JumpSourceDataProps = JSON.parse(value)
             const {highLightRange} = editorInfo
+            // 判断是否需要初始化 当关闭右侧审计结果重新打开时 无需重新恢复为第一项
+            if (
+                highLightRange &&
+                highLightRange.source &&
+                JSON.stringify(highLightRange.source.auditRightParams) === JSON.stringify(source.auditRightParams)
+            )
+                return
+
             if (highLightRange) {
                 nowShowRef.current = {...editorInfo, highLightRange: {...highLightRange, source}}
             }
@@ -1580,21 +1585,27 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
 
     // 监听 Monaco Widget 点击
     const onWidgetClick = useMemoizedFn((type: WidgetClickTypeProps) => {
-        closeFizzRangeWidget()
         switch (type) {
             case "previous":
+                closeFizzRangeWidget()
                 let previousItem = widgetControl?.previousValue as GraphInfoProps | null
                 if (previousItem) {
-                    onJumpRunnerFile(previousItem, source?.title)
+                    onJumpRunnerFile(previousItem, source)
                 }
                 break
             case "next":
+                closeFizzRangeWidget()
                 let nextItem = widgetControl?.nextValue as GraphInfoProps | null
                 if (nextItem) {
-                    onJumpRunnerFile(nextItem, source?.title)
+                    onJumpRunnerFile(nextItem, source)
                 }
                 break
             default:
+                const graphInfo = getMapResultDetail(source?.title || "")
+                console.log("source---", source, graphInfo)
+                if (source) {
+                    emiter.emit("onWidgetOpenRightAudit", JSON.stringify(source))
+                }
                 break
         }
     })

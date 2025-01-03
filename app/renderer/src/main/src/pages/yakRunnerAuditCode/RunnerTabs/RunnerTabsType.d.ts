@@ -17,6 +17,8 @@ export interface Selection {
         title: string
         // 节点
         node_id: string
+        // 审计结果加载参数
+        auditRightParams: AuditEmiterYakUrlProps
     }
 }
 
@@ -122,6 +124,7 @@ export interface CodeScanMonacoWidgetProps {
     source?: {
         title: string
         node_id: string
+        auditRightParams: AuditEmiterYakUrlProps
     }
     closeFizzRangeWidget:()=>void
 }
