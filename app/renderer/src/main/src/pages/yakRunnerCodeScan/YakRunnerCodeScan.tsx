@@ -89,6 +89,7 @@ import { AuditCodeDetailDrawer } from "./AuditCodeDetailDrawer/AuditCodeDetailDr
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
+import { YakitDragger } from "@/components/yakitUI/YakitForm/YakitForm"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
