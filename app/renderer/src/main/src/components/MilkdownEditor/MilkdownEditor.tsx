@@ -516,7 +516,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
 
     useUpdateEffect(() => {
         if (inViewport) {
-            onCollabConnect()
+            // 直接连接会collabService有意外报错情况
+            // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留
+            collabManagerRef.current?.flush("")
         } else {
             onCollabDisconnect()
         }

@@ -232,14 +232,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         blockProvider.current?.hide()
     }
     return (
-        <div
-            className={styles["block-wrapper"]}
-            ref={ref}
-            onMouseDown={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-            }}
-        >
+        <div className={styles["block-wrapper"]} ref={ref}>
             <YakitPopover
                 overlayClassName={styles["tooltip-popover"]}
                 placement='bottomLeft'
