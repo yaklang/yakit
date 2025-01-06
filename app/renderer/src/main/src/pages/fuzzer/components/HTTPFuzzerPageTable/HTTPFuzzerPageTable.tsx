@@ -17,7 +17,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
 import {Uint8ArrayToString} from "@/utils/str"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {analyzeFuzzerResponse, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
@@ -31,13 +31,13 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
-import {RemoteGV} from "@/yakitGV"
 import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
 import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -268,7 +268,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               v ? (
                                   <div
                                       style={{
-                                          color: !hasRedOpacityBg(rowData.cellClassName) ? StatusCodeToColor(v) : ""
+                                          color: !isCellRedSingleColor(rowData.cellClassName)
+                                              ? StatusCodeToColor(v)
+                                              : ""
                                       }}
                                   >{`${v}`}</div>
                               ) : (
@@ -371,7 +373,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                               v ? (
                                   <div
                                       style={{
-                                          color: !hasRedOpacityBg(rowData.cellClassName) ? DurationMsToColor(v) : ""
+                                          color: !isCellRedSingleColor(rowData.cellClassName)
+                                              ? DurationMsToColor(v)
+                                              : ""
                                       }}
                                   >{`${v}`}</div>
                               ) : (
@@ -419,7 +423,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                   onViewExecResults(item)
                                               }}
                                               style={{
-                                                  color: !hasRedOpacityBg(record.cellClassName) ? undefined : "#fff"
+                                                  color: !isCellRedSingleColor(record.cellClassName)
+                                                      ? undefined
+                                                      : "#fff"
                                               }}
                                           >
                                               详情
@@ -440,7 +446,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                   <div
                                       style={{
                                           color:
-                                              !hasRedOpacityBg(rowData.cellClassName) && text.startsWith("1.00")
+                                              !isCellRedSingleColor(rowData.cellClassName) && text.startsWith("1.00")
                                                   ? "var(--yakit-success-5)"
                                                   : undefined
                                       }}
@@ -508,7 +514,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                                           }
                                                       }}
                                                       style={{
-                                                          color: !hasRedOpacityBg(record.cellClassName) ? "" : "#fff"
+                                                          color: !isCellRedSingleColor(record.cellClassName)
+                                                              ? ""
+                                                              : "#fff"
                                                       }}
                                                   />
                                               </Tooltip>
@@ -518,7 +526,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
                                       <ArrowCircleRightSvgIcon
                                           style={{
-                                              color: !hasRedOpacityBg(record.cellClassName) ? "" : "#fff"
+                                              color: !isCellRedSingleColor(record.cellClassName) ? "" : "#fff"
                                           }}
                                           onClick={(e) => {
                                               e.stopPropagation()
@@ -575,9 +583,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             isHaveData,
             isShowDebug
         ])
-
-        // 背景颜色是否标注为红色
-        const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
 
         const compareSorterTable = useCampare(sorterTable)
         useThrottleEffect(
@@ -684,28 +689,29 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let durationMsMinIsPush = true
                         let durationMsMaxIsPush = true
                         let isHaveDataIsPush = true
-                        let colorIsPush = true
+                        let colorIsPush = false
                         // 搜索满足条件 交集
                         // 颜色搜索
-                        if (query?.Color && query?.Color?.length > 0) {
+                        if (record.MatchedByMatcher && query?.Color && query?.Color?.length > 0) {
                             const cLength = query.Color
-                            const colorIsPushArr: boolean[] = []
                             for (let index = 0; index < cLength.length; index++) {
                                 const element = query.Color[index]
-                                if (record.MatchedByMatcher && record.HitColor.toUpperCase() === element) {
-                                    colorIsPushArr.push(true)
-                                } else {
-                                    colorIsPushArr.push(false)
+                                if (record.HitColor.toUpperCase().indexOf(element) > -1) {
+                                    colorIsPush = true
+                                    break
                                 }
                             }
-                            colorIsPush = colorIsPushArr.includes(true)
                         }
                         // 关键字搜索
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
                             const payloadsString = (record.Payloads || []).join("")
-                            const extractedResultsString = (record.ExtractedResults || []).map(item => `${item.Key}${item.Value}`).join("")
-                            keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(query.keyWord)
+                            const extractedResultsString = (record.ExtractedResults || [])
+                                .map((item) => `${item.Key}${item.Value}`)
+                                .join("")
+                            keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(
+                                query.keyWord
+                            )
                         }
                         // 状态码搜索
                         if (query?.StatusCode && query?.StatusCode?.length > 0) {
@@ -1023,7 +1029,11 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             loading={codeLoading}
                             // noHeader={true}
                             originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
-                            originalPackage={currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw}
+                            originalPackage={
+                                currentSelectShowType === "request"
+                                    ? currentSelectItem?.RequestRaw
+                                    : currentSelectItem?.ResponseRaw
+                            }
                             onAddOverlayWidget={(editor) => {
                                 setEditor(editor)
                             }}

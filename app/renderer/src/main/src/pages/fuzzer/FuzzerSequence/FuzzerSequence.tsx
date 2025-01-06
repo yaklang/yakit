@@ -104,6 +104,7 @@ import {
 import {WebsiteGV} from "@/enums/website"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import {filterColorTag} from "@/components/TableVirtualResize/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -411,10 +412,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 Headers: Response.Headers || [],
                 UUID: Response.UUID,
                 Count: countRef.current.get(FuzzerIndex),
-                cellClassName: Response.MatchedByMatcher
-                    ? `color-opacity-bg-${Response.HitColor} color-text-${Response.HitColor} color-font-weight-${Response.HitColor}`
-                    : ""
+                cellClassName: ""
             } as FuzzerResponse
+
+            if (Response.MatchedByMatcher) {
+                let colors = filterColorTag(Response.HitColor) || undefined
+                r.cellClassName = colors
+            }
+
             if (Response.Ok) {
                 let successList = successBufferRef.current.get(FuzzerIndex)
                 let fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(FuzzerIndex) || DefFuzzerTableMaxData

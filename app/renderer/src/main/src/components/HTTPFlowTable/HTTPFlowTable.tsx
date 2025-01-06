@@ -87,6 +87,7 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombinationSearch"
 import {v4 as uuidv4} from "uuid"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
+import {filterColorTag, isCellRedSingleColor, TableCellToColorTag} from "../TableVirtualResize/utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -440,7 +441,7 @@ export const availableColors = [
         color: "RED",
         title: "红色[#F4736B]",
         className: TableRowColor("RED"),
-        searchWord: "YAKIT_COLOR_RED",
+        searchWord: TableCellToColorTag["RED"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-red")}></div>
@@ -452,7 +453,7 @@ export const availableColors = [
         color: "GREEN",
         title: "绿色[#56C991]",
         className: TableRowColor("GREEN"),
-        searchWord: "YAKIT_COLOR_GREEN",
+        searchWord: TableCellToColorTag["GREEN"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-green")}></div>
@@ -464,7 +465,7 @@ export const availableColors = [
         color: "BLUE",
         title: "蓝色[#4A94F8]",
         className: TableRowColor("BLUE"),
-        searchWord: "YAKIT_COLOR_BLUE",
+        searchWord: TableCellToColorTag["BLUE"],
         render: (
             <div className={classNames(style["history-color-tag"])}>
                 <div className={classNames(style["tag-color-display"], "color-bg-blue")}></div>
@@ -475,7 +476,7 @@ export const availableColors = [
     {
         color: "YELLOW",
         title: "黄色[#FFD583]",
-        searchWord: "YAKIT_COLOR_YELLOW",
+        searchWord: TableCellToColorTag["YELLOW"],
         className: TableRowColor("YELLOW"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -487,7 +488,7 @@ export const availableColors = [
     {
         color: "ORANGE",
         title: "橙色[#FFB660]",
-        searchWord: "YAKIT_COLOR_ORANGE",
+        searchWord: TableCellToColorTag["ORANGE"],
         className: TableRowColor("ORANGE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -499,7 +500,7 @@ export const availableColors = [
     {
         color: "PURPLE",
         title: "紫色[#8863F7]",
-        searchWord: "YAKIT_COLOR_PURPLE",
+        searchWord: TableCellToColorTag["PURPLE"],
         className: TableRowColor("PURPLE"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -511,7 +512,7 @@ export const availableColors = [
     {
         color: "CYAN",
         title: "天蓝色[#35D8EE]",
-        searchWord: "YAKIT_COLOR_CYAN",
+        searchWord: TableCellToColorTag["CYAN"],
         className: TableRowColor("CYAN"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -523,7 +524,7 @@ export const availableColors = [
     {
         color: "GREY",
         title: "灰色[#B4BBCA]",
-        searchWord: "YAKIT_COLOR_GREY",
+        searchWord: TableCellToColorTag["GREY"],
         className: TableRowColor("GREY"),
         render: (
             <div className={classNames(style["history-color-tag"])}>
@@ -588,12 +589,8 @@ export const getClassNameData = (resData: HTTPFlow[]) => {
     }
     for (let index = 0; index < length; index++) {
         const item: HTTPFlow = resData[index]
-        let className = ""
-        if (item.Tags && item.Tags.indexOf("YAKIT_COLOR") > -1) {
-            const colors = item.Tags.split("|")
-            const color = colors.find((i) => i.indexOf("YAKIT_COLOR") > -1)
-            className = (color && TableRowColor(color.split("_")?.pop()?.toUpperCase() || "")) || ""
-        }
+        let className: string | undefined = ""
+        className = filterColorTag(item.Tags) || undefined
         const newItem = {
             ...item,
             cellClassName: className
@@ -1755,7 +1752,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     return (
                         <div
                             className={classNames({
-                                [style["status-code"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                [style["status-code"]]: !isCellRedSingleColor(rowData.cellClassName)
                             })}
                         >
                             {text}
@@ -1934,7 +1931,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 <div
                                     className={classNames({
                                         [style["body-length-text-red"]]:
-                                            rowData.BodyLength > 1000000 && !hasRedOpacityBg(rowData.cellClassName)
+                                            rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName)
                                     })}
                                 >
                                     {rowData.BodySizeVerbose ? rowData.BodySizeVerbose : rowData.BodyLength}
@@ -1975,7 +1972,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
                             <CheckCircleIcon
                                 className={classNames({
-                                    [style["check-circle-icon"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                    [style["check-circle-icon"]]: !isCellRedSingleColor(rowData.cellClassName)
                                 })}
                             />
                         )}
@@ -2020,7 +2017,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     return (
                         <div
                             className={classNames({
-                                [style["duration-ms"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                [style["duration-ms"]]: !isCellRedSingleColor(rowData.cellClassName)
                             })}
                         >
                             {timeMs}
@@ -2063,7 +2060,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         <div className={style["action-btn-group"]}>
                             <ChromeFrameSvgIcon
                                 className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                    [style["icon-style"]]: !isCellRedSingleColor(rowData.cellClassName)
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -2081,7 +2078,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
                             <ArrowCircleRightSvgIcon
                                 className={classNames(style["icon-hover"], {
-                                    [style["icon-style"]]: !hasRedOpacityBg(rowData.cellClassName)
+                                    [style["icon-style"]]: !isCellRedSingleColor(rowData.cellClassName)
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
@@ -2123,9 +2120,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         idFixed
     ])
 
-    // 背景颜色是否标注为红色
-    const hasRedOpacityBg = (cellClassName: string) => cellClassName.indexOf("color-opacity-bg-red") !== -1
-
     // 标注颜色批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
         if (flowList.length === 0) {
@@ -2153,9 +2147,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const l = data.length
                 for (let index = 0; index < l; index++) {
                     const item = data[index]
-                    if (newList.findIndex((ele) => ele.Hash === item.Hash) !== -1) {
-                        item.cellClassName = i.className
-                        item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                    const find = newList.find((ele) => ele.Hash === item.Hash)
+                    if (!!find) {
+                        item.Tags = (find.Tags || []).join("|")
+                        item.cellClassName = filterColorTag(item.Tags) || undefined
                     }
                     newData.push(item)
                 }
@@ -2178,7 +2173,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const existedTags = flow.Tags
                 ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_"))
                 : []
-            existedTags.pop()
+            // existedTags.pop() // 不知道为什么需要 pop
             return {Id: flow.Id, Hash: flow.Hash, Tags: existedTags}
         })
         ipcRenderer
@@ -2191,9 +2186,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const l = data.length
                 for (let index = 0; index < l; index++) {
                     const item = data[index]
-                    if (newList.findIndex((ele) => ele.Hash === item.Hash) !== -1) {
+                    const find = newList.find((ele) => ele.Hash === item.Hash)
+                    if (!!find) {
+                        item.Tags = (find.Tags || []).join("|")
                         item.cellClassName = ""
-                        item.Tags = ""
                     }
                     newData.push(item)
                 }
@@ -2750,12 +2746,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onEditTagEvent = useMemoizedFn((infos) => {
         try {
             const info = JSON.parse(infos) || {}
-            const tagItem = data.find(item => item.Id == info.id)
+            const tagItem = data.find((item) => item.Id == info.id)
             if (tagItem && info.historyId === historyId) {
                 onEditTags(tagItem)
             }
-        } catch (error) {
-        }
+        } catch (error) {}
     })
     useEffect(() => {
         emiter.on("onEditTag", onEditTagEvent)
@@ -3440,7 +3435,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     yakitNotify("warning", `最多同时只能发送${200}条数据`)
                     return
                 } else {
-                    sendIds = data.map(item => item.Id + "")
+                    sendIds = data.map((item) => item.Id + "")
                 }
             } else {
                 if (sendIds.length > 200) {
@@ -4275,7 +4270,9 @@ export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
     useDebounceEffect(
         () => {
             if (searchVal) {
-                const newData = getRealOriginalList().filter((ele) => ele.label.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase() || ""))
+                const newData = getRealOriginalList().filter((ele) =>
+                    ele.label.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase() || "")
+                )
                 setData(newData)
             } else {
                 setData(getRealOriginalList())
@@ -4462,8 +4459,8 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             for (let index = 0; index < l; index++) {
                 const item = {...data[index]}
                 if (item.Hash === flow.Hash) {
-                    item.cellClassName = i.className
-                    item.Tags = `YAKIT_COLOR_${i.color.toUpperCase()}`
+                    item.Tags = (existedTags || []).join("|")
+                    item.cellClassName = filterColorTag(item.Tags) || undefined
                 }
                 newData.push(item)
             }
