@@ -370,8 +370,6 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                     setNodeId(undefined)
                     onChangeSvgStyle()
                 } else {
-                    console.log("wawawa", titleText, target.parentNode.id)
-
                     setNodeId(titleText)
                     onChangeSvgStyle(target.parentNode.id)
                 }

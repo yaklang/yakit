@@ -80,8 +80,9 @@ import {YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorTy
 import {createRoot} from "react-dom/client"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
-import {getMapResultDetail} from "../RightAuditDetail/ResultMap"
+import {getMapAllResultKey, getMapResultDetail} from "../RightAuditDetail/ResultMap"
 import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1579,8 +1580,7 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
             const graphInfo = getMapResultDetail(source.title)
             const result = checkArrayValues(graphInfo, source.node_id)
             setWidgetControl(result)
-        }
-        else{
+        } else {
             closeFizzRangeWidget()
         }
     }, [source])
@@ -1609,6 +1609,30 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
                 break
         }
     })
+
+    const getSelectOptions = useMemo(() => {
+        if (getMapAllResultKey().length <= 1) {
+            return null
+        }
+        return getMapAllResultKey().map((item) => ({
+            label: item,
+            value: item
+        }))
+    }, [])
+
+    const onChangeTitle = useMemoizedFn((data: string) => {
+        const arr = getMapResultDetail(data)
+        if (arr.length > 0 && source) {
+            const newSource = {
+                title: data,
+                node_id: arr[0].node_id,
+                auditRightParams: source.auditRightParams
+            }
+            closeFizzRangeWidget()
+            onJumpRunnerFile(arr[0], newSource)
+        }
+    })
+
     return (
         <div className={styles["code-scan-monaco-widget"]}>
             <div className={styles["header"]}>
@@ -1616,6 +1640,18 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
                 <div className={styles["extra"]} onClick={closeFizzRangeWidget}>
                     <OutlineXIcon />
                 </div>
+            </div>
+            <div className={styles["content"]}>
+                {getSelectOptions && (
+                    <YakitSelect
+                        size='small'
+                        value={source?.title}
+                        options={getSelectOptions}
+                        onChange={(item: string) => {
+                            onChangeTitle(item)
+                        }}
+                    />
+                )}
             </div>
             <div className={styles["option"]}>
                 {widgetControl?.hasPrevious && (

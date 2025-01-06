@@ -557,7 +557,7 @@
         flex-direction: row;
         justify-content: space-between;
         .title{
-
+            flex: 1;
         }
         .extra{
             width: 16px;
@@ -577,6 +577,9 @@
                 }
             }
         }
+    }
+    .content{
+        margin-top: 10px;
     }
     .option{
         margin-top: 10px;
