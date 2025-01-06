@@ -1039,6 +1039,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const onOkEnterProjectMag = () => {
         ipcRenderer.invoke("SetCurrentProject", {})
         setYakitMode("soft")
+        // 刷新项目管理列表
+        if (showProjectManage) {
+            emiter.emit("onRefreshProjectList")
+        }
         setShowProjectManage(true)
         setCurrentProject(undefined)
         setNowProjectDescription(undefined)
@@ -1145,6 +1149,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             emiter.off("onSwitchEngine", onOkEnterProjectMag)
         }
     }, [])
+    useEffect(() => {
+        if (engineLink) {
+            setSwitchEngineLoading(false)
+        }
+    }, [engineLink])
     /** ---------- 切换引擎时的逻辑 End ---------- */
 
     /** ---------- ChatCS Start ---------- */
@@ -1590,7 +1599,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} engineLink={engineLink} />
                                     </div>
                                 </div>
                                 <div
@@ -1696,7 +1705,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} engineLink={engineLink} />
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>

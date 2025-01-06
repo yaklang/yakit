@@ -182,6 +182,10 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     >
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
+
+                    <div>
+                        {changePortBtn()}
+                    </div>
                 </>
             )
         }
