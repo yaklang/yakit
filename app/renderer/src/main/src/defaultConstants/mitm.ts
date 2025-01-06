@@ -395,124 +395,84 @@ export const defaultMITMFilterData: MITMFilterData = {
 
 export const MITMHotPatchTempDefault = [
     {
-        name: "爆破 AES-CBC",
-        temp: `decode = func(param) {
-    key = codec.DecodeHex("31323334313233343132333431323334")~ /* 加密密钥 */
-    iv = codec.DecodeHex("03395d68979ed8632646813f4c0bbdb3")~ /* 初始化向量 */
-    usernameDict = ["admin"] /* 用户字典 */
-    passwordDict = ["admin", "123456", "admin123", "88888888", "666666"] /* 密码字典 */
-    resultList = []
-    for username in usernameDict {
-        for password in passwordDict {
-            m = {"username": username, "password": password} /* 这里替换为你需要的格式 */
-            jsonInput = json.dumps(m)
-            result = codec.AESCBCEncryptWithPKCS7Padding(key, jsonInput, iv)~
-            base64Result = codec.EncodeBase64(result)
-            resultList.Append(base64Result)
+        name: "加解密模板",
+        temp: `// 假设响应加密方式为 aes-cbc
+// 秘钥(key)为1234567890123456,向量(iv)为1234567890123456
+// 例如响应为{"encrypted":"nwvjULjLOqzUFt9nQt+gVg==", "key":"1234567890123456", "iv":"1234567890123456"}
+key = "1234567890123456"
+iv = "1234567890123456"
+decrypt = func(rsp) {
+    body = poc.GetHTTPPacketBody(rsp)
+    data = json.loads(body)
+    if "encrypted" in data {
+        encrypted = data.encrypted
+        encrypted = codec.DecodeBase64(encrypted)~ // 一般会将密文base64一次,所以要先解码
+        decrypted = codec.AESCBCDecrypt(key, encrypted, iv)~
+        if decrypted != "" {
+            rsp = poc.ReplaceHTTPPacketBody(rsp, decrypted) // 替换body
         }
     }
-    return resultList
-}`,
-        isDefault: true
-    },
-    {
-        name: "爆破 RSA-OAEP",
-        temp: `decode2 = func(param) {
-    publicKey64 = \`LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFvVlRNNjNuRXE3YXpGQ0Yza2lEKwpuMGgyMnlvWmd2eU92TDJaS001NDg0SWZ0TFFERGdLUjFGTGhBOHJpZDkzRUdYVTRwNVNKZHVHdmhLRmxqR2s1ClFXYmFDcWNOdVNqM3NuYi9RRXU0TXZ2ZmFTMStWd3R4Vk84Z0lIdTVMRCs4ZXNTT1FMdTZaY1Q4dVJ3Wm00c00KNEh0ZXltc2Fjc1lGZmpWME5vMklnMnNVSVJaOTBYR2NzK01CMVFlMFQzcHBHa2V1WGhORnpjMldzS3ZreXBRSApZUDlUeENXejUwR1VhV3YzK2xnUDJzUTZtcFd6SWRDeUZ2OWRlU1NWeE1uRlJQQzU0R0s1endFNmJ3blBhRHJJClhzS0IxN2VnK1NES0FFVHpEYi9YSGxXamZqcWo3aWlabUw5bHJxK3pTU2F0R2llMzM4NVdQMlpUVlZHcDZlSnQKd1FJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t\` /* base64格式的publicKey */
-    publicKey = codec.DecodeBase64(publicKey64)~ 
-
-    publicKey = []byte(publicKey)
-
-    usernameDict = ["admin"] /* 用户字典 */
-    passwordDict = ["admin", "123456", "admin123", "88888888", "666666"] /* 密码字典 */
-    resultList = []
-    for username in usernameDict {
-        for password in passwordDict {
-            m = {"username":username,"password":password, "age":"0"} /* 这里替换为你需要的格式 */
-            jsonInput = json.dumps(m)
-            result = codec.RSAEncryptWithOAEP(publicKey , jsonInput)~
-            base64Result = codec.EncodeBase64(result)
-            resultList.Append(base64Result)
-        }
-    }
-    return resultList
+    return rsp
 }
-`,
-        isDefault: true
-    },
-    {
-        name: "爆破 CSRF（带有保护用 token）",
-        temp: `beforeRequest = func(req) { /* beforeRequest将在请求发起之前执行 */
-    // 发送GET请求，获取响应
-    rsp, _, err = poc.HTTP(\`\`) /* 这里可以替换为你需要的请求 */
-    if err != nil {
-        return req
-    }
-    // 获取GET响应的Set-Cookie
-    cookie = poc.GetHTTPPacketHeader(rsp, "Set-Cookie")
-    node, err = xpath.LoadHTMLDocument(rsp)
-    if err != nil {
-        return req
-    }
-    // 通过xpath语法获取token的值
-    tokenNode = xpath.FindOne(node, "//input[@name='token']")
-    if tokenNode == nil {
-        return req
-    }
-    token = xpath.SelectAttr(tokenNode, "value")
-    // 替换token
-    req = req.ReplaceAll("__TOKEN__", token)
-    // 替换cookie
-    req = poc.AppendHTTPPacketHeader(req, "Cookie", cookie)
-    return req
-}`,
-        isDefault: true
-    },
-    {
-        name: "破解 Signature",
-        temp: `decode3 = func(param) {
-    key = \`1234123412341234\`
-    usernameDict = ["admin"] /* 用户字典 */
-    passwordDict = ["admin", "123456", "admin123", "88888888", "666666"] /* 密码字典 */
-    resultList = []
 
-    for username in usernameDict {
-        for password in passwordDict {
-            data = f\`username=\${username}&password=\${password}\`
-            signature = codec.EncodeToHex(codec.HmacSha256(key, data))
-            m = {
-                "signature": signature,
-                "key": "31323334313233343132333431323334",
-                "username": username,
-                "password": password
-            }
-            res = json.dumps(m)
-            resultList.Append(res)
-        }
-    }
-    return resultList
-}`,
-        isDefault: true
-    },
-    {
-        name: "第三方验证码绕过",
-        temp: `beforeRequest = func(req) {
-    img_packet = \`\`
-    img_packet_rsp, _ = poc.HTTP(img_packet, poc.https(true))~
+encrypt = func(rsp) {
+    body = poc.GetHTTPPacketBody(rsp)
+    encrypted = codec.AESCBCEncrypt(key, body, iv)~
+    encrypted = codec.EncodeBase64(encrypted)
+    encryptedBody = omap({"encrypted":encrypted, "key":key, "iv":iv})
+    rsp = poc.ReplaceHTTPPacketBody(rsp, json.dumps(encryptedBody)) // 替换body
+    return rsp
+}
 
-    result = re2.FindGroup(img_packet_rsp, \`,"img":"(?P&lt;img_data&gt;.*)"}}\`)
-    b64_img = str.ParamsGetOr(result, "img_data", "nope")
+// hijackHTTPResponseEx 是hijackHTTPResponse的扩展，能够获取到响应对应的请求，会在过滤后的响应到达Yakit MITM前被调用，可以通过该函数提前将响应修改或丢弃
+// !!! 通常实现hijackHTTPResponse 或 hijackHTTPResponseEx 其中一个函数即可
+// isHttps 请求是否为https请求
+// url 网站URL
+// req 请求
+// rsp 响应
+// forward(req) 提交修改后的响应，如果未被调用，则使用原始的响应
+// drop() 丢弃响应
+hijackHTTPResponseEx = func(isHttps  /*bool*/, url  /*string*/, req/*[]byte*/, rsp /*[]byte*/, forward /*func(modifiedResponse []byte)*/, drop /*func()*/) {
+    // 这里要对劫持的响应做解密再返回给Yakit
+    rsp = decrypt(rsp)
+    forward(rsp)
+}
 
-    result = re2.FindGroup(img_packet_rsp, \`"vi":"(?P&lt;img_id&gt;.*)","img"\`)
-    img_id = str.ParamsGetOr(result, "img_id", "nope")
-    ocr_packet = \`\`
-    
-    ocr_packet = ocr_packet + b64_img
-    img_data, _ = poc.HTTP(ocr_packet)~
-    ocr_result = string(poc.GetHTTPPacketBody(img_data))
-    req = re.ReplaceAll(req, \`__ocr__\`, codec.EncodeBase64(ocr_result))
-    req = re.ReplaceAll(req, \`__vi__\`, img_id)
-    return []byte(req)
+// afterRequest 会在响应到达客户端之前被调用,可以通过该函数对响应做最后一次修改
+// isHttps 请求是否为https请求
+// oreq 原始请求
+// req hijackRequest修改后的请求
+// orsp 原始响应
+// rsp hijackHTTPResponse/hijackHTTPResponseEx修改后的响应
+// 返回值: 修改后的响应,如果没有返回值则使用hijackHTTPResponse/hijackHTTPResponseEx修改后的响应
+afterRequest = func(ishttps, oreq/*原始请求*/ ,req/*hiajck修改之后的请求*/ ,orsp/*原始响应*/ ,rsp/*hijack修改后的响应*/){
+    // Yakit查看之后需要再加密回去
+    // !!! 也可以不加密回去,这样客户端拿到的也是解密后的数据
+    // 如果这里不加密,那么后续hijackSaveHTTPFlow也不需要再解密
+    rsp = encrypt(rsp)
+    return rsp
+}
+
+// hijackSaveHTTPFlow 会在流量被存储到数据库前被调用,可以通过该函数对入库前的流量进行修改,例如修改请求/响应,添加tag/染色等
+// flow 流量结构体,可以通过鼠标悬浮提示查看其拥有的字段并对其进行修改
+// modify(modified) 提交修改后的流量结构体，如果未被调用，则使用原始的流量结构体
+// drop() 丢弃流量
+hijackSaveHTTPFlow = func(flow /* *yakit.HTTPFlow */, modify /* func(modified *yakit.HTTPFlow) */, drop/* func() */) {
+    // flow.Request 转义后的请求
+    // flow.Response 转义后的响应
+    // 对于转义后的请求和响应,需要通过以下方式拿到原始的请求/响应
+    // req = str.Unquote(flow.Request)~
+    // rsp = str.Unquote(flow.Response)~
+    // 对于修改后的请求和响应,需要通过以下方式再将其转义回去
+    // flow.Request = str.Quote(req)
+    // flow.Response = str.Quote(rsp)
+    // flow.AddTag("tag") // 添加tag
+    // flow.Red() // 染红色
+    // 需要在流量中再将数据解密
+    rsp = str.Unquote(flow.Response)~
+    rsp = decrypt(rsp)
+    flow.Response = str.Quote(rsp)
+    modify(flow)
 }`,
         isDefault: true
     }
