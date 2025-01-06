@@ -684,14 +684,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         emiter.emit("onCloseCurrentPage", routeInfo.pageId)
     })
     const onCollabConnect = useMemoizedFn(() => {
-        Promise.resolve().then(() => {
-            collabManagerRef.current?.connect()
-        })
+        collabManagerRef.current?.connect()
     })
     const onCollabDisconnect = useMemoizedFn(() => {
-        Promise.resolve().then(() => {
-            collabManagerRef.current?.disconnect()
-        })
+        collabManagerRef.current?.disconnect()
     })
     //#endregion
 

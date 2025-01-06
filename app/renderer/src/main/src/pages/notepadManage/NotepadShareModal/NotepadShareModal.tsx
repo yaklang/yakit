@@ -268,7 +268,6 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                                     </YakitTag>
                                 )
                             }}
-                            wrapperClassName={styles["user-select"]}
                             optionFilterProp='title'
                         />
                         <AuthPopover

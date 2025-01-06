@@ -326,29 +326,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         setExpand(notepadWidth > notepadMixWidth)
     }, [notepadWidth])
     const getCatalogue = useDebounceFn(
-        (view) => {
-            const headings: MilkdownCatalogueProps[] = []
-            const {doc} = view.state
-
-            // 遍历文档节点，提取标题（heading）
-            doc.descendants((node) => {
-                if (node.type.name === "heading") {
-                    const {attrs} = node
-                    headings.push({
-                        id: attrs.id,
-                        title: node.textContent, // 标题文本
-                        key: "",
-                        level: attrs.level, // 标题级别,
-                        children: []
-                    })
-                }
-            })
+        (headings) => {
             // 生成目录树形结构
             const tocTree = buildTOCTree(headings)
             treeKeysRef.current = tocTree.keys
             setCatalogue(tocTree.treeData)
         },
-        {wait: 200, leading: true}
+        {wait: 500, leading: true}
     ).run
     const onCatalogueClick = useMemoizedFn((info: MilkdownCatalogueProps) => {
         const element = document.getElementById(info.id)
@@ -646,7 +630,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     type='notepad'
                                     readonly={readonly}
                                     defaultValue={notepadDetail.content}
-                                    customPlugin={cataloguePlugin(getCatalogue)}
+                                    // customPlugin={cataloguePlugin(getCatalogue)}//TODO 目录会影响标题,后续解决
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
                                 />
