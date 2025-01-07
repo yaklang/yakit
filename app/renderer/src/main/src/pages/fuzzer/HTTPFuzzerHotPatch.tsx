@@ -27,6 +27,8 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -354,6 +356,8 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     const {type, hotPatchTempLocal, onSetHotPatchTempLocal, onClickHotCode} = props
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
+    const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
+    const [viewCurHotCodeVisible, setViewCurHotCodeVisible] = useState<boolean>(false)
 
     useEffect(() => {
         if (hotCodeTempVisible) {
@@ -385,9 +389,14 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         }
     }, [hotCodeTempVisible, tab])
 
-    const onClickHotCodeName = (item: HotPatchTempItem) => {
+    const onClickHotCodeName = (item: HotPatchTempItem, click?: boolean) => {
+        setViewCurrHotCode("")
         if (item.isDefault) {
-            onClickHotCode(item.temp)
+            if (click) {
+                onClickHotCode(item.temp)
+            } else {
+                setViewCurrHotCode(item.temp)
+            }
             setHotCodeTempVisible(false)
         } else {
             if (tab === "local") {
@@ -398,7 +407,11 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 ipcRenderer
                     .invoke("QueryHotPatchTemplate", params)
                     .then((res: QueryHotPatchTemplateResponse) => {
-                        onClickHotCode(res.Data[0].Content)
+                        if (click) {
+                            onClickHotCode(res.Data[0].Content)
+                        } else {
+                            setViewCurrHotCode(res.Data[0].Content)
+                        }
                         setHotCodeTempVisible(false)
                     })
                     .catch((error) => {
@@ -438,8 +451,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     return (
         <Dropdown
             overlayStyle={{borderRadius: 4, width: 250}}
-            visible={hotCodeTempVisible}
-            onVisibleChange={setHotCodeTempVisible}
+            onVisibleChange={(v) => {
+                setHotCodeTempVisible(v)
+            }}
             trigger={["click"]}
             overlay={
                 <div className={styles["hotCode-list"]}>
@@ -463,41 +477,58 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     /> */}
                     {renderHotPatchTemp.map((item) => (
                         <div className={styles["hotCode-item"]} key={item.name}>
-                            <div
-                                className={classNames(styles["hotCode-item-cont"])}
-                                onClick={() => {
-                                    onClickHotCodeName(item)
+                            <YakitPopover
+                                trigger='hover'
+                                placement='right'
+                                overlayClassName={styles["hotCode-popover"]}
+                                content={
+                                    <YakitSpin spinning={!viewCurHotCode}>
+                                        <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
+                                    </YakitSpin>
+                                }
+                                onVisibleChange={(v) => {
+                                    if (v) {
+                                        onClickHotCodeName(item)
+                                    }
                                 }}
+                                zIndex={9999}
                             >
                                 <div
-                                    className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
-                                    title={item.name}
+                                    className={classNames(styles["hotCode-item-cont"])}
+                                    onClick={() => {
+                                        onClickHotCodeName(item)
+                                    }}
                                 >
-                                    {item.name}
+                                    <div
+                                        className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
+                                        title={item.name}
+                                    >
+                                        {item.name}
+                                    </div>
+                                    <div className={styles["extra-opt-btns"]}>
+                                        {false && (
+                                            <YakitButton
+                                                icon={<OutlineTrashIcon />}
+                                                type='text2'
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                }}
+                                            ></YakitButton>
+                                        )}
+                                        {!item.isDefault && (
+                                            <YakitButton
+                                                icon={<OutlineTrashIcon />}
+                                                type='text'
+                                                colors='danger'
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    deleteHotPatchTemplate(item)
+                                                }}
+                                            ></YakitButton>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className={styles["extra-opt-btns"]}>
-                                    {false && (
-                                        <YakitButton
-                                            icon={<OutlineTrashIcon />}
-                                            type='text2'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                            }}
-                                        ></YakitButton>
-                                    )}
-                                    {!item.isDefault && (
-                                        <YakitButton
-                                            icon={<OutlineTrashIcon />}
-                                            type='text'
-                                            colors='danger'
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                deleteHotPatchTemplate(item)
-                                            }}
-                                        ></YakitButton>
-                                    )}
-                                </div>
-                            </div>
+                            </YakitPopover>
                         </div>
                     ))}
                 </div>

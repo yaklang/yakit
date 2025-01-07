@@ -128,3 +128,28 @@
         }
     }
 }
+
+.hotCode-popover {
+    width: 429px;
+
+    :global {
+        .ant-popover-inner-content {
+            height: 40vh;
+            padding: 4px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            right: 0;
+        }
+
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
+        }
+    }
+}
