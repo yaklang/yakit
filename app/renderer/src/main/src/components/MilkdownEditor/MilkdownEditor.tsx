@@ -517,8 +517,8 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     useUpdateEffect(() => {
         if (inViewport) {
             // 直接连接会collabService有意外报错情况
-            // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留
-            collabManagerRef.current?.flush("")
+            // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留,传入defaultValue编辑器内部会自己做对比显示最新的内容
+            collabManagerRef.current?.flush(defaultValue || "")
         } else {
             onCollabDisconnect()
         }
@@ -634,8 +634,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             title: "文档不存在/已经被删除",
             content: <span>错误原因:{event.reason}</span>,
             closable: false,
+            showConfirmLoading: true,
             onOkText: "保存当前文档",
-            cancelText: "不保存",
+            onCancelText: "不保存",
             onOk: () => {
                 const markdownContent = get()?.action(getMarkdown()) || ""
                 // 有内容才保存，没有内容新建
@@ -646,10 +647,12 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                     }
                     apiSaveNotepadList(params).then((hash) => {
                         toEditNotepad({notepadHash: hash})
+                        onCloseCurrentPage()
                         s.destroy()
                     })
                 } else {
                     toAddNotepad()
+                    onCloseCurrentPage()
                     s.destroy()
                 }
             },
@@ -684,9 +687,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         const {routeInfo} = collabParams
         if (!routeInfo) return
         emiter.emit("onCloseCurrentPage", routeInfo.pageId)
-    })
-    const onCollabConnect = useMemoizedFn(() => {
-        collabManagerRef.current?.connect()
     })
     const onCollabDisconnect = useMemoizedFn(() => {
         collabManagerRef.current?.disconnect()
