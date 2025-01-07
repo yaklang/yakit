@@ -82,7 +82,7 @@ import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/g
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
-import { setYakitEngineMode } from "@/constants/software"
+import {setYakitEngineMode} from "@/constants/software"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -201,15 +201,16 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             NetWorkApi<any, API.SystemConfigResponse>({
                 method: "get",
                 url: "system/config"
-            }).then((config) => {
-                const data = config.data || []
-                setEeSystemConfig([...data])
-            }).catch(() => {
-                setEeSystemConfig([])
             })
+                .then((config) => {
+                    const data = config.data || []
+                    setEeSystemConfig([...data])
+                })
+                .catch(() => {
+                    setEeSystemConfig([])
+                })
         }
     }, [engineLink])
-
 
     /** ---------- 引擎状态和连接相关逻辑 Start ---------- */
     /** 插件漏洞信息库自检 */
@@ -799,7 +800,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const [killOldEngine, setKillOldEngine] = useState<boolean>(false)
     const [killLoading, setKillLoading] = useState<boolean>(false)
-    const killOldProcess = useMemoizedFn(() => {
+    const killOldProcess = useMemoizedFn((callback?: () => void) => {
         let isFailed: boolean = false
         let port: number = 0
         let pid: number = 0
@@ -850,6 +851,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     info(`KILL yak PROCESS: ${pid}`)
                                     setKillOldEngine(false)
                                     setLinkLocalEngine()
+                                    callback && callback()
                                 })
                                 .catch((e) => {
                                     failed(`PS | GREP yak failed ${e}`)
@@ -885,16 +887,39 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [builtInVersion, setBuiltInVersion] = useState<string>("")
     const [currentVersion, setCurrentVersion] = useState<string>("")
 
+    const compareVersions = (version1: string, version2: string) => {
+        // 用正则表达式将版本号分解成数字部分和beta后面的部分
+        const parseVersion = (version) => {
+            const parts = version.split("-") // 分割 beta 部分
+            const versionNumbers = parts[0].split(".").map((num) => parseInt(num)) // 获取数字部分
+            const betaPart = parts[1] ? parseInt(parts[1].replace("beta", "")) : null // 如果有beta，提取beta后的数字
+            return {versionNumbers, betaPart}
+        }
+
+        const v1 = parseVersion(version1)
+        const v2 = parseVersion(version2)
+
+        // 比较数字部分
+        for (let i = 0; i < Math.min(v1.versionNumbers.length, v2.versionNumbers.length); i++) {
+            if (v1.versionNumbers[i] > v2.versionNumbers[i]) return 1
+            if (v1.versionNumbers[i] < v2.versionNumbers[i]) return -1
+        }
+
+        // 如果数字部分相同，比较beta部分
+        if (v1.betaPart !== null && v2.betaPart !== null) {
+            if (v1.betaPart > v2.betaPart) return 1
+            if (v1.betaPart < v2.betaPart) return -1
+        }
+
+        // 如果没有beta部分，或者beta部分相同，则返回0
+        return 0
+    }
+
     const showCheckVersion = useMemo(() => {
         if (isDev.current) return false
         if (!builtInVersion) return false
         if (!currentVersion) return false
-        if (!yakEngineVersionList.length) return false
-        const index1 = yakEngineVersionList.indexOf(currentVersion)
-        const index2 = yakEngineVersionList.indexOf(builtInVersion)
-        if (index1 === -1 || index2 === -1) return false
-        if (index1 > index2) return true
-        return false
+        return compareVersions(currentVersion, builtInVersion) === -1
     }, [builtInVersion, currentVersion, yakEngineVersionList])
 
     useEffect(() => {
@@ -936,7 +961,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const onCheckVersionCancel = useMemoizedFn((flag: boolean) => {
         if (flag) {
             if (yaklangKillPss) return
-            emiter.emit("downYaklangSpecifyVersion", JSON.stringify({version: yaklangLastVersionRef.current}))
+            killOldProcess(() => {
+                ipcRenderer
+                    .invoke("InitBuildInEngine", {})
+                    .then(() => {
+                        yakitNotify("info", "解压内置引擎成功，即将重启软件")
+                        ipcRenderer.invoke("relaunch")
+                    })
+                    .catch((e) => {
+                        yakitNotify("error", `解压内置引擎失败：${e}`)
+                    })
+            })
         }
         setCurrentVersion("")
     })
