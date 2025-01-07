@@ -14,6 +14,7 @@ function encodeChineseCharacters(url) {
 
 let writer = null
 let downloadedLength = 0
+// 目前只有笔记本中的上传的文件，下载不需要额外的编码(因为这个地方只需要编码文件名字,后端编好了)
 function requestWithProgress(downloadUrl, dest, options = {}, onProgress = undefined, onFinished = undefined, onError = undefined, isEncodeURI = true) {
     // 设置axios请求配置
     const config = {

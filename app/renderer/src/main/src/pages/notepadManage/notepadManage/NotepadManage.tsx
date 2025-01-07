@@ -42,6 +42,7 @@ import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtu
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
@@ -233,13 +234,17 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                                         disabled={removeDisabled}
                                     />
                                     <Divider type='vertical' style={{margin: "0 8px"}} />
-                                    <YakitButton
-                                        danger
-                                        type='text'
-                                        icon={<OutlineTrashIcon />}
-                                        onClick={() => onSingleRemove(record)}
-                                        loading={actionItemRef.current === record && removeItemLoading}
-                                    />
+                                    <YakitPopconfirm
+                                        title='确定要删掉该文档吗'
+                                        onConfirm={() => onSingleRemove(record)}
+                                    >
+                                        <YakitButton
+                                            danger
+                                            type='text'
+                                            icon={<OutlineTrashIcon />}
+                                            loading={actionItemRef.current === record && removeItemLoading}
+                                        />
+                                    </YakitPopconfirm>
                                 </>
                             ) : null}
                         </div>
@@ -462,16 +467,20 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                             onSearch={onSearch}
                             includeSearchType={["keyword", "userName"]}
                         />
-                        <YakitButton
-                            type='outline2'
-                            danger
-                            icon={<OutlineTrashIcon />}
-                            disabled={totalRef.current === 0}
-                            onClick={onBatchRemove}
-                            loading={pageLoading}
+                        <YakitPopconfirm
+                            title={selectNumber > 0 ? "确定要删除勾选文档吗?" : "确定要删除所有文档吗?"}
+                            onConfirm={onBatchRemove}
                         >
-                            删除
-                        </YakitButton>
+                            <YakitButton
+                                type='outline2'
+                                danger
+                                icon={<OutlineTrashIcon />}
+                                disabled={totalRef.current === 0}
+                                loading={pageLoading}
+                            >
+                                删除
+                            </YakitButton>
+                        </YakitPopconfirm>
                         <YakitButton
                             type='outline2'
                             icon={<OutlineClouddownloadIcon />}

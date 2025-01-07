@@ -386,6 +386,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     setVisible={() => setDownFileInfo(undefined)}
                     onCancelDownload={onCancelDownload}
                     onSuccess={onOpenFile}
+                    isEncodeURI={false}
                 />
             )}
         </>
@@ -403,11 +404,23 @@ interface DownFilesModalProps {
     onCancelDownload: () => void
     onSuccess?: () => void
     yakitHintProps?: Omit<YakitHintProps, "visible" | "onCancel">
+    /**是否需要编码,默认编码 */
+    isEncodeURI?: boolean
 }
 /**下载文件到本地 */
 export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
-    const {isDeleteOOSAfterEnd, visible, setVisible, fileName, path, url, yakitHintProps, onCancelDownload, onSuccess} =
-        props
+    const {
+        isDeleteOOSAfterEnd,
+        visible,
+        setVisible,
+        fileName,
+        path,
+        url,
+        yakitHintProps,
+        onCancelDownload,
+        onSuccess,
+        isEncodeURI
+    } = props
 
     const [percent, setPercent] = useState<number>(0)
 
@@ -442,7 +455,8 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
         if (visible) {
             const value: DownloadUrlToLocal = {
                 onlineUrl: url,
-                localPath: path
+                localPath: path,
+                isEncodeURI
             }
             onStart(value)
         } else {

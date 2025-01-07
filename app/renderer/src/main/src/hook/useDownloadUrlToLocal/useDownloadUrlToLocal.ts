@@ -21,6 +21,8 @@ export interface DownloadUrlToLocal {
     onlineUrl: string
     /**保存到本地的地址 */
     localPath: string
+    /**是否需要编码,默认编码 */
+    isEncodeURI?: boolean
 }
 
 export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHooks) {
@@ -55,7 +57,8 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
     const onStart = (uploadParams: DownloadUrlToLocal) => {
         const params = {
             url: uploadParams.onlineUrl,
-            path: uploadParams.localPath
+            path: uploadParams.localPath,
+            isEncodeURI: uploadParams.isEncodeURI === false ? false : true
         }
         ipcRenderer.invoke("download-url-to-path", params)
     }
