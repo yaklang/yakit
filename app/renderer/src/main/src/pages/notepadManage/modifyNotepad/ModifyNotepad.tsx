@@ -252,6 +252,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     onOpenLocalFileByPath(res?.path)
                                     m.destroy()
                                 }}
+                                isEncodeURI={false}
                             />
                         ),
                         bodyStyle: {padding: 0}

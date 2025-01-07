@@ -539,6 +539,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                         onSuccess={onSuccessDownload}
                         visible={!!batchDownInfo.url}
                         setVisible={onCancelDownload}
+                        isEncodeURI={false}
                     />
                 )}
             </div>
