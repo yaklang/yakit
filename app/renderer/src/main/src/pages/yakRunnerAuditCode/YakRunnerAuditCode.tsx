@@ -304,6 +304,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
+                // 完全一样且存在widget数据 通知再次打开widget
+                if(JSON.stringify(file) === JSON.stringify({...file, highLightRange}) && file.highLightRange?.source){
+                    emiter.emit("onWidgetOpenAgain",file.path)
+                }
             } else {
                 // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
                 const fileSourceType = isOutside ? "file" : "audit"
@@ -645,8 +649,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
-            console.log("onOpenAuditRightDetailFun", data)
-
             setAuditRightParams(data)
             setShowAuditDetail(true)
             setTimeout(() => {

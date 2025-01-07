@@ -358,8 +358,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                         highLightRange
                     }
                 }
-                console.log("opopo",OpenFileByPathParams);
-                
                 emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 // 纯跳转行号
                 setTimeout(() => {
