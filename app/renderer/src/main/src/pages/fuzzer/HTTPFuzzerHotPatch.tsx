@@ -357,7 +357,6 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
     const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
-    const [viewCurHotCodeVisible, setViewCurHotCodeVisible] = useState<boolean>(false)
 
     useEffect(() => {
         if (hotCodeTempVisible) {
