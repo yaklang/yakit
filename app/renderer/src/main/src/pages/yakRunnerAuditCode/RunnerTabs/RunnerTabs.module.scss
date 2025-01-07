@@ -546,10 +546,10 @@
 .code-scan-monaco-widget{
     border-radius: 4px;
     width: 188px;
-    background-color: rgba(203, 210, 222, 0.6);
+    background-color: rgba(203, 210, 222, 0.5);
     padding: 10px;
     &:hover{
-        background-color: rgba(203, 210, 222, 1);
+        background-color: rgba(203, 210, 222, 0.8);
     }
     .header{
         // color: #ffffff;

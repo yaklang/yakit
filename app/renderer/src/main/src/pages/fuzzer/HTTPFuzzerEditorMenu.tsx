@@ -33,8 +33,8 @@ import {setClipboardText} from "@/utils/clipboard"
 const {ipcRenderer} = window.require("electron")
 
 export interface CountDirectionProps {
-    x?: string
-    y?: string
+    x?: "middle" | "left" | "right"
+    y?: "bottom" | "top"
 }
 
 export interface EditorDetailInfoProps {

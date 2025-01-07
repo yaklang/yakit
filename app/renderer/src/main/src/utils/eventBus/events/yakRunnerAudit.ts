@@ -46,4 +46,6 @@ export type YakRunnerAuditEventProps = {
     onWidgetOpenRightAudit: string
     // 展开对应路径信息
     onExpendRightPath: string
+    // 通知再次打开widget
+    onWidgetOpenAgain: string
 }

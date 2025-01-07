@@ -83,6 +83,7 @@ import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetails
 import {getMapAllResultKey, getMapResultDetail} from "../RightAuditDetail/ResultMap"
 import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1149,8 +1150,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
-    // 定时消失的定时器
-    const fizzRangeTimeoutId = useRef<NodeJS.Timeout>()
     // 当前展示项
     const nowShowRef = useRef<FileDetailInfo>()
     // 代码扫描编辑器提示
@@ -1158,9 +1157,54 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         if (!editorInfo?.highLightRange && !nowShowRef.current?.highLightRange?.source) return
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.range.code.scan.widget`
+
+        // 动态计算Widget显示位置 尽可能显示齐全
+        const editorContainer = editor.getDomNode()
+        // 获取特定行和列的坐标
+        let lineNumber: number = nowShowRef.current?.highLightRange?.endLineNumber || 0
+        let column: number = nowShowRef.current?.highLightRange?.endColumn || 0
+        const position = {lineNumber, column}
+        const visiblePosition = editor.getScrolledVisiblePosition(position)
+        // 位置信息
+        let direction: CountDirectionProps = {}
+        if (editorContainer && visiblePosition) {
+            // editorContainerInfo为编辑器在页面中的位置
+            const editorContainerInfo = editorContainer.getBoundingClientRect()
+            const {top, bottom, left, right} = editorContainerInfo
+            // visiblePosition为具体位置
+            const {left: x, top: y} = visiblePosition
+            // 判断焦点位置
+            const isTopHalf = y < (bottom - top) / 2
+            const isLeftHalf = x < (right - left) / 2
+            if (isTopHalf) {
+                // 位于编辑器上半部分
+                direction.y = "top"
+            } else {
+                // 位于编辑器下半部分
+                direction.y = "bottom"
+            }
+            if (Math.abs(x - (right - left) / 2) < 50) {
+                // 位于编辑器中间部分
+                direction.x = "middle"
+            } else if (isLeftHalf) {
+                // 位于编辑器左半部分
+                direction.x = "left"
+            } else {
+                // 位于编辑器右半部分
+                direction.x = "right"
+            }
+        }
+
+        if (direction.x === "right" || direction.y === "bottom") {
+            lineNumber = nowShowRef.current?.highLightRange?.startLineNumber || 0
+            column = nowShowRef.current?.highLightRange?.startColumn || 0
+        }
+
         // 编辑器选中显示的内容
         const fizzRangeWidget = {
             isOpen: false,
+            // 在可能溢出编辑器视图dom节点的位置呈现此内容小部件
+            allowEditorOverflow: true,
             getId: function () {
                 return rangeId
             },
@@ -1180,10 +1224,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             getPosition: function () {
                 return {
                     position: {
-                        lineNumber: nowShowRef.current?.highLightRange?.endLineNumber || 0,
-                        column: nowShowRef.current?.highLightRange?.endColumn || 0
+                        lineNumber,
+                        column
                     },
-                    preference: [1, 2]
+                    preference: [1]
                 }
             },
             update: function () {
@@ -1195,7 +1239,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         // 关闭选中的内容
         const closeFizzRangeWidget = () => {
             fizzRangeWidget.isOpen = false
-            fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
             editor.removeContentWidget(fizzRangeWidget)
         }
 
@@ -1232,17 +1275,29 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         } catch (error) {}
     })
 
+    const onWidgetOpenAgainFun = useMemoizedFn((path)=>{
+        if (!editor) return
+        if(activeFile?.path === path){
+            editerMenuFun(editor)
+        }
+    })
+
     useEffect(() => {
         emiter.on("onInitWidget", onRefreshWidgetFun)
+        emiter.on("onWidgetOpenAgain", onWidgetOpenAgainFun)
         return () => {
             emiter.off("onInitWidget", onRefreshWidgetFun)
+            emiter.off("onWidgetOpenAgain", onWidgetOpenAgainFun)
         }
     }, [])
 
     useEffect(() => {
         if (!editor) return
         nowShowRef.current = editorInfo
-        editerMenuFun(editor)
+        setTimeout(() => {
+            // 此处定时器作用为多文件切换时 需等待其内容渲染完毕，否则会导致位置信息错误
+            editerMenuFun(editor)
+        }, 50)
     }, [editor, editorInfo])
 
     return (
@@ -1555,6 +1610,7 @@ const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
 const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
     const {source, closeFizzRangeWidget} = props
     const [widgetControl, setWidgetControl] = useState<WidgetControlProps | null>(null)
+
     // 判断数组中某一项后面或者前面有没有值
     const checkArrayValues = useMemoizedFn((arr: GraphInfoProps[], node_id: string) => {
         // 查找值的索引
@@ -1634,7 +1690,11 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
     })
 
     return (
-        <div className={styles["code-scan-monaco-widget"]}>
+        <div
+            className={classNames(styles["code-scan-monaco-widget"], {
+                [styles[""]]: true
+            })}
+        >
             <div className={styles["header"]}>
                 <div className={styles["title"]}>这里的代码有点问题</div>
                 <div className={styles["extra"]} onClick={closeFizzRangeWidget}>
