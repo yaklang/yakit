@@ -567,6 +567,7 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
             okText='保存'
             onOk={onOk}
             destroyOnClose
+            footer={null}
         >
             <div className={styles["hotCodeTemp-save"]}>
                 <YakitInput.TextArea
@@ -577,6 +578,14 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
                         addHotPatchTempNameRef.current = e.target.value
                     }}
                 />
+                <div className={styles["btn-box"]}>
+                    <YakitButton type='outline2' onClick={onCancel}>
+                        取消
+                    </YakitButton>
+                    <YakitButton type='primary' onClick={onOk}>
+                        保存
+                    </YakitButton>
+                </div>
             </div>
         </YakitModal>
     )
