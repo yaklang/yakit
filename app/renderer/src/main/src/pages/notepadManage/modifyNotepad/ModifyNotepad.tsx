@@ -39,7 +39,7 @@ import {
     SaveDialogResponse,
     apiDeleteNotepadDetail,
     apiGetNotepadDetail,
-    apiSaveNotepadList,
+    apiSaveNotepad,
     onBaseNotepadDown,
     onOpenLocalFileByPath
 } from "../notepadManage/utils"
@@ -153,7 +153,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             }
             perTabName.current = params.title
             setNotepadLoading(true)
-            apiSaveNotepadList(params)
+            apiSaveNotepad(params)
                 .then((hash) => {
                     setNotepadDetail({
                         ...(notepadDetail || {}),
@@ -186,7 +186,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                 title: tabName || perTabName.current,
                 content: markdownContent || ""
             }
-            apiSaveNotepadList(params)
+            apiSaveNotepad(params)
         }
     })
 
@@ -230,7 +230,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             content: notepadContentRef.current
         }
         setDownItemLoading(true)
-        apiSaveNotepadList(params).then(() => {
+        apiSaveNotepad(params).then(() => {
             const downParams: API.NotepadDownloadRequest = {
                 hash: notepadDetail.hash
             }

@@ -3,6 +3,9 @@ import {IMonacoEditor} from "@/utils/editors"
 import {useNodeViewContext} from "@prosemirror-adapter/react"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import React, {useState, useEffect, useRef} from "react"
+import {TextSelection} from "@milkdown/kit/prose/state"
+import {useInstance} from "@milkdown/react"
+import {paragraphSchema} from "@milkdown/kit/preset/commonmark"
 
 export const CustomCodeComponent: React.FC = () => {
     const {node, view, getPos} = useNodeViewContext()
@@ -11,31 +14,38 @@ export const CustomCodeComponent: React.FC = () => {
 
     const codeRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(codeRef)
+    const isFocusRef = useRef<boolean>(false) // 是否已经初次聚焦
 
     useEffect(() => {
         if (!editor) return
-        if (!inViewport) return
-        editor.focus()
-    }, [editor, inViewport])
+        if (!isFocusRef.current) {
+            editor.focus()
+            isFocusRef.current = true
+        }
+    }, [editor])
 
     const updateEditorContent = useMemoizedFn((newContent) => {
-        if (!inViewport) return
-        const {state, dispatch} = view
-        if (newContent) {
-            const updatedContent = state.schema.nodes.code_block.create(
-                null, // 不带任何属性
-                state.schema.text(newContent)
-            )
-            const tr = state.tr.replaceWith(getPos() || 0, (getPos() || 0) + node.nodeSize, updatedContent) // 用新内容替换节点内容
-            dispatch(tr) // 提交事务更新内容
-        } else {
-            const updatedContent = state.schema.nodes.paragraph.create(
-                null, // 不带任何属性
-                state.schema.text(" ")
-            )
-            const tr = state.tr.replaceWith(getPos() || 0, (getPos() || 0) + node.nodeSize, updatedContent) // 用新内容替换节点内容
-            dispatch(tr) // 提交事务更新内容
-        }
+        try {
+            if (!inViewport) return
+            const {state, dispatch} = view
+            const start = getPos() || 0
+            const end = start + node.nodeSize
+            if (newContent) {
+                const updatedContent = state.schema.nodes.code_block.create(
+                    null, // 不带任何属性
+                    state.schema.text(newContent)
+                )
+                const tr = state.tr.replaceWith(start, end, updatedContent) // 用新内容替换节点内容
+                dispatch(tr) // 提交事务更新内容
+            } else {
+                const updatedContent = state.schema.nodes.paragraph.create()
+                let tr = state.tr.deleteRange(start, end).insert(start, updatedContent)
+                const selection = TextSelection.near(tr.doc.resolve(start))
+                tr.setSelection(selection)
+                dispatch(tr)
+                view.focus()
+            }
+        } catch (error) {}
     })
     return (
         <div style={{height: 200, marginBottom: 20}} ref={codeRef}>

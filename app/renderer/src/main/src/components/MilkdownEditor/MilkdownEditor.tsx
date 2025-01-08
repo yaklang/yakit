@@ -78,7 +78,7 @@ import {isBoolean} from "lodash"
 import {notepadSaveStatus} from "./WebsocketProvider/constants"
 import {toAddNotepad, toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {API} from "@/services/swagger/resposeType"
-import {apiSaveNotepadList} from "@/pages/notepadManage/notepadManage/utils"
+import {apiSaveNotepad} from "@/pages/notepadManage/notepadManage/utils"
 
 const markdown1 = `
 
@@ -645,7 +645,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         title: title,
                         content: markdownContent
                     }
-                    apiSaveNotepadList(params).then((hash) => {
+                    apiSaveNotepad(params).then((hash) => {
                         toEditNotepad({notepadHash: hash})
                         onCloseCurrentPage()
                         s.destroy()

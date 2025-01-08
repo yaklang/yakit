@@ -69,7 +69,7 @@ export const apiGetNotepadList: APIFunc<GetNotepadRequestProps, API.GetNotepadRe
  * @param hiddenError
  * @returns
  */
-export const apiSaveNotepadList: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
+export const apiSaveNotepad: APIFunc<API.PostNotepadRequest, string> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         NetWorkApi<API.PostNotepadRequest, string>({
             method: "post",
