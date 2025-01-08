@@ -71,7 +71,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     const mitmParamsGroupParamsRef = useRef<YakExtraParamProps[]>([])
     const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
     const handleMitmHasParams = () => {
-        console.log(123, i);
         const requiredParams = i.Params.filter((item) => item.Required)
         const norequiredParams = i.Params.filter((item) => !item.Required)
         const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
