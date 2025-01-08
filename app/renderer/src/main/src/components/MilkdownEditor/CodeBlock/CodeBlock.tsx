@@ -4,8 +4,6 @@ import {useNodeViewContext} from "@prosemirror-adapter/react"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import React, {useState, useEffect, useRef} from "react"
 import {TextSelection} from "@milkdown/kit/prose/state"
-import {useInstance} from "@milkdown/react"
-import {paragraphSchema} from "@milkdown/kit/preset/commonmark"
 
 export const CustomCodeComponent: React.FC = () => {
     const {node, view, getPos} = useNodeViewContext()

@@ -9,8 +9,7 @@ export const fileCustomAttr = $nodeAttr("file-custom", () => ({
 }))
 
 export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
-    inline: true,
-    group: "inline",
+    group: "block",
     content: "",
     atom: true,
     draggable: false,
@@ -32,14 +31,20 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
 
     // 将节点转为 DOM 结构，动态设置样式
     toDOM: (node) => {
-        // console.log("toDOM", node)
-        return ["div", 0]
+        const attrs = {
+            ...ctx.get(fileCustomAttr.key)(node),
+            "data-file-id": node.attrs.fileId,
+            "data-path": node.attrs.path,
+            "data-notepad-hash": node.attrs.notepadHash,
+            "data-upload-user-id": node.attrs.uploadUserId
+        }
+        return ["div", {...attrs}]
     },
 
     parseMarkdown: {
         match: (node) => {
             const {type, name} = node
-            return type === "textDirective" && name === "file"
+            return type === "containerDirective" && name === "file"
         },
         runner: (state, node, type) => {
             if (type.name === fileCustomId) {
@@ -53,14 +58,12 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
 
     toMarkdown: {
         match: (node) => {
-            // console.log("toMarkdown-match", node)
             return node.type.name === fileCustomId
         },
         runner: (state, node) => {
-            // console.log("toMarkdown-runner", node)
             if (node.attrs.fileId) {
                 state
-                    .openNode("textDirective", undefined, {
+                    .openNode("containerDirective", undefined, {
                         name: "file",
                         attributes: {
                             fileId: node.attrs.fileId,

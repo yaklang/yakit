@@ -36,7 +36,6 @@ import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
 import {setClipboardText} from "@/utils/clipboard"
 import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
-import {useInstance} from "@milkdown/react"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
@@ -279,6 +278,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     return (
         <>
             <div
+                contentEditable={false}
                 className={classNames(styles["file-custom"], {
                     [styles["file-custom-selected"]]: selected
                 })}
