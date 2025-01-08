@@ -243,9 +243,11 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
         // 新建插件时有初始值
         const handleNewPluginInitValue = useMemoizedFn((init: AddYakitScriptPageInfoProps) => {
+            const codeObjectInfo = init?.codeObject?.info || {}
             setInitBaseInfo({
                 Type: init.pluginType || "yak",
-                ScriptName: "",
+                ScriptName: codeObjectInfo.name || "",
+                Help: codeObjectInfo.description || "",
                 Tags: []
             })
             setType(init.pluginType || "yak")

@@ -50,6 +50,7 @@
         "html2pdf.js": "^0.10.1",
         "immutability-helper": "^3.1.1",
         "isomorphic-dompurify": "^1.8.0",
+        "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
         "mermaid": "^10.2.4",
         "mitt": "^3.0.1",
