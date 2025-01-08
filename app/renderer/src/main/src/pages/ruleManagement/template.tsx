@@ -12,7 +12,16 @@ import {
     RuleDebugAuditDetailProps,
     RuleDebugAuditListProps
 } from "./RuleManagementType"
-import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useMap,
+    useMemoizedFn,
+    useSafeState,
+    useSize,
+    useUpdateEffect,
+    useVirtualList
+} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouduploadIcon,
@@ -27,7 +36,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
-import {Form, InputRef, Modal, Tooltip} from "antd"
+import {Form, InputRef, Modal, Progress, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -49,7 +58,7 @@ import {
 import cloneDeep from "lodash/cloneDeep"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {failed, yakitNotify} from "@/utils/notification"
+import {failed, info, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -82,6 +91,8 @@ import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
+import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -366,6 +377,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
                                                         onChange={() => {
                                                             handleSelect(data)
                                                         }}
+                                                        onClick={(e) => e.stopPropagation()}
                                                     />
                                                     <SolidFolderopenIcon />
                                                     <span
@@ -446,63 +458,179 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
     )
 })
 
+const exportModalWidth = {
+    export: {
+        width: 520,
+        labelCol: 5,
+        wrapperCol: 18
+    },
+    import: {
+        width: 680,
+        labelCol: 6,
+        wrapperCol: 17
+    }
+}
+
+interface ImportYakScriptStreamRequest {
+    Filename: string
+    Password?: string
+}
+
+interface ImportRuleStreamRespnse {
+    Progress: number
+    Verbose: string
+}
+
+type FilterUndefinedAndEmptyArray<T> = {
+    [K in keyof T]: T[K] extends undefined | [] ? never : T[K]
+}
+
+// 转换规则导出筛选参数数据
+const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
+    if (Array.isArray(filter.RuleNames)) {
+        if (filter.RuleNames.length > 0 && !filter.allCheck) {
+            // RuleNames 是非空数组时，只返回 RuleNames
+            return {RuleNames: filter.RuleNames}
+        } else {
+            return {
+                Language: filter?.Language,
+                GroupNames: filter?.GroupNames,
+                Purpose: filter?.Purpose,
+                Keyword: filter?.Keyword
+            }
+        }
+    } else {
+        return {
+            Language: filter?.Language,
+            GroupNames: filter?.GroupNames,
+            Purpose: filter?.Purpose,
+            Keyword: filter?.Keyword
+        }
+    }
+}
+
+const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
+    Object.entries(obj).reduce<Partial<FilterUndefinedAndEmptyArray<T>>>((acc, [key, value]) => {
+        if (value !== undefined && !(Array.isArray(value) && value.length === 0)) {
+            acc[key as keyof T] = value as T[keyof T]
+        }
+        return acc
+    }, {})
+
 /** @name 规则导入导出弹窗 */
 export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo((props) => {
-    const {getContainer, width, visible, onCallback} = props
+    const {getContainer, extra, onCallback, filterData} = props
 
     const [form] = Form.useForm()
 
-    const [localPluginPath, setLocalPluginPath] = useState<string>("")
+    const [InputPath, setInputPath] = useState<string>("")
+    const [token] = useSafeState(randomString(40))
+    const [exportStreamLoading, setExportStreamLoading] = useSafeState(false)
+    const [exportStreamData, setExportStreamData] = useSafeState<ImportRuleStreamRespnse>({
+        Progress: 0,
+        Verbose: ""
+    })
 
-    const onSubmit = useMemoizedFn(() => {})
+    const onSubmit = useMemoizedFn(() => {
+        const formValue = form.getFieldsValue()
+        const tragetFilter = cleanObject(transformFilterData(filterData))
+        if (extra.type === "export") {
+            if (!formValue.TargetPath) {
+                failed(`请填写文件夹名`)
+                return
+            }
+            ipcRenderer.invoke(
+                "ExportSyntaxFlows",
+                {
+                    ...formValue,
+                    ...tragetFilter
+                },
+                token
+            )
+            setExportStreamLoading(true)
+        }
+
+        if (extra.type === "import") {
+            if (!formValue.InputPath) {
+                failed(`请输入本地插件路径`)
+                return
+            }
+            const params: ImportYakScriptStreamRequest = {
+                Filename: formValue.InputPath,
+                Password: formValue.Password || ""
+            }
+            ipcRenderer.invoke("ImportYakScriptStream", params)
+        }
+    })
+
+    useEffect(() => {
+        if (!token) {
+            return
+        }
+        ipcRenderer.on(`${token}-data`, async (_, data: ImportRuleStreamRespnse) => {
+            setExportStreamData(data)
+        })
+        ipcRenderer.on(`${token}-error`, (_, error) => {
+            console.log(error, "err")
+            failed(`[ExportSyntaxFlows] error:  ${error}`)
+            setExportStreamLoading(false)
+        })
+        ipcRenderer.on(`${token}-end`, () => {
+            info("[ExportSyntaxFlows] finished")
+            setExportStreamLoading(false)
+            // ipcRenderer.invoke("sss", formValue.TargetPath).then(res => {
+            //     openABSFileLocated(res)
+            // })
+            // setTimeout(() => , 300)
+        })
+        return () => {
+            ipcRenderer.invoke("cancel-ExportSyntaxFlows", token)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-end`)
+        }
+    }, [token])
 
     const onCancel = useMemoizedFn(() => {
+        form.resetFields()
         onCallback(false)
     })
 
-    return (
-        <YakitModal
-            getContainer={getContainer}
-            type='white'
-            width={width}
-            centered={true}
-            keyboard={false}
-            maskClosable={false}
-            title={"导入/导出规则"}
-            bodyStyle={{padding: 0}}
-            visible={visible}
-            onOk={onSubmit}
-            onCancel={onCancel}
-        >
-            <div className={styles["rule-import-export-modal"]}>
-                <div className={styles["export-hint"]}>
-                    远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-                </div>
+    // modal header 描述文字
+    const exportDescribeMemoizedFn = useMemoizedFn((type) => {
+        switch (type) {
+            case "export":
+                return (
+                    <div className={styles["export-hint"]}>
+                        远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                    </div>
+                )
+            case "import":
+                return (
+                    <div className={styles["import-hint"]}>
+                        导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
+                    </div>
+                )
 
-                <div className={styles["import-hint"]}>
-                    导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
-                </div>
+            default:
+                break
+        }
+    })
 
-                <Form
-                    form={form}
-                    layout={"horizontal"}
-                    labelCol={{span: 5}}
-                    wrapperCol={{span: 18}}
-                    onSubmitCapture={(e) => {
-                        e.preventDefault()
-                    }}
-                >
-                    <Form.Item
-                        label={"文件名"}
-                        rules={[{required: true, message: "请填写文件名"}]}
-                        name={"OutputFilename"}
-                    >
+    // 导入 / 导出 item 节点
+    const exportItemMemoizedFn = useMemoizedFn((type) => {
+        switch (type) {
+            case "export":
+                return (
+                    <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件名"}]} name={"TargetPath"}>
                         <YakitInput />
                     </Form.Item>
-
+                )
+            case "import":
+                return (
                     <YakitFormDragger
                         formItemProps={{
-                            name: "localPluginPath",
+                            name: "InputPath",
                             label: "本地插件路径",
                             rules: [{required: true, message: "请输入本地插件路径"}]
                         }}
@@ -510,18 +638,65 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                         selectType='file'
                         fileExtensionIsExist={false}
                         onChange={(val) => {
-                            setLocalPluginPath(val)
-                            form.setFieldsValue({localPluginPath: val})
+                            setInputPath(val)
+                            form.setFieldsValue({InputPath: val})
                         }}
-                        value={localPluginPath}
+                        value={InputPath}
                     />
+                )
 
-                    <Form.Item label={"密码"} name={"Password"}>
-                        <YakitInput />
-                    </Form.Item>
-                </Form>
-            </div>
-        </YakitModal>
+            default:
+                break
+        }
+    })
+
+    return (
+        <>
+            <YakitModal
+                getContainer={getContainer}
+                type='white'
+                width={exportModalWidth[extra.type].width}
+                centered={true}
+                keyboard={false}
+                maskClosable={false}
+                visible={extra.hint}
+                title={extra.title}
+                bodyStyle={{padding: 0}}
+                onOk={onSubmit}
+                onCancel={onCancel}
+                footerStyle={{justifyContent: "flex-end"}}
+                footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
+            >
+                {!exportStreamLoading ? (
+                    <div className={styles["rule-import-export-modal"]}>
+                        {exportDescribeMemoizedFn(extra.type)}
+                        <Form
+                            form={form}
+                            layout={"horizontal"}
+                            labelCol={{span: exportModalWidth[extra.type].labelCol}}
+                            wrapperCol={{span: exportModalWidth[extra.type].wrapperCol}}
+                            onSubmitCapture={(e) => {
+                                e.preventDefault()
+                            }}
+                        >
+                            {exportItemMemoizedFn(extra.type)}
+                            <Form.Item label={"密码"} name={"Password"}>
+                                <YakitInput />
+                            </Form.Item>
+                        </Form>
+                    </div>
+                ) : (
+                    <div style={{padding: "0 16px"}}>
+                        <ImportAndExportStatusInfo
+                            title='导出中'
+                            showDownloadDetail={false}
+                            streamData={exportStreamData || {Progress: 0}}
+                            logListInfo={[]}
+                        />
+                    </div>
+                )}
+            </YakitModal>
+        </>
     )
 })
 

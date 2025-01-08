@@ -76,7 +76,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string

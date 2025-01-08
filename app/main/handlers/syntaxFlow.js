@@ -250,6 +250,22 @@ module.exports = (win, getClient) => {
         return await asyncDeleteSyntaxFlowResult(params)
     })
 
+    // 导出SyntaxFlow规则
+    const exportSyntaxFlowsMap = new Map()
+    ipcMain.handle("cancel-ExportSyntaxFlows", handlerHelper.cancelHandler(exportSyntaxFlowsMap))
+    ipcMain.handle("ExportSyntaxFlows", (_, params, token) => {
+        let stream = getClient().ExportSyntaxFlows(params)
+        handlerHelper.registerHandler(win, stream, exportSyntaxFlowsMap, token)
+    })
+
+    // 导入SyntaxFlow规则
+    const importSyntaxFlowsMap = new Map()
+    ipcMain.handle("cancel-ImportSyntaxFlows", handlerHelper.cancelHandler(importSyntaxFlowsMap))
+    ipcMain.handle("ImportSyntaxFlows", (_, params, token) => {
+        let stream = getClient().ImportSyntaxFlows(params)
+        handlerHelper.registerHandler(win, stream, importSyntaxFlowsMap, token)
+    })
+
     const asyncQuerySSAPrograms = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QuerySSAPrograms(params, (err, data) => {
@@ -297,4 +313,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeleteSSAPrograms", async (e, params) => {
         return await asyncDeleteSSAPrograms(params)
     })
+
+    // ipcMain.handle("sss", async (e, params) => {
+    //     return path.join(YakitProjectPath, "projects", params)
+    // })
 }

@@ -2,6 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {
     QuerySyntaxFlowRuleResponse,
+    RuleImportExportModalProps,
     RuleManagementProps,
     SyntaxFlowRule,
     SyntaxFlowRuleFilter
@@ -71,6 +72,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             return {...filters, GroupNames: groups}
         })
     })
+
     const tableHeaderTitle = useMemo(() => {
         if (!filters.GroupNames) return "全部"
         if (filters.GroupNames.length === 0) return "全部"
@@ -288,25 +290,34 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         if (checked) {
             setSelectList((s) => [...s, row])
         } else {
+            setAllCheck(false)
             setSelectList((s) => s.filter((ele) => ele.RuleName !== row.RuleName))
         }
     })
 
     /** ---------- 导出逻辑 ---------- */
-    const [exportHint, setExportHint] = useState<boolean>(false)
-    const handleOpenExportHint = useMemoizedFn(() => {
-        if (exportHint) return
-        setExportHint(true)
+    const [exportExtra, setExportExtra] = useState<RuleImportExportModalProps["extra"]>({
+        hint: false,
+        title: "导出插件",
+        type: "export"
     })
+
+    const handleOpenExportHint = useMemoizedFn((extra: Omit<RuleImportExportModalProps["extra"], "hint">) => {
+        if (exportExtra.hint) return
+        setExportExtra((prev) => ({
+            ...extra,
+            hint: true
+        }))
+    })
+
     const handleCallbackExportHint = useMemoizedFn((result: boolean) => {
         if (result) {
         }
-        handleCancelExportHint()
+        setExportExtra((prev) => ({
+            ...prev,
+            hint: result
+        }))
     })
-    const handleCancelExportHint = useMemoizedFn(() => {
-        setExportHint(false)
-    })
-    /** ---------- 导入逻辑 ---------- */
 
     /** ---------- 新建|编辑逻辑 ---------- */
     const editInfo = useRef<SyntaxFlowRule>()
@@ -386,9 +397,10 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                             <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
                         </div>
 
-                        {/* <div className={styles["group-divider"]}></div>
-
-                <div className={styles["group-list"]}></div> */}
+                        {/* 
+                            <div className={styles["group-divider"]}></div>
+                            <div className={styles["group-list"]}></div> 
+                        */}
                     </div>
 
                     <div className={styles["rule-management-body"]}>
@@ -429,17 +441,25 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                     onClick={handleBatchDelRule}
                                                 />
 
-                                                {/* <YakitButton
-                                                type='outline2'
-                                                icon={<OutlineExportIcon />}
-                                                onClick={handleOpenExportHint}
-                                            >
-                                                导出
-                                            </YakitButton>
+                                                <YakitButton
+                                                    type='outline2'
+                                                    icon={<OutlineExportIcon />}
+                                                    onClick={() =>
+                                                        handleOpenExportHint({title: "导出插件", type: "export"})
+                                                    }
+                                                >
+                                                    导出
+                                                </YakitButton>
 
-                                            <YakitButton type='outline2' icon={<OutlineImportIcon />}>
-                                                导入
-                                            </YakitButton> */}
+                                                <YakitButton
+                                                    type='outline2'
+                                                    icon={<OutlineImportIcon />}
+                                                    onClick={() =>
+                                                        handleOpenExportHint({title: "导入插件", type: "import"})
+                                                    }
+                                                >
+                                                    导入
+                                                </YakitButton>
 
                                                 <YakitButton
                                                     icon={<OutlinePlusIcon />}
@@ -493,8 +513,13 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
                     <RuleImportExportModal
                         getContainer={wrapperRef.current || undefined}
-                        visible={exportHint}
+                        extra={exportExtra}
                         onCallback={handleCallbackExportHint}
+                        filterData={{
+                            ...filters,
+                            RuleNames: selectKeys,
+                            allCheck
+                        }}
                     />
 
                     <EditRuleDrawer

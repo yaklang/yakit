@@ -8,11 +8,21 @@ export interface LocalRuleGroupListProps {
     onGroupChange: (groups: string[]) => void
 }
 
+type RuleImportExportModalExtra = {
+    hint: boolean
+} & {
+    title: "导出插件" | "导入插件"
+    type: "export" | "import"
+}
+
 export interface RuleImportExportModalProps {
     /** 是否被dom节点包含 */
     getContainer?: HTMLElement
     width?: number
-    visible: boolean
+    extra: RuleImportExportModalExtra
+    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword"> & {
+        allCheck: boolean
+    }
     onCallback: (result: boolean) => void
 }
 
