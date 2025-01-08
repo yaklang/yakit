@@ -17,5 +17,7 @@ export enum FuzzerRemoteGV {
     /**@name WebFuzzer最大前端渲染数量 */
     FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
     FuzzerNoSystemProxy = "Fuzzer_NoSystemProxy",
-    FuzzerDisableUseConnPool = "Fuzzer_DisableUseConnPool"
+    FuzzerDisableUseConnPool = "Fuzzer_DisableUseConnPool",
+    HTTPFuzzerHotPatch_TEMPLATE_DEMO = "HTTPFuzzerHotPatch_TEMPLATE_DEMO",
+    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
 }

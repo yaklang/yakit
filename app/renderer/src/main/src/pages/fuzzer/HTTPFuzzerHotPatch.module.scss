@@ -13,6 +13,7 @@
             color: var(--yakit-header-color);
         }
         .ant-form-item-label > label {
+            width: 100%;
             color: var(--yakit-header-color);
         }
         .ant-form-item-explain,
@@ -25,6 +26,13 @@
         padding: 24px;
         overflow-y: auto;
         max-height: 80vh;
+        .http-fuzzer-hotPatch-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            width: 100%;
+        }
     }
     .http-fuzzer-hotPatch-heard {
         box-sizing: border-box;
@@ -51,6 +59,97 @@
             &:hover {
                 color: var(--yakit-primary-4);
             }
+        }
+    }
+}
+
+.hotCodeTemp-save {
+    .btn-box {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+        gap: 10px;
+        margin-top: 29px;
+    }
+}
+
+.hotCode-list {
+    padding: 4px 6px;
+    border-radius: 4px;
+    max-height: 380px;
+    overflow-y: auto;
+    .hotCode-tab-btns {
+        :global {
+            .ant-radio-button-wrapper {
+                padding: 0 34px;
+            }
+        }
+    }
+    .hotCode-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 28px;
+        border-radius: 4px;
+        padding: 0 2px;
+        &-input {
+            height: 24px;
+        }
+        &-cont {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            .hotCode-item-name {
+                width: calc(100% - 10px);
+                font-size: 12px;
+                color: var(--yakit-header-color);
+                font-weight: 400;
+            }
+            .extra-opt-btns {
+                display: none;
+                // width: 71px;
+            }
+            &:hover {
+                background-color: var(--yakit-background-color);
+                .extra-opt-btns {
+                    display: block;
+                }
+            }
+        }
+    }
+    .hotCode-item-select {
+        .hotCode-item-name {
+            color: var(--yakit-primary-5);
+        }
+    }
+}
+
+.hotCode-popover {
+    width: 429px;
+
+    :global {
+        .ant-popover-inner-content {
+            height: 40vh;
+            padding: 4px;
+        }
+
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+
+        .ant-popover-arrow {
+            right: 0;
+        }
+
+        .ant-popover-placement-top,
+        .ant-popover-placement-topLeft,
+        .ant-popover-placement-topRight {
+            padding-bottom: 8px;
         }
     }
 }

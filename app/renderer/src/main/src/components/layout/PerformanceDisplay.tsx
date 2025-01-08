@@ -311,7 +311,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             if (!val) {
                                                                 isLocal && +i.port === port && typeCallback("break")
                                                                 success("引擎进程关闭中...")
-                                                            }
+                                                           }
                                                         })
                                                         .catch((e: any) => {})
                                                         .finally(fetchPSList)
@@ -352,7 +352,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
                     <GooglePhotosLogoSvgIcon className={classNames({[styles["icon-rotate-animation"]]: !show})} />
                 </div>
-            </div>
+            </div> 
         </YakitPopover>
     )
 })

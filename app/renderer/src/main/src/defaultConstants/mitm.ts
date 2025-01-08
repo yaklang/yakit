@@ -392,3 +392,88 @@ export const defaultMITMFilterData: MITMFilterData = {
     ExcludeMethods: [],
     ExcludeMIME: []
 }
+
+export const MITMHotPatchTempDefault = [
+    {
+        name: "加解密模板",
+        temp: `// 假设响应加密方式为 aes-cbc
+// 秘钥(key)为1234567890123456,向量(iv)为1234567890123456
+// 例如响应为{"encrypted":"nwvjULjLOqzUFt9nQt+gVg==", "key":"1234567890123456", "iv":"1234567890123456"}
+key = "1234567890123456"
+iv = "1234567890123456"
+decrypt = func(rsp) {
+    body = poc.GetHTTPPacketBody(rsp)
+    data = json.loads(body)
+    if "encrypted" in data {
+        encrypted = data.encrypted
+        encrypted = codec.DecodeBase64(encrypted)~ // 一般会将密文base64一次,所以要先解码
+        decrypted = codec.AESCBCDecrypt(key, encrypted, iv)~
+        if decrypted != "" {
+            rsp = poc.ReplaceHTTPPacketBody(rsp, decrypted) // 替换body
+        }
+    }
+    return rsp
+}
+
+encrypt = func(rsp) {
+    body = poc.GetHTTPPacketBody(rsp)
+    encrypted = codec.AESCBCEncrypt(key, body, iv)~
+    encrypted = codec.EncodeBase64(encrypted)
+    encryptedBody = omap({"encrypted":encrypted, "key":key, "iv":iv})
+    rsp = poc.ReplaceHTTPPacketBody(rsp, json.dumps(encryptedBody)) // 替换body
+    return rsp
+}
+
+// hijackHTTPResponseEx 是hijackHTTPResponse的扩展，能够获取到响应对应的请求，会在过滤后的响应到达Yakit MITM前被调用，可以通过该函数提前将响应修改或丢弃
+// !!! 通常实现hijackHTTPResponse 或 hijackHTTPResponseEx 其中一个函数即可
+// isHttps 请求是否为https请求
+// url 网站URL
+// req 请求
+// rsp 响应
+// forward(req) 提交修改后的响应，如果未被调用，则使用原始的响应
+// drop() 丢弃响应
+hijackHTTPResponseEx = func(isHttps  /*bool*/, url  /*string*/, req/*[]byte*/, rsp /*[]byte*/, forward /*func(modifiedResponse []byte)*/, drop /*func()*/) {
+    // 这里要对劫持的响应做解密再返回给Yakit
+    rsp = decrypt(rsp)
+    forward(rsp)
+}
+
+// afterRequest 会在响应到达客户端之前被调用,可以通过该函数对响应做最后一次修改
+// isHttps 请求是否为https请求
+// oreq 原始请求
+// req hijackRequest修改后的请求
+// orsp 原始响应
+// rsp hijackHTTPResponse/hijackHTTPResponseEx修改后的响应
+// 返回值: 修改后的响应,如果没有返回值则使用hijackHTTPResponse/hijackHTTPResponseEx修改后的响应
+afterRequest = func(ishttps, oreq/*原始请求*/ ,req/*hiajck修改之后的请求*/ ,orsp/*原始响应*/ ,rsp/*hijack修改后的响应*/){
+    // Yakit查看之后需要再加密回去
+    // !!! 也可以不加密回去,这样客户端拿到的也是解密后的数据
+    // 如果这里不加密,那么后续hijackSaveHTTPFlow也不需要再解密
+    rsp = encrypt(rsp)
+    return rsp
+}
+
+// hijackSaveHTTPFlow 会在流量被存储到数据库前被调用,可以通过该函数对入库前的流量进行修改,例如修改请求/响应,添加tag/染色等
+// flow 流量结构体,可以通过鼠标悬浮提示查看其拥有的字段并对其进行修改
+// modify(modified) 提交修改后的流量结构体，如果未被调用，则使用原始的流量结构体
+// drop() 丢弃流量
+hijackSaveHTTPFlow = func(flow /* *yakit.HTTPFlow */, modify /* func(modified *yakit.HTTPFlow) */, drop/* func() */) {
+    // flow.Request 转义后的请求
+    // flow.Response 转义后的响应
+    // 对于转义后的请求和响应,需要通过以下方式拿到原始的请求/响应
+    // req = str.Unquote(flow.Request)~
+    // rsp = str.Unquote(flow.Response)~
+    // 对于修改后的请求和响应,需要通过以下方式再将其转义回去
+    // flow.Request = str.Quote(req)
+    // flow.Response = str.Quote(rsp)
+    // flow.AddTag("tag") // 添加tag
+    // flow.Red() // 染红色
+    // 需要在流量中再将数据解密
+    rsp = str.Unquote(flow.Response)~
+    rsp = decrypt(rsp)
+    flow.Response = str.Quote(rsp)
+    modify(flow)
+}`,
+        isDefault: true
+    }
+]

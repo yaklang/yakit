@@ -99,11 +99,11 @@ import {
     defaultAdvancedConfigValue,
     defaultWebFuzzerPageInfo,
     emptyFuzzer,
-    WEB_FUZZ_HOTPATCH_CODE,
-    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE
+    HotPatchDefaultContent
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {WebsiteGV} from "@/enums/website"
-import {setEditorContext} from "@/utils/monacoSpec/yakEditor";
+import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -209,6 +209,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
 
     const fuzzTokenRef = useRef<string>(randomString(60))
+    const webFuzzerNewEditorRef = useRef<any>()
     const hotPatchCodeRef = useRef<string>("")
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
     const sequenceResponseRef = useRef<SequenceResponseRefProps>({
@@ -282,13 +283,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     useEffect(() => {
         if (!inViewport) return
         onUpdateSequence()
-        getRemoteValue(WEB_FUZZ_HOTPATCH_CODE).then((remoteData) => {
-            if (!remoteData) {
-                return
-            }
-            hotPatchCodeRef.current = `${remoteData}`
-        })
-        getRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
+        getRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE).then((remoteData) => {
             if (!!remoteData) {
                 hotPatchCodeWithParamGetterRef.current = `${remoteData}`
             }
@@ -300,6 +295,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     setCurrentSelectRequest({
                         ...currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo
                     })
+
+                    const hotPatchCode = currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo.hotPatchCode
+                    setHotPatchCodeRef(hotPatchCode)
                 }
             }
         }, 200)
@@ -320,6 +318,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 setCurrentSelectRequest({
                     ...currentSequenceRequest.pageParamsInfo.webFuzzerPageInfo
                 })
+
+                const hotPatchCode = currentSequenceRequest?.pageParamsInfo.webFuzzerPageInfo.hotPatchCode
+                setHotPatchCodeRef(hotPatchCode)
             }
 
             const currentResponse = responseMap.get(currentSequenceItem.id)
@@ -718,7 +719,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 const httpParamsItem: FuzzerRequestProps = {
                     ...advancedConfigValueToFuzzerRequests(webFuzzerPageInfo.advancedConfigValue),
                     RequestRaw: Buffer.from(webFuzzerPageInfo.request, "utf8"), // StringToUint8Array(request, "utf8"),
-                    HotPatchCode: hotPatchCodeRef.current,
+                    HotPatchCode: webFuzzerPageInfo.hotPatchCode,
                     HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
                     InheritCookies: item.inheritCookies,
                     InheritVariables: item.inheritVariables,
@@ -860,11 +861,42 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     })
 
-    const setHotPatchCode = useMemoizedFn((val) => {
+    const setHotPatchCodeRef = (val) => {
         hotPatchCodeRef.current = val
+        setTimeout(() => {
+            if (webFuzzerNewEditorRef.current?.reqEditor) {
+                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCode", val)
+            }
+        }, 500)
+    }
+    const setHotPatchCode = useMemoizedFn((val) => {
+        setHotPatchCodeRef(val)
+        if (!currentSelectRequest?.pageId) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.HTTPFuzzer,
+            currentSelectRequest.pageId
+        )
+        if (!currentItem) return
+        if (currentItem.pageParamsInfo.webFuzzerPageInfo) {
+            const newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageParamsInfo: {
+                    webFuzzerPageInfo: {
+                        ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                        hotPatchCode: val
+                    }
+                }
+            }
+            updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+        }
     })
     const setHotPatchCodeWithParamGetter = useMemoizedFn((val) => {
         hotPatchCodeWithParamGetterRef.current = val
+        setTimeout(() => {
+            if (webFuzzerNewEditorRef.current?.reqEditor) {
+                setEditorContext(webFuzzerNewEditorRef.current.reqEditor, "hotPatchCodeWithParam", val)
+            }
+        }, 500)
     })
 
     const allRuntimeIds = () => {
@@ -1219,6 +1251,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 activeType={activeType}
                                 activeKey={activeKey}
                                 defActiveKeyAndOrder={defActiveKeyAndOrder}
+                                webFuzzerNewEditorRef={webFuzzerNewEditorRef}
                             />
                         </>
                     ) : (
@@ -1684,7 +1717,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             onSaveMatcherAndExtractionDrawer,
             activeKey,
             activeType,
-            defActiveKeyAndOrder
+            defActiveKeyAndOrder,
+            webFuzzerNewEditorRef
         } = props
         const {
             id: responseInfoId,
@@ -1730,8 +1764,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
         const successTableRef = useRef<any>()
         const requestHttpRef = useRef<string>(request)
-
-        const webFuzzerNewEditorRef = useRef<any>()
 
         const cachedTotal: number = useCreation(() => {
             return failedCount + successCount
@@ -1936,11 +1968,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                 footer: null,
                 maskClosable: false,
                 closable: false,
-                style: {top: "10%"},
                 hiddenHeader: true,
                 keyboard: false,
                 content: (
                     <HTTPFuzzerHotPatch
+                        pageId={pageId}
                         initialHotPatchCode={hotPatchCode}
                         initialHotPatchCodeWithParamGetter={hotPatchCodeWithParamGetter}
                         onInsert={(tag) => {
@@ -1950,17 +1982,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         }}
                         onSaveCode={(code) => {
                             setHotPatchCode(code)
-                            if (webFuzzerNewEditorRef.current.reqEditor) {
-                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCode", code)
-                            }
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_CODE, code)
                         }}
                         onSaveHotPatchCodeWithParamGetterCode={(code) => {
                             setHotPatchCodeWithParamGetter(code)
-                            if (webFuzzerNewEditorRef.current.reqEditor) {
-                                setEditorContext(webFuzzerNewEditorRef.current.reqEditor,"hotPatchCodeWithParam", code)
-                            }
-                            setRemoteValue(WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
+
+                            setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE, code)
                         }}
                         onCancel={() => m.destroy()}
                     />

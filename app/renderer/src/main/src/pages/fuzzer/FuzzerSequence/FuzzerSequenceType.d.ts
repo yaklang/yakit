@@ -147,7 +147,8 @@ export interface SequenceResponseProps {
     onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
     activeType: MatchingAndExtraction
     activeKey: string
-    defActiveKeyAndOrder: MatcherActiveKey
+    defActiveKeyAndOrder: MatcherActiveKey,
+    webFuzzerNewEditorRef: any
 }
 
 export interface SequenceResponseRefProps {
