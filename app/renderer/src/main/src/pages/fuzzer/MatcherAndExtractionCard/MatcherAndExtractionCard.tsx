@@ -1259,7 +1259,6 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                     </div>
                 </div>
             }
-            trigger={["click"]}
             placement='bottom'
             visible={isShowColor}
             onVisibleChange={setIsShowColor}

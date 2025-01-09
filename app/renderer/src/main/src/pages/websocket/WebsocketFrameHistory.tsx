@@ -202,17 +202,21 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
                                                 {FromServer ? (
-                                                    <YakitTag color='success'>服务端响应</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>服务端响应</YakitTag>
                                                 ) : (
-                                                    <YakitTag color='yellow'>客户端请求</YakitTag>
+                                                    <YakitTag className={styles["cell-tag-style"]}>客户端请求</YakitTag>
                                                 )}
                                             </div>
                                             <div
                                                 style={{width: 97}}
                                                 className={classNames(styles["tr-cell"], styles["base-cell"])}
                                             >
-                                                {IsJson && <YakitTag>Json</YakitTag>}
-                                                {IsProtobuf && <YakitTag>Protobuf</YakitTag>}
+                                                {IsJson && (
+                                                    <YakitTag className={styles["cell-tag-style"]}>Json</YakitTag>
+                                                )}
+                                                {IsProtobuf && (
+                                                    <YakitTag className={styles["cell-tag-style"]}>Protobuf</YakitTag>
+                                                )}
                                             </div>
                                             <div
                                                 className={classNames(

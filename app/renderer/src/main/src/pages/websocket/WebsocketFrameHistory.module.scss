@@ -55,6 +55,9 @@
         width: 100%;
         overflow: hidden;
     }
+    .cell-tag-style {
+        color: #31343f;
+    }
 
     .table-footer-empty {
         display: flex;
@@ -92,10 +95,13 @@
                     } @else {
                         // 单色-其他颜色处理
                         .table-tr.table-row-#{$type} {
-                            background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 20%);
+                            background: tools.generate-transparen(#{tools.fetch-color($type, "backgroundColor")}, 20%);
                             color: var(--yakit-table-text-color);
                             &:hover {
-                                background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 30%);
+                                background: tools.generate-transparen(
+                                    #{tools.fetch-color($type, "backgroundColor")},
+                                    30%
+                                );
                             }
                         }
                     }
