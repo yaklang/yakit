@@ -4941,6 +4941,7 @@ message WebsocketFlow {
   string DataVerbose = 10;
   bool IsJson = 11;
   bool IsProtobuf = 12;
+  string Tags = 13;
 }
 
 message SetMITMFilterRequest {

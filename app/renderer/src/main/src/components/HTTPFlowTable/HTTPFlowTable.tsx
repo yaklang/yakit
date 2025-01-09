@@ -3811,6 +3811,40 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                         showPopoverSearch={size?.width ? size?.width <= 1100 : true}
                                                         handleSearch={handleSearch}
                                                     />
+                                                    {/* webfuzzer 查看全部时，支持颜色搜索 */}
+                                                    {toWebFuzzer && (
+                                                        <div className={style["http-history-table-color-swatch"]}>
+                                                            <YakitPopover
+                                                                overlayClassName={
+                                                                    style["http-history-table-color-popover"]
+                                                                }
+                                                                content={
+                                                                    <ColorSearch
+                                                                        color={color}
+                                                                        setColor={setColor}
+                                                                        onReset={() => setColor([])}
+                                                                        onSure={() => onColorSure()}
+                                                                        setIsShowColor={setIsShowColor}
+                                                                    />
+                                                                }
+                                                                trigger='click'
+                                                                placement='bottomLeft'
+                                                                visible={isShowColor}
+                                                                onVisibleChange={(visible) => {
+                                                                    if (!visible) setIsShowColor(false)
+                                                                }}
+                                                            >
+                                                                <YakitButton
+                                                                    type='outline2'
+                                                                    isHover={isShowColor || !!color.length}
+                                                                    style={{padding: 4}}
+                                                                    onClick={() => setIsShowColor(true)}
+                                                                >
+                                                                    <ColorSwatchIcon />
+                                                                </YakitButton>
+                                                            </YakitPopover>
+                                                        </div>
+                                                    )}
                                                     {showBatchActions && (
                                                         <div style={{marginLeft: 8}}>{batchActions()}</div>
                                                     )}

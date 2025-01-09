@@ -1,15 +1,139 @@
-.websocket-table-wrapper {
+@use "../../components/TableVirtualResize/styleFunction.scss" as tools;
+
+.websocket-frame-history {
+    width: 100%;
     height: 100%;
-    :global {
-        .ant-spin-nested-loading {
-            height: 100%;
-            .ant-table {
-                flex: 1;
-                overflow: auto;
-            }
-            .ant-table-pagination.ant-pagination {
-                margin: 6px 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .base-cell {
+        padding: 6px 8px;
+    }
+    .flex-cell {
+        flex: 1;
+        overflow: hidden;
+    }
+    .table-header {
+        background-color: #f8f8f8;
+        display: flex;
+        border-bottom: 1px solid #eaecf3;
+        .header-cell {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 16px;
+        }
+    }
+}
+
+.websocket-frame-history-table {
+    flex: 1;
+    overflow: hidden;
+    .table-body {
+        height: 100%;
+        overflow: hidden auto;
+    }
+
+    .table-tr {
+        display: flex;
+        border-top: 1px solid #eaecf3;
+        .tr-cell {
+            color: #31343f;
+            font-size: 12px;
+            line-height: 16px;
+        }
+        &:hover {
+            background-color: var(--yakit-card-background-color);
+        }
+    }
+    .table-tr:first-child {
+        border-top: 0;
+    }
+    .cell-data-verbose {
+        display: inline-block;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .table-footer-empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 40px;
+        color: #b4bbca;
+        font-size: 12px;
+    }
+    .table-footer-loading {
+        min-height: 40px;
+        .loading-style {
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
+    @mixin generate-permutations-class-name($allTypes: (), $prefix: ()) {
+        // 剩余需要遍历的变量数组为空
+        @if length($allTypes) != 0 {
+            @each $type in $allTypes {
+                $pre: append($prefix, $type, $separator: comma);
+                @if length($pre) == 1 {
+                    // 单色情况
+                    @if $type == red {
+                        // 单色-红色单独处理
+                        .table-tr.table-row-red {
+                            background: var(--yakit-table-select-row-bg-color-red);
+                            color: #fff;
+                            font-weight: bold;
+                            &:hover {
+                                background: var(--yakit-table-hover-row-bg-color-red);
+                            }
+                        }
+                    } @else {
+                        // 单色-其他颜色处理
+                        .table-tr.table-row-#{$type} {
+                            background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 20%);
+                            color: var(--yakit-table-text-color);
+                            &:hover {
+                                background: generate-transparen(#{fetch-color($type, "backgroundColor")}, 30%);
+                            }
+                        }
+                    }
+                } @else {
+                    // 多色情况
+                    $gbColors: tools.generate-colors($pre);
+                    .table-tr.table-row-#{tools.generate-class-name($pre)} {
+                        background: tools.generate-gradient($gbColors, 20%);
+                        color: var(--yakit-table-text-color);
+                        &:hover {
+                            background: tools.generate-gradient($gbColors, 30%);
+                        }
+                    }
+                }
+
+                $remaining: if(
+                    index($allTypes, $type) == length($allTypes),
+                    (),
+                    tools.get-range($allTypes, index($allTypes, $type) + 1)
+                );
+                @if length($pre) <3 {
+                    @include generate-permutations-class-name($remaining, $pre);
+                } @else {
+                }
             }
         }
+    }
+    $allColorTypes: map-keys(tools.$allColors);
+    @include generate-permutations-class-name($allColorTypes);
+}
+
+.websocket-detail-modal {
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    .editor-body {
+        flex: 1;
+        overflow: hidden;
+        padding-top: 6px;
     }
 }
