@@ -20,7 +20,7 @@ import {
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
 import {genDefaultPagination, QueryGeneralResponse, YakScript} from "@/pages/invoker/schema"
-import {Badge, Divider, Form, FormInstance, Input, Progress, Tooltip, Tree} from "antd"
+import {Badge, Divider, Form, FormInstance, Input, Progress, Slider, Tooltip, Tree} from "antd"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {ExtraParamsNodeByType} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/PluginExecuteExtraParams"
 import {ExecuteEnterNodeByPluginParams} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
@@ -49,7 +49,10 @@ import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {failed, success, warn, yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {CustomPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
+import {
+    CustomPluginExecuteFormValue,
+    FormExtraSettingProps
+} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import useStore from "../hooks/useStore"
 import {getNameByPath, grpcFetchAuditTree, grpcFetchDeleteAudit, loadAuditFromYakURLRaw} from "../utils"
@@ -95,7 +98,8 @@ import {
     DeleteSyntaxFlowResultResponse,
     QuerySyntaxFlowResultRequest,
     QuerySyntaxFlowResultResponse,
-    SyntaxFlowResult
+    SyntaxFlowResult,
+    VerifyStartProps
 } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
@@ -103,7 +107,7 @@ import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitDragger, YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {PluginExecuteLog} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import useDispatcher from "../hooks/useDispatcher"
@@ -118,7 +122,11 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import { SyntaxFlowMonacoSpec } from "@/utils/monacoSpec/syntaxflowEditor"
+import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
+import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1222,85 +1230,16 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
     })
 )
 
-// 审计表单主要项内容
-export const AuditMainItemForm: React.FC<AuditMainItemFormProps> = (props) => {
-    const [type, setType] = useState<string>("local")
-    return (
-        <div className={styles["audit-main-item-form"]}>
-            <Form.Item
-                label={"项目类型"}
-                name='type'
-                rules={[{required: true, message: "请选择项目类型"}]}
-                initialValue='local'
-            >
-                <YakitSelect
-                    onChange={(value) => {
-                        setType(value)
-                    }}
-                >
-                    <YakitSelect.Option value='local'>本地文件</YakitSelect.Option>
-                    <YakitSelect.Option value='Yaklang'>压缩包</YakitSelect.Option>
-                    <YakitSelect.Option value='git/svn'>Git/SVN仓库</YakitSelect.Option>
-                    <YakitSelect.Option value='jar'>Jar</YakitSelect.Option>
-                </YakitSelect>
-            </Form.Item>
-            <YakitFormDragger
-                formItemProps={{
-                    name: "ProgramPath",
-                    label: "项目路径",
-                    rules: [{required: true}]
-                }}
-                isShowPathNumber={false}
-                selectType='folder'
-                multiple={false}
-                help='可将文件夹拖入框内或点击此处'
-            />
-            {type !== "jar" && (
-                <Form.Item name='language' label={"语言"} rules={[{required: true, message: "请选择语言"}]}>
-                    <YakitSelect>
-                        <YakitSelect.Option value='Yaklang'>Yaklang</YakitSelect.Option>
-                    </YakitSelect>
-                </Form.Item>
-            )}
-            {type === "git/svn" && (
-                <>
-                    <Form.Item name='programName1' label={"用户名"}>
-                        <YakitInput placeholder='请输入' />
-                    </Form.Item>
-                    <Form.Item name='programName2' label={"密码"}>
-                        <YakitInput placeholder='请输入' />
-                    </Form.Item>
-                    <Form.Item name='programName3' label={"代理"}>
-                        <YakitInput placeholder='请输入' />
-                    </Form.Item>
-                </>
-            )}
-            <Form.Item name='programName' label={"项目名称"}>
-                <YakitInput placeholder='请输入' />
-            </Form.Item>
-            <Form.Item label={"项目描述"}>
-                <YakitInput.TextArea placeholder='请输入' />
-            </Form.Item>
-        </div>
-    )
-}
-
 export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
-    const {onCancel, isInitDefault = false, isExecuting, onStartAudit} = props
-    const {fileTree} = useStore()
+    const {onCancel, isExecuting, onStartAudit, form, isVerifyForm, activeKey, setActiveKey} = props
     const [loading, setLoading] = useState<boolean>(true)
-
     const [plugin, setPlugin] = useState<YakScript>()
-    const [form] = Form.useForm()
-    const jsonSchemaListRef = useRef<{
-        [key: string]: any
-    }>({})
+    const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
 
-    const cacheRef = useRef<any>()
     // 获取参数
     const handleFetchParams = useDebounceFn(
         useMemoizedFn(async () => {
-            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目编译"}, true)
+            const newPlugin = await grpcFetchLocalPluginDetail({Name: "SSA 项目探测"}, true)
             setLoading(false)
             setPlugin(newPlugin)
         }),
@@ -1311,82 +1250,44 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         handleFetchParams()
     }, [])
 
-    const YakRunnerAuditCodeCache = "YakRunnerAuditCodeCache"
-    // 必要参数
-    const requiredParams = useMemo(() => {
-        return (
-            plugin?.Params.filter((item) => !!item.Required).map((item) => {
-                if (item.Field === "ProgramPath") {
-                    return {
-                        ...item,
-                        cacheRef,
-                        cacheHistoryDataKey: YakRunnerAuditCodeCache
-                    }
-                }
-                return item
-            }) || []
-        )
-    }, [plugin?.Params])
-
-    // 设置默认值
-    const initRequiredFormValue = useMemoizedFn(async () => {
-        let ProjectPath = ""
-        let ProjectName = ""
-        if (fileTree.length > 0) {
-            ProjectPath = fileTree[0].path
-            ProjectName = await getNameByPath(ProjectPath)
-        }
-
-        // 必填参数
-        let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue}
-
-        if (isInitDefault) {
-            requiredParams.forEach((ele) => {
-                const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-                if (ele.Field === "programName") {
-                    initRequiredFormValue = {
-                        ...initRequiredFormValue,
-                        [ele.Field]: ProjectName
-                    }
-                    return
-                }
-                if (ele.Field === "ProgramPath") {
-                    initRequiredFormValue = {
-                        ...initRequiredFormValue,
-                        [ele.Field]: ProjectPath
-                    }
-                    return
-                }
-                initRequiredFormValue = {
-                    ...initRequiredFormValue,
-                    [ele.Field]: value
-                }
-            })
-        }
-
-        // 选填参数默认值
-        const arr = plugin?.Params.filter((item) => !item.Required) || []
-        arr.forEach((ele) => {
-            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            initRequiredFormValue = {
-                ...initRequiredFormValue,
-                [ele.Field]: value
-            }
-        })
-
-        form.setFieldsValue({...initRequiredFormValue})
-    })
-
-    useEffect(() => {
-        if (plugin?.Params) {
-            initRequiredFormValue()
-        }
-    }, [plugin?.Params])
-
     /** 选填参数 */
     const groupParams = useMemo(() => {
         const arr = plugin?.Params.filter((item) => !item.Required) || []
-        return ParamsToGroupByGroupName(arr)
+        const showArr = arr.filter((item) => (item.Group || "").length > 0)
+        return ParamsToGroupByGroupName(showArr)
+    }, [plugin?.Params])
+
+    /** 自定义控件数据 */
+    const customParams = useMemo(() => {
+        const defalut: FormExtraSettingProps = {
+            double: false,
+            data: []
+        }
+        try {
+            const arr = plugin?.Params.filter((item) => !item.Required) || []
+            const customArr = arr.filter((item) => (item.Group || "").length === 0)
+            // 项目分片
+            const peephole = customArr.find((item) => item.Field === "peephole")?.ExtraSetting || "{}"
+            const language = customArr.find((item) => item.Field === "language")?.ExtraSetting || "{}"
+
+            const peepholeArr: FormExtraSettingProps = JSON.parse(peephole) || {
+                double: false,
+                data: []
+            }
+            const languageArr: FormExtraSettingProps = JSON.parse(language) || {
+                double: false,
+                data: []
+            }
+            return {
+                peepholeArr,
+                languageArr
+            }
+        } catch (error) {
+            return {
+                peepholeArr: defalut,
+                languageArr: defalut
+            }
+        }
     }, [plugin?.Params])
 
     const onStartExecute = useMemoizedFn(() => {
@@ -1402,26 +1303,16 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                         PluginName: ""
                     }
 
-                    const request: Record<string, any> = {}
-                    for (let el of plugin?.Params || []) request[el.Field] = value[el.Field] || undefined
                     requestParams.ExecParams = getYakExecutorParam({...value})
-                    // 缓存项目路径
-                    if (value?.ProgramPath) {
-                        cacheRef.current.onSetRemoteValues(value?.ProgramPath)
-                    }
-
-                    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                    if (result.jsonSchemaError.length > 0) {
-                        failed(`jsonSchema校验失败`)
-                        return
-                    }
-                    result.jsonSchemaSuccess.forEach((item) => {
-                        requestParams.ExecParams.push({
-                            Key: item.key,
-                            Value: JSON.stringify(item.value)
+                    if (customParams.peepholeArr.data.length > 0) {
+                        requestParams.ExecParams = requestParams.ExecParams.map((item) => {
+                            if (item.Key === "peephole") {
+                                return {...item, Value: customParams.peepholeArr?.data[item.Value]?.value}
+                            }
+                            return item
                         })
-                    })
-                    onStartAudit(value["programName"], requestParams)
+                    }
+                    onStartAudit(requestParams)
                 })
                 .catch(() => {})
         }
@@ -1432,10 +1323,9 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             <Form
                 style={{padding: 16}}
                 form={form}
-                onFinish={() => {}}
                 size='small'
-                labelCol={{span: 8}}
-                wrapperCol={{span: 16}}
+                labelCol={{span: 6}}
+                wrapperCol={{span: 18}}
                 labelWrap={true}
                 validateMessages={{
                     /* eslint-disable no-template-curly-in-string */
@@ -1443,42 +1333,103 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 }}
                 className={styles["audit-modal-form"]}
             >
-                {/* <AuditMainItemForm /> */}
-                <div className={styles["custom-params-wrapper"]}>
-                    <ExecuteEnterNodeByPluginParams
-                        paramsList={requiredParams}
-                        pluginType={"yak"}
-                        isExecuting={isExecuting}
-                        jsonSchemaListRef={jsonSchemaListRef}
+                <Form.Item name='target' label='项目路径' rules={[{required: true, message: "请输入项目路径"}]}>
+                    <YakitDragger
+                        isShowPathNumber={false}
+                        selectType='all'
+                        renderType='textarea'
+                        multiple={false}
+                        help='可将项目文件拖入框内或点击此处'
+                        disabled={false}
+                        // accept=""
                     />
-                </div>
-                {groupParams.length > 0 ? (
+                </Form.Item>
+
+                {groupParams.length > 0 && (
                     <>
                         <div className={styles["additional-params-divider"]}>
                             <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                            <div className={styles["divider-style"]}></div>
+                            <div className={styles["divider-style"]} />
                         </div>
+                        <YakitCollapse
+                            className={styles["extra-params-divider"]}
+                            activeKey={activeKey}
+                            onChange={(v) => {
+                                setActiveKey(v)
+                            }}
+                        >
+                            <YakitPanel key='defalut' header={`参数组`}>
+                                <Form.Item name='language' label='语言'>
+                                    <YakitSelect options={customParams.languageArr.data} />
+                                </Form.Item>
+                                <Form.Item
+                                    name='proxy'
+                                    label='代理'
+                                    extra={
+                                        <div
+                                            className={styles["agent-down-stream-proxy"]}
+                                            onClick={() => setAgentConfigModalVisible(true)}
+                                        >
+                                            配置代理认证
+                                        </div>
+                                    }
+                                >
+                                    <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                                </Form.Item>
+                                <Form.Item name='peephole' label='编译速度' help="小文件无需配置，大文件可根据需求选择，速度越快，精度越小">
+                                    <Slider
+                                        style={{width: 300}}
+                                        dots
+                                        min={0}
+                                        max={3}
+                                        tipFormatter={(value) => {
+                                            switch (value) {
+                                                case 0:
+                                                    return "关闭，精度IV"
+                                                case 1:
+                                                    return "慢速，精度III"
+                                                case 2:
+                                                    return "中速，精度II"
+                                                case 3:
+                                                    return "快速，精度I"
+                                                default:
+                                                    return value
+                                            }
+                                        }}
+                                    />
+                                </Form.Item>
+                            </YakitPanel>
+                        </YakitCollapse>
                         <ExtraParamsNodeByType
                             extraParamsGroup={groupParams}
                             pluginType={"yak"}
-                            jsonSchemaListRef={jsonSchemaListRef}
+                            isDefaultActiveKey={false}
                         />
                     </>
-                ) : null}
+                )}
             </Form>
             <div className={styles["audit-form-footer"]}>
                 <YakitButton type='outline2' onClick={onCancel}>
                     取消
                 </YakitButton>
-                <YakitButton onClick={onStartExecute}>开始编译</YakitButton>
+                <YakitButton onClick={onStartExecute} loading={isVerifyForm}>
+                    {isVerifyForm ? "正在校验" : "开始编译"}
+                </YakitButton>
             </div>
+            <AgentConfigModal
+                agentConfigModalVisible={agentConfigModalVisible}
+                onCloseModal={() => setAgentConfigModalVisible(false)}
+                generateURL={(url) => {
+                    form.setFieldsValue({proxy: url})
+                }}
+            />
         </YakitSpin>
     )
 }
 
 // 公共封装组件用于编译项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-    const {onCancel, onSuccee, isInitDefault, title, warrpId} = props
+    const {onCancel, onSuccee, title, warrpId} = props
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
     const tokenRef = useRef<string>(randomString(40))
     const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -1511,16 +1462,22 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         Speed: "0"
     })
     const logInfoRef = useRef<StreamResult.Log[]>([])
+    const [form] = Form.useForm()
+    // 是否表单校验中
+    const [isVerifyForm, setVerifyForm] = useState<boolean>(false)
+    const [activeKey, setActiveKey] = useState<string | string[]>()
+    // 由于此流还包含表单校验功能 因此需判断校验是否通过，是否已经真正的执行了
+    const isRealStartRef = useRef<boolean>(false)
+
     // 执行审计
-    const onStartAudit = useMemoizedFn((path: string, requestParams: DebugPluginRequest) => {
+    const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
         debugPluginStreamEvent.reset()
         setRuntimeId("")
-        pathCacheRef.current = path
+
         apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
-            setIsExecuting(true)
-            setShowCompileModal(false)
-            setShowRunAuditModal(true)
+            isRealStartRef.current = false
             debugPluginStreamEvent.start()
+            setVerifyForm(true)
         })
     })
 
@@ -1532,21 +1489,111 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         onCancel()
     }
 
-    useEffect(() => {
-        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
-        // 当任务结束时 跳转打开编译列表
-        if (progress === 1) {
-            setTimeout(() => {
-                logInfoRef.current = []
-                setShowRunAuditModal(false)
-                onSuccee(pathCacheRef.current)
-            }, 300)
+    useUpdateEffect(() => {
+        if (!isRealStartRef.current) {
+            const startLog = streamInfo.logState.find((item) => item.level === "code")
+            if (startLog && startLog.data) {
+                try {
+                    const verifyStart = JSON.parse(startLog?.data) as VerifyStartProps
+                    const {kind, msg} = verifyStart.error
+                    setVerifyForm(false)
+                    pathCacheRef.current = verifyStart.program_name
+                    switch (kind) {
+                        // 链接错误
+                        case "connectFailException":
+                            warn("链接错误")
+                            setActiveKey(["defalut"])
+                            setTimeout(() => {
+                                form.setFields([
+                                    {
+                                        name: "proxy",
+                                        errors: [msg] // 设置错误信息
+                                    },
+                                    {
+                                        name: "language",
+                                        errors: []
+                                    }
+                                ])
+                            }, 200)
+
+                            break
+                        // 文件类型错误
+                        case "fileTypeException":
+                            form.setFields([
+                                {
+                                    name: "proxy",
+                                    errors: []
+                                },
+                                {
+                                    name: "language",
+                                    errors: []
+                                }
+                            ])
+                            warn(
+                                "输入文件无法解析，请检查输入的路径为文件夹或jar/war/zip文件，或链接是否包含http/https/git协议头"
+                            )
+                            break
+                        // 文件不存在错误
+                        case "fileNotFoundException":
+                            form.setFields([
+                                {
+                                    name: "proxy",
+                                    errors: []
+                                },
+                                {
+                                    name: "language",
+                                    errors: []
+                                }
+                            ])
+                            warn(
+                                "路径错误或者输入的内容无法识别，请检查输入的路径是否存在文件或文件夹或链接是否有http/https/git协议头。"
+                            )
+                            break
+                        // 无法自动确定语言
+                        case "languageNeedSelectException":
+                            warn("该输入无法自动确定语言，请指定编译语言")
+                            setActiveKey(["defalut"])
+                            form.setFields([
+                                {
+                                    name: "language",
+                                    errors: [msg] // 设置错误信息
+                                },
+                                {
+                                    name: "proxy",
+                                    errors: []
+                                }
+                            ])
+                            break
+                        default:
+                            //  真正的启动
+                            isRealStartRef.current = true
+                            setIsExecuting(true)
+                            setShowCompileModal(false)
+                            setShowRunAuditModal(true)
+                            break
+                    }
+                } catch (error) {
+                    failed("启动解析失败")
+                }
+            }
         }
-        logInfoRef.current = streamInfo.logState.slice(0, 8)
-        setExportStreamData({
-            ...exportStreamData,
-            Progress: progress
-        })
+
+        if (isRealStartRef.current) {
+            const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+            // 当任务结束时 跳转打开编译列表
+            if (progress === 1) {
+                setTimeout(() => {
+                    logInfoRef.current = []
+                    setShowRunAuditModal(false)
+                    onSuccee(pathCacheRef.current)
+                }, 300)
+            }
+            logInfoRef.current = streamInfo.logState.slice(0, 8)
+            setExportStreamData({
+                ...exportStreamData,
+                Progress: progress
+            })
+        }
     }, [streamInfo])
 
     return (
@@ -1559,12 +1606,16 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
                 footer={null}
                 onCancel={onCancel}
                 maskClosable={false}
+                width={540}
             >
                 <AuditModalForm
-                    isInitDefault={isInitDefault}
                     onCancel={onCancel}
                     isExecuting={isExecuting}
                     onStartAudit={onStartAudit}
+                    form={form}
+                    isVerifyForm={isVerifyForm}
+                    activeKey={activeKey}
+                    setActiveKey={setActiveKey}
                 />
             </YakitModal>
             {/* 编译项目进度条弹窗 */}
@@ -1903,9 +1954,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             dataIndex: "Name",
             render: (text, record) => {
                 return (
-                    <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
-                        {record.Name}
-                    </div>
+                    <Tooltip title={record.Name}>
+                        <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>
+                            {record.Name}
+                        </div>
+                    </Tooltip>
                 )
             }
         },
@@ -1919,7 +1972,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             dataIndex: "Description",
             render: (text, record) => {
                 return (
-                    <Tooltip title={text}>
+                    <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
                         <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{text}</div>
                     </Tooltip>
                 )

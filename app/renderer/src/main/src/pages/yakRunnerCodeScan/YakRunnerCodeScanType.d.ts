@@ -70,11 +70,11 @@ export interface CodeScaMainExecuteContentProps {
     onSetSelectGroupListByKeyWord: (v: string[]) => void
     pageId: string
     pauseLoading: boolean
-    setPauseLoading: (v:boolean) => void
+    setPauseLoading: (v: boolean) => void
     stopLoading: boolean
-    setStopLoading: (v:boolean) => void
+    setStopLoading: (v: boolean) => void
     continueLoading: boolean
-    setContinueLoading: (v:boolean) => void
+    setContinueLoading: (v: boolean) => void
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -184,4 +184,14 @@ export interface CodeScanAuditExecuteFormProps {
     setIsExpand: (v: boolean) => void
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
     resetStreamInfo: () => void
+}
+
+interface ErrorProps {
+    kind: "" | "connectFailException" | "fileTypeException" | "fileNotFoundException" | "languageNeedSelectException"
+    msg: string
+}
+
+export interface VerifyStartProps {
+    error: ErrorProps
+    program_name: string
 }

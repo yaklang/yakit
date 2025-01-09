@@ -219,6 +219,7 @@
         }
     }
     .code-scan-execute-form-operate {
+        margin-top: 10px;
         @extend %display-flex-center;
         gap: 8px;
     }
@@ -359,6 +360,45 @@
             }
             }
             
+        }
+    }
+}
+
+.additional-params-divider {
+    margin: 16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    .text-style {
+        color: #b4bbca;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+    }
+    .divider-style {
+        flex: 1;
+        overflow: hidden;
+        height: 1px;
+        border-top: 1px dashed #eaecf3;
+    }
+}
+
+.agent-down-stream-proxy{
+    color: var(--yakit-primary-5);
+    display: inline-flex;
+    cursor: pointer;
+}
+
+.extra-params-collapse {
+    border-bottom: 1px solid #eaecf3;
+    margin-left: calc(33% - 90px);
+}
+
+.extra-node-collapse{
+    :global{
+        .ant-collapse-item{
+            margin-left: calc(33% - 90px);
         }
     }
 }

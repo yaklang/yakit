@@ -23,6 +23,7 @@ import {defPluginExecuteFormValue} from "./constants"
 import {splitPluginParamsData} from "@/pages/pluginEditor/utils/convert"
 import {RemotePluginGV} from "@/enums/plugin"
 import { JsonFormSchemaListWrapper } from "@/components/JsonFormWrapper/JsonFormWrapper"
+import classNames from "classnames"
 
 const {YakitPanel} = YakitCollapse
 
@@ -182,14 +183,18 @@ export default PluginExecuteExtraParams
 interface ExtraParamsNodeByTypeProps extends JsonFormSchemaListWrapper{
     extraParamsGroup: YakExtraParamProps[]
     pluginType: string
+    // 是否应用默认值
+    isDefaultActiveKey?: boolean
+    wrapperClassName?: string
 }
 export const ExtraParamsNodeByType: React.FC<ExtraParamsNodeByTypeProps> = React.memo((props) => {
-    const {extraParamsGroup, pluginType,jsonSchemaListRef} = props
+    const {extraParamsGroup, pluginType,jsonSchemaListRef,isDefaultActiveKey= true,wrapperClassName} = props
     const defaultActiveKey = useMemo(() => {
+        if(!isDefaultActiveKey) return undefined
         return extraParamsGroup.map((ele) => ele.group)
-    }, [extraParamsGroup])
+    }, [extraParamsGroup,isDefaultActiveKey])
     return (
-        <YakitCollapse defaultActiveKey={defaultActiveKey} className={styles["extra-params-node-type"]}>
+        <YakitCollapse defaultActiveKey={defaultActiveKey} className={classNames(styles["extra-params-node-type"], wrapperClassName || "")}>
             {extraParamsGroup.map((item, index) => (
                 <YakitPanel key={`${item.group}`} header={`参数组：${item.group}`}>
                     {item.data?.map((formItem) => (
