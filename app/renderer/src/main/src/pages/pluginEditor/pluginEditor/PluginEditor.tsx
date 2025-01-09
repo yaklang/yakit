@@ -264,10 +264,10 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 }
             } catch (e) {}
             const codeObjectInfo = codeObject?.info || {}
-
+            const scriptName = codeObjectInfo?.name || ""
             setInitBaseInfo({
                 ...initBaseInfo,
-                ScriptName: codeObjectInfo?.name || "",
+                ScriptName: scriptName.slice(0, 100),
                 Help: codeObjectInfo?.description || ""
             } as YakitPluginBaseInfo)
         })
