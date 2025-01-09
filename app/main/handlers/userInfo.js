@@ -1,5 +1,5 @@
 const {ipcMain, BrowserWindow, shell} = require("electron")
-const {httpApi,getSocketUrl} = require("../httpServer")
+const {httpApi, getSocketUrl} = require("../httpServer")
 const {USER_INFO, HttpSetting} = require("../state")
 const {templateStr} = require("./wechatWebTemplate/index")
 const urltt = require("url")
@@ -24,7 +24,7 @@ module.exports = {
                 user_id: info.user_id,
                 token: info.token,
                 companyName: info.name,
-                companyHeadImg: info.head_img,
+                companyHeadImg: info.head_img
             }
 
             USER_INFO.isLogin = user.isLogin
@@ -41,7 +41,7 @@ module.exports = {
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
             win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", { ok: true, info: "登录成功" })
+            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
         }
         // login modal
         ipcMain.on("user-sign-in", (event, arg) => {
@@ -52,7 +52,7 @@ module.exports = {
                 qq: "auth/from-qq/callback"
             }
 
-            const { url = "", type } = arg
+            const {url = "", type} = arg
 
             const geturlparam = (url) => {
                 let p = url.split("?")[1]
@@ -85,11 +85,11 @@ module.exports = {
                     const wxCode = params.get("code")
                     if (!wxCode) {
                         authWindow.webContents.session.clearStorageData()
-                        win.webContents.send("fetch-signin-data", { ok: false, info: "code获取失败,请重新登录！" })
+                        win.webContents.send("fetch-signin-data", {ok: false, info: "code获取失败,请重新登录！"})
                         authWindow.close()
                         return
                     }
-                    httpApi("get", typeApi[type], { code: wxCode })
+                    httpApi("get", typeApi[type], {code: wxCode})
                         .then((res) => {
                             if (!authWindow) return
                             if (res.code !== 200) {
@@ -108,7 +108,7 @@ module.exports = {
                         })
                         .catch((err) => {
                             authWindow.webContents.session.clearStorageData()
-                            win.webContents.send("fetch-signin-data", { ok: false, info: "登录错误:" + err })
+                            win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
                             authWindow.close()
                         })
                 })
@@ -125,12 +125,12 @@ module.exports = {
                 }
                 server = http
                     .createServer(async (req, res) => {
-                        const { pathname } = urltt.parse(req.url, true)
+                        const {pathname} = urltt.parse(req.url, true)
                         if (pathname === "/callback") {
                             res.write(templateStr)
                             res.end()
                         } else if (pathname === "/judgeSignin") {
-                            const { query } = urltt.parse(req.url, true)
+                            const {query} = urltt.parse(req.url, true)
                             // 处理回调的逻辑
                             const ghCode = query.code
                             if (!ghCode) {
@@ -143,8 +143,12 @@ module.exports = {
                                 return
                             }
                             await new Promise((resolve, reject) => {
-                                httpApi("get", typeApi[type], { code: ghCode },
-                                    { headers: { 'Accept': 'application/json, text/plain, */*' } })
+                                httpApi(
+                                    "get",
+                                    typeApi[type],
+                                    {code: ghCode},
+                                    {headers: {Accept: "application/json, text/plain, */*"}}
+                                )
                                     .then((resp) => {
                                         if (resp.code !== 200) {
                                             win.webContents.send("fetch-signin-data", {
@@ -168,7 +172,7 @@ module.exports = {
                                         resolve()
                                     })
                                     .catch((err) => {
-                                        win.webContents.send("fetch-signin-data", { ok: false, info: "登录错误:" + err })
+                                        win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
                                         res.end(
                                             JSON.stringify({
                                                 login: false
@@ -216,7 +220,7 @@ module.exports = {
                 user_id: info.user_id,
                 token: info.token,
                 companyName: info.name,
-                companyHeadImg: info.head_img,
+                companyHeadImg: info.head_img
             }
             USER_INFO.isLogin = user.isLogin
             USER_INFO.platform = user.platform
@@ -232,16 +236,16 @@ module.exports = {
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
             win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", { ok: true, info: "登录成功" })
+            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
 
             return new Promise((resolve, reject) => {
-                resolve({ next: true })
+                resolve({next: true})
             })
         })
 
         ipcMain.on("company-refresh-in", (event) => {
             win.webContents.send("fetch-signin-token", USER_INFO)
-            win.webContents.send("fetch-signin-data", { ok: true, info: "登录成功" })
+            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
         })
 
         ipcMain.handle("get-login-user-info", async (e) => {
@@ -291,17 +295,17 @@ module.exports = {
         ipcMain.on("edit-baseUrl", (event, arg) => {
             HttpSetting.httpBaseURL = arg.baseUrl
             HttpSetting.wsBaseURL = getSocketUrl(arg.baseUrl)
-            USER_INFO.token = ''
-            win.webContents.send("edit-baseUrl-status", { ok: true, info: "更改成功" })
-            win.webContents.send("refresh-new-home", { ok: true, info: "刷新成功" })
+            USER_INFO.token = ""
+            win.webContents.send("edit-baseUrl-status", {ok: true, info: "更改成功"})
+            win.webContents.send("refresh-new-home", {ok: true, info: "刷新成功"})
         })
 
         ipcMain.handle("reset-password", (event, arg) => {
             win.webContents.send("reset-password-callback")
         })
 
-        ipcMain.handle('get-ws-url', (event, arg) => {
-            return HttpSetting.wsBaseURL;
-        });
+        ipcMain.handle("get-ws-url", (event, arg) => {
+            return HttpSetting.wsBaseURL
+        })
     }
 }

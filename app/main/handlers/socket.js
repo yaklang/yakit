@@ -53,7 +53,7 @@ module.exports = (win, getClient) => {
         // 处理 WebSocket 连接打开事件
         ws.on("open", () => {
             isConnect = true
-            reconnectCount = 0  // 连接成功时重置重连计数
+            reconnectCount = 0 // 连接成功时重置重连计数
             win.webContents.send("client-socket-open")
         })
 

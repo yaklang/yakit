@@ -2,12 +2,12 @@
  * TODO: OSS上传,后期需要整合
  * LINK - ./upload.js#split-upload
  */
-const { service, } = require("../httpServer")
-const { ipcMain } = require("electron")
+const {service} = require("../httpServer")
+const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
-const { hashChunk } = require("../toolsFunc")
+const {hashChunk} = require("../toolsFunc")
 const axios = require("axios")
 const PATH = require("path")
 
@@ -20,7 +20,7 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             try {
                 // path为文件路径 token为切片进度回调 url为接口
-                const { url, path, token, filedHash = '', type } = params
+                const {url, path, token, filedHash = "", type} = params
                 // 获取文件名
                 const fileName = customPath.basename(path)
                 // 文件大小（以字节为单位）
@@ -36,19 +36,19 @@ module.exports = (win, getClient) => {
                 // 计算分片总数
                 const totalChunks = Math.ceil(size / chunkSize)
                 // 计算整个文件Hash
-                const fileHash = await hashChunk({ path })
+                const fileHash = await hashChunk({path})
                 const fileHashTime = `${fileHash}-${Date.now()}`
                 // 创建一个新的CancelToken
                 const cancelTokenSource = axios.CancelToken.source()
                 streamOSSplitSUpload.set(token, cancelTokenSource)
                 for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                     try {
-                        const hash = await hashChunk({ path, size, chunkSize, chunkIndex })
+                        const hash = await hashChunk({path, size, chunkSize, chunkIndex})
                         let add = chunkIndex === 0 ? 0 : 1
                         const start = chunkIndex * chunkSize + add
                         const end = Math.min((chunkIndex + 1) * chunkSize, size)
                         // 创建当前分片的读取流
-                        const chunkStream = fs.createReadStream(path, { start, end })
+                        const chunkStream = fs.createReadStream(path, {start, end})
                         await ossUploadBigFile({
                             url,
                             chunkStream,
@@ -92,7 +92,19 @@ module.exports = (win, getClient) => {
         })
     })
     // 上传到oss
-    const ossUploadBigFile = ({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHashTime, filedHash, type, token, cancelToken }) => {
+    const ossUploadBigFile = ({
+        url,
+        chunkStream,
+        chunkIndex,
+        totalChunks,
+        fileName,
+        hash,
+        fileHashTime,
+        filedHash,
+        type,
+        token,
+        cancelToken
+    }) => {
         return new Promise((resolve, reject) => {
             ossPostPackageHistory[hash] ? (ossPostPackageHistory[hash] += 1) : (ossPostPackageHistory[hash] = 1)
             const percent = (chunkIndex + 1) / totalChunks
@@ -104,11 +116,10 @@ module.exports = (win, getClient) => {
             formData.append("filedHash", filedHash)
             formData.append("type", type)
 
-
             service({
                 url,
-                method: 'post',
-                headers: { "Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}` },
+                method: "post",
+                headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
                 data: formData,
                 timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
                 cancelToken
@@ -124,7 +135,19 @@ module.exports = (win, getClient) => {
                     if (res.code !== 200 && ossPostPackageHistory[hash] <= 3) {
                         try {
                             // 传输失败 重传3次
-                            await ossUploadBigFile({ url, chunkStream, chunkIndex, totalChunks, fileName, hash, fileHashTime, filedHash, type, token, cancelToken })
+                            await ossUploadBigFile({
+                                url,
+                                chunkStream,
+                                chunkIndex,
+                                totalChunks,
+                                fileName,
+                                hash,
+                                fileHashTime,
+                                filedHash,
+                                type,
+                                token,
+                                cancelToken
+                            })
                         } catch (error) {
                             reject(error)
                         }
@@ -142,18 +165,16 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             try {
                 // 发送 HEAD 请求
-                const response = await axios.head(params);
+                const response = await axios.head(params)
                 const value = {
                     fileName: PATH.basename(params),
-                    size: response.headers['content-length'],
-                    type: response.headers['content-type'],
+                    size: response.headers["content-length"],
+                    type: response.headers["content-type"]
                 }
                 resolve(value)
             } catch (error) {
                 reject(error)
             }
-
         })
     })
-
 }

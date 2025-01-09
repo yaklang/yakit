@@ -67,19 +67,19 @@ const getNowTime = () => {
 
 const Uint8ArrayToString = (fileData, encoding) => {
     try {
-        return Buffer.from(fileData).toString(encoding ? encoding : "utf8");
+        return Buffer.from(fileData).toString(encoding ? encoding : "utf8")
     } catch (e) {
         return `${fileData}`
     }
 }
 
-const hashChunk = ({ path, size, chunkSize, chunkIndex }) => {
+const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
     return new Promise((resolve, reject) => {
         let options = {}
         if (size && chunkSize && chunkIndex) {
             const start = chunkIndex * chunkSize
             const end = Math.min(start + chunkSize, size)
-            options = { start, end }
+            options = {start, end}
         }
         // 创建当前分片的读取流
         const chunkStream = fs.createReadStream(path, options)
@@ -100,4 +100,4 @@ const hashChunk = ({ path, size, chunkSize, chunkIndex }) => {
     })
 }
 
-module.exports = { clearFolder, getNowTime, Uint8ArrayToString, hashChunk }
+module.exports = {clearFolder, getNowTime, Uint8ArrayToString, hashChunk}
