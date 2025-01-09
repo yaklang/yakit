@@ -471,7 +471,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
                 uiSchema={uiSchema as UiSchemaTableProps}
                 value={value}
                 onChange={(arr: any[]) => {
-                    onChange(arr.length === 0 ? options.emptyValue : arr)
+                    // 注：options.emptyValue在返回为数组时会导致校验无效
+                    onChange(arr)
                 }}
             />
         )
