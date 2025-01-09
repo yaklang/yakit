@@ -3,11 +3,16 @@ import {useNodeViewContext} from "@prosemirror-adapter/react"
 import React from "react"
 import styles from "./ListItem.module.scss"
 import classNames from "classnames"
+import {useCreation} from "ahooks"
 
 export const ListItem: React.FC = () => {
-    const {node, contentRef, setAttrs} = useNodeViewContext()
+    const {node, view, contentRef, setAttrs} = useNodeViewContext()
 
     const {label, checked, listType} = node.attrs
+
+    const disabled = useCreation(() => {
+        return !view.editable
+    }, [view.editable])
 
     const onUpdateChecked = (val: boolean) => {
         setAttrs({checked: val})
@@ -32,7 +37,11 @@ export const ListItem: React.FC = () => {
 
         return (
             <div className={styles["checked-dot-wrapper"]}>
-                <YakitCheckbox checked={checked} onChange={(e) => onUpdateChecked(e.target.checked)} />
+                <YakitCheckbox
+                    disabled={disabled}
+                    checked={checked}
+                    onChange={(e) => onUpdateChecked(e.target.checked)}
+                />
             </div>
         )
     }

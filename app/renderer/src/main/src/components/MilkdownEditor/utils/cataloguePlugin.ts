@@ -8,7 +8,7 @@ const getHeading = (view) => {
     const headings: MilkdownCatalogueProps[] = []
     // 遍历文档节点，提取标题（heading）
     doc.descendants((node) => {
-        if (node.type.name === state.schema.nodes.heading && node.content.size > 0) {
+        if (node.type.name === state.schema.nodes.heading.name && node.content.size > 0) {
             const {attrs} = node
             headings.push({
                 id: attrs.id,
