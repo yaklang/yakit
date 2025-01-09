@@ -410,7 +410,6 @@ export const ReverseServer_New: React.FC<FacadeOptionsProp> = (props) => {
                                         }
                                     }
                                     generaterOptions.forEach((item) => {
-                                        console.log(item)
                                         switch (item.Type) {
                                             case ParamType.String:
                                                 pushElement(item.KeyVerbose, item.Key, <Input placeholder='' />)

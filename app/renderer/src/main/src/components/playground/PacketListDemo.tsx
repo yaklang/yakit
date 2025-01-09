@@ -64,8 +64,6 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
 
     const handleSetValue = React.useCallback(
         (offset, value) => {
-            console.log("offset, value", offset, value)
-
             showData[offset] = value
             setShowData(showData)
             setNonce((v) => v + 1)
@@ -236,16 +234,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                                             height={treeHeight}
                                             // showSearch={false}
                                             onSelect={(selectedKeys, info) => {
-                                                console.log("select keys", selectedKeys)
-                                                console.log("info", info)
-                                                console.log("keyToScope", keyToScope)
                                                 let scope = keyToScope[selectedKeys[0]]
-                                                console.log("scope", scope)
                                                 if (scope?.length == 2) {
-                                                    console.log({
-                                                        start: Math.floor(scope[0] / 8),
-                                                        end: Math.ceil(scope[1] / 8)
-                                                    })
                                                     HexEditorRef.current.setSelectionRange(
                                                         Math.floor(scope[0] / 8),
                                                         Math.ceil(scope[1] / 8)

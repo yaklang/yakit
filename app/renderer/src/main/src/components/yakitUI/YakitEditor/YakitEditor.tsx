@@ -1413,9 +1413,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
                     }
                 }
-            } catch (e) {
-                console.log(e)
-            }
+            } catch (e) {}
         })
 
         // 移出编辑器时触发
