@@ -24,7 +24,7 @@ import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCode
 import {v4 as uuidv4} from "uuid"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
-import {getMapResultDetail, setMapResultDetail} from "./ResultMap"
+import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 
 export interface JumpSourceDataProps {
@@ -218,6 +218,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         setResultKey(undefined)
         let newData: InitDataProps[] = []
         if (graphLine) {
+            clearMapResultDetail()
             newData = graphLine.map((item, index) => {
                 let title = `路径${index + 1}`
                 let children = getChildren(item)
