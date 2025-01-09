@@ -1036,7 +1036,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    const onOkEnterProjectMag = () => {
+    const onOkEnterProjectMag = useMemoizedFn(() => {
         ipcRenderer.invoke("SetCurrentProject", {})
         setYakitMode("soft")
         // 刷新项目管理列表
@@ -1046,7 +1046,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setShowProjectManage(true)
         setCurrentProject(undefined)
         setNowProjectDescription(undefined)
-    }
+    })
 
     /** 项目管理的选中项目回调 */
     const softwareSettingFinish = useMemoizedFn(() => {
@@ -1144,16 +1144,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
 
     useEffect(() => {
+        if (engineLink) {
+            setSwitchEngineLoading(false)
+        }
+    }, [engineLink])
+
+    useEffect(() => {
         emiter.on("onSwitchEngine", onOkEnterProjectMag)
         return () => {
             emiter.off("onSwitchEngine", onOkEnterProjectMag)
         }
     }, [])
-    useEffect(() => {
-        if (engineLink) {
-            setSwitchEngineLoading(false)
-        }
-    }, [engineLink])
     /** ---------- 切换引擎时的逻辑 End ---------- */
 
     /** ---------- ChatCS Start ---------- */
