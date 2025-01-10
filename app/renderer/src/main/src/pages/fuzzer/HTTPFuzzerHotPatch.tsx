@@ -495,7 +495,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                 <div
                                     className={classNames(styles["hotCode-item-cont"])}
                                     onClick={() => {
-                                        onClickHotCodeName(item)
+                                        onClickHotCodeName(item, true)
                                     }}
                                 >
                                     <div
