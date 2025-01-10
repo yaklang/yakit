@@ -199,12 +199,16 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         super.destroy()
     }
     connect() {
-        this.wsProvider?.connect()
-        this.collabService?.connect()
+        Promise.resolve().then(() => {
+            this.wsProvider?.connect()
+            this.collabService?.connect()
+        })
     }
 
     disconnect() {
-        this.collabService?.disconnect()
-        this.wsProvider?.disconnect()
+        Promise.resolve().then(() => {
+            this.collabService?.disconnect()
+            this.wsProvider?.disconnect()
+        })
     }
 }

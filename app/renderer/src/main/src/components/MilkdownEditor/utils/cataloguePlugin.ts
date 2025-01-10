@@ -30,9 +30,7 @@ export const cataloguePlugin = (callback) =>
             view: (editorView) => {
                 // 初始化目录
                 const initHeadings = getHeading(editorView)
-                if (initHeadings.length > 0) {
-                    callback(initHeadings)
-                }
+                callback(initHeadings)
 
                 return {
                     update: (view) => {
@@ -46,10 +44,8 @@ export const cataloguePlugin = (callback) =>
                         const node = $from.node()
                         if (node && node.type === view.state.schema.nodes.heading) {
                             const headings = getHeading(view)
-                            if (headings.length > 0) {
-                                // 内容变化时更新目录
-                                callback(headings)
-                            }
+                            // 内容变化时更新目录
+                            callback(headings)
                         }
                     }
                 }

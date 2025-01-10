@@ -100,6 +100,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const [shareVisible, setShareVisible] = useState<boolean>(false)
 
     const [tabName, setTabName] = useState<string>(initTabName())
+    const [composedTabName, setComposedTabName] = useState<string>(initTabName()) // 不会保存拼音的中间状态
     const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
     const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
         id: 0,
@@ -183,7 +184,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         if (userInfo.isLogin) {
             const params: API.PostNotepadRequest = {
                 hash: notepadDetail.hash,
-                title: tabName || perTabName.current,
+                title: composedTabName || perTabName.current,
                 content: markdownContent || ""
             }
             apiSaveNotepad(params)
@@ -293,6 +294,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         const t = initTabName()
         setNotepadDetail((v) => ({...v, title: t}))
         setTabName(t)
+        setComposedTabName(t)
     })
 
     /**设置标题 */
@@ -305,7 +307,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             perTabName.current = title
         }
         setNotepadDetail((v) => ({...v, title}))
-        setTabName(title)
+        setComposedTabName(title)
         onSetPageTabName(title)
     })
     /**标题更改与页面菜单名称同步 */
@@ -409,7 +411,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [currentRole])
     const collabProps: MilkdownCollabProps = useCreation(() => {
         const enableCollab = !readonly
-        const newTitle = tabName || perTabName.current
+        const newTitle = composedTabName || perTabName.current
         const collabValue: MilkdownCollabProps = {
             title: newTitle,
             enableCollab,
@@ -424,7 +426,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             onSetTitle: onSetTabName
         }
         return collabValue
-    }, [notepadDetail.hash, pageId, readonly, YakitRoute.Modify_Notepad, tabName])
+    }, [notepadDetail.hash, pageId, readonly, YakitRoute.Modify_Notepad, composedTabName])
     //#endregion
 
     /**在线链接&&文档保存状态 */
@@ -456,7 +458,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         <div className={styles["modify-notepad"]}>
             <YakitSpin spinning={notepadLoading}>
                 <div className={styles["modify-notepad-heard"]}>
-                    <div className={styles["modify-notepad-heard-title"]}>{tabName}</div>
+                    <div className={styles["modify-notepad-heard-title"]}>{composedTabName}</div>
                     <div className={styles["modify-notepad-heard-extra"]}>
                         <div className={styles["modify-notepad-heard-extra-online-user"]}>
                             {onlineUsers.map((item) => (
@@ -586,20 +588,33 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     </div>
                     <div className={styles["notepad-content"]}>
                         <div className={styles["notepad-heard"]}>
+                            {/* 
+                                TODO- 标题共享后续需要优化
+                                同时使用onChange和onCompositionEnd
+                                1.拼音中间状态失焦不会进入onChange
+                                2.删除键不会进入onCompositionEnd
+                            */}
                             <YakitInput
                                 placeholder='请输入标题'
                                 size='large'
                                 bordered={false}
                                 className={styles["notepad-input"]}
-                                value={tabName}
+                                value={currentRole === notepadRole.adminPermission ? tabName : composedTabName}
                                 onChange={(e) => {
-                                    if (readonly) {
-                                        yakitNotify("error", "无编辑权限")
-                                    } else {
+                                    if (currentRole !== notepadRole.adminPermission) {
+                                        yakitNotify("error", "无编辑权限:仅限作者修改标题")
+                                        return
+                                    }
+                                    setTabName(e.target.value)
+                                    if (!(e.nativeEvent as InputEvent).isComposing) {
                                         onSetTabName(e.target.value)
                                     }
                                 }}
                                 maxLength={100}
+                                onCompositionEnd={(e) => {
+                                    if (currentRole !== notepadRole.adminPermission) return
+                                    onSetTabName((e.target as HTMLInputElement).value)
+                                }}
                             />
                             <div className={styles["notepad-heard-subTitle"]}>
                                 {notepadDetail?.headImg ? (

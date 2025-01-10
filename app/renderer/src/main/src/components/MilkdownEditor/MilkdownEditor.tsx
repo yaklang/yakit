@@ -508,6 +508,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         isSynced: false,
         saveStatus: notepadSaveStatus.saveProgress
     }) // 记录当前链接状态
+    // TODO - 共享标题
     useUpdateEffect(() => {
         if (collabManagerRef.current) {
             collabManagerRef.current.setTitle(collabParams.title)

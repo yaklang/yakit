@@ -17,7 +17,6 @@ import * as url from "lib0/url"
 import * as env from "lib0/environment"
 import {
     MessageHandlersProps,
-    NotepadSaveStatusProps,
     NotepadWsRequest,
     ObservableEvents,
     WebsocketProviderAwarenessUpdateHandler,
@@ -114,6 +113,14 @@ const setupWS = (provider: WebsocketProvider) => {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
+                provider.wsLastMessageReceived = time.getUnixTime()
+                const encoder = readMessage(provider, yjsParams, true)
+
+                if (encoding.length(encoder) > 1) {
+                    const messageUint8Array = encoding.toUint8Array(encoder)
+                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
+                    websocket.send(value)
+                }
                 if (!!data.params.userCount && data.params.docType === notepadActions.join) {
                     // 目前加入类型的消息会修改在线人数，用来做连接文档的初始化内容
                     provider.onlineUserCount = data.params.userCount
@@ -124,14 +131,6 @@ const setupWS = (provider: WebsocketProvider) => {
                             saveStatus: data.params.saveStatus
                         }
                     ])
-                }
-                provider.wsLastMessageReceived = time.getUnixTime()
-                const encoder = readMessage(provider, yjsParams, true)
-
-                if (encoding.length(encoder) > 1) {
-                    const messageUint8Array = encoding.toUint8Array(encoder)
-                    const value = provider?.getSendData({buf: messageUint8Array, docType: notepadActions.edit})
-                    websocket.send(value)
                 }
             } catch (error) {}
         }
@@ -264,6 +263,7 @@ const broadcastMessage = (provider, buf) => {
 export class WebsocketProvider extends ObservableV2<ObservableEvents> {
     /**
      * @param {string} serverUrl
+     * @param {string} room
      * @param {Y.Doc} doc
      * @param {object} opts
      * @param {boolean} [opts.connect]
