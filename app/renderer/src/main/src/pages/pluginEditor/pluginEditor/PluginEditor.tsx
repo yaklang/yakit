@@ -58,6 +58,7 @@ import {PluginUploadModal} from "@/pages/pluginHub/pluginUploadModal/PluginUploa
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {setClipboardText} from "@/utils/clipboard"
+import yaml from "js-yaml"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -243,13 +244,32 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
         // 新建插件时有初始值
         const handleNewPluginInitValue = useMemoizedFn((init: AddYakitScriptPageInfoProps) => {
+            const codeObjectInfo = init?.codeObject?.info || {}
             setInitBaseInfo({
                 Type: init.pluginType || "yak",
-                ScriptName: "",
+                ScriptName: codeObjectInfo.name || "",
+                Help: codeObjectInfo.description || "",
                 Tags: []
             })
             setType(init.pluginType || "yak")
             setInitCode(init.code || pluginTypeToName[init.pluginType || "yak"]?.content || "")
+        })
+        // 自动解析yaml获取基础信息
+        const handleParsingYaml = useMemoizedFn((content: string) => {
+            let codeObject: {info: Record<string, any>} = {info: {}}
+            try {
+                codeObject = yaml.load(content)
+                if (typeof codeObject !== "object") {
+                    codeObject = {info: {}}
+                }
+            } catch (e) {}
+            const codeObjectInfo = codeObject?.info || {}
+            const scriptName = codeObjectInfo?.name || ""
+            setInitBaseInfo({
+                ...initBaseInfo,
+                ScriptName: scriptName.slice(0, 100),
+                Help: codeObjectInfo?.description || ""
+            } as YakitPluginBaseInfo)
         })
 
         // 检查退出时是否有未保存的情况(暂时只能给编辑使用)
@@ -1014,6 +1034,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                     type={type}
                                     name={name}
                                     code={initCode}
+                                    handleParsingYaml={handleParsingYaml}
                                 />
                             </div>
                         </div>

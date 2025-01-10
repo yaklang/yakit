@@ -58,11 +58,12 @@ interface EditorCodeProps {
     name: string
     /** 初始化默认源码 */
     code: string
+    handleParsingYaml: (content: string) => void
 }
 
 export const EditorCode: React.FC<EditorCodeProps> = memo(
     forwardRef((props, ref) => {
-        const {expand, onExpand, isEdit = false, type, name, code} = props
+        const {expand, onExpand, isEdit = false, type, name, code, handleParsingYaml} = props
 
         const [visible, setVisible] = useState<boolean>(false)
         const handleExpand = useMemoizedFn((e) => {
@@ -99,6 +100,9 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 handleFetchParams(true)
             } else {
                 setParams([])
+                if (['nuclei'].includes(getType())) {
+                    handleParsingYaml(content)
+                }
             }
         }, [content])
 

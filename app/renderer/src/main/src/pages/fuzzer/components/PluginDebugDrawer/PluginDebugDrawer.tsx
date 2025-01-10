@@ -15,6 +15,8 @@ import {PluginDataProps} from "@/pages/plugins/pluginsType"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useMenuHeight} from "@/store/menuHeight"
+import yaml from "js-yaml"
+import {yakitNotify} from "@/utils/notification"
 
 const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) => {
     const {route, defaultCode, visible, getContainer, setVisible} = props
@@ -41,6 +43,16 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
     })
     // 点击存为插件 跳转新建插件页面
     const handleSkipAddYakitScriptPage = useMemoizedFn(() => {
+        let codeObject = {}
+        try {
+            codeObject = yaml.load(code)
+            if (typeof codeObject !== "object") {
+                codeObject = {}
+                yakitNotify("info", "未解析到相关基础信息")
+            }
+        } catch (e) {
+            yakitNotify("error", "Error parsing YAML: " + e)
+        }
         emiter.emit(
             "openPage",
             JSON.stringify({
@@ -48,7 +60,8 @@ const PluginDebugDrawer: React.FC<PluginDebugDrawerProps> = React.memo((props) =
                 params: {
                     pluginType: debuggerTypeRef.current,
                     code: code,
-                    source: route
+                    source: route,
+                    codeObject
                 }
             })
         )
