@@ -1036,13 +1036,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
     })
 
-    const onOkEnterProjectMag = () => {
+    const onOkEnterProjectMag = useMemoizedFn(() => {
         ipcRenderer.invoke("SetCurrentProject", {})
         setYakitMode("soft")
+        // 刷新项目管理列表
+        if (showProjectManage) {
+            emiter.emit("onRefreshProjectList")
+        }
         setShowProjectManage(true)
         setCurrentProject(undefined)
         setNowProjectDescription(undefined)
-    }
+    })
 
     /** 项目管理的选中项目回调 */
     const softwareSettingFinish = useMemoizedFn(() => {
@@ -1138,6 +1142,12 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             ipcRenderer.removeAllListeners("fetch-switch-conn-refresh")
         }
     }, [])
+
+    useEffect(() => {
+        if (engineLink) {
+            setSwitchEngineLoading(false)
+        }
+    }, [engineLink])
 
     useEffect(() => {
         emiter.on("onSwitchEngine", onOkEnterProjectMag)
@@ -1590,7 +1600,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                     </div>
 
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} engineLink={engineLink} />
                                     </div>
                                 </div>
                                 <div
@@ -1696,7 +1706,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                                 <div className={styles["header-right"]}>
                                     <div className={styles["left-cpu"]}>
-                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} />
+                                        <PerformanceDisplay engineMode={engineMode} typeCallback={handleOperations} engineLink={engineLink} />
                                     </div>
                                     <div className={styles["short-divider-wrapper"]}>
                                         <div className={styles["divider-style"]}></div>

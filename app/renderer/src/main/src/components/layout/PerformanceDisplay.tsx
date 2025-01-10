@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, success} from "@/utils/notification"
+import {failed, info, success, yakitNotify} from "@/utils/notification"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
 import {useInViewport, useMemoizedFn} from "ahooks"
@@ -23,6 +23,7 @@ const {ipcRenderer} = window.require("electron")
 interface PerformanceDisplayProps {
     engineMode: YaklangEngineMode | undefined
     typeCallback: (type: "break") => any
+    engineLink: boolean
 }
 
 export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo((props) => {
@@ -99,11 +100,12 @@ export interface yakProcess {
 interface UIEngineListProp {
     engineMode: YaklangEngineMode | undefined
     typeCallback: (type: "break") => any
+    engineLink: boolean
 }
 
 /** @name 已启动引擎列表 */
 const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
-    const {engineMode, typeCallback} = props
+    const {engineMode, typeCallback, engineLink} = props
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -225,16 +227,20 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                 return (
                                     <div key={i.pid} className={styles["engine-list-opt"]}>
                                         <div className={styles["left-body"]}>
-                                            <YakitTag color={isLocal && +i.port === port ? "success" : undefined}>
+                                            <YakitTag
+                                                color={
+                                                    isLocal && +i.port === port && engineLink ? "success" : undefined
+                                                }
+                                            >
                                                 {`PID: ${i.pid}`}
-                                                {isLocal && +i.port === port && (
+                                                {isLocal && +i.port === port && engineLink && (
                                                     <CheckedSvgIcon style={{marginLeft: 8}} />
                                                 )}
                                             </YakitTag>
                                             <div className={styles["engine-ps-info"]}>
                                                 {`yak grpc --port ${i.port === 0 ? "获取中" : i.port}`}
                                                 &nbsp;
-                                                {isLocal && +i.port === port && (
+                                                {isLocal && +i.port === port && engineLink && (
                                                     <span className={styles["current-ps-info"]}>{"(当前)"}</span>
                                                 )}
                                             </div>
@@ -255,7 +261,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                             </YakitButton>
 
                                             <YakitPopconfirm
-                                                title={<>确定是否切换连接的引擎,</>}
+                                                title={<>确定是否切换连接的引擎</>}
                                                 onConfirm={async () => {
                                                     if (+i.port !== port) {
                                                         await delTemporaryProject()
@@ -278,7 +284,24 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             }, 500)
                                                         })
                                                         .catch((e) => {
-                                                            failed(e)
+                                                            failed("切换引擎失败，请尝试切换其他端口重连")
+                                                            if (isLocal) {
+                                                                process.forEach((item) => {
+                                                                    if (item.port == port) {
+                                                                        ipcRenderer
+                                                                            .invoke(`kill-yak-grpc`, item.pid)
+                                                                            .then((val) => {
+                                                                                if (!val) {
+                                                                                    success("引擎进程关闭中...")
+                                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
+                                                                                    typeCallback("break")
+                                                                                }
+                                                                            })
+                                                                            .catch((e: any) => {})
+                                                                            .finally(fetchPSList)
+                                                                    }
+                                                                })
+                                                            }
                                                         })
                                                 }}
                                             >

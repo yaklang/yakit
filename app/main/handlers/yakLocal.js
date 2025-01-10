@@ -59,7 +59,9 @@ const windowsPidTableNetstatANO = (stdout) => {
                     pidToPort.set(pid, [])
                     portList = pidToPort.get(pid)
                 }
-                portList.push(port)
+                if (!portList.includes(port)) {
+                    portList.push(port)
+                }
             })
     }
 

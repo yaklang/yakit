@@ -273,13 +273,13 @@ module.exports = (win, callback, getClient, newClient) => {
         return await new Promise((resolve, reject) => {
             newClient().Echo({text: ECHO_TEST_MSG}, (err, data) => {
                 if (err) {
-                    reject(err)
+                    reject(err + "")
                     return
                 }
                 if (data["result"] === ECHO_TEST_MSG) {
                     resolve(data)
                 } else {
-                    reject(Error(`ECHO ${ECHO_TEST_MSG} ERROR`))
+                    reject(`ECHO ${ECHO_TEST_MSG} ERROR`)
                 }
             })
         })

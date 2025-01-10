@@ -1016,6 +1016,16 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         })
     })
 
+    const onRefreshProjectList = useMemoizedFn(() => {
+        update(1)
+    })
+    useEffect(() => {
+        emiter.on("onRefreshProjectList", onRefreshProjectList)
+        return () => {
+            emiter.off("onRefreshProjectList", onRefreshProjectList)
+        }
+    }, [])
+
     return (
         <div className={styles["project-manage-wrapper"]}>
             <div className={styles["project-manage-container"]}>
