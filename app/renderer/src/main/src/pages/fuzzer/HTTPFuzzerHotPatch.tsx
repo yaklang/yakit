@@ -342,7 +342,7 @@ export interface HotPatchTempItem {
 }
 
 interface DeleteHotPatchTemplateRequest {
-    condition: HotPatchTemplateRequest
+    Condition: HotPatchTemplateRequest
 }
 
 type HotCodeType = "fuzzer" | "mitm"
@@ -424,7 +424,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     const deleteHotPatchTemplate = (item: HotPatchTempItem) => {
         if (tab === "local") {
             const params: DeleteHotPatchTemplateRequest = {
-                condition: {
+                Condition: {
                     Type: type,
                     Name: [item.name]
                 }

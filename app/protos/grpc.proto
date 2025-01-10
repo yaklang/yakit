@@ -5949,23 +5949,23 @@ message FuzzTagSuggestionRequest{
 message HotPatchTemplate {
   string Name = 1;
   string Content = 2;
-  string Type = 3;
+  string Type = 3; // fuzzer/mitm
 }
 
 message HotPatchTemplateRequest {
   repeated int64 Id = 1;
   repeated string Name = 2;
   repeated string ContentKeyword = 3;
-  string Type = 4;
+  string Type = 4; // fuzzer/mitm
 }
 
 message UpdateHotPatchTemplateRequest {
-  HotPatchTemplateRequest condition = 1;
-  HotPatchTemplate data = 2;
+  HotPatchTemplateRequest Condition = 1;
+  HotPatchTemplate Data = 2;
 }
 
 message DeleteHotPatchTemplateRequest {
-  HotPatchTemplateRequest condition = 1;
+  HotPatchTemplateRequest Condition = 1;
   bool All = 2;
 }
 
@@ -5987,7 +5987,7 @@ message QueryHotPatchTemplateResponse {
 }
 
 message QueryHotPatchTemplateListRequest {
-  string Type = 1;
+  string Type = 1; // fuzzer/mitm
 }
 
 message QueryHotPatchTemplateListResponse {
