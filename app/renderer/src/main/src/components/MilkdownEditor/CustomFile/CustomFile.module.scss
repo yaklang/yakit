@@ -1,0 +1,153 @@
+$fileDivHeight: 64px;
+.file-custom {
+    display: flex;
+    width: 400px;
+    height: $fileDivHeight;
+    padding: 8px 12px 8px 8px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--yakit-border-color);
+    cursor: default;
+    user-select: none;
+    position: relative;
+    cursor: pointer;
+    margin-bottom: 20px;
+    .file-custom-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        gap: 8px;
+        overflow: hidden;
+        .file-type {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+        }
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow: hidden;
+            .info-name {
+                color: var(--yakit-header-color);
+                font-size: 16px;
+                font-weight: 500;
+                line-height: 24px;
+                height: 24px;
+
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+        }
+        .info-size {
+            color: var(--yakit-body-text-color);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+        }
+    }
+    .file-extra {
+        flex-shrink: 0;
+
+        .x-btn {
+            display: none;
+        }
+        .percent-loading {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--yakit-body-text-color);
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 16px;
+            cursor: pointer;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 40px;
+            &:hover {
+                .x-btn {
+                    display: flex;
+                }
+                .percent-loading {
+                    display: none;
+                }
+            }
+        }
+    }
+    .file-spinning {
+        align-items: center;
+        gap: 4px;
+        padding-top: 4px;
+    }
+}
+.file-custom-selected {
+    border-color: var(--yakit-primary-5);
+    &:hover {
+        border-color: var(--yakit-primary-2);
+        box-shadow: 0 0 0 1px var(--yakit-primary-2);
+    }
+}
+
+.tooltip-action {
+    position: absolute;
+    bottom: $fileDivHeight;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid var(--yakit-border-color);
+    background: #fff;
+    box-shadow: 0px 6px 20px 0px rgba(204, 210, 222, 0.3);
+    height: 52px;
+    padding: 12px;
+    gap: 8px;
+}
+.success-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 40px;
+    gap: 4px;
+}
+.x-circle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+    .x-circle-icon {
+        svg {
+            width: 20px;
+            height: 20px;
+            color: var(--yakit-danger-5);
+        }
+    }
+}
+
+.download-progress {
+    :global {
+        .ant-progress-text {
+            display: block;
+            margin-left: 0;
+            margin-top: 2px;
+        }
+    }
+}

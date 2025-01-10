@@ -145,7 +145,7 @@ module.exports = {
         })
 
         /** 登录相关监听 */
-        require("./handlers/userInfo")(win, getClient)
+        require("./handlers/userInfo").register(win, getClient)
 
         /** 注册本地缓存数据查改通信 */
         require("./localCache").register(win, getClient)

@@ -1,0 +1,64 @@
+.notepad-manage {
+    padding: 16px;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.notepad-manage-heard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    .heard-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: var(--yakit-header-color);
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 24px;
+    }
+    .heard-extra {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+}
+
+.notepad-manage-list {
+    flex: 1;
+}
+
+.time-cell {
+    padding: 0 8px;
+
+    color: var(--yakit-body-text-color);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+}
+
+.search-icon {
+    svg {
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-body-text-color);
+    }
+}
+
+.collaborators-popover {
+    padding-top: 0;
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
+    .collaborators-popover-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 20vw;
+    }
+}

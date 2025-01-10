@@ -144,7 +144,7 @@ const timeFilter: FilterInfoProps[] = [
     {key: "updated_at", label: "最近操作时间"}
 ]
 /** 时间过滤项对应展示内容 */
-const timeToName: {[key: string]: string} = {}
+export const timeToName: {[key: string]: string} = {}
 for (let item of timeFilter) timeToName[item.key] = item.label
 
 const DefaultProjectInfo: ProjectDescription = {

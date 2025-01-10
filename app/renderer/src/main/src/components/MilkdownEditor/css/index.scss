@@ -1,0 +1,50 @@
+@use "./alert.scss";
+@use "./comment.scss";
+@use "./heading.scss";
+@use "./codeBlock.scss";
+@use "./imageBlock.scss";
+@use "./imageInline.scss";
+@use "./listItemBlock.scss";
+@use "./placeholder.scss";
+@use "./blockquote.scss";
+@use "./table.scss";
+@use "./cursor.scss";
+
+.milkdown {
+    overscroll-behavior: none;
+    position: relative;
+    word-wrap: break-word;
+    white-space: break-spaces;
+
+    color: var(--yakit-header-color);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 24px;
+    .editor {
+        padding: 0 0 24px;
+    }
+    code {
+        height: 20px;
+        border-radius: 4px;
+        padding: 2px 6px;
+        background: var(--yakit-card-background-color);
+        border: 1px solid var(--yakit-border-color);
+        color: var(--yakit-body-text-color);
+        display: inline-flex;
+        align-items: center;
+        font-size: 12px;
+        white-space: normal;
+    }
+    .ProseMirror-selectednode {
+        background-color: var(--yakit-primary-2);
+        border-radius: 4px;
+    }
+
+    .ProseMirror-focused {
+        outline: 0;
+    }
+    ::selection {
+        background-color: var(--yakit-primary-2);
+        color: var(--yakit-header-color);
+    }
+}

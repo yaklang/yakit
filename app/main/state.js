@@ -15,10 +15,11 @@ const USER_INFO = {
     /** 角色 */
     role: null,
     token: null,
-    user_id: 0,
+    user_id: 0
 }
 const HttpSetting = {
-    httpBaseURL: "https://www.yaklang.com"
+    httpBaseURL: "https://www.yaklang.com",
+    wsBaseURL: "wss://www.yaklang.com"
 }
 
 /**

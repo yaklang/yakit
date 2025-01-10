@@ -115,6 +115,7 @@ import {
     BrutePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    ModifyNotepadPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
     RiskPageInfoProps,
@@ -148,6 +149,8 @@ const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
+const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
+const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -229,7 +232,9 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-code-scan": {label: "代码扫描"},
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
-    "rule-management": {label: "规则管理"}
+    "rule-management": {label: "规则管理"},
+    "notepad-manage": {label: "记事本"},
+    "modify-notepad": {label: "编辑记事本"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -265,7 +270,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Data_Statistics,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.Notepad_Manage
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -300,7 +306,9 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Code_Scan,
     YakitRoute.YakRunner_Audit_Code,
     YakitRoute.YakRunner_Project_Manager,
-    YakitRoute.Rule_Management
+    YakitRoute.Rule_Management,
+    YakitRoute.Modify_Notepad,
+    YakitRoute.Notepad_Manage
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
@@ -393,6 +401,8 @@ export interface ComponentParams {
     auditCodePageInfo?: AuditCodePageInfoProps
     /**代码扫描页面 */
     codeScanPageInfo?: CodeScanPageInfoProps
+    /**记事本编辑页面 */
+    modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -541,6 +551,18 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerProjectManager />
         case YakitRoute.Rule_Management:
             return <RuleManagement />
+        case YakitRoute.Notepad_Manage:
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <NotepadManage />
+                </OnlineJudgment>
+            )
+        case YakitRoute.Modify_Notepad:
+            return (
+                <OnlineJudgment isJudgingLogin={true}>
+                    <ModifyNotepad pageId={params?.id || ""} />
+                </OnlineJudgment>
+            )
         default:
             return <div />
     }

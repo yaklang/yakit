@@ -1,0 +1,52 @@
+%dot-wrapper {
+    width: 20px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.list-item-wrapper {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    width: 100%;
+    .bullet-dot-wrapper {
+        @extend %dot-wrapper;
+        .bullet-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: var(--yakit-primary-5);
+        }
+    }
+
+    .label-dot-wrapper {
+        @extend %dot-wrapper;
+        color: var(--yakit-primary-5);
+    }
+
+    .checked-dot-wrapper {
+        @extend %dot-wrapper;
+        color: var(--yakit-primary-5);
+        padding-bottom: 2px;
+    }
+
+    .list-item {
+        line-height: 24px;
+        flex: 1;
+        word-break: break-all;
+    }
+
+    .list-item-checked {
+        text-decoration: line-through;
+        color: var(--yakit-disable-text-color);
+    }
+}
+
+.list-item-checked-wrapper {
+    border-radius: 4px;
+    &:hover {
+        background-color: var(--yakit-card-background-color);
+    }
+}

@@ -10,6 +10,11 @@ import {RouteToPageProps} from "../publicMenu/PublicMenu"
 import {SendDatabaseFirstMenuProps} from "@/routes/newRouteType"
 import {YakitRoute} from "@/enums/yakitRoute"
 
+export interface NotepadMenuProps{
+    isExpand:boolean
+    onRouteMenuSelect: (info: RouteToPageProps) => void
+}
+
 export interface HeardMenuProps {
     defaultExpand: boolean
     onRouteMenuSelect: (info: RouteToPageProps) => void

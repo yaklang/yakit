@@ -16,7 +16,8 @@ import {
     GroupRightClickShowContentProps,
     OperateGroup,
     DroppableCloneProps,
-    SubTabsProps
+    SubTabsProps,
+    SwitchSubMenuItemProps
 } from "./MainOperatorContentType"
 import styles from "./MainOperatorContent.module.scss"
 import {
@@ -27,7 +28,7 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition} from "@/utils/envfile"
 import {
     useCreation,
     useDebounceFn,
@@ -139,6 +140,9 @@ import {
 } from "./utils"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import { FuzzerRemoteGV } from "@/enums/fuzzer"
+import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
+import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
+import {APIFunc} from "@/apiUtils/type"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -378,6 +382,36 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- 新逻辑 start ---------- */
 
+    useEffect(() => {
+        /**切换一级菜单选中key */
+        emiter.on("switchMenuItem", onSwitchMenuItem)
+        /**关闭一级菜单 */
+        emiter.on("onCloseFirstMenu", onCloseFirstMenu)
+        return () => {
+            emiter.off("switchMenuItem", onSwitchMenuItem)
+            emiter.off("onCloseFirstMenu", onCloseFirstMenu)
+        }
+    }, [])
+    const onSwitchMenuItem = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            if (value?.route) {
+                setCurrentTabKey(value.route)
+            }
+        } catch (error) {
+            yakitNotify("error", `切换一级菜单选中key失败:${error}`)
+        }
+    })
+    const onCloseFirstMenu = useMemoizedFn((res) => {
+        try {
+            const value: OnlyPageCache = JSON.parse(res)
+            const data: OnlyPageCache = {
+                menuName: "",
+                route: value.route
+            }
+            removeMenuPage(data)
+        } catch (error) {}
+    })
     /**
      * @name 渲染端通信-从顶部菜单里打开一个指定页面
      * @description 本通信方法 替换 老方法"open-route-page-callback"(ipc通信)
@@ -462,6 +496,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
+                break
+            case YakitRoute.Modify_Notepad:
+                addModifyNotepad(params)
                 break
             default:
                 break
@@ -592,6 +629,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
         )
+    })
+    const addModifyNotepad = useMemoizedFn(async (data) => {
+        try {
+            let verbose = ""
+            if (!!data?.notepadHash) {
+                const res = await apiGetNotepadDetail(data.notepadHash)
+                verbose = res?.title || ""
+            }
+            openMenuPage(
+                {route: YakitRoute.Modify_Notepad},
+                {
+                    verbose,
+                    pageParams: {
+                        modifyNotepadPageInfo: {...data}
+                    }
+                }
+            )
+        } catch (error) {}
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(
@@ -1143,10 +1198,20 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 let verbose =
                     nodeParams?.verbose ||
                     `${tabName}-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
-                if (route === YakitRoute.HTTPFuzzer) {
-                    // webFuzzer页面二级tab名称改为WF，特殊
-                    verbose =
-                        nodeParams?.verbose || `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+
+                switch (route) {
+                    case YakitRoute.HTTPFuzzer:
+                        verbose =
+                            nodeParams?.verbose ||
+                            `${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+                        break
+                    case YakitRoute.Modify_Notepad:
+                        verbose =
+                            nodeParams?.verbose ||
+                            `Untitled-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`
+                        break
+                    default:
+                        break
                 }
                 const node: MultipleNodeInfo = {
                     id: tabId,
@@ -1200,6 +1265,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, order)
                             break
+                        case YakitRoute.Modify_Notepad:
+                            onSetModifyNotepadData(node, order)
+                            break
                         case YakitRoute.YakRunner_Code_Scan:
                             onCodeScanPage(node, order)
                             break
@@ -1235,6 +1303,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             break
                         case YakitRoute.WebsocketFuzzer:
                             onWebsocketFuzzer(node, 1)
+                            break
+                        case YakitRoute.Modify_Notepad:
+                            onSetModifyNotepadData(node, 1)
                             break
                         case YakitRoute.YakRunner_Code_Scan:
                             onCodeScanPage(node, 1)
@@ -1410,7 +1481,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /**
      * @name 移除一级页面
-     * @param assignRoute 删除页面后指定某个页面展示(如果指定页面未打开则执行正常流程)
+     * @param assignRoute //ANCHOR[id=remove-menuPage] - 删除页面后指定某个页面展示(如果指定页面未打开则执行正常流程)
      */
     const removeMenuPage = useMemoizedFn((data: OnlyPageCache, assignPage?: OnlyPageCache) => {
         // 获取需要关闭页面的索引
@@ -1556,6 +1627,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const unFuzzerCacheData = useRef<any>(null)
     // web-fuzzer多开页面缓存数据
     useEffect(() => {
+        if (isEnterpriseEdition()) {
+            // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
+            clearAllData()
+            clearFuzzerSequence()
+        }
         getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
             .then((cacheTabKey) => {
                 /**没有缓存数据或者缓存数据的tab key为HTTPFuzzer，初始化WF缓存数据 */
@@ -1954,6 +2030,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.WebsocketFuzzer, newPageNode)
     })
+
+    /**记事本编辑 */
+    const onSetModifyNotepadData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.Modify_Notepad,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                modifyNotepadPageInfo: {...(node?.pageParams?.modifyNotepadPageInfo || defaultModifyNotepadPageInfo)}
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.Modify_Notepad, newPageNode)
+    })
+
     /**
      * @description 设置专项漏洞
      */
@@ -2618,8 +2711,8 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }, [subPage])
     const onSelectSubMenuById = useMemoizedFn((resVal) => {
         try {
-            const res = JSON.parse(resVal)
-            if (!inViewport) return
+            const res: SwitchSubMenuItemProps = JSON.parse(resVal)
+            if (res.forceRefresh !== true && !inViewport) return
             const index = flatSubPage.findIndex((ele) => ele.id === res.pageId)
             if (index === -1) return
             const newSubPage: MultipleNodeInfo = {...flatSubPage[index]}
@@ -2769,6 +2862,12 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         )
         useEffect(() => {
             getIsCloseGroupTip()
+            emiter.on("onCloseCurrentPage", onCloseCurrentPage)
+            emiter.on("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
+            return () => {
+                emiter.off("onCloseCurrentPage", onCloseCurrentPage)
+                emiter.off("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
+            }
         }, [])
 
         const tabMenuSubRef = useRef<any>()
@@ -3359,6 +3458,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 setSelectSubMenu({...handleItem})
             }
         })
+        const onCloseCurrentPage = useMemoizedFn((id: string) => {
+            const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, id)
+            if (!current) return
+            const removeItem: MultipleNodeInfo = {
+                id: current.pageId,
+                verbose: current.pageName,
+                sortFieId: current.sortFieId,
+                groupId: current.pageGroupId
+            }
+            onRemoveSubPage(removeItem)
+        })
         /** 关闭当前标签页 */
         const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
             //  先更改当前选择item,在删除
@@ -3438,7 +3548,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     onClick: ({key, keyPath}) => {
                         switch (key) {
                             case "rename":
-                                onRename(item)
+                                onShowRenameModal(item)
                                 break
                             case "removeFromGroup":
                                 onRemoveFromGroup(item)
@@ -3468,7 +3578,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
 
         /**重命名 */
-        const onRename = useMemoizedFn((item: MultipleNodeInfo) => {
+        const onShowRenameModal = useMemoizedFn((item: MultipleNodeInfo) => {
             const m = showYakitModal({
                 footer: null,
                 closable: false,
@@ -3482,37 +3592,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             }}
                             name={item.verbose}
                             onOk={(val) => {
-                                if (val.length > 50) {
-                                    yakitNotify("error", "不能超过50个字符")
-                                    return
-                                }
-
-                                const {index, subIndex} = getPageItemById(subPage, item.id)
-                                if (index === -1) return
-                                if (subIndex === -1) {
-                                    // 当前情况说明item是游离的页面,没有在其他组内
-                                    subPage[index] = {...subPage[index], verbose: val}
-                                    onUpdatePageCache(subPage)
-                                } else {
-                                    // 当前情况说明item在subPage[index]的组内
-                                    const groupChildrenList = subPage[index].groupChildren || []
-                                    if (groupChildrenList.length > 0) {
-                                        groupChildrenList[subIndex] = {
-                                            ...groupChildrenList[subIndex],
-                                            verbose: val
-                                        }
-                                        subPage[index] = {
-                                            ...subPage[index],
-                                            groupChildren: [...groupChildrenList]
-                                        }
-                                        onUpdatePageCache(subPage)
+                                onRenameAndUpdatePageNameAndSendEmiter({
+                                    route: currentTabKey,
+                                    updateItem: {
+                                        ...item,
+                                        verbose: val
                                     }
-                                }
-                                const updateItem = {
-                                    ...item,
-                                    verbose: val
-                                }
-                                onUpdatePageName(currentTabKey, updateItem)
+                                })
                                 m.destroy()
                             }}
                         />
@@ -3520,14 +3606,83 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 )
             })
         })
-        /**更新数据中心得页面名称数据 */
-        const onUpdatePageName = useMemoizedFn((currentTabKey: string, param: MultipleNodeInfo) => {
-            const current: PageNodeItemProps | undefined = queryPagesDataById(currentTabKey, param.id)
-            if (!current) return
-            current.pageName = param.verbose
-            updatePagesDataCacheById(currentTabKey, current)
-            emiter.emit("secondMenuTabDataChange", "")
+        /**
+         * 从页面中修改菜单名，不需要再发送修改的信号
+         */
+        const onUpdateSubMenuNameFormPage = useMemoizedFn((val) => {
+            try {
+                const data = JSON.parse(val)
+                const {route, value, pageId} = data
+                const {index, subIndex} = getPageItemById(subPage, pageId)
+                if (index === -1) return
+                let item
+                if (subIndex === -1) {
+                    item = subPage[index]
+                } else {
+                    item = subPage[index][subIndex]
+                }
+                item.verbose = value
+                onRenameAndUpdatePageName({route, updateItem: {...item}})
+            } catch (error) {}
         })
+        const onRename = useMemoizedFn((val: string, item: MultipleNodeInfo) => {
+            if (val.length > 50) {
+                yakitNotify("error", "不能超过50个字符")
+                return
+            }
+            const {index, subIndex} = getPageItemById(subPage, item.id)
+            if (index === -1) return
+            if (subIndex === -1) {
+                // 当前情况说明item是游离的页面,没有在其他组内
+                subPage[index] = {...subPage[index], verbose: val}
+                onUpdatePageCache(subPage)
+            } else {
+                // 当前情况说明item在subPage[index]的组内
+                const groupChildrenList = subPage[index].groupChildren || []
+                if (groupChildrenList.length > 0) {
+                    groupChildrenList[subIndex] = {
+                        ...groupChildrenList[subIndex],
+                        verbose: val
+                    }
+                    subPage[index] = {
+                        ...subPage[index],
+                        groupChildren: [...groupChildrenList]
+                    }
+                    onUpdatePageCache(subPage)
+                }
+            }
+        })
+        /**修改名称，更新数据中心得页面名称数据并发送数据修改的信号 */
+        const onRenameAndUpdatePageNameAndSendEmiter = useMemoizedFn(
+            (data: {route: YakitRoute; updateItem: MultipleNodeInfo}) => {
+                const {route, updateItem} = data
+                onRename(updateItem.verbose, updateItem)
+                onUpdatePageName({route, updateItem}).then(() => {
+                    emiter.emit("secondMenuTabDataChange", "")
+                })
+            }
+        )
+        /**修改名称，更新数据中心得页面名称数据 */
+        const onRenameAndUpdatePageName = useMemoizedFn((data: {route: YakitRoute; updateItem: MultipleNodeInfo}) => {
+            const {route, updateItem} = data
+            onRename(updateItem.verbose, updateItem)
+            onUpdatePageName({route, updateItem})
+        })
+        /**仅更新数据中心得页面名称数据 */
+        const onUpdatePageName: APIFunc<{route: YakitRoute; updateItem: MultipleNodeInfo}, null> = (data) => {
+            return new Promise((resolve, reject) => {
+                const {route, updateItem} = data
+                const current: PageNodeItemProps | undefined = queryPagesDataById(route, updateItem.id)
+                if (!current) {
+                    reject("当前页面不存在")
+                    return
+                }
+                current.pageName = updateItem.verbose
+                updatePagesDataCacheById(route, current)
+                resolve(null)
+            })
+        }
+
         /**将页面添加到新建组 */
         const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
             const {index, subIndex} = getPageItemById(subPage, item.id)

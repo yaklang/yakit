@@ -3,7 +3,6 @@ const {ipcMain} = require("electron")
 const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
-const crypto = require("crypto")
 const {Readable} = require("stream")
 
 module.exports = (win, getClient) => {
@@ -29,34 +28,6 @@ module.exports = (win, getClient) => {
         const fileData = fs.readFileSync(filePath)
         return fileData.toString("base64")
     })
-
-    // 计算Hash（支持分片计算与整体计算）
-    const hashChunk = ({path, size, chunkSize, chunkIndex}) => {
-        return new Promise((resolve, reject) => {
-            let options = {}
-            if (size && chunkSize && chunkIndex) {
-                const start = chunkIndex * chunkSize
-                const end = Math.min(start + chunkSize, size)
-                options = {start, end}
-            }
-            // 创建当前分片的读取流
-            const chunkStream = fs.createReadStream(path, options)
-            // 计算Hash
-            const hash = crypto.createHash("sha1")
-            chunkStream.on("data", (chunk) => {
-                hash.update(chunk)
-            })
-            chunkStream.on("end", () => {
-                // 单独一片的Hash
-                const fileChunkHash = hash.digest("hex").slice(0, 8) // 仅保留前8个字符作为哈希值
-                resolve(fileChunkHash)
-            })
-
-            chunkStream.on("error", (err) => {
-                reject(err)
-            })
-        })
-    }
 
     // 上传次数缓存
     let postPackageHistory = {}
@@ -185,13 +156,19 @@ module.exports = (win, getClient) => {
 
     // http-上传图片-通过路径上传
     ipcMain.handle("http-upload-img-path", async (event, params) => {
-        const {path, type} = params
+        const {path} = params
         // 创建数据流,可以像使用同步接口一样使用它
         const readerStream = fs.createReadStream(path) // 。
 
         const formData = new FormData()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (key !== "path") {
+                    formData.append(key, value || undefined)
+                }
+            })
+        }
         formData.append("file_name", readerStream)
-        if (type) formData.append("type", type || undefined)
         const res = httpApi(
             "post",
             "upload/img",
@@ -217,8 +194,14 @@ module.exports = (win, getClient) => {
         readable.push(null)
 
         const formData = new FormData()
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                if (key !== "base64" && key !== "imgInfo") {
+                    formData.append(key, value || undefined)
+                }
+            })
+        }
         formData.append("file_name", readable, {...imgInfo})
-        if (type) formData.append("type", type || undefined)
         const res = await httpApi(
             "post",
             "upload/img",

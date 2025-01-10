@@ -28,6 +28,11 @@ export declare namespace API {
          */
         messageType: string
         params: object
+        /**
+         * 文档协作参数
+         */
+        yjsParams?: string
+        token?: string
     }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
@@ -61,6 +66,7 @@ export declare namespace API {
         appid: string
         head_img: string
         role: string
+        uid?: string
     }
     export interface UserInfoByToken {
         token: string
@@ -431,6 +437,20 @@ export declare namespace API {
     }
     export interface PostPluginsResponse extends PluginsDetail {
         isUpdate?: boolean
+    }
+    export interface PostNotepadRequest {
+        hash?: string
+        title: string
+        content: string
+    }
+    export interface PostNotepadPermissionRequest {
+        notepadHash: string
+        userId: number[]
+        /**
+         *  'view', 'edit' 读写权限 '' 默认移除
+         */
+        permissionType: string
+        description?: string
     }
     export interface PluginTypeListResponse {
         data: PluginTypeList[]
@@ -882,6 +902,10 @@ export declare namespace API {
         data: Operation[]
     }
     export interface Operation extends GormBaseModel, NewOperation {}
+    export interface NotepadDownloadWhere {
+        hash?: string
+    }
+    export interface NotepadDownloadRequest extends GetNotepadRequest, NotepadDownloadWhere {}
     export interface NewUrmResponse {
         user_name: string
         password: string
@@ -954,6 +978,14 @@ export declare namespace API {
         hash: string
         description: string
         status: number
+        /**
+         * 协作文档ID
+         */
+        notepadHash?: string
+        /**
+         * 协作文档标题
+         */
+        notepadTitle?: string
     }
     export interface LogsRequest {
         uuid: string
@@ -1175,6 +1207,33 @@ export declare namespace API {
         end_time?: number
         status?: string
     }
+    export interface GetNotepadResponse extends Paging {
+        data: GetNotepadList[]
+    }
+    export interface GetNotepadRequest {
+        keywords?: string
+        /**
+         * 作者名称
+         */
+        user?: string
+        /**
+         * 协作者名称
+         */
+        collaborator?: string
+    }
+    export interface GetNotepadList extends GormBaseModel, GetNotepadDetail {}
+    export interface GetNotepadDetail {
+        title: string
+        content: string
+        userName: string
+        headImg: string
+        /**
+         * 协作者
+         */
+        collaborator?: CollaboratorInfo[]
+        hash: string
+        notepadUserId?: number
+    }
     export interface FuzzableParam {
         position?: string
         paramName?: string
@@ -1227,6 +1286,10 @@ export declare namespace API {
     export interface DeleteOssResource {
         file_name: string[]
     }
+    export interface DeleteNotepadWhere {
+        hash?: string
+    }
+    export interface DeleteNotepadRequest extends GetNotepadRequest, DeleteNotepadWhere {}
     export interface CopyPluginsRequest extends PluginsRequest, CopyPlugins {}
     export interface CopyPlugins {
         /**
@@ -1255,6 +1318,7 @@ export declare namespace API {
         user_id: number
         head_img: string
         user_name: string
+        role?: string
     }
     export interface ActionSucceeded {
         /**
