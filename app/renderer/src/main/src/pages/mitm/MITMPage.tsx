@@ -504,7 +504,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const [hasParamsCheckList, setHasParamsCheckList] = useState<string[]>([])
     const [noParamsCheckList, setNoParamsCheckList] = useState<string[]>([])
     const [enableInitialPlugin, setEnableInitialPlugin] = useState<boolean>(false)
-    const [isFullScreenSecondNode, setIsFullScreenSecondNode] = useState<boolean>(false)
     const [isFullScreenFirstNode, setIsFullScreenFirstNode] = useState<boolean>(false)
 
     const [triggerSearch, setTriggerSearch] = useState<boolean>(false)
@@ -932,15 +931,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     <MITMHijackedContent
                         setStatus={setStatus}
                         status={status}
-                        isFullScreen={isFullScreenSecondNode}
-                        setIsFullScreen={setIsFullScreenSecondNode}
                         logs={logs}
                         statusCards={statusCards}
                         downstreamProxyStr={downstreamProxyStr}
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
                         setShowPluginHistoryList={setShowPluginHistoryList}
-                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }
@@ -958,15 +954,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             p.firstRatio = "24px"
         }
 
-        if (isFullScreenSecondNode) {
-            p.firstRatio = "0%"
-        }
         if (isFullScreenFirstNode) {
             p.secondRatio = "0%"
             p.firstRatio = "calc(100% + 6px)"
         }
         return p
-    }, [isFullScreenSecondNode, isFullScreenFirstNode, openTabsFlag])
+    }, [isFullScreenFirstNode, openTabsFlag])
 
     return (
         <YakitResizeBox
@@ -976,12 +969,11 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             firstNode={() => (
                 <div
                     className={style["mitm-server-start-pre-first"]}
-                    style={{display: isFullScreenSecondNode ? "none" : ""}}
                 >
                     {onRenderFirstNode()}
                 </div>
             )}
-            lineStyle={{display: isFullScreenSecondNode || isFullScreenFirstNode ? "none" : ""}}
+            lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
             secondMinSize={720}
             secondNode={() => (
@@ -995,10 +987,6 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             secondNodeStyle={{
                 padding: isFullScreenFirstNode ? 0 : undefined,
                 display: isFullScreenFirstNode ? "none" : ""
-            }}
-            firstNodeStyle={{
-                padding: isFullScreenSecondNode ? 0 : undefined,
-                display: isFullScreenSecondNode ? "none" : ""
             }}
             {...ResizeBoxProps}
         />
