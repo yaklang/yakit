@@ -1422,6 +1422,17 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                 content='更新Yakit可同步更新引擎，建议先更新Yakit'
                                 okButtonText='更新Yakit'
                                 cancelButtonText='更新引擎'
+                                footerExtra={
+                                    <YakitButton
+                                        size='max'
+                                        type='outline2'
+                                        onClick={() => {
+                                            setUpdateHint(false)
+                                        }}
+                                    >
+                                        取消
+                                    </YakitButton>
+                                }
                                 onOk={() => {
                                     setUpdateHint(false)
                                     onDownload("yakit")
