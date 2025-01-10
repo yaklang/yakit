@@ -181,7 +181,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
-        if (userInfo.isLogin) {
+        if (userInfo.isLogin && !readonly) {
             const params: API.PostNotepadRequest = {
                 hash: notepadDetail.hash,
                 title: composedTabName || perTabName.current,
@@ -423,7 +423,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             enableSaveHistory: true,
             onChangeWSLinkStatus: onSetDocumentLinkStatus,
             onChangeOnlineUser: onSetOnlineUsers, // 过滤了作者本人
-            onSetTitle: onSetTabName
+            onSetTitle: (v) => {
+                setTabName(v)
+                onSetTabName(v)
+            }
         }
         return collabValue
     }, [notepadDetail.hash, pageId, readonly, YakitRoute.Modify_Notepad, composedTabName])
@@ -599,12 +602,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 size='large'
                                 bordered={false}
                                 className={styles["notepad-input"]}
-                                value={currentRole === notepadRole.adminPermission ? tabName : composedTabName}
+                                // value={currentRole === notepadRole.adminPermission ? tabName : composedTabName}
+                                value={tabName}
                                 onChange={(e) => {
-                                    if (currentRole !== notepadRole.adminPermission) {
-                                        yakitNotify("error", "无编辑权限:仅限作者修改标题")
-                                        return
-                                    }
                                     setTabName(e.target.value)
                                     if (!(e.nativeEvent as InputEvent).isComposing) {
                                         onSetTabName(e.target.value)
@@ -612,7 +612,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 }}
                                 maxLength={100}
                                 onCompositionEnd={(e) => {
-                                    if (currentRole !== notepadRole.adminPermission) return
                                     onSetTabName((e.target as HTMLInputElement).value)
                                 }}
                             />
@@ -646,7 +645,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     type='notepad'
                                     readonly={readonly}
                                     defaultValue={notepadDetail.content}
-                                    // customPlugin={cataloguePlugin(getCatalogue)}//TODO 目录会影响标题,后续解决
+                                    customPlugin={cataloguePlugin(getCatalogue)}
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
                                 />
