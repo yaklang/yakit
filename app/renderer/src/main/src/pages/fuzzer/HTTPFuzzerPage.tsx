@@ -145,6 +145,7 @@ import {GetSystemProxyResult, apiGetSystemProxy} from "@/utils/ConfigSystemProxy
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
+import {filterColorTag} from "@/components/TableVirtualResize/utils"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -1121,10 +1122,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 Headers: data.Headers || [],
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
                 Count: count++,
-                cellClassName: data.MatchedByMatcher
-                    ? `color-opacity-bg-${data.HitColor} color-text-${data.HitColor} color-font-weight-${data.HitColor}`
-                    : ""
+                cellClassName: ""
             } as FuzzerResponse
+            if (data.MatchedByMatcher) {
+                let colors = filterColorTag(data.HitColor) || undefined
+                r.cellClassName = colors
+            }
+
             // 设置第一个 response
             if (getFirstResponse().RequestRaw.length === 0) {
                 setFirstResponse(r)
@@ -2532,7 +2536,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 <YakitSelect
                                     size='small'
                                     mode='tags'
-                                    options={availableColors.map((i) => ({value: i.color, label: i.render}))}
+                                    options={availableColors.map((i) => ({value: i.searchWord, label: i.render}))}
                                     allowClear
                                     value={color}
                                     onChange={setColor}

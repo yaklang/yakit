@@ -46,11 +46,12 @@ import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitProtoCheckbox, YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
 import {YakitTag} from "../yakitUI/YakitTag/YakitTag"
-import {randomString} from "@/utils/randomUtil"
 import cloneDeep from "lodash/cloneDeep"
 import locale from "antd/es/date-picker/locale/zh_CN"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
+import {parseColorTag} from "./utils"
+
 const {RangePicker} = YakitDatePicker
 
 /**
@@ -485,7 +486,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         }
         let w = (width - columnsAllWidth) / (cLength - total || 1)
         const cw = w - scrollBarWidth / (cLength - total || 1) + 32
-        
+
         const newColumns = getColumns().map((ele, index) => {
             if (ele.isDefWidth) {
                 return {
@@ -1025,7 +1026,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </>
             )}
             {(width === 0 && <YakitSpin spinning={true} tip='加载中...'></YakitSpin>) || (
-                <YakitSpin spinning={isHiddenLoadingUI ? false : (loading !== undefined ? loading && pagination?.page == 1 : false)}>
+                <YakitSpin
+                    spinning={
+                        isHiddenLoadingUI ? false : loading !== undefined ? loading && pagination?.page == 1 : false
+                    }
+                >
                     <div
                         className={classNames(styles["virtual-table-body"])}
                         style={{
@@ -1539,46 +1544,24 @@ const CellRender = React.memo(
             return false
         }, [selectedRows])
 
-        const rowBgColorFlagFun = (color: string) => {
-            return item.data["cellClassName"] && item.data["cellClassName"].indexOf(`color-opacity-bg-${color}`) !== -1
-        }
+        const colorTypes = useMemo(() => {
+            const colorClassName = parseColorTag(item.data["cellClassName"])
+            return colorClassName
+        }, [item.data])
+
         return (
             <div
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
-                    [styles["virtual-table-active-row"]]: isSelect,
-                    [styles["virtual-table-active-row-red"]]: isSelect && rowBgColorFlagFun("red"),
-                    [styles["virtual-table-active-row-green"]]: isSelect && rowBgColorFlagFun("green"),
-                    [styles["virtual-table-active-row-blue"]]: isSelect && rowBgColorFlagFun("blue"),
-                    [styles["virtual-table-active-row-yellow"]]: isSelect && rowBgColorFlagFun("yellow"),
-                    [styles["virtual-table-active-row-orange"]]: isSelect && rowBgColorFlagFun("orange"),
-                    [styles["virtual-table-active-row-purple"]]: isSelect && rowBgColorFlagFun("purple"),
-                    [styles["virtual-table-active-row-lakeBlue"]]: isSelect && rowBgColorFlagFun("lakeBlue"),
-                    [styles["virtual-table-active-row-cyan"]]: isSelect && rowBgColorFlagFun("cyan"),
-                    [styles["virtual-table-active-row-bluePurple"]]: isSelect && rowBgColorFlagFun("bluePurple"),
-                    [styles["virtual-table-active-row-grey"]]: isSelect && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-hover-row-red"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("red"),
-                    [styles["virtual-table-hover-row-green"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("green"),
-                    [styles["virtual-table-hover-row-blue"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("blue"),
-                    [styles["virtual-table-hover-row-yellow"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("yellow"),
-                    [styles["virtual-table-hover-row-orange"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("orange"),
-                    [styles["virtual-table-hover-row-purple"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("purple"),
-                    [styles["virtual-table-hover-row-lakeBlue"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("lakeBlue"),
-                    [styles["virtual-table-hover-row-cyan"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("cyan"),
-                    [styles["virtual-table-hover-row-bluePurple"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("bluePurple"),
-                    [styles["virtual-table-hover-row-grey"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("grey"),
+                    [styles["virtual-table-active-row"]]: isSelect,
+
+                    [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
+                    [styles[`virtual-table-hover-cell-${colorTypes}`]]:
+                        !!colorTypes && mouseCellId === item.data[renderKey],
+                    [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
@@ -1769,50 +1752,29 @@ const CellRenderDrop = React.memo(
             return false
         }, [selectedRows])
 
-        const rowBgColorFlagFun = (color: string) => {
-            return item.data["cellClassName"] && item.data["cellClassName"].indexOf(`color-opacity-bg-${color}`) !== -1
-        }
         const checkboxProps: YakitProtoCheckboxProps = useCreation(() => {
             return checkboxPropsMap.get(item.data[renderKey]) || {}
         }, [checkboxPropsMap])
+
+        const colorTypes = useMemo(() => {
+            const colorClassName = parseColorTag(item.data["cellClassName"])
+            return colorClassName
+        }, [item.data])
+
         return (
             <div
                 data-handler-id={handlerId}
                 className={classNames(styles["virtual-table-row-cell"], item.data["cellClassName"], {
                     [styles["virtual-table-row-cell-middle"]]: size === "middle",
-                    [styles["virtual-table-active-row"]]: isSelect,
-                    [styles["virtual-table-active-row-red"]]: isSelect && rowBgColorFlagFun("red"),
-                    [styles["virtual-table-active-row-green"]]: isSelect && rowBgColorFlagFun("green"),
-                    [styles["virtual-table-active-row-blue"]]: isSelect && rowBgColorFlagFun("blue"),
-                    [styles["virtual-table-active-row-yellow"]]: isSelect && rowBgColorFlagFun("yellow"),
-                    [styles["virtual-table-active-row-orange"]]: isSelect && rowBgColorFlagFun("orange"),
-                    [styles["virtual-table-active-row-purple"]]: isSelect && rowBgColorFlagFun("purple"),
-                    [styles["virtual-table-active-row-lakeBlue"]]: isSelect && rowBgColorFlagFun("lakeBlue"),
-                    [styles["virtual-table-active-row-cyan"]]: isSelect && rowBgColorFlagFun("cyan"),
-                    [styles["virtual-table-active-row-bluePurple"]]: isSelect && rowBgColorFlagFun("bluePurple"),
-                    [styles["virtual-table-active-row-grey"]]: isSelect && rowBgColorFlagFun("grey"),
                     [styles["virtual-table-batch-active-row"]]: batchActive,
                     [styles["virtual-table-hover-row"]]: mouseCellId === item.data[renderKey],
-                    [styles["virtual-table-hover-row-red"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("red"),
-                    [styles["virtual-table-hover-row-green"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("green"),
-                    [styles["virtual-table-hover-row-blue"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("blue"),
-                    [styles["virtual-table-hover-row-yellow"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("yellow"),
-                    [styles["virtual-table-hover-row-orange"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("orange"),
-                    [styles["virtual-table-hover-row-purple"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("purple"),
-                    [styles["virtual-table-hover-row-lakeBlue"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("lakeBlue"),
-                    [styles["virtual-table-hover-row-cyan"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("cyan"),
-                    [styles["virtual-table-hover-row-bluePurple"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("bluePurple"),
-                    [styles["virtual-table-hover-row-grey"]]:
-                        mouseCellId === item.data[renderKey] && rowBgColorFlagFun("grey"),
+                    [styles["virtual-table-active-row"]]: isSelect,
+
+                    [styles[`virtual-table-cell-${colorTypes}`]]: !!colorTypes,
+                    [styles[`virtual-table-hover-cell-${colorTypes}`]]:
+                        !!colorTypes && mouseCellId === item.data[renderKey],
+                    [styles[`virtual-table-active-cell-${colorTypes}`]]: !!colorTypes && isSelect,
+
                     [styles["virtual-table-row-cell-border-right-0"]]: isLastItem,
                     [styles["virtual-table-row-cell-border-right-1"]]: (batchActive || isSelect) && isLastItem,
                     [styles["virtual-table-row-cell-border-left-1"]]: (batchActive || isSelect) && colIndex === 0,
@@ -2126,7 +2088,10 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                                         })}
                                         onClick={() => onSelectMultiple(item.data)}
                                     >
-                                        <span className={classNames(styles["select-item-text"], "content-ellipsis")} title={item.data.label}>
+                                        <span
+                                            className={classNames(styles["select-item-text"], "content-ellipsis")}
+                                            title={item.data.label}
+                                        >
                                             {item.data.label}
                                         </span>
                                         {checked && <CheckIcon className={styles["check-icon"]} />}

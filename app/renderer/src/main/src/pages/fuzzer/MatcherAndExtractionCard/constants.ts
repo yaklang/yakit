@@ -1,3 +1,4 @@
+import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {HTTPResponseExtractor, HTTPResponseMatcher} from "./MatcherAndExtractionCardType"
 
 /**@name 过滤器模式 */
@@ -39,7 +40,7 @@ export const defaultSubMatcherItem: HTTPResponseMatcher = {
     GroupEncoding: "",
     HitColor: "",
     Action: "",
-    filterMode:'onlyMatch'
+    filterMode: "onlyMatch"
 }
 export const defaultMatcherItem: HTTPResponseMatcher = {
     MatcherType: "",
@@ -56,9 +57,9 @@ export const defaultMatcherItem: HTTPResponseMatcher = {
     ],
     SubMatcherCondition: "and",
     GroupEncoding: "",
-    HitColor: "red",
+    HitColor: TableCellToColorTag["RED"],
     Action: "",
-    filterMode:'onlyMatch'
+    filterMode: "onlyMatch"
 }
 
 export const defaultExtractorItem: HTTPResponseExtractor = {

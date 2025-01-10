@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed} from "@/utils/notification"
-import {useCreation, useDebounce, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -340,7 +340,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             })
         } else {
             ipcRenderer
-                .invoke("mitm-forward-modified-request", modifiedPacketBytes, currentPacketId, [calloutColor])
+                .invoke("mitm-forward-modified-request", modifiedPacketBytes, currentPacketId, calloutColor ? [calloutColor] : [])
                 .finally(() => {
                     clearCurrentPacket()
                     setCalloutColor("")

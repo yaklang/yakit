@@ -65,6 +65,7 @@ import {
 } from "./constants"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
+import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1179,43 +1180,56 @@ export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) =>
         </div>
     )
 })
-const colors = [
+const colors: {color: string; title: string}[] = [
     {
-        color: "red",
+        color: TableCellToColorTag["RED"],
         title: "红色"
     },
     {
-        color: "green",
+        color: TableCellToColorTag["GREEN"],
         title: "绿色"
     },
     {
-        color: "blue",
+        color: TableCellToColorTag["BLUE"],
         title: "蓝色"
     },
     {
-        color: "yellow",
+        color: TableCellToColorTag["YELLOW"],
         title: "黄色"
     },
     {
-        color: "orange",
+        color: TableCellToColorTag["ORANGE"],
         title: "橙色"
     },
     {
-        color: "purple",
+        color: TableCellToColorTag["PURPLE"],
         title: "紫色"
     },
     {
-        color: "cyan",
+        color: TableCellToColorTag["CYAN"],
         title: "天蓝色"
     },
     {
-        color: "grey",
+        color: TableCellToColorTag["GRAY"],
         title: "灰色"
     }
 ]
 export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
     const {value, onChange, size} = props
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
+
+    const getColorClassName = useMemoizedFn((content?: string) => {
+        if (!content) return ""
+
+        let colorClassName = ""
+        try {
+            const color = content.split("_").pop() || ""
+            if (TableCellToColorTag[color]) {
+                colorClassName = `color-bg-${color.toLowerCase()}`
+            }
+        } catch (error) {}
+        return colorClassName
+    })
 
     return (
         <YakitPopover
@@ -1224,21 +1238,24 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                 <div className={styles["color-select-content"]}>
                     <span className={styles["hit-color"]}>命中颜色</span>
                     <div className={styles["color-list"]}>
-                        {colors.map((colorItem) => (
-                            <div
-                                className={classNames(styles["color-list-item"], {
-                                    [styles["color-list-item-active"]]: value === colorItem.color
-                                })}
-                                key={colorItem.color}
-                                onClick={() => {
-                                    if (onChange) onChange(colorItem.color)
-                                    setIsShowColor(false)
-                                }}
-                            >
-                                <div className={classNames(styles["color-chunk"], `color-bg-${colorItem.color}`)} />
-                                <span>{colorItem.title}</span>
-                            </div>
-                        ))}
+                        {colors.map((colorItem) => {
+                            let colorClassName = getColorClassName(colorItem.color)
+                            return (
+                                <div
+                                    className={classNames(styles["color-list-item"], {
+                                        [styles["color-list-item-active"]]: value === colorItem.color
+                                    })}
+                                    key={colorItem.color}
+                                    onClick={() => {
+                                        if (onChange) onChange(colorItem.color)
+                                        setIsShowColor(false)
+                                    }}
+                                >
+                                    <div className={classNames(styles["color-chunk"], colorClassName)} />
+                                    <span>{colorItem.title}</span>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             }
@@ -1250,7 +1267,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
                 className={classNames(styles["color-select-btn"], {
                     [styles["color-select-btn-active"]]: isShowColor,
                     [styles["color-select-btn-small"]]: size === "small",
-                    [`color-bg-${value}`]: !!value
+                    [getColorClassName(value)]: !!value && getColorClassName(value)
                 })}
             >
                 {!value && <ColorSwatchIcon />}
