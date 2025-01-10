@@ -85,11 +85,11 @@ import {
     SyntaxFlowRule
 } from "../ruleManagement/RuleManagementType"
 import cloneDeep from "lodash/cloneDeep"
-import { AuditCodeDetailDrawer } from "./AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import {AuditCodeDetailDrawer} from "./AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
-import { YakitDragger } from "@/components/yakitUI/YakitForm/YakitForm"
+import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -950,11 +950,13 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             if (isExecuting) {
                 setInterval(500)
             } else {
-                setInterval(undefined)
+                // 由于任务结束时 有可能map卡片数据并未更新完毕 因此等待1S后关闭轮询
+                setTimeout(() => {
+                    setInterval(undefined)
+                }, 1000)
             }
         }, [isExecuting])
 
-        // const cacheCard: HoldGRPCStreamProps.InfoCards[] = convertCardInfo(cardKVPair.current)
         /** 判断是否为无效数据 */
         const checkStreamValidity = useMemoizedFn((stream: StreamResult.Log) => {
             try {
@@ -1184,7 +1186,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         // 审计详情抽屉
         const auditInfo = useRef<SyntaxFlowResult>()
         const [auditDetailShow, setAuditDetailShow] = useState<boolean>(false)
-        const handleShowDetail = useMemoizedFn((info: SyntaxFlowResult)=>{
+        const handleShowDetail = useMemoizedFn((info: SyntaxFlowResult) => {
             if (auditDetailShow) return
             auditInfo.current = cloneDeep(info)
             setAuditDetailShow(true)
@@ -1201,7 +1203,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 {tabName: "Console", type: "console"}
             ]
             if (runtimeId) {
-                return [{tabName: "审计结果", type: "result",customProps: {onDetail: handleShowDetail}}, ...tabsState]
+                return [{tabName: "审计结果", type: "result", customProps: {onDetail: handleShowDetail}}, ...tabsState]
             }
             return tabsState
         }, [runtimeId])
@@ -1355,15 +1357,15 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     />
                 )}
 
-            <React.Suspense fallback={<>loading...</>}>
-                {auditDetailShow && auditInfo.current && (
-                    <AuditCodeDetailDrawer
-                        rowData={auditInfo.current}
-                        visible={auditDetailShow}
-                        handleCancelDetail={handleCancelDetail}
-                    />
-                )}
-            </React.Suspense>
+                <React.Suspense fallback={<>loading...</>}>
+                    {auditDetailShow && auditInfo.current && (
+                        <AuditCodeDetailDrawer
+                            rowData={auditInfo.current}
+                            visible={auditDetailShow}
+                            handleCancelDetail={handleCancelDetail}
+                        />
+                    )}
+                </React.Suspense>
             </>
         )
     })
@@ -1670,65 +1672,72 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                     {groupParams.length > 0 && (
                         <Row>
                             <Col span={18}>
-                            <div className={styles["additional-params-divider"]} style={{marginLeft: "calc(33% - 98px)"}}>
-                                <div className={styles["text-style"]}>额外参数 (非必填)</div>
-                                <div className={styles["divider-style"]} />
-                            </div>
-                            <YakitCollapse
-                                className={styles["extra-params-collapse"]}
-                                activeKey={activeKey}
-                                onChange={(v) => {
-                                    setActiveKey(v)
-                                }}
-                            >
-                                <YakitPanel key='defalut' header={`参数组`}>
-                                    <Form.Item name='language' label='语言'>
-                                        <YakitSelect options={customParams.languageArr.data} />
-                                    </Form.Item>
-                                    <Form.Item
-                                        name='proxy'
-                                        label='代理'
-                                        extra={
-                                            <div
-                                                className={styles["agent-down-stream-proxy"]}
-                                                onClick={() => setAgentConfigModalVisible(true)}
-                                            >
-                                                配置代理认证
-                                            </div>
-                                        }
-                                    >
-                                        <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
-                                    </Form.Item>
-                                    <Form.Item name='peephole' label='编译速度' help="小文件无需配置，大文件可根据需求选择，速度越快，精度越小">
-                                        <Slider
-                                            style={{width: 300}}
-                                            dots
-                                            min={0}
-                                            max={3}
-                                            tipFormatter={(value) => {
-                                                switch (value) {
-                                                    case 0:
-                                                        return "关闭，精度IV"
-                                                    case 1:
-                                                        return "慢速，精度III"
-                                                    case 2:
-                                                        return "中速，精度II"
-                                                    case 3:
-                                                        return "快速，精度I"
-                                                    default:
-                                                        return value
-                                                }
-                                            }}
-                                        />
-                                    </Form.Item>
-                                </YakitPanel>
-                            </YakitCollapse>
-                            <ExtraParamsNodeByType
-                                extraParamsGroup={groupParams}
-                                pluginType={"yak"}
-                                isDefaultActiveKey={false}
-                                wrapperClassName={styles["extra-node-collapse"]}
-                            />
+                                <div
+                                    className={styles["additional-params-divider"]}
+                                    style={{marginLeft: "calc(33% - 98px)"}}
+                                >
+                                    <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                                    <div className={styles["divider-style"]} />
+                                </div>
+                                <YakitCollapse
+                                    className={styles["extra-params-collapse"]}
+                                    activeKey={activeKey}
+                                    onChange={(v) => {
+                                        setActiveKey(v)
+                                    }}
+                                >
+                                    <YakitPanel key='defalut' header={`参数组`}>
+                                        <Form.Item name='language' label='语言'>
+                                            <YakitSelect options={customParams.languageArr.data} />
+                                        </Form.Item>
+                                        <Form.Item
+                                            name='proxy'
+                                            label='代理'
+                                            extra={
+                                                <div
+                                                    className={styles["agent-down-stream-proxy"]}
+                                                    onClick={() => setAgentConfigModalVisible(true)}
+                                                >
+                                                    配置代理认证
+                                                </div>
+                                            }
+                                        >
+                                            <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
+                                        </Form.Item>
+                                        <Form.Item
+                                            name='peephole'
+                                            label='编译速度'
+                                            help='小文件无需配置，大文件可根据需求选择，速度越快，精度越小'
+                                        >
+                                            <Slider
+                                                style={{width: 300}}
+                                                dots
+                                                min={0}
+                                                max={3}
+                                                tipFormatter={(value) => {
+                                                    switch (value) {
+                                                        case 0:
+                                                            return "关闭，精度IV"
+                                                        case 1:
+                                                            return "慢速，精度III"
+                                                        case 2:
+                                                            return "中速，精度II"
+                                                        case 3:
+                                                            return "快速，精度I"
+                                                        default:
+                                                            return value
+                                                    }
+                                                }}
+                                            />
+                                        </Form.Item>
+                                    </YakitPanel>
+                                </YakitCollapse>
+                                <ExtraParamsNodeByType
+                                    extraParamsGroup={groupParams}
+                                    pluginType={"yak"}
+                                    isDefaultActiveKey={false}
+                                    wrapperClassName={styles["extra-node-collapse"]}
+                                />
                             </Col>
                         </Row>
                     )}

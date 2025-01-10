@@ -142,10 +142,8 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
     const globalNetworkConfig = useRef<GlobalNetworkConfig>()
     useEffect(() => {
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            console.log("GetGlobalNetworkConfig", rsp)
             globalNetworkConfig.current = rsp
             const {SynScanNetInterface} = rsp
-            console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
                 if (!data || data.AvailablePcapDevices.length === 0) {
                     return

@@ -22,11 +22,66 @@ import {clearMapGraphInfoDetail, getMapGraphInfoDetail, setMapGraphInfoDetail} f
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {v4 as uuidv4} from "uuid"
-import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
+import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
+import {Selection} from "../RunnerTabs/RunnerTabsType"
+
+export interface JumpSourceDataProps {
+    title: string
+    node_id: string
+    auditRightParams: AuditEmiterYakUrlProps
+}
+
+// 跳转详情
+export const onJumpRunnerFile = async (
+    data: GraphInfoProps,
+    jumpData?: {
+        title: string
+        auditRightParams: AuditEmiterYakUrlProps
+    }
+) => {
+    const {code_range, node_id} = data
+    const {url, start_line, start_column, end_line, end_column} = code_range
+    const name = await getNameByPath(url)
+    const highLightRange: Selection = {
+        startLineNumber: start_line,
+        startColumn: start_column,
+        endLineNumber: end_line,
+        endColumn: end_column
+    }
+
+    // 携带跳转项信息
+    if (jumpData) {
+        highLightRange.source = {
+            ...jumpData,
+            node_id
+        }
+    }
+    const OpenFileByPathParams: OpenFileByPathProps = {
+        params: {
+            path: url,
+            name,
+            highLightRange
+        }
+    }
+    // 定位文件树
+    emiter.emit("onCodeAuditScrollToFileTree", url)
+    // 打开文件
+    emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+    // 纯跳转行号
+    setTimeout(() => {
+        const obj: JumpToAuditEditorProps = {
+            selections: highLightRange,
+            path: url,
+            isSelect: false
+        }
+        emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+    }, 100)
+}
 
 interface AuditResultItemProps {
-    onDetail: (data: CodeRangeProps) => void
+    onDetail: (data: GraphInfoProps) => void
     nodeId?: string
     data: GraphInfoProps[]
     title: string
@@ -52,7 +107,7 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
                         onClick={(e) => {
                             e.stopPropagation()
                             emiter.emit("onCodeAuditScrollToFileTree", code_range.url)
-                            onDetail(code_range)
+                            onDetail(info)
                         }}
                     >
                         {fileName}:{code_range.start_line}
@@ -100,12 +155,12 @@ export const AuditResultItem: React.FC<AuditResultItemProps> = (props) => {
 }
 
 interface AuditResultBoxProps {
-    onDetail: (data: CodeRangeProps) => void
     nodeId?: string
     graphLine?: string[][]
     message: string
     activeKey?: string | string[]
     setActiveKey: (v: string | string[]) => void
+    auditRightParams: AuditEmiterYakUrlProps
 }
 
 interface InitDataProps {
@@ -115,8 +170,27 @@ interface InitDataProps {
 }
 
 export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
-    const {onDetail, nodeId, graphLine, message, activeKey, setActiveKey} = props
+    const {nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
+
+    const onExpendRightPathFun = useMemoizedFn((value:string)=>{
+        try {
+            const data: JumpSourceDataProps = JSON.parse(value)
+            const index = getMapResultDetail(data.title).findIndex((item)=>item.node_id === data.node_id)
+            setActiveKey([data.title])
+            setResultKey([`${data.title}-${index}`])
+        } catch (error) {
+            
+        }
+    })
+
+    useEffect(()=>{
+        // 打开编译右侧详情
+        emiter.on("onExpendRightPath", onExpendRightPathFun)
+        return () => {
+            emiter.off("onExpendRightPath", onExpendRightPathFun)
+        }
+    },[])
 
     useUpdateEffect(() => {
         if (activeKey === undefined) {
@@ -139,18 +213,41 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         return children
     })
 
+    const firstSource = useRef<JumpSourceDataProps>()
     const initData: InitDataProps[] = useMemo(() => {
         setResultKey(undefined)
+        let newData: InitDataProps[] = []
         if (graphLine) {
-            return graphLine.map((item, index) => {
+            clearMapResultDetail()
+            newData = graphLine.map((item, index) => {
+                let title = `路径${index + 1}`
+                let children = getChildren(item)
+                // 将第一项默认值给入
+                if (index === 0 && children.length > 0) {
+                    firstSource.current = {
+                        title,
+                        node_id: children[0].node_id,
+                        auditRightParams
+                    }
+                }
+                setMapResultDetail(title, children)
                 return {
-                    title: `路径${index + 1}`,
-                    children: getChildren(item)
+                    title,
+                    children
                 }
             })
         }
-        return []
+
+        return newData
     }, [graphLine])
+
+    useUpdateEffect(() => {
+        if (!firstSource.current) return
+        // 此处需通知runnerTab页更新Widget
+        setTimeout(() => {
+            emiter.emit("onInitWidget", JSON.stringify(firstSource.current))
+        }, 200)
+    }, [initData])
 
     const titleRender = (info: InitDataProps) => {
         return <div className={styles["title-render"]}>{info.title}</div>
@@ -160,7 +257,7 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
         return (
             <AuditResultItem
                 data={info.children}
-                onDetail={onDetail}
+                onDetail={(data) => onJumpRunnerFile(data, {title: info.title, auditRightParams})}
                 title={info.title}
                 nodeId={nodeId}
                 resultKey={resultKey}
@@ -191,14 +288,13 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
 }
 
 interface FlowChartBoxProps {
-    onDetail: (data: CodeRangeProps) => void
     graph?: string
     refresh: boolean
     node_id?: string
 }
 
 export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
-    const {onDetail, graph, refresh, node_id} = props
+    const {graph, refresh, node_id} = props
     const svgBoxRef = useRef<HTMLDivElement>(null)
     const svgRef = useRef<any>(null)
     const [nodeId, setNodeId] = useState<string>()
@@ -284,8 +380,18 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
-    const onRefreshAuditDetailFun = useMemoizedFn(() => {
-        setNodeId(undefined)
+    const onRefreshAuditDetailFun = useMemoizedFn((newNodeId?:string) => {
+        if(newNodeId && svgBoxRef.current){
+            // 此处根据node_id染色
+            // 查找 title 为 n6 的元素
+            const targetElement = Array.from(svgBoxRef.current.getElementsByTagName('title')).find(el => el.innerHTML === newNodeId);
+            if (targetElement) {
+                // 获取父元素的 id
+                const parentId = targetElement?.parentElement?.id;
+                onChangeSvgStyle(parentId)
+            }
+        }
+        setNodeId(newNodeId)
     })
 
     useEffect(() => {
@@ -446,7 +552,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                             <Tooltip placement='topLeft' title={contentInfo.code_range.url}>
                                 <div
                                     className={classNames(styles["url-box"], "yakit-single-line-ellipsis")}
-                                    onClick={() => onDetail(contentInfo.code_range)}
+                                    onClick={() => onJumpRunnerFile(contentInfo)}
                                 >
                                     {contentInfo.code_range.url}
                                 </div>
@@ -564,38 +670,6 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
         } catch (error) {}
     })
 
-    // 跳转详情
-    const onDetail = useMemoizedFn(async (data: CodeRangeProps) => {
-        const {url, start_line, start_column, end_line, end_column} = data
-        const name = await getNameByPath(url)
-        const highLightRange = {
-            startLineNumber: start_line,
-            startColumn: start_column,
-            endLineNumber: end_line,
-            endColumn: end_column
-        }
-        const OpenFileByPathParams: OpenFileByPathProps = {
-            params: {
-                path: url,
-                name,
-                highLightRange
-            }
-        }
-        // 定位文件树
-        emiter.emit("onCodeAuditScrollToFileTree", url)
-        // 打开文件
-        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-        // 纯跳转行号
-        setTimeout(() => {
-            const obj: JumpToEditorProps = {
-                selections: highLightRange,
-                id: url,
-                isSelect: false
-            }
-            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-        }, 100)
-    })
-
     return (
         <div className={classNames(styles["right-audit-detail"])}>
             <div className={styles["header"]}>
@@ -635,16 +709,20 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     secondNodeStyle={{padding: 0}}
                     secondMinSize={350}
                     firstNode={
-                        <AuditResultBox
-                            activeKey={activeKey}
-                            setActiveKey={setActiveKey}
-                            onDetail={onDetail}
-                            graphLine={graphLine}
-                            message={message}
-                            nodeId={nodeId}
-                        />
+                        <>
+                            {auditRightParams && (
+                                <AuditResultBox
+                                    activeKey={activeKey}
+                                    setActiveKey={setActiveKey}
+                                    graphLine={graphLine}
+                                    message={message}
+                                    nodeId={nodeId}
+                                    auditRightParams={auditRightParams}
+                                />
+                            )}
+                        </>
                     }
-                    secondNode={<FlowChartBox onDetail={onDetail} graph={graph} refresh={refresh} node_id={nodeId} />}
+                    secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
                 />
             </div>
         </div>

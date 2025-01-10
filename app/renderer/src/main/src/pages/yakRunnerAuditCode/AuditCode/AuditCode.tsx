@@ -64,6 +64,7 @@ import {
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
     OutlinePencilaltIcon,
+    OutlineRefreshIcon,
     OutlineReloadScanIcon,
     OutlineScanIcon,
     OutlineSearchIcon,
@@ -104,7 +105,7 @@ import {
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {AuditCodeStatusInfo} from "../YakRunnerAuditCode"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {JumpToEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {YakitDragger, YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
@@ -126,6 +127,7 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {Selection} from "../RunnerTabs/RunnerTabsType"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -344,7 +346,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 const {url, start_line, start_column, end_line, end_column} = item
                 const name = await getNameByPath(url)
                 // console.log("monaca跳转", item, name)
-                const highLightRange = {
+                const highLightRange: Selection = {
                     startLineNumber: start_line,
                     startColumn: start_column,
                     endLineNumber: end_line,
@@ -360,9 +362,9 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                 // 纯跳转行号
                 setTimeout(() => {
-                    const obj: JumpToEditorProps = {
+                    const obj: JumpToAuditEditorProps = {
                         selections: highLightRange,
-                        id: url,
+                        path: url,
                         isSelect: false
                     }
                     emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
@@ -1376,7 +1378,11 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                                 >
                                     <YakitAutoComplete placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890' />
                                 </Form.Item>
-                                <Form.Item name='peephole' label='编译速度' help="小文件无需配置，大文件可根据需求选择，速度越快，精度越小">
+                                <Form.Item
+                                    name='peephole'
+                                    label='编译速度'
+                                    help='小文件无需配置，大文件可根据需求选择，速度越快，精度越小'
+                                >
                                     <Slider
                                         style={{width: 300}}
                                         dots
@@ -1972,7 +1978,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             dataIndex: "Description",
             render: (text, record) => {
                 return (
-                    <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
+                    <Tooltip title={text} overlayClassName={styles["tooltip-line-feed"]}>
                         <div className={classNames("yakit-content-single-ellipsis", styles["audit-text"])}>{text}</div>
                     </Tooltip>
                 )
@@ -2202,6 +2208,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     >
                         添加项目
                     </YakitButton>
+                    <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={(e) => update(true)} />
                     {onClose && <YakitButton type='text2' icon={<OutlineXIcon />} onClick={onClose} />}
                 </div>
             </div>

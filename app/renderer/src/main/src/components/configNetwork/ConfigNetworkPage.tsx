@@ -186,9 +186,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         isShowLoading.current = false
         // setParams(defaultParams)
         ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            console.log("GetGlobalNetworkConfig", rsp)
             const {ClientCertificates, SynScanNetInterface} = rsp
-            console.log("SynScanNetInterface", SynScanNetInterface)
             ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
                 if (!data || !data.AvailablePcapDevices?.length) {
                     return

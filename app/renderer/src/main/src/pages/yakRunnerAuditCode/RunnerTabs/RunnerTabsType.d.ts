@@ -11,6 +11,15 @@ export interface Selection {
     startColumn: number // 开始-字符位置
     endLineNumber: number // 结束-行号
     endColumn: number // 结束-字符位置
+    // 此处为审计结果处来源
+    source?: {
+        // 路径
+        title: string
+        // 节点
+        node_id: string
+        // 审计结果加载参数
+        auditRightParams: AuditEmiterYakUrlProps
+    }
 }
 
 export interface FileDetailInfo {
@@ -108,3 +117,21 @@ export interface YakitRunnerSaveModalProps {
 }
 
 export type SplitDirectionProps = "top" | "bottom" | "left" | "right"
+
+export type WidgetClickTypeProps = "previous" | "next" | "detail"
+
+export interface CodeScanMonacoWidgetProps {
+    source?: {
+        title: string
+        node_id: string
+        auditRightParams: AuditEmiterYakUrlProps
+    }
+    closeFizzRangeWidget:()=>void
+}
+
+export interface WidgetControlProps {
+    hasPrevious: boolean;
+    hasNext: boolean;
+    previousValue: GraphInfoProps | null;
+    nextValue: GraphInfoProps | null;
+}

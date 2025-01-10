@@ -47,7 +47,7 @@ import moment from "moment"
 import {WaterMark} from "@ant-design/pro-layout"
 import {isCommunityEdition} from "@/utils/envfile"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
+import {JumpSourceDataProps, RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import classNames from "classnames"
 import {DragDropContext, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import cloneDeep from "lodash/cloneDeep"
@@ -304,6 +304,10 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 const newAreaInfo = setAreaFileActive(cacheAreaInfo, path)
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
+                // 完全一样且存在widget数据 通知再次打开widget
+                if(JSON.stringify(file) === JSON.stringify({...file, highLightRange}) && file.highLightRange?.source){
+                    emiter.emit("onWidgetOpenAgain",file.path)
+                }
             } else {
                 // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开
                 const fileSourceType = isOutside ? "file" : "audit"
@@ -647,15 +651,36 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             const data: AuditEmiterYakUrlProps = JSON.parse(value)
             setAuditRightParams(data)
             setShowAuditDetail(true)
-            emiter.emit("onCodeAuditRefreshAuditDetail")
+            setTimeout(() => {
+                emiter.emit("onCodeAuditRefreshAuditDetail")
+            }, 200)
+        } catch (error) {}
+    })
+
+    const onWidgetOpenRightAuditFun = useMemoizedFn((value: string) => {
+        try {
+            const data: JumpSourceDataProps = JSON.parse(value)
+            if (!isShowAuditDetail) {
+                setAuditRightParams(data.auditRightParams)
+                setShowAuditDetail(true)
+            }
+            setTimeout(() => {
+                // 展开对应路径
+                emiter.emit("onExpendRightPath", value)
+                // 展开节点信息
+                emiter.emit("onCodeAuditRefreshAuditDetail", data.node_id)
+            }, 200)
         } catch (error) {}
     })
 
     useEffect(() => {
         // 正常打开编译右侧详情
         emiter.on("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+        // monaco查看详情 展开对应审计结果、审计过程
+        emiter.on("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
+            emiter.off("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
         }
     }, [])
 
@@ -688,7 +713,9 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                 firstMinSize={200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
-                                firstNode={<LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails}/>}
+                                firstNode={
+                                    <LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails} />
+                                }
                                 secondNodeStyle={{overflow: "unset", padding: 0}}
                                 secondNode={
                                     <YakitResizeBox
@@ -713,11 +740,15 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                                             </div>
                                         }
                                         secondNode={
-                                            <RightAuditDetail
-                                                auditRightParams={auditRightParams}
-                                                isShowAuditDetail={isShowAuditDetail}
-                                                setShowAuditDetail={setShowAuditDetail}
-                                            />
+                                            <>
+                                                {isShowAuditDetail && (
+                                                    <RightAuditDetail
+                                                        auditRightParams={auditRightParams}
+                                                        isShowAuditDetail={isShowAuditDetail}
+                                                        setShowAuditDetail={setShowAuditDetail}
+                                                    />
+                                                )}
+                                            </>
                                         }
                                     />
                                 }

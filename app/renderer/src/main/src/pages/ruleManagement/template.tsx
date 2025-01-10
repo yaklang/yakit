@@ -679,7 +679,6 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const onSubmitApi = useMemoizedFn((request: SyntaxFlowRuleInput) => {
         setLoading(true)
         const api = isEdit ? grpcUpdateLocalRule : grpcCreateLocalRule
-        console.log(`${isEdit ? "grpcUpdateLocalRule" : "grpcCreateLocalRule"}-request`, JSON.stringify(request))
         api({SyntaxFlowInput: request})
             .then(({Rule}) => {
                 onCallback(true, Rule)
@@ -1599,7 +1598,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                 Path: "/",
                 Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
             }
-            console.log("currentInfo.current", currentInfo.current)
             const result = await loadAuditFromYakURLRaw(params)
 
             if (result && result.Resources.length > 0) {

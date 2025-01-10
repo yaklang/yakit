@@ -542,3 +542,48 @@
         gap: 8px;
     }
 }
+
+.code-scan-monaco-widget{
+    border-radius: 4px;
+    width: 188px;
+    background-color: rgba(203, 210, 222, 0.5);
+    padding: 10px;
+    &:hover{
+        background-color: rgba(203, 210, 222, 0.8);
+    }
+    .header{
+        // color: #ffffff;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        .title{
+            flex: 1;
+        }
+        .extra{
+            width: 16px;
+            height: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            svg {
+                width: 16px;
+                height: 16px;
+                color: black;
+            }
+            &:hover {
+                svg {
+                    color: #f28b44;
+                }
+            }
+        }
+    }
+    .content{
+        margin-top: 10px;
+    }
+    .option{
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+    }
+}
