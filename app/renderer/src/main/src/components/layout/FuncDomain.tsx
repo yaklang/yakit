@@ -96,6 +96,7 @@ import {randomString} from "@/utils/randomUtil"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
+import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1193,6 +1194,7 @@ interface UIOpUpdateProps {
     updateContent?: string
     onDownload: (type: "yakit" | "yaklang") => any
     onUpdateEdit?: (type: "yakit" | "yaklang") => any
+    isUpdate: boolean
 
     /** yakit属性 */
     isUpdateWait?: boolean // 是否已下载未安装
@@ -1200,14 +1202,14 @@ interface UIOpUpdateProps {
     /** yaklang属性 */
     localVersion?: string // 本地引擎文件版本
     moreYaklangVersionList?: string[] // 更多引擎版本列表
-    lowerYaklangLastVersion?: boolean // 引擎是否有更新
     isRemoteMode?: boolean // 是否为远程模式
     onNoticeShow?: (visible: boolean) => void
+    isUpdateYakit?: boolean // 下载引擎之前判断yakit是否需要先更新
 }
 
 /** @name Yakit版本以及更新内容 */
 const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
-    const {version, lastVersion, isUpdateWait, onDownload, role, updateContent = "", onUpdateEdit} = props
+    const {version, lastVersion, isUpdate, isUpdateWait, onDownload, role, updateContent = "", onUpdateEdit} = props
 
     // 是否可编辑
     const isShowModify = useMemo(() => {
@@ -1215,8 +1217,6 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         if (isEnpriTrace() && role === "admin") return true
         return false
     }, [role])
-
-    const isUpdate = lastVersion !== "" && removePrefixV(lastVersion) !== removePrefixV(version)
 
     const content: string[] = useMemo(() => {
         if (updateContent) {
@@ -1305,21 +1305,18 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         lastVersion,
         localVersion = "",
         moreYaklangVersionList = [],
-        lowerYaklangLastVersion = false,
         isRemoteMode = false,
         onDownload,
         role,
         updateContent = "",
         onUpdateEdit,
-        onNoticeShow = () => {}
+        onNoticeShow = () => {},
+        isUpdate,
+        isUpdateYakit
     } = props
 
+    const [updateHint, setUpdateHint] = useState<boolean>(false)
     const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
-
-    /** 是否存在更新 */
-    const isUpdate = useMemo(() => {
-        return lowerYaklangLastVersion
-    }, [lowerYaklangLastVersion])
     /** 判断连接引擎版本和本地引擎文件版本是否相同，不同提示是否重新启动引擎 */
     const isKillEngine = useMemo(() => {
         return (
@@ -1404,11 +1401,47 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                 <div className={styles["more-version-btn"]}>更多版本</div>
                             </YakitPopover>
                             {isUpdate && (
-                                <div className={styles["update-btn"]} onClick={() => onDownload("yaklang")}>
+                                <div
+                                    className={styles["update-btn"]}
+                                    onClick={() => {
+                                        if (isUpdateYakit) {
+                                            onNoticeShow(false)
+                                            setUpdateHint(true)
+                                        } else {
+                                            onDownload("yaklang")
+                                        }
+                                    }}
+                                >
                                     <UpdateSvgIcon style={{marginRight: 4}} />
                                     立即更新
                                 </div>
                             )}
+                            <YakitHint
+                                visible={updateHint}
+                                title='更新提示'
+                                content='更新Yakit可同步更新引擎，建议先更新Yakit'
+                                okButtonText='更新Yakit'
+                                cancelButtonText='更新引擎'
+                                footerExtra={
+                                    <YakitButton
+                                        size='max'
+                                        type='outline2'
+                                        onClick={() => {
+                                            setUpdateHint(false)
+                                        }}
+                                    >
+                                        取消
+                                    </YakitButton>
+                                }
+                                onOk={() => {
+                                    setUpdateHint(false)
+                                    onDownload("yakit")
+                                }}
+                                onCancel={() => {
+                                    setUpdateHint(false)
+                                    onDownload("yaklang")
+                                }}
+                            />
                             {isKillEngine && (
                                 <YakitButton
                                     onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
@@ -1893,6 +1926,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
 
     const notice = useMemo(() => {
+        const isUpdateYakit = yakitLastVersion !== "" && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)
+        const isUpdateYaklang = lowerYaklangLastVersion
+
         return (
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-notice-body"]}>
@@ -1969,19 +2005,21 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     role={userInfo.role}
                                     updateContent={communityYakit}
                                     onUpdateEdit={UpdateContentEdit}
+                                    isUpdate={isUpdateYakit}
                                 />
                                 <UIOpUpdateYaklang
                                     version={yaklangVersion}
                                     lastVersion={yaklangLastVersion}
                                     localVersion={yaklangLocalVersion}
                                     moreYaklangVersionList={moreYaklangVersionList}
-                                    lowerYaklangLastVersion={lowerYaklangLastVersion}
                                     isRemoteMode={isRemoteMode}
                                     onDownload={onDownload}
                                     role={userInfo.role}
                                     updateContent={communityYaklang}
                                     onUpdateEdit={UpdateContentEdit}
                                     onNoticeShow={setShow}
+                                    isUpdate={isUpdateYaklang}
+                                    isUpdateYakit={isUpdateYakit}
                                 />
                             </div>
                             <div className={styles["history-version"]}>
