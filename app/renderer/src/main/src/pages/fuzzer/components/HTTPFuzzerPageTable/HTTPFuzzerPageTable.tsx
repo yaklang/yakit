@@ -689,18 +689,20 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         let durationMsMinIsPush = true
                         let durationMsMaxIsPush = true
                         let isHaveDataIsPush = true
-                        let colorIsPush = false
+                        let colorIsPush = true
                         // 搜索满足条件 交集
                         // 颜色搜索
                         if (record.MatchedByMatcher && query?.Color && query?.Color?.length > 0) {
                             const cLength = query.Color
+                            let colorFlag = false
                             for (let index = 0; index < cLength.length; index++) {
                                 const element = query.Color[index]
                                 if (record.HitColor.toUpperCase().indexOf(element) > -1) {
-                                    colorIsPush = true
+                                    colorFlag = true
                                     break
                                 }
                             }
+                            colorIsPush = colorFlag
                         }
                         // 关键字搜索
                         if (query?.keyWord) {
