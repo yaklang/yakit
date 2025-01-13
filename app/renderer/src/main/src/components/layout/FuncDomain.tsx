@@ -23,13 +23,12 @@ import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import SelectUpload from "@/pages/SelectUpload"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
@@ -162,7 +161,6 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     roleAdmin: {key: "role-admin", label: "角色管理"},
     accountAdmin: {key: "account-admin", label: "用户管理"},
     setPassword: {key: "set-password", label: "修改密码"},
-    uploadData: {key: "upload-data", label: "上传数据"},
     controlAdmin: {key: "control-admin", label: "远程管理"},
     dynamicControl: {key: "dynamic-control", label: "发起远程"},
     closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
@@ -212,8 +210,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 是否允许密码框关闭 */
     const [passwordClose, setPasswordClose] = useState<boolean>(true)
-    /** 上传数据弹框 */
-    const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
     /** 发起远程弹框 受控端 - 控制端 */
     const [dynamicControlModal, setDynamicControlModal] = useState<boolean>(false)
@@ -244,24 +240,27 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-超管
             if (userInfo.role === "superAdmin") {
                 isNew = true
-                setUserMenu(
-                    [
-                        UserMenusMap["trustList"],
-                        UserMenusMap["licenseAdmin"],
-                        UserMenusMap["pluginAudit"],
-                        UserMenusMap["dataStatistics"],
-                        UserMenusMap["misstatement"]
-                    ].concat(signOutMenu)
-                )
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["trustList"],
+                    UserMenusMap["licenseAdmin"],
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["dataStatistics"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-管理员
             if (userInfo.role === "admin") {
                 isNew = true
-                setUserMenu(
-                    [UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"], UserMenusMap["misstatement"]].concat(
-                        signOutMenu
-                    )
-                )
+                let cacheMenus: YakitMenuItemType[] = [UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"],UserMenusMap["misstatement"]].concat(signOutMenu)
+                // sast scan版本时管理员不显示插件管理
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-操作员
             if (userInfo.role === "operate") {
@@ -276,7 +275,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-审核员
             if (userInfo.role === "auditor") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAudit"], UserMenusMap["misstatement"]].concat(signOutMenu))
+                let cacheMenus: YakitMenuItemType[] = [UserMenusMap["pluginAudit"],UserMenusMap["misstatement"]].concat(signOutMenu)
+                // sast scan版本时管理员不显示插件管理
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-非权限人员
             if (!isNew) {
@@ -299,7 +303,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 } else {
                     let cacheMenus: YakitMenuItemType[] = [
                         ...userAvatar,
-                        UserMenusMap["uploadData"],
                         UserMenusMap["dynamicControl"],
                         UserMenusMap["controlAdmin"],
                         UserMenusMap["closeDynamicControl"],
@@ -319,13 +322,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
                         )
                     }
+                    // sast scan版本时管理员不显示插件管理
+                    if (isSastScan()) {
+                        cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                    }
                     setUserMenu([...cacheMenus])
                 }
             } else {
                 let isNew: boolean = false
                 let cacheMenus: YakitMenuItemType[] = [
                     ...userAvatar,
-                    UserMenusMap["uploadData"],
                     UserMenusMap["dynamicControl"],
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
@@ -367,6 +373,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
                     )
                 }
+
                 if (isNew) {
                     setUserMenu([...cacheMenus])
                 } else {
@@ -582,7 +589,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                     setPasswordClose(true)
                                                     setPasswordShow(true)
                                                 }
-                                                if (key === "upload-data") setUploadModalShow(true)
                                                 if (key === "role-admin") {
                                                     onOpenPage({route: YakitRoute.RoleAdminPage})
                                                 }
@@ -658,19 +664,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-            </YakitModal>
-
-            <YakitModal
-                visible={uploadModalShow}
-                title={"上传数据"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={520}
-                onCancel={() => setUploadModalShow(false)}
-                footer={null}
-            >
-                <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </YakitModal>
 
             <DynamicControl

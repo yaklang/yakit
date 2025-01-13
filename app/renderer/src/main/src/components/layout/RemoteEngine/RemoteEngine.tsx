@@ -6,7 +6,7 @@ import {Form} from "antd"
 import {PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo} from "./RemoteEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
 import {YakitThemeSvgIcon} from "../icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -19,6 +19,7 @@ import {YakEditor} from "@/utils/editors"
 
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSE from "@/assets/yakitSE.png"
+import yakitSS from "@/assets/yakitSS.png"
 import classNames from "classnames"
 import styles from "./RemoteEngine.module.scss"
 
@@ -124,10 +125,20 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
             <YakitSpin spinning={loading}>
                 <div className={styles["remote-yaklang-engine-body"]}>
                     <div className={styles["remote-title"]}>
-                        {isCommunityEdition() && <YakitThemeSvgIcon className={styles["logo-img"]} />}
+                        {isCommunityEdition() && (
+                            <>
+                                {isSastScan() ? (
+                                    <div className={styles["logo-img"]}>
+                                        <img src={yakitSS} alt='暂无图片' />
+                                    </div>
+                                ) : (
+                                    <YakitThemeSvgIcon className={styles["logo-img"]} />
+                                )}
+                            </>
+                        )}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitEE} alt='暂无图片' />
+                                <img src={isSastScan() ? yakitSS : yakitEE} alt='暂无图片' />
                             </div>
                         )}
                         {isEnpriTraceAgent() && (
