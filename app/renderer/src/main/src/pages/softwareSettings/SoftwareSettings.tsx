@@ -9,11 +9,13 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import { isEnpriTrace, isEnpriTraceAgent } from "@/utils/envfile"
-import yakitEEProject from "@/assets/yakitFontEE.png";
-import yakitSEProject from "@/assets/yakitFontSE.png";
-import yakitEEMiniProject from "@/assets/yakitEE.png";
-import yakitSEMiniProject from "@/assets/yakitSE.png";
+import {isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import yakitEEProject from "@/assets/yakitFontEE.png"
+import yakitSEProject from "@/assets/yakitFontSE.png"
+import yakitSSProject from "@/assets/yakitFontSS.png"
+import yakitEEMiniProject from "@/assets/yakitEE.png"
+import yakitSEMiniProject from "@/assets/yakitSE.png"
+import yakitSSMiniProject from "@/assets/yakitSS.png"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 
@@ -26,14 +28,14 @@ interface SettingsMenuProp {
     name: string
     icon: ReactNode
 }
-const ProjectLogo = (showMini:boolean) => {
-    if(isEnpriTrace()){
-        return <img style={{height:"100%"}} src={showMini?yakitEEMiniProject:yakitEEProject} alt="暂无图片" />
-    }
-    else if(isEnpriTraceAgent()){
-        return <img style={{height:"100%"}} src={showMini?yakitSEMiniProject:yakitSEProject} alt="暂无图片" />
-    }
-    else{
+const ProjectLogo = (showMini: boolean) => {
+    if (isSastScan()) {
+        return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
+    } else if (isEnpriTrace()) {
+        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
+    } else if (isEnpriTraceAgent()) {
+        return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
+    } else {
         return <YakitLogoSvgIcon />
     }
 }
@@ -109,9 +111,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         [styles["left-mini-body"]]: showMini
                     })}
                 >
-                    <div className={styles["navbar-logo"]}>
-                        {ProjectLogo(showMini)}
-                    </div>
+                    <div className={styles["navbar-logo"]}>{ProjectLogo(showMini)}</div>
 
                     <div className={styles["navbar-list-wrapper"]}>
                         <div className={styles["list-body"]}>
