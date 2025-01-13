@@ -1,9 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Dropdown, Form, Space} from "antd"
+import {Dropdown, Form, Space, Tooltip} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {RefreshIcon} from "@/assets/newIcon"
+import {InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -13,7 +13,7 @@ import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
 import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -27,8 +27,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -70,7 +69,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             return cloneDeep(defaultWebFuzzerPageInfo)
         }
     })
-
     const [params, setParams, getParams] = useGetState({
         Template: `{{yak(handle|{{params(test)}})}}`,
         HotPatchCode: props.initialHotPatchCode,
@@ -84,6 +82,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(400)
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
+    const [hotPatchCodeOpen, setHotPatchCodeOpen] = useState<boolean>(false)
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -91,10 +90,30 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 setParams({...params, Template: e})
             }
         })
+
+        getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode).then((e) => {
+            if (!!e) {
+                try {
+                    const obj = JSON.parse(e) || {}
+                    if (obj.hotPatchCodeOpen && initWebFuzzerPageInfo().hotPatchCode === obj.hotPatchCode) {
+                        setHotPatchCodeOpen(obj.hotPatchCodeOpen)
+                    }
+                } catch (error) {}
+            }
+        })
+
         return () => {
             setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
         }
     }, [])
+
+    const saveCode = useMemoizedFn((hotPatchCode: string) => {
+        props.onSaveCode(hotPatchCode)
+        setRemoteValue(
+            FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode,
+            JSON.stringify({hotPatchCodeOpen: hotPatchCodeOpen, hotPatchCode: getParams().HotPatchCode})
+        )
+    })
 
     const onClose = useMemoizedFn(async () => {
         if (initWebFuzzerPageInfo().hotPatchCode !== params.HotPatchCode) {
@@ -106,7 +125,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 icon: <ExclamationCircleOutlined />,
                 style: {top: "20%"},
                 onOk: () => {
-                    props.onSaveCode(params.HotPatchCode)
+                    saveCode(params.HotPatchCode)
                     props.onCancel()
                     m.destroy()
                 },
@@ -131,7 +150,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
-                    props.onSaveCode(params.HotPatchCode)
+                    saveCode(params.HotPatchCode)
                     props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
                     setLoading(true)
@@ -198,7 +217,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 type={"primary"}
                                 onClick={() => {
                                     props.onInsert(params.Template)
-                                    props.onSaveCode(params.HotPatchCode)
+                                    saveCode(params.HotPatchCode)
                                 }}
                             >
                                 插入编辑器位置
@@ -221,7 +240,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         <YakitPopconfirm
                             title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
                             onConfirm={(e) => {
-                                props.onSaveCode(HotPatchDefaultContent)
+                                saveCode(HotPatchDefaultContent)
                                 setParams({...params, HotPatchCode: HotPatchDefaultContent})
                             }}
                         >
@@ -257,15 +276,20 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         >
                             <YakitButton icon={<FullscreenOutlined />} type='text' />
                         </YakitPopover>
-                        <div>
-                            <HotCodeTemplate
-                                type='fuzzer'
-                                hotPatchTempLocal={hotPatchTempLocal}
-                                onSetHotPatchTempLocal={setHotPatchTempLocal}
-                                onClickHotCode={(temp) => {
-                                    setParams({...getParams(), HotPatchCode: temp})
-                                }}
-                            ></HotCodeTemplate>
+                        <HotCodeTemplate
+                            type='fuzzer'
+                            hotPatchTempLocal={hotPatchTempLocal}
+                            onSetHotPatchTempLocal={setHotPatchTempLocal}
+                            onClickHotCode={(temp) => {
+                                setParams({...getParams(), HotPatchCode: temp})
+                            }}
+                        ></HotCodeTemplate>
+                        <div className={styles["hotPatchCodeOpen"]}>
+                            公用热加载代码：
+                            <Tooltip title='打开以后webfuzzer标签将公用当前热加载代码，但只对新建标签页生效'>
+                                <InformationCircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                            <YakitSwitch checked={hotPatchCodeOpen} onChange={setHotPatchCodeOpen}></YakitSwitch>
                         </div>
                     </Space>
                     <Space style={{lineHeight: "16px"}}>
@@ -287,7 +311,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             type={"primary"}
                             onClick={() => {
                                 try {
-                                    props.onSaveCode(params.HotPatchCode)
+                                    saveCode(params.HotPatchCode)
                                     setTimeout(() => {
                                         yakitNotify("success", "保存成功")
                                     }, 100)
@@ -389,14 +413,12 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     }, [hotCodeTempVisible, tab])
 
     const onClickHotCodeName = (item: HotPatchTempItem, click?: boolean) => {
-        setViewCurrHotCode("")
         if (item.isDefault) {
             if (click) {
                 onClickHotCode(item.temp)
-            } else {
-                setViewCurrHotCode(item.temp)
+                setHotCodeTempVisible(false)
             }
-            setHotCodeTempVisible(false)
+            setViewCurrHotCode(item.temp)
         } else {
             if (tab === "local") {
                 const params: HotPatchTemplateRequest = {
@@ -408,10 +430,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     .then((res: QueryHotPatchTemplateResponse) => {
                         if (click) {
                             onClickHotCode(res.Data[0].Content)
-                        } else {
-                            setViewCurrHotCode(res.Data[0].Content)
+                            setHotCodeTempVisible(false)
                         }
-                        setHotCodeTempVisible(false)
+                        setViewCurrHotCode(res.Data[0].Content)
                     })
                     .catch((error) => {
                         yakitNotify("error", error + "")
@@ -450,6 +471,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     return (
         <Dropdown
             overlayStyle={{borderRadius: 4, width: 250}}
+            visible={hotCodeTempVisible}
             onVisibleChange={(v) => {
                 setHotCodeTempVisible(v)
             }}
@@ -464,7 +486,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                             {
                                 value: "local",
                                 label: "本地模板"
-                            }
+                            },
                             {
                                 value: "online",
                                 label: "线上模板"
@@ -480,11 +502,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                 trigger='hover'
                                 placement='right'
                                 overlayClassName={styles["hotCode-popover"]}
-                                content={
-                                    <YakitSpin spinning={!viewCurHotCode}>
-                                        <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
-                                    </YakitSpin>
-                                }
+                                content={<YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />}
                                 onVisibleChange={(v) => {
                                     if (v) {
                                         onClickHotCodeName(item)
