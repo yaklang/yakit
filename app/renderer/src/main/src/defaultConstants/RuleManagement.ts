@@ -41,3 +41,17 @@ export const DefaultRuleContent = `desc(
 //     alert $source // record $source
 
 `
+
+/** 规则(导入|导出)弹框的宽度和表单的比例 */
+export const RuleImportExportModalSize = {
+    export: {
+        width: 520,
+        labelCol: 5,
+        wrapperCol: 18
+    },
+    import: {
+        width: 680,
+        labelCol: 6,
+        wrapperCol: 17
+    }
+}

@@ -10,7 +10,10 @@ import {
     SyntaxFlowRuleFilter,
     UpdateSyntaxFlowRuleAndGroupRequest,
     RuleDebugAuditDetailProps,
-    RuleDebugAuditListProps
+    RuleDebugAuditListProps,
+    SyntaxflowsProgress,
+    ExportSyntaxFlowsRequest,
+    ImportSyntaxFlowsRequest
 } from "./RuleManagementType"
 import {
     useDebounceEffect,
@@ -36,7 +39,7 @@ import {
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
-import {Form, InputRef, Modal, Progress, Tooltip} from "antd"
+import {Form, InputRef, Modal, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -62,7 +65,7 @@ import {failed, info, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {DefaultRuleContent, RuleLanguageList} from "@/defaultConstants/RuleManagement"
+import {DefaultRuleContent, RuleImportExportModalSize, RuleLanguageList} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
@@ -88,11 +91,11 @@ import {HoleBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCod
 import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {openABSFileLocated} from "@/utils/openWebsite"
+import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
-import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
-import {openABSFileLocated} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -458,47 +461,13 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
     )
 })
 
-const exportModalWidth = {
-    export: {
-        width: 520,
-        labelCol: 5,
-        wrapperCol: 18
-    },
-    import: {
-        width: 680,
-        labelCol: 6,
-        wrapperCol: 17
-    }
-}
-
-interface ImportYakScriptStreamRequest {
-    Filename: string
-    Password?: string
-}
-
-interface ImportRuleStreamRespnse {
-    Progress: number
-    Verbose: string
-}
-
 type FilterUndefinedAndEmptyArray<T> = {
     [K in keyof T]: T[K] extends undefined | [] ? never : T[K]
 }
-
 // 转换规则导出筛选参数数据
 const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
-    if (Array.isArray(filter.RuleNames)) {
-        if (filter.RuleNames.length > 0 && !filter.allCheck) {
-            // RuleNames 是非空数组时，只返回 RuleNames
-            return {RuleNames: filter.RuleNames}
-        } else {
-            return {
-                Language: filter?.Language,
-                GroupNames: filter?.GroupNames,
-                Purpose: filter?.Purpose,
-                Keyword: filter?.Keyword
-            }
-        }
+    if (!filter.allCheck && Array.isArray(filter.RuleNames) && filter.RuleNames.length > 0) {
+        return {RuleNames: filter.RuleNames}
     } else {
         return {
             Language: filter?.Language,
@@ -508,7 +477,6 @@ const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) =
         }
     }
 }
-
 const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
     Object.entries(obj).reduce<Partial<FilterUndefinedAndEmptyArray<T>>>((acc, [key, value]) => {
         if (value !== undefined && !(Array.isArray(value) && value.length === 0)) {
@@ -523,31 +491,41 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
 
     const [form] = Form.useForm()
 
-    const [InputPath, setInputPath] = useState<string>("")
-    const [token] = useSafeState(randomString(40))
-    const [exportStreamLoading, setExportStreamLoading] = useSafeState(false)
-    const [exportStreamData, setExportStreamData] = useSafeState<ImportRuleStreamRespnse>({
+    const [token, setToken] = useSafeState("")
+    const [showProgressStream, setShowProgressStream] = useSafeState(false)
+    const [progressStream, setProgressStream] = useSafeState<SyntaxflowsProgress>({
         Progress: 0,
         Verbose: ""
     })
 
+    // 规则导出路径
+    const exportPath = useRef<string>("")
+
     const onSubmit = useMemoizedFn(() => {
         const formValue = form.getFieldsValue()
+
         const tragetFilter = cleanObject(transformFilterData(filterData))
         if (extra.type === "export") {
             if (!formValue.TargetPath) {
                 failed(`请填写文件夹名`)
                 return
             }
-            ipcRenderer.invoke(
-                "ExportSyntaxFlows",
-                {
-                    ...formValue,
-                    ...tragetFilter
-                },
-                token
-            )
-            setExportStreamLoading(true)
+            const request: ExportSyntaxFlowsRequest = {
+                Filter: {...cloneDeep(tragetFilter), isNotBuiltin: true},
+                TargetPath: formValue?.TargetPath || "",
+                Password: formValue?.Password || undefined
+            }
+            if (!request.TargetPath.endsWith(".zip")) {
+                request.TargetPath = request.TargetPath + ".zip"
+            }
+            ipcRenderer
+                .invoke("GenerateProjectsFilePath", request.TargetPath)
+                .then((res) => {
+                    exportPath.current = res
+                    ipcRenderer.invoke("ExportSyntaxFlows", request, token)
+                    setShowProgressStream(true)
+                })
+                .catch(() => {})
         }
 
         if (extra.type === "import") {
@@ -555,11 +533,33 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                 failed(`请输入本地插件路径`)
                 return
             }
-            const params: ImportYakScriptStreamRequest = {
-                Filename: formValue.InputPath,
-                Password: formValue.Password || ""
+            const params: ImportSyntaxFlowsRequest = {
+                InputPath: formValue.InputPath,
+                Password: formValue.Password || undefined
             }
-            ipcRenderer.invoke("ImportYakScriptStream", params)
+            ipcRenderer.invoke("ImportSyntaxFlows", params, token)
+            setShowProgressStream(true)
+        }
+    })
+
+    const onCancelStream = useMemoizedFn(() => {
+        if (!token) return
+
+        if (extra.type === "export") {
+            ipcRenderer.invoke("cancel-ExportSyntaxFlows", token)
+        }
+        if (extra.type === "import") {
+            ipcRenderer.invoke("cancel-ImportSyntaxFlows", token)
+        }
+    })
+    const onSuccessStream = useMemoizedFn((isSuccess: boolean) => {
+        if (isSuccess) {
+            if (extra.type === "export") {
+                exportPath.current && openABSFileLocated(exportPath.current)
+            }
+            onCallback(true)
+        } else {
+            exportPath.current = ""
         }
     })
 
@@ -567,32 +567,31 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
         if (!token) {
             return
         }
-        ipcRenderer.on(`${token}-data`, async (_, data: ImportRuleStreamRespnse) => {
-            setExportStreamData(data)
+        let success = true
+        ipcRenderer.on(`${token}-data`, async (_, data: SyntaxflowsProgress) => {
+            setProgressStream(data)
         })
         ipcRenderer.on(`${token}-error`, (_, error) => {
-            console.log(error, "err")
+            success = false
             failed(`[ExportSyntaxFlows] error:  ${error}`)
-            setExportStreamLoading(false)
         })
         ipcRenderer.on(`${token}-end`, () => {
             info("[ExportSyntaxFlows] finished")
-            setExportStreamLoading(false)
-            // ipcRenderer.invoke("sss", formValue.TargetPath).then(res => {
-            //     openABSFileLocated(res)
-            // })
-            // setTimeout(() => , 300)
+            setShowProgressStream(false)
+            onSuccessStream(success)
+            success = true
         })
         return () => {
-            ipcRenderer.invoke("cancel-ExportSyntaxFlows", token)
-            ipcRenderer.removeAllListeners(`${token}-data`)
-            ipcRenderer.removeAllListeners(`${token}-error`)
-            ipcRenderer.removeAllListeners(`${token}-end`)
+            if (token) {
+                onCancelStream()
+                ipcRenderer.removeAllListeners(`${token}-data`)
+                ipcRenderer.removeAllListeners(`${token}-error`)
+                ipcRenderer.removeAllListeners(`${token}-end`)
+            }
         }
     }, [token])
 
     const onCancel = useMemoizedFn(() => {
-        form.resetFields()
         onCallback(false)
     })
 
@@ -637,11 +636,6 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                         multiple={false}
                         selectType='file'
                         fileExtensionIsExist={false}
-                        onChange={(val) => {
-                            setInputPath(val)
-                            form.setFieldsValue({InputPath: val})
-                        }}
-                        value={InputPath}
                     />
                 )
 
@@ -650,12 +644,27 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
         }
     })
 
+    useEffect(() => {
+        if (extra.hint) {
+            setToken(randomString(40))
+            form.resetFields()
+        }
+        // 关闭时重置所有数据
+        return () => {
+            if (extra.hint) {
+                setShowProgressStream(false)
+                setProgressStream({Progress: 0, Verbose: ""})
+                exportPath.current = ""
+            }
+        }
+    }, [extra.hint])
+
     return (
         <>
             <YakitModal
                 getContainer={getContainer}
                 type='white'
-                width={exportModalWidth[extra.type].width}
+                width={RuleImportExportModalSize[extra.type].width}
                 centered={true}
                 keyboard={false}
                 maskClosable={false}
@@ -667,14 +676,14 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                 footerStyle={{justifyContent: "flex-end"}}
                 footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
             >
-                {!exportStreamLoading ? (
+                {!showProgressStream ? (
                     <div className={styles["rule-import-export-modal"]}>
                         {exportDescribeMemoizedFn(extra.type)}
                         <Form
                             form={form}
                             layout={"horizontal"}
-                            labelCol={{span: exportModalWidth[extra.type].labelCol}}
-                            wrapperCol={{span: exportModalWidth[extra.type].wrapperCol}}
+                            labelCol={{span: RuleImportExportModalSize[extra.type].labelCol}}
+                            wrapperCol={{span: RuleImportExportModalSize[extra.type].wrapperCol}}
                             onSubmitCapture={(e) => {
                                 e.preventDefault()
                             }}
@@ -690,7 +699,7 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                         <ImportAndExportStatusInfo
                             title='导出中'
                             showDownloadDetail={false}
-                            streamData={exportStreamData || {Progress: 0}}
+                            streamData={progressStream || {Progress: 0}}
                             logListInfo={[]}
                         />
                     </div>

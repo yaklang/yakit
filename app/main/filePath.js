@@ -121,6 +121,9 @@ const htmlTemplateDir = loadExtraFilePath(path.join("report"))
 /** 窗口缓存文件路径 */
 const windowStatePatch = path.join(basicDir)
 
+/** yak 项目相关文件路径 */
+const yakProjects = path.join(YakitProjectPath, "projects")
+
 module.exports = {
     YakitProjectPath,
 
@@ -142,5 +145,6 @@ module.exports = {
     codeDir,
 
     htmlTemplateDir,
-    windowStatePatch
+    windowStatePatch,
+    yakProjects
 }

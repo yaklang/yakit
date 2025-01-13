@@ -572,7 +572,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             }}
                         ></PluginLocalExportForm>
                     </div>
-                )
+                ),
+                getContainer: divRef.current || undefined
             })
         } catch (error) {
             yakitNotify("error", error + "")

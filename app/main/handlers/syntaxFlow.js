@@ -1,4 +1,7 @@
 const {ipcMain} = require("electron")
+const fs = require("fs")
+const path = require("path")
+const {yakProjects} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // query local rule group list
@@ -254,6 +257,13 @@ module.exports = (win, getClient) => {
     const exportSyntaxFlowsMap = new Map()
     ipcMain.handle("cancel-ExportSyntaxFlows", handlerHelper.cancelHandler(exportSyntaxFlowsMap))
     ipcMain.handle("ExportSyntaxFlows", (_, params, token) => {
+        const {TargetPath} = params
+        if (!fs.existsSync(yakProjects)) {
+            try {
+                fs.mkdirSync(yakProjects, {recursive: true})
+            } catch (error) {}
+        }
+        params.TargetPath = path.join(yakProjects, TargetPath)
         let stream = getClient().ExportSyntaxFlows(params)
         handlerHelper.registerHandler(win, stream, exportSyntaxFlowsMap, token)
     })
@@ -314,7 +324,8 @@ module.exports = (win, getClient) => {
         return await asyncDeleteSSAPrograms(params)
     })
 
-    // ipcMain.handle("sss", async (e, params) => {
-    //     return path.join(YakitProjectPath, "projects", params)
-    // })
+    // 生成 yakit-projects 文件夹下 projects 里面的文件路径
+    ipcMain.handle("GenerateProjectsFilePath", async (e, fileName) => {
+        return path.join(yakProjects, fileName)
+    })
 }

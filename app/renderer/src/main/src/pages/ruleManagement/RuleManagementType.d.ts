@@ -14,7 +14,6 @@ type RuleImportExportModalExtra = {
     title: "导出插件" | "导入插件"
     type: "export" | "import"
 }
-
 export interface RuleImportExportModalProps {
     /** 是否被dom节点包含 */
     getContainer?: HTMLElement
@@ -117,6 +116,8 @@ export interface SyntaxFlowRuleFilter {
 
     AfterId?: number
     BeforeId?: number
+
+    isNotBuiltin?: boolean // 是否不是内置规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter
@@ -171,6 +172,22 @@ export interface UpdateSyntaxFlowRuleRequest {
 
 export interface DeleteSyntaxFlowRuleRequest {
     Filter: SyntaxFlowRuleFilter
+}
+
+export interface ExportSyntaxFlowsRequest {
+    Filter: SyntaxFlowRuleFilter
+    Password?: string
+    TargetPath: string
+}
+
+export interface ImportSyntaxFlowsRequest {
+    InputPath: string
+    Password?: string
+}
+
+export interface SyntaxflowsProgress {
+    Progress: number
+    Verbose: string
 }
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */

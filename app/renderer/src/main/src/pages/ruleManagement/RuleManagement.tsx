@@ -295,6 +295,16 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         }
     })
 
+    const handleUpdateSelected = useMemoizedFn((info: SyntaxFlowRule) => {
+        const findIndex = selectList.findIndex((el) => el.RuleName === info.RuleName)
+        if (findIndex > -1) {
+            setSelectList((arr) => {
+                arr.splice(findIndex, 1)
+                return [...arr]
+            })
+        }
+    })
+
     /** ---------- 导出逻辑 ---------- */
     const [exportExtra, setExportExtra] = useState<RuleImportExportModalProps["extra"]>({
         hint: false,
@@ -304,19 +314,24 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     const handleOpenExportHint = useMemoizedFn((extra: Omit<RuleImportExportModalProps["extra"], "hint">) => {
         if (exportExtra.hint) return
-        setExportExtra((prev) => ({
-            ...extra,
-            hint: true
-        }))
+        setExportExtra({...extra, hint: true})
     })
 
     const handleCallbackExportHint = useMemoizedFn((result: boolean) => {
         if (result) {
+            const type = exportExtra.type
+            if (type === "export") {
+                handleAllCheck([], [], false)
+            } else {
+                fetchList()
+            }
         }
-        setExportExtra((prev) => ({
-            ...prev,
-            hint: result
-        }))
+        setExportExtra((prev) => {
+            return {
+                ...prev,
+                hint: false
+            }
+        })
     })
 
     /** ---------- 新建|编辑逻辑 ---------- */
@@ -349,6 +364,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         setDelRules((arr) => [...arr, RuleName])
         grpcDeleteLocalRule({Filter: {RuleNames: [RuleName]}})
             .then(() => {
+                handleUpdateSelected(info)
                 setData((res) => {
                     return {...res, Rule: res.Rule.filter((ele) => ele.RuleName !== RuleName), Total: res.Total - 1}
                 })
