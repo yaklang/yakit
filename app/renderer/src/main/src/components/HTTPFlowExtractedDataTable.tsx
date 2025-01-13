@@ -108,6 +108,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         if (Filter) {
             query.Filter = Filter
         }
+        console.log("query", query)
         ipcRenderer
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
@@ -160,17 +161,28 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
 
     // 获取tags等分组
     const getHTTPFlowsFieldGroup = useMemoizedFn(() => {
+        const newParams = {
+            Filter: {
+                TraceID: [props.hiddenIndex],
+                RuleVerbose: []
+            },
+            Page: 1,
+            Limit: 10000
+        }
         ipcRenderer
-            .invoke("HTTPFlowsFieldGroup", {
-                RefreshRequest: true
-            })
-            .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                const tags = rsp.Tags.filter((item) => item.Value)
-                const realTags: FiltersItemProps[] = tags.map((ele) => ({label: ele.Value, value: ele.Value}))
-                setTags(realTags)
+            .invoke("QueryMITMRuleExtractedData", newParams)
+            .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
+                if (rsp.Data.length) {
+                    const ruleNames = rsp.Data.map((item) => item.RuleName)
+                    const tags = [...new Set(ruleNames)]
+                    const realTags: FiltersItemProps[] = tags.map((tag) => ({label: tag, value: tag}))
+                    setTags(realTags)
+                } else {
+                    setTags([])
+                }
             })
             .catch((e: any) => {
-                yakitNotify("error", `query HTTP Flows Field Group failed: ${e}`)
+                yakitNotify("error", `${e}`)
             })
     })
 
@@ -210,7 +222,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                     {i.RuleName}
                 </Text>
             ),
-            width: 100,
+            width: 150,
             filterIcon: () => {
                 return (
                     <OutlineSearchIcon
