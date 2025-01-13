@@ -108,7 +108,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         if (Filter) {
             query.Filter = Filter
         }
-        console.log("query", query)
         ipcRenderer
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
