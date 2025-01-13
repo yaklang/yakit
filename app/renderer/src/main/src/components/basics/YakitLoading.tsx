@@ -2,13 +2,14 @@ import React, {useMemo, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
 import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
+import yakitSS from "@/assets/yakitSS.png"
 import styles from "./yakitLoading.module.scss"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {setLocalValue} from "@/utils/kv"
@@ -101,7 +102,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 rules={[
                                     {required: true, message: `请输入端口号`},
                                     {
-                                        pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+                                        pattern:
+                                            /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
                                         message: "请输入正确的端口号"
                                     }
                                 ]}
@@ -183,9 +185,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
 
-                    <div>
-                        {changePortBtn()}
-                    </div>
+                    <div>{changePortBtn()}</div>
                 </>
             )
         }
@@ -282,24 +282,44 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
 
                     {/* 社区版 - 启动Logo */}
                     {isCommunityEdition() && (
-                        <div className={styles["yakit-loading-icon-wrapper"]}>
-                            <div className={styles["theme-icon-wrapper"]}>
-                                <div className={styles["theme-icon"]}>
-                                    <YakitThemeLoadingSvgIcon />
+                        <>
+                            {isSastScan() ? (
+                                <div className={styles["yakit-loading-icon-wrapper"]}>
+                                    <div className={styles["white-icon"]}>
+                                        <img src={yakitSS} alt='暂无图片' />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className={styles["white-icon"]}>
-                                <YakitLoadingSvgIcon />
-                            </div>
-                        </div>
+                            ) : (
+                                <div className={styles["yakit-loading-icon-wrapper"]}>
+                                    <div className={styles["theme-icon-wrapper"]}>
+                                        <div className={styles["theme-icon"]}>
+                                            <YakitThemeLoadingSvgIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["white-icon"]}>
+                                        <YakitLoadingSvgIcon />
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                     {/* 企业版 - 启动Logo */}
                     {isEnpriTrace() && (
-                        <div className={styles["yakit-loading-icon-wrapper"]}>
-                            <div className={styles["white-icon"]}>
-                                <img src={yakitEE} alt='暂无图片' />
-                            </div>
-                        </div>
+                        <>
+                            {isSastScan() ? (
+                                <div className={styles["yakit-loading-icon-wrapper"]}>
+                                    <div className={styles["white-icon"]}>
+                                        <img src={yakitSS} alt='暂无图片' />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className={styles["yakit-loading-icon-wrapper"]}>
+                                    <div className={styles["white-icon"]}>
+                                        <img src={yakitEE} alt='暂无图片' />
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                     {/* 便携版 - 启动Logo */}
                     {isEnpriTraceAgent() && (
