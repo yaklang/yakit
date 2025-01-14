@@ -39,14 +39,9 @@ export const cataloguePlugin = (callback) =>
                             // 跳过输入中文拼音的中间状态
                             return
                         }
-                        const {selection} = view.state
-                        const $from = selection.$from
-                        const node = $from.node()
-                        if (node && node.type === view.state.schema.nodes.heading) {
-                            const headings = getHeading(view)
-                            // 内容变化时更新目录
-                            callback(headings)
-                        }
+                        const headings = getHeading(view)
+                        // 内容变化时更新目录
+                        callback(headings)
                     }
                 }
             }

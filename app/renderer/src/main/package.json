@@ -108,7 +108,7 @@
         "xterm-addon-unicode11": "^0.5.0",
         "xterm-for-react": "^1.0.4",
         "y-prosemirror": "^1.2.12",
-        "y-websocket": "^2.0.4",
+        "y-protocols": "^1.0.6",
         "yjs": "^13.6.19",
         "zustand": "^4.4.1"
     },

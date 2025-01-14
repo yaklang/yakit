@@ -32,7 +32,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
-import {cloneDeep} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -129,6 +129,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const clientHeightRef = useRef(document.body.clientHeight)
     const avatarColor = useRef<string>(randomAvatarColor())
     const perTabName = useRef<string>(initTabName())
+    const perHeadings = useRef<MilkdownCatalogueProps[]>([])
+
     const [inViewport = true] = useInViewport(notepadRef)
 
     useEffect(() => {
@@ -330,14 +332,17 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [notepadWidth])
     const getCatalogue = useDebounceFn(
         (headings) => {
+            if (isEqual(perHeadings.current, headings)) return
             // 生成目录树形结构
             const tocTree = buildTOCTree(headings)
+            perHeadings.current = headings
             treeKeysRef.current = tocTree.keys
             setCatalogue(tocTree.treeData)
         },
         {wait: 500, leading: true}
     ).run
     const onCatalogueClick = useMemoizedFn((info: MilkdownCatalogueProps) => {
+        if (!info.id) return
         const element = document.getElementById(info.id)
         if (element) {
             element.scrollIntoView({behavior: "smooth"})

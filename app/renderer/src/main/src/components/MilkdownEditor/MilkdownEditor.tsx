@@ -2,7 +2,14 @@ import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/
 import React, {useEffect, useRef, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
-import {blockquoteSchema, codeBlockSchema, commonmark, hrSchema, listItemSchema} from "@milkdown/kit/preset/commonmark"
+import {
+    blockquoteSchema,
+    codeBlockSchema,
+    commonmark,
+    hrSchema,
+    listItemSchema,
+    syncHeadingIdPlugin
+} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
@@ -393,7 +400,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
                         })
                     })
-                    .use(commonmark)
+                    .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
                     .use(gfm)
                     .use(cursor)
                     .use(tooltip)
