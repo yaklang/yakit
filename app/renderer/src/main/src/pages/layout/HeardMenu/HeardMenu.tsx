@@ -36,7 +36,7 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
@@ -137,7 +137,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         setRouteMenu([...DefaultMenu])
         setSubMenuData(DefaultMenu[0].children || [])
         setMenuId(DefaultMenu[0].label)
-        // 当为企业简易版
+
         if (isEnpriTraceAgent()) {
             let currentMenuList: EnhancedPrivateRouteMenuProps[] = [...SimpleMenus]
             if (userInfo.role !== "admin") {
@@ -149,6 +149,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setMenuId(currentMenuList[0]?.label)
             return
         } else {
+            // 当为SastScan版本时 只有专家模式
+            if (isSastScan()) return
             // 获取软件内菜单模式
             getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
                 const menuMode = patternMenu || "expert"
@@ -692,73 +694,79 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     {!isEnpriTraceAgent() ? (
                         <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
-                            <NotepadMenu isExpand={isExpand} onRouteMenuSelect={onRouteMenuSelect} />
-                            <Dropdown
-                                overlayClassName={style["customize-drop-menu"]}
-                                overlay={
-                                    <>
-                                        {CustomizeMenuData.map((item) => (
-                                            <div
-                                                key={item.key}
-                                                className={classNames(style["customize-item"], {
-                                                    [style["customize-item-select"]]: patternMenu === item.key
-                                                })}
-                                                onClick={() => onCustomizeMenuClick(item.key)}
-                                            >
-                                                <div className={style["customize-item-left"]}>
-                                                    {item.itemIcon}
-                                                    <span className={style["customize-item-label"]}>{item.label}</span>
-                                                </div>
-                                                {patternMenu === item.key && <CheckIcon />}
+                            {!isSastScan() && (
+                                <>
+                                    <NotepadMenu isExpand={isExpand} onRouteMenuSelect={onRouteMenuSelect} />
+                                    <Dropdown
+                                        overlayClassName={style["customize-drop-menu"]}
+                                        overlay={
+                                            <>
+                                                {CustomizeMenuData.map((item) => (
+                                                    <div
+                                                        key={item.key}
+                                                        className={classNames(style["customize-item"], {
+                                                            [style["customize-item-select"]]: patternMenu === item.key
+                                                        })}
+                                                        onClick={() => onCustomizeMenuClick(item.key)}
+                                                    >
+                                                        <div className={style["customize-item-left"]}>
+                                                            {item.itemIcon}
+                                                            <span className={style["customize-item-label"]}>
+                                                                {item.label}
+                                                            </span>
+                                                        </div>
+                                                        {patternMenu === item.key && <CheckIcon />}
+                                                    </div>
+                                                ))}
+                                                <Divider style={{margin: "6px 0"}} />
+                                                <YakitSpin spinning={loading} tip='Loading...' size='small'>
+                                                    <div
+                                                        className={classNames(style["customize-item"])}
+                                                        onClick={() =>
+                                                            CustomizeMenuData.find(
+                                                                (ele) => patternMenu === ele.key
+                                                            )?.onRestoreMenu()
+                                                        }
+                                                    >
+                                                        {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
+                                                    </div>
+                                                    <div
+                                                        className={classNames(style["customize-item"])}
+                                                        onClick={() => onGoCustomize()}
+                                                    >
+                                                        编辑菜单
+                                                    </div>
+                                                    <div
+                                                        className={classNames(style["customize-item"])}
+                                                        onClick={() => {
+                                                            setVisibleImport(true)
+                                                            setMenuDataString("")
+                                                            setFileName("")
+                                                            setRefreshTrigger(!refreshTrigger)
+                                                        }}
+                                                    >
+                                                        导入 JSON 配置
+                                                    </div>
+                                                </YakitSpin>
+                                            </>
+                                        }
+                                        onVisibleChange={setCustomizeVisible}
+                                    >
+                                        <YakitButton
+                                            type='secondary2'
+                                            className={classNames(style["heard-menu-customize"], {
+                                                [style["margin-right-0"]]: isExpand,
+                                                [style["heard-menu-customize-menu"]]: customizeVisible
+                                            })}
+                                            icon={<CursorClickIcon />}
+                                        >
+                                            <div className={style["heard-menu-customize-content"]}>
+                                                自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
                                             </div>
-                                        ))}
-                                        <Divider style={{margin: "6px 0"}} />
-                                        <YakitSpin spinning={loading} tip='Loading...' size='small'>
-                                            <div
-                                                className={classNames(style["customize-item"])}
-                                                onClick={() =>
-                                                    CustomizeMenuData.find(
-                                                        (ele) => patternMenu === ele.key
-                                                    )?.onRestoreMenu()
-                                                }
-                                            >
-                                                {CustomizeMenuData.find((ele) => patternMenu === ele.key)?.tip}
-                                            </div>
-                                            <div
-                                                className={classNames(style["customize-item"])}
-                                                onClick={() => onGoCustomize()}
-                                            >
-                                                编辑菜单
-                                            </div>
-                                            <div
-                                                className={classNames(style["customize-item"])}
-                                                onClick={() => {
-                                                    setVisibleImport(true)
-                                                    setMenuDataString("")
-                                                    setFileName("")
-                                                    setRefreshTrigger(!refreshTrigger)
-                                                }}
-                                            >
-                                                导入 JSON 配置
-                                            </div>
-                                        </YakitSpin>
-                                    </>
-                                }
-                                onVisibleChange={setCustomizeVisible}
-                            >
-                                <YakitButton
-                                    type='secondary2'
-                                    className={classNames(style["heard-menu-customize"], {
-                                        [style["margin-right-0"]]: isExpand,
-                                        [style["heard-menu-customize-menu"]]: customizeVisible
-                                    })}
-                                    icon={<CursorClickIcon />}
-                                >
-                                    <div className={style["heard-menu-customize-content"]}>
-                                        自定义{(customizeVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
-                                    </div>
-                                </YakitButton>
-                            </Dropdown>
+                                        </YakitButton>
+                                    </Dropdown>
+                                </>
+                            )}
                         </>
                     ) : (
                         <>

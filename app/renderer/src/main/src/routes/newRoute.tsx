@@ -106,7 +106,7 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition, isSastScan} from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
@@ -151,6 +151,7 @@ import {Misstatement} from "@/pages/misstatement/Misstatement"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
+const SastScanHome = React.lazy(() => import("@/pages/home/SastScanHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
@@ -441,7 +442,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <Home />
+            return <>{isSastScan() ? <SastScanHome /> : <Home />}</>
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -1137,96 +1138,114 @@ export const InvalidPageMenuItem = isCommunityEdition()
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改
  */
-export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
-    {
-        page: undefined,
-        label: "手工渗透",
-        children: routeToChildren([YakitRoute.HTTPHacker, YakitRoute.HTTPFuzzer, YakitRoute.WebsocketFuzzer])
-    },
-    {
-        page: undefined,
-        label: "安全工具",
-        children: [
-            PrivateAllMenus[YakitRoute.Mod_Brute],
-            {
-                page: YakitRoute.Plugin_OP,
-                label: "基础爬虫",
-                icon: getFixedPluginIcon(ResidentPluginName.BasicCrawler),
-                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.BasicCrawler),
-                describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
-                yakScripName: ResidentPluginName.BasicCrawler
-            },
-            PrivateAllMenus[YakitRoute.Space_Engine],
-            PrivateAllMenus[YakitRoute.Mod_ScanPort],
-            {
-                page: YakitRoute.Plugin_OP,
-                label: "子域名收集",
-                icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
-                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
-                describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
-                yakScripName: ResidentPluginName.SubDomainCollection
-            },
-            {
-                page: YakitRoute.Plugin_OP,
-                label: "目录扫描",
-                icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
-                hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
-                describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
-                yakScripName: ResidentPluginName.DirectoryScanning
-            }
-        ]
-    },
-    {
-        page: undefined,
-        label: "代码审计",
-        children: [
-            PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
-            PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
-            PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-            PrivateAllMenus[YakitRoute.Rule_Management],
-            PrivateAllMenus[YakitRoute.YakRunner_Audit_Hole],
-        ]
-    },
-    {
-        page: undefined,
-        label: "专项漏洞检测",
-        children: routeToChildren([YakitRoute.PoC])
-    },
-    {
-        page: undefined,
-        label: "插件",
-        children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
-    },
-    {
-        page: undefined,
-        label: "反连",
-        children: routeToChildren([
-            YakitRoute.ShellReceiver,
-            YakitRoute.ReverseServer_New,
-            YakitRoute.DNSLog,
-            YakitRoute.ICMPSizeLog,
-            YakitRoute.TCPPortLog,
-            YakitRoute.PayloadGenerater_New
-        ])
-    },
-    {
-        page: undefined,
-        label: "数据处理",
-        children: routeToChildren([YakitRoute.Codec, YakitRoute.DataCompare])
-    },
-    {
-        page: undefined,
-        label: "数据库",
-        children: routeToChildren([
-            YakitRoute.DB_Report,
-            YakitRoute.DB_Ports,
-            YakitRoute.DB_Risk,
-            YakitRoute.DB_Domain,
-            YakitRoute.DB_HTTPHistory,
-            YakitRoute.DB_CVE
-        ])
-    }
-]
+export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isSastScan()
+    ? [
+          {
+              page: undefined,
+              label: "代码审计",
+              children: [
+                  PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
+                  PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
+                  PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
+                  PrivateAllMenus[YakitRoute.Rule_Management]
+              ]
+          },
+          {
+              page: undefined,
+              label: "数据库",
+              children: routeToChildren([YakitRoute.DB_Report])
+          }
+      ]
+    : [
+          {
+              page: undefined,
+              label: "手工渗透",
+              children: routeToChildren([YakitRoute.HTTPHacker, YakitRoute.HTTPFuzzer, YakitRoute.WebsocketFuzzer])
+          },
+          {
+              page: undefined,
+              label: "安全工具",
+              children: [
+                  PrivateAllMenus[YakitRoute.Mod_Brute],
+                  {
+                      page: YakitRoute.Plugin_OP,
+                      label: "基础爬虫",
+                      icon: getFixedPluginIcon(ResidentPluginName.BasicCrawler),
+                      hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.BasicCrawler),
+                      describe: getFixedPluginDescribe(ResidentPluginName.BasicCrawler),
+                      yakScripName: ResidentPluginName.BasicCrawler
+                  },
+                  PrivateAllMenus[YakitRoute.Space_Engine],
+                  PrivateAllMenus[YakitRoute.Mod_ScanPort],
+                  {
+                      page: YakitRoute.Plugin_OP,
+                      label: "子域名收集",
+                      icon: getFixedPluginIcon(ResidentPluginName.SubDomainCollection),
+                      hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.SubDomainCollection),
+                      describe: getFixedPluginDescribe(ResidentPluginName.SubDomainCollection),
+                      yakScripName: ResidentPluginName.SubDomainCollection
+                  },
+                  {
+                      page: YakitRoute.Plugin_OP,
+                      label: "目录扫描",
+                      icon: getFixedPluginIcon(ResidentPluginName.DirectoryScanning),
+                      hoverIcon: getFixedPluginHoverIcon(ResidentPluginName.DirectoryScanning),
+                      describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
+                      yakScripName: ResidentPluginName.DirectoryScanning
+                  }
+              ]
+          },
+          {
+              page: undefined,
+              label: "代码审计",
+              children: [
+                  PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
+                  PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
+                  PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
+                  PrivateAllMenus[YakitRoute.Rule_Management]
+              ]
+          },
+          {
+              page: undefined,
+              label: "专项漏洞检测",
+              children: routeToChildren([YakitRoute.PoC])
+          },
+          {
+              page: undefined,
+              label: "插件",
+              children: routeToChildren([YakitRoute.Plugin_Hub, YakitRoute.BatchExecutorPage])
+          },
+          {
+              page: undefined,
+              label: "反连",
+              children: routeToChildren([
+                  YakitRoute.ShellReceiver,
+                  YakitRoute.ReverseServer_New,
+                  YakitRoute.DNSLog,
+                  YakitRoute.ICMPSizeLog,
+                  YakitRoute.TCPPortLog,
+                  YakitRoute.PayloadGenerater_New
+              ])
+          },
+          {
+              page: undefined,
+              label: "数据处理",
+              children: routeToChildren([YakitRoute.Codec, YakitRoute.DataCompare])
+          },
+          {
+              page: undefined,
+              label: "数据库",
+              children: routeToChildren([
+                  YakitRoute.DB_Report,
+                  YakitRoute.DB_Ports,
+                  YakitRoute.DB_Risk,
+                  YakitRoute.DB_Domain,
+                  YakitRoute.DB_HTTPHistory,
+                  YakitRoute.DB_CVE
+              ])
+          }
+      ]
+
 /**
  * @name private版扫描模式菜单配置数据
  * @description 修改只对扫描模式有效，别的模式需取对应模式数据进行修改
