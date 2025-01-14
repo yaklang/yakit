@@ -28,7 +28,7 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition} from "@/utils/envfile"
+import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition, isSastScan} from "@/utils/envfile"
 import {
     useCreation,
     useDebounceFn,
@@ -275,6 +275,19 @@ export const getInitPageCache: () => PageCache[] = () => {
                 verbose: "入侵模拟",
                 menuName: YakitRouteToPageInfo[YakitRoute.DB_ChaosMaker].label,
                 route: YakitRoute.DB_ChaosMaker,
+                singleNode: true,
+                multipleNode: []
+            }
+        ]
+    }
+
+    if (isSastScan()){
+        return [
+            {
+                routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                verbose: "首页",
+                menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                route: YakitRoute.NewHome,
                 singleNode: true,
                 multipleNode: []
             }
