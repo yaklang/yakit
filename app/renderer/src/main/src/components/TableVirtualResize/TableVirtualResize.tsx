@@ -142,6 +142,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [selectedRows, setSelectedRows] = useState<T[]>([])
     const [width, setWidth] = useState<number>(0) //表格所在div宽度
     const [height, setHeight] = useState<number>(300) //表格所在div高度
+    const [bodyHeight, setBodyHeight] = useState<number>(73) //表格body高度
+
     const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(props.columns) // 表头
     const [columns, setColumns, getColumns] = useGetState<ColumnsTypeProps[]>(props.columns) // 表头
     const [lineLeft, setLineLeft] = useState<number>(0) // 拖拽线 left
@@ -1041,6 +1043,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                 "100%"
                         }}
                     >
+                        <ReactResizeDetector
+                            onResize={(w, h) => {
+                                if (!w || !h) {
+                                    return
+                                }
+                                setBodyHeight(h)
+                            }}
+                            handleWidth={true}
+                            handleHeight={true}
+                            refreshMode={"debounce"}
+                            refreshRate={50}
+                        />
                         {enableDrag && lineIndex > -1 && (
                             <div
                                 className={classNames(styles["drag-line"])}
@@ -1085,7 +1099,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         enableDrag={enableDrag}
                                         columns={columns}
                                         onMouseDown={onMouseDown}
-                                        height={height}
+                                        bodyHeight={bodyHeight}
                                         setHoverLine={setHoverLine}
                                         hoverLine={hoverLine}
                                         size={size}
@@ -1176,7 +1190,7 @@ interface ColumnsItemRenderProps {
     enableDrag?: boolean
     columns: ColumnsTypeProps[]
     onMouseDown: (e: any, index: number) => void
-    height: number
+    bodyHeight: number
     hoverLine: boolean
     setHoverLine: (b: boolean) => void
     size: "small" | "middle" | "large"
@@ -1202,7 +1216,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
         enableDrag,
         columns,
         onMouseDown,
-        height,
+        bodyHeight,
         setHoverLine,
         hoverLine,
         size
@@ -1346,7 +1360,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 {enableDrag && columnsItem.enableDrag !== false && cIndex < columns.length - 1 && (
                     <div
                         className={classNames(styles["virtual-table-title-drag"])}
-                        style={{height: hoverLine ? height : 28}}
+                        style={{height: hoverLine ? bodyHeight - 10 : 28}}
                         onMouseEnter={() => setHoverLine(true)}
                         onMouseLeave={() => setHoverLine(false)}
                         onMouseDown={(e) => onMouseDown(e, cIndex)}
