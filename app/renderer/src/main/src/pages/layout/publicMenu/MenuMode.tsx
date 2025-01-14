@@ -40,6 +40,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
+import {isSastScan} from "@/utils/envfile"
 
 interface MenuModeProps {
     mode: string
@@ -345,7 +346,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "代码审计" && (
                 <>
-                <div
+                    <div
                         className={styles["vertical-menu-wrapper"]}
                         onClick={() => onMenu(YakitRoute.YakRunner_Project_Manager)}
                     >
@@ -405,58 +406,91 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "数据库" && (
                 <>
-                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_HTTPHistory)}>
-                        <div className={styles["menu-icon-wrapper"]}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicHTTPHistoryIcon />
+                    {isSastScan() ? (
+                        <div className={styles["multiple-vertical-menu-wrapper"]}>
+                            <div
+                                className={styles["vertical-menu-wrapper"]}
+                                onClick={() => onMenu(YakitRoute.DB_Report)}
+                            >
+                                <div className={styles["menu-icon-wrapper"]}>
+                                    <div className={styles["icon-wrapper"]}>
+                                        <PublicReportIcon />
+                                    </div>
+                                </div>
+                                <div className={styles["title-style"]}>报告</div>
                             </div>
                         </div>
-                        <div className={styles["title-style"]}>History</div>
-                    </div>
-                    <div className={styles["divider-style"]}></div>
-                    <div className={styles["multiple-vertical-menu-wrapper"]}>
-                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Report)}>
-                            <div className={styles["menu-icon-wrapper"]}>
-                                <div className={styles["icon-wrapper"]}>
-                                    <PublicReportIcon />
+                    ) : (
+                        <>
+                            <div
+                                className={styles["vertical-menu-wrapper"]}
+                                onClick={() => onMenu(YakitRoute.DB_HTTPHistory)}
+                            >
+                                <div className={styles["menu-icon-wrapper"]}>
+                                    <div className={styles["icon-wrapper"]}>
+                                        <PublicHTTPHistoryIcon />
+                                    </div>
+                                </div>
+                                <div className={styles["title-style"]}>History</div>
+                            </div>
+                            <div className={styles["divider-style"]}></div>
+                            <div className={styles["multiple-vertical-menu-wrapper"]}>
+                                <div
+                                    className={styles["vertical-menu-wrapper"]}
+                                    onClick={() => onMenu(YakitRoute.DB_Report)}
+                                >
+                                    <div className={styles["menu-icon-wrapper"]}>
+                                        <div className={styles["icon-wrapper"]}>
+                                            <PublicReportIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["title-style"]}>报告</div>
+                                </div>
+                                <div
+                                    className={styles["vertical-menu-wrapper"]}
+                                    onClick={() => onMenu(YakitRoute.DB_Risk)}
+                                >
+                                    <div className={styles["menu-icon-wrapper"]}>
+                                        <div className={styles["icon-wrapper"]}>
+                                            <PublicRiskIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["title-style"]}>漏洞</div>
+                                </div>
+                                <div
+                                    className={styles["vertical-menu-wrapper"]}
+                                    onClick={() => onMenu(YakitRoute.DB_Ports)}
+                                >
+                                    <div className={styles["menu-icon-wrapper"]}>
+                                        <div className={styles["icon-wrapper"]}>
+                                            <PublicPortsIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["title-style"]}>端口</div>
+                                </div>
+                                <div
+                                    className={styles["vertical-menu-wrapper"]}
+                                    onClick={() => onMenu(YakitRoute.DB_Domain)}
+                                >
+                                    <div className={styles["menu-icon-wrapper"]}>
+                                        <div className={styles["icon-wrapper"]}>
+                                            <PublicDomainIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["title-style"]}>域名</div>
                                 </div>
                             </div>
-                            <div className={styles["title-style"]}>报告</div>
-                        </div>
-                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Risk)}>
-                            <div className={styles["menu-icon-wrapper"]}>
-                                <div className={styles["icon-wrapper"]}>
-                                    <PublicRiskIcon />
+                            <div className={styles["divider-style"]}></div>
+                            <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_CVE)}>
+                                <div className={styles["menu-icon-wrapper"]}>
+                                    <div className={styles["icon-wrapper"]}>
+                                        <PublicCVEIcon />
+                                    </div>
                                 </div>
+                                <div className={styles["title-style"]}>CVE 管理</div>
                             </div>
-                            <div className={styles["title-style"]}>漏洞</div>
-                        </div>
-                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Ports)}>
-                            <div className={styles["menu-icon-wrapper"]}>
-                                <div className={styles["icon-wrapper"]}>
-                                    <PublicPortsIcon />
-                                </div>
-                            </div>
-                            <div className={styles["title-style"]}>端口</div>
-                        </div>
-                        <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_Domain)}>
-                            <div className={styles["menu-icon-wrapper"]}>
-                                <div className={styles["icon-wrapper"]}>
-                                    <PublicDomainIcon />
-                                </div>
-                            </div>
-                            <div className={styles["title-style"]}>域名</div>
-                        </div>
-                    </div>
-                    <div className={styles["divider-style"]}></div>
-                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.DB_CVE)}>
-                        <div className={styles["menu-icon-wrapper"]}>
-                            <div className={styles["icon-wrapper"]}>
-                                <PublicCVEIcon />
-                            </div>
-                        </div>
-                        <div className={styles["title-style"]}>CVE 管理</div>
-                    </div>
+                        </>
+                    )}
                 </>
             )}
         </div>
