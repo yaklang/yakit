@@ -693,7 +693,37 @@ export interface PublicRouteMenuProps {
  * @name public版菜单配置数据
  * @description 注意! 该数据只在折叠菜单时使用，展开菜单的渲染并未使用该数据，如需调整展开菜单，请在组件MenuMode内修改
  */
-export const PublicRouteMenu: PublicRouteMenuProps[] = [
+export const PublicRouteMenu: PublicRouteMenuProps[] = isSastScan()?[
+    {
+        page: undefined,
+        label: "代码审计",
+        children: [
+            {
+                page: YakitRoute.YakRunner_Project_Manager,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Project_Manager]
+            },
+            {
+                page: YakitRoute.YakRunner_Audit_Code,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
+            },
+            {
+                page: YakitRoute.YakRunner_Code_Scan,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
+            },
+            {
+                page: YakitRoute.Rule_Management,
+                ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
+            }
+        ]
+    },
+    {
+        page: undefined,
+        label: "数据库",
+        children: [
+            {page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]},
+        ]
+    }
+]:[
     {
         page: undefined,
         label: "渗透测试",
