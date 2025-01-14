@@ -599,7 +599,6 @@ service Yak {
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
-
   /*
     ChaosMakerRule: Bas
   */
@@ -756,12 +755,20 @@ service Yak {
   rpc GetAllFuzztagInfo (GetAllFuzztagInfoRequest) returns (GetAllFuzztagInfoResponse);
   rpc GenerateFuzztag (GenerateFuzztagRequest) returns (GenerateFuzztagResponse);
 
+  // 导入导出SyntaxFlow规则
+  rpc ExportSyntaxFlows(ExportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
+  rpc ImportSyntaxFlows(ImportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
+
   // hot-patch template
   rpc CreateHotPatchTemplate(HotPatchTemplate) returns (CreateHotPatchTemplateResponse);
   rpc DeleteHotPatchTemplate(DeleteHotPatchTemplateRequest) returns (DeleteHotPatchTemplateResponse);
   rpc UpdateHotPatchTemplate(UpdateHotPatchTemplateRequest) returns (UpdateHotPatchTemplateResponse);
   rpc QueryHotPatchTemplate(HotPatchTemplateRequest) returns (QueryHotPatchTemplateResponse);
   rpc QueryHotPatchTemplateList(QueryHotPatchTemplateListRequest) returns (QueryHotPatchTemplateListResponse);
+
+  rpc UploadHotPatchTemplateToOnline(UploadHotPatchTemplateToOnlineRequest) returns (Empty);
+  rpc DownloadHotPatchTemplate(DownloadHotPatchTemplateRequest) returns (Empty);
+
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -1699,13 +1706,13 @@ message QueryMITMRuleExtractedDataResponse {
 
 message QueryMITMRuleExtractedDataRequest {
   Paging Pagination = 1;
-  string HTTPFlowHash = 2; // 废弃
-  string HTTPFlowHiddenIndex = 3; //废弃
+  string HTTPFlowHash = 2;
+  string HTTPFlowHiddenIndex = 3;
   ExtractedDataFilter Filter = 4;
 }
 
 message ExtractedDataFilter {
-  repeated string TraceID = 1; // 对应原来的  HTTPFlowHiddenIndex 或者 HTTPFlowHash
+  repeated string TraceID = 1;
   repeated string RuleVerbose = 2;
 }
 
@@ -1719,6 +1726,7 @@ message ExportMITMRuleExtractedDataResponse {
   double Percent = 2;
   string Verbose = 4;
 }
+
 
 message ExportProjectRequest {
   string ProjectName = 1;
@@ -3986,6 +3994,7 @@ message YakScriptParam {
   string JsonSchema = 10;
 
   string SuggestionDataExpression = 11;
+
   string UISchema = 12;
 }
 
@@ -4535,6 +4544,7 @@ message FuzzerRequest {
 
   // use tcp conn pool
   bool DisableUseConnPool = 58;
+
   // disable hotPatch
   bool DisableHotPatch = 59;
 }
@@ -5606,6 +5616,7 @@ message SyntaxFlowRuleFilter {
   int64 BeforeId = 12;
 }
 
+
 message SSAProgram{
   // basic info
   int64 CreateAt = 1;
@@ -5730,10 +5741,10 @@ message UpdateSyntaxFlowRuleGroupRequest {
 }
 
 message UpdateSyntaxFlowRuleAndGroupRequest{
-  SyntaxFlowRuleFilter Filter = 1;
-  repeated string AddGroups= 2;
-  repeated string RemoveGroups = 3;
-  bool All = 4; // abort
+   SyntaxFlowRuleFilter Filter = 1;
+   repeated string AddGroups= 2;
+   repeated string RemoveGroups = 3;
+   bool All = 4; // abort
 }
 
 message QuerySyntaxFlowSameGroupRequest{
@@ -5775,7 +5786,7 @@ message SyntaxFlowScanTaskFilter{
   repeated string TaskIds = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
-  string keyword = 6; // fuzz search program-name 
+  string Keyword = 6; // fuzz search program-name 
   repeated string Kind = 7; // "debug" | "scan";
 }
 
@@ -5945,53 +5956,81 @@ message FuzzTagSuggestionRequest{
   string InspectType = 3;
 }
 
+message ExportSyntaxFlowsRequest {
+  SyntaxFlowRuleFilter Filter = 1;
+  string Password = 2;
+  string TargetPath = 3;
+}
+message ImportSyntaxFlowsRequest {
+  string InputPath = 1;
+  string Password = 2;
+}
+
+message SyntaxflowsProgress {
+  // 进度  0-1.0
+  double Progress = 1;
+  // 展示的提示语，可能是中断原因或者错误原因之类的
+  string Verbose = 2;
+}
+
 // hot-patch template
 message HotPatchTemplate {
-  string Name = 1;
-  string Content = 2;
-  string Type = 3; // fuzzer/mitm
+    string Name = 1;
+    string Content = 2;
+    string Type = 3; // fuzzer/mitm
 }
 
 message HotPatchTemplateRequest {
-  repeated int64 Id = 1;
-  repeated string Name = 2;
-  repeated string ContentKeyword = 3;
-  string Type = 4; // fuzzer/mitm
+    repeated int64 Id = 1;
+    repeated string Name = 2;
+    repeated string ContentKeyword = 3;
+    string Type = 4; // fuzzer/mitm
 }
 
 message UpdateHotPatchTemplateRequest {
-  HotPatchTemplateRequest Condition = 1;
-  HotPatchTemplate Data = 2;
+    HotPatchTemplateRequest Condition = 1;
+    HotPatchTemplate Data = 2;
 }
 
 message DeleteHotPatchTemplateRequest {
-  HotPatchTemplateRequest Condition = 1;
-  bool All = 2;
+    HotPatchTemplateRequest Condition = 1;
+    bool All = 2;
 }
 
 message CreateHotPatchTemplateResponse {
-  DbOperateMessage Message = 1;
+    DbOperateMessage Message = 1;
 }
 
 message DeleteHotPatchTemplateResponse {
-  DbOperateMessage Message = 1;
+    DbOperateMessage Message = 1;
 }
 
 message UpdateHotPatchTemplateResponse {
-  DbOperateMessage Message = 1;
+    DbOperateMessage Message = 1;
 }
 
 message QueryHotPatchTemplateResponse {
-  DbOperateMessage Message = 1;
-  repeated HotPatchTemplate Data = 2;
+    DbOperateMessage Message = 1;
+    repeated HotPatchTemplate Data = 2;
 }
 
 message QueryHotPatchTemplateListRequest {
-  string Type = 1; // fuzzer/mitm
+    string Type = 1; // fuzzer/mitm
 }
 
 message QueryHotPatchTemplateListResponse {
-  Paging Pagination = 1;
-  repeated string Name = 2;
-  int64 Total = 3;
+    Paging Pagination = 1;
+    repeated string Name = 2;
+    int64 Total = 3;
+}
+
+message UploadHotPatchTemplateToOnlineRequest {
+  string Token = 1;
+  string Name = 2;
+  string Type = 3; // fuzzer/mitm
+}
+
+message DownloadHotPatchTemplateRequest {
+  string Name = 1;
+  string Type = 2; // fuzzer/mitm
 }
