@@ -31,35 +31,29 @@ export type MITMStatus = "hijacking" | "hijacked" | "idle"
 interface MITMHijackedContentProps {
     status: MITMStatus
     setStatus: (status: MITMStatus) => any
-    isFullScreen: boolean
-    setIsFullScreen: (f: boolean) => void
     logs: ExecResultLog[]
     statusCards: StatusCardProps[]
     downstreamProxyStr: string
     loadedPluginLen: number
     onSelectAll: (e: boolean) => void
     setShowPluginHistoryList: (l: string[]) => void
-    setTempShowPluginHistory?: (t: string) => void
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
     const {
         status,
         setStatus,
-        isFullScreen,
-        setIsFullScreen,
         logs,
         statusCards,
         downstreamProxyStr,
         loadedPluginLen,
         onSelectAll,
-        setShowPluginHistoryList,
-        setTempShowPluginHistory
+        setShowPluginHistoryList
     } = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
 
-    const [hijackResponseType, setHijackResponseType] = useState<"onlyOne" | "all" | "never">("never") // 劫持类型
+    const [hijackResponseType, setHijackResponseType] = useState<"all" | "never">("never") // 劫持类型
 
     const [forResponse, setForResponse] = useState(false)
     const [urlInfo, setUrlInfo] = useState("监听中...")
@@ -255,12 +249,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     if (!!currentPacket) {
                         clearCurrentPacket()
                     }
-                    // setCurrentPacket(String.fromCharCode.apply(null, msg.request))
                 } else {
                     setStatus("hijacked")
                     setForResponse(false)
-                    // setCurrentPacket(msg.request)
-                    // setCurrentPacketId(msg.id)
                     setCurrentPacketInfo({
                         currentPacket: !!msg?.isWebsocket
                             ? Uint8ArrayToString(msg.Payload)
@@ -310,9 +301,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             if (currentPacket && currentPacketId) {
                 forward()
             }
-            setShowPluginHistoryList([])
-            setTempShowPluginHistory && setTempShowPluginHistory("")
-            setSourceType("mitm")
         } catch (e) {
             console.info(e)
         }
@@ -326,7 +314,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             return
         }
         setIsRefreshHistory(true)
-        // setLoading(true);
         setStatus("hijacking")
         if (hijackResponseType !== "all") {
             setHijackResponseType("never")
@@ -336,22 +323,23 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacketBytes, currentPacketId).finally(() => {
                 clearCurrentPacket()
-                // setTimeout(() => setLoading(false))
             })
         } else {
             ipcRenderer
-                .invoke("mitm-forward-modified-request", modifiedPacketBytes, currentPacketId, calloutColor ? [calloutColor] : [])
+                .invoke(
+                    "mitm-forward-modified-request",
+                    modifiedPacketBytes,
+                    currentPacketId,
+                    calloutColor ? [calloutColor] : []
+                )
                 .finally(() => {
                     clearCurrentPacket()
                     setCalloutColor("")
-                    // setTimeout(() => setLoading(false))
                 })
         }
     })
     const hijacking = useMemoizedFn(() => {
-        // setCurrentPacket(new Buffer([]));
         clearCurrentPacket()
-        // setLoading(true);
         setStatus("hijacking")
     })
     /**
@@ -359,9 +347,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
      */
     const onSetHijackResponseType = useMemoizedFn((val) => {
         switch (val) {
-            case "onlyOne":
-                allowHijackedResponseByRequest(currentPacketId)
-                break
             case "all":
                 if (currentPacketId > 0) {
                     allowHijackedResponseByRequest(currentPacketId)
@@ -383,15 +368,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const onDiscardRequest = useMemoizedFn(() => {
         hijacking()
         if (forResponse) {
-            dropResponse(currentPacketId).finally(() => {
-                setTimeout(() => {
-                    // setLoading(false)
-                }, 300)
-            })
+            dropResponse(currentPacketId)
         } else {
-            dropRequest(currentPacketId).finally(() => {
-                // setTimeout(() => setLoading(false), 300)
-            })
+            dropRequest(currentPacketId)
         }
         setForResponse(false)
         setCalloutColor("")
@@ -429,9 +408,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
 
     const onRenderHeardExtra = useMemoizedFn(() => {
-        switch (autoForward) {
-            case "manual":
-                return (
+        return (
+            <>
+                {/* 手动劫持 */}
+                <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
                     <MITMManualHeardExtra
                         urlInfo={urlInfo}
                         ipInfo={ipInfo}
@@ -449,80 +429,79 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         beautifyTriggerRefresh={beautifyTriggerRefresh}
                         onSetBeautifyTrigger={onSetBeautifyTrigger}
                     />
-                )
-            case "log":
-                return (
+                </div>
+
+                {/* 自动放行 */}
+                <div style={{display: autoForward === "log" ? "block" : "none", width: "100%"}}>
                     <MITMLogHeardExtra
                         sourceType={sourceType}
                         onSetSourceType={setSourceType}
                         setShowPluginHistoryList={setShowPluginHistoryList}
                     />
-                )
-            default:
-                break
-        }
+                </div>
+            </>
+        )
     })
 
     const onRenderContent = useMemoizedFn(() => {
-        switch (autoForward) {
-            // 手动劫持
-            case "manual":
-                return (
-                    <div className={styles["mitm-hijacked-manual-content"]}>
-                        {width < 900 && (
-                            <ManualUrlInfo
-                                urlInfo={urlInfo}
-                                ipInfo={ipInfo}
-                                status={status}
-                                currentIsWebsocket={currentIsWebsocket}
-                                currentIsForResponse={currentIsForResponse}
-                                traceInfo={traceInfo}
-                                className={styles["mitm-hijacked-manual-content-url"]}
-                            />
-                        )}
-                        <div className={styles["mitm-hijacked-manual-content-editor"]}>
-                            <MITMManualEditor
-                                urlInfo={urlInfo}
-                                isHttp={isHttp}
-                                currentIsWebsocket={currentIsWebsocket}
-                                currentPacket={modifiedPacket}
-                                beautifyTriggerRefresh={beautifyTriggerRefresh}
-                                setModifiedPacket={setModifiedPacket}
-                                forResponse={forResponse}
-                                currentPacketId={currentPacketId}
-                                handleAutoForward={handleAutoForward}
-                                autoForward={autoForward}
-                                forward={forward}
-                                hijacking={hijacking}
-                                status={status}
-                                onSetHijackResponseType={onSetHijackResponseType}
-                                currentIsForResponse={currentIsForResponse}
-                                requestPacket={requestPacket}
-                            />
-                        </div>
-                    </div>
-                )
-            // 自动放行
-            case "log":
-                return (
-                    <>
-                        <HTTPHistory
-                            pageType='MITM'
-                            downstreamProxyStr={downstreamProxyStr}
-                            params={{SourceType: sourceType}}
+        return (
+            <>
+                {/* 手动劫持 */}
+                <div
+                    style={{display: autoForward === "manual" ? "block" : "none"}}
+                    className={styles["mitm-hijacked-manual-content"]}
+                >
+                    {width < 900 && (
+                        <ManualUrlInfo
+                            urlInfo={urlInfo}
+                            ipInfo={ipInfo}
+                            status={status}
+                            currentIsWebsocket={currentIsWebsocket}
+                            currentIsForResponse={currentIsForResponse}
+                            traceInfo={traceInfo}
+                            className={styles["mitm-hijacked-manual-content-url"]}
                         />
-                    </>
-                )
-            // 被动日志
-            case "passive":
-                return (
-                    <div className={styles["mitm-hijacked-passive-content"]}>
-                        <MITMPluginLogViewer messages={logs} status={statusCards} />
+                    )}
+                    <div className={styles["mitm-hijacked-manual-content-editor"]}>
+                        <MITMManualEditor
+                            urlInfo={urlInfo}
+                            isHttp={isHttp}
+                            currentIsWebsocket={currentIsWebsocket}
+                            currentPacket={modifiedPacket}
+                            beautifyTriggerRefresh={beautifyTriggerRefresh}
+                            setModifiedPacket={setModifiedPacket}
+                            forResponse={forResponse}
+                            currentPacketId={currentPacketId}
+                            handleAutoForward={handleAutoForward}
+                            autoForward={autoForward}
+                            forward={forward}
+                            hijacking={hijacking}
+                            status={status}
+                            onSetHijackResponseType={onSetHijackResponseType}
+                            currentIsForResponse={currentIsForResponse}
+                            requestPacket={requestPacket}
+                        />
                     </div>
-                )
-            default:
-                break
-        }
+                </div>
+
+                {/* 自动放行 */}
+                <div style={{display: autoForward === "log" ? "block" : "none", height: "100%"}}>
+                    <HTTPHistory
+                        pageType='MITM'
+                        downstreamProxyStr={downstreamProxyStr}
+                        params={{SourceType: sourceType}}
+                    />
+                </div>
+
+                {/* 被动日志 */}
+                <div
+                    style={{display: autoForward === "passive" ? "block" : "none"}}
+                    className={styles["mitm-hijacked-passive-content"]}
+                >
+                    <MITMPluginLogViewer messages={logs} status={statusCards} />
+                </div>
+            </>
+        )
     })
 
     const clearLoadedPlugins = () => {
@@ -584,7 +563,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }, [alertMsg])
 
     return (
-        <div className={styles["mitm-hijacked-content"]} style={{paddingLeft: isFullScreen ? 13 : 5}}>
+        <div className={styles["mitm-hijacked-content"]} style={{paddingLeft: 5}}>
             <ReactResizeDetector
                 onResize={(w, h) => {
                     if (!w) {

@@ -7,7 +7,6 @@ import React, {useEffect, useState, useMemo} from "react"
 import {MITMStatus} from "./MITMHijackedContent"
 import styles from "./MITMServerHijacking.module.scss"
 import classNames from "classnames"
-import {YakitSegmented} from "@/components/yakitUI/YakitSegmented/YakitSegmented"
 import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
@@ -101,26 +100,6 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                 </div>
                 <div className={styles["manual-select"]}>
                     <span className={styles["manual-select-label"]}>劫持响应:</span>
-                    {/* <YakitSegmented
-                        value={hijackResponseType}
-                        onChange={(v) => {
-                            setHijackResponseType(v as "onlyOne" | "all" | "never")
-                        }}
-                        options={[
-                            {
-                                label: "当前请求",
-                                value: "onlyOne"
-                            },
-                            {
-                                label: "所有",
-                                value: "all"
-                            },
-                            {
-                                label: "从不",
-                                value: "never"
-                            }
-                        ]}
-                    /> */}
                     <YakitSwitch
                         checked={hijackResponseType === "all"}
                         onChange={(val: boolean) => {
