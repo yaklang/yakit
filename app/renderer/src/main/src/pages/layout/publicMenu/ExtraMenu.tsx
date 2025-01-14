@@ -11,6 +11,7 @@ import {SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon
 
 import styles from "./ExtraMenu.module.scss"
 import {ImportLocalPlugin, LoadPluginMode} from "@/pages/mitm/MITMPage"
+import {isSastScan} from "@/utils/envfile"
 
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
@@ -70,59 +71,73 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
 
     return (
         <div className={styles["extra-menu-wrapper"]}>
-            <YakitPopover
-                overlayClassName={styles["import-resource-popover"]}
-                overlayStyle={{paddingTop: 2}}
-                placement={"bottom"}
-                trigger={"click"}
-                content={importMenu}
-                visible={importMenuShow}
-                onVisibleChange={(visible) => setImportMenuShow(visible)}
-            >
+            {isSastScan() ? (
                 <YakitButton
-                    type='text'
-                    style={{fontWeight: 500}}
-                    onClick={(e) => e.preventDefault()}
-                    icon={<OutlineSaveIcon />}
+                    type='secondary2'
+                    onClick={() => {
+                        onMenuSelect({route: YakitRoute.YakScript})
+                    }}
+                    icon={<SolidTerminalIcon />}
                 >
-                    导入资源
+                    Yak Runner
                 </YakitButton>
-            </YakitPopover>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.Codec})
-                }}
-                icon={<SolidCodecIcon />}
-            >
-                Codec
-            </YakitButton>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.PayloadManager})
-                }}
-                icon={<SolidPayloadIcon />}
-            >
-                Payload
-            </YakitButton>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.YakScript})
-                }}
-                icon={<SolidTerminalIcon />}
-            >
-                Yak Runner
-            </YakitButton>
-            <ImportLocalPlugin
-                visible={visibleImport}
-                setVisible={(v) => {
-                    setVisibleImport(v)
-                }}
-                loadPluginMode={loadPluginMode}
-                sendPluginLocal={true}
-            />
+            ) : (
+                <>
+                    <YakitPopover
+                        overlayClassName={styles["import-resource-popover"]}
+                        overlayStyle={{paddingTop: 2}}
+                        placement={"bottom"}
+                        trigger={"click"}
+                        content={importMenu}
+                        visible={importMenuShow}
+                        onVisibleChange={(visible) => setImportMenuShow(visible)}
+                    >
+                        <YakitButton
+                            type='text'
+                            style={{fontWeight: 500}}
+                            onClick={(e) => e.preventDefault()}
+                            icon={<OutlineSaveIcon />}
+                        >
+                            导入资源
+                        </YakitButton>
+                    </YakitPopover>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.Codec})
+                        }}
+                        icon={<SolidCodecIcon />}
+                    >
+                        Codec
+                    </YakitButton>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.PayloadManager})
+                        }}
+                        icon={<SolidPayloadIcon />}
+                    >
+                        Payload
+                    </YakitButton>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.YakScript})
+                        }}
+                        icon={<SolidTerminalIcon />}
+                    >
+                        Yak Runner
+                    </YakitButton>
+                    <ImportLocalPlugin
+                        visible={visibleImport}
+                        setVisible={(v) => {
+                            setVisibleImport(v)
+                        }}
+                        loadPluginMode={loadPluginMode}
+                        sendPluginLocal={true}
+                    />
+                </>
+            )}
         </div>
     )
 })
