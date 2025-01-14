@@ -122,7 +122,8 @@
             }
             .extra-opt-btns {
                 display: none;
-                // width: 71px;
+                width: 65px;
+                text-align: right;
             }
             &:hover {
                 background-color: var(--yakit-background-color);
