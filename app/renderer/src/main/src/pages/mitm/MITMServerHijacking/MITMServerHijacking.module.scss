@@ -496,3 +496,27 @@
         }
     }
 }
+
+.mitm-hijacked-heard-tab {
+    :global {
+        .ant-radio-button-wrapper:nth-child(2) {
+            padding: 0 2px;
+        }
+    }
+}
+
+.configuredIcon {
+    svg {
+        color: #56c991;
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.unconfiguredIcon {
+    svg {
+        color: var(--yakit-body-text-color);
+        width: 16px;
+        height: 16px;
+    }
+}

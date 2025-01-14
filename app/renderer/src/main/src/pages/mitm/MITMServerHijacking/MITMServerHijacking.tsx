@@ -262,7 +262,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
-                <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
+                <MITMFiltersModal filterType="filter" visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>
         </div>

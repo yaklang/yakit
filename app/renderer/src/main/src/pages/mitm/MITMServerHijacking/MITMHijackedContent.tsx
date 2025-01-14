@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useGetState, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -17,13 +17,14 @@ import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineConfiguredIcon, OutlineUnConfiguredIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
 import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultMITMFilterData} from "@/defaultConstants/mitm"
-import {getAdvancedFlag} from "../MITMServerStartForm/MITMFiltersModal"
+import MITMFiltersModal, {getAdvancedFlag, getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
+import {Tooltip} from "antd"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -51,7 +52,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setShowPluginHistoryList
     } = props
     // 自动转发 与 劫持响应的自动设置
-    const [autoForward, setAutoForward, getAutoForward] = useGetState<"manual" | "log" | "passive">("log")
+    const [autoForward, setAutoForward] = useState<"manual" | "log" | "passive">("log")
 
     const [hijackResponseType, setHijackResponseType] = useState<"all" | "never">("never") // 劫持类型
 
@@ -70,14 +71,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         currentPacket: string
         currentPacketId: number
         isHttp: boolean
-        isResponse: boolean
         traceInfo: TraceInfo
     }>({
         requestPacket: "",
         currentPacketId: 0,
         currentPacket: "",
         isHttp: true,
-        isResponse: false,
         traceInfo: {
             AvailableDNSServers: [],
             DurationMs: 0,
@@ -86,7 +85,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             TotalDurationMs: 0
         }
     })
-    const {currentPacket, currentPacketId, isHttp, requestPacket, isResponse, traceInfo} = currentPacketInfo
+    const {currentPacket, currentPacketId, isHttp, requestPacket, traceInfo} = currentPacketInfo
 
     const [modifiedPacket, setModifiedPacket] = useState<string>("")
 
@@ -105,14 +104,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [calloutColor, setCalloutColor] = useState<string>("")
 
+    const [sourceType, setSourceType] = useState<string>("mitm")
+
+    /** 黄色提示 start */
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
     const [alertVisible, setAlertVisible] = useState<boolean>(false)
-
-    const [beautifyTriggerRefresh, setBeautifyTriggerRefresh] = useState<boolean>(false) // 美化触发编辑器刷新
-
-    const [sourceType, setSourceType] = useState<string>("mitm")
-
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
             .invoke("mitm-get-filter")
@@ -133,21 +130,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 yakitFailed("获取 MITM 过滤器失败:" + err)
             })
     })
-    useEffect(() => {
-        getMITMFilter()
-        const onSetFilterWhiteListEvent = (flag: string) => {
-            const val = flag === "true"
-            setWhiteListFlag(val)
-            if (val) {
-                setAlertVisible(true)
-            }
+    const onSetFilterWhiteListEvent = useMemoizedFn((flag: string) => {
+        const val = flag === "true"
+        setWhiteListFlag(val)
+        if (val) {
+            setAlertVisible(true)
         }
-        emiter.on("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
-        return () => {
-            emiter.off("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
-        }
-    }, [])
-
+    })
     const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
@@ -164,46 +153,120 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
     })
-    useEffect(() => {
-        getRules()
-        const onOpenRepRuleEvent = (flag: string) => {
-            const val = flag === "true"
-            setOpenRepRuleFlag(val)
-            if (val) {
-                setAlertVisible(true)
-            }
+    const onOpenRepRuleEvent = useMemoizedFn((flag: string) => {
+        const val = flag === "true"
+        setOpenRepRuleFlag(val)
+        if (val) {
+            setAlertVisible(true)
         }
+    })
+    useEffect(() => {
+        getMITMFilter()
+        getRules()
+        emiter.on("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
         emiter.on("onOpenRepRuleEvent", onOpenRepRuleEvent)
         return () => {
+            emiter.off("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
             emiter.off("onOpenRepRuleEvent", onOpenRepRuleEvent)
         }
     }, [])
-
     useEffect(() => {
         if (loadedPluginLen) setAlertVisible(true)
     }, [loadedPluginLen])
+    const clearLoadedPlugins = () => {
+        return (
+            <YakitButton type='text' colors='danger' onClick={() => onSelectAll(false)} style={{padding: 0}}>
+                清空
+            </YakitButton>
+        )
+    }
+    const alertMsg = useMemo(() => {
+        if (whiteListFlag && openRepRuleFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。检测到加载
+                    {loadedPluginLen}个插件，如抓包有问题可点击
+                    {clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
+        if (whiteListFlag && openRepRuleFlag) {
+            return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。"
+        }
+        if (whiteListFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭。检测到加载
+                    {loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
+        if (openRepRuleFlag && loadedPluginLen) {
+            return (
+                <>
+                    检测到配置替换规则，如抓包有问题可先将替换关闭。检测到加载
+                    {loadedPluginLen}
+                    个插件，如抓包有问题可点击
+                    {clearLoadedPlugins()}
+                    取消加载插件。
+                </>
+            )
+        }
+        if (whiteListFlag) return "检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭"
+        if (openRepRuleFlag) return "检测到配置替换规则，如抓包有问题可先将替换关闭"
+        if (loadedPluginLen)
+            return (
+                <>
+                    检测到加载{loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}取消加载插件
+                </>
+            )
+        return ""
+    }, [openRepRuleFlag, whiteListFlag, loadedPluginLen])
+    useEffect(() => {
+        if (alertMsg === "") {
+            setAlertVisible(false)
+        }
+    }, [alertMsg])
+    /** 黄色提示 end */
 
     const isManual = useCreation(() => {
         return autoForward === "manual"
     }, [autoForward])
+    useEffect(() => {
+        ipcRenderer.invoke("mitm-auto-forward", !isManual).finally(() => {
+            console.info(`设置服务端自动转发：${!isManual}`)
+        })
+    }, [autoForward])
+
+    /** 条件劫持 start */
+    const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
+    const [hijackFilterFlag, setHijackFilterFlag] = useState<boolean>(false)
+    const getMITMHijackFilter = useMemoizedFn(() => {
+        ipcRenderer
+            .invoke("mitm-hijack-get-filter")
+            .then((res: MITMFilterSchema) => {
+                const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
+                let flag = getMitmHijackFilter(data.baseFilter, data.advancedFilters)
+                setHijackFilterFlag(flag)
+            })
+            .catch((err) => {
+                yakitFailed("获取 条件劫持 过滤器失败:" + err)
+            })
+    })
+    useEffect(() => {
+        getMITMHijackFilter()
+    }, [])
+    /** 条件劫持 end */
+
+    // 自动转发劫持，进行的操作
     useEffect(() => {
         ipcRenderer.on("client-mitm-hijacked", forwardHandler)
         return () => {
             ipcRenderer.removeAllListeners("client-mitm-hijacked")
         }
     }, [autoForward])
-
-    useEffect(() => {
-        ipcRenderer.invoke("mitm-auto-forward", !isManual).finally(() => {
-            console.info(`设置服务端自动转发：${!isManual}`)
-        })
-    }, [autoForward])
-    useEffect(() => {
-        if (hijackResponseType === "all" && currentPacketId > 0) {
-            allowHijackedResponseByRequest(currentPacketId)
-        }
-    }, [hijackResponseType, currentPacketId])
-    // 自动转发劫持，进行的操作
     const forwardHandler = useMemoizedFn((e: any, msg: MITMResponse) => {
         if (msg?.RemoteAddr) {
             setIpInfo(msg?.RemoteAddr)
@@ -233,7 +296,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     currentPacketId: msg.responseId,
                     isHttp: msg.isHttps,
                     requestPacket: Uint8ArrayToString(msg.request),
-                    isResponse: true,
                     traceInfo: msg.traceInfo || {
                         AvailableDNSServers: [],
                         DurationMs: 0,
@@ -243,37 +305,41 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     }
                 })
             }
-        } else {
-            if (msg.request) {
-                if (!isManual) {
+        } else if (msg.request) {
+            const updateRequest = () => {
+                setStatus("hijacked")
+                setForResponse(false)
+                setCurrentPacketInfo({
+                    currentPacket: !!msg?.isWebsocket
+                        ? Uint8ArrayToString(msg.Payload)
+                        : Uint8ArrayToString(msg.request),
+                    currentPacketId: msg.id,
+                    isHttp: msg.isHttps,
+                    requestPacket: Uint8ArrayToString(msg.request),
+                    traceInfo: msg.traceInfo || {
+                        AvailableDNSServers: [],
+                        DurationMs: 0,
+                        DNSDurationMs: 0,
+                        ConnDurationMs: 0,
+                        TotalDurationMs: 0
+                    }
+                })
+                setUrlInfo(msg.url)
+            }
+
+            if (!isManual) {
+                if (hijackFilterFlag) {
+                    setAutoForward("manual")
+                    updateRequest()
+                    info("已触发 条件 劫持")
+                } else {
                     forwardRequest(msg.id)
                     if (!!currentPacket) {
                         clearCurrentPacket()
                     }
-                } else {
-                    setStatus("hijacked")
-                    setForResponse(false)
-                    setCurrentPacketInfo({
-                        currentPacket: !!msg?.isWebsocket
-                            ? Uint8ArrayToString(msg.Payload)
-                            : Uint8ArrayToString(msg.request),
-                        currentPacketId: msg.id,
-                        isHttp: msg.isHttps,
-                        requestPacket: Uint8ArrayToString(msg.request),
-                        isResponse: true,
-                        traceInfo: msg.traceInfo || {
-                            AvailableDNSServers: [],
-                            DurationMs: 0,
-                            DNSDurationMs: 0,
-                            ConnDurationMs: 0,
-                            TotalDurationMs: 0
-                        }
-                    })
-                    setUrlInfo(msg.url)
-                    // ipcRenderer.invoke("fetch-url-ip", msg.url.split('://')[1].split('/')[0]).then((res) => {
-                    //     setIpInfo(res)
-                    // })
                 }
+            } else {
+                updateRequest()
             }
         }
     })
@@ -283,7 +349,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             currentPacket: "",
             requestPacket: "",
             isHttp: true,
-            isResponse: false,
             traceInfo: {
                 AvailableDNSServers: [],
                 DurationMs: 0,
@@ -293,6 +358,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             }
         })
     }
+
+    useHotkeys(
+        "ctrl+t",
+        () => {
+            handleAutoForward(isManual ? "manual" : "log")
+        },
+        [autoForward, isManual]
+    )
     const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
         try {
             if (!isManual) {
@@ -300,16 +373,79 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             }
             setAutoForward(e)
             if (currentPacket && currentPacketId) {
-                forward()
+                forward(e === "manual")
             }
         } catch (e) {
             console.info(e)
         }
     })
-    /**
-     * @description 这个 Forward 主要用来转发修改后的内容，同时可以转发请求和响应
-     */
-    const forward = useMemoizedFn(() => {
+
+    const hijacking = useMemoizedFn(() => {
+        clearCurrentPacket()
+        setStatus("hijacking")
+    })
+
+    // 美化
+    const [beautifyTriggerRefresh, setBeautifyTriggerRefresh] = useState<boolean>(false) // 美化触发编辑器刷新
+    const onSetBeautifyTrigger = useMemoizedFn((flag: boolean) => {
+        if (modifiedPacket === "") {
+            return
+        }
+        const encoder = new TextEncoder()
+        const bytes = encoder.encode(modifiedPacket)
+        const mb = bytes.length / 1024 / 1024
+        if (mb > 0.5) {
+            return
+        } else {
+            prettifyPacketCode(modifiedPacket).then((res) => {
+                if (!!res) {
+                    setCurrentPacketInfo((prev) => ({...prev, currentPacket: Uint8ArrayToString(res as Uint8Array)}))
+                    setBeautifyTriggerRefresh(flag)
+                }
+            })
+        }
+    })
+
+    // 切换劫持类型
+    const onSetHijackResponseType = useMemoizedFn((val) => {
+        switch (val) {
+            case "all":
+                if (currentPacketId > 0) {
+                    allowHijackedResponseByRequest(currentPacketId)
+                }
+                info("劫持所有响应内容")
+                break
+            case "never":
+                cancelHijackedResponseByRequest(currentPacketId)
+                info("仅劫持请求")
+                break
+            default:
+                break
+        }
+        setHijackResponseType(val)
+    })
+    useEffect(() => {
+        if (hijackResponseType === "all" && currentPacketId > 0) {
+            allowHijackedResponseByRequest(currentPacketId)
+        }
+    }, [hijackResponseType, currentPacketId])
+
+    // 丢弃数据
+    const onDiscardRequest = useMemoizedFn(() => {
+        hijacking()
+        if (forResponse) {
+            dropResponse(currentPacketId)
+        } else {
+            dropRequest(currentPacketId)
+        }
+        setForResponse(false)
+        setCalloutColor("")
+        setUrlInfo("监听中...")
+        setIpInfo("")
+    })
+
+    // 这个 Forward 提交数据、切换tab、编辑器右键菜单会调用
+    const forward = useMemoizedFn((isManual: boolean) => {
         // ID 不存在
         if (!currentPacketId) {
             return
@@ -331,80 +467,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     "mitm-forward-modified-request",
                     modifiedPacketBytes,
                     currentPacketId,
-                    calloutColor ? [calloutColor] : []
+                    calloutColor ? [calloutColor] : [],
+                    !isManual
                 )
                 .finally(() => {
                     clearCurrentPacket()
                     setCalloutColor("")
                 })
-        }
-    })
-    const hijacking = useMemoizedFn(() => {
-        clearCurrentPacket()
-        setStatus("hijacking")
-    })
-    /**
-     * @description 切换劫持类型
-     */
-    const onSetHijackResponseType = useMemoizedFn((val) => {
-        switch (val) {
-            case "all":
-                if (currentPacketId > 0) {
-                    allowHijackedResponseByRequest(currentPacketId)
-                }
-                info("劫持所有响应内容")
-                break
-            case "never":
-                cancelHijackedResponseByRequest(currentPacketId)
-                info("仅劫持请求")
-                break
-            default:
-                break
-        }
-        setHijackResponseType(val)
-    })
-    /**
-     * @description 丢弃数据
-     */
-    const onDiscardRequest = useMemoizedFn(() => {
-        hijacking()
-        if (forResponse) {
-            dropResponse(currentPacketId)
-        } else {
-            dropRequest(currentPacketId)
-        }
-        setForResponse(false)
-        setCalloutColor("")
-        setUrlInfo("监听中...")
-        setIpInfo("")
-    })
-    useHotkeys(
-        "ctrl+t",
-        () => {
-            handleAutoForward(isManual ? "manual" : "log")
-        },
-        [autoForward]
-    )
-
-    /**
-     * 美化
-     */
-    const onSetBeautifyTrigger = useMemoizedFn((flag: boolean) => {
-        if (modifiedPacket === "") {
-            return
-        }
-        const encoder = new TextEncoder()
-        const bytes = encoder.encode(modifiedPacket)
-        const mb = bytes.length / 1024 / 1024
-        if (mb > 0.5) {
-            return
-        } else {
-            prettifyPacketCode(modifiedPacket).then((res) => {
-                if (!!res) {
-                    setCurrentPacketInfo((prev) => ({...prev, currentPacket: Uint8ArrayToString(res as Uint8Array)}))
-                    setBeautifyTriggerRefresh(flag)
-                }
-            })
         }
     })
 
@@ -443,7 +512,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             </>
         )
     })
-
     const onRenderContent = useMemoizedFn(() => {
         return (
             <>
@@ -505,64 +573,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         )
     })
 
-    const clearLoadedPlugins = () => {
-        return (
-            <YakitButton type='text' colors='danger' onClick={() => onSelectAll(false)} style={{padding: 0}}>
-                清空
-            </YakitButton>
-        )
-    }
-    // 提示文案
-    const alertMsg = useMemo(() => {
-        if (whiteListFlag && openRepRuleFlag && loadedPluginLen) {
-            return (
-                <>
-                    检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。检测到加载
-                    {loadedPluginLen}个插件，如抓包有问题可点击
-                    {clearLoadedPlugins()}
-                    取消加载插件。
-                </>
-            )
-        }
-        if (whiteListFlag && openRepRuleFlag) {
-            return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。"
-        }
-        if (whiteListFlag && loadedPluginLen) {
-            return (
-                <>
-                    检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭。检测到加载
-                    {loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}
-                    取消加载插件。
-                </>
-            )
-        }
-        if (openRepRuleFlag && loadedPluginLen) {
-            return (
-                <>
-                    检测到配置替换规则，如抓包有问题可先将替换关闭。检测到加载
-                    {loadedPluginLen}
-                    个插件，如抓包有问题可点击
-                    {clearLoadedPlugins()}
-                    取消加载插件。
-                </>
-            )
-        }
-        if (whiteListFlag) return "检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭"
-        if (openRepRuleFlag) return "检测到配置替换规则，如抓包有问题可先将替换关闭"
-        if (loadedPluginLen)
-            return (
-                <>
-                    检测到加载{loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}取消加载插件
-                </>
-            )
-        return ""
-    }, [openRepRuleFlag, whiteListFlag, loadedPluginLen])
-    useEffect(() => {
-        if (alertMsg === "") {
-            setAlertVisible(false)
-        }
-    }, [alertMsg])
-
     return (
         <div className={styles["mitm-hijacked-content"]}>
             <div>
@@ -583,16 +593,46 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div className={styles["mitm-hijacked-heard"]}>
                     <div className={styles["mitm-hijacked-heard-left"]}>
                         <YakitRadioButtons
+                            wrapClassName={styles["mitm-hijacked-heard-tab"]}
                             buttonStyle='solid'
                             value={autoForward}
                             options={[
-                                {label: "手动劫持", value: "manual"},
+                                {
+                                    label: "手动劫持",
+                                    value: "manual"
+                                },
+                                {
+                                    label: (
+                                        <>
+                                            <Tooltip title='条件劫持' align={{offset: [0, 8]}}>
+                                                <div style={{display: "flex"}} onClick={() => setFiltersVisible(true)}>
+                                                    {hijackFilterFlag ? (
+                                                        <OutlineConfiguredIcon className={styles["configuredIcon"]} />
+                                                    ) : (
+                                                        <OutlineUnConfiguredIcon
+                                                            className={styles["unconfiguredIcon"]}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </Tooltip>
+                                        </>
+                                    ),
+                                    value: "hijackFilter"
+                                },
                                 {label: "自动放行", value: "log"},
                                 {label: "被动日志", value: "passive"}
                             ]}
                             onChange={(e) => {
+                                if (e.target.value === "hijackFilter") return
                                 handleAutoForward(e.target.value)
                             }}
+                        />
+                        <MITMFiltersModal
+                            filterType='hijackFilter'
+                            visible={filtersVisible}
+                            setVisible={setFiltersVisible}
+                            isStartMITM={true}
+                            onSetHijackFilterFlag={setHijackFilterFlag}
                         />
                     </div>
                     <div className={styles["mitm-hijacked-heard-right"]}>{onRenderHeardExtra()}</div>
