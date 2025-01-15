@@ -2457,7 +2457,6 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             onOkText: "关闭所有",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
                 if (fixedTabs.length > 0) {
                     const key = fixedTabs[fixedTabs.length - 1].routeKey
@@ -2490,6 +2489,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
                 const newPage: PageCache[] = [...fixedTabs, item]
                 setPageCache(newPage)
+                setCurrentTabKey(item.routeKey)
                 clearOtherDataByRoute(item.routeKey)
                 if (item.route !== YakitRoute.HTTPFuzzer) {
                     //当前item不是YakitRoute.HTTPFuzzer,则清除序列化缓存数据
