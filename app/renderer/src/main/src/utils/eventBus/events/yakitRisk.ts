@@ -5,4 +5,8 @@ export type YakitRiskProps = {
     onRefRiskFieldGroup?: string
     /** 指定筛选漏洞等级 */
     specifyVulnerabilityLevel: string
+
+    /** 刷新audit risk页面 统计 数据 */
+    onRefAuditRiskFieldGroup?: string
+    
 }

@@ -4,10 +4,8 @@ import styles from "./YakRunnerAuditHole.module.scss"
 import {HoleQueryProps, IPListItemProps, IPListProps, VulnerabilityLevelProps, VulnerabilityTypeProps, YakRunnerAuditHoleProps} from "./YakRunnerAuditHoleType"
 import {QueryRisksRequest} from "../risks/YakitRiskTable/YakitRiskTableType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitRiskTable} from "../risks/YakitRiskTable/YakitRiskTable"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
-import { defQueryRisksRequest } from "../risks/YakitRiskTable/constants"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
 import { Divider, Tooltip } from "antd"
@@ -20,12 +18,14 @@ import { VulnerabilityLevelPieRefProps } from "../risks/VulnerabilityLevelPie/Vu
 import { VulnerabilityLevelPie } from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPie"
 import { VulnerabilityTypePieRefProps } from "../risks/VulnerabilityTypePie/VulnerabilityTypePieType"
 import { VulnerabilityTypePie } from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
+import { defQuerySSARisksRequest, YakitAuditHoleTable } from "./YakitAuditHoleTable/YakitAuditHoleTable"
+import { QuerySSARisksRequest } from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
-    const [query, setQuery] = useState<QueryRisksRequest>({
-        ...defQueryRisksRequest
+    const [query, setQuery] = useState<QuerySSARisksRequest>({
+        ...defQuerySSARisksRequest
     })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
@@ -43,14 +43,14 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     return (
         <YakitSpin spinning={riskLoading}>
             <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
-                <HoleQuery
+                {/* <HoleQuery
                     inViewport={inViewport}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={onSetQueryShow}
                     query={query}
                     setQuery={setQuery}
-                />
-                <YakitRiskTable
+                /> */}
+                <YakitAuditHoleTable
                     query={query}
                     setQuery={setQuery}
                     advancedQuery={advancedQuery}

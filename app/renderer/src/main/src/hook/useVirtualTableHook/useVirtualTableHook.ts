@@ -6,7 +6,7 @@ import {
     VirtualPaging,
     DataTProps
 } from "./useVirtualTableHookType"
-import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
+import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
@@ -22,10 +22,10 @@ const defSort: SortProps = {
 }
 
 // 倒序时需要额外处理传给后端顺序
-export const verifyOrder = (pagination: VirtualPaging, AfterID?: number) => {
+export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
     // 是否将返回结果倒序
     let isReverse = false
-    if (pagination.Order && ["desc", "none"].includes(pagination.Order) && AfterID) {
+    if (pagination.Order && ["desc", "none"].includes(pagination.Order) && AfterId) {
         pagination.Order = "asc"
         isReverse = true
     }
@@ -33,7 +33,6 @@ export const verifyOrder = (pagination: VirtualPaging, AfterID?: number) => {
 }
 
 // 使用此hook接口需满足此种结构
-
 // request {
 //     Pagination {
 //       int64 BeforeId
@@ -41,7 +40,6 @@ export const verifyOrder = (pagination: VirtualPaging, AfterID?: number) => {
 //     }
 //     Filter {} //每个请求可能不同
 //   }
-
 //   response {
 //     Pagination {
 //       int64 BeforeId
@@ -58,12 +56,15 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
     props: useVirtualTableHookParams<T, DataT>
 ) {
     const {
+        tableBoxRef,
         tableRef,
         boxHeightRef,
         grpcFun,
         defaultParams = {Pagination: genDefaultPagination(20), Filter: {}},
-        onFirst
+        onFirst,
+        initResDataFun
     } = props
+
     const [params, setParams] = useState<ParamsTProps>(defaultParams)
     // 表格展示的完整数据
     const [data, setData] = useState<DataT[]>([])
@@ -86,16 +87,11 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
     // 表格排序
     const sortRef = useRef<SortProps>(defSort)
     const [loading, setLoading] = useState(false)
-    const [_, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
+    const [offsetData, setOffsetData, getOffsetData] = useGetState<DataT[]>([])
     // 设置是否自动刷新
     const idRef = useRef<NodeJS.Timeout>()
     // 表格是否可见
-    const [inViewport] = useInViewport(tableRef)
-    useEffect(() => {
-        if (defaultParams) {
-            setParams(defaultParams)
-        }
-    }, [])
+    const [inViewport] = useInViewport(tableBoxRef)
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn((query, type: "top" | "bottom" | "update" | "offset") => {
@@ -108,11 +104,17 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         // 真正需要传给后端的查询数据
         const realQuery: ParamsTProps = cloneDeep(query)
         // 倒序时需要额外处理传给后端顺序
-        const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Filter.AfterID)
+        const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
+
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT>) => {
-                const newData: DataT[] = verifyResult.isReverse ? rsp.data.reverse() : rsp.data
+                console.log("rsp------------------", type, finalParams, rsp)
+                let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
+                if (initResDataFun) {
+                    newData = initResDataFun(newData)
+                }
+
                 if (type === "top") {
                     if (newData.length <= 0) {
                         // 没有数据
@@ -169,8 +171,8 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                         maxIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
                         minIdRef.current = newData.length > 0 ? newData[0].Id : 0
                     }
-                    setTotal(rsp.Total)
                 }
+                setTotal(rsp.Total)
             })
             .catch((e: any) => {
                 if (idRef.current) {
@@ -208,8 +210,8 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
 
         const query: ParamsTProps = {
             ...params,
-            Pagination: {...paginationProps},
-            Filter: {...params.Filter, AfterID: maxIdRef.current}
+            Pagination: {...paginationProps, AfterId: maxIdRef.current},
+            Filter: {...params.Filter}
         }
         getDataByGrpc(query, "top")
     })
@@ -230,11 +232,13 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
 
         const query: ParamsTProps = {
             ...params,
-            Pagination: {...paginationProps},
+            Pagination: {
+                ...paginationProps,
+                BeforeId: ["desc", "none"].includes(paginationProps.Order) ? minIdRef.current : undefined,
+                AfterId: ["desc", "none"].includes(paginationProps.Order) ? undefined : maxIdRef.current
+            },
             Filter: {
-                ...params.Filter,
-                BeforeID: ["desc", "none"].includes(paginationProps.Order) ? minIdRef.current : undefined,
-                AfterID: ["desc", "none"].includes(paginationProps.Order) ? undefined : maxIdRef.current
+                ...params.Filter
             }
         }
         getDataByGrpc(query, "bottom")
@@ -243,7 +247,9 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
     // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
     const updateData = useMemoizedFn(() => {
         if (boxHeightRef.current) {
+            onFirst && onFirst()
             setOffsetData([])
+            setLoading(true)
             maxIdRef.current = 0
             minIdRef.current = 0
             const limitCount: number = Math.ceil(boxHeightRef.current / 28)
@@ -257,8 +263,6 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                 ...params,
                 Pagination: {...paginationProps}
             }
-            // setCurrentIndex(undefined)
-            // setOnlyShowFirstNode && setOnlyShowFirstNode(true)
             getDataByGrpc(query, "update")
         } else {
             setIsLoop(true)
@@ -275,8 +279,8 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         }
         const query = {
             ...params,
-            Filter: {...params.Filter, AfterID: maxIdRef.current},
-            Pagination: {...paginationProps}
+            Filter: {...params.Filter},
+            Pagination: {...paginationProps, AfterId: maxIdRef.current}
         }
         getDataByGrpc(query, "offset")
     })
@@ -316,6 +320,23 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         }
     })
 
+    // 滚动条监听
+    useEffect(() => {
+        let sTop, cHeight, sHeight
+        let id = setInterval(() => {
+            const scrollTop = tableRef.current?.containerRef?.scrollTop
+            const clientHeight = tableRef.current?.containerRef?.clientHeight
+            const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+            if (sTop !== scrollTop || cHeight !== clientHeight || sHeight !== scrollHeight) {
+                setIsLoop(true)
+            }
+            sTop = scrollTop
+            cHeight = clientHeight
+            sHeight = scrollHeight
+        }, 1000)
+        return () => clearInterval(id)
+    }, [])
+
     useEffect(() => {
         if (inViewport) {
             scrollUpdate()
@@ -328,6 +349,17 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         }
         return () => clearInterval(idRef.current)
     }, [inViewport, isLoop, scrollUpdate])
+
+    useDebounceEffect(
+        () => {
+            updateData()
+        },
+        [params],
+        {
+            wait: 200,
+            leading: true
+        }
+    )
 
     /** @name 重置查询条件刷新表格 */
     const refreshT = useMemoizedFn(() => {
@@ -353,10 +385,38 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         setLoading(is)
     })
 
-    /** @name 设置params */
-    const setP = useMemoizedFn((newParams) => {
-        setParams({...params, ...newParams})
+    /** @name 设置表格数据 */
+    const setTData = useMemoizedFn((newData: DataT[]) => {
+        setData(newData)
     })
 
-    return [data, total, loading, {startT, refreshT, noResetRefreshT, setTLoad, setP}]
+    /** @name 设置params */
+    const setP = useMemoizedFn((newParams: ParamsTProps) => {
+        const data: ParamsTProps = {
+            Pagination: {
+                ...params.Pagination,
+                ...newParams.Pagination
+            },
+            Filter: {
+                ...params.Filter,
+                ...newParams.Filter
+            }
+        }
+        if (data.Pagination.Order) {
+            sortRef.current.order = data.Pagination.Order as "none" | "asc" | "desc"
+        }
+        setParams(data)
+    })
+
+    // console.log("tableData------",data);
+
+    return [
+        params,
+        data,
+        total,
+        pagination,
+        loading,
+        offsetData,
+        {startT, refreshT, noResetRefreshT, setTLoad, setTData, setP}
+    ] as const
 }

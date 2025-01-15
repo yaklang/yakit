@@ -185,6 +185,7 @@ module.exports = {
         require("./handlers/startBrute")(win, getClient)
         require("./handlers/webshell")(win, getClient)
         require("./handlers/syntaxFlow")(win, getClient)
+        require("./handlers/auditRisk")(win, getClient)
 
         // start chrome manager
         try {

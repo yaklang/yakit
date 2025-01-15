@@ -47,6 +47,10 @@ export const startupDuplexConn = () => {
                 case "risk":
                     emiter.emit("onRefreshQueryNewRisk")
                     break
+                // 通知QuerySSARisks轮询更新
+                case "xxx":
+                    emiter.emit("onRefreshQuerySSARisks")
+                    break
                 // 文件树结构监控
                 case "file_monitor":
                     const event: FileMonitorProps = obj

@@ -503,15 +503,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
             },
             {
-                title: "所属项目",
-                dataKey: "test",// 其余表需屏蔽
-                filterProps: {
-                    filterKey: "Test",
-                    filtersType: "input",
-                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
-                },
-            },
-            {
                 title: "IP",
                 dataKey: "IP",
                 width: 120,

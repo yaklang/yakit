@@ -1,6 +1,8 @@
 import React from "react"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 export interface useVirtualTableHookParams<T, DataT> {
+    // 表格容器ref
+    tableBoxRef: React.MutableRefObject<any>
     // 表格ref
     tableRef: React.MutableRefObject<any>
     // 表格容器ref
@@ -13,6 +15,8 @@ export interface useVirtualTableHookParams<T, DataT> {
     onFirst?: () => void
     // 暂无新数据请求停止的回调
     onStop?: () => void
+    // 响应数据的预处理方法（用于对响应数据的二次处理）
+    initResDataFun?: (arr: DataT[]) => DataT[]
 }
 
 type VirtualPaging = {
@@ -20,8 +24,8 @@ type VirtualPaging = {
     Limit: number
     Order?: "asc" | "desc" | string
     OrderBy?: "created_at" | "updated_at" | string
-    AfterID?: number
-    BeforeID?: number
+    AfterId?: number
+    BeforeId?: number
 }
 
 export interface FilterProps {
@@ -38,10 +42,10 @@ export interface ParamsTProps {
 export interface DataResponseProps<T> {
     Total: number
     Pagination: VirtualPaging
-    data: T[]
+    Data: T[]
 }
 
 export interface DataTProps {
-    id: number
+    Id: number
     [key: string]: any
 }
