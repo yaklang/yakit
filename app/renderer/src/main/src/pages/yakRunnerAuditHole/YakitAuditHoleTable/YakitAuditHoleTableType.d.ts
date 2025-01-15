@@ -1,16 +1,52 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
-import {Risk} from "../schema"
 import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail";
+import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+
+export interface SSARisk {
+    Id: number
+    CreatedAt: number
+    UpdatedAt?: number
+
+    Hash: string
+
+    ProgramName: string
+    CodeSourceUrl: string
+    CodeRange: string
+    CodeFragment: string
+
+    Title: string
+    TitleVerbose?: string
+    RiskType: string
+    RiskTypeVerbose?: string
+    Details?: string
+    Severity?: string
+
+    FromRule: string
+    RuntimeID: string
+
+    IsPotential: boolean
+
+    CVE: string
+    CveAccessVector: string
+    CveAccessComplexity: string
+    Tags: string
+    ResultID: number
+
+    IsRead: boolean
+
+    // 前端用于染色 后端不存在此字段
+    cellClassName?: string
+}
+
 export interface YakitAuditHoleTableProps {
     setRiskLoading: (b: boolean) => void
     /**是否开启高级查询 */
     advancedQuery?: boolean
     setAdvancedQuery?: (b: boolean) => void
-    query: QueryRisksRequest
-    setQuery: (v: QueryRisksRequest) => void
+    query: QuerySSARisksRequest
+    setQuery: (v: QuerySSARisksRequest) => void
     renderTitle?: ReactNode
     riskWrapperClassName?: string
     tableVirtualResizeProps?: TableVirtualResizeProps
@@ -21,64 +57,62 @@ export interface YakitAuditHoleTableProps {
     setAllTotal?: (b: number) => void
 }
 
-export interface QueryRisksRequest {
-    Pagination: Paging
-    Search: string
-    Network: string
-    Ports: string
-    RiskType: string
-    Token: string
-    WaitingVerified: boolean
-    Severity: string
-    FromId: number
-    UntilId: number
-    Tags: string
-    /** 全部'' 已读:'true'，未读：'false' */
-    IsRead: string
-    Title: string
-
-    /**前端展示使用 列表 */
-    RiskTypeList?: string[]
-    /**前端展示使用 */
-    SeverityList?: string[]
-    /**前端展示使用 */
-    TagList?: string[]
-    /**IP段 */
-    IPList?: string[]
-
-    RuntimeId?: string
-}
-
-export type QueryRisksResponse = QueryGeneralResponse<Risk>
-
 export interface YakitRiskDetailsProps {
     className?: string
-    info: Risk
+    info: SSARisk
     isShowTime?: boolean
     shrink?: ConstrainBoolean
-    onClickIP?: (info: Risk) => void
+    onClickIP?: (info: SSARisk) => void
     border?: boolean
     isShowExtra?: boolean
-    onRetest?: (info: Risk) => void
+    onRetest?: (info: SSARisk) => void
 }
 
 export interface YakitRiskSelectTagProps {
-    info: Risk
+    info: SSARisk
     onClose?: () => void
-    onSave: (info: Risk) => void
+    onSave: (info: SSARisk) => void
 }
 
 export interface YakitCodeScanRiskDetailsProps {
     className?: string
-    info: Risk
-    onClickIP?: (info: Risk) => void
+    info: SSARisk
+    onClickIP?: (info: SSARisk) => void
     border?: boolean
     isShowExtra?: boolean
 }
 
 export interface YakURLDataItemProps {
-    index:string
-    code_range:CodeRangeProps
+    index: string
+    code_range: CodeRangeProps
     source: string
-    ResourceName:string
+    ResourceName: string
+}
+
+export interface QuerySSARisksRequest {
+    Pagination: Paging
+    Filter: SSARisksFilter
+}
+
+export type QuerySSARisksResponse = QueryGeneralResponse<SSARisk>
+
+export interface SSARisksFilter {
+    ID?: number[]
+    Search?: string
+    ProgramName?: string[]
+    CodeSourceUrl?: string[]
+    RiskType?: string[]
+    Severity?: string[]
+    FromRule?: string[]
+    RuntimeID?: string[]
+    ResultID?: string[]
+    Tags?: string[]
+
+    // 此处需等待后端写入
+    /** 全部'' 已读:'true'，未读：'false' */
+    IsRead?: string
+}
+
+export interface DeleteSSARisksRequest {
+    Filter?: SSARisksFilter
 }
