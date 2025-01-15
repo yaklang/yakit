@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {NotepadManageProps} from "./NotepadManageType"
+import {NotepadActionProps, NotepadManageProps} from "./NotepadManageType"
 import styles from "./NotepadManage.module.scss"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -98,8 +98,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 
     const [listLoading, setListLoading] = useState<boolean>(true)
     const [pageLoading, setPageLoading] = useState<boolean>(false)
-    const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
-    const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
 
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
@@ -128,7 +126,7 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 
     const totalRef = useRef<number>(0)
     const notepadRef = useRef<HTMLDivElement>(null)
-    const actionItemRef = useRef<API.GetNotepadList>()
+    const actionHashMapRef = useRef<Map<string, string>>(new Map())
 
     const [inViewPort = true] = useInViewport(notepadRef)
 
@@ -207,52 +205,27 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
                 dataIndex: "action",
                 width: 180,
                 render: (text, record) => {
-                    const removeDisabled = actionItemRef.current === record && removeItemLoading
                     return (
-                        <div>
-                            <YakitButton
-                                type='text2'
-                                icon={<OutlinePencilaltIcon />}
-                                onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
-                                disabled={removeDisabled}
-                            />
-                            <Divider type='vertical' style={{margin: "0 8px"}} />
-                            <YakitButton
-                                type='text2'
-                                icon={<OutlineClouddownloadIcon />}
-                                onClick={() => onSingleDown(record)}
-                                loading={actionItemRef.current === record && downItemLoading}
-                                disabled={removeDisabled}
-                            />
-                            {record.notepadUserId === userInfo.user_id ? (
-                                <>
-                                    <Divider type='vertical' style={{margin: "0 8px"}} />
-                                    <YakitButton
-                                        type='text2'
-                                        icon={<OutlineShareIcon />}
-                                        onClick={() => onShare(record)}
-                                        disabled={removeDisabled}
-                                    />
-                                    <Divider type='vertical' style={{margin: "0 8px"}} />
-                                    <YakitPopconfirm
-                                        title='确定要删掉该文档吗'
-                                        onConfirm={() => onSingleRemove(record)}
-                                    >
-                                        <YakitButton
-                                            danger
-                                            type='text'
-                                            icon={<OutlineTrashIcon />}
-                                            loading={actionItemRef.current === record && removeItemLoading}
-                                        />
-                                    </YakitPopconfirm>
-                                </>
-                            ) : null}
-                        </div>
+                        <NotepadAction
+                            record={record}
+                            notepadPageList={notepadPageList}
+                            userInfo={userInfo}
+                            onSingleDownAfter={setBatchDownInfo}
+                            onShareAfter={() => {
+                                setRefresh(!refresh)
+                            }}
+                            onSingleRemoveAfter={() => {
+                                setResponse((prev) => ({
+                                    ...prev,
+                                    data: prev.data.filter((ele) => ele.hash !== record.hash)
+                                }))
+                            }}
+                        />
                     )
                 }
             }
         ]
-    }, [downItemLoading, removeItemLoading, actionItemRef.current, sorterKey, timeSortVisible, notepadPageList])
+    }, [actionHashMapRef.current, sorterKey, timeSortVisible, notepadPageList])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()
@@ -340,42 +313,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
         }
     })
 
-    const onShare = useMemoizedFn((record: API.GetNotepadList) => {
-        const m = showYakitModal({
-            hiddenHeader: true,
-            content: (
-                <NotepadShareModal
-                    notepadInfo={record}
-                    onClose={() => {
-                        m.destroy()
-                        setRefresh(!refresh)
-                    }}
-                />
-            ),
-            onCancel: () => {
-                m.destroy()
-                setRefresh(!refresh)
-            },
-            footer: null
-        })
-    })
-    const onSingleRemove = useMemoizedFn((record: API.GetNotepadList) => {
-        actionItemRef.current = record
-        setRemoveItemLoading(true)
-        apiDeleteNotepadDetail({hash: record.hash})
-            .then(() => {
-                setResponse((prev) => ({
-                    ...prev,
-                    data: prev.data.filter((ele) => ele.hash !== record.hash)
-                }))
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setRemoveItemLoading(false)
-                    actionItemRef.current = undefined
-                }, 200)
-            })
-    })
     const onBatchRemove = useMemoizedFn(() => {
         const filter = isAllSelect ? convertGetNotepadRequest(search) : {}
         const removeParams: API.DeleteNotepadRequest = {
@@ -390,24 +327,6 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
             .finally(() =>
                 setTimeout(() => {
                     setPageLoading(false)
-                }, 200)
-            )
-    })
-
-    const onSingleDown = useMemoizedFn((record: API.GetNotepadList) => {
-        actionItemRef.current = record
-        setDownItemLoading(true)
-        const downParams: API.NotepadDownloadRequest = {
-            hash: record.hash
-        }
-        onBaseNotepadDown(downParams)
-            .then((res) => {
-                setBatchDownInfo(res)
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setDownItemLoading(false)
-                    actionItemRef.current = undefined
                 }, 200)
             )
     })
@@ -548,3 +467,91 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 })
 
 export default NotepadManage
+
+const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) => {
+    const {record, notepadPageList, userInfo, onSingleDownAfter, onShareAfter, onSingleRemoveAfter} = props
+
+    const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
+    const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
+
+    const onSingleDown = useMemoizedFn((record: API.GetNotepadList) => {
+        setDownItemLoading(true)
+        const downParams: API.NotepadDownloadRequest = {
+            hash: record.hash
+        }
+        onBaseNotepadDown(downParams)
+            .then((res) => {
+                onSingleDownAfter(res)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setDownItemLoading(false)
+                }, 200)
+            )
+    })
+
+    const onShare = useMemoizedFn((record: API.GetNotepadList) => {
+        const m = showYakitModal({
+            hiddenHeader: true,
+            content: (
+                <NotepadShareModal
+                    notepadInfo={record}
+                    onClose={() => {
+                        m.destroy()
+                        onShareAfter()
+                    }}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+                onShareAfter()
+            },
+            footer: null
+        })
+    })
+    const onSingleRemove = useMemoizedFn((record: API.GetNotepadList) => {
+        setRemoveItemLoading(true)
+        apiDeleteNotepadDetail({hash: record.hash})
+            .then(() => {
+                onSingleRemoveAfter()
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setRemoveItemLoading(false)
+                }, 200)
+            })
+    })
+    return (
+        <div>
+            <YakitButton
+                type='text2'
+                icon={<OutlinePencilaltIcon />}
+                onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
+                disabled={removeItemLoading}
+            />
+            <Divider type='vertical' style={{margin: "0 8px"}} />
+            <YakitButton
+                type='text2'
+                icon={<OutlineClouddownloadIcon />}
+                onClick={() => onSingleDown(record)}
+                loading={downItemLoading}
+                disabled={removeItemLoading}
+            />
+            {record.notepadUserId === userInfo.user_id ? (
+                <>
+                    <Divider type='vertical' style={{margin: "0 8px"}} />
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineShareIcon />}
+                        onClick={() => onShare(record)}
+                        disabled={removeItemLoading}
+                    />
+                    <Divider type='vertical' style={{margin: "0 8px"}} />
+                    <YakitPopconfirm title='确定要删掉该文档吗' onConfirm={() => onSingleRemove(record)}>
+                        <YakitButton danger type='text' icon={<OutlineTrashIcon />} loading={removeItemLoading} />
+                    </YakitPopconfirm>
+                </>
+            ) : null}
+        </div>
+    )
+})
