@@ -101,6 +101,7 @@ import {
     AuditCodePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    ModifyNotepadPageInfoProps,
     PageNodeItemProps,
     PageProps,
     PluginHubPageInfoProps,
@@ -146,7 +147,6 @@ import {
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
-import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {APIFunc} from "@/apiUtils/type"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -635,23 +635,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addModifyNotepad = useMemoizedFn(async (data) => {
-        try {
-            let verbose = ""
-            if (!!data?.notepadHash) {
-                const res = await apiGetNotepadDetail(data.notepadHash)
-                verbose = res?.title || ""
-            }
-            openMenuPage(
-                {route: YakitRoute.Modify_Notepad},
-                {
-                    verbose,
-                    pageParams: {
-                        modifyNotepadPageInfo: {...data}
-                    }
+    const addModifyNotepad = useMemoizedFn((data: ModifyNotepadPageInfoProps) => {
+        openMenuPage(
+            {route: YakitRoute.Modify_Notepad},
+            {
+                verbose: data.title,
+                pageParams: {
+                    modifyNotepadPageInfo: {...data}
                 }
-            )
-        } catch (error) {}
+            }
+        )
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(

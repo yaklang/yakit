@@ -650,11 +650,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // 有内容才保存，没有内容新建
                 if (markdownContent) {
                     const params: API.PostNotepadRequest = {
-                        title: title,
+                        title,
                         content: markdownContent
                     }
                     apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({notepadHash: hash})
+                        toEditNotepad({notepadHash: hash, title})
                         onCloseCurrentPage()
                         s.destroy()
                     })

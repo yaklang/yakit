@@ -24,6 +24,7 @@ import {
     SaveDialogResponse,
     SearchParamsProps,
     apiDeleteNotepadDetail,
+    apiGetNotepadDetail,
     apiGetNotepadList,
     convertGetNotepadRequest,
     onBaseNotepadDown,
@@ -55,8 +56,8 @@ const timeMap = {
  * @param notepadHash
  * @param notepadPageList
  */
-export const toEditNotepad = (params?: {notepadHash: string; notepadPageList?: PageNodeItemProps[]}) => {
-    const {notepadHash = "", notepadPageList = []} = params || {notepadHash: ""}
+export const toEditNotepad = (params?: {notepadHash: string; title: string; notepadPageList?: PageNodeItemProps[]}) => {
+    const {notepadHash = "", title = "", notepadPageList = []} = params || {notepadHash: ""}
     const current =
         notepadHash &&
         notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
@@ -67,7 +68,8 @@ export const toEditNotepad = (params?: {notepadHash: string; notepadPageList?: P
         const info = {
             route: YakitRoute.Modify_Notepad,
             params: {
-                notepadHash
+                notepadHash,
+                title
             }
         }
         emiter.emit("openPage", JSON.stringify(info))
@@ -473,6 +475,7 @@ const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) => {
 
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
+    const [editLoading, setEditLoading] = useState<boolean>(false)
 
     const onSingleDown = useMemoizedFn((record: API.GetNotepadList) => {
         setDownItemLoading(true)
@@ -521,12 +524,25 @@ const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) => {
                 }, 200)
             })
     })
+    const onEdit = useMemoizedFn(() => {
+        setEditLoading(true)
+        apiGetNotepadDetail(record.hash)
+            .then((res) => {
+                toEditNotepad({notepadHash: res.hash, title: res.title, notepadPageList})
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setEditLoading(false)
+                }, 200)
+            })
+    })
     return (
         <div>
             <YakitButton
                 type='text2'
                 icon={<OutlinePencilaltIcon />}
-                onClick={() => toEditNotepad({notepadHash: record.hash, notepadPageList})}
+                onClick={onEdit}
+                loading={editLoading}
                 disabled={removeItemLoading}
             />
             <Divider type='vertical' style={{margin: "0 8px"}} />
