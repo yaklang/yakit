@@ -56,7 +56,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     return (
                         <YakitInput.TextArea
                             className={styles["input-textarea"]}
-                            rows={1}
+                            rows={3}
                             placeholder={`请输入 ${typeof title === "object" ? "该字段" : title}`}
                         />
                     )
