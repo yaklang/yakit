@@ -104,6 +104,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             }
         })
         this.wsProvider.on("connection-close", (payload) => {
+            docTitle.unobserve((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
             this.emit("offline-after", [payload])
         })
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
@@ -132,7 +133,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
     private docObserveTitle(yarrayEvent: YTextEvent, tr: Transaction) {
         if (tr.local) return
-        const value = (yarrayEvent.delta[0]?.insert as string) || ""
+        const value = this.doc.getText("title").toString()
         this.onSetTitle(value)
     }
 
@@ -169,9 +170,14 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     }
 
     setTitle(value) {
-        const oldValue = this.doc.getText("title").toString()
-        if (isEqual(oldValue, value)) return
-        this.doc.getText("title").applyDelta([{insert: value}])
+        const docTitle = this.doc.getText("title")
+        if (isEqual(this.title, value)) return
+        this.title = value
+        // 两次修改封装到一个事务中，观察器只会被触发一次
+        this.doc.transact(() => {
+            docTitle.delete(0, docTitle.length)
+            docTitle.insert(0, value)
+        })
     }
 
     sendContent(value: {content: string; title: string}) {

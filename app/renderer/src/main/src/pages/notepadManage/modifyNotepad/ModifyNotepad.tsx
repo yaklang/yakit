@@ -416,7 +416,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [currentRole])
     const collabProps: MilkdownCollabProps = useCreation(() => {
         const enableCollab = !readonly
-        const newTitle = composedTabName || perTabName.current
+        const newTitle = composedTabName
         const collabValue: MilkdownCollabProps = {
             title: newTitle,
             enableCollab,

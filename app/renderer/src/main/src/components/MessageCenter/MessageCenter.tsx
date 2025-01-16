@@ -272,7 +272,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             apiGetNotepadDetail(data.notepadHash).then((res) => {
                                 toEditNotepad({
                                     notepadHash: res.hash,
-                                    title: res.hash,
+                                    title: res.title,
                                     notepadPageList: notepadPageList || []
                                 })
                             })
