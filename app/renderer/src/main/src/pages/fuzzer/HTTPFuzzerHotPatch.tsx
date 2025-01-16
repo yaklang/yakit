@@ -540,7 +540,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                             setHotCodeTempVisible(false)
                             sameNameHintInfoRef.current = {
                                 title: "同名覆盖提示",
-                                content: "有同名模板，上传会覆盖，仍要上传吗？",
+                                content: "线上有同名模板，上传会覆盖，确定上传吗？",
                                 onOk: () => {
                                     resolve(true)
                                 },
@@ -562,7 +562,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     setHotCodeTempVisible(false)
                     sameNameHintInfoRef.current = {
                         title: "同名覆盖提示",
-                        content: "有同名模板，上传会覆盖，仍要上传吗？",
+                        content: "本地有同名模板，下载会覆盖，确定下载吗？",
                         onOk: () => {
                             resolve(true)
                         },
