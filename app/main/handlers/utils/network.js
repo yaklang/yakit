@@ -10,6 +10,7 @@ const path = require("path")
 const {loadExtraFilePath} = require("../../filePath")
 
 const ossDomains = [
+    "oss-qn.yaklang.com",
     "aliyun-oss.yaklang.com",
     "yaklang.oss-cn-beijing.aliyuncs.com",
     "yaklang.oss-accelerate.aliyuncs.com"

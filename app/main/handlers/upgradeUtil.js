@@ -178,19 +178,20 @@ module.exports = {
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncQueryLatestNotification = (params) => {
             return new Promise((resolve, reject) => {
-                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/notification.md")
-                rsp.on("response", rsp => {
-                    rsp.on("data", data => {
-                        const passage = Buffer.from(data).toString();
-                        if (passage.startsWith("# Yakit Notification")) {
-                            resolve(passage)
-                        } else {
-                            resolve("")
-                        }
+                reject("error", "abandoned")
+                // let rsp = https.get("https://aliyun-oss.yaklang.com/yak/latest/notification.md")
+                // rsp.on("response", rsp => {
+                //     rsp.on("data", data => {
+                //         const passage = Buffer.from(data).toString();
+                //         if (passage.startsWith("# Yakit Notification")) {
+                //             resolve(passage)
+                //         } else {
+                //             resolve("")
+                //         }
 
-                    }).on("error", err => reject(err))
-                })
-                rsp.on("error", reject)
+                //     }).on("error", err => reject(err))
+                // })
+                // rsp.on("error", reject)
             })
         }
         ipcMain.handle("query-latest-notification", async (e, params) => {
