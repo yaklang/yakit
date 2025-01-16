@@ -308,7 +308,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     /** ---------- 导出逻辑 ---------- */
     const [exportExtra, setExportExtra] = useState<RuleImportExportModalProps["extra"]>({
         hint: false,
-        title: "导出插件",
+        title: "导出规则",
         type: "export"
     })
 
@@ -323,7 +323,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             if (type === "export") {
                 handleAllCheck([], [], false)
             } else {
-                fetchList()
+                handleRefreshGroup()
             }
         }
         setExportExtra((prev) => {
@@ -461,7 +461,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                     type='outline2'
                                                     icon={<OutlineExportIcon />}
                                                     onClick={() =>
-                                                        handleOpenExportHint({title: "导出插件", type: "export"})
+                                                        handleOpenExportHint({title: "导出规则", type: "export"})
                                                     }
                                                 >
                                                     导出
@@ -471,7 +471,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                     type='outline2'
                                                     icon={<OutlineImportIcon />}
                                                     onClick={() =>
-                                                        handleOpenExportHint({title: "导入插件", type: "import"})
+                                                        handleOpenExportHint({title: "导入规则", type: "import"})
                                                     }
                                                 >
                                                     导入

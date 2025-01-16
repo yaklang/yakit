@@ -11,7 +11,7 @@ export interface LocalRuleGroupListProps {
 type RuleImportExportModalExtra = {
     hint: boolean
 } & {
-    title: "导出插件" | "导入插件"
+    title: "导出规则" | "导入规则"
     type: "export" | "import"
 }
 export interface RuleImportExportModalProps {
@@ -59,6 +59,7 @@ export interface SyntaxFlowRuleGroupFilter {
 }
 export interface QuerySyntaxFlowRuleGroupRequest {
     Filter: SyntaxFlowRuleGroupFilter
+    Pagination: Paging
 }
 
 export interface SyntaxFlowGroup {
@@ -68,6 +69,7 @@ export interface SyntaxFlowGroup {
 }
 export interface QuerySyntaxFlowRuleGroupResponse {
     Group: SyntaxFlowGroup[]
+    Pagination: Paging
 }
 
 export interface CreateSyntaxFlowGroupRequest {
@@ -117,7 +119,7 @@ export interface SyntaxFlowRuleFilter {
     AfterId?: number
     BeforeId?: number
 
-    isNotBuiltin?: boolean // 是否不是内置规则
+    IsNotBuiltin?: boolean // 是否不是内置规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter

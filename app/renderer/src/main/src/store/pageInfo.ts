@@ -156,7 +156,7 @@ export interface PluginHubPageInfoProps {
      * @param tabActive 主动跳到详情里的指定 tab 上
      * @description tabActive-如果想打开指定 tab 页面里的指定子 tab，可以使用'/'进行分割，例如：'log/check'，log是主tab，check是子tab
      */
-    detailInfo?: {uuid: string; name: string; tabActive?: string}
+    detailInfo?: {uuid: string; name: string; tabActive?: string, isCorePlugin?: boolean}
     /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
     refeshList?: boolean
     /**是否打开管理分组抽屉 */

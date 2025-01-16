@@ -920,7 +920,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             return
         }
         setShowIndex(index)
-        onPluginDetail({type: "local", name: info.ScriptName, uuid: info.UUID || ""})
+        onPluginDetail({type: "local", name: info.ScriptName, uuid: info.UUID || "", isCorePlugin: !!info.IsCorePlugin})
     })
 
     // 触发详情列表的单项定位

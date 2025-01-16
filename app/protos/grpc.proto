@@ -5610,7 +5610,7 @@ message SyntaxFlowRuleFilter {
   int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
-  bool isNotBuiltin = 13; // 是否不是内置规则
+  bool IsNotBuiltin = 13; // 是否不是内置规则
 }
 
 message SSAProgram{
@@ -5721,10 +5721,12 @@ message SyntaxFlowGroup{
 
 message QuerySyntaxFlowRuleGroupRequest{
   SyntaxFlowRuleGroupFilter Filter = 1;
+  Paging Pagination = 2;
 }
 
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
+  Paging Pagination = 2;
 }
 
 message CreateSyntaxFlowGroupRequest{

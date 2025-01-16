@@ -65,7 +65,12 @@ import {failed, info, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
-import {DefaultRuleContent, RuleImportExportModalSize, RuleLanguageList} from "@/defaultConstants/RuleManagement"
+import {
+    DefaultRuleContent,
+    DefaultRuleGroupFilterPageMeta,
+    RuleImportExportModalSize,
+    RuleLanguageList
+} from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
@@ -122,7 +127,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
     const fetchList = useMemoizedFn(() => {
         if (loading) return
 
-        const request: QuerySyntaxFlowRuleGroupRequest = {Filter: {}}
+        const request: QuerySyntaxFlowRuleGroupRequest = {Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}}
         if (search.current) {
             request.Filter = {KeyWord: search.current || ""}
         }
@@ -217,7 +222,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
 
         grpcCreateLocalRuleGroup({GroupName: groupName})
             .then(() => {
-                setData((arr) => arr.concat({GroupName: groupName, Count: 0, IsBuildIn: false}))
+                setData((arr) => [{GroupName: groupName, Count: 0, IsBuildIn: false}].concat([...arr]))
                 setTimeout(() => {
                     setActiveAdd(false)
                     setGroupName("")
@@ -328,8 +333,20 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
                 </div>
             </div>
 
-            <div className={styles["list-search"]}>
+            <div className={styles["list-search-and-add"]}>
                 <YakitInput.Search size='large' allowClear={true} placeholder='请输入组名' onSearch={handleSearch} />
+
+                {/* 新建规则组输入框 */}
+                <YakitInput
+                    ref={addInputRef}
+                    wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
+                    showCount
+                    maxLength={50}
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    onBlur={handleAddGroupBlur}
+                    onPressEnter={handleAddGroupBlur}
+                />
             </div>
 
             <div className={styles["list-container"]}>
@@ -435,25 +452,6 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
                                 )
                             })}
                         </div>
-
-                        {activeAdd && (
-                            <div
-                                className={styles["list-add-input"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                }}
-                            >
-                                <YakitInput
-                                    ref={addInputRef}
-                                    showCount
-                                    maxLength={50}
-                                    value={groupName}
-                                    onChange={(e) => setGroupName(e.target.value)}
-                                    onBlur={handleAddGroupBlur}
-                                    onPressEnter={handleAddGroupBlur}
-                                />
-                            </div>
-                        )}
                     </div>
                 </YakitSpin>
             </div>
@@ -511,7 +509,7 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                 return
             }
             const request: ExportSyntaxFlowsRequest = {
-                Filter: {...cloneDeep(tragetFilter), isNotBuiltin: true},
+                Filter: {...cloneDeep(tragetFilter), IsNotBuiltin: true},
                 TargetPath: formValue?.TargetPath || "",
                 Password: formValue?.Password || undefined
             }
@@ -567,16 +565,17 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
         if (!token) {
             return
         }
+        const typeTitle = extra.type === "export" ? "ExportSyntaxFlows" : "ImportSyntaxFlows"
         let success = true
         ipcRenderer.on(`${token}-data`, async (_, data: SyntaxflowsProgress) => {
             setProgressStream(data)
         })
         ipcRenderer.on(`${token}-error`, (_, error) => {
             success = false
-            failed(`[ExportSyntaxFlows] error:  ${error}`)
+            failed(`[${typeTitle}] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, () => {
-            info("[ExportSyntaxFlows] finished")
+            info(`[${typeTitle}] finished`)
             setShowProgressStream(false)
             onSuccessStream(success)
             success = true
@@ -630,8 +629,8 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                     <YakitFormDragger
                         formItemProps={{
                             name: "InputPath",
-                            label: "本地插件路径",
-                            rules: [{required: true, message: "请输入本地插件路径"}]
+                            label: "本地规则路径",
+                            rules: [{required: true, message: "请输入本地规则路径"}]
                         }}
                         multiple={false}
                         selectType='file'
@@ -841,7 +840,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     // 规则组列表
     const [groups, setGroups] = useState<{label: string; value: string}[]>([])
     const handleSearchGroup = useMemoizedFn(() => {
-        grpcFetchLocalRuleGroupList({Filter: {}})
+        grpcFetchLocalRuleGroupList({Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}})
             .then(({Group}) => {
                 setGroups(
                     Group?.map((item) => {
@@ -1379,7 +1378,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
             setRemoveGroup([...getOldGroup()])
             if (loading.current) return
             loading.current = true
-            grpcFetchLocalRuleGroupList({Filter: {}})
+            grpcFetchLocalRuleGroupList({Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}})
                 .then(({Group}) => {
                     const groups = (Group || []).map((item) => ({...item, isCreate: false}))
                     allGroup.current = groups
