@@ -493,7 +493,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         showPluginHistoryList,
         tempShowPluginHistory,
         setShowPluginHistoryList,
-        setTempShowPluginHistory,
+        setTempShowPluginHistory
     } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
@@ -1196,7 +1196,6 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
 
     const onOk = useMemoizedFn(() => {
         const formValue = form.getFieldsValue()
-
         if (loadMode === "giturl") {
             const params: YakExecutorParam[] = [
                 {Key: "giturl", Value: ""},

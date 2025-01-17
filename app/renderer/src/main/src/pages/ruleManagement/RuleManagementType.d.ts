@@ -8,11 +8,20 @@ export interface LocalRuleGroupListProps {
     onGroupChange: (groups: string[]) => void
 }
 
+type RuleImportExportModalExtra = {
+    hint: boolean
+} & {
+    title: "导出规则" | "导入规则"
+    type: "export" | "import"
+}
 export interface RuleImportExportModalProps {
     /** 是否被dom节点包含 */
     getContainer?: HTMLElement
     width?: number
-    visible: boolean
+    extra: RuleImportExportModalExtra
+    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword"> & {
+        allCheck: boolean
+    }
     onCallback: (result: boolean) => void
 }
 
@@ -50,6 +59,7 @@ export interface SyntaxFlowRuleGroupFilter {
 }
 export interface QuerySyntaxFlowRuleGroupRequest {
     Filter: SyntaxFlowRuleGroupFilter
+    Pagination: Paging
 }
 
 export interface SyntaxFlowGroup {
@@ -59,6 +69,7 @@ export interface SyntaxFlowGroup {
 }
 export interface QuerySyntaxFlowRuleGroupResponse {
     Group: SyntaxFlowGroup[]
+    Pagination: Paging
 }
 
 export interface CreateSyntaxFlowGroupRequest {
@@ -107,6 +118,8 @@ export interface SyntaxFlowRuleFilter {
 
     AfterId?: number
     BeforeId?: number
+
+    FilterRuleKind?: "buildIn" | "unBuildIn" // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter
@@ -161,6 +174,22 @@ export interface UpdateSyntaxFlowRuleRequest {
 
 export interface DeleteSyntaxFlowRuleRequest {
     Filter: SyntaxFlowRuleFilter
+}
+
+export interface ExportSyntaxFlowsRequest {
+    Filter: SyntaxFlowRuleFilter
+    Password?: string
+    TargetPath: string
+}
+
+export interface ImportSyntaxFlowsRequest {
+    InputPath: string
+    Password?: string
+}
+
+export interface SyntaxflowsProgress {
+    Progress: number
+    Verbose: string
 }
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */

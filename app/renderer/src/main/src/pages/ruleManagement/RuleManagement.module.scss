@@ -7,6 +7,16 @@
     width: 100%;
     height: 100%;
     display: flex;
+    overflow: hidden;
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
 }
 
 .rule-management-group {
@@ -133,8 +143,14 @@
         }
     }
 
-    .list-search {
+    .list-search-and-add {
         padding: 0 12px;
+        .hidden-add-input {
+            display: none;
+        }
+        .show-add-input {
+            margin-top: 10px;
+        }
     }
 
     .list-container {
@@ -145,15 +161,6 @@
             height: 100%;
             overflow: hidden auto;
             padding: 0 12px;
-
-            .list-add-input {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                background-color: transparent;
-                width: 100%;
-                padding: 6px 8px;
-            }
         }
     }
 

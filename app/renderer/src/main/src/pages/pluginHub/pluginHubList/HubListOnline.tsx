@@ -480,7 +480,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             return
         }
         setShowIndex(index)
-        onPluginDetail({type: "online", name: info.script_name, uuid: info.uuid})
+        onPluginDetail({type: "online", name: info.script_name, uuid: info.uuid, isCorePlugin: !!info.isCorePlugin})
     })
 
     // 触发详情列表的单项定位

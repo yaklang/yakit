@@ -738,6 +738,12 @@ service Yak {
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
   rpc DeleteSyntaxFlowScanTask(DeleteSyntaxFlowScanTaskRequest) returns (DbOperateMessage);
+
+  // 导出SyntaxFlow规则
+  rpc ExportSyntaxFlows(ExportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
+  // 导入SyntaxFlow规则
+  rpc ImportSyntaxFlows(ImportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
+
   // query result
   rpc QuerySyntaxFlowResult (QuerySyntaxFlowResultRequest) returns (QuerySyntaxFlowResultResponse);
   rpc DeleteSyntaxFlowResult (DeleteSyntaxFlowResultRequest) returns (DeleteSyntaxFlowResultResponse);
@@ -5614,6 +5620,7 @@ message SyntaxFlowRuleFilter {
   int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
+  string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
 }
 
 
@@ -5725,10 +5732,12 @@ message SyntaxFlowGroup{
 
 message QuerySyntaxFlowRuleGroupRequest{
   SyntaxFlowRuleGroupFilter Filter = 1;
+  Paging Pagination = 2;
 }
 
 message QuerySyntaxFlowRuleGroupResponse{
   repeated SyntaxFlowGroup Group = 1;
+  Paging Pagination = 2;
 }
 
 message CreateSyntaxFlowGroupRequest{
@@ -5900,6 +5909,24 @@ message DeleteSyntaxFlowResultRequest{
 
 message DeleteSyntaxFlowResultResponse{
   DbOperateMessage Message = 1;
+}
+
+message ExportSyntaxFlowsRequest {
+  SyntaxFlowRuleFilter Filter = 1;
+  string Password = 2;
+  string TargetPath = 3;
+}
+
+message ImportSyntaxFlowsRequest {
+  string InputPath = 1;
+  string Password = 2;
+}
+
+message SyntaxflowsProgress {
+  // 进度  0-1.0
+  double Progress = 1;
+  // 展示的提示语，可能是中断原因或者错误原因之类的
+  string Verbose = 2;
 }
 
 message QueryPluginEnvRequest {

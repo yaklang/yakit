@@ -9,6 +9,8 @@ export interface PluginToDetailInfo {
     name: string
     /** 插件UUID(线上来源则存在此值) */
     uuid: string
+    /** 是否为内置插件 */
+    isCorePlugin?: boolean
 }
 
 /** 插件列表组件基础属性 */

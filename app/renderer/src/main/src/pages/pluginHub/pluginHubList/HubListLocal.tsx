@@ -76,7 +76,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
@@ -572,7 +572,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             }}
                         ></PluginLocalExportForm>
                     </div>
-                )
+                ),
+                getContainer: divRef.current || undefined
             })
         } catch (error) {
             yakitNotify("error", error + "")
@@ -919,7 +920,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             return
         }
         setShowIndex(index)
-        onPluginDetail({type: "local", name: info.ScriptName, uuid: info.UUID || ""})
+        onPluginDetail({type: "local", name: info.ScriptName, uuid: info.UUID || "", isCorePlugin: !!info.IsCorePlugin})
     })
 
     // 触发详情列表的单项定位

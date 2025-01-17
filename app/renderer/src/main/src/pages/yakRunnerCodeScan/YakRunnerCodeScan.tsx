@@ -90,6 +90,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -125,7 +126,7 @@ const CodeScanGroupByKeyWord: React.FC<CodeScanGroupByKeyWordProps> = React.memo
                 KeyWord
             }
         }
-        grpcFetchLocalRuleGroupList(params)
+        grpcFetchLocalRuleGroupList({Pagination: DefaultRuleGroupFilterPageMeta, ...params})
             .then(({Group}) => {
                 setResponse(Group)
             })

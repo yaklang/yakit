@@ -120,6 +120,15 @@
     overflow: hidden;
 
     .outer-list {
+        :global {
+            .ant-modal-mask {
+                position: absolute;
+            }
+            .ant-modal-wrap {
+                position: absolute;
+            }
+        }
+
         height: 100%;
         display: flex;
         .list-filter {
@@ -423,7 +432,7 @@
             padding: 12px;
         }
         .ant-popover-arrow {
-            left: 110px
+            left: 110px;
         }
     }
 }

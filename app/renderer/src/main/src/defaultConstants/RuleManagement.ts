@@ -1,3 +1,5 @@
+import {Paging} from "@/utils/yakQueryHTTPFlow"
+
 /** 规则类型渲染 tag */
 export const RuleType: Record<string, {key: string; name: string}> = {
     audit: {key: "audit", name: "Code Audit"},
@@ -41,3 +43,20 @@ export const DefaultRuleContent = `desc(
 //     alert $source // record $source
 
 `
+
+/** 规则(导入|导出)弹框的宽度和表单的比例 */
+export const RuleImportExportModalSize = {
+    export: {
+        width: 520,
+        labelCol: 5,
+        wrapperCol: 18
+    },
+    import: {
+        width: 680,
+        labelCol: 6,
+        wrapperCol: 17
+    }
+}
+
+/** 规则组默认的搜索 pagemeta 条件 */
+export const DefaultRuleGroupFilterPageMeta: Paging = {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}

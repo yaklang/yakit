@@ -1,4 +1,7 @@
 const {ipcMain} = require("electron")
+const fs = require("fs")
+const path = require("path")
+const {yakProjects} = require("../filePath")
 
 module.exports = (win, getClient) => {
     // query local rule group list
@@ -250,6 +253,29 @@ module.exports = (win, getClient) => {
         return await asyncDeleteSyntaxFlowResult(params)
     })
 
+    // 导出SyntaxFlow规则
+    const exportSyntaxFlowsMap = new Map()
+    ipcMain.handle("cancel-ExportSyntaxFlows", handlerHelper.cancelHandler(exportSyntaxFlowsMap))
+    ipcMain.handle("ExportSyntaxFlows", (_, params, token) => {
+        const {TargetPath} = params
+        if (!fs.existsSync(yakProjects)) {
+            try {
+                fs.mkdirSync(yakProjects, {recursive: true})
+            } catch (error) {}
+        }
+        params.TargetPath = path.join(yakProjects, TargetPath)
+        let stream = getClient().ExportSyntaxFlows(params)
+        handlerHelper.registerHandler(win, stream, exportSyntaxFlowsMap, token)
+    })
+
+    // 导入SyntaxFlow规则
+    const importSyntaxFlowsMap = new Map()
+    ipcMain.handle("cancel-ImportSyntaxFlows", handlerHelper.cancelHandler(importSyntaxFlowsMap))
+    ipcMain.handle("ImportSyntaxFlows", (_, params, token) => {
+        let stream = getClient().ImportSyntaxFlows(params)
+        handlerHelper.registerHandler(win, stream, importSyntaxFlowsMap, token)
+    })
+
     const asyncQuerySSAPrograms = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QuerySSAPrograms(params, (err, data) => {
@@ -296,5 +322,10 @@ module.exports = (win, getClient) => {
     // 删除项目管理数据
     ipcMain.handle("DeleteSSAPrograms", async (e, params) => {
         return await asyncDeleteSSAPrograms(params)
+    })
+
+    // 生成 yakit-projects 文件夹下 projects 里面的文件路径
+    ipcMain.handle("GenerateProjectsFilePath", async (e, fileName) => {
+        return path.join(yakProjects, fileName)
     })
 }

@@ -34,10 +34,10 @@ import {PluginLog} from "../pluginLog/PluginLog"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {PluginLogRefProps} from "../pluginLog/PluginLogType"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
 
 const {TabPane} = PluginTabs
 
@@ -233,14 +233,23 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         // 获取插件线上信息
         const fetchOnlinePlugin: () => Promise<API.PluginsDetail> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
-                if (!currentRequest.current || !currentRequest.current.uuid) return reject("false")
+                /** 没有网不进行线上查询 */
+                if (!navigator.onLine) return reject("false")
+                /**
+                 * 没有值|没有uuid|内置插件不进行线上查询
+                 */
+                if (!currentRequest.current || !currentRequest.current.uuid || !!currentRequest.current.isCorePlugin) {
+                    return reject("false")
+                }
                 apiFetchOnlinePluginInfo({uuid: currentRequest.current.uuid}, true).then(resolve).catch(reject)
             })
         })
         // 获取插件本地信息
         const fetchLocalPlugin: () => Promise<YakScript> = useMemoizedFn(() => {
             return new Promise((resolve, reject) => {
-                if (!currentRequest.current || !currentRequest.current.name) return reject("false")
+                if (!currentRequest.current || !currentRequest.current.name) {
+                    return reject("false")
+                }
                 grpcFetchLocalPluginDetail(
                     {Name: currentRequest.current.name, UUID: currentRequest.current?.uuid || undefined},
                     true
