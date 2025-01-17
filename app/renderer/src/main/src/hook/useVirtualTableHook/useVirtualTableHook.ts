@@ -106,12 +106,9 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         // 倒序时需要额外处理传给后端顺序
         const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
-        
-        console.log("finalParams---", finalParams, type)
 
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT>) => {
-                console.log("rsp------------------", rsp)
                 let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
                 if (initResDataFun) {
                     newData = initResDataFun(newData)
@@ -354,6 +351,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
 
     useDebounceEffect(
         () => {
+            isGrpcRef.current = false
             updateData()
         },
         [params],
@@ -368,12 +366,14 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         sortRef.current = defSort
         setParams(defaultParams)
         setTimeout(() => {
+            isGrpcRef.current = false
             updateData()
         }, 100)
     })
 
     /** @name 仅刷新新表格 */
     const noResetRefreshT = useMemoizedFn(() => {
+        isGrpcRef.current = false
         updateData()
     })
 
@@ -409,8 +409,6 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         }
         setParams(data)
     })
-
-    // console.log("tableData------",data);
 
     return [
         params,

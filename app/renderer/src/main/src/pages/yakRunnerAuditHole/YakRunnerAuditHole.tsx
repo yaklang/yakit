@@ -71,8 +71,8 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
 const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
     const [programList, setProgramList] = useState<FieldGroup[]>([])
-    const [levelList, setLevelList] = useState<FieldGroup[]>([])
-    const [typeList, setTypeList] = useState<FieldGroup[]>([])
+    const [levelList, setLevelList] = useState<FieldName[]>([])
+    const [typeList, setTypeList] = useState<FieldName[]>([])
     useEffect(() => {
         if (!inViewport) return
         getGroups()
@@ -87,8 +87,6 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const getGroups = useMemoizedFn(() => {
         apiGetSSARiskFieldGroup().then((res) => {
             const {ProgramNameField, SeverityField, RiskTypeField} = res
-            console.log("apiGetSSARiskFieldGroup---", res)
-
             setProgramList(ProgramNameField)
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
@@ -110,7 +108,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
             ProgramName: [...newProgramList]
         })
     })
-    const onSelect = useMemoizedFn((val: string[], key: string) => {
+    const onSelect = useMemoizedFn((val: string[], key: "Severity" | "RiskType") => {
         setQuery({
             ...query,
             [key]: [...val]
@@ -241,7 +239,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     重置
                 </YakitButton>
             </div>
-            {/* <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} /> */}
+            <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
         </div>
     )
 })
