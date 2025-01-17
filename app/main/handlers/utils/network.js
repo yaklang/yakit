@@ -10,6 +10,7 @@ const path = require("path")
 const {loadExtraFilePath} = require("../../filePath")
 
 const ossDomains = [
+    "oss-qn.yaklang.com",
     "aliyun-oss.yaklang.com",
     "yaklang.oss-cn-beijing.aliyuncs.com",
     "yaklang.oss-accelerate.aliyuncs.com"
@@ -28,17 +29,22 @@ const config = {
     initializedOSSDomain: false,
     currentOSSDomain: "",
     fetchingOSSDomain: false,
-    fetchOSSDomainEventEmitter: new events.EventEmitter()
+    fetchOSSDomainEventEmitter: new events.EventEmitter(),
+    loggedCachedDomain: false
 }
 
 /** 初始化 oss 配置信息 */
 async function getAvailableOSSDomain() {
-    console.info("start to fetch oss domain for download extra resources")
     try {
         if (config.initializedOSSDomain) {
             if (!config.currentOSSDomain) {
+                config.loggedCachedDomain = false
                 return "yaklang.oss-accelerate.aliyuncs.com"
             } else {
+                if (!config.loggedCachedDomain) {
+                    console.info(`(cached) use oss domain: ${config.currentOSSDomain}`)
+                    config.loggedCachedDomain = true
+                }
                 return config.currentOSSDomain
             }
         }
@@ -48,8 +54,13 @@ async function getAvailableOSSDomain() {
                 config.fetchOSSDomainEventEmitter.once("done", () => {
                     console.info("fetch oss domain done, resolve the promise.")
                     if (!config.currentOSSDomain) {
+                        config.loggedCachedDomain = false
                         resolve("yaklang.oss-accelerate.aliyuncs.com")
                     } else {
+                        if (!config.loggedCachedDomain) {
+                            console.info(`(cached) use oss domain: ${config.currentOSSDomain}`)
+                            config.loggedCachedDomain = true
+                        }
                         resolve(config.currentOSSDomain)
                     }
                 })
@@ -292,5 +303,6 @@ module.exports = {
     downloadYakitEE,
     getYakitCommunityDownloadUrl,
     getYakEngineDownloadUrl,
-    getYakitEEDownloadUrl
+    getYakitEEDownloadUrl,
+    getAvailableOSSDomain
 }

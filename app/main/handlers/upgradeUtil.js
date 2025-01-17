@@ -175,28 +175,6 @@ module.exports = {
             return remoteLinkDir;
         })
 
-        // asyncQueryLatestYakEngineVersion wrapper
-        const asyncQueryLatestNotification = (params) => {
-            return new Promise((resolve, reject) => {
-                let rsp = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/notification.md")
-                rsp.on("response", rsp => {
-                    rsp.on("data", data => {
-                        const passage = Buffer.from(data).toString();
-                        if (passage.startsWith("# Yakit Notification")) {
-                            resolve(passage)
-                        } else {
-                            resolve("")
-                        }
-
-                    }).on("error", err => reject(err))
-                })
-                rsp.on("error", reject)
-            })
-        }
-        ipcMain.handle("query-latest-notification", async (e, params) => {
-            return await asyncQueryLatestNotification(params)
-        })
-
         class YakVersionEmitter extends EventEmitter {
         }
 
@@ -213,9 +191,7 @@ module.exports = {
         // asyncQueryLatestYakEngineVersion wrapper
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
-                console.info("start to fetch YAK-VERSION")
                 if (latestVersionCache) {
-                    console.info("YAK-VERSION: fetch cache: " + `${latestVersionCache}`)
                     resolve(latestVersionCache)
                     return;
                 }
@@ -223,7 +199,6 @@ module.exports = {
                 console.info("YAK-VERSION: mount version")
                 yakVersionEmitter.once('version', (err, version) => {
                     if (err) {
-
                         diagnosingYakVersion().catch(err => {
                             console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
                             reject(err)

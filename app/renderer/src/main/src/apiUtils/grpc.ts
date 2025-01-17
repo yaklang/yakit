@@ -17,6 +17,22 @@ export const grpcFetchLatestYakitVersion: APINoRequestFunc<string> = (hiddenErro
     })
 }
 
+let ossDomain: string = "";
+
+/** @name OSS域名 */
+export const grpcFetchLatestOSSDomain: APINoRequestFunc<string> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        if(ossDomain && ossDomain.length > 0){
+            resolve(ossDomain)
+            return
+        }
+        ipcRenderer.invoke("get-available-oss-domain").then((domain)=>{
+            ossDomain = domain
+            resolve(domain)
+        }).catch(reject)
+    })
+}
+
 /** @name 获取Yak引擎最新版本号 */
 export const grpcFetchLatestYakVersion: APINoRequestFunc<string> = (hiddenError) => {
     return new Promise(async (resolve, reject) => {

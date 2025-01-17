@@ -7,11 +7,16 @@ const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
 const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
-    fetchLatestYakitVersion
+    fetchLatestYakitVersion,
+    getAvailableOSSDomain,
 } = require("../handlers/utils/network")
 const {getCheckTextUrl} = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
+    ipcMain.handle("get-available-oss-domain", async () => {
+        return await getAvailableOSSDomain()
+    })
+
     /** yaklang引擎是否安装 */
     ipcMain.handle("is-yaklang-engine-installed", () => {
         /** @returns {Boolean} */
@@ -78,9 +83,10 @@ module.exports = (win, getClient) => {
     })
 
     /** 获取Yaklang所有版本 */
-    const asyncFetchYaklangVersionList = () => {
-        return new Promise((resolve, reject) => {
-            let rsp = https.get("https://aliyun-oss.yaklang.com/yak/version-info/active_versions.txt")
+    const asyncFetchYaklangVersionList = async () => {
+        return new Promise(async (resolve, reject) => {
+            const domain = await getAvailableOSSDomain()
+            let rsp = https.get(`https://${domain}/yak/version-info/active_versions.txt`)
             rsp.on("response", (rsp) => {
                 rsp.on("data", (data) => {
                     resolve(Buffer.from(data).toString("utf8"))

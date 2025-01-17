@@ -19,7 +19,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {setClipboardText} from "@/utils/clipboard"
-
+import {grpcFetchLatestOSSDomain} from "@/apiUtils/grpc"
 export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
@@ -33,6 +33,11 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
         NoHttps: true,
         SafeMode: false
     })
+    const [ossDomain, setOSSDomain] = useState<string>("")
+
+    useEffect(() => {
+        grpcFetchLatestOSSDomain().then(setOSSDomain)
+    }, [])
 
     useEffect(() => {
         ipcRenderer.on(`${token}-data`, async (e, data: ExecResult) => {})
@@ -236,15 +241,15 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                             {[
                                                 {
                                                     name: "Windows",
-                                                    url: "https://aliyun-oss.yaklang.com/vulinbox/latest/vulinbox_windows_amd64.exe"
+                                                    url: `https://${ossDomain}/vulinbox/latest/vulinbox_windows_amd64.exe`
                                                 },
                                                 {
                                                     name: "Linux",
-                                                    url: "https://aliyun-oss.yaklang.com/vulinbox/latest/vulinbox_linux_amd64"
+                                                    url: `https://${ossDomain}/vulinbox/latest/vulinbox_linux_amd64`
                                                 },
                                                 {
                                                     name: "MacOS",
-                                                    url: "https://aliyun-oss.yaklang.com/vulinbox/latest/vulinbox_darwin_amd64"
+                                                    url: `https://${ossDomain}/vulinbox/latest/vulinbox_darwin_amd64`
                                                 }
                                             ].map((item) => (
                                                 <div
