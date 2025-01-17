@@ -88,18 +88,18 @@
     opacity: 0;
 }
 
-.ip-list-body {
+.program-list-body {
     @extend %flex-column;
     overflow: hidden;
     flex: 1;
     padding: 8px 12px 4px;
     min-height: 150px;
-    @include heard("ip-list");
-    .ip-list-content {
+    @include heard("program-list");
+    .program-list-content {
         @extend %flex-column;
         flex: 1;
         overflow-y: auto;
-        .ip-list-item {
+        .program-list-item {
             @extend %flex-row-center;
             justify-content: space-between;
             padding: 4px 8px;
@@ -110,22 +110,22 @@
             &:hover {
                 background-color: var(--yakit-background-color);
             }
-            .ip-list-item-label {
+            .program-list-item-label {
                 color: var(--yakit-header-color);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
             }
-            .ip-list-item-value {
+            .program-list-item-value {
                 color: var(--yakit-helper-text-color);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px; /* 133.333% */
             }
         }
-        .ip-list-item-active {
-            .ip-list-item-label,
-            .ip-list-item-value {
+        .program-list-item-active {
+            .program-list-item-label,
+            .program-list-item-value {
                 color: var(--yakit-primary-5);
             }
         }

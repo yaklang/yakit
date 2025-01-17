@@ -38,6 +38,13 @@ export interface SSARisk {
 
     // 前端用于染色 后端不存在此字段
     cellClassName?: string
+
+    // 等待后端添加
+    SyntaxFlowVariable?: string
+    FromYakScript?: string
+    Description?: string
+    Solution?: string
+    index?: string
 }
 
 export interface YakitAuditHoleTableProps {
@@ -45,16 +52,12 @@ export interface YakitAuditHoleTableProps {
     /**是否开启高级查询 */
     advancedQuery?: boolean
     setAdvancedQuery?: (b: boolean) => void
-    query: QuerySSARisksRequest
-    setQuery: (v: QuerySSARisksRequest) => void
     renderTitle?: ReactNode
     riskWrapperClassName?: string
     tableVirtualResizeProps?: TableVirtualResizeProps
-    yakitRiskDetailsBorder?: boolean
     excludeColumnsKey?: string[]
-    /**该字段会影响初次请求数据，建议外界只使用，不设值 */
-    allTotal?: number
-    setAllTotal?: (b: number) => void
+    query: SSARisksFilter
+    setQuery: (v: SSARisksFilter) => void
 }
 
 export interface YakitRiskDetailsProps {
@@ -109,10 +112,18 @@ export interface SSARisksFilter {
     Tags?: string[]
 
     // 此处需等待后端写入
-    /** 全部'' 已读:'true'，未读：'false' */
-    IsRead?: string
+    /** >0 true  <0 false =0 all */
+    IsRead?: number 
 }
 
 export interface DeleteSSARisksRequest {
     Filter?: SSARisksFilter
+}
+
+export interface YakitAuditRiskDetailsProps {
+    className?: string
+    info: SSARisk
+    onClickIP?: (info: SSARisk) => void
+    border?: boolean
+    isShowExtra?: boolean
 }

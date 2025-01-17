@@ -82,3 +82,26 @@ export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (qu
             })
     })
 }
+
+export interface GroupTableColumnRequest {
+    DatabaseName: "Project"|"Profile"|"SSA"
+    TableName: string
+    ColumnName:string
+}
+
+export interface GroupTableColumnResponse {
+    Data: string[]
+}
+
+export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<GroupTableColumnResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("GroupTableColumn", query)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `已读失败: ${e}`)
+                reject(e)
+            })
+    })
+}
+
