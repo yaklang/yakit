@@ -740,8 +740,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)
         if (!currentItem) return
         const hotPatchCode = currentItem.pageParamsInfo.webFuzzerPageInfo?.hotPatchCode
-        if (!hotPatchCode) return
-        setHotPatchCode(hotPatchCode)
+        setHotPatchCode(hotPatchCode || "")
     })
     /**更新请求包 */
     const onUpdateRequest = useMemoizedFn(() => {

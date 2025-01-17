@@ -32,6 +32,16 @@
             justify-content: space-between;
             margin-bottom: 16px;
             width: 100%;
+            .hotPatchCodeOpen {
+                display: flex;
+                align-items: center;
+                .info-icon {
+                    margin-left: 4px;
+                    svg {
+                        color: var(--yakit-helper-text-color);
+                    }
+                }
+            }
         }
     }
     .http-fuzzer-hotPatch-heard {
@@ -112,7 +122,8 @@
             }
             .extra-opt-btns {
                 display: none;
-                // width: 71px;
+                width: 65px;
+                text-align: right;
             }
             &:hover {
                 background-color: var(--yakit-background-color);

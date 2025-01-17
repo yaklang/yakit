@@ -298,6 +298,11 @@ export declare namespace API {
          */
         searchTime: string
     }
+    export interface TemplateDetail extends GormBaseModel {
+        type: string
+        name: string
+        content: string
+    }
     export interface SystemConfigResponse extends Paging {
         data: SystemConfigList[]
     }
@@ -1157,6 +1162,18 @@ export declare namespace API {
     export interface HTTPFlowBareResponse {
         id: number
         data: string
+    }
+    export interface HotPatchTemplateResponse extends Paging {
+        data: TemplateDetail[]
+    }
+    export interface HotPatchTemplateRequest {
+        type?: string
+        name?: string
+    }
+    export interface HotPatchTemplateDownloadRequest extends HotPatchTemplateRequest, HotPatchTemplateDownload {}
+    export interface HotPatchTemplateDownload {
+        page?: number
+        limit?: number
     }
     export interface HandleUser {
         /**

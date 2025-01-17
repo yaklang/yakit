@@ -1,9 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {Dropdown, Form, Space} from "antd"
+import {Dropdown, Form, Space, Tooltip} from "antd"
 import {AutoCard} from "../../components/AutoCard"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useGetState, useMemoizedFn} from "ahooks"
-import {RefreshIcon} from "@/assets/newIcon"
+import {InformationCircleIcon, RefreshIcon} from "@/assets/newIcon"
 import {ExclamationCircleOutlined, FullscreenOutlined} from "@ant-design/icons/lib"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -12,8 +12,8 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
-import {OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
-import {showYakitModal, YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {OutlineClouddownloadIcon, OutlineClouduploadIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
 import {setClipboardText} from "@/utils/clipboard"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -27,8 +27,14 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DbOperateMessage} from "../layout/mainOperatorContent/utils"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {useStore} from "@/store"
+import {NetWorkApi} from "@/services/fetch"
+import {API} from "@/services/swagger/resposeType"
+import {PluginListPageMeta} from "../plugins/baseTemplateType"
+import {isEnpriTrace} from "@/utils/envfile"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -70,7 +76,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             return cloneDeep(defaultWebFuzzerPageInfo)
         }
     })
-
     const [params, setParams, getParams] = useGetState({
         Template: `{{yak(handle|{{params(test)}})}}`,
         HotPatchCode: props.initialHotPatchCode,
@@ -84,6 +89,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [hotPatchEditorHeight, setHotPatchEditorHeight] = useState(400)
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(HotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
+    const [hotPatchCodeOpen, setHotPatchCodeOpen] = useState<boolean>(false)
+    const initHotPatchCodeOpen = useRef<boolean>(false)
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -91,13 +98,37 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 setParams({...params, Template: e})
             }
         })
+
+        getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode).then((e) => {
+            if (!!e) {
+                try {
+                    const obj = JSON.parse(e) || {}
+                    if (obj.hotPatchCodeOpen && initWebFuzzerPageInfo().hotPatchCode === obj.hotPatchCode) {
+                        setHotPatchCodeOpen(obj.hotPatchCodeOpen)
+                        initHotPatchCodeOpen.current = obj.hotPatchCodeOpen
+                    }
+                } catch (error) {}
+            }
+        })
+
         return () => {
             setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
         }
     }, [])
 
+    const saveCode = useMemoizedFn((hotPatchCode: string) => {
+        props.onSaveCode(hotPatchCode)
+        setRemoteValue(
+            FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode,
+            JSON.stringify({hotPatchCodeOpen: hotPatchCodeOpen, hotPatchCode: getParams().HotPatchCode})
+        )
+    })
+
     const onClose = useMemoizedFn(async () => {
-        if (initWebFuzzerPageInfo().hotPatchCode !== params.HotPatchCode) {
+        if (
+            initWebFuzzerPageInfo().hotPatchCode !== params.HotPatchCode ||
+            initHotPatchCodeOpen.current !== hotPatchCodeOpen
+        ) {
             let m = YakitModalConfirm({
                 width: 420,
                 type: "white",
@@ -106,7 +137,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 icon: <ExclamationCircleOutlined />,
                 style: {top: "20%"},
                 onOk: () => {
-                    props.onSaveCode(params.HotPatchCode)
+                    saveCode(params.HotPatchCode)
                     props.onCancel()
                     m.destroy()
                 },
@@ -114,7 +145,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     props.onCancel()
                     m.destroy()
                 },
-                content: "是否保存修改的【热加载代码】"
+                content: "是否保存修改的热加载代码和配置"
             })
         } else {
             props.onCancel()
@@ -131,7 +162,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                 onSubmitCapture={(e) => {
                     e.preventDefault()
 
-                    props.onSaveCode(params.HotPatchCode)
+                    saveCode(params.HotPatchCode)
                     props.onSaveHotPatchCodeWithParamGetterCode(params.HotPatchCodeWithParamGetter)
 
                     setLoading(true)
@@ -198,7 +229,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 type={"primary"}
                                 onClick={() => {
                                     props.onInsert(params.Template)
-                                    props.onSaveCode(params.HotPatchCode)
+                                    saveCode(params.HotPatchCode)
                                 }}
                             >
                                 插入编辑器位置
@@ -221,7 +252,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         <YakitPopconfirm
                             title={"点击该按钮将会重置热加载代码，代码可能会丢失，请谨慎操作"}
                             onConfirm={(e) => {
-                                props.onSaveCode(HotPatchDefaultContent)
+                                saveCode(HotPatchDefaultContent)
                                 setParams({...params, HotPatchCode: HotPatchDefaultContent})
                             }}
                         >
@@ -257,15 +288,20 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         >
                             <YakitButton icon={<FullscreenOutlined />} type='text' />
                         </YakitPopover>
-                        <div>
-                            <HotCodeTemplate
-                                type='fuzzer'
-                                hotPatchTempLocal={hotPatchTempLocal}
-                                onSetHotPatchTempLocal={setHotPatchTempLocal}
-                                onClickHotCode={(temp) => {
-                                    setParams({...getParams(), HotPatchCode: temp})
-                                }}
-                            ></HotCodeTemplate>
+                        <HotCodeTemplate
+                            type='fuzzer'
+                            hotPatchTempLocal={hotPatchTempLocal}
+                            onSetHotPatchTempLocal={setHotPatchTempLocal}
+                            onClickHotCode={(temp) => {
+                                setParams({...getParams(), HotPatchCode: temp})
+                            }}
+                        ></HotCodeTemplate>
+                        <div className={styles["hotPatchCodeOpen"]}>
+                            <span style={{fontSize: 12}}>共用热加载代码</span>
+                            <Tooltip title='打开以后webfuzzer标签将共用当前热加载代码，但只对新建标签页生效'>
+                                <InformationCircleIcon className={styles["info-icon"]} />
+                            </Tooltip>
+                            ：<YakitSwitch checked={hotPatchCodeOpen} onChange={setHotPatchCodeOpen}></YakitSwitch>
                         </div>
                     </Space>
                     <Space style={{lineHeight: "16px"}}>
@@ -287,7 +323,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             type={"primary"}
                             onClick={() => {
                                 try {
-                                    props.onSaveCode(params.HotPatchCode)
+                                    saveCode(params.HotPatchCode)
                                     setTimeout(() => {
                                         yakitNotify("success", "保存成功")
                                     }, 100)
@@ -345,6 +381,8 @@ interface DeleteHotPatchTemplateRequest {
     Condition: HotPatchTemplateRequest
 }
 
+interface GetOnlineHotPatchTemplateRequest extends API.HotPatchTemplateRequest, PluginListPageMeta {}
+
 type HotCodeType = "fuzzer" | "mitm"
 interface HotCodeTemplateProps {
     type: HotCodeType
@@ -357,6 +395,15 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
     const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
+    const userInfo = useStore((s) => s.userInfo)
+    const hotPatchTempLocalRef = useRef<HotPatchTempItem[]>(hotPatchTempLocal)
+    const [hotPatchTempOnline, setHotPatchTempOnline] = useState<HotPatchTempItem[]>([])
+    const [sameNameHint, setSameNameHint] = useState<boolean>(false)
+    const sameNameHintInfoRef = useRef({title: "", content: "", onOk: () => {}, onCancel: () => {}})
+
+    useEffect(() => {
+        hotPatchTempLocalRef.current = hotPatchTempLocal
+    }, [hotPatchTempLocal])
 
     useEffect(() => {
         if (hotCodeTempVisible) {
@@ -367,7 +414,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     })
                     .then((res: QueryHotPatchTemplateListResponse) => {
                         const nameArr = res.Name
-                        const newHotPatchTempLocal = hotPatchTempLocal.slice()
+                        const newHotPatchTempLocal = hotPatchTempLocalRef.current.slice()
                         nameArr.forEach((name) => {
                             const index = newHotPatchTempLocal.findIndex((item) => item.name === name)
                             if (index === -1) {
@@ -384,19 +431,35 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                         yakitNotify("error", error + "")
                     })
             } else {
+                NetWorkApi<GetOnlineHotPatchTemplateRequest, API.HotPatchTemplateResponse>({
+                    method: "get",
+                    url: "hot/patch/template",
+                    data: {
+                        page: 1,
+                        limit: 1000,
+                        type: type
+                    }
+                })
+                    .then((res) => {
+                        const d = res.data || []
+                        // 线上模板 isDefault都默认为true
+                        const list = d.map((item) => ({name: item.name, temp: item.content, isDefault: true}))
+                        setHotPatchTempOnline(list)
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "线上模板列表获取失败：" + err)
+                    })
             }
         }
     }, [hotCodeTempVisible, tab])
 
     const onClickHotCodeName = (item: HotPatchTempItem, click?: boolean) => {
-        setViewCurrHotCode("")
         if (item.isDefault) {
             if (click) {
                 onClickHotCode(item.temp)
-            } else {
-                setViewCurrHotCode(item.temp)
+                setHotCodeTempVisible(false)
             }
-            setHotCodeTempVisible(false)
+            setViewCurrHotCode(item.temp)
         } else {
             if (tab === "local") {
                 const params: HotPatchTemplateRequest = {
@@ -408,15 +471,14 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     .then((res: QueryHotPatchTemplateResponse) => {
                         if (click) {
                             onClickHotCode(res.Data[0].Content)
-                        } else {
-                            setViewCurrHotCode(res.Data[0].Content)
+                            setHotCodeTempVisible(false)
                         }
-                        setHotCodeTempVisible(false)
+                        setViewCurrHotCode(res.Data[0].Content)
                     })
                     .catch((error) => {
+                        setViewCurrHotCode("")
                         yakitNotify("error", error + "")
                     })
-            } else {
             }
         }
     }
@@ -439,102 +501,264 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     yakitNotify("error", error + "")
                 })
         } else {
+            NetWorkApi<API.HotPatchTemplateRequest, API.ActionSucceeded>({
+                method: "delete",
+                url: "hot/patch/template",
+                data: {
+                    type: type,
+                    name: item.name
+                }
+            })
+                .then((res) => {
+                    if (res.ok) {
+                        setHotPatchTempOnline(hotPatchTempOnline.filter((i) => i.name !== item.name))
+                        yakitNotify("success", "线上删除成功")
+                    }
+                })
+                .catch((err) => {
+                    yakitNotify("error", "线上删除失败：" + err)
+                })
         }
     }
 
+    const findHotPatchTemplate = (item: HotPatchTempItem, upload: boolean) => {
+        return new Promise((resolve, reject) => {
+            if (upload) {
+                NetWorkApi<GetOnlineHotPatchTemplateRequest, API.HotPatchTemplateResponse>({
+                    method: "get",
+                    url: "hot/patch/template",
+                    data: {
+                        page: 1,
+                        limit: 1000,
+                        type: type,
+                        name: item.name
+                    }
+                })
+                    .then((res) => {
+                        const d = res.data || []
+                        if (d.length) {
+                            setHotCodeTempVisible(false)
+                            sameNameHintInfoRef.current = {
+                                title: "同名覆盖提示",
+                                content: "线上有同名模板，上传会覆盖，确定上传吗？",
+                                onOk: () => {
+                                    resolve(true)
+                                },
+                                onCancel: () => {
+                                    reject("线上存在同名模板")
+                                }
+                            }
+                            setSameNameHint(true)
+                        } else {
+                            resolve(false)
+                        }
+                    })
+                    .catch((err) => {
+                        yakitNotify("error", "查询热加载模板名线上是否存在失败：" + err)
+                    })
+            } else {
+                const index = hotPatchTempLocal.findIndex((i) => i.name === item.name)
+                if (index !== -1) {
+                    setHotCodeTempVisible(false)
+                    sameNameHintInfoRef.current = {
+                        title: "同名覆盖提示",
+                        content: "本地有同名模板，下载会覆盖，确定下载吗？",
+                        onOk: () => {
+                            resolve(true)
+                        },
+                        onCancel: () => {
+                            reject("本地存在同名模板")
+                        }
+                    }
+                    setSameNameHint(true)
+                } else {
+                    resolve(false)
+                }
+            }
+        })
+    }
+
+    const uploadHotPatchTemplateToOnline = (item: HotPatchTempItem) => {
+        findHotPatchTemplate(item, true)
+            .then(() => {
+                ipcRenderer
+                    .invoke("UploadHotPatchTemplateToOnline", {
+                        Type: type,
+                        Token: userInfo.token,
+                        Name: item.name
+                    })
+                    .then((res) => {
+                        yakitNotify("success", "上传成功")
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", "上传失败：" + error)
+                    })
+            })
+            .catch(() => {})
+    }
+
+    const downloadHotPatchTemplate = (item: HotPatchTempItem) => {
+        findHotPatchTemplate(item, false)
+            .then((r) => {
+                ipcRenderer
+                    .invoke("DownloadHotPatchTemplate", {
+                        Type: type,
+                        Name: item.name
+                    })
+                    .then((res) => {
+                        if (r) {
+                            // 手动删除本地数据，这里不需要删掉数据库里面的
+                            onSetHotPatchTempLocal(hotPatchTempLocal.filter((i) => i.name !== item.name))
+                        }
+                        yakitNotify("success", "下载成功")
+                    })
+                    .catch((error) => {
+                        yakitNotify("error", "下载失败：" + error)
+                    })
+            })
+            .catch(() => {})
+    }
+
+    // admin、审核员 支持（本地上传，线上删除）
+    const hasPermissions = useMemo(() => {
+        const flag = ["admin", "auditor"].includes(userInfo.role || "")
+        return flag
+    }, [userInfo])
+
     const renderHotPatchTemp = useMemo(() => {
         if (tab === "local") return hotPatchTempLocal
+        if (tab === "online") return hotPatchTempOnline
         return []
-    }, [hotPatchTempLocal, tab])
+    }, [tab, hotPatchTempLocal, hotPatchTempOnline])
 
     return (
-        <Dropdown
-            overlayStyle={{borderRadius: 4, width: 250}}
-            onVisibleChange={(v) => {
-                setHotCodeTempVisible(v)
-            }}
-            trigger={["click"]}
-            overlay={
-                <div className={styles["hotCode-list"]}>
-                    {/* <YakitRadioButtons
-                        wrapClassName={styles["hotCode-tab-btns"]}
-                        value={tab}
-                        buttonStyle='solid'
-                        options={[
-                            {
-                                value: "local",
-                                label: "本地模板"
-                            }
-                            {
-                                value: "online",
-                                label: "线上模板"
-                            }
-                        ]}
-                        onChange={(e) => {
-                            setTab(e.target.value)
-                        }}
-                    /> */}
-                    {renderHotPatchTemp.map((item) => (
-                        <div className={styles["hotCode-item"]} key={item.name}>
-                            <YakitPopover
-                                trigger='hover'
-                                placement='right'
-                                overlayClassName={styles["hotCode-popover"]}
-                                content={
-                                    <YakitSpin spinning={!viewCurHotCode}>
-                                        <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
-                                    </YakitSpin>
-                                }
-                                onVisibleChange={(v) => {
-                                    if (v) {
-                                        onClickHotCodeName(item)
+        <>
+            <Dropdown
+                overlayStyle={{borderRadius: 4, width: 250}}
+                visible={hotCodeTempVisible}
+                onVisibleChange={(v) => {
+                    setHotCodeTempVisible(v)
+                }}
+                trigger={["click"]}
+                overlay={
+                    <div className={styles["hotCode-list"]}>
+                        {isEnpriTrace() && (
+                            <YakitRadioButtons
+                                wrapClassName={styles["hotCode-tab-btns"]}
+                                value={tab}
+                                buttonStyle='solid'
+                                options={[
+                                    {
+                                        value: "local",
+                                        label: "本地模板"
+                                    },
+                                    {
+                                        value: "online",
+                                        label: "线上模板"
                                     }
+                                ]}
+                                onChange={(e) => {
+                                    setTab(e.target.value)
                                 }}
-                                zIndex={9999}
-                            >
-                                <div
-                                    className={classNames(styles["hotCode-item-cont"])}
-                                    onClick={() => {
-                                        onClickHotCodeName(item, true)
-                                    }}
-                                >
-                                    <div
-                                        className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
-                                        title={item.name}
-                                    >
-                                        {item.name}
-                                    </div>
-                                    <div className={styles["extra-opt-btns"]}>
-                                        {false && (
-                                            <YakitButton
-                                                icon={<OutlineTrashIcon />}
-                                                type='text2'
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
+                            />
+                        )}
+                        {renderHotPatchTemp.length ? (
+                            <>
+                                {renderHotPatchTemp.map((item) => (
+                                    <div className={styles["hotCode-item"]} key={item.name}>
+                                        <YakitPopover
+                                            trigger='hover'
+                                            placement='right'
+                                            overlayClassName={styles["hotCode-popover"]}
+                                            content={
+                                                <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
+                                            }
+                                            onVisibleChange={(v) => {
+                                                if (v) {
+                                                    onClickHotCodeName(item)
+                                                }
+                                            }}
+                                            zIndex={9999}
+                                        >
+                                            <div
+                                                className={classNames(styles["hotCode-item-cont"])}
+                                                onClick={() => {
+                                                    onClickHotCodeName(item, true)
                                                 }}
-                                            ></YakitButton>
-                                        )}
-                                        {!item.isDefault && (
-                                            <YakitButton
-                                                icon={<OutlineTrashIcon />}
-                                                type='text'
-                                                colors='danger'
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    deleteHotPatchTemplate(item)
-                                                }}
-                                            ></YakitButton>
-                                        )}
+                                            >
+                                                <div
+                                                    className={classNames(
+                                                        styles["hotCode-item-name"],
+                                                        "content-ellipsis"
+                                                    )}
+                                                    title={item.name}
+                                                >
+                                                    {item.name}
+                                                </div>
+                                                <div className={styles["extra-opt-btns"]}>
+                                                    {/* 本地上传 */}
+                                                    {tab === "local" && !item.isDefault && hasPermissions && (
+                                                        <YakitButton
+                                                            icon={<OutlineClouduploadIcon />}
+                                                            type='text2'
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                uploadHotPatchTemplateToOnline(item)
+                                                            }}
+                                                        ></YakitButton>
+                                                    )}
+                                                    {/* 线上下载 */}
+                                                    {tab === "online" && (
+                                                        <YakitButton
+                                                            icon={<OutlineClouddownloadIcon />}
+                                                            type='text2'
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                downloadHotPatchTemplate(item)
+                                                            }}
+                                                        ></YakitButton>
+                                                    )}
+                                                    {/* 删除 */}
+                                                    {(tab === "local" && !item.isDefault) ||
+                                                    (tab === "online" && hasPermissions) ? (
+                                                        <YakitButton
+                                                            icon={<OutlineTrashIcon />}
+                                                            type='text'
+                                                            colors='danger'
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                deleteHotPatchTemplate(item)
+                                                            }}
+                                                        ></YakitButton>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                        </YakitPopover>
                                     </div>
-                                </div>
-                            </YakitPopover>
-                        </div>
-                    ))}
-                </div>
-            }
-        >
-            <YakitButton type='text'>代码模板</YakitButton>
-        </Dropdown>
+                                ))}
+                            </>
+                        ) : (
+                            <YakitEmpty></YakitEmpty>
+                        )}
+                    </div>
+                }
+            >
+                <YakitButton type='text'>代码模板</YakitButton>
+            </Dropdown>
+            <YakitHint
+                visible={sameNameHint}
+                title={sameNameHintInfoRef.current.title}
+                content={sameNameHintInfoRef.current.content}
+                onOk={() => {
+                    setSameNameHint(false)
+                    sameNameHintInfoRef.current.onOk()
+                }}
+                onCancel={() => {
+                    setSameNameHint(false)
+                    sameNameHintInfoRef.current.onCancel()
+                }}
+            />
+        </>
     )
 })
 

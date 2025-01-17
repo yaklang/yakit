@@ -115,7 +115,12 @@ import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {DefFuzzerTableMaxData, HotPatchDefaultContent, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
+import {
+    DefFuzzerTableMaxData,
+    HotPatchDefaultContent,
+    defaultAdvancedConfigValue,
+    defaultPostTemplate
+} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     defPluginBatchExecuteExtraFormValue,
     defaultPluginBatchExecutorPageInfo
@@ -139,7 +144,7 @@ import {
     apiSaveFuzzerConfig
 } from "./utils"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
-import { FuzzerRemoteGV } from "@/enums/fuzzer"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {APIFunc} from "@/apiUtils/type"
@@ -879,7 +884,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 newAdvancedConfigValue.noSystemProxy = cacheData.noSystemProxy
                 newAdvancedConfigValue.disableUseConnPool = cacheData.disableUseConnPool
             }
-            
+
             let newAdvancedConfigShow = cacheData.advancedConfigShow
             let newIsHttps = !!isHttps
             let newIsGmTLS = !!isGmTLS
@@ -1100,7 +1105,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** @name 打开一个菜单项页面(只负责打开，如果判断页面是否打开，应在执行该方法前判断) */
     const openMenuPage = useMemoizedFn(
-        (
+        async (
             routeInfo: RouteToPageProps,
             nodeParams?: {
                 openFlag?: boolean
@@ -1242,7 +1247,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
                     switch (route) {
                         case YakitRoute.HTTPFuzzer:
-                            addFuzzerList(node.id, node, order)
+                            await addFuzzerList(node.id, node, order)
                             break
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, order)
@@ -1281,7 +1286,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
                     switch (route) {
                         case YakitRoute.HTTPFuzzer:
-                            addFuzzerList(node.id, node, 1)
+                            await addFuzzerList(node.id, node, 1)
                             break
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, 1)
@@ -1716,7 +1721,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 etcHosts: cacheData.etcHosts,
                 resNumlimit: cacheData.resNumlimit,
                 noSystemProxy: cacheData.noSystemProxy,
-                disableUseConnPool: cacheData.disableUseConnPool,
+                disableUseConnPool: cacheData.disableUseConnPool
             }
             clearAllData()
             // 菜单在代码内的名字
@@ -1840,27 +1845,53 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose hotPatchCode */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
-        const newPageNode: PageNodeItemProps = {
-            id: `${randomString(8)}-${order}`,
-            routeKey: YakitRoute.HTTPFuzzer,
-            pageGroupId: node.groupId,
-            pageId: node.id,
-            pageName: node.verbose,
-            pageParamsInfo: {
-                webFuzzerPageInfo: {
-                    pageId: node.id,
-                    advancedConfigValue: {
-                        ...defaultAdvancedConfigValue,
-                        ...node.pageParams?.advancedConfigValue
-                    },
-                    advancedConfigShow: node.pageParams?.advancedConfigShow,
-                    request: node.pageParams?.request || defaultPostTemplate,
-                    hotPatchCode: node.pageParams?.hotPatchCode || HotPatchDefaultContent
-                }
-            },
-            sortFieId: order
-        }
-        addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
+        return new Promise((resove, reject) => {
+            let hotPatchCode = node.pageParams?.hotPatchCode
+            // 获取热加载全局开关和代码
+            getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode)
+                .then((res) => {
+                    if (hotPatchCode === undefined) {
+                        if (res) {
+                            try {
+                                const obj = JSON.parse(res) || {}
+                                if (obj.hotPatchCodeOpen) {
+                                    hotPatchCode = obj.hotPatchCode
+                                } else {
+                                    hotPatchCode = HotPatchDefaultContent
+                                }
+                            } catch (error) {
+                                hotPatchCode = HotPatchDefaultContent
+                            }
+                        } else {
+                            hotPatchCode = HotPatchDefaultContent
+                        }
+                    }
+                })
+                .finally(() => {
+                    const newPageNode: PageNodeItemProps = {
+                        id: `${randomString(8)}-${order}`,
+                        routeKey: YakitRoute.HTTPFuzzer,
+                        pageGroupId: node.groupId,
+                        pageId: node.id,
+                        pageName: node.verbose,
+                        pageParamsInfo: {
+                            webFuzzerPageInfo: {
+                                pageId: node.id,
+                                advancedConfigValue: {
+                                    ...defaultAdvancedConfigValue,
+                                    ...node.pageParams?.advancedConfigValue
+                                },
+                                advancedConfigShow: node.pageParams?.advancedConfigShow,
+                                request: node.pageParams?.request || defaultPostTemplate,
+                                hotPatchCode: hotPatchCode || ""
+                            }
+                        },
+                        sortFieId: order
+                    }
+                    addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
+                    resove(true)
+                })
+        })
     })
 
     // 序列导入更新菜单
@@ -2153,7 +2184,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const cacheSequence = JSON.parse(resSequence || "[]")
                 if (cacheSequence.length > 0) {
                     const historySequenceList = [cacheSequence]
-                    setRemoteProjectValue(FuzzerRemoteGV.FuzzerSequenceCacheHistoryList, JSON.stringify(historySequenceList))
+                    setRemoteProjectValue(
+                        FuzzerRemoteGV.FuzzerSequenceCacheHistoryList,
+                        JSON.stringify(historySequenceList)
+                    )
                 }
             })
             .finally(() => setTimeout(() => setLoading(false), 200))

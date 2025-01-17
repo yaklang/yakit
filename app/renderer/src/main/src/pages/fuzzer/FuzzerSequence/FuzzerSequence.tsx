@@ -98,8 +98,7 @@ import {
     DefFuzzerTableMaxData,
     defaultAdvancedConfigValue,
     defaultWebFuzzerPageInfo,
-    emptyFuzzer,
-    HotPatchDefaultContent
+    emptyFuzzer
 } from "@/defaultConstants/HTTPFuzzerPage"
 import {WebsiteGV} from "@/enums/website"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"

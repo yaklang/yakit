@@ -19,5 +19,6 @@ export enum FuzzerRemoteGV {
     FuzzerNoSystemProxy = "Fuzzer_NoSystemProxy",
     FuzzerDisableUseConnPool = "Fuzzer_DisableUseConnPool",
     HTTPFuzzerHotPatch_TEMPLATE_DEMO = "HTTPFuzzerHotPatch_TEMPLATE_DEMO",
-    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE"
+    WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE = "WEB_FUZZ_HOTPATCH_WITH_PARAM_CODE",
+    FuzzerHotCodeSwitchAndCode = "Fuzzer_HotCode_Switch_And_Code",
 }
