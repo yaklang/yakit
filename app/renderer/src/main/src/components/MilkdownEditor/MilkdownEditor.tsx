@@ -450,10 +450,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     useEffect(() => {
         if (loading) return
         const editor = get()
-        if (editor && setEditor) {
-            setEditor(editor)
+        if (editor) {
+            if (setEditor) setEditor(editor)
             // DeletedFiles
-            editor?.action(onSetDeletedFiles)
+            editor.action(onSetDeletedFiles)
         }
     }, [loading, get])
     //#endregion

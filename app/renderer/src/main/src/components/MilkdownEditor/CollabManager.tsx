@@ -104,7 +104,6 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             }
         })
         this.wsProvider.on("connection-close", (payload) => {
-            docTitle.unobserve((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
             this.emit("offline-after", [payload])
         })
         this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
@@ -201,6 +200,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     }
 
     destroy(): void {
+        this.doc.getText("title").unobserve((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
         this.wsProvider?.destroy()
         super.destroy()
     }

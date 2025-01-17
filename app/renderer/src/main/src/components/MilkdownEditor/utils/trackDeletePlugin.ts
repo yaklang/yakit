@@ -1,4 +1,4 @@
-import {Plugin, PluginKey} from "prosemirror-state"
+import {Plugin,PluginKey} from "@milkdown/kit/prose/state"
 import {$prose} from "@milkdown/kit/utils"
 
 import {ReplaceStep} from "prosemirror-transform"

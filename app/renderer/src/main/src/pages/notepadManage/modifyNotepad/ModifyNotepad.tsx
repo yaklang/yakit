@@ -101,7 +101,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     const [tabName, setTabName] = useState<string>(initTabName())
     const [composedTabName, setComposedTabName] = useState<string>(initTabName()) // 不会保存拼音的中间状态
-    const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
+
+    const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
         id: 0,
         created_at: moment().unix(),
@@ -134,6 +135,13 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(notepadRef)
 
     useEffect(() => {
+        if (!inViewport) {
+            notepadContentRef.current = editor?.action(getMarkdown()) || ""
+            onSaveNewContent(notepadContentRef.current)
+        }
+    }, [inViewport])
+    useEffect(() => {
+        const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             setNotepadLoading(true)
@@ -179,7 +187,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             const notepadContent = notepadContentRef.current
             onSaveNewContent(notepadContent)
         }
-    }, [pageInfo])
+    }, [])
 
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
@@ -227,6 +235,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     // 下载文档
     const onDownNotepad = useMemoizedFn(() => {
+        notepadContentRef.current = editor?.action(getMarkdown()) || ""
         const params: API.PostNotepadRequest = {
             hash: notepadDetail.hash,
             title: tabName,
@@ -301,8 +310,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
-        if (title.length > 100) {
-            yakitNotify("error", "标题不超过100个字符")
+        if (title.length > 50) {
+            yakitNotify("error", "标题不超过50个字符")
             return
         }
         if (title) {
@@ -607,7 +616,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 size='large'
                                 bordered={false}
                                 className={styles["notepad-input"]}
-                                // value={currentRole === notepadRole.adminPermission ? tabName : composedTabName}
                                 value={tabName}
                                 onChange={(e) => {
                                     setTabName(e.target.value)
@@ -615,7 +623,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                         onSetTabName(e.target.value)
                                     }
                                 }}
-                                maxLength={100}
+                                maxLength={50}
                                 onCompositionEnd={(e) => {
                                     onSetTabName((e.target as HTMLInputElement).value)
                                 }}
@@ -653,6 +661,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     customPlugin={cataloguePlugin(getCatalogue)}
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
+                                    setEditor={setEditor}
                                 />
                             </YakitSpin>
                         </div>

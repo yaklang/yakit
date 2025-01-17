@@ -1,6 +1,9 @@
 import {$command} from "@milkdown/utils"
 import {convertSelectionByNode} from "./utils"
 import {headingSchema} from "@milkdown/kit/preset/commonmark"
+import {$prose} from "@milkdown/kit/utils"
+import {Plugin, PluginKey} from "@milkdown/kit/prose/state"
+import type {EditorView} from "@milkdown/prose/view"
 
 export const listToHeadingCommand = $command(
     `listToHeadingCommand`,
@@ -36,6 +39,75 @@ export const headingToParagraphCommand = $command(`headingToParagraphCommand`, (
     return false
 })
 
+export const customSyncHeadingIdPlugin = $prose((ctx) => {
+    const headingIdPluginKey = new PluginKey("CUSTOM_MILKDOWN_HEADING_ID")
+    let isComposed = false
+    const updateId = (view: EditorView) => {
+        if (isComposed) return
+
+        const tr = view.state.tr.setMeta("addToHistory", false)
+
+        let found = false
+
+        view.state.doc.descendants((node, pos) => {
+            if (node.type === headingSchema.type(ctx)) {
+                if (node.textContent.trim().length === 0) return
+
+                const attrs = node.attrs
+                const idString = node.textContent.length > 20 ? node.textContent.substring(0, 20) : node.textContent
+                const id = Buffer.from(idString).toString("hex")
+                if (attrs.id !== id) {
+                    found = true
+                    tr.setMeta(headingIdPluginKey, true).setNodeMarkup(pos, undefined, {
+                        ...attrs,
+                        id: id
+                    })
+                }
+            }
+        })
+
+        if (found) view.dispatch(tr)
+    }
+
+    return new Plugin({
+        key: headingIdPluginKey,
+        view: (view) => {
+            updateId(view)
+
+            return {
+                update: (view, prevState) => {
+                    if (view.state.doc.eq(prevState.doc)) return
+                    updateId(view)
+                }
+            }
+        },
+        props: {
+            handleTextInput(view, from, to, text) {
+                // 检测是否为拼音中间状态
+                if (!isComposed) {
+                    updateId(view)
+                }
+                return false // 允许正常文本插入
+            },
+            handleDOMEvents: {
+                compositionstart: () => {
+                    isComposed = true
+                    return false
+                },
+                compositionupdate: (view, event) => {
+                    isComposed = true
+                    return false
+                },
+                compositionend: (view) => {
+                    isComposed = false
+                    updateId(view)
+                    return false
+                }
+            }
+        }
+    })
+})
+
 export const headingCustomPlugin = () => {
-    return [listToHeadingCommand, headingToParagraphCommand]
+    return [listToHeadingCommand, headingToParagraphCommand, customSyncHeadingIdPlugin]
 }
