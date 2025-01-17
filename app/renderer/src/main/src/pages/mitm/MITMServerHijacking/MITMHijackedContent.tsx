@@ -400,7 +400,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         } else {
             prettifyPacketCode(modifiedPacket).then((res) => {
                 if (!!res) {
-                    setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
+                    setCurrentPacketInfo((prev) => ({...prev, currentPacket: Uint8ArrayToString(res as Uint8Array)}))
                     setBeautifyTriggerRefresh(flag)
                 }
             })
@@ -467,7 +467,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             urlInfo={urlInfo}
                             isHttp={isHttp}
                             currentIsWebsocket={currentIsWebsocket}
-                            currentPacket={modifiedPacket}
+                            currentPacket={currentPacket}
                             beautifyTriggerRefresh={beautifyTriggerRefresh}
                             setModifiedPacket={setModifiedPacket}
                             forResponse={forResponse}
