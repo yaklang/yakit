@@ -316,6 +316,7 @@ $keyColor: map-keys($tagColor);
 }
 
 .disabled-open {
+    min-width: 134px;
     background: var(--ui-background-color);
     color: var(--yakit-disable-text-color);
     border-radius: 4px;

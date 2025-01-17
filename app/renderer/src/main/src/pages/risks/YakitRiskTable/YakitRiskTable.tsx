@@ -95,7 +95,8 @@ import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditC
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -1939,7 +1940,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
 })
 
 export interface AuditResultDescribeProps {
-    info: Risk
+    info: Risk | SSARisk
     columnSize?: number
 }
 

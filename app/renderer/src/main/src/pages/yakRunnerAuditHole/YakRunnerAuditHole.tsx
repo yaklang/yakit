@@ -1,32 +1,38 @@
 import React, {useEffect, useRef, useState} from "react"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
-import {HoleQueryProps, IPListItemProps, IPListProps, VulnerabilityLevelProps, VulnerabilityTypeProps, YakRunnerAuditHoleProps} from "./YakRunnerAuditHoleType"
+import {
+    HoleQueryProps,
+    ProgramListItemProps,
+    ProgramListProps,
+    VulnerabilityLevelProps,
+    VulnerabilityTypeProps,
+    YakRunnerAuditHoleProps
+} from "./YakRunnerAuditHoleType"
 import {QueryRisksRequest} from "../risks/YakitRiskTable/YakitRiskTableType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import classNames from "classnames"
-import { Divider, Tooltip } from "antd"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
-import { OutlineCloseIcon, OutlineInformationcircleIcon } from "@/assets/icon/outline"
-import { apiRiskFieldGroup, FieldGroup } from "../risks/YakitRiskTable/utils"
-import { FieldName } from "../risks/RiskTable"
-import { RollingLoadList } from "@/components/RollingLoadList/RollingLoadList"
-import { VulnerabilityLevelPieRefProps } from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
-import { VulnerabilityLevelPie } from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPie"
-import { VulnerabilityTypePieRefProps } from "../risks/VulnerabilityTypePie/VulnerabilityTypePieType"
-import { VulnerabilityTypePie } from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
-import { defQuerySSARisksRequest, YakitAuditHoleTable } from "./YakitAuditHoleTable/YakitAuditHoleTable"
-import { QuerySSARisksRequest } from "./YakitAuditHoleTable/YakitAuditHoleTableType"
+import {Divider, Tooltip} from "antd"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {OutlineCloseIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
+import {apiRiskFieldGroup, FieldGroup} from "../risks/YakitRiskTable/utils"
+import {FieldName} from "../risks/RiskTable"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {VulnerabilityLevelPieRefProps} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
+import {VulnerabilityLevelPie} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPie"
+import {VulnerabilityTypePieRefProps} from "../risks/VulnerabilityTypePie/VulnerabilityTypePieType"
+import {VulnerabilityTypePie} from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
+import {defQuerySSARisksRequest, YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
+import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
+import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
-    const [query, setQuery] = useState<QuerySSARisksRequest>({
-        ...defQuerySSARisksRequest
-    })
+    const [query, setQuery] = useState<SSARisksFilter>({})
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
 
@@ -43,31 +49,30 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     return (
         <YakitSpin spinning={riskLoading}>
             <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
-                {/* <HoleQuery
+                <HoleQuery
                     inViewport={inViewport}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={onSetQueryShow}
                     query={query}
                     setQuery={setQuery}
-                /> */}
+                />
                 <YakitAuditHoleTable
-                    query={query}
-                    setQuery={setQuery}
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={onSetQueryShow}
                     setRiskLoading={setRiskLoading}
+                    query={query}
+                    setQuery={setQuery}
                 />
             </div>
         </YakitSpin>
     )
 }
 
-
 const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
-    const [ipList, setIpList] = useState<FieldGroup[]>([])
-    const [levelList, setLevelList] = useState<FieldName[]>([])
-    const [typeList, setTypeList] = useState<FieldName[]>([])
+    const [programList, setProgramList] = useState<FieldGroup[]>([])
+    const [levelList, setLevelList] = useState<FieldGroup[]>([])
+    const [typeList, setTypeList] = useState<FieldGroup[]>([])
     useEffect(() => {
         if (!inViewport) return
         getGroups()
@@ -80,40 +85,42 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
         getGroups()
     })
     const getGroups = useMemoizedFn(() => {
-        apiRiskFieldGroup().then((res) => {
-            const {RiskIPGroup, RiskLevelGroup, RiskTypeGroup} = res
-            setIpList(RiskIPGroup)
-            setLevelList(RiskLevelGroup)
-            setTypeList(RiskTypeGroup)
-            if (RiskIPGroup.length === 0 && RiskLevelGroup.length === 0 && RiskTypeGroup.length === 0) {
+        apiGetSSARiskFieldGroup().then((res) => {
+            const {ProgramNameField, SeverityField, RiskTypeField} = res
+            console.log("apiGetSSARiskFieldGroup---", res)
+
+            setProgramList(ProgramNameField)
+            setLevelList(SeverityField)
+            setTypeList(RiskTypeField)
+            if (ProgramNameField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
                 setAdvancedQuery(false)
             }
         })
     })
-    const onSelectIP = useMemoizedFn((ipItem: FieldGroup) => {
-        const index = (query.IPList || []).findIndex((ele) => ele === ipItem.Name)
-        let newIPList = query.IPList || []
+    const onSelectProgram = useMemoizedFn((programItem: FieldGroup) => {
+        const index = (query.ProgramName || []).findIndex((ele) => ele === programItem.Name)
+        let newProgramList = query.ProgramName || []
         if (index === -1) {
-            newIPList = [...newIPList, ipItem.Name]
+            newProgramList = [...newProgramList, programItem.Name]
         } else {
-            newIPList.splice(index, 1)
+            newProgramList.splice(index, 1)
         }
         setQuery({
             ...query,
-            IPList: [...newIPList]
+            ProgramName: [...newProgramList]
         })
     })
-    const onSelect = useMemoizedFn((val: string[], text: string) => {
+    const onSelect = useMemoizedFn((val: string[], key: string) => {
         setQuery({
             ...query,
-            [text]: [...val]
+            [key]: [...val]
         })
     })
 
-    const onResetIP = useMemoizedFn(() => {
+    const onResetProgram = useMemoizedFn(() => {
         setQuery({
             ...query,
-            IPList: []
+            ProgramName: []
         })
     })
 
@@ -121,9 +128,9 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
         setAdvancedQuery(false)
     })
 
-    const selectIPList = useCreation(() => {
-        return query.IPList || []
-    }, [query.IPList])
+    const selectProgramList = useCreation(() => {
+        return query.ProgramName || []
+    }, [query.ProgramName])
 
     return (
         <div className={classNames(styles["hole-query"], {[styles["hole-query-hidden"]]: !advancedQuery})}>
@@ -134,18 +141,23 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
                 </Tooltip>
             </div>
             <div className={styles["hole-query-body"]}>
-                <IPList list={ipList} onSelect={onSelectIP} selectList={selectIPList} onReset={onResetIP} />
+                <ProgramList
+                    list={programList}
+                    onSelect={onSelectProgram}
+                    selectList={selectProgramList}
+                    onReset={onResetProgram}
+                />
                 <Divider style={{margin: "8px 0px"}} />
                 <VulnerabilityLevel
-                    selectList={query.SeverityList || []}
+                    selectList={query.Severity || []}
                     data={levelList}
-                    onSelect={(val) => onSelect(val, "SeverityList")}
+                    onSelect={(val) => onSelect(val, "Severity")}
                 />
                 <Divider style={{margin: "8px 0px"}} />
                 <VulnerabilityType
-                    selectList={query.RiskTypeList || []}
+                    selectList={query.RiskType || []}
                     data={typeList}
-                    onSelect={(val) => onSelect(val, "RiskTypeList")}
+                    onSelect={(val) => onSelect(val, "RiskType")}
                 />
                 <div className={styles["to-end"]}>已经到底啦～</div>
             </div>
@@ -153,13 +165,13 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     )
 })
 
-const IPList: React.FC<IPListProps> = React.memo((props) => {
+const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
     const {list, onSelect, selectList, onReset} = props
 
     return (
-        <div className={styles["ip-list-body"]}>
-            <div className={styles["ip-list-heard"]}>
-                <div className={styles["ip-list-heard-title"]}>IP 统计</div>
+        <div className={styles["program-list-body"]}>
+            <div className={styles["program-list-heard"]}>
+                <div className={styles["program-list-heard-title"]}>项目统计</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -170,7 +182,7 @@ const IPList: React.FC<IPListProps> = React.memo((props) => {
                     重置
                 </YakitButton>
             </div>
-            <div className={styles["ip-list-content"]}>
+            <div className={styles["program-list-content"]}>
                 <RollingLoadList<FieldGroup>
                     data={list}
                     page={-1}
@@ -180,7 +192,11 @@ const IPList: React.FC<IPListProps> = React.memo((props) => {
                     rowKey='value'
                     defItemHeight={32}
                     renderRow={(record, index: number) => (
-                        <IPListItem item={record} onSelect={onSelect} isSelect={selectList.includes(record.Name)} />
+                        <ProgramListItem
+                            item={record}
+                            onSelect={onSelect}
+                            isSelect={selectList.includes(record.Name)}
+                        />
                     )}
                 />
             </div>
@@ -188,17 +204,17 @@ const IPList: React.FC<IPListProps> = React.memo((props) => {
     )
 })
 
-const IPListItem: React.FC<IPListItemProps> = React.memo((props) => {
+const ProgramListItem: React.FC<ProgramListItemProps> = React.memo((props) => {
     const {item, onSelect, isSelect} = props
     return (
         <div
-            className={classNames(styles["ip-list-item"], {
-                [styles["ip-list-item-active"]]: isSelect
+            className={classNames(styles["program-list-item"], {
+                [styles["program-list-item-active"]]: isSelect
             })}
             onClick={() => onSelect(item)}
         >
-            <div className={styles["ip-list-item-label"]}>{item.Name}</div>
-            <div className={styles["ip-list-item-value"]}>{item.Total}</div>
+            <div className={styles["program-list-item-label"]}>{item.Name}</div>
+            <div className={styles["program-list-item-value"]}>{item.Total}</div>
         </div>
     )
 })
@@ -225,7 +241,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     重置
                 </YakitButton>
             </div>
-            <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
+            {/* <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} /> */}
         </div>
     )
 })
