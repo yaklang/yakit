@@ -124,7 +124,16 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     return difference > 1000 * 30
 }
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {type, readonly, defaultValue, collabProps, setEditor, customPlugin, onMarkdownUpdated} = props
+    const {
+        type,
+        readonly,
+        defaultValue,
+        collabProps,
+        setEditor,
+        customPlugin,
+        onMarkdownUpdated,
+        onSaveContentBeforeDestroy
+    } = props
 
     const milkdownRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(milkdownRef)
@@ -456,6 +465,12 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             editor.action(onSetDeletedFiles)
         }
     }, [loading, get])
+    useEffect(() => {
+        return () => {
+            const value = get()?.action(getMarkdown()) || ""
+            onSaveContentBeforeDestroy && onSaveContentBeforeDestroy(value)
+        }
+    }, [])
     //#endregion
 
     //#region 删除资源

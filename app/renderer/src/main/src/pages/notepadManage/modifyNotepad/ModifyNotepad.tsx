@@ -183,10 +183,10 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     }, 200)
                 )
         }
-        return () => {
-            const notepadContent = notepadContentRef.current
-            onSaveNewContent(notepadContent)
-        }
+        // return () => {
+        //     const notepadContent = notepadContentRef.current
+        //     onSaveNewContent(notepadContent)
+        // }
     }, [])
 
     /**保存最新的文档内容 */
@@ -662,6 +662,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
                                     setEditor={setEditor}
+                                    onSaveContentBeforeDestroy={onSaveNewContent}
                                 />
                             </YakitSpin>
                         </div>
