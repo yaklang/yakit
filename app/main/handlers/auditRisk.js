@@ -79,4 +79,21 @@ module.exports = (win, getClient) => {
     ipcMain.handle("NewSSARiskRead", async (e, params) => {
         return await asyncNewSSARiskRead(params)
     })
+
+    const asyncGroupTableColumn = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GroupTableColumn(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+
+    // 审计漏洞类型
+    ipcMain.handle("GroupTableColumn", async (e, params) => {
+        return await asyncGroupTableColumn(params)
+    })
 }

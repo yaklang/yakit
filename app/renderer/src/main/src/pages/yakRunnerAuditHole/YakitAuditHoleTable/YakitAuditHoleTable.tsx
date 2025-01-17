@@ -1,86 +1,55 @@
-import React, {ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
-    YakitCodeScanRiskDetailsProps,
-    YakitRiskDetailsProps,
     YakitRiskSelectTagProps,
     YakitAuditHoleTableProps,
     YakURLDataItemProps,
     SSARisk,
     DeleteSSARisksRequest,
-    QuerySSARisksResponse,
-    QuerySSARisksRequest
+    QuerySSARisksRequest,
+    YakitAuditRiskDetailsProps
 } from "./YakitAuditHoleTableType"
 import styles from "./YakitAuditHoleTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {Badge, Descriptions, Divider, Form, Tooltip} from "antd"
-import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
+import {Badge, Divider, Form, Tooltip} from "antd"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    useControllableValue,
-    useCreation,
-    useDebounceEffect,
-    useDebounceFn,
-    useInViewport,
-    useInterval,
-    useMemoizedFn,
-    useUpdateEffect
-} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     OutlineChevrondownIcon,
-    OutlineExportIcon,
     OutlineEyeIcon,
     OutlineOpenIcon,
-    OutlinePlayIcon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineTerminalIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import cloneDeep from "lodash/cloneDeep"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {SolidRefreshIcon} from "@/assets/icon/solid"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {
+    GroupTableColumnRequest,
     UpdateSSARiskTagsRequest,
     apiDeleteSSARisks,
+    apiGroupTableColumn,
     apiNewRiskRead,
     apiQuerySSARisks,
     apiUpdateSSARiskTags
 } from "./utils"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import classNames from "classnames"
-import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {ExportSelect} from "@/components/DataExport/DataExport"
-import {RemoteGV} from "@/yakitGV"
-import {yakitNotify} from "@/utils/notification"
-import moment from "moment"
 import emiter from "@/utils/eventBus/eventBus"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
-import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {AuditCodePageInfoProps, PluginHubPageInfoProps} from "@/store/pageInfo"
-import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
+import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import ReactResizeDetector from "react-resize-detector"
-import {serverPushStatus} from "@/utils/duplex/duplex"
-import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
-import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
-import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
-import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
-import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {FieldName} from "@/pages/risks/RiskTable"
-import {getHtmlTemplate} from "@/pages/risks/YakitRiskTable/htmlTemplate"
 import {
     IconSolidDefaultRiskIcon,
     IconSolidHighRiskIcon,
@@ -90,23 +59,14 @@ import {
     IconSolidSeriousIcon
 } from "@/pages/risks/icon"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
-import {apiQueryAvailableRiskType, apiQueryRiskTags, FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
+import {AuditResultCollapse, AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
     Filter: {}
 }
 
-const batchExportMenuData: YakitMenuItemProps[] = [
-    {
-        key: "export-csv",
-        label: "导出 CSV"
-    },
-    {
-        key: "export-html",
-        label: "导出 html"
-    }
-]
 const batchRefreshMenuData: YakitMenuItemProps[] = [
     {
         key: "noResetRefresh",
@@ -141,106 +101,6 @@ export const SeverityMapTag = [
         tag: "serious"
     }
 ]
-/**漏洞风险导出字段及其属性 */
-const exportFields = [
-    {
-        label: "漏洞标题",
-        value: "TitleVerbose",
-        isDefaultChecked: true
-    },
-    {
-        label: "IP",
-        value: "IP",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞等级",
-        value: "Severity",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞类型",
-        value: "Type",
-        isDefaultChecked: true
-    },
-    {
-        label: "URL",
-        value: "Url",
-        isDefaultChecked: true
-    },
-    {
-        label: "Tag",
-        value: "Tags",
-        isDefaultChecked: false
-    },
-    {
-        label: "发现时间",
-        value: "CreatedAt",
-        isDefaultChecked: true
-    },
-    {
-        label: "端口",
-        value: "Port",
-        isDefaultChecked: true
-    },
-    {
-        label: "漏洞描述",
-        value: "Description",
-        isDefaultChecked: true
-    },
-    {
-        label: "解决方案",
-        value: "Solution",
-        isDefaultChecked: true
-    },
-    {
-        label: "来源",
-        value: "FromYakScript",
-        isDefaultChecked: false
-    },
-    {
-        label: "反连 Token",
-        value: "ReverseToken",
-        isDefaultChecked: false
-    },
-    {
-        label: "参数",
-        value: "Parameter",
-        isDefaultChecked: false
-    },
-    {
-        label: "Payload",
-        value: "Payload",
-        isDefaultChecked: false
-    }
-]
-const yakitRiskCellStyle = {
-    信息: {
-        font: {
-            color: {rgb: "56c991"}
-        }
-    },
-    低危: {
-        font: {
-            color: {rgb: "ffb660"}
-        }
-    },
-    中危: {
-        font: {
-            color: {rgb: "f28b44"}
-        }
-    },
-    高危: {
-        font: {
-            color: {rgb: "f6544a"}
-        }
-    },
-    严重: {
-        font: {
-            color: {rgb: "bd2a21"}
-        }
-    }
-}
 
 const initResDataFun = (data: SSARisk[]) => {
     const newData = data.map((ele) => ({
@@ -258,8 +118,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         renderTitle,
         riskWrapperClassName = "",
         tableVirtualResizeProps,
-        yakitRiskDetailsBorder = true,
-        excludeColumnsKey = []
+        excludeColumnsKey = [],
+        query,
+        setQuery
     } = props
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -269,8 +130,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const [allCheck, setAllCheck] = useState<boolean>(false)
     const [selectList, setSelectList] = useState<SSARisk[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<SSARisk>()
-
-    const [exportTitle, setExportTitle] = useState<string[]>([])
 
     const [riskTypeVerbose, setRiskTypeVerbose] = useState<FieldName[]>([])
 
@@ -295,6 +154,18 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             onFirst
         })
 
+    useUpdateEffect(() => {
+        console.log("opopop", query)
+        debugVirtualTableEvent.setP({
+            ...tableParams,
+            Filter: {
+                ...tableParams.Filter,
+                // 此处预留未读筛选 等待后端
+                ...query
+            }
+        })
+    }, [query])
+
     // 选中插件的数量
     const selectNum = useMemo(() => {
         if (allCheck) return tableTotal
@@ -308,16 +179,15 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
     }, [inViewport])
 
-    useUpdateEffect(()=>{
+    useUpdateEffect(() => {
         debugVirtualTableEvent.setP({
             ...tableParams,
-            Filter:{
+            Filter: {
                 ...tableParams.Filter,
-                // 此处预留未读筛选 等待后端
-                IsRead: type === "all" ? "" : "false"
+                IsRead: type === "all" ? 0 : -1
             }
         })
-    },[type])
+    }, [type])
 
     useEffect(() => {
         // 组件存在既不卸载
@@ -496,7 +366,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [riskTypeVerbose, excludeColumnsKey])
 
     const getRiskType = useMemoizedFn(() => {
-        apiQueryAvailableRiskType().then(setRiskTypeVerbose)
+        const query:GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "risk_type"}
+        apiGroupTableColumn(query).then((data) => {
+            console.log("GroupTableColumn---",query, data)
+        })
+        // setRiskTypeVerbose
     })
 
     const onOpenSelect = useMemoizedFn((record: SSARisk) => {
@@ -533,8 +407,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 ID: [id]
             }
         }
-        console.log("delete----",removeQuery);
-        
+        console.log("delete----", removeQuery)
+
         apiDeleteSSARisks(removeQuery).then(() => {
             debugVirtualTableEvent.setTData(tableData.filter((item) => item.Id !== id))
             emiter.emit("onRefAuditRiskFieldGroup")
@@ -543,9 +417,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     /**批量删除后，重置查询条件刷新 */
     const onRemove = useMemoizedFn(() => {
         let removeQuery: DeleteSSARisksRequest = {
-            Filter: {
-                
-            }
+            Filter: {}
         }
         if (!allCheck && selectList.length > 0) {
             // 勾选删除
@@ -555,8 +427,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         }
         setRiskLoading(true)
-        console.log("removeQuery---",removeQuery);
-        
+        console.log("removeQuery---", removeQuery)
+
         apiDeleteSSARisks(removeQuery)
             .then(() => {
                 debugVirtualTableEvent.noResetRefreshT()
@@ -568,176 +440,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 }, 200)
             )
     })
-    // const onExportMenuSelect = useMemoizedFn((key: string) => {
-    //     switch (key) {
-    //         case "export-csv":
-    //             onExportCSV()
-    //             break
-    //         case "export-html":
-    //             onExportHTML()
-    //             break
-    //         default:
-    //             break
-    //     }
-    // })
-    // const onExportCSV = useMemoizedFn(() => {
-    //     if (+response.Total === 0) return
-    //     const exportValue = exportFields.map((item) => item.label)
-    //     const initCheckFields = exportFields.filter((ele) => ele.isDefaultChecked).map((item) => item.label)
-    //     const m = showYakitModal({
-    //         title: "选择导出字段",
-    //         content: (
-    //             <ExportSelect
-    //                 exportValue={exportValue}
-    //                 initCheckValue={initCheckFields}
-    //                 setExportTitle={setExportTitle}
-    //                 exportKey={RemoteGV.RiskExportFields}
-    //                 getData={getExcelData}
-    //                 onClose={() => m.destroy()}
-    //                 fileName='审计漏洞'
-    //             />
-    //         ),
-    //         onCancel: () => {
-    //             m.destroy()
-    //             setSelectList([])
-    //         },
-    //         footer: null,
-    //         width: 650
-    //     })
-    // })
-    // const formatJson = (filterVal, jsonData) => {
-    //     return jsonData.map((v, index) =>
-    //         filterVal.map((j) => {
-    //             if (j === "Tags") {
-    //                 const value = v["Tags"] || ""
-    //                 return value.replaceAll("|", ",")
-    //             }
-    //             if (j === "FromYakScript") {
-    //                 const value = v["FromYakScript"] || "漏洞检测"
-    //                 return value
-    //             }
-    //             if (j === "TitleVerbose") {
-    //                 const value = v["TitleVerbose"] || v["Title"] || ""
-    //                 return value
-    //             }
-    //             if (j === "Type") {
-    //                 const value = v["RiskTypeVerbose"] || v["RiskType"] || ""
-    //                 return value.replaceAll("NUCLEI-", "")
-    //             }
-    //             if (j === "Severity") {
-    //                 const title = SeverityMapTag.filter((item) => item.key.includes(v["Severity"] || ""))[0]
-    //                 return title ? title.name : v["Severity"] || "-"
-    //             }
-    //             if (j === "CreatedAt") {
-    //                 return formatTimestamp(v[j])
-    //             }
-    //             if (["Request", "Response"].includes(j)) {
-    //                 return Buffer.from(v[j]).toString("utf8")
-    //             }
-    //             return v[j]
-    //         })
-    //     )
-    // }
-    // const getExcelData = useMemoizedFn(() => {
-    //     return new Promise((resolve, reject) => {
-    //         let exportData: any = []
-    //         const header: string[] = []
-    //         const filterVal: string[] = []
-    //         exportTitle.forEach((item) => {
-    //             const itemData = exportFields.filter((itemIn) => itemIn.label === item)[0]
-    //             header.push(item)
-    //             filterVal.push(itemData.value)
-    //         })
-    //         const number = filterVal.findIndex((ele) => ele === "Severity")
-    //         let optsSingleCellSetting = {}
-    //         if (number !== -1) {
-    //             optsSingleCellSetting = {
-    //                 c: number, // 第*列，
-    //                 colorObj: yakitRiskCellStyle // 字体颜色设置
-    //             }
-    //         }
-    //         const resolveData = {
-    //             header,
-    //             optsSingleCellSetting
-    //         }
-    //         if (allCheck || selectList.length === 0) {
-    //             const exportQuery: QuerySSARisksRequest = {
-    //                 ...getQuery(),
-    //                 Pagination: {
-    //                     ...query.Pagination,
-    //                     Page: 1,
-    //                     Limit: tableTotal
-    //                 }
-    //             }
-    //             apiQuerySSARisks(exportQuery).then((res) => {
-    //                 exportData = formatJson(filterVal, res.Data)
-    //                 resolve({
-    //                     ...resolveData,
-    //                     exportData,
-    //                     response: res
-    //                 })
-    //             })
-    //         } else {
-    //             exportData = formatJson(filterVal, selectList)
-    //             resolve({
-    //                 ...resolveData,
-    //                 exportData,
-    //                 response: {
-    //                     Total: selectList.length,
-    //                     Data: selectList,
-    //                     Pagination: {
-    //                         Page: 1,
-    //                         Limit: selectList.length,
-    //                         OrderBy: query.Pagination.OrderBy,
-    //                         Order: query.Pagination.Order
-    //                     }
-    //                 }
-    //             })
-    //         }
-    //     })
-    // })
-    // const onExportHTML = useMemoizedFn(async () => {
-    //     if (+response.Total === 0) return
-    //     setRiskLoading(true)
-    //     let risks: SSARisk[] = []
-    //     if (allCheck || selectList.length === 0) {
-    //         const exportQuery: QuerySSARisksRequest = {
-    //             ...getQuery(),
-    //             Pagination: {
-    //                 ...query.Pagination,
-    //                 Page: 1,
-    //                 Limit: tableTotal
-    //             }
-    //         }
-    //         const res = await apiQuerySSARisks(exportQuery)
-    //         risks = [...res.Data]
-    //     } else {
-    //         risks = [...selectList]
-    //     }
-    //     const newRisks = risks.map((ele) => ({
-    //         ...ele,
-    //         RequestString: Buffer.from(ele.Request || new Uint8Array()).toString("utf8"),
-    //         ResponseString: Buffer.from(ele.Response || new Uint8Array()).toString("utf8")
-    //     }))
-    //     const htmlContent = getHtmlTemplate()
-    //     const params: ExportHtmlProps = {
-    //         htmlContent,
-    //         fileName: `riskTable-${moment().valueOf()}`,
-    //         data: newRisks
-    //     }
-    //     apiExportHtml(params).catch((error) => {
-    //         yakitNotify("error", `导出html失败:${error}`)
-    //     })
-    //     setTimeout(() => {
-    //         setRiskLoading(false)
-    //     }, 200)
-    // })
+
     const onRefreshMenuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "noResetRefresh":
                 debugVirtualTableEvent.noResetRefreshT()
                 break
             case "resetRefresh":
+                setQuery({})
                 debugVirtualTableEvent.refreshT()
                 break
             default:
@@ -769,34 +479,19 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 ...Filter,
                 Severity: !!Filter.SeverityList ? getQuerySeverity(Filter.SeverityList) : [],
                 ProgramName: !!Filter.ProgramNameStr ? [Filter.ProgramNameStr] : [],
-                IsRead: type === "all" ? "" : "false"
+                IsRead: type === "all" ? 0 : -1
             }
         }
-        console.log("newQuery---", finalParams,filter)
+        console.log("newQuery---", finalParams, filter)
         debugVirtualTableEvent.setP(finalParams)
     })
     const getQuerySeverity = useMemoizedFn((list: string[]) => {
-        if(list.length === 0) return []
+        if (list.length === 0) return []
         return SeverityMapTag.filter((ele) => list.includes(ele.name))
             .map((ele) => ele.key)
             .join(",")
             .split(",")
     })
-
-    // const getQuery = useMemoizedFn(() => {
-    //     const query = tableParams as QuerySSARisksRequest
-    //     const {Filter} = query
-    //     const finalParams: QuerySSARisksRequest = {
-    //         ...query,
-    //         Filter: {
-    //             RiskType: !!Filter.RiskTypeList ? query.RiskTypeList.join(",") : "",
-    //             Severity: !!query.SeverityList ? getQuerySeverity(query.SeverityList) : "",
-    //             Tags: !!query.TagList ? query.TagList.join("|") : "",
-    //             IsRead: type === "all" ? "" : "false"
-    //         }
-    //     }
-    //     return finalParams
-    // })
 
     const onSearch = useMemoizedFn((val) => {
         debugVirtualTableEvent.setP({
@@ -858,42 +553,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const onExpend = useMemoizedFn(() => {
         if (setAdvancedQuery) setAdvancedQuery(true)
     })
-    const onRowContextMenu = useMemoizedFn((rowData: SSARisk) => {
-        if (!rowData) return
-        // showByRightContext({
-        //     width: 180,
-        //     data: [{key: "delete-repeat-title", label: "删除重复标题数据"}],
-        //     onClick: ({key}) => onRightMenuSelect(key, rowData)
-        // })
-    })
-    // const onRightMenuSelect = useMemoizedFn((key: string, rowData: SSARisk) => {
-    // switch (key) {
-    //     case "delete-repeat-title":
-    //         onDeleteRepeatTitle(rowData)
-    //         break
-    //     default:
-    //         break
-    // }
-    // })
-    // const onDeleteRepeatTitle = useMemoizedFn((rowData: SSARisk) => {
-    //     const newParams = {
-    //         Filter: {
-    //             Title: rowData?.TitleVerbose || rowData.Title,
-    //             Network: rowData?.IP
-    //         }
-    //     }
-    //     setRiskLoading(true)
-    //     apiDeleteSSARisks(newParams)
-    //         .then(() => {
-    //             debugVirtualTableEvent.noResetRefreshT()
-    //             emiter.emit("onRefAuditRiskFieldGroup")
-    //         })
-    //         .finally(() =>
-    //             setTimeout(() => {
-    //                 setRiskLoading(false)
-    //             }, 200)
-    //         )
-    // })
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
@@ -1025,27 +685,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                             onClick={onAllRead}
                                             name='全部已读'
                                         />
-                                        {/* <YakitDropdownMenu
-                                            menu={{
-                                                data: batchExportMenuData,
-                                                onClick: ({key}) => {
-                                                    onExportMenuSelect(key)
-                                                }
-                                            }}
-                                            dropdown={{
-                                                trigger: ["hover"],
-                                                placement: "bottom",
-                                                disabled: tableTotal === 0
-                                            }}
-                                        >
-                                            <FuncBtn
-                                                maxWidth={1200}
-                                                type='outline2'
-                                                icon={<OutlineExportIcon />}
-                                                name=' 导出为...'
-                                                disabled={tableTotal === 0}
-                                            />
-                                        </YakitDropdownMenu> */}
                                         <YakitPopconfirm
                                             title={
                                                 allCheck
@@ -1102,30 +741,18 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                         enableDrag={true}
                         useUpAndDown
                         onChange={onTableChange}
-                        onRowContextMenu={onRowContextMenu}
                         {...(tableVirtualResizeProps || {})}
                     />
                 }
                 secondNode={
                     currentSelectItem && (
                         <>
-                            {/* {isShowCodeScanDetail(currentSelectItem) ? (
-                                <YakitCodeScanRiskDetails
-                                    info={currentSelectItem}
-                                    onClickIP={onClickIP}
-                                    className={styles["yakit-code-scan-SSARisk-details"]}
-                                    isShowExtra={true}
-                                />
-                            ) : (
-                                <YakitRiskDetails
-                                    info={currentSelectItem}
-                                    className={styles["yakit-SSARisk-details"]}
-                                    onClickIP={onClickIP}
-                                    border={yakitRiskDetailsBorder}
-                                    isShowExtra={!excludeColumnsKey.includes("action")}
-                                    onRetest={onRetest}
-                                />
-                            )} */}
+                            <YakitAuditRiskDetails
+                                info={currentSelectItem}
+                                onClickIP={onClickIP}
+                                className={styles["yakit-code-scan-SSARisk-details"]}
+                                isShowExtra={true}
+                            />
                         </>
                     )
                 }
@@ -1208,562 +835,194 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
     )
 })
 
-// export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((props) => {
-//     const {info, isShowTime = true, className = "", border = true, isShowExtra, onRetest} = props
-//     const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("request")
-//     const [isShowCode, setIsShowCode] = useState<boolean>(true)
-//     const descriptionsRef = useRef<HTMLDivElement>(null)
-//     const descriptionsDivWidth = useListenWidth(descriptionsRef)
+export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
+    const {info, className, border, isShowExtra} = props
+    const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
 
-//     useEffect(() => {
-//         const isRequestString = !!requestString(info)
-//         const isResponseString = !!responseString(info)
-//         if (isRequestString) {
-//             setCurrentSelectShowType("request")
-//         } else if (isResponseString) {
-//             setCurrentSelectShowType("response")
-//         }
-//         if (isRequestString || isResponseString) {
-//             setIsShowCode(true)
-//         } else {
-//             setIsShowCode(false)
-//         }
-//     }, [info])
+    useEffect(() => {
+        initData()
+    }, [info])
 
-//     const severityInfo = useCreation(() => {
-//         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
-//         let icon = <></>
-//         switch (severity?.name) {
-//             case "信息":
-//                 icon = <IconSolidInfoRiskIcon />
-//                 break
-//             case "低危":
-//                 icon = <IconSolidLowRiskIcon />
-//                 break
-//             case "中危":
-//                 icon = <IconSolidMediumRiskIcon />
-//                 break
-//             case "高危":
-//                 icon = <IconSolidHighRiskIcon />
-//                 break
-//             case "严重":
-//                 icon = <IconSolidSeriousIcon />
-//                 break
-//             default:
-//                 icon = <IconSolidDefaultRiskIcon />
-//                 break
-//         }
-//         return {
-//             icon,
-//             tag: severity?.tag || "default",
-//             name: severity?.name || info?.Severity || "-"
-//         }
-//     }, [info.Severity])
-//     const onClickIP = useMemoizedFn(() => {
-//         if (props.onClickIP) props.onClickIP(info)
-//     })
-//     const column = useCreation(() => {
-//         if (descriptionsDivWidth > 600) return 3
-//         return 1
-//     }, [descriptionsDivWidth])
-//     const codeNode = useMemoizedFn(() => {
-//         const isHttps = !!info.Url && info.Url?.length > 0 && info.Url.includes("https")
-//         const extraParams = {
-//             originValue: currentSelectShowType === "request" ? requestString(info) : responseString(info),
-//             originalPackage: currentSelectShowType === "request" ? info.Request : info.Response,
-//             webFuzzerValue: currentSelectShowType === "request" ? "" : requestString(info)
-//         }
-//         return (
-//             <NewHTTPPacketEditor
-//                 defaultHttps={isHttps}
-//                 url={info.Url || ""}
-//                 readOnly={true}
-//                 isShowBeautifyRender={true}
-//                 showDefaultExtra={true}
-//                 hideSearch={true}
-//                 noHex={true}
-//                 noModeTag={true}
-//                 simpleMode={true}
-//                 bordered={false}
-//                 isResponse={currentSelectShowType === "response"}
-//                 title={
-//                     <div className={styles["content-resize-first-heard"]}>
-//                         <YakitRadioButtons
-//                             size='small'
-//                             value={currentSelectShowType}
-//                             onChange={(e) => {
-//                                 setCurrentSelectShowType(e.target.value)
-//                             }}
-//                             buttonStyle='solid'
-//                             options={[
-//                                 {
-//                                     value: "request",
-//                                     label: "请求"
-//                                 },
-//                                 {
-//                                     value: "response",
-//                                     label: "响应"
-//                                 }
-//                             ]}
-//                         />
-//                     </div>
-//                 }
-//                 downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: currentSelectShowType === "request"}}
-//                 {...extraParams}
-//             />
-//         )
-//     })
-//     const requestString = useMemoizedFn((info) => {
-//         return Uint8ArrayToString(info?.Request || new Uint8Array())
-//     })
-//     const responseString = useMemoizedFn((info) => {
-//         return Uint8ArrayToString(info?.Response || new Uint8Array())
-//     })
-//     const extraResizeBoxProps = useCreation(() => {
-//         let p: YakitResizeBoxProps = {
-//             firstNode: <></>,
-//             secondNode: <></>,
-//             firstRatio: "50%",
-//             secondRatio: "50%",
-//             lineStyle: {height: "auto"},
-//             firstNodeStyle: {height: "auto"}
-//         }
-//         if (!isShowCode) {
-//             p.firstRatio = "0%"
-//             p.secondRatio = "100%"
-//             p.lineStyle = {display: "none"}
-//             p.firstNodeStyle = {display: "none"}
-//             p.secondNodeStyle = {padding: 0}
-//         }
-//         return p
-//     }, [isShowCode])
+    const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
+    const initData = useMemoizedFn(async () => {
+        try {
+            const {index, CodeRange, ProgramName, CodeFragment} = info
+            if (index && CodeRange) {
+                const code_range: CodeRangeProps = JSON.parse(CodeRange)
+                setYakURLData([
+                    {
+                        index,
+                        code_range,
+                        source: CodeFragment,
+                        ResourceName: ProgramName
+                    }
+                ])
+                setIsShowCollapse(true)
+            } else {
+                setIsShowCollapse(false)
+            }
+        } catch (error) {
+            setIsShowCollapse(false)
+        }
+    })
 
-//     return (
-//         <>
-//             <div
-//                 className={classNames(
-//                     styles["yakit-SSARisk-details-content"],
-//                     "yakit-descriptions",
-//                     {
-//                         [styles["yakit-SSARisk-details-content-no-border"]]: !border
-//                     },
-//                     className
-//                 )}
-//             >
-//                 <div className={styles["content-heard"]}>
-//                     <div className={styles["content-heard-left"]}>
-//                         <div className={styles["content-heard-severity"]}>
-//                             {severityInfo.icon}
-//                             <span
-//                                 className={classNames(
-//                                     styles["content-heard-severity-name"],
-//                                     styles[`severity-${severityInfo.tag}`]
-//                                 )}
-//                             >
-//                                 {severityInfo.name}
-//                             </span>
-//                         </div>
-//                         <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
-//                         <div className={styles["content-heard-body"]}>
-//                             <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
-//                                 {info.Title || "-"}
-//                             </div>
-//                             <div className={styles["content-heard-body-description"]}>
-//                                 <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
-//                                     ID:{info.Id}
-//                                 </YakitTag>
-//                                 <span>IP:{info.IP || "-"}</span>
-//                                 <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                                 <span className={styles["description-port"]}>端口:{info.Port || "-"}</span>
-//                                 <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                                 <span className={styles["url-info"]}>
-//                                     URL:
-//                                     <span className={classNames(styles["url"], "content-ellipsis")}>
-//                                         {info?.Url || "-"}
-//                                     </span>
-//                                     <CopyComponents copyText={info?.Url || "-"} />
-//                                 </span>
-//                                 {isShowTime && (
-//                                     <>
-//                                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                                         <span className={styles["content-heard-body-time"]}>
-//                                             发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
-//                                         </span>
-//                                     </>
-//                                 )}
-//                                 {!isShowCode && (
-//                                     <>
-//                                         <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                                         <YakitTag color='warning'>无数据包</YakitTag>
-//                                     </>
-//                                 )}
-//                             </div>
-//                         </div>
-//                     </div>
-//                     {isShowExtra && (
-//                         <div className={styles["content-heard-right"]}>
-//                             <FuncBtn
-//                                 maxWidth={1200}
-//                                 type='outline2'
-//                                 icon={<OutlinePlayIcon />}
-//                                 onClick={(e) => {
-//                                     e.stopPropagation()
-//                                     if (onRetest) onRetest(info)
-//                                 }}
-//                                 name='复测'
-//                             />
-//                         </div>
-//                     )}
-//                 </div>
-//                 <YakitResizeBox
-//                     {...extraResizeBoxProps}
-//                     firstNode={<div className={styles["content-resize-first"]}>{codeNode()}</div>}
-//                     secondNode={
-//                         <div className={styles["content-resize-second"]} ref={descriptionsRef}>
-//                             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
-//                                 <Descriptions.Item label='Host'>{info.Host || "-"}</Descriptions.Item>
-//                                 <Descriptions.Item label='类型'>
-//                                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
-//                                 </Descriptions.Item>
-//                                 <Descriptions.Item label='来源'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
-//                                 <Descriptions.Item label='反连Token' contentStyle={{minWidth: 120}}>
-//                                     {info?.ReverseToken || "-"}
-//                                 </Descriptions.Item>
-//                                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-//                                 <Descriptions.Item label='验证状态'>
-//                                     <YakitTag color={`${!info.WaitingVerified ? "success" : "info"}`}>
-//                                         {!info.WaitingVerified ? "已验证" : "未验证"}
-//                                     </YakitTag>
-//                                 </Descriptions.Item>
+    const extraResizeBoxProps = useCreation(() => {
+        let p: YakitResizeBoxProps = {
+            firstNode: <></>,
+            secondNode: <></>,
+            firstRatio: "50%",
+            secondRatio: "50%",
+            lineStyle: {height: "auto"},
+            firstNodeStyle: {height: "auto"}
+        }
+        if (!isShowCollapse) {
+            p.firstRatio = "0%"
+            p.secondRatio = "100%"
+            p.lineStyle = {display: "none"}
+            p.firstNodeStyle = {display: "none"}
+            p.secondNodeStyle = {padding: 0}
+        }
+        return p
+    }, [isShowCollapse])
 
-//                                 <>
-//                                     <Descriptions.Item
-//                                         label='漏洞描述'
-//                                         span={column}
-//                                         contentStyle={{whiteSpace: "pre-wrap"}}
-//                                     >
-//                                         {info.Description || "-"}
-//                                     </Descriptions.Item>
-//                                     <Descriptions.Item
-//                                         label='解决方案'
-//                                         span={column}
-//                                         contentStyle={{whiteSpace: "pre-wrap"}}
-//                                     >
-//                                         {info.Solution || "-"}
-//                                     </Descriptions.Item>
-//                                     <Descriptions.Item label='Parameter' span={column}>
-//                                         {info.Parameter || "-"}
-//                                     </Descriptions.Item>
-//                                     <Descriptions.Item label='Payload' span={column}>
-//                                         <div style={{maxHeight: 180, overflow: "auto"}}>{`${info.Payload}` || "-"}</div>
-//                                     </Descriptions.Item>
-//                                     <Descriptions.Item label='详情' span={column}>
-//                                         <div style={{height: 180}}>
-//                                             <YakitEditor type='yak' value={`${info.Details || ""}`} readOnly={true} />
-//                                         </div>
-//                                     </Descriptions.Item>
-//                                 </>
-//                             </Descriptions>
-//                             <div className={styles["no-more"]}>暂无更多</div>
-//                         </div>
-//                     }
-//                     firstMinSize={200}
-//                     secondMinSize={400}
-//                 />
-//             </div>
-//         </>
-//     )
-// })
+    const onClickIP = useMemoizedFn(() => {
+        if (props.onClickIP) props.onClickIP(info)
+    })
 
-// export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
-//     const {info, className, border, isShowExtra} = props
-//     const [tableLoading, setLoading] = useState<boolean>(false)
-//     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
+    const severityInfo = useCreation(() => {
+        const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
+        let icon = <></>
+        switch (severity?.name) {
+            case "信息":
+                icon = <IconSolidInfoRiskIcon />
+                break
+            case "低危":
+                icon = <IconSolidLowRiskIcon />
+                break
+            case "中危":
+                icon = <IconSolidMediumRiskIcon />
+                break
+            case "高危":
+                icon = <IconSolidHighRiskIcon />
+                break
+            case "严重":
+                icon = <IconSolidSeriousIcon />
+                break
+            default:
+                icon = <IconSolidDefaultRiskIcon />
+                break
+        }
+        return {
+            icon,
+            tag: severity?.tag || "default",
+            name: severity?.name || info?.Severity || "-"
+        }
+    }, [info.Severity])
 
-//     useEffect(() => {
-//         const {ResultID, SyntaxFlowVariable, ProgramName} = info
-//         if (ResultID && SyntaxFlowVariable && ProgramName) {
-//             const params: AuditEmiterYakUrlProps = {
-//                 Schema: "syntaxflow",
-//                 Location: ProgramName,
-//                 Path: `/${SyntaxFlowVariable}`,
-//                 Query: [{Key: "result_id", Value: ResultID}]
-//             }
-//             initData(params)
-//         }
-//     }, [info])
+    // 跳转到代码审计页面
+    const jumpCodeScanPage = useMemoizedFn((value?: string) => {
+        const {ProgramName, SyntaxFlowVariable, ResultID} = info
+        if (ResultID && SyntaxFlowVariable && ProgramName) {
+            // 跳转到审计页面的参数
+            const params: AuditCodePageInfoProps = {
+                Schema: "syntaxflow",
+                Location: ProgramName,
+                Path: `/`,
+                Variable: SyntaxFlowVariable,
+                Value: value,
+                Query: [{Key: "result_id", Value: ResultID}]
+            }
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.YakRunner_Audit_Code,
+                    params
+                })
+            )
+        }
+    })
 
-//     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
-//     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
-//         try {
-//             setLoading(true)
-//             const {Body, ...auditYakUrl} = params
-//             const body = Body ? StringToUint8Array(Body) : undefined
-//             const result = await loadAuditFromYakURLRaw(auditYakUrl, body)
-
-//             if (result && result.Resources.length > 0) {
-//                 const ResultID = result.Resources.find((item) => item.ResourceType === "result_id")?.ResourceName
-//                 if (ResultID === info.ResultID) {
-//                     setLoading(false)
-//                     let arr: YakURLDataItemProps[] = []
-//                     result.Resources.filter((item) => item.ResourceType === "value").forEach((item) => {
-//                         let obj: any = {
-//                             index: "",
-//                             source: "",
-//                             ResourceName: item.ResourceName
-//                         }
-//                         item.Extra.forEach((itemIn) => {
-//                             if (["index", "source"].includes(itemIn.Key)) {
-//                                 obj[itemIn.Key] = itemIn.Value
-//                             }
-//                             if (itemIn.Key === "code_range") {
-//                                 try {
-//                                     obj[itemIn.Key] = JSON.parse(itemIn.Value)
-//                                 } catch (error) {}
-//                             }
-//                         })
-//                         arr.push(obj)
-//                     })
-//                     setYakURLData(arr)
-//                     setIsShowCollapse(true)
-//                 }
-//             } else {
-//                 setLoading(false)
-//                 setIsShowCollapse(false)
-//             }
-//         } catch (error) {
-//             setLoading(false)
-//             setIsShowCollapse(false)
-//         }
-//     })
-
-//     const extraResizeBoxProps = useCreation(() => {
-//         let p: YakitResizeBoxProps = {
-//             firstNode: <></>,
-//             secondNode: <></>,
-//             firstRatio: "50%",
-//             secondRatio: "50%",
-//             lineStyle: {height: "auto"},
-//             firstNodeStyle: {height: "auto"}
-//         }
-//         if (!isShowCollapse) {
-//             p.firstRatio = "0%"
-//             p.secondRatio = "100%"
-//             p.lineStyle = {display: "none"}
-//             p.firstNodeStyle = {display: "none"}
-//             p.secondNodeStyle = {padding: 0}
-//         }
-//         return p
-//     }, [isShowCollapse])
-
-//     const onClickIP = useMemoizedFn(() => {
-//         if (props.onClickIP) props.onClickIP(info)
-//     })
-
-//     const severityInfo = useCreation(() => {
-//         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
-//         let icon = <></>
-//         switch (severity?.name) {
-//             case "信息":
-//                 icon = <IconSolidInfoRiskIcon />
-//                 break
-//             case "低危":
-//                 icon = <IconSolidLowRiskIcon />
-//                 break
-//             case "中危":
-//                 icon = <IconSolidMediumRiskIcon />
-//                 break
-//             case "高危":
-//                 icon = <IconSolidHighRiskIcon />
-//                 break
-//             case "严重":
-//                 icon = <IconSolidSeriousIcon />
-//                 break
-//             default:
-//                 icon = <IconSolidDefaultRiskIcon />
-//                 break
-//         }
-//         return {
-//             icon,
-//             tag: severity?.tag || "default",
-//             name: severity?.name || info?.Severity || "-"
-//         }
-//     }, [info.Severity])
-
-//     // 跳转到代码审计页面
-//     const jumpCodeScanPage = useMemoizedFn((value?: string) => {
-//         const {ProgramName, SyntaxFlowVariable, ResultID} = info
-//         if (ResultID && SyntaxFlowVariable && ProgramName) {
-//             // 跳转到审计页面的参数
-//             const params: AuditCodePageInfoProps = {
-//                 Schema: "syntaxflow",
-//                 Location: ProgramName,
-//                 Path: `/`,
-//                 Variable: SyntaxFlowVariable,
-//                 Value: value,
-//                 Query: [{Key: "result_id", Value: ResultID}]
-//             }
-//             emiter.emit(
-//                 "openPage",
-//                 JSON.stringify({
-//                     route: YakitRoute.YakRunner_Audit_Code,
-//                     params
-//                 })
-//             )
-//         }
-//     })
-
-//     return (
-//         <div
-//             className={classNames(
-//                 styles["yakit-SSARisk-details-content"],
-//                 "yakit-descriptions",
-//                 {
-//                     [styles["yakit-SSARisk-details-content-no-border"]]: !border
-//                 },
-//                 className
-//             )}
-//         >
-//             <div className={styles["content-heard"]}>
-//                 <div className={styles["content-heard-left"]}>
-//                     <div className={styles["content-heard-severity"]}>
-//                         {severityInfo.icon}
-//                         <span
-//                             className={classNames(
-//                                 styles["content-heard-severity-name"],
-//                                 styles[`severity-${severityInfo.tag}`]
-//                             )}
-//                         >
-//                             {severityInfo.name}
-//                         </span>
-//                     </div>
-//                     <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
-//                     <div className={styles["content-heard-body"]}>
-//                         <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
-//                             {info?.TitleVerbose || info.Title || "-"}
-//                         </div>
-//                         <div className={styles["content-heard-body-description"]}>
-//                             <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
-//                                 ID:{info.Id}
-//                             </YakitTag>
-//                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                             <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
-//                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-//                             <span className={styles["content-heard-body-time"]}>
-//                                 发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
-//                             </span>
-//                         </div>
-//                     </div>
-//                 </div>
-//                 {isShowExtra && (
-//                     <div className={styles["content-heard-right"]} style={{height: "100%", alignItems: "center"}}>
-//                         {isShowCollapse ? (
-//                             <YakitButton
-//                                 type='outline2'
-//                                 icon={<OutlineTerminalIcon />}
-//                                 onClick={(e) => {
-//                                     e.stopPropagation()
-//                                     jumpCodeScanPage()
-//                                 }}
-//                             >
-//                                 在代码审计中打开
-//                             </YakitButton>
-//                         ) : (
-//                             <Tooltip title={`相关数据已被删除`} placement='topLeft'>
-//                                 <div className={styles["disabled-open"]}>
-//                                     <OutlineTerminalIcon />
-//                                     在代码审计中打开
-//                                 </div>
-//                             </Tooltip>
-//                         )}
-//                     </div>
-//                 )}
-//             </div>
-//             <YakitResizeBox
-//                 {...extraResizeBoxProps}
-//                 firstNode={
-//                     <div className={styles["content-resize-collapse"]}>
-//                         <div className={styles["main-title"]}>相关代码段</div>
-//                         <YakitSpin spinning={tableLoading}>
-//                             <AuditResultCollapse
-//                                 data={yakURLData}
-//                                 jumpCodeScanPage={jumpCodeScanPage}
-//                                 isShowExtra={isShowExtra}
-//                             />
-//                         </YakitSpin>
-//                     </div>
-//                 }
-//                 secondNode={<AuditResultDescribe info={info} />}
-//                 firstMinSize={200}
-//                 secondMinSize={400}
-//             />
-//         </div>
-//     )
-// })
-
-interface AuditResultCollapseProps {
-    data: YakURLDataItemProps[]
-    jumpCodeScanPage: (v: string) => void
-    isShowExtra?: boolean
-}
-
-export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
-    const {data, jumpCodeScanPage, isShowExtra} = props
-
-    const titleRender = (info: YakURLDataItemProps) => {
-        const {index, code_range, source, ResourceName} = info
-        const lastSlashIndex = code_range.url.lastIndexOf("/")
-        const fileName = code_range.url.substring(lastSlashIndex + 1)
-        return (
-            <div className={styles["node-content"]}>
-                <div className={classNames(styles["content-body"])}>
-                    <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>{ResourceName}</div>
-                    <Tooltip title={`${code_range.url}:${code_range.start_line}`}>
-                        <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
-                            {fileName}:{code_range.start_line}
+    return (
+        <div
+            className={classNames(
+                styles["yakit-audit-risk-details-content"],
+                "yakit-descriptions",
+                {
+                    [styles["yakit-audit-risk-details-content-no-border"]]: !border
+                },
+                className
+            )}
+        >
+            <div className={styles["content-heard"]}>
+                <div className={styles["content-heard-left"]}>
+                    <div className={styles["content-heard-severity"]}>
+                        {severityInfo.icon}
+                        <span
+                            className={classNames(
+                                styles["content-heard-severity-name"],
+                                styles[`severity-${severityInfo.tag}`]
+                            )}
+                        >
+                            {severityInfo.name}
+                        </span>
+                    </div>
+                    <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
+                    <div className={styles["content-heard-body"]}>
+                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
+                            {info?.TitleVerbose || info.Title || "-"}
                         </div>
-                    </Tooltip>
+                        <div className={styles["content-heard-body-description"]}>
+                            <YakitTag color='info' style={{cursor: "pointer"}} onClick={onClickIP}>
+                                ID:{info.Id}
+                            </YakitTag>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                            <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
+                            <span className={styles["content-heard-body-time"]}>
+                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 {isShowExtra && (
-                    <Tooltip title={"在代码审计中打开"}>
-                        <YakitButton
-                            type='text2'
-                            icon={<OutlineTerminalIcon />}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                jumpCodeScanPage(`/${index}`)
-                            }}
-                        />
-                    </Tooltip>
+                    <div className={styles["content-heard-right"]} style={{height: "100%", alignItems: "center"}}>
+                        {isShowCollapse ? (
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineTerminalIcon />}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    jumpCodeScanPage()
+                                }}
+                            >
+                                在代码审计中打开
+                            </YakitButton>
+                        ) : (
+                            <Tooltip title={`相关数据已被删除`} placement='topLeft'>
+                                <div className={styles["disabled-open"]}>
+                                    <OutlineTerminalIcon />
+                                    在代码审计中打开
+                                </div>
+                            </Tooltip>
+                        )}
+                    </div>
                 )}
             </div>
-        )
-    }
-
-    const renderItem = (info: YakURLDataItemProps) => {
-        const filename = info.code_range.url.split("/").pop()
-        const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
-        return (
-            <YakCodemirror
-                readOnly={true}
-                fileName={filename}
-                value={info.source}
-                firstLineNumber={source_code_line}
-                highLight={{
-                    from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
-                    to: {line: end_line - source_code_line, ch: end_column} // 结束位置
-                }}
-            />
-        )
-    }
-    return (
-        <div className={styles["audit-result-collapse"]}>
-            <CollapseList
-                type='sideBar'
-                onlyKey='index'
-                list={data}
-                titleRender={titleRender}
-                renderItem={renderItem}
+            <YakitResizeBox
+                {...extraResizeBoxProps}
+                firstNode={
+                    <div className={styles["content-resize-collapse"]}>
+                        <div className={styles["main-title"]}>相关代码段</div>
+                        <AuditResultCollapse
+                            data={yakURLData}
+                            jumpCodeScanPage={jumpCodeScanPage}
+                            isShowExtra={isShowExtra}
+                        />
+                    </div>
+                }
+                secondNode={<AuditResultDescribe info={info} />}
+                firstMinSize={200}
+                secondMinSize={400}
             />
         </div>
     )

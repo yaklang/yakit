@@ -250,3 +250,121 @@ $keyColor: map-keys($tagColor);
     padding: 12px;
     width: 100%;
 }
+
+
+
+.yakit-audit-risk-details-content {
+    overflow-y: auto;
+    border: 1px solid var(--yakit-border-color);
+    :global {
+        .ant-descriptions-bordered .ant-descriptions-view > table {
+            table-layout: fixed;
+        }
+    }
+    .content-heard {
+        @extend %display-flex-center;
+        align-items: flex-start;
+        padding: 12px;
+        border-bottom: 1px solid var(--yakit-border-color);
+        .content-heard-left {
+            @extend %display-flex-center;
+            overflow: hidden;
+            .content-heard-severity {
+                @extend %display-column-center;
+                align-items: center;
+                justify-content: center;
+                .content-heard-severity-name {
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+                svg {
+                    width: 28px;
+                    height: 28px;
+                }
+            }
+            .content-heard-body {
+                @extend %display-flex-center;
+                gap: 8px;
+                overflow: hidden;
+                flex-wrap: wrap;
+                .content-heard-body-title {
+                    color: var(--yakit-header-color);
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .content-heard-body-description {
+                    @extend %display-flex-center;
+                    color: var(--yakit-header-color);
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                    overflow: hidden;
+                    .description-port {
+                        flex-shrink: 0;
+                    }
+                    .url-info {
+                        @extend %display-flex-center;
+                        gap: 4px;
+                        overflow: hidden;
+                        .url {
+                            color: var(--yakit-body-text-color);
+                        }
+                    }
+                    .content-heard-body-time {
+                        @extend %display-flex-center;
+                        gap: 16px;
+                        flex-shrink: 0;
+                    }
+                }
+            }
+        }
+        .content-heard-right {
+            @extend %display-flex-center;
+            align-items: flex-start;
+            flex: 1;
+            justify-content: flex-end;
+        }
+    }
+    .content-resize-first {
+        @extend %display-column-center;
+        height: 100%;
+        overflow: hidden;
+        &-heard {
+            @extend %display-flex-center;
+        }
+    }
+    .content-resize-second {
+        @extend %display-column-center;
+        overflow-y: auto;
+        height: 100%;
+    }
+}
+.yakit-audit-risk-details-content-no-border {
+    border: 0;
+}
+
+.disabled-open {
+    min-width: 134px;
+    background: var(--ui-background-color);
+    color: var(--yakit-disable-text-color);
+    border-radius: 4px;
+    border: 1px solid var(--yakit-border-color);
+    height: 24px;
+    padding: 3px 8px;
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    cursor: no-drop;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    svg{
+        width: 16px;
+        height: 16px;
+        color: var(--yakit-disable-text-color);
+    }
+}
