@@ -2,7 +2,14 @@ import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/
 import React, {useEffect, useRef, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
-import {blockquoteSchema, codeBlockSchema, commonmark, hrSchema, listItemSchema} from "@milkdown/kit/preset/commonmark"
+import {
+    blockquoteSchema,
+    codeBlockSchema,
+    commonmark,
+    hrSchema,
+    listItemSchema,
+    syncHeadingIdPlugin
+} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
@@ -117,7 +124,16 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     return difference > 1000 * 30
 }
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {type, readonly, defaultValue, collabProps, setEditor, customPlugin, onMarkdownUpdated} = props
+    const {
+        type,
+        readonly,
+        defaultValue,
+        collabProps,
+        setEditor,
+        customPlugin,
+        onMarkdownUpdated,
+        onSaveContentBeforeDestroy
+    } = props
 
     const milkdownRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(milkdownRef)
@@ -393,7 +409,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                             onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
                         })
                     })
-                    .use(commonmark)
+                    .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
                     .use(gfm)
                     .use(cursor)
                     .use(tooltip)
@@ -443,12 +459,18 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     useEffect(() => {
         if (loading) return
         const editor = get()
-        if (editor && setEditor) {
-            setEditor(editor)
+        if (editor) {
+            if (setEditor) setEditor(editor)
             // DeletedFiles
-            editor?.action(onSetDeletedFiles)
+            editor.action(onSetDeletedFiles)
         }
     }, [loading, get])
+    useEffect(() => {
+        return () => {
+            const value = get()?.action(getMarkdown()) || ""
+            onSaveContentBeforeDestroy && onSaveContentBeforeDestroy(value)
+        }
+    }, [])
     //#endregion
 
     //#region 删除资源
@@ -643,11 +665,11 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                 // 有内容才保存，没有内容新建
                 if (markdownContent) {
                     const params: API.PostNotepadRequest = {
-                        title: title,
+                        title,
                         content: markdownContent
                     }
                     apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({notepadHash: hash})
+                        toEditNotepad({notepadHash: hash, title})
                         onCloseCurrentPage()
                         s.destroy()
                     })

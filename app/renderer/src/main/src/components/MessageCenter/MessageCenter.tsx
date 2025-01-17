@@ -30,6 +30,7 @@ import IconNoLoginMessage from "@/assets/no_login_message.png"
 import LoginMessage from "@/assets/login_message.png"
 import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {shallow} from "zustand/shallow"
+import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
@@ -268,7 +269,14 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                                 yakitNotify("error", "未找到笔记本信息")
                                 break
                             }
-                            toEditNotepad({notepadHash: data.notepadHash, notepadPageList: notepadPageList || []})
+                            apiGetNotepadDetail(data.notepadHash).then((res) => {
+                                toEditNotepad({
+                                    notepadHash: res.hash,
+                                    title: res.title,
+                                    notepadPageList: notepadPageList || []
+                                })
+                            })
+
                             break
                         // 其余跳转到插件日志
                         default:

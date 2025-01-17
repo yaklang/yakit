@@ -58,8 +58,10 @@ export interface CustomMilkdownProps {
 
     /**协作文档相关参数 */
     collabProps?: MilkdownCollabProps
-    /**编辑器内容的变化 */
+    /**编辑器内容的变化 tip:在线协作时，A本地触发内容的变化，B编辑器会同步内容，但listener.markdownUpdated监听不到 */
     onMarkdownUpdated?: (next: string, per: string) => void
+    /**卸载前，抛出去最新的内容 */
+    onSaveContentBeforeDestroy?: (value: string) => void
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
 

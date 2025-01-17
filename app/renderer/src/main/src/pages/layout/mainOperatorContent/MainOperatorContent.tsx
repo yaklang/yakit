@@ -101,6 +101,7 @@ import {
     AuditCodePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    ModifyNotepadPageInfoProps,
     PageNodeItemProps,
     PageProps,
     PluginHubPageInfoProps,
@@ -146,7 +147,6 @@ import {
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
-import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
 import {APIFunc} from "@/apiUtils/type"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -635,23 +635,16 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         )
     })
-    const addModifyNotepad = useMemoizedFn(async (data) => {
-        try {
-            let verbose = ""
-            if (!!data?.notepadHash) {
-                const res = await apiGetNotepadDetail(data.notepadHash)
-                verbose = res?.title || ""
-            }
-            openMenuPage(
-                {route: YakitRoute.Modify_Notepad},
-                {
-                    verbose,
-                    pageParams: {
-                        modifyNotepadPageInfo: {...data}
-                    }
+    const addModifyNotepad = useMemoizedFn((data: ModifyNotepadPageInfoProps) => {
+        openMenuPage(
+            {route: YakitRoute.Modify_Notepad},
+            {
+                verbose: data.title,
+                pageParams: {
+                    modifyNotepadPageInfo: {...data}
                 }
-            )
-        } catch (error) {}
+            }
+        )
     })
     const addScanPort = useMemoizedFn((data) => {
         openMenuPage(
@@ -2464,7 +2457,6 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             onOkText: "关闭所有",
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
-                // const newPage: PageCache | undefined = pageCache.find((p) => p.route === YakitRoute.NewHome)
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
                 if (fixedTabs.length > 0) {
                     const key = fixedTabs[fixedTabs.length - 1].routeKey
@@ -2497,6 +2489,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                 const fixedTabs = pageCache.filter((ele) => defaultFixedTabs.includes(ele.route))
                 const newPage: PageCache[] = [...fixedTabs, item]
                 setPageCache(newPage)
+                setCurrentTabKey(item.routeKey)
                 clearOtherDataByRoute(item.routeKey)
                 if (item.route !== YakitRoute.HTTPFuzzer) {
                     //当前item不是YakitRoute.HTTPFuzzer,则清除序列化缓存数据

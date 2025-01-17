@@ -12,7 +12,7 @@ import {HybridScanControlAfterRequest, HybridScanModeType} from "@/models/Hybrid
 import {defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {PluginSourceType} from "@/pages/pluginHub/type"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import { SyntaxFlowScanModeType } from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import {SyntaxFlowScanModeType} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
 
 /**
  * @description 页面暂存数据
@@ -197,6 +197,8 @@ export interface CodeScanPageInfoProps {
 export interface ModifyNotepadPageInfoProps {
     /**笔记本 hash */
     notepadHash?: string
+    /**笔记本标题 */
+    title?: string
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

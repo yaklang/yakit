@@ -1,4 +1,4 @@
-import {Plugin, PluginKey} from "prosemirror-state"
+import {Plugin, PluginKey} from "@milkdown/kit/prose/state"
 import {$prose} from "@milkdown/kit/utils"
 import {MilkdownCatalogueProps} from "@/pages/notepadManage/modifyNotepad/ModifyNotepadType"
 
@@ -26,27 +26,18 @@ const getHeading = (view) => {
 export const cataloguePlugin = (callback) =>
     $prose((ctx) => {
         return new Plugin({
-            key: new PluginKey("MILKDOWN_PLUGIN_CATALOGUE"),
+            key: new PluginKey("CUSTOM_MILKDOWN_PLUGIN_CATALOGUE"),
             view: (editorView) => {
                 // 初始化目录
                 const initHeadings = getHeading(editorView)
                 callback(initHeadings)
 
                 return {
-                    update: (view) => {
-                        const composing = view.composing
-                        if (composing) {
-                            // 跳过输入中文拼音的中间状态
-                            return
-                        }
-                        const {selection} = view.state
-                        const $from = selection.$from
-                        const node = $from.node()
-                        if (node && node.type === view.state.schema.nodes.heading) {
-                            const headings = getHeading(view)
-                            // 内容变化时更新目录
-                            callback(headings)
-                        }
+                    update: (view, prevState) => {
+                        if (view.state.doc.eq(prevState.doc)) return
+                        const headings = getHeading(view)
+                        // 内容变化时更新目录
+                        callback(headings)
                     }
                 }
             }

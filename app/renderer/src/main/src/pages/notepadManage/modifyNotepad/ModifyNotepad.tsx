@@ -32,7 +32,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {useStore} from "@/store"
 import {judgeAvatar} from "@/pages/MainOperator"
 import {randomAvatarColor} from "@/components/layout/FuncDomain"
-import {cloneDeep} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -101,7 +101,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     const [tabName, setTabName] = useState<string>(initTabName())
     const [composedTabName, setComposedTabName] = useState<string>(initTabName()) // 不会保存拼音的中间状态
-    const [pageInfo, setPageInfo] = useState<ModifyNotepadPageInfoProps>(initPageInfo())
+
+    const [editor, setEditor] = useState<EditorMilkdownProps>()
     const [notepadDetail, setNotepadDetail] = useState<API.GetNotepadList>({
         id: 0,
         created_at: moment().unix(),
@@ -129,9 +130,18 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const clientHeightRef = useRef(document.body.clientHeight)
     const avatarColor = useRef<string>(randomAvatarColor())
     const perTabName = useRef<string>(initTabName())
+    const perHeadings = useRef<MilkdownCatalogueProps[]>([])
+
     const [inViewport = true] = useInViewport(notepadRef)
 
     useEffect(() => {
+        if (!inViewport) {
+            notepadContentRef.current = editor?.action(getMarkdown()) || ""
+            onSaveNewContent(notepadContentRef.current)
+        }
+    }, [inViewport])
+    useEffect(() => {
+        const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             setNotepadLoading(true)
@@ -173,11 +183,11 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     }, 200)
                 )
         }
-        return () => {
-            const notepadContent = notepadContentRef.current
-            onSaveNewContent(notepadContent)
-        }
-    }, [pageInfo])
+        // return () => {
+        //     const notepadContent = notepadContentRef.current
+        //     onSaveNewContent(notepadContent)
+        // }
+    }, [])
 
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
@@ -225,6 +235,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     // 下载文档
     const onDownNotepad = useMemoizedFn(() => {
+        notepadContentRef.current = editor?.action(getMarkdown()) || ""
         const params: API.PostNotepadRequest = {
             hash: notepadDetail.hash,
             title: tabName,
@@ -299,8 +310,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
 
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
-        if (title.length > 100) {
-            yakitNotify("error", "标题不超过100个字符")
+        if (title.length > 50) {
+            yakitNotify("error", "标题不超过50个字符")
             return
         }
         if (title) {
@@ -330,14 +341,17 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [notepadWidth])
     const getCatalogue = useDebounceFn(
         (headings) => {
+            if (isEqual(perHeadings.current, headings)) return
             // 生成目录树形结构
             const tocTree = buildTOCTree(headings)
+            perHeadings.current = headings
             treeKeysRef.current = tocTree.keys
             setCatalogue(tocTree.treeData)
         },
         {wait: 500, leading: true}
     ).run
     const onCatalogueClick = useMemoizedFn((info: MilkdownCatalogueProps) => {
+        if (!info.id) return
         const element = document.getElementById(info.id)
         if (element) {
             element.scrollIntoView({behavior: "smooth"})
@@ -411,7 +425,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     }, [currentRole])
     const collabProps: MilkdownCollabProps = useCreation(() => {
         const enableCollab = !readonly
-        const newTitle = composedTabName || perTabName.current
+        const newTitle = composedTabName
         const collabValue: MilkdownCollabProps = {
             title: newTitle,
             enableCollab,
@@ -602,7 +616,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                 size='large'
                                 bordered={false}
                                 className={styles["notepad-input"]}
-                                // value={currentRole === notepadRole.adminPermission ? tabName : composedTabName}
                                 value={tabName}
                                 onChange={(e) => {
                                     setTabName(e.target.value)
@@ -610,7 +623,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                         onSetTabName(e.target.value)
                                     }
                                 }}
-                                maxLength={100}
+                                maxLength={50}
                                 onCompositionEnd={(e) => {
                                     onSetTabName((e.target as HTMLInputElement).value)
                                 }}
@@ -648,6 +661,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                                     customPlugin={cataloguePlugin(getCatalogue)}
                                     collabProps={collabProps}
                                     onMarkdownUpdated={onMarkdownUpdated}
+                                    setEditor={setEditor}
+                                    onSaveContentBeforeDestroy={onSaveNewContent}
                                 />
                             </YakitSpin>
                         </div>
