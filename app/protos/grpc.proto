@@ -761,10 +761,6 @@ service Yak {
   rpc GetAllFuzztagInfo (GetAllFuzztagInfoRequest) returns (GetAllFuzztagInfoResponse);
   rpc GenerateFuzztag (GenerateFuzztagRequest) returns (GenerateFuzztagResponse);
 
-  // 导入导出SyntaxFlow规则
-  rpc ExportSyntaxFlows(ExportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
-  rpc ImportSyntaxFlows(ImportSyntaxFlowsRequest) returns (stream SyntaxflowsProgress);
-
   // hot-patch template
   rpc CreateHotPatchTemplate(HotPatchTemplate) returns (CreateHotPatchTemplateResponse);
   rpc DeleteHotPatchTemplate(DeleteHotPatchTemplateRequest) returns (DeleteHotPatchTemplateResponse);
@@ -5981,23 +5977,6 @@ message FuzzTagSuggestionRequest{
   string HotPatchCode = 1;
   string FuzztagCode = 2;
   string InspectType = 3;
-}
-
-message ExportSyntaxFlowsRequest {
-  SyntaxFlowRuleFilter Filter = 1;
-  string Password = 2;
-  string TargetPath = 3;
-}
-message ImportSyntaxFlowsRequest {
-  string InputPath = 1;
-  string Password = 2;
-}
-
-message SyntaxflowsProgress {
-  // 进度  0-1.0
-  double Progress = 1;
-  // 展示的提示语，可能是中断原因或者错误原因之类的
-  string Verbose = 2;
 }
 
 // hot-patch template
