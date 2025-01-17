@@ -119,7 +119,7 @@ export interface SyntaxFlowRuleFilter {
     AfterId?: number
     BeforeId?: number
 
-    IsNotBuiltin?: boolean // 是否不是内置规则
+    FilterRuleKind?: "buildIn" | "unBuildIn" // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter

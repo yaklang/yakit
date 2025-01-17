@@ -5610,7 +5610,7 @@ message SyntaxFlowRuleFilter {
   int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
-  bool IsNotBuiltin = 13; // 是否不是内置规则
+  string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
 }
 
 message SSAProgram{

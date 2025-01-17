@@ -509,7 +509,7 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                 return
             }
             const request: ExportSyntaxFlowsRequest = {
-                Filter: {...cloneDeep(tragetFilter), IsNotBuiltin: true},
+                Filter: {...cloneDeep(tragetFilter), FilterRuleKind: "unBuildIn"},
                 TargetPath: formValue?.TargetPath || "",
                 Password: formValue?.Password || undefined
             }
