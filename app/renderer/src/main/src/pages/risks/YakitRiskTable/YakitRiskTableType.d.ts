@@ -77,7 +77,7 @@ export interface YakitCodeScanRiskDetailsProps {
 }
 
 export interface YakURLDataItemProps {
-    index:string
+    index:string|number
     code_range:CodeRangeProps
     source: string
     ResourceName:string

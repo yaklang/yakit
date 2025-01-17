@@ -1,6 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {DeleteSSARisksRequest, QuerySSARisksRequest, QuerySSARisksResponse} from "./YakitAuditHoleTableType"
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
+import { FieldName } from "@/pages/risks/RiskTable"
 const {ipcRenderer} = window.require("electron")
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -47,8 +48,8 @@ export const apiUpdateSSARiskTags: (params: UpdateSSARiskTagsRequest) => Promise
 
 export interface GetSSARiskFieldGroupResponse {
     ProgramNameField: FieldGroup[]
-    SeverityField: FieldGroup[]
-    RiskTypeField: FieldGroup[]
+    SeverityField: FieldName[]
+    RiskTypeField: FieldName[]
 }
 /** GetSSARiskFieldGroup */
 export const apiGetSSARiskFieldGroup: () => Promise<GetSSARiskFieldGroupResponse> = () => {
@@ -71,8 +72,6 @@ export interface NewRiskReadRequest {
 }
 export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
-        console.log("query---",query);
-        
         ipcRenderer
             .invoke("NewSSARiskRead", query)
             .then(resolve)

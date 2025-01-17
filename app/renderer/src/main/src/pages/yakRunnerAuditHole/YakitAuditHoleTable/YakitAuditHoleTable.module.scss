@@ -254,7 +254,10 @@ $keyColor: map-keys($tagColor);
 
 
 .yakit-audit-risk-details-content {
-    overflow-y: auto;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--yakit-border-color);
     :global {
         .ant-descriptions-bordered .ant-descriptions-view > table {
@@ -328,19 +331,6 @@ $keyColor: map-keys($tagColor);
             flex: 1;
             justify-content: flex-end;
         }
-    }
-    .content-resize-first {
-        @extend %display-column-center;
-        height: 100%;
-        overflow: hidden;
-        &-heard {
-            @extend %display-flex-center;
-        }
-    }
-    .content-resize-second {
-        @extend %display-column-center;
-        overflow-y: auto;
-        height: 100%;
     }
 }
 .yakit-audit-risk-details-content-no-border {

@@ -11,7 +11,7 @@ import {
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
-import {Badge, Descriptions, Divider, Form, Tooltip} from "antd"
+import {Badge, CollapseProps, Descriptions, Divider, Form, Tooltip} from "antd"
 import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -1841,6 +1841,8 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
+            console.log("xxx",params);
+            
             emiter.emit(
                 "openPage",
                 JSON.stringify({
@@ -1951,6 +1953,11 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
         if (columnSize) return columnSize
         return 1
     }, [])
+
+    const getRule = useMemoizedFn(() => {
+        const newInfo = info as any
+        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+    })
     return (
         <div className={styles["content-resize-second"]}>
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
@@ -1958,7 +1965,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                 </Descriptions.Item>
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Description || "-"}
@@ -2010,6 +2017,11 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
+
+    const getRule = useMemoizedFn(() => {
+        const newInfo = info as any
+        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+    })
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
@@ -2052,7 +2064,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                     </Descriptions.Item>
                     <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                    <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                             {info.Description || "-"}
@@ -2072,10 +2084,11 @@ interface AuditResultCollapseProps {
     data: YakURLDataItemProps[]
     jumpCodeScanPage: (v: string) => void
     isShowExtra?: boolean
+    collapseProps?: CollapseProps
 }
 
 export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
-    const {data, jumpCodeScanPage, isShowExtra} = props
+    const {data, jumpCodeScanPage, isShowExtra, collapseProps} = props
 
     const titleRender = (info: YakURLDataItemProps) => {
         const {index, code_range, source, ResourceName} = info
@@ -2131,6 +2144,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                 list={data}
                 titleRender={titleRender}
                 renderItem={renderItem}
+                collapseProps={collapseProps}
             />
         </div>
     )

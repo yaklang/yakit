@@ -131,7 +131,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const [selectList, setSelectList] = useState<SSARisk[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<SSARisk>()
 
-    const [riskTypeVerbose, setRiskTypeVerbose] = useState<FieldName[]>([])
+    const [riskTypeVerbose, setRiskTypeVerbose] = useState<string[]>([])
 
     const onFirst = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
@@ -155,15 +155,15 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         })
 
     useUpdateEffect(() => {
-        console.log("opopop", query)
-        debugVirtualTableEvent.setP({
+        const newParams: QuerySSARisksRequest = {
             ...tableParams,
             Filter: {
                 ...tableParams.Filter,
-                // 此处预留未读筛选 等待后端
-                ...query
+                ...query,
+                Severity: query.Severity ? getQuerySeverity(query.Severity) : []
             }
-        })
+        }
+        debugVirtualTableEvent.setP(newParams)
     }, [query])
 
     // 选中插件的数量
@@ -204,9 +204,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
-            value: item.Verbose,
-            label: item.Verbose,
-            total: item.Total
+            value: item,
+            label: item
         }))
         const columnArr: ColumnsTypeProps[] = [
             {
@@ -366,11 +365,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [riskTypeVerbose, excludeColumnsKey])
 
     const getRiskType = useMemoizedFn(() => {
-        const query:GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "risk_type"}
+        const query: GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "risk_type"}
         apiGroupTableColumn(query).then((data) => {
-            console.log("GroupTableColumn---",query, data)
+            setRiskTypeVerbose(data.Data.filter((item) => item.length !== 0))
         })
-        // setRiskTypeVerbose
     })
 
     const onOpenSelect = useMemoizedFn((record: SSARisk) => {
@@ -407,8 +405,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 ID: [id]
             }
         }
-        console.log("delete----", removeQuery)
-
         apiDeleteSSARisks(removeQuery).then(() => {
             debugVirtualTableEvent.setTData(tableData.filter((item) => item.Id !== id))
             emiter.emit("onRefAuditRiskFieldGroup")
@@ -427,8 +423,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         }
         setRiskLoading(true)
-        console.log("removeQuery---", removeQuery)
-
         apiDeleteSSARisks(removeQuery)
             .then(() => {
                 debugVirtualTableEvent.noResetRefreshT()
@@ -482,7 +476,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 IsRead: type === "all" ? 0 : -1
             }
         }
-        console.log("newQuery---", finalParams, filter)
         debugVirtualTableEvent.setP(finalParams)
     })
     const getQuerySeverity = useMemoizedFn((list: string[]) => {
@@ -846,12 +839,12 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
     const initData = useMemoizedFn(async () => {
         try {
-            const {index, CodeRange, ProgramName, CodeFragment} = info
-            if (index && CodeRange) {
+            const {Index, CodeRange, ProgramName, CodeFragment} = info
+            if (Index && CodeRange) {
                 const code_range: CodeRangeProps = JSON.parse(CodeRange)
                 setYakURLData([
                     {
-                        index,
+                        index: Index,
                         code_range,
                         source: CodeFragment,
                         ResourceName: ProgramName
@@ -921,14 +914,14 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
     // 跳转到代码审计页面
     const jumpCodeScanPage = useMemoizedFn((value?: string) => {
-        const {ProgramName, SyntaxFlowVariable, ResultID} = info
-        if (ResultID && SyntaxFlowVariable && ProgramName) {
+        const {ProgramName, Variable, ResultID} = info
+        if (ResultID && Variable && ProgramName) {
             // 跳转到审计页面的参数
             const params: AuditCodePageInfoProps = {
                 Schema: "syntaxflow",
                 Location: ProgramName,
                 Path: `/`,
-                Variable: SyntaxFlowVariable,
+                Variable,
                 Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
@@ -992,7 +985,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                 icon={<OutlineTerminalIcon />}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    jumpCodeScanPage()
+                                    jumpCodeScanPage(info.Index ? `/${info.Index}` : undefined)
                                 }}
                             >
                                 在代码审计中打开
@@ -1016,7 +1009,10 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                         <AuditResultCollapse
                             data={yakURLData}
                             jumpCodeScanPage={jumpCodeScanPage}
-                            isShowExtra={isShowExtra}
+                            isShowExtra={false}
+                            collapseProps={{
+                                defaultActiveKey: ["0"]
+                            }}
                         />
                     </div>
                 }

@@ -32,19 +32,21 @@ export interface SSARisk {
     CveAccessVector: string
     CveAccessComplexity: string
     Tags: string
-    ResultID: number
 
     IsRead: boolean
 
-    // 前端用于染色 后端不存在此字段
-    cellClassName?: string
+    ResultID: number
+    Variable?: string
+    Index?: number
 
-    // 等待后端添加
-    SyntaxFlowVariable?: string
-    FromYakScript?: string
+    FunctionName?: string
+    Line?: number
+
     Description?: string
     Solution?: string
-    index?: string
+
+    // 前端用于染色 后端不存在此字段
+    cellClassName?: string
 }
 
 export interface YakitAuditHoleTableProps {
@@ -86,7 +88,7 @@ export interface YakitCodeScanRiskDetailsProps {
 }
 
 export interface YakURLDataItemProps {
-    index: string
+    index: number
     code_range: CodeRangeProps
     source: string
     ResourceName: string
@@ -113,7 +115,7 @@ export interface SSARisksFilter {
 
     // 此处需等待后端写入
     /** >0 true  <0 false =0 all */
-    IsRead?: number 
+    IsRead?: number
 }
 
 export interface DeleteSSARisksRequest {
