@@ -4547,6 +4547,9 @@ message FuzzerRequest {
 
   // disable hotPatch
   bool DisableHotPatch = 59;
+
+  // engine drop packet
+  bool EngineDropPacket = 60;
 }
 
 message MutateMethod {
