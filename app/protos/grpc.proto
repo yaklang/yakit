@@ -745,6 +745,12 @@ service Yak {
   rpc QuerySSAPrograms(QuerySSAProgramRequest)returns(QuerySSAProgramResponse);
   rpc UpdateSSAProgram(UpdateSSAProgramRequest)returns(DbOperateMessage);
   rpc DeleteSSAPrograms(DeleteSSAProgramRequest)returns(DbOperateMessage);
+  // SSA Risk CURD
+  rpc QuerySSARisks(QuerySSARisksRequest)returns(QuerySSARisksResponse);
+  rpc DeleteSSARisks(DeleteSSARisksRequest)returns(DbOperateMessage);
+  rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
+  rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
+  rpc NewSSARiskRead(NewRiskReadRequest) returns (Empty);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
@@ -765,6 +771,10 @@ service Yak {
   rpc UpdateHotPatchTemplate(UpdateHotPatchTemplateRequest) returns (UpdateHotPatchTemplateResponse);
   rpc QueryHotPatchTemplate(HotPatchTemplateRequest) returns (QueryHotPatchTemplateResponse);
   rpc QueryHotPatchTemplateList(QueryHotPatchTemplateListRequest) returns (QueryHotPatchTemplateListResponse);
+
+  // db common rpc
+  rpc GroupTableColumn(GroupTableColumnRequest) returns (GroupTableColumnResponse);
+
 
   rpc UploadHotPatchTemplateToOnline(UploadHotPatchTemplateToOnlineRequest) returns (Empty);
   rpc DownloadHotPatchTemplate(DownloadHotPatchTemplateRequest) returns (Empty);
@@ -4684,6 +4694,8 @@ message Paging {
   string OrderBy = 53;
   string Order = 54;
   string RawOrder = 55;
+  int64 BeforeId = 56;
+  int64 AfterId = 57;
 }
 
 message GetHTTPFlowByHashRequest {
@@ -5848,6 +5860,7 @@ message SyntaxFlowScanResponse{
   // result 
   SyntaxFlowResult Result = 4;
   repeated Risk risks = 5;
+  repeated SSARisk SSARisks = 6;
 }
 
 
@@ -5970,6 +5983,90 @@ message FuzzTagSuggestionRequest{
   string InspectType = 3;
 }
 
+message SSARisk {
+  int64 Id = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
+
+  string Hash = 4;
+
+  string ProgramName = 5;
+  string CodeSourceUrl = 6;
+  string CodeRange = 7;
+  string CodeFragment = 8;
+
+  string Title = 9;
+  string TitleVerbose = 10;
+  string RiskType = 11;
+  string RiskTypeVerbose = 12;
+  string Details = 13;
+  string Severity = 14;
+
+  string FromRule = 15;
+  string RuntimeID = 16;
+
+  bool IsPotential = 17;
+
+  string CVE = 18;
+  string CveAccessVector = 19;
+  string CveAccessComplexity = 20;
+  string Tags = 21;
+
+  bool IsRead = 23;
+
+  uint64 ResultID = 22;
+  string Variable  = 24;
+  int64 Index = 25;
+
+  string FunctionName = 26;
+  int64 Line = 27;
+
+  // other mesg 
+  string Solution = 28;
+  string Description = 29 ;
+}
+
+message SSARisksFilter {
+  repeated int64 ID = 1;
+
+  string Search = 2;
+  repeated string ProgramName = 3;
+  repeated string CodeSourceUrl = 4;
+  repeated string RiskType = 5;
+  repeated string Severity = 6;
+  repeated string FromRule = 7;
+  repeated string RuntimeID = 8;
+  repeated uint64 ResultID = 9;
+  repeated string Tags = 10;
+  int64 IsRead = 11; // >0 true  <0 false =0 all
+}
+
+message QuerySSARisksRequest {
+  Paging Pagination = 1;
+  SSARisksFilter Filter = 2;
+}
+
+message QuerySSARisksResponse {
+  Paging Pagination = 1;
+  repeated SSARisk Data = 2;
+  int64 Total = 3;
+}
+
+message DeleteSSARisksRequest {
+  SSARisksFilter Filter = 1;
+}
+
+message UpdateSSARiskTagsRequest {
+  int64 ID = 1;
+  repeated string Tags = 2;
+}
+
+message SSARiskFieldGroupResponse {
+  repeated FieldGroup FileField = 1;
+  repeated FieldName SeverityField = 2;
+  repeated FieldName RiskTypeField = 3;
+}
+
 message ExportSyntaxFlowsRequest {
   SyntaxFlowRuleFilter Filter = 1;
   string Password = 2;
@@ -6038,6 +6135,15 @@ message QueryHotPatchTemplateListResponse {
     int64 Total = 3;
 }
 
+message GroupTableColumnRequest {
+  string DatabaseName = 1; //  enum    Project/Profile/SSA
+  string TableName = 2;
+  string ColumnName = 3;
+}
+
+message GroupTableColumnResponse {
+  repeated string Data = 1;
+}
 message UploadHotPatchTemplateToOnlineRequest {
   string Token = 1;
   string Name = 2;
