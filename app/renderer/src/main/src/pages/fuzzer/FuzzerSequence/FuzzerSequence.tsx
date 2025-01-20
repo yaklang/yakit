@@ -56,6 +56,7 @@ import {
     FuzzerExtraShow,
     FuzzerRequestProps,
     FuzzerResponse,
+    FuzzerShowSuccess,
     ResponseViewer,
     SecondNodeExtra,
     SecondNodeTitle,
@@ -1746,7 +1747,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             advancedConfigValue: {...defaultAdvancedConfigValue},
             pageId: ""
         }
-        const [showSuccess, setShowSuccess] = useState(true)
+        const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>("true")
         const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
         const [affixSearch, setAffixSearch] = useState<string>("")
         const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
@@ -1925,6 +1926,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         setShowSuccess(v)
                         setQuery({})
                     }}
+                    showConcurrentAndLoad={false}
                 />
             </>
         )
@@ -2060,11 +2062,11 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                         </div>
                                         {cachedTotal > 1 ? (
                                             <>
-                                                {showSuccess && (
+                                                {showSuccess === "true" && (
                                                     <HTTPFuzzerPageTable
                                                         ref={successTableRef}
                                                         isRefresh={isRefresh}
-                                                        success={showSuccess}
+                                                        success={true}
                                                         data={successFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
@@ -2090,10 +2092,10 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
-                                                {!showSuccess && (
+                                                {showSuccess === "false" && (
                                                     <HTTPFuzzerPageTable
                                                         isRefresh={isRefresh}
-                                                        success={showSuccess}
+                                                        success={false}
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
