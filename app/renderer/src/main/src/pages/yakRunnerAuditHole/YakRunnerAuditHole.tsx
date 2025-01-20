@@ -87,7 +87,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const getGroups = useMemoizedFn(() => {
         apiGetSSARiskFieldGroup().then((res) => {
             const {ProgramNameField, SeverityField, RiskTypeField} = res
-            setProgramList(ProgramNameField)
+            setProgramList(ProgramNameField.sort((a,b)=>b.Total-a.Total))
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
             if (ProgramNameField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {

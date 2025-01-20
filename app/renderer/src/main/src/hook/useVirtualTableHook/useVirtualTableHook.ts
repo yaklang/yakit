@@ -35,6 +35,7 @@ export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
 // 使用此hook接口需满足此种结构
 // request {
 //     Pagination {
+//       ...
 //       int64 BeforeId
 //       int64 AfterId
 //     }
@@ -106,9 +107,12 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         // 倒序时需要额外处理传给后端顺序
         const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
+        // console.log("finalParams---",finalParams);
 
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT>) => {
+                // console.log("rsp---",rsp);
+                
                 let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
                 if (initResDataFun) {
                     newData = initResDataFun(newData)

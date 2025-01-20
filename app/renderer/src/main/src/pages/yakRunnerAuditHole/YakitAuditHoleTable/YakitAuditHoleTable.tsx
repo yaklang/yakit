@@ -160,7 +160,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             Filter: {
                 ...tableParams.Filter,
                 ...query,
-                Severity: query.Severity ? getQuerySeverity(query.Severity) : []
+                Severity: query.Severity ? query.Severity : []
             }
         }
         debugVirtualTableEvent.setP(newParams)
@@ -259,23 +259,23 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     filterMultiple: true,
                     filters: [
                         {
-                            value: "严重",
+                            value: "critical",
                             label: "严重"
                         },
                         {
-                            value: "高危",
+                            value: "high",
                             label: "高危"
                         },
                         {
-                            value: "中危",
+                            value: "warning",
                             label: "中危"
                         },
                         {
-                            value: "低危",
+                            value: "low",
                             label: "低危"
                         },
                         {
-                            value: "信息",
+                            value: "info",
                             label: "信息"
                         }
                     ]
@@ -471,19 +471,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             ...newQuery,
             Filter: {
                 ...Filter,
-                Severity: !!Filter.SeverityList ? getQuerySeverity(Filter.SeverityList) : [],
+                Severity: !!Filter.SeverityList ? Filter.SeverityList : [],
                 ProgramName: !!Filter.ProgramNameStr ? [Filter.ProgramNameStr] : [],
                 IsRead: type === "all" ? 0 : -1
             }
         }
         debugVirtualTableEvent.setP(finalParams)
-    })
-    const getQuerySeverity = useMemoizedFn((list: string[]) => {
-        if (list.length === 0) return []
-        return SeverityMapTag.filter((ele) => list.includes(ele.name))
-            .map((ele) => ele.key)
-            .join(",")
-            .split(",")
     })
 
     const onSearch = useMemoizedFn((val) => {
