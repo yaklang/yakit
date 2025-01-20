@@ -481,23 +481,23 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filterMultiple: true,
                     filters: [
                         {
-                            value: "严重",
+                            value: "critical",
                             label: "严重"
                         },
                         {
-                            value: "高危",
+                            value: "high",
                             label: "高危"
                         },
                         {
-                            value: "中危",
+                            value: "warning",
                             label: "中危"
                         },
                         {
-                            value: "低危",
+                            value: "low",
                             label: "低危"
                         },
                         {
-                            value: "信息",
+                            value: "info",
                             label: "信息"
                         }
                     ]
@@ -911,11 +911,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         setQuery(newQuery)
         limitRef.current = defLimitRef.current
     })
-    const getQuerySeverity = useMemoizedFn((list: string[]) => {
-        return SeverityMapTag.filter((ele) => list.includes(ele.name))
-            .map((ele) => ele.key)
-            .join(",")
-    })
+
     const getQueryNetwork = useMemoizedFn((network: string, ipList: string[]) => {
         let ip = network
         if (ipList.length > 0) {
@@ -928,7 +924,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const finalParams: QueryRisksRequest = {
             ...query,
             RiskType: !!query.RiskTypeList ? query.RiskTypeList.join(",") : "",
-            Severity: !!query.SeverityList ? getQuerySeverity(query.SeverityList) : "",
+            Severity: !!query.SeverityList ? query.SeverityList.join(",") : "",
             Tags: !!query.TagList ? query.TagList.join("|") : "",
             Network: getQueryNetwork(query.Network, query.IPList || []),
             IsRead: type === "all" ? "" : "false"
@@ -1841,7 +1837,6 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
-            console.log("xxx",params);
             
             emiter.emit(
                 "openPage",
