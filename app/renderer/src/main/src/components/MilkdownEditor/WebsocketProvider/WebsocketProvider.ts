@@ -191,7 +191,6 @@ const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, ev
     if (ws === provider.ws) {
         if (event) provider.emit("connection-close", [event, provider])
         provider.ws = null
-        ws.close()
         provider.wsconnecting = false
         if (provider.wsconnected) {
             provider.wsconnected = false
@@ -212,13 +211,19 @@ const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, ev
         } else {
             provider.wsUnsuccessfulReconnects++
         }
-        switch (event?.code) {
+        const code = event?.code || 0
+        switch (code) {
+            // event为undefined;
+            // 1.发送notepadActions.leave，主动断开，不重连，等待后端返回200后关闭ws
+            case 0:
+                break
             case 401:
             case 403:
             case 404:
-            case 200:
+            case 200: // 发送notepadActions.leave，后端会给200,正常关闭
             case 209:
             case 500:
+                ws.close()
                 break
             default:
                 // Start with no reconnect timeout and increase timeout by

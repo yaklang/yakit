@@ -112,11 +112,11 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         })
 
         this.wsProvider.once("online-user-count", (onlineUserCount: number) => {
-            if (onlineUserCount < 2 && this.collabStatus.isSynced) {
-                this.collabService.applyTemplate(template).connect()
-            } else if (this.collabStatus.isSynced) {
-                this.collabService.connect()
-            }
+            this.collabService
+                .applyTemplate(template, () => {
+                    return onlineUserCount < 2 && this.collabStatus.isSynced
+                })
+                .connect()
         })
 
         this.wsProvider.on("saveStatus", ({saveStatus}) => {
