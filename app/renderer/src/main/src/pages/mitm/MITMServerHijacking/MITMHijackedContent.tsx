@@ -99,6 +99,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     )
 
     const [width, setWidth] = useState<number>(0)
+    const [height, setHeight] = useState<number>(0)
 
     const {setIsRefreshHistory} = useStore()
 
@@ -485,7 +486,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
 
                 {/* 自动放行 */}
-                <div style={{display: autoForward === "log" ? "block" : "none", height: "100%"}}>
+                <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
                     <HTTPHistory
                         pageType='MITM'
                         downstreamProxyStr={downstreamProxyStr}
@@ -563,45 +564,49 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }, [alertMsg])
 
     return (
-        <div className={styles["mitm-hijacked-content"]} style={{paddingLeft: 5}}>
-            <ReactResizeDetector
-                onResize={(w, h) => {
-                    if (!w) {
-                        return
-                    }
-                    setWidth(w)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
-            <div className={styles["mitm-hijacked-heard"]}>
-                <div className={styles["mitm-hijacked-heard-left"]}>
-                    <YakitRadioButtons
-                        buttonStyle='solid'
-                        value={autoForward}
-                        options={[
-                            {label: "手动劫持", value: "manual"},
-                            {label: "自动放行", value: "log"},
-                            {label: "被动日志", value: "passive"}
-                        ]}
-                        onChange={(e) => {
-                            handleAutoForward(e.target.value)
-                        }}
+        <div className={styles["mitm-hijacked-content"]}>
+            <div>
+                <ReactResizeDetector
+                    onResize={(w, h) => {
+                        if (w) {
+                            setWidth(w)
+                        }
+                        if (h) {
+                            setHeight(h)
+                        }
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={"debounce"}
+                    refreshRate={50}
+                />
+                <div className={styles["mitm-hijacked-heard"]}>
+                    <div className={styles["mitm-hijacked-heard-left"]}>
+                        <YakitRadioButtons
+                            buttonStyle='solid'
+                            value={autoForward}
+                            options={[
+                                {label: "手动劫持", value: "manual"},
+                                {label: "自动放行", value: "log"},
+                                {label: "被动日志", value: "passive"}
+                            ]}
+                            onChange={(e) => {
+                                handleAutoForward(e.target.value)
+                            }}
+                        />
+                    </div>
+                    <div className={styles["mitm-hijacked-heard-right"]}>{onRenderHeardExtra()}</div>
+                </div>
+                <div className={styles["mitm-alert-msg"]} style={{display: alertVisible ? "block" : "none"}}>
+                    {alertMsg}
+                    <YakitButton
+                        style={{float: "right"}}
+                        type='text2'
+                        size={"middle"}
+                        icon={<OutlineXIcon />}
+                        onClick={() => setAlertVisible(false)}
                     />
                 </div>
-                <div className={styles["mitm-hijacked-heard-right"]}>{onRenderHeardExtra()}</div>
-            </div>
-            <div className={styles["mitm-alert-msg"]} style={{display: alertVisible ? "block" : "none"}}>
-                {alertMsg}
-                <YakitButton
-                    style={{float: "right"}}
-                    type='text2'
-                    size={"middle"}
-                    icon={<OutlineXIcon />}
-                    onClick={() => setAlertVisible(false)}
-                />
             </div>
             {onRenderContent()}
         </div>
