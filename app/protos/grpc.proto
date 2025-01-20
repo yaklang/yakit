@@ -6039,6 +6039,7 @@ message SSARisksFilter {
   repeated uint64 ResultID = 9;
   repeated string Tags = 10;
   int64 IsRead = 11; // >0 true  <0 false =0 all
+  string Title = 12; // fuzz search
 }
 
 message QuerySSARisksRequest {
