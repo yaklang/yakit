@@ -93,6 +93,7 @@ export interface HTTPFuzzerPageTableQuery {
     beforeDurationMs?: number
     StatusCode?: string
     Color?: string[]
+    ExtractedResults?: string
     // bodyLengthUnit: "B" | "k" | "M"
 }
 
@@ -181,8 +182,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
         const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
         const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("response") //选中的表格项
-
-        const [isHaveData, setIsHaveData] = useState<boolean>(false) // 查询提取数据不为空
 
         const [editor, setEditor] = useState<IMonacoEditor>()
         const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
@@ -397,15 +396,20 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                           title: "提取数据",
                           dataKey: "ExtractedResults",
                           width: 300,
-                          beforeIconExtra: (
-                              <div className={classNames(styles["extracted-checkbox"])}>
-                                  <YakitCheckbox
-                                      checked={isHaveData}
-                                      onChange={(e) => setIsHaveData(e.target.checked)}
+                          filterProps: {
+                              filterKey: "ExtractedResults",
+                              filtersType: "input",
+                              filterIcon: (
+                                  <OutlineSearchIcon
+                                      className={classNames(styles["search-icon"], styles["filter-icon"], {
+                                          [styles["active-icon"]]: !!query?.ExtractedResults?.length
+                                      })}
                                   />
-                                  <span className={styles["tip"]}>不为空</span>
-                              </div>
-                          ),
+                              ),
+                              filterInputProps: {
+                                  placeholder: "请输入关键字进行搜索"
+                              }
+                          },
                           render: (item, record) =>
                               extractedMap.size > 0 ? (
                                   extractedMap.get(record["UUID"]) || "-"
@@ -580,7 +584,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             query?.afterDurationMs,
             query?.beforeDurationMs,
             extractedMap,
-            isHaveData,
+            query?.ExtractedResults,
             isShowDebug
         ])
 
@@ -599,7 +603,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         }, [isRefresh])
         useUpdateEffect(() => {
             update()
-        }, [compareQuery, isHaveData])
+        }, [compareQuery])
         useEffect(() => {
             getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
                 .then((data) => {
@@ -674,7 +678,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     query?.beforeBodyLength ||
                     query?.afterDurationMs ||
                     query?.beforeDurationMs ||
-                    isHaveData
+                    (query?.ExtractedResults && query?.ExtractedResults?.length > 0)
                 ) {
                     const newDataTable = sorterFunction(data, sorterTable) || []
                     const l = newDataTable.length
@@ -708,9 +712,14 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                         if (query?.keyWord) {
                             const responseString = Uint8ArrayToString(record.ResponseRaw)
                             const payloadsString = (record.Payloads || []).join("")
-                            const extractedResultsString = (record.ExtractedResults || [])
-                                .map((item) => `${item.Key}${item.Value}`)
-                                .join("")
+                            let extractedResultsString = ""
+                            if (extractedMap.size > 0) {
+                                extractedResultsString = extractedMap.get(record["UUID"]) || ""
+                            } else {
+                                extractedResultsString = (record.ExtractedResults || [])
+                                    .map((item) => `${item.Key}: ${item.Value}`)
+                                    .join("")
+                            }
                             keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(
                                 query.keyWord
                             )
@@ -748,12 +757,16 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
                         }
                         // 是否有提取数据
-                        if (isHaveData) {
+                        if (query?.ExtractedResults) {
+                            let extractedResultsString = ""
                             if (extractedMap.size > 0) {
-                                isHaveDataIsPush = !!extractedMap.get(record["UUID"])
+                                extractedResultsString = extractedMap.get(record["UUID"]) || ""
                             } else {
-                                isHaveDataIsPush = record.ExtractedResults.length > 0
+                                extractedResultsString = (record.ExtractedResults || [])
+                                    .map((item) => `${item.Key}: ${item.Value}`)
+                                    .join("")
                             }
+                            isHaveDataIsPush = extractedResultsString.includes(query.ExtractedResults.trim())
                         }
                         // 搜索同时为true时，push新数组
                         if (
