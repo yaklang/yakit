@@ -1,7 +1,7 @@
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useMap, useSize} from "ahooks"
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {SecondNodeTitle, SecondNodeExtra, FuzzerResponse} from "../HTTPFuzzerPage"
+import {SecondNodeTitle, SecondNodeExtra, FuzzerResponse, FuzzerShowSuccess} from "../HTTPFuzzerPage"
 import {ResponseCardProps} from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import {Divider} from "antd"
@@ -15,7 +15,7 @@ const cachedTotal = 2
 const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
     //   const {allSuccessResponse,allFailedResponse}=props;
     const {responseMap, showAllResponse, setShowAllResponse} = props
-    const [showSuccess, setShowSuccess] = useState(true)
+    const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>("true")
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
     const [affixSearch, setAffixSearch] = useState<string>("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState<string>("")
@@ -94,6 +94,7 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                             setQuery(undefined)
                         }}
                         size='middle'
+                        showConcurrentAndLoad={false}
                     />
                 </div>
                 <div className={styles["all-sequence-response-heard-extra"]}>
@@ -142,10 +143,10 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                 className={styles["all-sequence-response-table"]}
                 style={{border: "1px solid var(--yakit-border-color)"}}
             >
-                {showSuccess && (
+                {showSuccess === "true" && (
                     <HTTPFuzzerPageTable
                         isRefresh={isRefresh}
-                        success={showSuccess}
+                        success={true}
                         data={fuzzerData.successFuzzer}
                         query={query}
                         setQuery={setQuery}
@@ -154,10 +155,10 @@ const ResponseCard: React.FC<ResponseCardProps> = React.memo((props) => {
                         isShowDebug={false}
                     />
                 )}
-                {!showSuccess && (
+                {showSuccess === "false" && (
                     <HTTPFuzzerPageTable
                         isRefresh={isRefresh}
-                        success={showSuccess}
+                        success={false}
                         data={fuzzerData.failedFuzzer}
                         query={query}
                         setQuery={setQuery}

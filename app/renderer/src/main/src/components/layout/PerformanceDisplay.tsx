@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useMemo} from "react"
-import {failed, info, success, yakitNotify} from "@/utils/notification"
+import {failed, info, success} from "@/utils/notification"
 import {YaklangEngineMode} from "@/yakitGVDefine"
 import {LoadingOutlined} from "@ant-design/icons"
 import {useInViewport, useMemoizedFn} from "ahooks"
@@ -68,17 +68,33 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
         }
     }, [])
 
+    const [rps, setRps] = useState<number>(0)
+    const onRefreshCurRps = (rps: number) => {
+        setRps(rps)
+    }
+    useEffect(() => {
+        emiter.on("onRefreshCurRps", onRefreshCurRps)
+        return () => {
+            emiter.off("onRefreshCurRps", onRefreshCurRps)
+        }
+    }, [])
+
     return (
         <div className={styles["system-func-wrapper"]}>
             <div className={styles["cpu-wrapper"]}>
                 <div className={styles["cpu-title"]}>
-                    <span className={styles["title-headline"]}>CPU </span>
+                    <span className={styles["title-headline"]}>RPS </span>
+                    <span className={styles["title-content"]}>{rps}</span>
+                </div>
+
+                <div className={styles["cpu-title"]}>
+                    <span className={styles["title-headline"]}> CPU </span>
                     <span className={styles["title-content"]}>{`${cpu[cpu.length - 1] || 0}%`}</span>
                 </div>
 
                 {showLine && (
                     <div className={styles["cpu-spark"]}>
-                        <Sparklines data={cpu} width={96} height={10} max={96}>
+                        <Sparklines data={cpu} width={50} height={10} max={50}>
                             <SparklinesCurve color='#85899E' />
                         </Sparklines>
                     </div>
@@ -293,7 +309,10 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                                             .then((val) => {
                                                                                 if (!val) {
                                                                                     success("引擎进程关闭中...")
-                                                                                    ipcRenderer.invoke("switch-conn-refresh", false)
+                                                                                    ipcRenderer.invoke(
+                                                                                        "switch-conn-refresh",
+                                                                                        false
+                                                                                    )
                                                                                     typeCallback("break")
                                                                                 }
                                                                             })
@@ -334,7 +353,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                             if (!val) {
                                                                 isLocal && +i.port === port && typeCallback("break")
                                                                 success("引擎进程关闭中...")
-                                                           }
+                                                            }
                                                         })
                                                         .catch((e: any) => {})
                                                         .finally(fetchPSList)
@@ -375,7 +394,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                 <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
                     <GooglePhotosLogoSvgIcon className={classNames({[styles["icon-rotate-animation"]]: !show})} />
                 </div>
-            </div> 
+            </div>
         </YakitPopover>
     )
 })
