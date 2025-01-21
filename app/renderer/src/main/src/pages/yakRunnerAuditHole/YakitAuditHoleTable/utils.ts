@@ -67,7 +67,7 @@ export const apiGetSSARiskFieldGroup: () => Promise<GetSSARiskFieldGroupResponse
 export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("NewSSARiskRead", query)
+            .invoke("NewSSARiskRead", {Filter:query})
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `已读失败: ${e}`)
