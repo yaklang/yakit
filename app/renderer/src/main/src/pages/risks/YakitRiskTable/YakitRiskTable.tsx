@@ -1054,7 +1054,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setCurrentSelectItem(val)
         }
         if (!val.IsRead) {
-            apiNewRiskRead({Ids: [val.Id]}).then(() => {
+            apiNewRiskRead({Filter:{...query,Ids: [val.Id]}}).then(() => {
                 setResponse({
                     ...response,
                     Data: response.Data.map((ele) => {
@@ -1070,7 +1070,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onAllRead = useMemoizedFn(() => {
-        apiNewRiskRead({Ids: []}).then(() => {
+        apiNewRiskRead({Filter:{...query,Ids: []}}).then(() => {
             onRefRiskList()
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })
