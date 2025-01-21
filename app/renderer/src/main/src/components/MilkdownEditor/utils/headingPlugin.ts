@@ -4,6 +4,7 @@ import {headingSchema} from "@milkdown/kit/preset/commonmark"
 import {$prose} from "@milkdown/kit/utils"
 import {Plugin, PluginKey} from "@milkdown/kit/prose/state"
 import type {EditorView} from "@milkdown/prose/view"
+import debounce from "lodash/debounce"
 
 export const listToHeadingCommand = $command(
     `listToHeadingCommand`,
@@ -42,7 +43,7 @@ export const headingToParagraphCommand = $command(`headingToParagraphCommand`, (
 export const customSyncHeadingIdPlugin = $prose((ctx) => {
     const headingIdPluginKey = new PluginKey("CUSTOM_MILKDOWN_HEADING_ID")
     let isComposed = false
-    const updateId = (view: EditorView) => {
+    const updateId = debounce((view: EditorView) => {
         if (isComposed) return
 
         const tr = view.state.tr.setMeta("addToHistory", false)
@@ -67,7 +68,7 @@ export const customSyncHeadingIdPlugin = $prose((ctx) => {
         })
 
         if (found) view.dispatch(tr)
-    }
+    }, 500)
 
     return new Plugin({
         key: headingIdPluginKey,
