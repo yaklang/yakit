@@ -263,29 +263,30 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
 
     const [bugHash, setBugHash] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
-        // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
-            try {
-                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                if (arr.length > 0) {
-                    const hash = arr[0].Value
-                    setBugHash(hash)
-                    setShowAuditDetail(true)
+        try {
+            const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+            // 预留打开BUG详情
+            if (arr.length > 0 && node.isBug) {
+                const hash = arr[0]?.Value
+                setBugHash(hash)
+                setShowAuditDetail(true)
+            }
+            if (node.ResourceType === "value") {
+                setFoucsedKey(node.id)
+                const rightParams: AuditEmiterYakUrlProps = {
+                    Schema: "syntaxflow",
+                    Location: rowData.ProgramName,
+                    Path: node.id,
+                    Query: [{Key: "result_id", Value: rowData.ResultID}]
                 }
-            } catch (error) {
-                failed(`打开错误${error}`)
+                setAuditRightParams(rightParams)
+                setShowAuditDetail(true)
             }
-        }
-        if (node.ResourceType === "value") {
-            setFoucsedKey(node.id)
-            const rightParams: AuditEmiterYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: rowData.ProgramName,
-                Path: node.id,
-                Query: [{Key: "result_id", Value: rowData.ResultID}]
+            if(!node.isBug){
+                setBugHash(undefined)
             }
-            setAuditRightParams(rightParams)
-            setShowAuditDetail(true)
+        } catch (error) {
+            failed(`打开错误${error}`)
         }
     })
 
