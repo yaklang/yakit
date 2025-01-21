@@ -74,10 +74,6 @@ export const startupDuplexConn = () => {
                 case "risk":
                     emiter.emit("onRefreshQueryNewRisk")
                     break
-                // 通知QuerySSARisks轮询更新
-                case "xxx":
-                    emiter.emit("onRefreshQuerySSARisks")
-                    break
                 // 文件树结构监控
                 case "file_monitor":
                     const event: FileMonitorProps = obj
@@ -90,6 +86,10 @@ export const startupDuplexConn = () => {
                 // fuzzer-批量请求中的丢弃包数量
                 case "fuzzer_server_push":
                     emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
+                    break
+                // 通知QuerySSARisks轮询更新
+                case "ssa-risk":
+                    emiter.emit("onRefreshQuerySSARisks", JSON.stringify(obj))
                     break
                 // rps
                 case "rps":

@@ -61,6 +61,7 @@ import {
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
 import {AuditResultCollapse, AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -132,6 +133,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const [currentSelectItem, setCurrentSelectItem] = useState<SSARisk>()
 
     const [riskTypeVerbose, setRiskTypeVerbose] = useState<string[]>([])
+    const [riskProgramList, setRiskProgramList] = useState<string[]>([])
+
+    const [Pagination, setPagination] = useState<VirtualPaging>()
 
     const onFirst = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
@@ -156,7 +160,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 
     useUpdateEffect(() => {
         const newParams: QuerySSARisksRequest = {
-            ...tableParams,
+            Pagination: {
+                ...tableParams.Pagination,
+                ...Pagination
+            },
             Filter: {
                 ...tableParams.Filter,
                 ...query,
@@ -164,7 +171,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         }
         debugVirtualTableEvent.setP(newParams)
-    }, [query])
+    }, [query, Pagination])
 
     // 选中插件的数量
     const selectNum = useMemo(() => {
@@ -176,6 +183,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     useEffect(() => {
         if (inViewport) {
             getRiskType()
+            getRiskProject()
         }
     }, [inViewport])
 
@@ -198,12 +206,30 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [])
 
     /**开启实时数据刷新 */
-    const onStartInterval = useMemoizedFn(() => {
-        debugVirtualTableEvent.startT()
+    const onStartInterval = useMemoizedFn((data) => {
+        try {
+            const updateData = JSON.parse(data)
+            const {RuntimeID} = query
+            const runTimeId = RuntimeID?.[0]
+            // 没有RuntimeID时直接更新
+            if (!runTimeId) {
+                debugVirtualTableEvent.startT()
+            }
+            if (typeof updateData !== "string" && updateData.task_id === runTimeId) {
+                if (updateData.action === "update") {
+                    debugVirtualTableEvent.startT()
+                }
+            }
+        } catch (error) {}
     })
 
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         const riskTypeVerboseTable = riskTypeVerbose.map((item) => ({
+            value: item,
+            label: item
+        }))
+
+        const riskProgramTable = riskProgramList.map((item) => ({
             value: item,
             label: item
         }))
@@ -254,7 +280,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     )
                 },
                 filterProps: {
-                    filterKey: "SeverityList",
+                    filterKey: "Severity",
                     filtersType: "select",
                     filterMultiple: true,
                     filters: [
@@ -267,7 +293,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             label: "高危"
                         },
                         {
-                            value: "warning",
+                            value: "middle",
                             label: "中危"
                         },
                         {
@@ -283,11 +309,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             },
             {
                 title: "所属项目",
-                dataKey: "ProgramName", // 其余表需屏蔽
+                dataKey: "ProgramName",
                 filterProps: {
-                    filterKey: "ProgramNameStr",
-                    filtersType: "input",
-                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+                    filterKey: "ProgramName",
+                    filtersType: "select",
+                    filterMultiple: true,
+                    filters: riskProgramTable
                 }
             },
             {
@@ -371,6 +398,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         })
     })
 
+    const getRiskProject = useMemoizedFn(() => {
+        const query: GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "program_name"}
+        apiGroupTableColumn(query).then((data) => {
+            setRiskProgramList(data.Data.filter((item) => item.length !== 0))
+        })
+    })
+
     const onOpenSelect = useMemoizedFn((record: SSARisk) => {
         const m = showYakitModal({
             title: (
@@ -412,8 +446,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     })
     /**批量删除后，重置查询条件刷新 */
     const onRemove = useMemoizedFn(() => {
+        const {RuntimeID} = query
         let removeQuery: DeleteSSARisksRequest = {
-            Filter: {}
+            Filter: {
+                RuntimeID
+            }
         }
         if (!allCheck && selectList.length > 0) {
             // 勾选删除
@@ -422,7 +459,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 ID: ids
             }
         }
-        setRiskLoading(true)
+        setRiskLoading && setRiskLoading(true)
         apiDeleteSSARisks(removeQuery)
             .then(() => {
                 debugVirtualTableEvent.noResetRefreshT()
@@ -430,7 +467,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             })
             .finally(() =>
                 setTimeout(() => {
-                    setRiskLoading(false)
+                    setRiskLoading && setRiskLoading(false)
                 }, 200)
             )
     })
@@ -441,8 +478,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 debugVirtualTableEvent.noResetRefreshT()
                 break
             case "resetRefresh":
-                setQuery({})
-                debugVirtualTableEvent.refreshT()
+                const {RuntimeID} = query
+                setQuery && setQuery({})
+                debugVirtualTableEvent.refreshT({RuntimeID})
                 break
             default:
                 break
@@ -455,28 +493,35 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             sort.order = "desc"
             sort.orderBy = "id"
         }
-        const newQuery = {
-            Pagination: {
+
+        if (setQuery) {
+            const newPagination = {
                 ...tableParams.Pagination,
                 Order: sort.order,
                 OrderBy: sort.orderBy
-            },
-            Filter: {
-                ...tableParams.Filter,
-                ...filter
             }
-        }
-        const {Filter} = newQuery
-        const finalParams: QuerySSARisksRequest = {
-            ...newQuery,
-            Filter: {
-                ...Filter,
-                Severity: !!Filter.SeverityList ? Filter.SeverityList : [],
-                ProgramName: !!Filter.ProgramNameStr ? [Filter.ProgramNameStr] : [],
+            const newFilter = {
+                ...tableParams.Filter,
+                ...filter,
                 IsRead: type === "all" ? 0 : -1
             }
+            setPagination(newPagination)
+            setQuery && setQuery(newFilter)
+        } else {
+            const finalParams = {
+                Pagination: {
+                    ...tableParams.Pagination,
+                    Order: sort.order,
+                    OrderBy: sort.orderBy
+                },
+                Filter: {
+                    ...tableParams.Filter,
+                    ...filter,
+                    IsRead: type === "all" ? 0 : -1
+                }
+            }
+            debugVirtualTableEvent.setP(finalParams)
         }
-        debugVirtualTableEvent.setP(finalParams)
     })
 
     const onSearch = useMemoizedFn((val) => {
@@ -596,6 +641,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 firstNode={
                     <TableVirtualResize<SSARisk>
                         ref={tableRef}
+                        query={tableParams.Filter}
                         scrollToIndex={scrollToIndex}
                         tableLoading={tableLoading}
                         isRefresh={isRefresh}
@@ -606,7 +652,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             ) : (
                                 <div className={styles["table-renderTitle"]}>
                                     <div className={styles["table-renderTitle-left"]}>
-                                        {!advancedQuery && (
+                                        {!advancedQuery && !query.RuntimeID && (
                                             <Tooltip
                                                 title='展开筛选'
                                                 placement='topLeft'
@@ -792,9 +838,9 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
         if (onClose) onClose()
     })
     return (
-        <div className={styles["yakit-SSARisk-select-tag"]}>
+        <div className={styles["yakit-ssa-risk-select-tag"]}>
             <Form onFinish={onFinish}>
-                <Form.Item label='Tags' name='TagList' initialValue={initSelectTags}>
+                <Form.Item label='处置状态' name='TagList' initialValue={initSelectTags}>
                     <YakitSelect mode='tags' allowClear>
                         {tags.map((item) => {
                             return (
@@ -805,7 +851,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
                         })}
                     </YakitSelect>
                 </Form.Item>
-                <div className={styles["yakit-SSARisk-select-tag-btns"]}>
+                <div className={styles["yakit-ssa-risk-select-tag-btns"]}>
                     <YakitButton
                         type='outline2'
                         onClick={() => {

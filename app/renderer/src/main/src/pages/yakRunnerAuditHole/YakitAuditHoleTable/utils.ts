@@ -47,7 +47,7 @@ export const apiUpdateSSARiskTags: (params: UpdateSSARiskTagsRequest) => Promise
 }
 
 export interface GetSSARiskFieldGroupResponse {
-    ProgramNameField: FieldGroup[]
+    FileField: FieldGroup[]
     SeverityField: FieldName[]
     RiskTypeField: FieldName[]
 }
