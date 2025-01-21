@@ -25,7 +25,7 @@ interface MITMManualHeardExtraProps {
     traceInfo: TraceInfo
     setHijackResponseType: (v: "onlyOne" | "all" | "never") => void
     onDiscardRequest: () => void
-    onSubmitData: () => void
+    onSubmitData: (isManual: boolean) => void
     width: number
     calloutColor: string
     onSetCalloutColor: (calloutColor: string) => void
@@ -116,7 +116,7 @@ export const MITMManualHeardExtra: React.FC<MITMManualHeardExtraProps> = React.m
                 >
                     丢弃数据
                 </YakitButton>
-                <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData()}>
+                <YakitButton disabled={status === "hijacking"} onClick={() => onSubmitData(true)}>
                     提交数据
                 </YakitButton>
             </div>
@@ -219,7 +219,7 @@ interface MITMManualEditorProps {
     currentPacketId: number
     handleAutoForward: (v: "manual" | "log" | "passive") => void
     autoForward: "manual" | "log" | "passive"
-    forward: () => void
+    forward: (isManual: boolean) => void
     hijacking: () => void
     status: MITMStatus
     onSetHijackResponseType: (s: string) => void
@@ -284,16 +284,11 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                 handleAutoForward(autoForward === "manual" ? "log" : "manual")
                                 break
                             case "forward-response":
-                                forward()
+                                forward(autoForward === "manual")
                                 break
                             case "drop-response":
                                 hijacking()
-                                dropResponse(currentPacketId).finally(() => {
-                                    // setTimeout(
-                                    //     () => setLoading(false),
-                                    //     300
-                                    // )
-                                })
+                                dropResponse(currentPacketId)
                                 break
                             default:
                                 break
@@ -341,21 +336,16 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                                 handleAutoForward(autoForward === "manual" ? "log" : "manual")
                                 break
                             case "forward-response":
-                                forward()
+                                forward(autoForward === "manual")
                                 break
                             case "drop-response":
                                 hijacking()
-                                dropResponse(currentPacketId).finally(() => {
-                                    // setTimeout(
-                                    //     () => setLoading(false),
-                                    //     300
-                                    // )
-                                })
+                                dropResponse(currentPacketId)
                                 break
                             case "hijack-current-response":
                                 onSetHijackResponseType("onlyOne")
                                 setTimeout(() => {
-                                    forward()
+                                    forward(autoForward === "manual")
                                 }, 200)
                                 break
                             default:
@@ -365,7 +355,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 }
             }
         }
-    }, [forResponse, isHttp])
+    }, [forResponse, autoForward, currentPacketId])
 
     return (
         <NewHTTPPacketEditor

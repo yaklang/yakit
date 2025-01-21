@@ -5600,3 +5600,50 @@ const ScanRuleEditIcon = () => (
 export const OutlineScanRuleEditIcon = (props: Partial<IconProps>) => {
     return <Icon component={ScanRuleEditIcon} {...props} />
 }
+
+const ConfiguredIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M3 6.07374C3 5.1801 3.59284 4.3949 4.45233 4.15019L11.4564 2.15601C11.8145 2.05403 12.1941 2.05408 12.5522 2.15615L19.5482 4.14993C20.4074 4.39481 21 5.17989 21 6.07335V9.82122C21 15.1343 17.6491 19.8741 12.6147 21.7841C12.2197 21.934 11.7829 21.934 11.3878 21.7841C6.35199 19.8741 3 15.1332 3 9.81878V6.07374Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path
+            d='M7.5 11.5L11 15L17 9'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const OutlineConfiguredIcon = (props: Partial<IconProps>) => {
+    return <Icon component={ConfiguredIcon} {...props} />
+}
+
+const UnConfiguredIcon = () => (
+    <svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'>
+        <path
+            d='M3 6.07374C3 5.1801 3.59284 4.3949 4.45233 4.15019L11.4564 2.15601C11.8145 2.05403 12.1941 2.05408 12.5522 2.15615L19.5482 4.14993C20.4074 4.39481 21 5.17989 21 6.07335V9.82122C21 15.1343 17.6491 19.8741 12.6147 21.7841C12.2197 21.934 11.7829 21.934 11.3878 21.7841C6.35199 19.8741 3 15.1332 3 9.81878V6.07374Z'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+        <path d='M12 15.5V16' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+        <path
+            d='M12 7.50024L12.0042 12.5'
+            stroke='currentColor'
+            strokeWidth='1.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+        />
+    </svg>
+)
+
+export const OutlineUnConfiguredIcon = (props: Partial<IconProps>) => {
+    return <Icon component={UnConfiguredIcon} {...props} />
+}

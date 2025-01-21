@@ -119,12 +119,14 @@ module.exports = (win, getClient) => {
     })
 
     // MITM 转发
-    ipcMain.handle("mitm-forward-modified-request", (e, request, id, tags) => {
+    ipcMain.handle("mitm-forward-modified-request", (e, request, id, tags, autoForwardValue) => {
         if (stream) {
             stream.write({
                 id,
                 request: Buffer.from(request),
-                Tags: tags
+                Tags: tags,
+                setAutoForward: true,
+                autoForwardValue: autoForwardValue
             })
         }
     })
@@ -488,6 +490,43 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-get-filter", async (e, params) => {
         return await asyncGetMITMFilter(params)
     })
+
+    // 设置mitm Hijack filter
+    const asyncSetMITMHijackFilter = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetMITMHijackFilter(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("mitm-hijack-set-filter", async (e, params) => {
+        if (stream) {
+            stream.write({ HijackFilterData: params.FilterData, updateHijackFilter: true })
+        }
+        return await asyncSetMITMHijackFilter(params)
+    })
+    // 获取mitm Hijack filter
+    const asyncGetMITMHijackFilter = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().GetMITMHijackFilter(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("mitm-hijack-get-filter", async (e, params) => {
+        return await asyncGetMITMHijackFilter(params)
+    })
+
     // 代理劫持
     const asyncGenerateURL = (params) => {
         return new Promise((resolve, reject) => {

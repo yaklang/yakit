@@ -561,7 +561,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         certs={certs}
                         setCerts={setCerts}
                     />
-                    <MITMFiltersModal visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
+                    <MITMFiltersModal filterType="filter" visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={false} />
                     <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
                 </React.Suspense>
             </YakitDrawer>
