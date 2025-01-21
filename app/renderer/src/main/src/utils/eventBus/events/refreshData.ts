@@ -6,7 +6,7 @@ export type RefreshDataEventProps = {
     // 通知QueryNewRisk轮询更新
     onRefreshQueryNewRisk?: string
     // 通知QuerySSARisks轮询更新
-    onRefreshQuerySSARisks?: string
+    onRefreshQuerySSARisks: string
     // 通知YakRunner轮询结构更新
     onRefreshYakRunnerFileTree: string
     // 通知CodeScan轮询更新

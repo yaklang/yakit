@@ -146,9 +146,9 @@ $keyColor: map-keys($tagColor);
     }
 }
 
-.yakit-risk-select-tag {
+.yakit-ssa-risk-select-tag {
     padding: 24px;
-    .yakit-risk-select-tag-btns {
+    .yakit-ssa-risk-select-tag-btns {
         @extend %display-flex-center;
         justify-content: flex-end;
         gap: 8px;

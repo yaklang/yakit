@@ -16,6 +16,7 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             })
     })
 }
+
 /**
  * @description QueryRisks 获取降序的增量数据
  */

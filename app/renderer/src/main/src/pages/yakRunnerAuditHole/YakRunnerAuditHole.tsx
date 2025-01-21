@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
 import {
@@ -9,7 +9,6 @@ import {
     VulnerabilityTypeProps,
     YakRunnerAuditHoleProps
 } from "./YakRunnerAuditHoleType"
-import {QueryRisksRequest} from "../risks/YakitRiskTable/YakitRiskTableType"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
@@ -18,16 +17,18 @@ import classNames from "classnames"
 import {Divider, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineCloseIcon, OutlineInformationcircleIcon} from "@/assets/icon/outline"
-import {apiRiskFieldGroup, FieldGroup} from "../risks/YakitRiskTable/utils"
+import {FieldGroup} from "../risks/YakitRiskTable/utils"
 import {FieldName} from "../risks/RiskTable"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {VulnerabilityLevelPieRefProps} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPieType"
 import {VulnerabilityLevelPie} from "../risks/VulnerabilityLevelPie/VulnerabilityLevelPie"
 import {VulnerabilityTypePieRefProps} from "../risks/VulnerabilityTypePie/VulnerabilityTypePieType"
 import {VulnerabilityTypePie} from "../risks/VulnerabilityTypePie/VulnerabilityTypePie"
-import {defQuerySSARisksRequest, YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
+import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
+import {WaterMark} from "@ant-design/pro-layout"
+import {isCommunityEdition} from "@/utils/envfile"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
@@ -35,7 +36,12 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const [query, setQuery] = useState<SSARisksFilter>({})
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
-
+    const waterMarkStr = useMemo(() => {
+        if (isCommunityEdition()) {
+            return "Yakit技术浏览版仅供技术交流使用"
+        }
+        return " "
+    }, [])
     // 获取筛选展示状态
     useEffect(() => {
         getRemoteValue(RemoteGV.AuditHoleShow).then((value: string) => {
@@ -47,24 +53,26 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
         setRemoteValue(RemoteGV.AuditHoleShow, `${val}`)
     })
     return (
-        <YakitSpin spinning={riskLoading}>
-            <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
-                <HoleQuery
-                    inViewport={inViewport}
-                    advancedQuery={advancedQuery}
-                    setAdvancedQuery={onSetQueryShow}
-                    query={query}
-                    setQuery={setQuery}
-                />
-                <YakitAuditHoleTable
-                    advancedQuery={advancedQuery}
-                    setAdvancedQuery={onSetQueryShow}
-                    setRiskLoading={setRiskLoading}
-                    query={query}
-                    setQuery={setQuery}
-                />
-            </div>
-        </YakitSpin>
+        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
+            <YakitSpin spinning={riskLoading}>
+                <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
+                    <HoleQuery
+                        inViewport={inViewport}
+                        advancedQuery={advancedQuery}
+                        setAdvancedQuery={onSetQueryShow}
+                        query={query}
+                        setQuery={setQuery}
+                    />
+                    <YakitAuditHoleTable
+                        advancedQuery={advancedQuery}
+                        setAdvancedQuery={onSetQueryShow}
+                        setRiskLoading={setRiskLoading}
+                        query={query}
+                        setQuery={setQuery}
+                    />
+                </div>
+            </YakitSpin>
+        </WaterMark>
     )
 }
 
@@ -86,18 +94,18 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     })
     const getGroups = useMemoizedFn(() => {
         apiGetSSARiskFieldGroup().then((res) => {
-            const {ProgramNameField, SeverityField, RiskTypeField} = res
-            setProgramList(ProgramNameField.sort((a,b)=>b.Total-a.Total))
+            const {FileField, SeverityField, RiskTypeField} = res
+            setProgramList(FileField.sort((a, b) => b.Total - a.Total))
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
-            if (ProgramNameField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
+            if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
                 setAdvancedQuery(false)
             }
         })
     })
     const onSelectProgram = useMemoizedFn((programItem: FieldGroup) => {
-        const index = (query.ProgramName || []).findIndex((ele) => ele === programItem.Name)
-        let newProgramList = query.ProgramName || []
+        const index = (query.CodeSourceUrl || []).findIndex((ele) => ele === programItem.Name)
+        let newProgramList = query.CodeSourceUrl || []
         if (index === -1) {
             newProgramList = [...newProgramList, programItem.Name]
         } else {
@@ -105,7 +113,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
         }
         setQuery({
             ...query,
-            ProgramName: [...newProgramList]
+            CodeSourceUrl: [...newProgramList]
         })
     })
     const onSelect = useMemoizedFn((val: string[], key: "Severity" | "RiskType") => {
@@ -118,7 +126,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const onResetProgram = useMemoizedFn(() => {
         setQuery({
             ...query,
-            ProgramName: []
+            CodeSourceUrl: []
         })
     })
 
@@ -127,8 +135,8 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     })
 
     const selectProgramList = useCreation(() => {
-        return query.ProgramName || []
-    }, [query.ProgramName])
+        return query.CodeSourceUrl || []
+    }, [query.CodeSourceUrl])
 
     return (
         <div className={classNames(styles["hole-query"], {[styles["hole-query-hidden"]]: !advancedQuery})}>
@@ -169,7 +177,7 @@ const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
     return (
         <div className={styles["program-list-body"]}>
             <div className={styles["program-list-heard"]}>
-                <div className={styles["program-list-heard-title"]}>项目统计</div>
+                <div className={styles["program-list-heard-title"]}>文件统计</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -211,7 +219,11 @@ const ProgramListItem: React.FC<ProgramListItemProps> = React.memo((props) => {
             })}
             onClick={() => onSelect(item)}
         >
-            <div className={styles["program-list-item-label"]}>{item.Name}</div>
+            <Tooltip title={item.Name}>
+                <div className={classNames(styles["program-list-item-label"], "yakit-single-line-ellipsis")}>
+                    {item.Name}
+                </div>
+            </Tooltip>
             <div className={styles["program-list-item-value"]}>{item.Total}</div>
         </div>
     )

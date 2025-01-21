@@ -4,7 +4,8 @@ import {
     useVirtualTableHookParams,
     DataResponseProps,
     VirtualPaging,
-    DataTProps
+    DataTProps,
+    FilterProps
 } from "./useVirtualTableHookType"
 import {useDebounceEffect, useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import cloneDeep from "lodash/cloneDeep"
@@ -107,12 +108,12 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
         // 倒序时需要额外处理传给后端顺序
         const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
         finalParams.Pagination = verifyResult.pagination
-        // console.log("finalParams---",finalParams);
+        // console.log("finalParams---", finalParams)
 
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT>) => {
-                // console.log("rsp---",rsp);
-                
+                // console.log("rsp---", rsp)
+
                 let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
                 if (initResDataFun) {
                     newData = initResDataFun(newData)
@@ -366,9 +367,18 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
     )
 
     /** @name 重置查询条件刷新表格 */
-    const refreshT = useMemoizedFn(() => {
+    const refreshT = useMemoizedFn((newFilter?: FilterProps, newPagination?: VirtualPaging) => {
         sortRef.current = defSort
-        setParams(defaultParams)
+        setParams({
+            Filter: {
+                ...defaultParams.Filter,
+                ...newFilter
+            },
+            Pagination: {
+                ...defaultParams.Pagination,
+                ...newPagination
+            }
+        })
         setTimeout(() => {
             isGrpcRef.current = false
             updateData()
@@ -393,7 +403,8 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
 
     /** @name 设置表格数据 */
     const setTData = useMemoizedFn((newData: DataT[]) => {
-        setData(newData)
+        const cloneData = cloneDeep(newData)
+        setData(cloneData)
     })
 
     /** @name 设置params */
