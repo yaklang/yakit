@@ -50,7 +50,7 @@ export interface SSARisk {
 }
 
 export interface YakitAuditHoleTableProps {
-    setRiskLoading: (b: boolean) => void
+    setRiskLoading?: (b: boolean) => void
     /**是否开启高级查询 */
     advancedQuery?: boolean
     setAdvancedQuery?: (b: boolean) => void
@@ -59,7 +59,7 @@ export interface YakitAuditHoleTableProps {
     tableVirtualResizeProps?: TableVirtualResizeProps
     excludeColumnsKey?: string[]
     query: SSARisksFilter
-    setQuery: (v: SSARisksFilter) => void
+    setQuery?: (v: SSARisksFilter) => void
 }
 
 export interface YakitRiskDetailsProps {

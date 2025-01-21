@@ -19,7 +19,7 @@ export interface useVirtualTableHookParams<T, DataT> {
     initResDataFun?: (arr: DataT[]) => DataT[]
 }
 
-type VirtualPaging = {
+export type VirtualPaging = {
     Page: number
     Limit: number
     Order?: "asc" | "desc" | string
