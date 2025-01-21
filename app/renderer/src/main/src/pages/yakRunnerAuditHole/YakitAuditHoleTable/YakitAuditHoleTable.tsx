@@ -561,7 +561,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             setCurrentSelectItem(val)
         }
         if (!val.IsRead) {
-            apiNewRiskRead({Ids: [val.Id]}).then(() => {
+            apiNewRiskRead({...tableParams.Filter, ID: [val.Id]}).then(() => {
                 debugVirtualTableEvent.setTData(
                     tableData.map((ele) => {
                         if (ele.Id === val.Id) {
@@ -576,7 +576,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
     })
     const onAllRead = useMemoizedFn(() => {
-        apiNewRiskRead({Ids: []}).then(() => {
+        apiNewRiskRead({...tableParams.Filter, ID: []}).then(() => {
             debugVirtualTableEvent.noResetRefreshT()
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })

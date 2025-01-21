@@ -1,5 +1,5 @@
 import {yakitNotify} from "@/utils/notification"
-import {DeleteSSARisksRequest, QuerySSARisksRequest, QuerySSARisksResponse} from "./YakitAuditHoleTableType"
+import {DeleteSSARisksRequest, QuerySSARisksRequest, QuerySSARisksResponse, SSARisksFilter} from "./YakitAuditHoleTableType"
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
 import { FieldName } from "@/pages/risks/RiskTable"
 const {ipcRenderer} = window.require("electron")
@@ -64,13 +64,7 @@ export const apiGetSSARiskFieldGroup: () => Promise<GetSSARiskFieldGroupResponse
     })
 }
 
-export interface NewRiskReadRequest {
-    /**@deprecated */
-    AfterId?: string
-    /**传空数组代表全部已读 */
-    Ids: number[]
-}
-export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
+export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("NewSSARiskRead", query)
