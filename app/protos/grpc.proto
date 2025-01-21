@@ -750,7 +750,7 @@ service Yak {
   rpc DeleteSSARisks(DeleteSSARisksRequest)returns(DbOperateMessage);
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
-  rpc NewSSARiskRead(NewRiskReadRequest) returns (Empty);
+  rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
@@ -3155,6 +3155,7 @@ message NewRisk {
 message NewRiskReadRequest {
   int64 AfterId = 1;
   repeated int64 Ids = 2;
+  QueryRisksRequest Filter = 3; 
 }
 
 message UploadRiskToOnlineRequest {
@@ -6040,6 +6041,7 @@ message SSARisksFilter {
   repeated string Tags = 10;
   int64 IsRead = 11; // >0 true  <0 false =0 all
   string Title = 12; // fuzz search
+  repeated string Hash = 13;
 }
 
 message QuerySSARisksRequest {
@@ -6066,6 +6068,12 @@ message SSARiskFieldGroupResponse {
   repeated FieldGroup FileField = 1;
   repeated FieldName SeverityField = 2;
   repeated FieldName RiskTypeField = 3;
+}
+
+message NewSSARiskReadRequest {
+  SSARisksFilter Filter = 1;
+}
+message NewSSARiskReadResponse {
 }
 
 message ExportSyntaxFlowsRequest {
