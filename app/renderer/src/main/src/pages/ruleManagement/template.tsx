@@ -1913,7 +1913,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     const bugHash = useRef<string>()
-    const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
         // 预留打开BUG详情
         if (node.ResourceType === "variable" && node.VerboseType === "alert") {
@@ -1923,7 +1922,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                     const hash = arr[0].Value
                     bugHash.current = hash
                     setShowAuditDetail(true)
-                    setBugId(node.id)
                 }
             } catch (error) {
                 failed(`打开错误${error}`)
@@ -1931,7 +1929,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
         }
         if (node.ResourceType === "value") {
             if (!currentInfo.current) return
-            setBugId(undefined)
             setFoucsedKey(node.id)
             const rightParams: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
@@ -1947,7 +1944,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
         setAuditRightParams(undefined)
         setShowAuditDetail(false)
         bugHash.current = undefined
-        setBugId(undefined)
     })
     /** ---------- 审计详情信息 End ---------- */
 
@@ -1984,7 +1980,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                         onJump={onJump}
                         onlyJump={true}
                         wrapClassName={styles["code-tree-wrap"]}
-                        bugId={bugId}
                     />
                 )}
             </div>
@@ -1992,7 +1987,7 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
             <div className={styles["audit-detail"]}>
                 {isShowAuditDetail ? (
                     <>
-                        {bugId && bugHash.current ? (
+                        {bugHash.current ? (
                             <HoleBugDetail bugHash={bugHash.current} />
                         ) : (
                             <RightAuditDetail
