@@ -136,11 +136,6 @@ service Yak {
   rpc ResetMITMFilter(Empty) returns (SetMITMFilterRequest); //重置MITM启动前的过滤器
   rpc DownloadMITMCert(Empty) returns (MITMCert);
 
-  // MITM hijack filter
-  rpc SetMITMHijackFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
-  rpc GetMITMHijackFilter(Empty) returns (SetMITMFilterRequest);
-  rpc ResetMITMHijackFilter(Empty) returns (SetMITMFilterRequest);
-
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
 
@@ -5086,10 +5081,6 @@ message MITMRequest {
 
   // disable websocket compression
   bool DisableWebsocketCompression = 64;
-
-  // hijack filter
-  MITMFilterData HijackFilterData = 65;
-  bool updateHijackFilter = 66;
 }
 
 message FilterDataItem {
