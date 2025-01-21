@@ -317,6 +317,9 @@ export interface FuzzerRequestProps {
     FuzzerIndex?: string
     /**@name fuzzer Tab的唯一key */
     FuzzerTabIndex?: string
+
+    /** 是否由引擎进行丢弃包逻辑 */
+    EngineDropPacket?: boolean
 }
 
 export const showDictsAndSelect = (fun: (i: string) => any) => {
@@ -957,7 +960,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             RequestRaw: Buffer.from(requestRef.current, "utf8"), // StringToUint8Array(request, "utf8"),
             HotPatchCode: hotPatchCodeRef.current,
             HotPatchCodeWithParamGetter: hotPatchCodeWithParamGetterRef.current,
-            FuzzerTabIndex: props.id
+            FuzzerTabIndex: props.id,
+            EngineDropPacket: true
         }
     })
 
@@ -1113,8 +1117,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 reset()
             }
 
-            if (onIsDropped(data)) return
-
             const r = {
                 // 6.16
                 ...data,
@@ -1190,7 +1192,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
+    /**
+     * @returns bool false没有丢弃的数据，true有丢弃的数据
+     * 已无用方法
+     */
     const onIsDropped = useMemoizedFn((data) => {
         if (data.Discard) {
             // 丢弃不匹配的内容
@@ -1200,6 +1205,22 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
         return false
     })
+
+    useEffect(() => {
+        // 监听每次发送请求里的丢弃包数量
+        const handleSetDroppedCount = (content: string) => {
+            try {
+                const data: {fuzzer_tab_index: string; discard_count: number} = JSON.parse(content)
+                if (data.fuzzer_tab_index === props.id) {
+                    setDroppedCount(Number(data.discard_count) || 0)
+                }
+            } catch (error) {}
+        }
+        emiter.on("onGetDiscardPackageCount", handleSetDroppedCount)
+        return () => {
+            emiter.off("onGetDiscardPackageCount", handleSetDroppedCount)
+        }
+    }, [props.id])
 
     const setExtractedMap = useMemoizedFn((extractedMap: Map<string, string>) => {
         if (inViewport) setAll(extractedMap)

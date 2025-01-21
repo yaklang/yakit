@@ -17,9 +17,9 @@ export interface FileMonitorItemProps {
 }
 
 export interface FileMonitorProps {
-    ChangeEvents:FileMonitorItemProps[]
-    CreateEvents:FileMonitorItemProps[]
-    DeleteEvents:FileMonitorItemProps[]
+    ChangeEvents: FileMonitorItemProps[]
+    CreateEvents: FileMonitorItemProps[]
+    DeleteEvents: FileMonitorItemProps[]
 }
 
 /**@name 推送是否开启 */
@@ -27,7 +27,7 @@ export let serverPushStatus = false
 
 export const startupDuplexConn = () => {
     info("Server Push Enabled Already")
-    ipcRenderer.on(`${id}-data`, (e, data:DuplexConnectionProps) => {
+    ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
             const obj = JSON.parse(Uint8ArrayToString(data.Data))
             switch (data.MessageType) {
@@ -49,17 +49,18 @@ export const startupDuplexConn = () => {
                     break
                 // 文件树结构监控
                 case "file_monitor":
-                    const event:FileMonitorProps = obj
-                    emiter.emit("onRefreshYakRunnerFileTree",JSON.stringify(event))
+                    const event: FileMonitorProps = obj
+                    emiter.emit("onRefreshYakRunnerFileTree", JSON.stringify(event))
                     break
                 // 代码扫描-审计结果表
                 case "syntaxflow_result":
-                    emiter.emit("onRefreshCodeScanResult",JSON.stringify(obj))
+                    emiter.emit("onRefreshCodeScanResult", JSON.stringify(obj))
                     break
-                }
-                
-
-        
+                // fuzzer-批量请求中的丢弃包数量
+                case "fuzzer_server_push":
+                    emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
+                    break
+            }
         } catch (error) {}
     })
     ipcRenderer.on(`${id}-error`, (e, error) => {
@@ -76,7 +77,7 @@ export interface DuplexConnectionProps {
     Timestamp: number
 }
 
-export const sendDuplexConn = (params:DuplexConnectionProps) => {
+export const sendDuplexConn = (params: DuplexConnectionProps) => {
     ipcRenderer.invoke("DuplexConnectionWrite", params, id)
 }
 
