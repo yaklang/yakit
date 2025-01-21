@@ -231,7 +231,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
     const goBUGDetail = useMemoizedFn((e) => {
         e.stopPropagation()
-        onJump({...info,isBug:true})
+        onJump({...info, isBug: true})
     })
     return (
         <>
@@ -299,7 +299,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         setFoucsedKey,
         onJump,
         onlyJump,
-        wrapClassName,
+        wrapClassName
     } = props
     const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
@@ -798,7 +798,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     emiter.emit("onCodeAuditOpenBottomDetail", JSON.stringify({type: "holeDetail"}))
                 }
             }
-            if(arr.length === 0){
+            if (arr.length === 0) {
                 emiter.emit("onCodeAuditOpenBugDetail", "")
             }
             if (node.ResourceType === "value") {
@@ -820,7 +820,9 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
                 emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
             }
-        } catch (error) {}
+        } catch (error) {
+            failed(`打开错误${error}`)
+        }
     })
 
     const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>(defaultQuery)
