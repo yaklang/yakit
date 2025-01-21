@@ -25,4 +25,7 @@ export type WebFuzzerEventProps = {
     onRefVariableActiveKey?: string
     /**打开匹配器和提取器Modal */
     openMatcherAndExtraction: string
+
+    /** 全局刷新器返回数据-发送请求里丢弃包的数量 */
+    onGetDiscardPackageCount: string
 }
