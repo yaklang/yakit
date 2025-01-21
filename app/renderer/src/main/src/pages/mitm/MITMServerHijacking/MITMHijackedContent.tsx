@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -89,13 +89,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     const [modifiedPacket, setModifiedPacket] = useState<string>("")
 
-    useDebounceEffect(
-        () => {
-            setModifiedPacket(currentPacket)
-        },
-        [currentPacket],
-        {wait: 500}
-    )
+    useEffect(() => {
+        setModifiedPacket(currentPacket)
+    }, [currentPacket])
 
     const [width, setWidth] = useState<number>(0)
     const [height, setHeight] = useState<number>(0)
@@ -288,7 +284,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 }
             } else {
                 setForResponse(true)
-                setStatus("hijacked")
                 setCurrentPacketInfo({
                     currentPacket: !!msg?.isWebsocket
                         ? Uint8ArrayToString(msg.Payload)
@@ -304,10 +299,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         TotalDurationMs: 0
                     }
                 })
+                setStatus("hijacked")
             }
         } else if (msg.request) {
             const updateRequest = () => {
-                setStatus("hijacked")
                 setForResponse(false)
                 setCurrentPacketInfo({
                     currentPacket: !!msg?.isWebsocket
@@ -325,6 +320,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     }
                 })
                 setUrlInfo(msg.url)
+                setStatus("hijacked")
             }
 
             if (!isManual) {
@@ -450,8 +446,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (!currentPacketId) {
             return
         }
-        setIsRefreshHistory(true)
         setStatus("hijacking")
+        setIsRefreshHistory(true)
         if (hijackResponseType !== "all") {
             setHijackResponseType("never")
         }

@@ -781,7 +781,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         }
         setStrValue(originValue)
         if (mode === "hex") setHexValue(StringToUint8Array(originValue))
-    }, [props.refreshTrigger, mode])
+    }, [props.refreshTrigger, mode, props.readOnly])
 
     useEffect(() => {
         props.onChange && props.onChange(strValue)
