@@ -2273,6 +2273,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         afterDurationMs: undefined,
         beforeDurationMs: undefined
     })
+    const [extractedResults, setExtractedResults] = useState<string>()
 
     const [responseExtractorVisible, setResponseExtractorVisible] = useState<boolean>(false)
     const bodyLengthRef = useRef<any>()
@@ -2291,6 +2292,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             afterDurationMs: query?.afterDurationMs,
             beforeDurationMs: query?.beforeDurationMs
         })
+        setExtractedResults(query?.ExtractedResults)
     }, [query])
 
     // 导出数据的回调
@@ -2545,6 +2547,17 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                     showFooter={false}
                                 />
                             </div>
+                            <div className={styles["second-node-search-item"]}>
+                                <span>提取数据</span>
+                                <YakitInput
+                                    value={extractedResults}
+                                    onChange={(e) => {
+                                        let val = e.target.value
+                                        setExtractedResults(val)
+                                    }}
+                                    placeholder='请输入关键词搜索'
+                                ></YakitInput>
+                            </div>
                         </div>
                     }
                     onVisibleChange={(b) => {
@@ -2556,7 +2569,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 ...d,
                                 keyWord: keyWord,
                                 StatusCode: statusCode,
-                                Color: color
+                                Color: color,
+                                ExtractedResults: extractedResults
                             })
                         }
                     }}
@@ -2572,7 +2586,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 query?.beforeBodyLength ||
                                 query?.afterDurationMs ||
                                 query?.beforeDurationMs ||
-                                (query?.Color?.length || 0) > 0
+                                (query?.Color?.length || 0) > 0 ||
+                                (query?.ExtractedResults?.length || 0) > 0
                             )
                         }
                     />
