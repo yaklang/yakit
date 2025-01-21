@@ -766,7 +766,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                     .map((item) => `${item.Key}: ${item.Value}`)
                                     .join("")
                             }
-                            isHaveDataIsPush = extractedResultsString.includes(query.ExtractedResults.trim())
+                            isHaveDataIsPush = extractedResultsString
+                                .toLocaleLowerCase()
+                                .includes(query.ExtractedResults.trim().toLocaleLowerCase())
                         }
                         // 搜索同时为true时，push新数组
                         if (
