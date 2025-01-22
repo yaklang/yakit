@@ -451,7 +451,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
-        console.log(123, modifiedPacketRef.current);
         const modifiedPacketBytes = StringToUint8Array(modifiedPacketRef.current)
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacketBytes, currentPacketId).finally(() => {
