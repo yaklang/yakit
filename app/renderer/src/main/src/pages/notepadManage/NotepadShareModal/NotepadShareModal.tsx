@@ -1,4 +1,4 @@
-import React, {ReactNode, useState} from "react"
+import React, {ReactNode, useRef, useState} from "react"
 import styles from "./NotepadShareModal.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -47,6 +47,8 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
     const [userList, setUserList] = useState<API.UserList[]>([])
     const [selectUserList, setSelectUserList] = useState<SelectUserProps[]>([])
     const [collaborators, setCollaborators] = useState<NotepadCollaboratorInfoProps[]>(notepadInfo?.collaborator || [])
+
+    const colorRef = useRef<string>(randomAvatarColor())
 
     const onClear = useMemoizedFn(() => {
         setUserList([])
@@ -180,7 +182,7 @@ const NotepadShareModal: React.FC<NotepadShareModalProps> = React.memo((props) =
                 imgNode: judgeAvatar(
                     {companyHeadImg: notepadInfo.headImg, companyName: notepadInfo.userName},
                     28,
-                    randomAvatarColor()
+                    colorRef.current
                 ),
                 role: ""
             }

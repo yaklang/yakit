@@ -1,11 +1,10 @@
-import {Plugin,PluginKey} from "@milkdown/kit/prose/state"
+import {Plugin, PluginKey} from "@milkdown/kit/prose/state"
 import {$prose} from "@milkdown/kit/utils"
-
-import {ReplaceStep} from "prosemirror-transform"
 import {fileCustomId} from "./uploadPlugin"
 import {createSlice} from "@milkdown/kit/ctx"
 import moment from "moment"
 import {DeleteOSSFileItem} from "../MilkdownEditorType"
+import {ReplaceStep} from "@milkdown/kit/prose/transform"
 
 export const getFileNameByUrl = (url) => {
     if (!url) return ""
