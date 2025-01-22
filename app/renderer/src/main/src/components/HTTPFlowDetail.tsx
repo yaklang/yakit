@@ -1206,25 +1206,40 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     const [codeKey, setCodeKey] = useState<string>("utf-8")
     const [codeLoading, setCodeLoading] = useState<boolean>(false)
     const [codeValue, setCodeValue] = useState<string>("")
-    useEffect(() => {
-        if (flow) {
-            setCodeKey("utf-8")
-            getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
-                if (!!res) {
-                    setReqTypeOptionVal(res)
-                } else {
+    useDebounceEffect(
+        () => {
+            if (flow) {
+                setCodeKey("utf-8")
+                const reqArr = highLightItem?.IsMatchRequest ? [highLightItem] : []
+                const resArr = highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []
+                if (reqArr.length) {
                     setReqTypeOptionVal(undefined)
-                }
-            })
-            getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
-                if (!!res) {
-                    setResTypeOptionVal(res)
                 } else {
-                    setResTypeOptionVal(undefined)
+                    getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
+                        if (!!res) {
+                            setReqTypeOptionVal(res)
+                        } else {
+                            setReqTypeOptionVal(undefined)
+                        }
+                    })
                 }
-            })
-        }
-    }, [flow])
+
+                if (resArr.length) {
+                    setResTypeOptionVal(undefined)
+                } else {
+                    getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
+                        if (!!res) {
+                            setResTypeOptionVal(res)
+                        } else {
+                            setResTypeOptionVal(undefined)
+                        }
+                    })
+                }
+            }
+        },
+        [flow, highLightItem],
+        {wait: 300}
+    )
 
     // 响应额外按钮
     const secondNodeResExtraBtn = () => {
@@ -1487,9 +1502,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={secondNodeResExtraBtn()}
                         AfterBeautifyRenderBtn={
                             <>
-                                <YakitButton size='small' onClick={() => {
-                                    emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
-                                }}>
+                                <YakitButton
+                                    size='small'
+                                    onClick={() => {
+                                        emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
+                                    }}
+                                >
                                     编辑tag
                                 </YakitButton>
                                 <CodingPopover
