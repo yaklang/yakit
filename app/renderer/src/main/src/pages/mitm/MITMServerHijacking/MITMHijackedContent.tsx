@@ -1,7 +1,7 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed} from "@/utils/notification"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
-import React, {useEffect, useMemo, useState} from "react"
+import {useCreation, useMemoizedFn} from "ahooks"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
 import {MITMManualHeardExtra, MITMManualEditor, dropResponse, dropRequest, ManualUrlInfo} from "./MITMManual"
@@ -87,15 +87,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     const {currentPacket, currentPacketId, isHttp, requestPacket, traceInfo} = currentPacketInfo
 
-    const [modifiedPacket, setModifiedPacket] = useState<string>("")
-
-    useDebounceEffect(
-        () => {
-            setModifiedPacket(currentPacket)
-        },
-        [currentPacket],
-        {wait: 500}
-    )
+    const modifiedPacketRef = useRef<string>("")
+    useEffect(() => {
+        modifiedPacketRef.current = currentPacket
+    }, [currentPacket])
 
     const [width, setWidth] = useState<number>(0)
     const [height, setHeight] = useState<number>(0)
@@ -288,7 +283,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 }
             } else {
                 setForResponse(true)
-                setStatus("hijacked")
                 setCurrentPacketInfo({
                     currentPacket: !!msg?.isWebsocket
                         ? Uint8ArrayToString(msg.Payload)
@@ -304,10 +298,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         TotalDurationMs: 0
                     }
                 })
+                setStatus("hijacked")
             }
         } else if (msg.request) {
             const updateRequest = () => {
-                setStatus("hijacked")
                 setForResponse(false)
                 setCurrentPacketInfo({
                     currentPacket: !!msg?.isWebsocket
@@ -325,6 +319,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                     }
                 })
                 setUrlInfo(msg.url)
+                setStatus("hijacked")
             }
 
             if (!isManual) {
@@ -388,16 +383,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     // 美化
     const [beautifyTriggerRefresh, setBeautifyTriggerRefresh] = useState<boolean>(false) // 美化触发编辑器刷新
     const onSetBeautifyTrigger = useMemoizedFn((flag: boolean) => {
-        if (modifiedPacket === "") {
+        if (modifiedPacketRef.current === "") {
             return
         }
         const encoder = new TextEncoder()
-        const bytes = encoder.encode(modifiedPacket)
+        const bytes = encoder.encode(modifiedPacketRef.current)
         const mb = bytes.length / 1024 / 1024
         if (mb > 0.5) {
             return
         } else {
-            prettifyPacketCode(modifiedPacket).then((res) => {
+            prettifyPacketCode(modifiedPacketRef.current).then((res) => {
                 if (!!res) {
                     setCurrentPacketInfo((prev) => ({...prev, currentPacket: Uint8ArrayToString(res as Uint8Array)}))
                     setBeautifyTriggerRefresh(flag)
@@ -450,13 +445,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (!currentPacketId) {
             return
         }
-        setIsRefreshHistory(true)
         setStatus("hijacking")
+        setIsRefreshHistory(true)
         if (hijackResponseType !== "all") {
             setHijackResponseType("never")
         }
         setForResponse(false)
-        const modifiedPacketBytes = StringToUint8Array(modifiedPacket)
+        const modifiedPacketBytes = StringToUint8Array(modifiedPacketRef.current)
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacketBytes, currentPacketId).finally(() => {
                 clearCurrentPacket()
@@ -538,7 +533,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             currentIsWebsocket={currentIsWebsocket}
                             currentPacket={currentPacket}
                             beautifyTriggerRefresh={beautifyTriggerRefresh}
-                            setModifiedPacket={setModifiedPacket}
+                            setModifiedPacket={(val) => (modifiedPacketRef.current = val)}
                             forResponse={forResponse}
                             currentPacketId={currentPacketId}
                             handleAutoForward={handleAutoForward}
