@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import styles from "./EditTable.module.scss"
 import {failed, warn} from "@/utils/notification"
@@ -33,6 +33,7 @@ interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
     index: number
     children: React.ReactNode
     form: FormInstance<any>
+    setFoucusFun: (v: boolean) => void
 }
 
 const EditableCell: React.FC<EditableCellProps> = ({
@@ -47,8 +48,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
     index,
     children,
     form,
+    setFoucusFun,
     ...restProps
 }) => {
+    const onFocus = useMemoizedFn(() => {
+        setFoucusFun(true)
+    })
+
     const getNode = useMemoizedFn(() => {
         if (UiStyle && UiStyle?.["ui:widget"]) {
             switch (UiStyle["ui:widget"]) {
@@ -58,19 +64,24 @@ const EditableCell: React.FC<EditableCellProps> = ({
                             className={styles["input-textarea"]}
                             rows={3}
                             placeholder={`请输入 ${typeof title === "object" ? "该字段" : title}`}
+                            onFocus={onFocus}
                         />
                     )
                 default:
-                    return <YakitInput />
+                    return <YakitInput onFocus={onFocus} />
             }
         } else {
             switch (type) {
                 case "string":
-                    return selectOption.length > 0 ? <YakitSelect options={selectOption} /> : <YakitInput />
+                    return selectOption.length > 0 ? (
+                        <YakitSelect options={selectOption} onFocus={onFocus} />
+                    ) : (
+                        <YakitInput onFocus={onFocus} />
+                    )
                 case "boolean":
-                    return <YakitSwitch />
+                    return <YakitSwitch onClick={onFocus} />
                 default:
-                    return <YakitInput />
+                    return <YakitInput onFocus={onFocus} />
             }
         }
     })
@@ -343,16 +354,20 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         }
     })
 
-    // 失焦自动保存
-    const onBlur = useMemoizedFn(async (record: Item) => {
-        if (editingId) {
-            try {
-                await onSave(record)
-                setEditingId("")
-            } catch (error) {
-                // 保存失败时不退出编辑状态
+    // 失焦自动保存（如若此时点击可选组件时，不应调用自动保存）
+    const onBlur = useMemoizedFn((record: Item) => {
+        isFoucus.current = false
+        setTimeout(async() => {
+            if (editingId && !isFoucus.current) {
+                try {
+                    await onSave(record)
+                    setEditingId("")
+                } catch (error) {
+                    // 保存失败时不退出编辑状态
+                }
             }
-        }
+            isFoucus.current = false
+        }, 200)
     })
 
     const addCell = useMemoizedFn(async () => {
@@ -452,6 +467,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         ]
     }, [columns, editingId])
 
+    const isFoucus = useRef<boolean>(false)
+    const setFoucusFun = useMemoizedFn((is: boolean) => {
+        isFoucus.current = is
+    })
     const mergedColumns = realColumns.map((col) => {
         if (!col.editable) {
             return col
@@ -468,6 +487,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 selectOption: (col.enum || []).map((item) => ({label: item, value: item})),
                 UiStyle: uiKeys?.[col.dataIndex],
                 form,
+                setFoucusFun: setFoucusFun,
                 onBlur: () => onBlur(record)
             })
         }
