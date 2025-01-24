@@ -9,6 +9,7 @@ const {
     fetchLatestYakitEEVersion,
     fetchLatestYakitVersion,
     getAvailableOSSDomain,
+    fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
 const {getCheckTextUrl} = require("../handlers/utils/network")
 
@@ -100,6 +101,7 @@ module.exports = (win, getClient) => {
         return await asyncFetchYaklangVersionList()
     })
 
+    // 已无用，确认后再删除
     const asyncFetchCheckYaklangSource = (version) => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -124,7 +126,7 @@ module.exports = (win, getClient) => {
         })
     }
     /** 校验Yaklang来源是否正确 */
-    ipcMain.handle("fetch-check-yaklang-source", async (e, version) => {
-        return await asyncFetchCheckYaklangSource(version)
+    ipcMain.handle("fetch-check-yaklang-source", async (e, version, requestConfig) => {
+        return await fetchSpecifiedYakVersionHash(version, requestConfig)
     })
 }

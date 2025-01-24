@@ -1676,7 +1676,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const fetchYakitLastVersion = useMemoizedFn(() => {
         /** 社区版埋点 */
         if (isCommunityEdition()) visitorsStatisticsFun()
-        grpcFetchLatestYakitVersion(true)
+        grpcFetchLatestYakitVersion(undefined, true)
             .then((data: string) => {
                 setYakitLastVersion(data)
             })

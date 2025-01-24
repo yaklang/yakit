@@ -10,18 +10,18 @@ import {WebsiteGV} from "@/enums/website"
 
 import classNames from "classnames"
 import styles from "./HelpDoc.module.scss"
+import {SystemInfo} from "@/constants/hardware"
 
 const {ipcRenderer} = window.require("electron")
 
 interface HelpDocProps {
     system: YakitSystem
-    arch: string
     engineLink: boolean
 }
 
 /** @name Yakit软件更新下载弹窗 */
 export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
-    const {system, arch, engineLink} = props
+    const {system, engineLink} = props
 
     const [currentYakit, setCurrentYakit] = useState<string>("")
     const [currentYaklang, setCurrentYaklang] = useState<string>("")
@@ -29,12 +29,12 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     const info = useMemo(() => {
         const info: LocalInfoProps = {
             system: system,
-            arch: arch,
+            arch: SystemInfo.architecture || "",
             localYakit: currentYakit,
             localYaklang: currentYaklang
         }
         return info
-    }, [system, arch, currentYakit, currentYaklang])
+    }, [system, currentYakit, currentYaklang])
 
     useEffect(() => {
         grpcFetchLocalYakitVersion(true)
@@ -73,14 +73,16 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
         ></YakitMenu>
     )
     const menuSelect = useMemoizedFn((type: string) => {
+        console.log("menuselct", info)
         if (show) setShow(false)
         switch (type) {
             case "report_bug":
                 const bug_tpl = ReportBug(info)
-                ipcRenderer.invoke(
-                    "open-url",
-                    `https://github.com/yaklang/yakit/issues/new?title=【BUG】问题标题&body=${bug_tpl}&labels=bug`
-                )
+                console.log("bug_tpl", bug_tpl)
+                // ipcRenderer.invoke(
+                //     "open-url",
+                //     `https://github.com/yaklang/yakit/issues/new?title=【BUG】问题标题&body=${bug_tpl}&labels=bug`
+                // )
                 return
             case "feature_request":
                 let feature_tpl = FeatureRequest()

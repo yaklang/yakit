@@ -135,3 +135,70 @@
         }
     }
 }
+
+// ---------- UpdateYakitHint ----------
+.update-yakit-hint {
+    .content {
+        .download-progress {
+            :global {
+                .ant-progress-text {
+                    display: block;
+                    margin-left: 0;
+                    margin-top: 2px;
+                }
+            }
+        }
+        .download-info-wrapper {
+            margin-top: 16px;
+            display: flex;
+            align-items: center;
+            height: 16px;
+            font-size: 12px;
+            color: var(--yakit-helper-text-color);
+            .divider-wrapper {
+                margin: 0 8px;
+                width: 1px;
+                height: 12px;
+                border-left: 1px solid var(--yakit-border-color);
+            }
+        }
+
+        .hint-right-content {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-body-text-color);
+        }
+        .hint-right-update-content {
+            box-sizing: border-box;
+            margin-top: 8px;
+            max-height: 108px;
+            overflow: hidden auto;
+
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px;
+            gap: 6px;
+
+            background: var(--yakit-neutral10-color);
+            border: 1px solid var(--yakit-border-color);
+            border-radius: 4px;
+
+            font-size: 12px;
+            line-height: 18px;
+            color: var(--yakit-header-color);
+        }
+    }
+
+    .footer {
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+    }
+}
