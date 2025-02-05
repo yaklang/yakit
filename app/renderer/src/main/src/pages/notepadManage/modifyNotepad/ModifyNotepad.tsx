@@ -151,6 +151,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     notepadContentRef.current = res.content
                     setNotepadDetail(res)
                 })
+                .catch((error) => {
+                    onErrorModal(error)
+                })
                 .finally(() =>
                     setTimeout(() => {
                         setNotepadLoading(false)
@@ -177,6 +180,9 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         notepadHash: hash
                     })
                 })
+                .catch((error) => {
+                    onErrorModal(error)
+                })
                 .finally(() =>
                     setTimeout(() => {
                         setNotepadLoading(false)
@@ -188,6 +194,23 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         //     onSaveNewContent(notepadContent)
         // }
     }, [])
+
+    /**查询或者新建异常处理 */
+    const onErrorModal = useMemoizedFn((error) => {
+        if (!pageId) return
+        const m = showYakitModal({
+            title: "网络异常",
+            content: <span>错误原因:{error}</span>,
+            closable: false,
+            onOkText: "关闭页面",
+            cancelButtonProps: {style: {display: "none"}},
+            onOk: () => {
+                emiter.emit("onCloseCurrentPage", pageId)
+                m.destroy()
+            },
+            bodyStyle: {padding: 24}
+        })
+    })
 
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
