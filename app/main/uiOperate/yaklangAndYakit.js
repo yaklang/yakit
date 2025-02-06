@@ -9,6 +9,7 @@ const {
     fetchLatestYakitEEVersion,
     fetchLatestYakitVersion,
     getAvailableOSSDomain,
+    fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
 const {getCheckTextUrl} = require("../handlers/utils/network")
 
@@ -41,10 +42,11 @@ module.exports = (win, getClient) => {
     })
 
     /** 获取Yakit最新版本号 */
-    const asyncFetchLatestYakitVersion = (isEnterprise) => {
+    const asyncFetchLatestYakitVersion = (params) => {
+        const {config, isEnterprise} = params
         return new Promise((resolve, reject) => {
             const fetchPromise = isEnterprise ? fetchLatestYakitEEVersion : fetchLatestYakitVersion
-            fetchPromise()
+            fetchPromise(config)
                 .then((version) => {
                     resolve(version)
                 })
@@ -54,8 +56,8 @@ module.exports = (win, getClient) => {
         })
     }
     /** 获取Yakit最新版本号 */
-    ipcMain.handle("fetch-latest-yakit-version", async (e, isEnterprise) => {
-        return await asyncFetchLatestYakitVersion(isEnterprise)
+    ipcMain.handle("fetch-latest-yakit-version", async (e, params) => {
+        return await asyncFetchLatestYakitVersion(params)
     })
 
     /** 获取Yakit本地版本号 */
@@ -66,20 +68,6 @@ module.exports = (win, getClient) => {
     /** 以更新引擎但未关闭内存中的老版本引擎进程(mac) */
     ipcMain.handle("kill-old-engine-process", (e, type) => {
         win.webContents.send("kill-old-engine-process-callback", type)
-    })
-
-    /** 获取软件当前版本对应的引擎版本号 */
-    ipcMain.handle("fetch-built-in-engine-version", (e) => {
-        const versionPath = loadExtraFilePath(path.join("bins", "engine-version.txt"))
-        if (fs.existsSync(versionPath)) {
-            try {
-                return fs.readFileSync(versionPath).toString("utf8")
-            } catch (error) {
-                return ""
-            }
-        } else {
-            return ""
-        }
     })
 
     /** 获取Yaklang所有版本 */
@@ -100,31 +88,8 @@ module.exports = (win, getClient) => {
         return await asyncFetchYaklangVersionList()
     })
 
-    const asyncFetchCheckYaklangSource = (version) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const url = await getCheckTextUrl(version)
-                if (url === "") {
-                    reject(`Unsupported platform: ${process.platform}`)
-                }
-                let rsp = https.get(url)
-                rsp.on("response", (rsp) => {
-                    rsp.on("data", (data) => {
-                        if (rsp.statusCode == 200) {
-                            resolve(Buffer.from(data).toString("utf8"))
-                        } else {
-                            reject("校验值不存在")
-                        }
-                    }).on("error", (err) => reject(err))
-                })
-                rsp.on("error", reject)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
     /** 校验Yaklang来源是否正确 */
-    ipcMain.handle("fetch-check-yaklang-source", async (e, version) => {
-        return await asyncFetchCheckYaklangSource(version)
+    ipcMain.handle("fetch-check-yaklang-source", async (e, version, requestConfig) => {
+        return await fetchSpecifiedYakVersionHash(version, requestConfig)
     })
 }
