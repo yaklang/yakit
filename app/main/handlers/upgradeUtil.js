@@ -1,14 +1,14 @@
-const { app, ipcMain, shell } = require("electron");
-const childProcess = require("child_process");
-const process = require("process");
-const path = require("path");
-const os = require("os");
-const fs = require("fs");
-const gracefulfs = require("graceful-fs");
-const https = require("https");
-const EventEmitter = require('events');
-const zip = require('node-stream-zip');
-const crypto = require("crypto");
+const {ipcMain, shell} = require("electron")
+const childProcess = require("child_process")
+const process = require("process")
+const path = require("path")
+const os = require("os")
+const fs = require("fs")
+const gracefulfs = require("graceful-fs")
+const https = require("https")
+const EventEmitter = require("events")
+const zip = require("node-stream-zip")
+const crypto = require("crypto")
 
 const {
     YakitProjectPath,
@@ -26,33 +26,29 @@ const {
     getYakitEEDownloadUrl,
     getYakitCommunityDownloadUrl,
     downloadYakEngine
-} = require("./utils/network");
-const {
-    engineCancelRequestWithProgress,
-    yakitCancelRequestWithProgress
-} = require("./utils/requestWithProgress");
-const { getCheckTextUrl } = require("../handlers/utils/network")
+} = require("./utils/network")
+const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
+const {getCheckTextUrl} = require("../handlers/utils/network")
 
-const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile");
-const authMeta = [];
-
+const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
+const authMeta = []
 
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
         try {
-            fs.mkdirSync(remoteLinkDir, { recursive: true })
-            fs.mkdirSync(basicDir, { recursive: true })
-            fs.mkdirSync(userChromeDataDir, { recursive: true })
-            fs.mkdirSync(yaklangEngineDir, { recursive: true })
-            fs.mkdirSync(codeDir, { recursive: true })
+            fs.mkdirSync(remoteLinkDir, {recursive: true})
+            fs.mkdirSync(basicDir, {recursive: true})
+            fs.mkdirSync(userChromeDataDir, {recursive: true})
+            fs.mkdirSync(yaklangEngineDir, {recursive: true})
+            fs.mkdirSync(codeDir, {recursive: true})
 
             try {
                 console.info("Start checking bins/resources")
-                const extraResources = loadExtraFilePath(path.join("bins", "resources"));
-                const resourceBase = basicDir;
+                const extraResources = loadExtraFilePath(path.join("bins", "resources"))
+                const resourceBase = basicDir
                 if (!fs.existsSync(path.join(resourceBase, "flag.txt"))) {
                     console.info("Start to load bins/resources ...")
-                    fs.readdirSync(extraResources).forEach(value => {
+                    fs.readdirSync(extraResources).forEach((value) => {
                         if (value.endsWith(".txt")) {
                             try {
                                 fs.copyFileSync(path.join(extraResources, value), path.join(resourceBase, value))
@@ -76,8 +72,8 @@ const initMkbaseDir = async () => {
 const loadSecrets = () => {
     authMeta.splice(0, authMeta.length)
     try {
-        const data = fs.readFileSync(path.join(remoteLinkDir, "yakit-remote.json"));
-        JSON.parse(data).forEach(i => {
+        const data = fs.readFileSync(path.join(remoteLinkDir, "yakit-remote.json"))
+        JSON.parse(data).forEach((i) => {
             if (!(i["host"] && i["port"])) {
                 return
             }
@@ -88,12 +84,11 @@ const loadSecrets = () => {
                 port: i["port"],
                 tls: i["tls"] || false,
                 password: i["password"] || "",
-                caPem: i["caPem"] || "",
+                caPem: i["caPem"] || ""
             })
         })
-    } catch (e) {
-    }
-};
+    } catch (e) {}
+}
 
 function saveSecret(name, host, port, tls, password, caPem) {
     if (!host || !port) {
@@ -101,26 +96,30 @@ function saveSecret(name, host, port, tls, password, caPem) {
     }
 
     authMeta.push({
-        host, port, tls, password, caPem, name: name || `${host}:${port}`,
+        host,
+        port,
+        tls,
+        password,
+        caPem,
+        name: name || `${host}:${port}`
     })
     saveAllSecret([...authMeta])
-};
+}
 
-const isWindows = process.platform === "win32";
+const isWindows = process.platform === "win32"
 
 const saveAllSecret = (authInfos) => {
     try {
         fs.unlinkSync(remoteLinkFile)
-    } catch (e) {
+    } catch (e) {}
 
-    }
-
-
-    const authFileStr = JSON.stringify([...authInfos.filter((v, i, arr) => {
-        return arr.findIndex(origin => origin.name === v.name) === i
-    })]);
+    const authFileStr = JSON.stringify([
+        ...authInfos.filter((v, i, arr) => {
+            return arr.findIndex((origin) => origin.name === v.name) === i
+        })
+    ])
     fs.writeFileSync(remoteLinkFile, new Buffer(authFileStr, "utf8"))
-};
+}
 
 const getLatestYakLocalEngine = () => {
     switch (process.platform) {
@@ -149,38 +148,43 @@ const getYakitPlatform = () => {
 }
 
 module.exports = {
-    getLatestYakLocalEngine, initial: async () => {
-        return await initMkbaseDir();
-    }, register: (win, getClient) => {
+    getLatestYakLocalEngine,
+    initial: async () => {
+        return await initMkbaseDir()
+    },
+    register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
-            let { name, host, port, tls, caPem, password } = params;
+            let {name, host, port, tls, caPem, password} = params
             name = name || `${host}:${port}`
-            saveAllSecret([...authMeta.filter(i => {
-                return i.name !== name
-            })]);
+            saveAllSecret([
+                ...authMeta.filter((i) => {
+                    return i.name !== name
+                })
+            ])
             loadSecrets()
             saveSecret(name, host, port, tls, password, caPem)
         })
         ipcMain.handle("remove-yakit-remote-auth", async (e, name) => {
-            saveAllSecret([...authMeta.filter(i => {
-                return i.name !== name
-            })]);
-            loadSecrets();
+            saveAllSecret([
+                ...authMeta.filter((i) => {
+                    return i.name !== name
+                })
+            ])
+            loadSecrets()
         })
         ipcMain.handle("get-yakit-remote-auth-all", async (e, name) => {
             loadSecrets()
-            return authMeta;
+            return authMeta
         })
         ipcMain.handle("get-yakit-remote-auth-dir", async (e, name) => {
-            return remoteLinkDir;
+            return remoteLinkDir
         })
 
-        class YakVersionEmitter extends EventEmitter {
-        }
+        class YakVersionEmitter extends EventEmitter {}
 
-        const yakVersionEmitter = new YakVersionEmitter();
-        let isFetchingVersion = false;
-        let latestVersionCache = null;
+        const yakVersionEmitter = new YakVersionEmitter()
+        let isFetchingVersion = false
+        let latestVersionCache = null
 
         /** clear latestVersionCache value */
         ipcMain.handle("clear-local-yaklang-version-cache", async (e) => {
@@ -193,48 +197,50 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 if (latestVersionCache) {
                     resolve(latestVersionCache)
-                    return;
+                    return
                 }
 
                 console.info("YAK-VERSION: mount version")
-                yakVersionEmitter.once('version', (err, version) => {
+                yakVersionEmitter.once("version", (err, version) => {
                     if (err) {
-                        diagnosingYakVersion().catch(err => {
-                            console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
-                            reject(err)
-                        }).then(() => {
-                            console.info("YAK-VERSION: fetch error: " + `${err}`)
-                            reject(err)
-                        })
+                        diagnosingYakVersion()
+                            .catch((err) => {
+                                console.info("YAK-VERSION(DIAG): fetch error: " + `${err}`)
+                                reject(err)
+                            })
+                            .then(() => {
+                                console.info("YAK-VERSION: fetch error: " + `${err}`)
+                                reject(err)
+                            })
                     } else {
                         console.info("YAK-VERSION: hit version: " + `${version}`)
-                        resolve(version);
+                        resolve(version)
                     }
                 })
                 if (isFetchingVersion) {
                     console.info("YAK-VERSION is executing...")
-                    return;
+                    return
                 }
 
                 console.info("YAK-VERSION process is executing...")
-                isFetchingVersion = true;
+                isFetchingVersion = true
                 childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
                     console.info(stdout)
                     if (err) {
-                        yakVersionEmitter.emit('version', err, null);
+                        yakVersionEmitter.emit("version", err, null)
                         isFetchingVersion = false
-                        return;
+                        return
                     }
                     // const version = stdout.replaceAll("yak version ()", "").trim();
-                    const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout);
-                    const version = match && match[2];
+                    const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout)
+                    const version = match && match[2]
                     if (!version) {
-                        const error = new Error("[unknown reason] cannot fetch yak version (yak -v)");
-                        yakVersionEmitter.emit('version', error, null);
-                        isFetchingVersion = false;
+                        const error = new Error("[unknown reason] cannot fetch yak version (yak -v)")
+                        yakVersionEmitter.emit("version", error, null)
+                        isFetchingVersion = false
                     } else {
-                        latestVersionCache = version;
-                        yakVersionEmitter.emit('version', null, version);
+                        latestVersionCache = version
+                        yakVersionEmitter.emit("version", null, version)
                         isFetchingVersion = false
                     }
                 })
@@ -244,57 +250,65 @@ module.exports = {
             return await asyncGetCurrentLatestYakVersion(params)
         })
 
-        const diagnosingYakVersion = () => new Promise((resolve, reject) => {
-            const commandPath = getLatestYakLocalEngine()
-            fs.access(commandPath, fs.constants.X_OK, err => {
-                if (err) {
-                    if (err.code === 'ENOENT') {
-                        reject(new Error(`命令未找到: ${commandPath}`));
-                    } else if (err.code === 'EACCES') {
-                        reject(new Error(`命令无法执行(无权限): ${commandPath}`));
-                    } else {
-                        reject(new Error(`命令无法执行: ${commandPath}`));
+        const diagnosingYakVersion = () =>
+            new Promise((resolve, reject) => {
+                const commandPath = getLatestYakLocalEngine()
+                fs.access(commandPath, fs.constants.X_OK, (err) => {
+                    if (err) {
+                        if (err.code === "ENOENT") {
+                            reject(new Error(`命令未找到: ${commandPath}`))
+                        } else if (err.code === "EACCES") {
+                            reject(new Error(`命令无法执行(无权限): ${commandPath}`))
+                        } else {
+                            reject(new Error(`命令无法执行: ${commandPath}`))
+                        }
+                        return
                     }
-                    return;
-                }
 
-                childProcess.execFile(commandPath, ['-v'], { timeout: 20000 }, (error, stdout, stderr) => {
-                    if (error) {
-                        let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`;
-                        if (error.code === 'ENOENT') {
-                            errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`;
-                        } else if (error.killed) {
-                            errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`;
-                        } else if (error.signal) {
-                            errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`;
-                        } else if (error.code === 'ETIMEDOUT') {
-                            errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`;
+                    childProcess.execFile(commandPath, ["-v"], {timeout: 20000}, (error, stdout, stderr) => {
+                        if (error) {
+                            let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
+                            if (error.code === "ENOENT") {
+                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`
+                            } else if (error.killed) {
+                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`
+                            } else if (error.signal) {
+                                errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
+                            } else if (error.code === "ETIMEDOUT") {
+                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                            }
+
+                            reject(new Error(errorMessage))
+                            return
                         }
 
-                        reject(new Error(errorMessage));
-                        return;
-                    }
-
-                    resolve(stdout);
+                        resolve(stdout)
+                    })
                 })
             })
-        })
-        ipcMain.handle('diagnosing-yak-version', async (e, params) => {
+        ipcMain.handle("diagnosing-yak-version", async (e, params) => {
             return diagnosingYakVersion()
         })
 
         // asyncDownloadLatestYak wrapper
         const asyncDownloadLatestYak = (version) => {
             return new Promise(async (resolve, reject) => {
-                const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
+                const dest = path.join(
+                    yaklangEngineDir,
+                    version.startsWith("dev/") ? "yak-" + version.replace("dev/", "dev-") : `yak-${version}`
+                )
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {
-
-                }
-                await downloadYakEngine(version, dest, state => {
-                    win.webContents.send("download-yak-engine-progress", state)
-                }, resolve, reject)
+                } catch (e) {}
+                await downloadYakEngine(
+                    version,
+                    dest,
+                    (state) => {
+                        win.webContents.send("download-yak-engine-progress", state)
+                    },
+                    resolve,
+                    reject
+                )
             })
         }
         ipcMain.handle("download-latest-yak", async (e, version) => {
@@ -303,7 +317,10 @@ module.exports = {
 
         // 判断历史引擎版本是否存在以及正确性
         const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-            const dest = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
+            const dest = path.join(
+                yaklangEngineDir,
+                version.startsWith("dev/") ? "yak-" + version.replace("dev/", "dev-") : `yak-${version}`
+            )
             return new Promise(async (resolve, reject) => {
                 try {
                     const url = await getCheckTextUrl(version)
@@ -327,12 +344,13 @@ module.exports = {
                             }).on("error", (err) => reject(err))
                         })
                         rsp.on("error", (err) => reject(err))
-                        rsp.setTimeout(3000, () => { // 设置请求超时时间为3秒
+                        rsp.setTimeout(3000, () => {
+                            // 设置请求超时时间为3秒
                             rsp.destroy() // 超时后中止请求
-                            reject('Request timeout')
+                            reject("Request timeout")
                         })
                     } else {
-                        reject('Engine version directory does not exist')
+                        reject("Engine version directory does not exist")
                     }
                 } catch (error) {
                     reject(error)
@@ -356,29 +374,42 @@ module.exports = {
 
                 console.info("start to fetching download-url for yakit")
 
-                const downloadUrl = isEnterprise ? await getYakitEEDownloadUrl(version) : await getYakitCommunityDownloadUrl(version)
+                const downloadUrl = isEnterprise
+                    ? await getYakitEEDownloadUrl(version)
+                    : await getYakitCommunityDownloadUrl(version)
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, { recursive: true })
-                const dest = path.join(yakitInstallDir, path.basename(downloadUrl));
+                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {
-                }
+                } catch (e) {}
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
 
                 if (isEnterprise) {
-                    await downloadYakitEE(version, dest, state => {
-                        if (!!state) {
-                            win.webContents.send("download-yakit-engine-progress", state)
-                        }
-                    }, resolve, reject)
+                    await downloadYakitEE(
+                        version,
+                        dest,
+                        (state) => {
+                            if (!!state) {
+                                win.webContents.send("download-yakit-engine-progress", state)
+                            }
+                        },
+                        resolve,
+                        reject
+                    )
                 } else {
-                    await downloadYakitCommunity(version, dest, state => {
-                        if (!!state) {
-                            win.webContents.send("download-yakit-engine-progress", state)
-                        }
-                    }, resolve, reject)
+                    await downloadYakitCommunity(
+                        version,
+                        dest,
+                        (state) => {
+                            if (!!state) {
+                                win.webContents.send("download-yakit-engine-progress", state)
+                            }
+                        },
+                        resolve,
+                        reject
+                    )
                 }
             })
         }
@@ -398,11 +429,11 @@ module.exports = {
         })
 
         ipcMain.handle("update-enpritrace-info", async () => {
-            return await { version: getYakitPlatform() }
+            return await {version: getYakitPlatform()}
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
-            return getLatestYakLocalEngine();
+            return getLatestYakLocalEngine()
             //systemRoot := os.Getenv("WINDIR")
             // 			if systemRoot == "" {
             // 				systemRoot = os.Getenv("windir")
@@ -420,15 +451,17 @@ module.exports = {
             //     return "%WINDIR%\\System32\\yak.exe"
             // }
             // return getWindowsInstallPath();
-
-        });
+        })
 
         const installYakEngine = (version) => {
             return new Promise((resolve, reject) => {
-                let origin = path.join(yaklangEngineDir, version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`);
-                origin = origin.replaceAll(`"`, `\"`);
+                let origin = path.join(
+                    yaklangEngineDir,
+                    version.startsWith("dev/") ? "yak-" + version.replace("dev/", "dev-") : `yak-${version}`
+                )
+                origin = origin.replaceAll(`"`, `\"`)
 
-                let dest = getLatestYakLocalEngine(); //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
+                let dest = getLatestYakLocalEngine() //;isWindows ? getWindowsInstallPath() : "/usr/local/bin/yak";
                 dest = dest.replaceAll(`"`, `\"`)
                 // setTimeout childProcess.exec执行顺序 确保childProcess.exec执行后不会再执行tryUnlink
                 let flag = false
@@ -439,39 +472,44 @@ module.exports = {
                     } catch (err) {
                         if (err.message.indexOf("operation not permitted") > -1) {
                             if (retriesLeft > 0) {
-                                setTimeout(() => tryUnlink(retriesLeft - 1), 500);
+                                setTimeout(() => tryUnlink(retriesLeft - 1), 500)
                             } else {
                                 reject("operation not permitted")
                             }
                         }
                     }
-
                 }
-                tryUnlink(2);
-                childProcess.exec(isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`, err => {
-                    flag = true
-                    if (err) {
-                        if (err.message.indexOf('The process cannot access the file because it is being used by another process') !== -1) {
-                            reject("operation not permitted")
-                        } else {
-                            reject(err)
+                tryUnlink(2)
+                childProcess.exec(
+                    isWindows ? `copy "${origin}" "${dest}"` : `cp "${origin}" "${dest}" && chmod +x "${dest}"`,
+                    (err) => {
+                        flag = true
+                        if (err) {
+                            if (
+                                err.message.indexOf(
+                                    "The process cannot access the file because it is being used by another process"
+                                ) !== -1
+                            ) {
+                                reject("operation not permitted")
+                            } else {
+                                reject(err)
+                            }
+                            return
                         }
-                        return
+                        resolve()
                     }
-                    resolve()
-                })
+                )
             })
-
         }
 
         ipcMain.handle("install-yak-engine", async (e, version) => {
-            return await installYakEngine(version);
+            return await installYakEngine(version)
         })
 
         // 获取yak code文件根目录路径
         ipcMain.handle("fetch-code-path", () => {
             return codeDir
-        });
+        })
 
         // 打开指定路径文件
         ipcMain.handle("open-specified-file", async (e, path) => {
@@ -488,7 +526,8 @@ module.exports = {
                 }
                 console.log("start to gen cert script")
                 const zipHandler = new zip({
-                    file: loadExtraFilePath(path.join("bins/scripts", all)), storeEntries: true,
+                    file: loadExtraFilePath(path.join("bins/scripts", all)),
+                    storeEntries: true
                 })
                 zipHandler.on("ready", () => {
                     const targetPath = path.join(YakitProjectPath, output_name)
@@ -498,21 +537,20 @@ module.exports = {
                         } else {
                             // 如果不是 Windows，给脚本文件添加执行权限
                             if (!isWindows) {
-                                fs.chmodSync(targetPath, 0o755);
+                                fs.chmodSync(targetPath, 0o755)
                             }
                             resolve(targetPath)
                         }
-                        zipHandler.close();
+                        zipHandler.close()
                     })
                 })
-                zipHandler.on("error", err => {
+                zipHandler.on("error", (err) => {
                     console.info(err)
                     reject(`${err}`)
                     zipHandler.close()
                 })
             })
         }
-
 
         ipcMain.handle("generate-install-script", async (e) => {
             return await generateInstallScript()
@@ -528,16 +566,17 @@ module.exports = {
 
                 console.info("Start to Extract yak.zip")
                 const zipHandler = new zip({
-                    file: loadExtraFilePath(path.join("bins", "yak.zip")), storeEntries: true,
+                    file: loadExtraFilePath(path.join("bins", "yak.zip")),
+                    storeEntries: true
                 })
                 console.info("Start to Extract yak.zip: Set `ready`")
                 zipHandler.on("ready", () => {
-                    const buildInPath = path.join(yaklangEngineDir, "yak.build-in");
+                    const buildInPath = path.join(yaklangEngineDir, "yak.build-in")
 
-                    console.log('Entries read: ' + zipHandler.entriesCount);
+                    console.log("Entries read: " + zipHandler.entriesCount)
                     for (const entry of Object.values(zipHandler.entries())) {
-                        const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
-                        console.log(`Entry ${entry.name}: ${desc}`);
+                        const desc = entry.isDirectory ? "directory" : `${entry.size} bytes`
+                        console.log(`Entry ${entry.name}: ${desc}`)
                     }
 
                     console.info("we will extract file to: " + buildInPath)
@@ -567,7 +606,6 @@ module.exports = {
                         if (!fs.existsSync(buildInPath)) {
                             reject(`Extract BuildIn Engine Failed`)
                         } else {
-
                             /**
                              * 复制引擎到真实地址
                              * */
@@ -585,11 +623,11 @@ module.exports = {
                             }
                         }
                         console.info("zipHandler closing...")
-                        zipHandler.close();
+                        zipHandler.close()
                     })
                 })
                 console.info("Start to Extract yak.zip: Set `error`")
-                zipHandler.on("error", err => {
+                zipHandler.on("error", (err) => {
                     console.info(err)
                     reject(`${err}`)
                     zipHandler.close()
@@ -606,21 +644,24 @@ module.exports = {
             if (fs.existsSync(targetFile)) {
                 return
             }
-            const buildinDBFile = loadExtraFilePath(path.join("bins", "database", "default-cve.db.gzip"));
+            const buildinDBFile = loadExtraFilePath(path.join("bins", "database", "default-cve.db.gzip"))
             if (fs.existsSync(buildinDBFile)) {
                 fs.copyFileSync(buildinDBFile, targetFile)
             }
         })
 
         // 获取内置引擎版本
-        ipcMain.handle("GetBuildInEngineVersion"
-            /*"IsBinsExisted"*/, async (e) => {
-                const yakZipName = path.join("bins", "yak.zip")
-                if (!fs.existsSync(loadExtraFilePath(yakZipName))) {
-                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(yakZipName)}`)
+        ipcMain.handle(
+            "GetBuildInEngineVersion",
+            /*"IsBinsExisted"*/ async (e) => {
+                const yakZipPath = path.join("bins", "yak.zip")
+                if (!fs.existsSync(loadExtraFilePath(yakZipPath))) {
+                    throw Error(`Cannot found yak.zip, bins: ${loadExtraFilePath(yakZipPath)}`)
                 }
-                return fs.readFileSync(loadExtraFilePath(path.join("bins", "engine-version.txt"))).toString("utf8")
-            })
+                const versionPath = path.join("bins", "engine-version.txt")
+                return fs.readFileSync(loadExtraFilePath(versionPath)).toString("utf8")
+            }
+        )
 
         // asyncRestoreEngineAndPlugin wrapper
         ipcMain.handle("RestoreEngineAndPlugin", async (e, params) => {
@@ -640,7 +681,6 @@ module.exports = {
                 if (fs.existsSync(cacheFlagLock)) {
                     fs.unlinkSync(cacheFlagLock)
                 }
-
             } catch (e) {
                 throw e
             }
@@ -653,14 +693,14 @@ module.exports = {
                 } catch (err) {
                     if (err.message.indexOf("operation not permitted") > -1) {
                         if (retriesLeft > 0) {
-                            setTimeout(() => tryUnlink(retriesLeft - 1), 500);
+                            setTimeout(() => tryUnlink(retriesLeft - 1), 500)
                         } else {
                             throw e
                         }
                     }
                 }
             }
-            tryUnlink(2);
+            tryUnlink(2)
             return await asyncInitBuildInEngine({})
         })
 
@@ -681,7 +721,8 @@ module.exports = {
                     return
                 }
                 const zipHandler = new zip({
-                    file: loadExtraFilePath(path.join("bins/scripts", all)), storeEntries: true,
+                    file: loadExtraFilePath(path.join("bins/scripts", all)),
+                    storeEntries: true
                 })
                 zipHandler.on("ready", () => {
                     const targetPath = path.join(yaklangEngineDir, output_name)
@@ -691,14 +732,14 @@ module.exports = {
                         } else {
                             // 如果不是 Windows，给脚本文件添加执行权限
                             if (!isWindows) {
-                                fs.chmodSync(targetPath, 0o755);
+                                fs.chmodSync(targetPath, 0o755)
                             }
                             resolve("")
                         }
-                        zipHandler.close();
+                        zipHandler.close()
                     })
                 })
-                zipHandler.on("error", err => {
+                zipHandler.on("error", (err) => {
                     console.info(err)
                     reject(`${err}`)
                     zipHandler.close()
@@ -706,9 +747,8 @@ module.exports = {
             })
         }
 
-
         ipcMain.handle("generate-start-engine", async (e) => {
             return await generateStartEngineGRPC()
         })
-    },
+    }
 }

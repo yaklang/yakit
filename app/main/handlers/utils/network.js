@@ -101,7 +101,7 @@ async function getAvailableOSSDomain() {
     }
 }
 
-/**获取校验url */
+/** 获取校验url */
 const getCheckTextUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
     let system_mode = ""
@@ -136,6 +136,21 @@ const getCheckTextUrl = async (version) => {
     }
     return url
 }
+/** 获取指定版本号的引擎Hash值 */
+const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
+    const url = await getCheckTextUrl(version)
+    if (url === "") {
+        throw new Error(`No Find ${version} Hash Url`)
+    }
+    return axios.get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)}).then((response) => {
+        const versionData = Buffer.from(response.data).toString("utf8")
+        if (versionData.length > 0) {
+            return Buffer.from(response.data).toString("utf8")
+        } else {
+            throw new Error("校验值不存在")
+        }
+    })
+}
 /** 获取最新 yak 版本号 */
 const fetchLatestYakEngineVersion = async () => {
     const domain = await getAvailableOSSDomain()
@@ -150,30 +165,34 @@ const fetchLatestYakEngineVersion = async () => {
     })
 }
 /** 获取最新 yakit 版本号 */
-const fetchLatestYakitVersion = async () => {
+const fetchLatestYakitVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
-        const versionData = `${response.data}`.trim()
-        if (versionData.length > 0) {
-            return versionData.startsWith("v") ? versionData : `v${versionData}`
-        } else {
-            throw new Error("Failed to fetch version data")
-        }
-    })
+    return axios
+        .get(versionUrl, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(domain)})
+        .then((response) => {
+            const versionData = `${response.data}`.trim()
+            if (versionData.length > 0) {
+                return versionData.startsWith("v") ? versionData : `v${versionData}`
+            } else {
+                throw new Error("Failed to fetch version data")
+            }
+        })
 }
 /** 获取最新 yakit EE 版本号 */
-const fetchLatestYakitEEVersion = async () => {
+const fetchLatestYakitEEVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/vip/latest/yakit-version.txt`
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
-        const versionData = `${response.data}`.trim()
-        if (versionData.length > 0) {
-            return versionData.startsWith("v") ? versionData : `v${versionData}`
-        } else {
-            throw new Error("Failed to fetch version data")
-        }
-    })
+    return axios
+        .get(versionUrl, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(domain)})
+        .then((response) => {
+            const versionData = `${response.data}`.trim()
+            if (versionData.length > 0) {
+                return versionData.startsWith("v") ? versionData : `v${versionData}`
+            } else {
+                throw new Error("Failed to fetch version data")
+            }
+        })
 }
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
@@ -295,6 +314,7 @@ const downloadYakitEE = async (version, destination, progressHandler, onFinished
 
 module.exports = {
     getCheckTextUrl,
+    fetchSpecifiedYakVersionHash,
     fetchLatestYakEngineVersion,
     fetchLatestYakitVersion,
     fetchLatestYakitEEVersion,

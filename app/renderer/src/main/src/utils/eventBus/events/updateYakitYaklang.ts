@@ -13,6 +13,4 @@ export type UpdateYakitYaklangEventProps = {
     useOfficialEngineByDownload?: string
     /** 系统检测校验引擎是否是官方发布 使用内置引擎 */
     useOfficialEngineByDownloadByBuiltIn?: string
-    /** 执行localEngine文件中的内置引擎 */
-    execLocalEngineInitBuildInEngine?: string
 }
