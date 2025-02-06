@@ -79,14 +79,14 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
                 const bug_tpl = ReportBug(info)
                 ipcRenderer.invoke(
                     "open-url",
-                    `https://github.com/yaklang/yakit/issues/new?title=【BUG】问题标题&body=${bug_tpl}&labels=bug`
+                    `https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`
                 )
                 return
             case "feature_request":
                 let feature_tpl = FeatureRequest()
                 ipcRenderer.invoke(
                     "open-url",
-                    `https://github.com/yaklang/yakit/issues/new?title=【需求】需求标题&body=${feature_tpl}&labels=enhancement`
+                    `https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`
                 )
                 return
             case "official_website":
