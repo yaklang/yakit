@@ -1,0 +1,63 @@
+name: Discussion / 答疑讨论
+description: Start a new discussion topic / 开启一个新的答疑讨论主题
+title: "[Discussion]: "
+labels: ["discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        欢迎开启一个新的讨论！请确保您的讨论主题清晰明确。
+        Welcome to start a new discussion! Please ensure your discussion topic is clear and specific.
+
+  - type: dropdown
+    id: topic-type
+    attributes:
+      label: Discussion Type / 讨论类型
+      description: What type of discussion is this? / 这个讨论属于什么类型？
+      options:
+        - Architecture Design / 架构设计
+        - Performance Optimization / 性能优化
+        - User Experience / 用户体验
+        - Technology Selection / 技术选型
+        - Best Practices / 最佳实践
+        - Plugin Wanted / 插件需求
+        - Others / 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: Discussion Topic / 讨论主题
+      description: Please describe in detail what you want to discuss / 请详细描述您想讨论的内容
+      placeholder: |
+        Clearly articulate your discussion topic and background /
+        清晰地阐述您想讨论的主题和背景
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context Information / 上下文信息
+      description: Provide relevant context information / 提供一些相关的上下文信息
+      placeholder: |
+        For example: current project status, specific scenarios encountered /
+        例如：当前项目情况、遇到的具体场景等
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Your Opinion / 您的观点
+      description: Share your thoughts or suggestions on this topic / 分享您对这个主题的想法或建议
+      placeholder: |
+        Please explain your viewpoint and reasoning in detail /
+        请详细说明您的观点和理由
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References / 参考资料
+      description: List any relevant references, documentation, or examples / 如果有任何相关的参考资料、文档或示例，请在此列出

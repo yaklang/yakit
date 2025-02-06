@@ -1,0 +1,59 @@
+name: Feature Request / 功能建议
+description: Submit a new feature request / 提出一个新功能建议
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您为项目提出新的功能建议！请详细描述您的想法。
+        Thank you for submitting a new feature request! Please describe your idea in detail.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Related Problem / 相关问题
+      description: Is this feature request related to a problem? Please describe. / 这个功能建议是否与某个问题相关？请描述一下。
+      placeholder: |
+        For example: I'm always frustrated when... / 
+        例如：当我在使用...时，总是感觉很不方便...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Desired Solution / 期望的解决方案
+      description: Describe the solution you'd like to see / 描述您希望看到的解决方案
+      placeholder: |
+        A clear and concise description of what you want to happen /
+        清晰简洁地描述您希望发生的事情
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered / 考虑过的替代方案
+      description: Describe any alternative solutions or features you've considered / 描述您考虑过的任何替代解决方案或功能
+      placeholder: |
+        A clear and concise description of any alternative solutions /
+        清晰简洁地描述您考虑过的替代方案
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority / 优先级
+      description: How would you rate the priority of this feature? / 您认为这个功能的优先级如何？
+      options:
+        - Low (Can wait) / 低（可以等待）
+        - Medium (Important) / 中（较为重要）
+        - High (Urgent) / 高（迫切需要）
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context / 补充信息
+      description: Add any other context or screenshots about the feature request / 添加任何其他有关功能请求的上下文或截图信息
