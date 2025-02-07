@@ -50,7 +50,7 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.devTool }}
+              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.devTool }} ${{ inputs.engineVersion }}
 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
