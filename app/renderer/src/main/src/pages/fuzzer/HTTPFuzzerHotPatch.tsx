@@ -122,6 +122,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode,
             JSON.stringify({hotPatchCodeOpen: hotPatchCodeOpen, hotPatchCode: getParams().HotPatchCode})
         )
+        initHotPatchCodeOpen.current = hotPatchCodeOpen
     })
 
     const onClose = useMemoizedFn(async () => {
@@ -353,6 +354,30 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
             </Form>
         </div>
     )
+}
+
+export const getHotPatchCodeInfo = async () => {
+    let hotPatchCode = ""
+    try {
+        const res = await getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode)
+        if (res) {
+            try {
+                const obj = JSON.parse(res) || {}
+                if (obj.hotPatchCodeOpen) {
+                    hotPatchCode = obj.hotPatchCode
+                } else {
+                    hotPatchCode = HotPatchDefaultContent
+                }
+            } catch (error) {
+                hotPatchCode = HotPatchDefaultContent
+            }
+        } else {
+            hotPatchCode = HotPatchDefaultContent
+        }
+    } catch (error) {
+        hotPatchCode = HotPatchDefaultContent
+    }
+    return hotPatchCode
 }
 
 interface QueryHotPatchTemplateListResponse {

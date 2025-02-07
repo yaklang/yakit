@@ -148,6 +148,7 @@ import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {APIFunc} from "@/apiUtils/type"
+import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -902,6 +903,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (downstreamProxyStr) {
                 newAdvancedConfigValue.proxy = [downstreamProxyStr]
             }
+
+            // 获取全局热加载缓存信息
+            const hotPatchCode = await getHotPatchCodeInfo()
+            hotPatchCodeRef.current = hotPatchCode
+
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
                 {
@@ -1098,7 +1104,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** @name 打开一个菜单项页面(只负责打开，如果判断页面是否打开，应在执行该方法前判断) */
     const openMenuPage = useMemoizedFn(
-        async (
+        (
             routeInfo: RouteToPageProps,
             nodeParams?: {
                 openFlag?: boolean
@@ -1240,7 +1246,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
                     switch (route) {
                         case YakitRoute.HTTPFuzzer:
-                            await addFuzzerList(node.id, node, order)
+                            addFuzzerList(node.id, node, order)
                             break
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, order)
@@ -1279,7 +1285,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
                     switch (route) {
                         case YakitRoute.HTTPFuzzer:
-                            await addFuzzerList(node.id, node, 1)
+                            addFuzzerList(node.id, node, 1)
                             break
                         case YakitRoute.Space_Engine:
                             onSetSpaceEngineData(node, 1)
@@ -1835,56 +1841,34 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             yakitNotify("error", "fetchFuzzerList失败:" + error)
         }
     })
+
+    // 获取热加载全局缓存信息
+    const hotPatchCodeRef = useRef<string>(HotPatchDefaultContent)
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose hotPatchCode */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
-        return new Promise((resove, reject) => {
-            let hotPatchCode = node.pageParams?.hotPatchCode
-            // 获取热加载全局开关和代码
-            getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode)
-                .then((res) => {
-                    if (hotPatchCode === undefined) {
-                        if (res) {
-                            try {
-                                const obj = JSON.parse(res) || {}
-                                if (obj.hotPatchCodeOpen) {
-                                    hotPatchCode = obj.hotPatchCode
-                                } else {
-                                    hotPatchCode = HotPatchDefaultContent
-                                }
-                            } catch (error) {
-                                hotPatchCode = HotPatchDefaultContent
-                            }
-                        } else {
-                            hotPatchCode = HotPatchDefaultContent
-                        }
-                    }
-                })
-                .finally(() => {
-                    const newPageNode: PageNodeItemProps = {
-                        id: `${randomString(8)}-${order}`,
-                        routeKey: YakitRoute.HTTPFuzzer,
-                        pageGroupId: node.groupId,
-                        pageId: node.id,
-                        pageName: node.verbose,
-                        pageParamsInfo: {
-                            webFuzzerPageInfo: {
-                                pageId: node.id,
-                                advancedConfigValue: {
-                                    ...defaultAdvancedConfigValue,
-                                    ...node.pageParams?.advancedConfigValue
-                                },
-                                advancedConfigShow: node.pageParams?.advancedConfigShow,
-                                request: node.pageParams?.request || defaultPostTemplate,
-                                hotPatchCode: hotPatchCode || ""
-                            }
-                        },
-                        sortFieId: order
-                    }
-                    addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
-                    resove(true)
-                })
-        })
+        let hotPatchCode = node.pageParams?.hotPatchCode || hotPatchCodeRef.current
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.HTTPFuzzer,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                webFuzzerPageInfo: {
+                    pageId: node.id,
+                    advancedConfigValue: {
+                        ...defaultAdvancedConfigValue,
+                        ...node.pageParams?.advancedConfigValue
+                    },
+                    advancedConfigShow: node.pageParams?.advancedConfigShow,
+                    request: node.pageParams?.request || defaultPostTemplate,
+                    hotPatchCode: hotPatchCode || ""
+                }
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.HTTPFuzzer, newPageNode)
     })
 
     // 序列导入更新菜单
