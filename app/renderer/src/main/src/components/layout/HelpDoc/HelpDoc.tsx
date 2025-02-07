@@ -76,14 +76,12 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
         if (show) setShow(false)
         switch (type) {
             case "report_bug":
-                const bug_tpl = ReportBug(info)
                 ipcRenderer.invoke(
                     "open-url",
                     `https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`
                 )
                 return
             case "feature_request":
-                let feature_tpl = FeatureRequest()
                 ipcRenderer.invoke(
                     "open-url",
                     `https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`
