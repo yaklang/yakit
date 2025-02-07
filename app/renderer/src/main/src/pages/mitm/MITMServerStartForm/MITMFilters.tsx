@@ -87,7 +87,7 @@ export const MITMFilters: React.FC<MITMFiltersProp> = React.forwardRef((props, r
                 </Form.Item>
                 <Form.Item
                     label='包含 URL 路径'
-                    help={"可理解为 URI 匹配，例如 /main/index.php?a=123 或者 /*/index 或 /admin* "}
+                    help={"可理解为 URI 匹配，例如 /main/index.php?a=123"}
                 >
                     <YakitSelect
                         mode='tags'
