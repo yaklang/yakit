@@ -89,6 +89,17 @@ import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {WebsiteGV} from "@/enums/website"
 const {ipcRenderer} = window.require("electron")
 
+export const convertToBytes = (size: number, unit: string) => {
+    const units = {
+        B: 1,
+        KB: 1024,
+        MB: 1024 ** 2,
+        GB: 1024 ** 3,
+        TB: 1024 ** 4
+    }
+    return size * (units[unit.toUpperCase()] || 1)
+}
+
 interface ToolInfo {
     label: string
     icon: ReactElement
@@ -604,16 +615,7 @@ const Home: React.FC<HomeProp> = (props) => {
             setCurProjectInfo(res)
         })
     }
-    const convertToBytes = (size: number, unit: string) => {
-        const units = {
-            B: 1,
-            KB: 1024,
-            MB: 1024 ** 2,
-            GB: 1024 ** 3,
-            TB: 1024 ** 4
-        }
-        return size * (units[unit.toUpperCase()] || 1)
-    }
+
     const judgeMoreTenGB = useMemo(() => {
         const arr: string[] = curProjectInfo?.FileSize.split(" ") || []
         if (arr[0] && arr[1]) {
