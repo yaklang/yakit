@@ -25,6 +25,33 @@ export interface FileMonitorProps {
 /**@name 推送是否开启 */
 export let serverPushStatus = false
 
+interface ConcurrentLoadItem {
+    number: number
+    time: number
+}
+export interface ConcurrentLoad {
+    rps: ConcurrentLoadItem[]
+    cps: ConcurrentLoadItem[]
+}
+export let concurrentLoad: ConcurrentLoad = {
+    rps: [],
+    cps: []
+}
+export const updateConcurrentLoad = (key: keyof ConcurrentLoad, value: ConcurrentLoadItem[]) => {
+    concurrentLoad = {
+        ...concurrentLoad,
+        [key]: value
+    }
+}
+
+function handleConcurrentLoadData(key: keyof ConcurrentLoad, number: number) {
+    const curTime = Math.floor(Date.now() / 1000)
+    const arr = concurrentLoad[key].slice()
+    arr.push({number, time: curTime})
+    const trimmedData = arr.filter((point) => curTime - point.time < 300) // 最近5分钟数据
+    updateConcurrentLoad(key, trimmedData)
+}
+
 export const startupDuplexConn = () => {
     info("Server Push Enabled Already")
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
@@ -59,6 +86,16 @@ export const startupDuplexConn = () => {
                 // fuzzer-批量请求中的丢弃包数量
                 case "fuzzer_server_push":
                     emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
+                    break
+                // rps
+                case "rps":
+                    handleConcurrentLoadData("rps", obj)
+                    emiter.emit("onRefreshRps")
+                    emiter.emit("onRefreshCurRps", obj)
+                    break
+                case "cps":
+                    handleConcurrentLoadData("cps", obj)
+                    emiter.emit("onRefreshCps")
                     break
             }
         } catch (error) {}

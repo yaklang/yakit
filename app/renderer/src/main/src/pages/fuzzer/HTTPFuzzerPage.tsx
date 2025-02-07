@@ -146,6 +146,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
+import {FuzzerConcurrentLoad} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -642,7 +643,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     // second Node
     const secondNodeRef = useRef(null)
     const secondNodeSize = useSize(secondNodeRef)
-    const [showSuccess, setShowSuccess] = useState(true)
+    const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>("true")
     const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
 
     // Matching And Extraction
@@ -1591,14 +1592,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     )
 
     const secondNodeTitle = () => {
-        let isShow: boolean = true
-        if (+(secondNodeSize?.width || 0) < 700 && (getSuccessCount() > 999 || getFailedCount() > 999)) isShow = false
-
         return (
             <>
-                {isShow && (
-                    <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
-                )}
                 <SecondNodeTitle
                     cachedTotal={cachedTotal}
                     onlyOneResponse={onlyOneResponse}
@@ -1610,6 +1605,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         setShowSuccess(v)
                         setQuery(undefined)
                     }}
+                    showConcurrentAndLoad={true}
                 />
             </>
         )
@@ -2043,10 +2039,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         </div>
                                         {cachedTotal >= 1 ? (
                                             <>
-                                                {showSuccess && (
+                                                {showSuccess === "true" && (
                                                     <HTTPFuzzerPageTable
                                                         // onSendToWebFuzzer={onSendToWebFuzzer}
-                                                        success={showSuccess}
+                                                        success={true}
                                                         data={successFuzzer}
                                                         setExportData={setExportData}
                                                         query={query}
@@ -2074,9 +2070,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
-                                                {!showSuccess && (
+                                                {showSuccess === "false" && (
                                                     <HTTPFuzzerPageTable
-                                                        success={showSuccess}
+                                                        success={false}
                                                         data={failedFuzzer}
                                                         query={query}
                                                         setQuery={setQuery}
@@ -2085,6 +2081,16 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         pageId={props.id}
                                                     />
                                                 )}
+                                                <div
+                                                    style={{
+                                                        display: showSuccess === "Concurrent/Load" ? "block" : "none",
+                                                        height: "100%",
+                                                        overflowY: "auto",
+                                                        overflowX: "hidden"
+                                                    }}
+                                                >
+                                                    <FuzzerConcurrentLoad inViewportCurrent={inViewport === true} />
+                                                </div>
                                             </>
                                         ) : (
                                             <Result
@@ -2233,7 +2239,7 @@ interface SecondNodeExtraProps {
     setShowExtra: (b: boolean) => void
     showResponseInfoSecondEditor: boolean
     setShowResponseInfoSecondEditor: (b: boolean) => void
-    showSuccess?: boolean
+    showSuccess?: FuzzerShowSuccess
     retrySubmit?: () => void
     isShowMatch?: boolean
     matchSubmit?: () => void
@@ -2270,7 +2276,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         setShowExtra,
         showResponseInfoSecondEditor,
         setShowResponseInfoSecondEditor,
-        showSuccess = true,
+        showSuccess = "true",
         retrySubmit,
         isShowMatch = false,
         matchSubmit,
@@ -2473,7 +2479,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1 && showSuccess) {
+    if (!onlyOneResponse && cachedTotal > 1 && showSuccess === "true") {
         const searchNode = (
             <YakitInput.Search
                 size={size === "small" ? "small" : "middle"}
@@ -2822,7 +2828,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
             </div>
         )
     }
-    if (!onlyOneResponse && cachedTotal > 1 && !showSuccess) {
+    if (!onlyOneResponse && cachedTotal > 1 && showSuccess === "false") {
         return (
             <>
                 {retryNoPopconfirm ? (
@@ -2865,15 +2871,17 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     return <></>
 })
 
+export type FuzzerShowSuccess = "true" | "false" | "Concurrent/Load"
 interface SecondNodeTitleProps {
     cachedTotal: number
     rsp: FuzzerResponse
     onlyOneResponse: boolean
     successFuzzerLength: number
     failedFuzzerLength: number
-    showSuccess: boolean
-    setShowSuccess: (b: boolean) => void
+    showSuccess: FuzzerShowSuccess
+    setShowSuccess: (b: FuzzerShowSuccess) => void
     size?: YakitButtonProp["size"]
+    showConcurrentAndLoad: boolean
 }
 
 /**
@@ -2888,7 +2896,8 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         failedFuzzerLength,
         showSuccess,
         setShowSuccess,
-        size = "small"
+        size = "small",
+        showConcurrentAndLoad
     } = props
 
     if (onlyOneResponse) {
@@ -2908,7 +2917,25 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
             </>
         )
     }
-    if (cachedTotal > 1) {
+    if (cachedTotal >= 1) {
+        const options = [
+            {
+                value: "true",
+                label: `成功[${successFuzzerLength > 9999 ? "9999+" : successFuzzerLength}]`
+            },
+            {
+                value: "false",
+                label: `失败[${failedFuzzerLength > 9999 ? "9999+" : failedFuzzerLength}]`
+            }
+        ]
+
+        if (showConcurrentAndLoad) {
+            options.push({
+                value: "Concurrent/Load",
+                label: "并发/负载"
+            })
+        }
+
         return (
             <div className={styles["second-node-title"]}>
                 <YakitRadioButtons
@@ -2918,16 +2945,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
                         setShowSuccess(e.target.value)
                     }}
                     buttonStyle='solid'
-                    options={[
-                        {
-                            value: true,
-                            label: `成功[${successFuzzerLength > 9999 ? "9999+" : successFuzzerLength}]`
-                        },
-                        {
-                            value: false,
-                            label: `失败[${failedFuzzerLength > 9999 ? "9999+" : failedFuzzerLength}]`
-                        }
-                    ]}
+                    options={options}
                 />
             </div>
         )

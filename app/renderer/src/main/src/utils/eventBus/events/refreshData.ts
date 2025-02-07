@@ -12,4 +12,10 @@ export type RefreshDataEventProps = {
 
     // WebSocket通知
     onRefreshMessageSocket: string
+
+    // 通知rps
+    onRefreshRps?: string
+    onRefreshCurRps: number
+    // 通知cps
+    onRefreshCps?: string
 }
