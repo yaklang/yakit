@@ -184,7 +184,6 @@ export interface FuncDomainProp {
     showProjectManage?: boolean
     /** @name 操作系统类型 */
     system: YakitSystem
-    onYakEngineVersionList: (versionList: string[]) => void
 }
 
 export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
@@ -198,8 +197,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         typeCallback,
         showProjectManage = false,
         system,
-        isJudgeLicense,
-        onYakEngineVersionList
+        isJudgeLicense
     } = props
 
     /** 登录用户信息 */
@@ -482,7 +480,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         <UIOpNotice
                             isEngineLink={isEngineLink}
                             isRemoteMode={isRemoteMode}
-                            onYakEngineVersionList={onYakEngineVersionList}
                             onLogin={() => setLoginShow(true)}
                         />
                     )}
@@ -1562,7 +1559,6 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
 interface UIOpNoticeProp {
     isEngineLink: boolean
     isRemoteMode: boolean
-    onYakEngineVersionList: (versionList: string[]) => void
     onLogin: () => void
 }
 
@@ -1588,7 +1584,7 @@ interface SetUpdateContentProp extends FetchUpdateContentProp {
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
-    const {isEngineLink, isRemoteMode, onYakEngineVersionList, onLogin} = props
+    const {isEngineLink, isRemoteMode, onLogin} = props
 
     const {userInfo} = useStore()
 
@@ -1621,9 +1617,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         if (index2 > index1) return true
         return false
     }, [isRemoteMode, moreYaklangVersionList, yaklangLastVersion, yaklangVersion])
-    useEffect(() => {
-        onYakEngineVersionList(moreYaklangVersionList)
-    }, [moreYaklangVersionList])
+
     const versionsInfoTime = useRef<any>(null)
     const [communityYakitContent, setCommunityYakitContent] = useState<UpdateContentProp>({version: "", content: ""})
     const [communityYaklangContent, setCommunityYaklangContent] = useState<UpdateContentProp>({
@@ -1676,7 +1670,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const fetchYakitLastVersion = useMemoizedFn(() => {
         /** 社区版埋点 */
         if (isCommunityEdition()) visitorsStatisticsFun()
-        grpcFetchLatestYakitVersion(true)
+        grpcFetchLatestYakitVersion(undefined, true)
             .then((data: string) => {
                 setYakitLastVersion(data)
             })
@@ -1729,6 +1723,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             ipcRenderer.on("fetch-yak-version-callback", async (e: any, data: string) => {
                 setYaklangVersion(data || "dev")
             })
+            return () => {
+                ipcRenderer.removeAllListeners("fetch-yak-version-callback")
+            }
         }
     }, [isEngineLink])
 

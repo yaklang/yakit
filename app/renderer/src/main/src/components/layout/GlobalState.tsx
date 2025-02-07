@@ -35,7 +35,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import {grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
+import {grpcFetchBuildInYakVersion, grpcFetchLocalYakVersion, grpcFetchSpecifiedYakVersionHash} from "@/apiUtils/grpc"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -270,12 +270,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     }
-    const timeout = (ms: number) =>
-        new Promise((_, reject) => setTimeout(() => reject(new Error("Check engine source request timed out")), ms))
     const checkEngineSource = async (localYaklang: string, resolve, reject) => {
         try {
             const [res1, res2] = await Promise.all([
-                Promise.race([ipcRenderer.invoke("fetch-check-yaklang-source", localYaklang), timeout(3000)]),
+                // 远端
+                grpcFetchSpecifiedYakVersionHash({version: localYaklang, config: {timeout: 3000}}, true),
+                // 本地
                 ipcRenderer.invoke("CalcEngineSha265")
             ])
             if (res1 === res2) {
@@ -291,7 +291,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     }
     const onUseOfficialEngine = async () => {
         try {
-            const res = await ipcRenderer.invoke("GetBuildInEngineVersion")
+            const res = await grpcFetchBuildInYakVersion(true)
             if (res !== "") {
                 emiter.emit("useOfficialEngineByDownloadByBuiltIn")
             } else {

@@ -18,7 +18,7 @@ import {useTemporaryProjectStore} from "./store/temporaryProject"
 import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
-import { closeWebSocket, startWebSocket } from "./utils/webSocket/webSocket"
+import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -46,6 +46,7 @@ function NewApp() {
     useEffect(() => {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
+        // 获取系统信息
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
         ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
@@ -308,13 +309,13 @@ function NewApp() {
     }, [userInfo.isLogin])
 
     // 在页面打开时，执行一次，用于初始化WebSocket推送（DuplexConnection）
-    useEffect(()=>{
+    useEffect(() => {
         startWebSocket()
         return () => {
             // 当组件销毁的时候，关闭WebSocket
             closeWebSocket()
         }
-    },[])
+    }, [])
 
     if (!agreed) {
         return (

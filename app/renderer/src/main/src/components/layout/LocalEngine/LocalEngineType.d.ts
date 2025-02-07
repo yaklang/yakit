@@ -1,10 +1,10 @@
-import React from "react"
+import React, {Dispatch, SetStateAction} from "react"
 import {YakitSystem} from "@/yakitGVDefine"
 
 export interface LocalEngineProps {
     ref?: React.ForwardedRef<LocalEngineLinkFuncProps>
     system: YakitSystem
-    setLog: (log: string[]) => any
+    setLog: Dispatch<SetStateAction<string[]>>
     onLinkEngine: (port: number) => any
     setYakitStatus: (v: YakitStatusType) => any
     checkEngineDownloadLatestVersion: () => any

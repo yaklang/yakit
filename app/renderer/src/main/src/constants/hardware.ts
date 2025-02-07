@@ -17,8 +17,11 @@ export type Architecture =
     | "x64"
 
 interface SystemInfoProps {
+    /** 操作系统 */
     system?: System
+    /** 系统架构 */
     architecture?: Architecture
+    /** 是否为开发环境 */
     isDev?: boolean
 }
 
