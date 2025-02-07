@@ -58,8 +58,6 @@ import {DownloadYaklang} from "./update/DownloadYaklang"
 import {HelpDoc} from "./HelpDoc/HelpDoc"
 import {SolidCheckCircleIcon, SolidHomeIcon} from "@/assets/icon/solid"
 import {ChatCSGV} from "@/enums/chatCS"
-import {CheckEngineVersion} from "./CheckEngineVersion/CheckEngineVersion"
-import {EngineRemoteGV} from "@/enums/engine"
 import {outputToPrintLog} from "./WelcomeConsoleUtil"
 import {setNowProjectDescription} from "@/pages/globalVariable"
 import {apiGetGlobalNetworkConfig, apiSetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
@@ -75,7 +73,7 @@ import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
 import {Tooltip} from "antd"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {clearTerminalMap, getMapAllTerminalKey} from "@/pages/yakRunner/BottomEditorDetails/TerminalBox/TerminalMap"
-import {grpcFetchBuildInYakVersion, grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
+import {grpcFetchLatestYakVersion, grpcFetchYakInstallResult} from "@/apiUtils/grpc"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
@@ -905,100 +903,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }, [])
     /** ---------- yakit和yaklang的更新(以连接引擎的状态下) & kill引擎进程 End ---------- */
 
-    /** ---------- 软件绑定引擎版本检测提示 Start ---------- */
-    const [yakEngineVersionList, setYakEngineVersionList] = useState<string[]>([])
-    const [builtInVersion, setBuiltInVersion] = useState<string>("")
-    const [currentVersion, setCurrentVersion] = useState<string>("")
-
-    const compareVersions = (version1: string, version2: string) => {
-        // 用正则表达式将版本号分解成数字部分和beta后面的部分
-        const parseVersion = (version) => {
-            const parts = version.split("-") // 分割 beta 部分
-            const versionNumbers = parts[0].split(".").map((num) => parseInt(num)) // 获取数字部分
-            const betaPart = parts[1] ? parseInt(parts[1].replace("beta", "")) : null // 如果有beta，提取beta后的数字
-            return {versionNumbers, betaPart}
-        }
-
-        const v1 = parseVersion(version1)
-        const v2 = parseVersion(version2)
-
-        // 比较数字部分
-        for (let i = 0; i < Math.min(v1.versionNumbers.length, v2.versionNumbers.length); i++) {
-            if (v1.versionNumbers[i] > v2.versionNumbers[i]) return 1
-            if (v1.versionNumbers[i] < v2.versionNumbers[i]) return -1
-        }
-
-        // 如果数字部分相同，比较beta部分
-        if (v1.betaPart !== null && v2.betaPart !== null) {
-            if (v1.betaPart > v2.betaPart) return 1
-            if (v1.betaPart < v2.betaPart) return -1
-        }
-
-        // 如果没有beta部分，或者beta部分相同，则返回0
-        return 0
-    }
-
-    const showCheckVersion = useMemo(() => {
-        if (SystemInfo.isDev) return false
-        if (!builtInVersion) return false
-        if (!currentVersion) return false
-        return compareVersions(currentVersion, builtInVersion) === -1
-    }, [builtInVersion, currentVersion, yakEngineVersionList])
-
-    useEffect(() => {
-        // 监听事件-获取当前连接引擎的版本
-        ipcRenderer.on("fetch-yak-version-callback", async (e: any, v: string) => {
-            let version = v.replace(/\r?\n/g, "")
-            if (version.startsWith("v")) version = version.slice(1)
-            setCurrentVersion(version)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-yak-version-callback")
-        }
-    }, [])
-
-    useEffect(() => {
-        if (engineLink) {
-            getRemoteValue(EngineRemoteGV.RemoteCheckEngineVersion)
-                .then((v?: string) => {
-                    if (!v || v === "false") {
-                        if (builtInVersion === "") {
-                            // 获取软件对应的内置版本
-                            grpcFetchBuildInYakVersion(true)
-                                .then((v: string) => {
-                                    let version = v || ""
-                                    if (version.startsWith("v")) version = version.substring(1)
-                                    setBuiltInVersion(version)
-                                })
-                                .catch(() => {})
-                        }
-                        // 获取当前连接引擎的版本
-                        ipcRenderer.invoke("fetch-yak-version")
-                    }
-                })
-                .catch(() => {})
-        }
-    }, [engineLink])
-
-    const onCheckVersionCancel = useMemoizedFn((flag: boolean) => {
-        if (flag) {
-            if (yaklangKillPss) return
-            killOldProcess(() => {
-                ipcRenderer
-                    .invoke("InitBuildInEngine", {})
-                    .then(() => {
-                        yakitNotify("info", "解压内置引擎成功，即将重启软件")
-                        ipcRenderer.invoke("relaunch")
-                    })
-                    .catch((e) => {
-                        yakitNotify("error", `解压内置引擎失败：${e}`)
-                    })
-            })
-        }
-        setCurrentVersion("")
-    })
-    /** ---------- 软件绑定引擎版本检测提示 End ---------- */
-
     /** ---------- 远程控制(控制端) Start ---------- */
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
     const {userInfo} = useStore()
@@ -1689,7 +1593,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                 showProjectManage={showProjectManage}
                                                 system={system}
                                                 isJudgeLicense={isJudgeLicense}
-                                                onYakEngineVersionList={setYakEngineVersionList}
                                             />
                                             {!showProjectManage && (
                                                 <>
@@ -1745,7 +1648,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                                     showProjectManage={showProjectManage}
                                                     system={system}
                                                     isJudgeLicense={isJudgeLicense}
-                                                    onYakEngineVersionList={setYakEngineVersionList}
                                                 />
                                             </div>
                                         </>
@@ -1886,16 +1788,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                                 {/* 更新yakit */}
                                 <DownloadYakit system={system} visible={yakitDownload} setVisible={setYakitDownload} />
                             </div>
-                        )}
-
-                        {engineLink && (
-                            <CheckEngineVersion
-                                engineMode={engineMode || "local"}
-                                visible={showCheckVersion}
-                                builtInVersion={builtInVersion}
-                                currentVersion={currentVersion}
-                                onCancel={onCheckVersionCancel}
-                            />
                         )}
 
                         <YakitHint
