@@ -183,13 +183,6 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         return ""
     }, [filterType])
 
-    const infoCont = useMemo(() => {
-        if (filterType === "filter")
-            return "基础配置除Content-Type和文件后缀外默认都按关键字匹配，如需要正则和glob模式匹配请在高级配置中配置"
-        if (filterType === "hijackFilter") return "符合条件的数据会自动跳转到手动劫持查看，其余数据自动放行"
-        return ""
-    }, [filterType])
-
     // 保存过滤器
     const onSaveFilter = useMemoizedFn(() => {
         const m = showYakitModal({
@@ -327,7 +320,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     />
                 </div>
             }
-            width={720}
+            width={730}
             maskClosable={false}
             subTitle={
                 <div className={styles["mitm-filters-subTitle"]}>
@@ -416,7 +409,18 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         >
             <div className={styles.infoBox}>
                 <div>提示：</div>
-                <div>{infoCont}</div>
+                {filterType === "hijackFilter" ? (
+                    <>
+                        <div>1、符合条件的数据会自动跳转到手动劫持查看，其余数据自动放行</div>
+                        <div>
+                            2、基础配置除Content-Type和文件后缀外默认都按关键字匹配，如需要正则和glob模式匹配请在高级配置中配置
+                        </div>
+                    </>
+                ) : (
+                    <div>
+                        基础配置除Content-Type和文件后缀外默认都按关键字匹配，如需要正则和glob模式匹配请在高级配置中配置
+                    </div>
+                )}
             </div>
             <MITMFilters
                 visible={type === "base-setting"}

@@ -599,7 +599,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 {
                                     label: (
                                         <>
-                                            <Tooltip title='条件劫持' align={{offset: [0, 8]}}>
+                                            <Tooltip title='条件劫持' align={{offset: [0, 0]}}>
                                                 <div style={{display: "flex"}} onClick={() => setFiltersVisible(true)}>
                                                     {hijackFilterFlag ? (
                                                         <OutlineConfiguredIcon className={styles["configuredIcon"]} />
