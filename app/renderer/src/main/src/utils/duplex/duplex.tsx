@@ -60,6 +60,10 @@ export const startupDuplexConn = () => {
                 case "fuzzer_server_push":
                     emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
                     break
+                // 通知QuerySSARisks轮询更新
+                case "ssa-risk":
+                    emiter.emit("onRefreshQuerySSARisks", JSON.stringify(obj))
+                    break
             }
         } catch (error) {}
     })

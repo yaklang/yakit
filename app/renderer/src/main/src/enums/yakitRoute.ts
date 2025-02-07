@@ -87,5 +87,7 @@ export enum YakitRoute {
     /**笔记本管理 */
     Notepad_Manage = "notepad-manage",
     /**笔记本内容编辑页面 */
-    Modify_Notepad = "modify-notepad"
+    Modify_Notepad = "modify-notepad",
+    // YakRunner漏洞管理
+    YakRunner_Audit_Hole = "yakrunner-audit-hole"
 }

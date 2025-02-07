@@ -52,6 +52,7 @@ import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
+import { YakitAuditHoleTable } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 
 const {TabPane} = PluginTabs
 
@@ -72,7 +73,12 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     useUpdateEffect(() => {
         setAllTotal(0)
         setTempTotal(0)
-        setInterval(1000)
+        if(streamInfo.tabsState.find((item)=>item.type==="ssa-risk")){
+            setInterval(undefined)  
+        }
+        else{
+            setInterval(1000)
+        }
     }, [runtimeId])
     useInterval(() => {
         if (runtimeId) getTotal()
@@ -145,17 +151,23 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
             case "result":
                 const {customProps} = ele
                 return <CodeScanResult {...(customProps || {})} isExecuting={loading} runtimeId={runtimeId} />
+            case "ssa-risk":
+                return <YakitAuditHoleTable query={{
+                    RuntimeID: [runtimeId]
+                }}/>
             default:
                 return <></>
         }
     })
 
     const showTabs = useMemo(() => {
-        if (!tempTotal) {
+        if (!tempTotal && !streamInfo.tabsState.find((item)=>item.type==="ssa-risk")) {
             return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
         }
         return streamInfo.tabsState
     }, [streamInfo.tabsState, tempTotal])
+
+   
 
     const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
         if (tab.type === "risk") {

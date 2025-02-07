@@ -21,7 +21,6 @@ export interface AuditTreeProps {
     onJump: (v: AuditNodeProps) => void
     onlyJump?: boolean
     wrapClassName?: string
-    bugId?: string
 }
 
 export interface AuditNodeDetailProps {
@@ -38,7 +37,6 @@ export interface AuditTreeNodeProps {
     foucsedKey: string
     setFoucsedKey: (v: string) => void
     onJump: (info: AuditNodeProps) => void
-    bugId?: string
 }
 
 // Map存储列表详情
@@ -80,6 +78,9 @@ export interface AuditNodeProps {
         Key: string
         Value: number
     }[]
+
+    // 前端所需校验属性
+    isBug?: boolean
 }
 
 export interface AuditYakUrlProps {

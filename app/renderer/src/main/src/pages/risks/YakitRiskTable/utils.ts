@@ -16,6 +16,7 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
             })
     })
 }
+
 /**
  * @description QueryRisks 获取降序的增量数据
  */
@@ -29,7 +30,8 @@ export interface NewRiskReadRequest {
     /**@deprecated */
     AfterId?: string
     /**传空数组代表全部已读 */
-    Ids: number[]
+    Ids?: number[]
+    Filter?: QueryRisksRequest
 }
 export const apiNewRiskRead: (query?: NewRiskReadRequest) => Promise<null> = (query) => {
     return new Promise((resolve, reject) => {

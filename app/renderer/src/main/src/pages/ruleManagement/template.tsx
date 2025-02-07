@@ -1032,7 +1032,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     const getTabsState = useMemo(() => {
         const tabsState: HoldGRPCStreamProps.InfoTab[] = [
-            {tabName: "漏洞与风险", type: "risk"},
+            {tabName: "漏洞与风险", type: "ssa-risk"},
             {tabName: "日志", type: "log"},
             {tabName: "Console", type: "console"}
         ]
@@ -1913,41 +1913,38 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     const bugHash = useRef<string>()
-    const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
-        // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
-            try {
-                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                if (arr.length > 0) {
-                    const hash = arr[0].Value
-                    bugHash.current = hash
-                    setShowAuditDetail(true)
-                    setBugId(node.id)
+        try {
+            const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+            // 预留打开BUG详情
+            if (arr.length > 0 && node.isBug) {
+                const hash = arr[0]?.Value
+                bugHash.current = hash
+                setShowAuditDetail(true)
+            }
+            if(!node.isBug){
+                bugHash.current = undefined
+            }
+            if (node.ResourceType === "value") {
+                if (!currentInfo.current) return
+                setFoucsedKey(node.id)
+                const rightParams: AuditEmiterYakUrlProps = {
+                    Schema: "syntaxflow",
+                    Location: currentInfo.current.ProgramName,
+                    Path: node.id,
+                    Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
                 }
-            } catch (error) {
-                failed(`打开错误${error}`)
+                setAuditRightParams(rightParams)
+                setShowAuditDetail(true)
             }
-        }
-        if (node.ResourceType === "value") {
-            if (!currentInfo.current) return
-            setBugId(undefined)
-            setFoucsedKey(node.id)
-            const rightParams: AuditEmiterYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: currentInfo.current.ProgramName,
-                Path: node.id,
-                Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
-            }
-            setAuditRightParams(rightParams)
-            setShowAuditDetail(true)
+        } catch (error) {
+            failed(`打开错误${error}`)
         }
     })
     const handleResetAuditDetail = useMemoizedFn(() => {
         setAuditRightParams(undefined)
         setShowAuditDetail(false)
         bugHash.current = undefined
-        setBugId(undefined)
     })
     /** ---------- 审计详情信息 End ---------- */
 
@@ -1984,7 +1981,6 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                         onJump={onJump}
                         onlyJump={true}
                         wrapClassName={styles["code-tree-wrap"]}
-                        bugId={bugId}
                     />
                 )}
             </div>
@@ -1992,7 +1988,7 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
             <div className={styles["audit-detail"]}>
                 {isShowAuditDetail ? (
                     <>
-                        {bugId && bugHash.current ? (
+                        {bugHash.current ? (
                             <HoleBugDetail bugHash={bugHash.current} />
                         ) : (
                             <RightAuditDetail
