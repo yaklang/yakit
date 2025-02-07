@@ -906,7 +906,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
             // 获取全局热加载缓存信息
             const hotPatchCode = await getHotPatchCodeInfo()
-            hotPatchCodeRef.current = hotPatchCode
 
             openMenuPage(
                 {route: YakitRoute.HTTPFuzzer},
@@ -920,7 +919,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                             isHttps: newIsHttps,
                             isGmTLS: newIsGmTLS
                         },
-                        advancedConfigShow: newAdvancedConfigShow
+                        advancedConfigShow: newAdvancedConfigShow,
+                        hotPatchCode: hotPatchCode
                     }
                 }
             )
@@ -1842,12 +1842,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     })
 
-    // 获取热加载全局缓存信息
-    const hotPatchCodeRef = useRef<string>(HotPatchDefaultContent)
     // 新增缓存数据
     /**@description 新增缓存数据 目前最新只缓存 request isHttps verbose hotPatchCode */
     const addFuzzerList = useMemoizedFn((key: string, node: MultipleNodeInfo, order: number) => {
-        let hotPatchCode = node.pageParams?.hotPatchCode || hotPatchCodeRef.current
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
             routeKey: YakitRoute.HTTPFuzzer,
@@ -1863,7 +1860,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     },
                     advancedConfigShow: node.pageParams?.advancedConfigShow,
                     request: node.pageParams?.request || defaultPostTemplate,
-                    hotPatchCode: hotPatchCode || ""
+                    hotPatchCode: node.pageParams?.hotPatchCode || ""
                 }
             },
             sortFieId: order
