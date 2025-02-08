@@ -3,6 +3,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {HorizontalScrollCard} from "../horizontalScrollCard/HorizontalScrollCard"
 import styles from "./PluginExecuteResult.module.scss"
 import {
+    AuditHoleTableOnTabProps,
     PluginExecuteCodeProps,
     PluginExecuteCustomTableProps,
     PluginExecuteLogProps,
@@ -52,7 +53,7 @@ import {apiQueryRisks} from "@/pages/risks/YakitRiskTable/utils"
 import {OutlineChartpieIcon, OutlineLogIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import {LocalList, LocalPluginLog, LocalText} from "./LocalPluginLog"
 import {CodeScanResult} from "@/pages/yakRunnerCodeScan/CodeScanResultTable/CodeScanResultTable"
-import { YakitAuditHoleTable } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {YakitAuditHoleTable} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 
 const {TabPane} = PluginTabs
 
@@ -73,10 +74,9 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     useUpdateEffect(() => {
         setAllTotal(0)
         setTempTotal(0)
-        if(streamInfo.tabsState.find((item)=>item.type==="ssa-risk")){
-            setInterval(undefined)  
-        }
-        else{
+        if (streamInfo.tabsState.find((item) => item.type === "ssa-risk")) {
+            setInterval(undefined)
+        } else {
             setInterval(1000)
         }
     }, [runtimeId])
@@ -152,22 +152,18 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
                 const {customProps} = ele
                 return <CodeScanResult {...(customProps || {})} isExecuting={loading} runtimeId={runtimeId} />
             case "ssa-risk":
-                return <YakitAuditHoleTable query={{
-                    RuntimeID: [runtimeId]
-                }}/>
+                return <AuditHoleTableOnTab runtimeId={runtimeId} />
             default:
                 return <></>
         }
     })
 
     const showTabs = useMemo(() => {
-        if (!tempTotal && !streamInfo.tabsState.find((item)=>item.type==="ssa-risk")) {
+        if (!tempTotal && !streamInfo.tabsState.find((item) => item.type === "ssa-risk")) {
             return streamInfo.tabsState.filter((item) => item.tabName !== "漏洞与风险")
         }
         return streamInfo.tabsState
     }, [streamInfo.tabsState, tempTotal])
-
-   
 
     const tabBarRender = useMemoizedFn((tab: HoldGRPCStreamProps.InfoTab, length: number) => {
         if (tab.type === "risk") {
@@ -480,6 +476,42 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
         </div>
     )
 })
+
+/**审计漏洞tab表 */
+export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.memo((props) => {
+    const {runtimeId} = props
+    const [allTotal, setAllTotal] = useState<number>(0)
+
+    const onJumpAuditHole = useMemoizedFn(() => {
+        const info: RouteToPageProps = {
+            route: YakitRoute.YakRunner_Audit_Hole
+        }
+        emiter.emit("menuOpenPage", JSON.stringify(info))
+    })
+    return (
+        <div className={styles["risks-table"]}>
+            <YakitAuditHoleTable
+                query={{
+                    RuntimeID: [runtimeId]
+                }}
+                setAllTotal={setAllTotal}
+                renderTitle={
+                    <div className={styles["table-renderTitle"]}>
+                        <div className={styles["table-renderTitle-left"]}>
+                            <span>风险与漏洞</span>
+                            <TableTotalAndSelectNumber total={allTotal} />
+                        </div>
+                        <YakitButton type='outline2' size='small' onClick={onJumpAuditHole}>
+                            查看全部
+                        </YakitButton>
+                    </div>
+                }
+                riskWrapperClassName={styles["risks-table-wrapper"]}
+            />
+        </div>
+    )
+})
+
 /**插件执行的tab content 结构 */
 const PluginExecuteResultTabContent: React.FC<PluginExecuteResultTabContentProps> = React.memo((props) => {
     const {title, extra, children, className = ""} = props

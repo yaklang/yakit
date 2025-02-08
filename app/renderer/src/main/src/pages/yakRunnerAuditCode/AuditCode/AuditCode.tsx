@@ -2036,15 +2036,20 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 record.Recompile ? "该项目是由旧引擎编译，现在编译规则已更新，建议重新编译" : "重新编译"
                             }
                         >
-                            <Badge dot={record.Recompile} style={{top: 6, right: 7}}>
-                                <YakitButton
-                                    type='text'
-                                    icon={<OutlineReloadScanIcon />}
-                                    onClick={() => {
-                                        setAfreshName(record.Name)
-                                    }}
-                                />
-                            </Badge>
+                            <YakitPopconfirm
+                                title={
+                                    <>
+                                        重新编译将会删掉该项目所有数据后再编译,
+                                        <br />
+                                        请问是否重新编译？
+                                    </>
+                                }
+                                onConfirm={() => setAfreshName(record.Name)}
+                            >
+                                <Badge dot={record.Recompile} style={{top: 6, right: 7}}>
+                                    <YakitButton type='text' icon={<OutlineReloadScanIcon />} />
+                                </Badge>
+                            </YakitPopconfirm>
                         </Tooltip>
 
                         <Tooltip title={"代码扫描"}>

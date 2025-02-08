@@ -121,7 +121,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         tableVirtualResizeProps,
         excludeColumnsKey = [],
         query,
-        setQuery
+        setQuery,
+        setAllTotal
     } = props
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -157,6 +158,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             initResDataFun,
             onFirst
         })
+
+    useUpdateEffect(() => {
+        setAllTotal && setAllTotal(tableTotal)
+    }, [tableTotal])
 
     useUpdateEffect(() => {
         const newParams: QuerySSARisksRequest = {
