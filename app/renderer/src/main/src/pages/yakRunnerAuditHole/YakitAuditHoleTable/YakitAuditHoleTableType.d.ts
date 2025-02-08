@@ -60,6 +60,8 @@ export interface YakitAuditHoleTableProps {
     excludeColumnsKey?: string[]
     query: SSARisksFilter
     setQuery?: (v: SSARisksFilter) => void
+    /**外界只使用，不设值 */
+    setAllTotal?: (b: number) => void
 }
 
 export interface YakitRiskDetailsProps {

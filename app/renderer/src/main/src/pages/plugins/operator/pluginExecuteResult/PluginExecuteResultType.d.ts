@@ -17,6 +17,10 @@ export interface VulnerabilitiesRisksTableProps {
     setAllTotal: (n: number) => void
 }
 
+export interface AuditHoleTableOnTabProps {
+    runtimeId: string
+}
+
 export interface PluginExecuteLogProps {
     loading: boolean
     messageList: StreamResult.Log[]
