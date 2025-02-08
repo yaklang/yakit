@@ -133,6 +133,9 @@ export const emptyFuzzer: FuzzerResponse = {
 
     DNSDurationMs: 0,
     TotalDurationMs: 0,
+    TLSHandshakeDurationMs: 0,
+    TCPDurationMs: 0,
+    ConnectDurationMs: 0,
     ExtractedResults: [],
     MatchedByMatcher: false,
     HitColor: "",

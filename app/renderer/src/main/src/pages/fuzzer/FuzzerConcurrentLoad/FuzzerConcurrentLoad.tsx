@@ -46,11 +46,12 @@ const lineDefaultOption: echarts.EChartsOption = {
 interface DynamicLineChartProps {
     type: keyof ConcurrentLoad
     inViewportCurrent: boolean
+    loading: boolean
     lineChartOption: echarts.EChartsOption
 }
 
-const DynamicLineChart: React.FC<DynamicLineChartProps> = (props) => {
-    const {type, inViewportCurrent, lineChartOption} = props
+const DynamicLineChart: React.FC<DynamicLineChartProps> = React.memo((props) => {
+    const {type, inViewportCurrent, loading, lineChartOption} = props
 
     const [option, setOption] = useState<echarts.EChartsOption>(merge({}, lineDefaultOption, lineChartOption))
 
@@ -69,7 +70,7 @@ const DynamicLineChart: React.FC<DynamicLineChartProps> = (props) => {
             ]
 
             const subtextPrefix = type === "rps" ? "当前发包数：" : "当前连接数："
-            const subtextSuffix = concurrentLoad[type][concurrentLoad[type].length - 1].number || 0
+            const subtextSuffix = concurrentLoad[type][concurrentLoad[type].length - 1]?.number || 0
 
             return {
                 ...prevOption,
@@ -90,49 +91,173 @@ const DynamicLineChart: React.FC<DynamicLineChartProps> = (props) => {
         })
     })
 
+    const resetData = useMemoizedFn(() => {
+        if (type === "rps") {
+            emiter.off("onRefreshRps", updateData)
+            updateConcurrentLoad(type, [])
+        } else if (type === "cps") {
+            emiter.off("onRefreshCps", updateData)
+            updateConcurrentLoad(type, [])
+        }
+    })
+
     useEffect(() => {
         if (inViewportCurrent) {
             if (type === "rps") {
                 emiter.on("onRefreshRps", updateData)
-                return () => {
-                    emiter.off("onRefreshRps", updateData)
-                    updateConcurrentLoad(type, [])
-                }
             } else if (type === "cps") {
                 emiter.on("onRefreshCps", updateData)
-                return () => {
-                    emiter.off("onRefreshCps", updateData)
-                    updateConcurrentLoad(type, [])
-                }
+            }
+        } else {
+            if (loading) {
+                resetData()
             }
         }
-    }, [type, inViewportCurrent])
+    }, [type, inViewportCurrent, loading])
+
+    useEffect(() => {
+        return () => {
+            resetData()
+        }
+    }, [])
 
     return <ReactECharts option={option} />
-}
+})
 
 interface DynamicStackedAreaChartProps {
-    inViewportCurrent: boolean
-    stackedAreaChartOption: echarts.EChartsOption
+    stackedAreaData: string
 }
-const DynamicStackedAreaChart: React.FC<DynamicStackedAreaChartProps> = (props) => {
-    const {inViewportCurrent, stackedAreaChartOption} = props
-    const [option, setOption] = useState<echarts.EChartsOption>(stackedAreaChartOption)
+const DynamicStackedAreaChart: React.FC<DynamicStackedAreaChartProps> = React.memo((props) => {
+    const {stackedAreaData} = props
+    const [option, setOption] = useState<echarts.EChartsOption>({
+        tooltip: {
+            trigger: "axis",
+            axisPointer: {
+                type: "cross",
+                label: {
+                    backgroundColor: "#6a7985"
+                }
+            }
+        },
+        legend: {
+            top: "0%",
+            data: ["TLS握手", "TCP连接", "总时长"]
+        },
+        xAxis: [
+            {
+                type: "category",
+                boundaryGap: false,
+                data: []
+            }
+        ],
+        yAxis: [
+            {
+                type: "value",
+                name: "请求延时",
+                nameLocation: "end",
+                nameGap: 30,
+                nameTextStyle: {
+                    fontSize: 16,
+                    fontWeight: "bold",
+                    padding: [0, 0, 0, 0]
+                }
+            }
+        ],
+        series: [
+            {
+                name: "TLS握手",
+                type: "line",
+                stack: "Total",
+                areaStyle: {},
+                emphasis: {
+                    focus: "series"
+                },
+                data: []
+            },
+            {
+                name: "TCP连接",
+                type: "line",
+                stack: "Total",
+                areaStyle: {},
+                emphasis: {
+                    focus: "series"
+                },
+                data: []
+            },
+            {
+                name: "总时长",
+                type: "line",
+                stack: "Total",
+                areaStyle: {},
+                emphasis: {
+                    focus: "series"
+                },
+                data: []
+            }
+        ]
+    })
+
+    const updateData = useMemoizedFn(() => {
+        try {
+            const d = JSON.parse(stackedAreaData) || []
+            setOption((prevOption) => {
+                const series = prevOption.series || []
+                const xAxis = prevOption.xAxis || []
+
+                return {
+                    ...prevOption,
+                    xAxis: [
+                        {
+                            ...xAxis[0],
+                            data: d.map((point) => point.count)
+                        }
+                    ],
+                    series: [
+                        {
+                            ...series[0],
+                            data: d.map((point) => point.TLSHandshakeDurationMs)
+                        },
+                        {
+                            ...series[1],
+                            data: d.map((point) => point.TCPDurationMs)
+                        },
+                        {
+                            ...series[2],
+                            data: d.map((point) => point.ConnectDurationMs)
+                        }
+                    ]
+                }
+            })
+        } catch (error) {}
+    })
+
+    useEffect(() => {
+        updateData()
+    }, [stackedAreaData])
 
     return <ReactECharts option={option} />
-}
+})
 
+export interface FuzzerStackedAreaData {
+    count: number
+    TLSHandshakeDurationMs: number
+    TCPDurationMs: number
+    ConnectDurationMs: number
+}
 interface FuzzerConcurrentLoadProps {
     inViewportCurrent: boolean
+    loading: boolean
+    stackedAreaData: string
 }
-export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = (props) => {
-    const {inViewportCurrent} = props
+export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = React.memo((props) => {
+    const {inViewportCurrent, loading, stackedAreaData} = props
 
     return (
         <>
             <DynamicLineChart
                 type='rps'
                 inViewportCurrent={inViewportCurrent}
+                loading={loading}
                 lineChartOption={{
                     yAxis: {
                         name: "每秒发包数（5min）"
@@ -142,6 +267,7 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = (props)
             <DynamicLineChart
                 type='cps'
                 inViewportCurrent={inViewportCurrent}
+                loading={loading}
                 lineChartOption={{
                     yAxis: {
                         name: "每秒连接数（5min）"
@@ -158,81 +284,7 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = (props)
                     ]
                 }}
             />
-            <DynamicStackedAreaChart
-                inViewportCurrent={inViewportCurrent}
-                stackedAreaChartOption={{
-                    tooltip: {
-                        trigger: "axis",
-                        axisPointer: {
-                            type: "cross",
-                            label: {
-                                backgroundColor: "#6a7985"
-                            }
-                        }
-                    },
-                    legend: {
-                        data: ["TLS连接", "请求时间", "TCP时间"]
-                    },
-                    grid: {
-                        left: "6%",
-                        right: "10%",
-                        bottom: "3%",
-                        containLabel: true
-                    },
-                    xAxis: [
-                        {
-                            type: "category",
-                            boundaryGap: false,
-                            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            type: "value",
-                            name: "请求延时",
-                            nameLocation: "end",
-                            nameGap: 30,
-                            nameTextStyle: {
-                                fontSize: 16,
-                                fontWeight: "bold",
-                                padding: [0, 0, 0, 0]
-                            }
-                        }
-                    ],
-                    series: [
-                        {
-                            name: "TLS连接",
-                            type: "line",
-                            stack: "Total",
-                            areaStyle: {},
-                            emphasis: {
-                                focus: "series"
-                            },
-                            data: [120, 132, 101, 134, 90, 230, 210]
-                        },
-                        {
-                            name: "请求时间",
-                            type: "line",
-                            stack: "Total",
-                            areaStyle: {},
-                            emphasis: {
-                                focus: "series"
-                            },
-                            data: [220, 182, 191, 234, 290, 330, 310]
-                        },
-                        {
-                            name: "TCP时间",
-                            type: "line",
-                            stack: "Total",
-                            areaStyle: {},
-                            emphasis: {
-                                focus: "series"
-                            },
-                            data: [150, 232, 201, 154, 190, 330, 410]
-                        }
-                    ]
-                }}
-            />
+            <DynamicStackedAreaChart stackedAreaData={stackedAreaData} />
         </>
     )
-}
+})

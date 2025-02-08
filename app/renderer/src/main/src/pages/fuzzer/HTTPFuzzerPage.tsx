@@ -146,7 +146,7 @@ import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
-import {FuzzerConcurrentLoad} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
+import {FuzzerConcurrentLoad, FuzzerStackedAreaData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -231,6 +231,9 @@ export interface FuzzerResponse {
     DNSDurationMs: number
     FirstByteDurationMs?: number
     TotalDurationMs: number
+    TLSHandshakeDurationMs: number
+    TCPDurationMs: number
+    ConnectDurationMs: number
     Proxy?: string
     RemoteAddr?: string
     ExtractedResults: KVPair[]
@@ -658,6 +661,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const {setSubscribeClose, getSubscribeClose} = useSubscribeClose()
     const fuzzerRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(fuzzerRef)
+    const inViewportRef = useRef<boolean>(inViewport)
 
     const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
@@ -689,6 +693,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
     useEffect(() => {
+        inViewportRef.current = inViewport
         if (inViewport) {
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
@@ -861,6 +866,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         if (!retryRef.current) {
             runtimeIdRef.current = ""
         }
+        setStackedAreaData("")
     })
 
     const retryRef = useRef<boolean>(false)
@@ -1047,6 +1053,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     })
 
+    // 目前按钮处于继续状态
+    const canPlayAgain = useMemo(() => {
+        return !loading && !isPause
+    }, [isPause, loading])
     // 目前按钮处于发送请求状态
     const isbuttonIsSendReqStatus = useMemo(() => {
         return !loading && isPause
@@ -1065,7 +1075,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const taskIDRef = useRef<string>("")
     const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
     const runtimeIdRef = useRef<string>("")
-
+    const [stackedAreaData, setStackedAreaData] = useState<string>("")
     useEffect(() => {
         const token = tokenRef.current
 
@@ -1084,7 +1094,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         })
         let successBuffer: FuzzerResponse[] = []
         let failedBuffer: FuzzerResponse[] = []
-
+        let stackedAreaDataBuffer: FuzzerStackedAreaData[] = []
         let count: number = 0 // 用于数据项请求字段
 
         const updateData = () => {
@@ -1092,7 +1102,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 return
             }
 
-            if (failedBuffer.length + successBuffer.length + failedCount + successCount === 0) {
+            if (
+                failedBuffer.length +
+                    successBuffer.length +
+                    failedCount +
+                    successCount +
+                    stackedAreaDataBuffer.length ===
+                0
+            ) {
                 return
             }
 
@@ -1100,6 +1117,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
+            setStackedAreaData(JSON.stringify(stackedAreaDataBuffer))
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
@@ -1117,13 +1135,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 // 重置extractedMap
                 reset()
             }
-
+            const countId = count++
             const r = {
                 // 6.16
                 ...data,
                 Headers: data.Headers || [],
                 UUID: data.UUID || randomString(16), // 新版yakit,成功和失败的数据都有UUID,旧版失败的数据没有UUID,兼容
-                Count: count++,
+                Count: countId,
                 cellClassName: ""
             } as FuzzerResponse
             if (data.MatchedByMatcher) {
@@ -1147,6 +1165,20 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedBuffer.push(r)
             }
+
+            if (inViewportRef.current) {
+                stackedAreaDataBuffer.push({
+                    count: countId,
+                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                    TCPDurationMs: +r.TCPDurationMs,
+                    ConnectDurationMs: +r.ConnectDurationMs
+                })
+                if (stackedAreaDataBuffer.length > 5000) {
+                    stackedAreaDataBuffer.shift()
+                }
+            } else {
+                stackedAreaDataBuffer = []
+            }
         })
 
         ipcRenderer.on(endToken, () => {
@@ -1156,6 +1188,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             count = 0
             successCount = 0
             failedCount = 0
+            stackedAreaDataBuffer = []
             dCountRef.current = 0
             taskIDRef.current = ""
             setTimeout(() => {
@@ -1669,7 +1702,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 extractedMap={extractedMap}
                 pageId={props.id}
                 noPopconfirm={isbuttonIsSendReqStatus}
-                retryNoPopconfirm={!(!loading && !isPause)}
+                retryNoPopconfirm={!canPlayAgain}
                 cancelCurrentHTTPFuzzer={cancelCurrentHTTPFuzzer}
                 resumeAndPause={resumeAndPause}
             />
@@ -2089,7 +2122,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                         overflowX: "hidden"
                                                     }}
                                                 >
-                                                    <FuzzerConcurrentLoad inViewportCurrent={inViewport === true} />
+                                                    <FuzzerConcurrentLoad
+                                                        inViewportCurrent={inViewport === true}
+                                                        stackedAreaData={stackedAreaData}
+                                                        loading={loading}
+                                                    />
                                                 </div>
                                             </>
                                         ) : (
