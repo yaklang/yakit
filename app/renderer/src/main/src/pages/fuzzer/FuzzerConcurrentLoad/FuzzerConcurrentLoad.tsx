@@ -111,6 +111,17 @@ const DynamicLineChart: React.FC<DynamicLineChartProps> = (props) => {
     return <ReactECharts option={option} />
 }
 
+interface DynamicStackedAreaChartProps {
+    inViewportCurrent: boolean
+    stackedAreaChartOption: echarts.EChartsOption
+}
+const DynamicStackedAreaChart: React.FC<DynamicStackedAreaChartProps> = (props) => {
+    const {inViewportCurrent, stackedAreaChartOption} = props
+    const [option, setOption] = useState<echarts.EChartsOption>(stackedAreaChartOption)
+
+    return <ReactECharts option={option} />
+}
+
 interface FuzzerConcurrentLoadProps {
     inViewportCurrent: boolean
 }
@@ -143,6 +154,81 @@ export const FuzzerConcurrentLoad: React.FC<FuzzerConcurrentLoadProps> = (props)
                             lineStyle: {
                                 color: "#F6544A"
                             }
+                        }
+                    ]
+                }}
+            />
+            <DynamicStackedAreaChart
+                inViewportCurrent={inViewportCurrent}
+                stackedAreaChartOption={{
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: {
+                            type: "cross",
+                            label: {
+                                backgroundColor: "#6a7985"
+                            }
+                        }
+                    },
+                    legend: {
+                        data: ["TLS连接", "请求时间", "TCP时间"]
+                    },
+                    grid: {
+                        left: "6%",
+                        right: "10%",
+                        bottom: "3%",
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            type: "category",
+                            boundaryGap: false,
+                            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                            name: "请求延时",
+                            nameLocation: "end",
+                            nameGap: 30,
+                            nameTextStyle: {
+                                fontSize: 16,
+                                fontWeight: "bold",
+                                padding: [0, 0, 0, 0]
+                            }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: "TLS连接",
+                            type: "line",
+                            stack: "Total",
+                            areaStyle: {},
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: "请求时间",
+                            type: "line",
+                            stack: "Total",
+                            areaStyle: {},
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: "TCP时间",
+                            type: "line",
+                            stack: "Total",
+                            areaStyle: {},
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [150, 232, 201, 154, 190, 330, 410]
                         }
                     ]
                 }}
