@@ -435,7 +435,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
-    const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const [refreshTree, setRefreshTree, getRefreshTree] = useGetState<boolean>(false)
     const [removeVisible, setRemoveVisible] = useState<boolean>(false)
     /** 子组件方法传递给父组件 */
     const auditHistoryListRef = useRef<AuditHistoryListRefProps>(null)
@@ -656,7 +656,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         setMapAuditChildDetail(TopId, messageIds)
                     }
                     setMapAuditChildDetail("/", [...topIds, ...variableIds])
-                    setRefreshTree(!refreshTree)
+                    setRefreshTree(!getRefreshTree())
                 } else {
                     setShowEmpty(true)
                 }

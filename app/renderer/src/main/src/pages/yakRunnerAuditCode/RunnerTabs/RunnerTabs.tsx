@@ -1154,7 +1154,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const nowShowRef = useRef<FileDetailInfo>()
     // 代码扫描编辑器提示
     const editerMenuFun = (editor: YakitIMonacoEditor) => {
-        if (!editorInfo?.highLightRange && !nowShowRef.current?.highLightRange?.source) return
+        if (!editorInfo?.highLightRange || !nowShowRef.current?.highLightRange?.source) return
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.range.code.scan.widget`
 
@@ -1275,9 +1275,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         } catch (error) {}
     })
 
-    const onWidgetOpenAgainFun = useMemoizedFn((path)=>{
+    const onWidgetOpenAgainFun = useMemoizedFn((path) => {
         if (!editor) return
-        if(activeFile?.path === path){
+        if (activeFile?.path === path) {
             editerMenuFun(editor)
         }
     })
@@ -1690,11 +1690,7 @@ const CodeScanMonacoWidget: React.FC<CodeScanMonacoWidgetProps> = (props) => {
     })
 
     return (
-        <div
-            className={classNames(styles["code-scan-monaco-widget"], {
-                [styles[""]]: true
-            })}
-        >
+        <div className={classNames(styles["code-scan-monaco-widget"])}>
             <div className={styles["header"]}>
                 <div className={styles["title"]}>这里的代码有点问题</div>
                 <div className={styles["extra"]} onClick={closeFizzRangeWidget}>
