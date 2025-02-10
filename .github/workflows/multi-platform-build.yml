@@ -13,7 +13,7 @@ on:
                     - linux
                     - mwl
             legacy:
-                description: "Compatible with older versions of the system"
+                description: "Legacy system version"
                 required: false
                 type: boolean
                 default: false
@@ -31,15 +31,15 @@ on:
                 required: false
                 type: boolean
                 default: false
+            engineVersion:
+                description: "Specify engine version(need check built-in engine)"
+                required: false
+                type: string
             devTool:
-                description: "Do you want to display developer tools"
+                description: "Display developer tools"
                 required: false
                 type: boolean
                 default: false
-            engineVersion:
-                description: "Specify engine version"
-                required: false
-                type: string
 
 jobs:
     build_yakit:
