@@ -88,7 +88,7 @@ export const startupDuplexConn = () => {
                     emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
                     break
                 // 通知QuerySSARisks轮询更新
-                case "ssa-risk":
+                case "ssa_risk":
                     emiter.emit("onRefreshQuerySSARisks", JSON.stringify(obj))
                     break
                 // rps
