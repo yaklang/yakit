@@ -107,6 +107,11 @@ const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props)
     }, [type, inViewportCurrent, loading])
 
     useEffect(() => {
+        if (type === "rps") {
+            updateConcurrentLoad(type, [])
+        } else if (type === "cps") {
+            updateConcurrentLoad(type, [])
+        }
         return () => {
             resetData()
         }

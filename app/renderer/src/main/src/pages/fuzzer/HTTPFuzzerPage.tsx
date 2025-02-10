@@ -615,6 +615,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     // 切换【配置】/【规则】高级内容显示 type
     const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
+    const advancedConfigShowTypeRef = useRef<WebFuzzerType>(advancedConfigShowType)
+    useEffect(() => {
+        advancedConfigShowTypeRef.current = advancedConfigShowType
+    }, [advancedConfigShowType])
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -1164,8 +1168,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedBuffer.push(r)
             }
-
-            if (inViewportRef.current && r.Count) {
+            if (inViewportRef.current && advancedConfigShowTypeRef.current !== "sequence" && r.Count) {
                 fuzzerResChartDataBuffer.push({
                     Count: r.Count,
                     TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
@@ -2123,7 +2126,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                     }}
                                                 >
                                                     <FuzzerConcurrentLoad
-                                                        inViewportCurrent={inViewport === true}
+                                                        inViewportCurrent={
+                                                            inViewport && advancedConfigShowType !== "sequence"
+                                                        }
                                                         fuzzerResChartData={fuzzerResChartData}
                                                         loading={loading}
                                                     />

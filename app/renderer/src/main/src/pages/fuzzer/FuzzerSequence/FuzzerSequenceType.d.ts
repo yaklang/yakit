@@ -8,6 +8,7 @@ import {
     MatcherActiveKey
 } from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
 import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
+import {FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 /**
  * @description 序列props
  * @property {string} pageId页面节点id
@@ -100,6 +101,7 @@ export interface ResponseProps {
     failedFuzzer: FuzzerResponse[]
     runtimeIdFuzzer: string[]
     fuzzerTableMaxData: number
+    fuzzerResChartData: FuzzerResChartData[]
 }
 /**
  * @description HTTPFuzzerSequence接口返回类型
@@ -149,6 +151,7 @@ export interface SequenceResponseProps {
     activeKey: string
     defActiveKeyAndOrder: MatcherActiveKey,
     webFuzzerNewEditorRef: any
+    inViewport: boolean
 }
 
 export interface SequenceResponseRefProps {

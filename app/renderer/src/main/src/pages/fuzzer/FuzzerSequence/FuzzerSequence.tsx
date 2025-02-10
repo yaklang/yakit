@@ -105,6 +105,7 @@ import {WebsiteGV} from "@/enums/website"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
+import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -219,6 +220,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
+    const inViewportRef = useRef<boolean>(inViewport === true)
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
 
@@ -249,6 +251,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     }, [])
 
     useEffect(() => {
+        inViewportRef.current = inViewport === true
         if (inViewport) {
             const unSubPageNode = usePageInfo.subscribe(
                 (state) => {
@@ -311,6 +314,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const countRef = useRef<Map<string, number>>(new Map())
     const runtimeIdBufferRef = useRef<Map<string, string[]>>(new Map())
     const fuzzerTableMaxDataRef = useRef<Map<string, number>>(new Map())
+    const fuzzerResChartDataBufferRef = useRef<Map<string, FuzzerResChartData[]>>(new Map())
 
     useEffect(() => {
         if (currentSequenceItem) {
@@ -446,6 +450,24 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (!fuzzerIndexArr.current.includes(FuzzerIndex)) {
                 fuzzerIndexArr.current.push(FuzzerIndex)
             }
+
+            let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
+            if (inViewportRef.current && fuzzerResChartData && r.Count) {
+                fuzzerResChartData.push({
+                    Count: r.Count,
+                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                    TCPDurationMs: +r.TCPDurationMs,
+                    ConnectDurationMs: +r.ConnectDurationMs,
+                    DurationMs: +r.DurationMs
+                })
+                // 超过最大显示 展示最新数据
+                if (fuzzerResChartData.length > 5000) {
+                    fuzzerResChartData.shift()
+                }
+                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, fuzzerResChartData)
+            } else {
+                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, [])
+            }
         })
         ipcRenderer.on(endToken, () => {
             setTimeout(() => {
@@ -513,6 +535,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const failedBuffer: FuzzerResponse[] = failedBufferRef.current.get(fuzzerIndex) || []
             const runtimeIdBuffer = runtimeIdBufferRef.current.get(fuzzerIndex) || []
             const fuzzerTableMaxData = fuzzerTableMaxDataRef.current.get(fuzzerIndex) || DefFuzzerTableMaxData
+            const fuzzerResChartDataBuffer = fuzzerResChartDataBufferRef.current.get(fuzzerIndex) || []
             if (failedBuffer.length + successBuffer.length === 0) {
                 return
             }
@@ -542,7 +565,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     successFuzzer: successBuffer,
                     failedFuzzer: failedBuffer,
                     runtimeIdFuzzer: runtimeIdBuffer,
-                    fuzzerTableMaxData: fuzzerTableMaxData
+                    fuzzerTableMaxData: fuzzerTableMaxData,
+                    fuzzerResChartData: fuzzerResChartDataBuffer
                 })
                 return
             }
@@ -556,7 +580,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 successFuzzer: [...successBuffer],
                 failedFuzzer: [...failedBuffer],
                 runtimeIdFuzzer: [...runtimeIdBuffer],
-                fuzzerTableMaxData: fuzzerTableMaxData
+                fuzzerTableMaxData: fuzzerTableMaxData,
+                fuzzerResChartData: fuzzerResChartDataBuffer
             }
             setResponse(fuzzerIndex, newResponse)
         },
@@ -570,6 +595,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         failedBufferRef.current.clear()
         countRef.current.clear()
         runtimeIdBufferRef.current.clear()
+        fuzzerResChartDataBufferRef.current.clear()
     })
     /**
      * 组内的webFuzzer页面高级配置或者request发生变化，或者组发生变化，
@@ -1257,6 +1283,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 activeKey={activeKey}
                                 defActiveKeyAndOrder={defActiveKeyAndOrder}
                                 webFuzzerNewEditorRef={webFuzzerNewEditorRef}
+                                inViewport={inViewport === true}
                             />
                         </>
                     ) : (
@@ -1723,7 +1750,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             activeKey,
             activeType,
             defActiveKeyAndOrder,
-            webFuzzerNewEditorRef
+            webFuzzerNewEditorRef,
+            inViewport
         } = props
         const {
             id: responseInfoId,
@@ -1732,7 +1760,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             failedFuzzer,
             successCount,
             failedCount,
-            fuzzerTableMaxData
+            fuzzerTableMaxData,
+            fuzzerResChartData
         } = responseInfo || {
             id: "0",
             onlyOneResponse: {...emptyFuzzer},
@@ -1740,7 +1769,8 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             failedFuzzer: [],
             successCount: 0,
             failedCount: 0,
-            fuzzerTableMaxData: DefFuzzerTableMaxData
+            fuzzerTableMaxData: DefFuzzerTableMaxData,
+            fuzzerResChartData: []
         }
         const {request, advancedConfigValue, pageId} = requestInfo || {
             request: "",
@@ -1914,7 +1944,6 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
 
         const secondNodeTitle = () => (
             <>
-                <span style={{marginRight: 8, fontSize: 12, fontWeight: 500, color: "#31343f"}}>Responses</span>
                 <SecondNodeTitle
                     cachedTotal={cachedTotal}
                     onlyOneResponse={onlyOneResponse}
@@ -1926,7 +1955,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         setShowSuccess(v)
                         setQuery({})
                     }}
-                    showConcurrentAndLoad={false}
+                    showConcurrentAndLoad={true}
                 />
             </>
         )
@@ -2103,6 +2132,20 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                                         extractedMap={extractedMap}
                                                     />
                                                 )}
+                                                <div
+                                                    style={{
+                                                        display: showSuccess === "Concurrent/Load" ? "block" : "none",
+                                                        height: "100%",
+                                                        overflowY: "auto",
+                                                        overflowX: "hidden"
+                                                    }}
+                                                >
+                                                    <FuzzerConcurrentLoad
+                                                        inViewportCurrent={inViewport}
+                                                        fuzzerResChartData={JSON.stringify(fuzzerResChartData)}
+                                                        loading={loading}
+                                                    />
+                                                </div>
                                             </>
                                         ) : (
                                             <Result status={"warning"} title={"请执行序列后进行查看"} />
