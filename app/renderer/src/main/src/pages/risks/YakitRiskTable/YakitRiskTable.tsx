@@ -2135,7 +2135,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
         <div className={styles["audit-result-collapse"]}>
             <CollapseList
                 type='sideBar'
-                onlyKey='index'
+                // onlyKey='index'
                 list={data}
                 titleRender={titleRender}
                 renderItem={renderItem}

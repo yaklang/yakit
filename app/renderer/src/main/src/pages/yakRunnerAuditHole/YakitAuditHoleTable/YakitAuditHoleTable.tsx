@@ -221,7 +221,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 debugVirtualTableEvent.startT()
             }
             if (typeof updateData !== "string" && updateData.task_id === runTimeId) {
-                if (updateData.action === "update") {
+                if (updateData.action === "create") {
                     debugVirtualTableEvent.startT()
                 }
             }
@@ -372,11 +372,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             <YakitButton
                                 type='text'
                                 icon={<OutlineTerminalIcon />}
-                                onClick={() => {
+                                onClick={(e) => {
+                                    e.stopPropagation()
                                     const params: AuditCodePageInfoProps = {
                                         Schema: "syntaxflow",
                                         Location: record.ProgramName || "",
                                         Path: `/`,
+                                        Variable: record.Variable,
+                                        Value: record.Index ? `/${record.Index}` : undefined,
                                         Query: [{Key: "result_id", Value: record.ResultID || 0}]
                                     }
                                     emiter.emit(
@@ -555,6 +558,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             setSelectList((s) => [...s, selectedRows])
         } else {
             setSelectList((s) => s.filter((ele) => ele.Id !== selectedRows.Id))
+            setAllCheck(false)
         }
     })
     const onSetCurrentRow = useMemoizedFn((val?: SSARisk) => {
@@ -1055,7 +1059,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                             jumpCodeScanPage={jumpCodeScanPage}
                             isShowExtra={false}
                             collapseProps={{
-                                defaultActiveKey: ["0"]
+                                defaultActiveKey: ["collapse-list-0"]
                             }}
                         />
                     </div>
