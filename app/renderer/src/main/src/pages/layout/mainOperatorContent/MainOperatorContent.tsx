@@ -28,7 +28,13 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition, isSastScan} from "@/utils/envfile"
+import {
+    isEnpriTraceAgent,
+    isBreachTrace,
+    isEnterpriseOrSimpleEdition,
+    isEnterpriseEdition,
+    isSastScan
+} from "@/utils/envfile"
 import {
     useCreation,
     useDebounceFn,
@@ -281,7 +287,7 @@ export const getInitPageCache: () => PageCache[] = () => {
         ]
     }
 
-    if (isSastScan()){
+    if (isSastScan()) {
         return [
             {
                 routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -539,7 +545,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addYakRunnerAuditCodePage = useMemoizedFn((data: AuditCodePageInfoProps) => {
+    const addYakRunnerAuditCodePage = useMemoizedFn((data?: AuditCodePageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Code).length
         if (isExist && data) {
             emiter.emit("onAuditCodePageInfo", JSON.stringify(data))
@@ -567,9 +573,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.YakRunner_Audit_Code},
             {
                 pageParams: {
-                    auditCodePageInfo: {
-                        ...data
-                    }
+                    auditCodePageInfo: data
+                        ? {
+                              ...data
+                          }
+                        : undefined
                 }
             }
         )
