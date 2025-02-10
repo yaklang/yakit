@@ -95,7 +95,7 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                             onClick={() =>
                                 onMenuParams({
                                     route: YakitRoute.YakRunner_Audit_Code,
-                                    params: {}
+                                    params: undefined
                                 })
                             }
                         >
