@@ -105,6 +105,18 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
     }, [inViewport])
 
+    const onRefreshHistoryTable = useMemoizedFn(() => {
+        setRefresh(!refresh)
+    })
+    useEffect(() => {
+        if (pageType === "History") {
+            emiter.on("onRefreshHistoryTable", onRefreshHistoryTable)
+            return () => {
+                emiter.off("onRefreshHistoryTable", onRefreshHistoryTable)
+            }
+        }
+    }, [pageType])
+
     const [defaultFold, setDefaultFold] = useState<boolean>()
     useEffect(() => {
         getRemoteValue("HISTORY_FOLD").then((result: string) => {

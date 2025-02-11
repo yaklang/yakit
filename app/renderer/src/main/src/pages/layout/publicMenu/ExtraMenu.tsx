@@ -8,10 +8,17 @@ import {useMemoizedFn} from "ahooks"
 import {RouteToPageProps} from "./PublicMenu"
 import {OutlineSaveIcon} from "@/assets/icon/outline"
 import {SolidCodecIcon, SolidPayloadIcon, SolidTerminalIcon} from "@/assets/icon/solid"
-
-import styles from "./ExtraMenu.module.scss"
 import {ImportLocalPlugin, LoadPluginMode} from "@/pages/mitm/MITMPage"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {Form} from "antd"
+import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {randomString} from "@/utils/randomUtil"
+import {yakitNotify} from "@/utils/notification"
+import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import emiter from "@/utils/eventBus/eventBus"
+import styles from "./ExtraMenu.module.scss"
 
+const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
     onMenuSelect: (route: RouteToPageProps) => void
 }
@@ -21,6 +28,11 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     const [visibleImport, setVisibleImport] = useState<boolean>(false)
     const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
+    const [form] = Form.useForm()
+    const [historyharPath, setHistoryharPath] = useState<string>("")
+    const [importHistoryharToken, setImportHistoryharToken] = useState<string>("")
+    const [percentVisible, setPercentVisible] = useState<boolean>(false)
+
     const importMenuSelect = useMemoizedFn((type: string) => {
         switch (type) {
             case "local":
@@ -33,6 +45,72 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 return
             case "import-share":
                 onImportShare()
+                setImportMenuShow(false)
+                return
+            case "import-history-har":
+                setHistoryharPath("")
+                form.setFieldsValue({historyharPath: ""})
+
+                const m = showYakitModal({
+                    title: "导入HAR流量数据",
+                    width: 600,
+                    content: (
+                        <div style={{padding: 15}}>
+                            <Form form={form}>
+                                <YakitFormDragger
+                                    multiple={false}
+                                    isShowPathNumber={false}
+                                    fileExtensionIsExist={false}
+                                    selectType='file'
+                                    formItemProps={{
+                                        name: "historyharPath",
+                                        label: "导入HAR流量数据路径",
+                                        labelCol: {span: 8},
+                                        wrapperCol: {span: 17}
+                                    }}
+                                    onChange={(val) => {
+                                        console.log(val)
+                                        setHistoryharPath(val)
+                                        form.setFieldsValue({historyharPath: val})
+                                    }}
+                                    value={historyharPath}
+                                />
+                            </Form>
+                            <div style={{width: "100%", textAlign: "right"}}>
+                                <YakitButton
+                                    type='primary'
+                                    onClick={() => {
+                                        const formValue = form.getFieldsValue()
+                                        if (!formValue.historyharPath) {
+                                            yakitNotify("error", "请输入HAR流量数据路径")
+                                            return
+                                        }
+                                        m.destroy()
+                                        const token = randomString(40)
+                                        setImportHistoryharToken(token)
+                                        ipcRenderer
+                                            .invoke(
+                                                "ImportHTTPFlowStream",
+                                                {
+                                                    InputPath: formValue.historyharPath
+                                                },
+                                                token
+                                            )
+                                            .then(() => {
+                                                setPercentVisible(true)
+                                            })
+                                            .catch((error) => {
+                                                yakitNotify("error", `[ImportHTTPFlowStream] error: ${error}`)
+                                            })
+                                    }}
+                                >
+                                    导入
+                                </YakitButton>
+                            </div>
+                        </div>
+                    ),
+                    footer: null
+                })
                 setImportMenuShow(false)
                 return
 
@@ -60,6 +138,10 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     {
                         key: "import-share",
                         label: "导入分享数据"
+                    },
+                    {
+                        key: "import-history-har",
+                        label: "导入HAR流量数据"
                     }
                 ]}
                 onClick={({key}) => importMenuSelect(key)}
@@ -123,6 +205,22 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 loadPluginMode={loadPluginMode}
                 sendPluginLocal={true}
             />
+            {percentVisible && (
+                <ImportExportHttpFlowProgress
+                    visible={percentVisible}
+                    title='导入HAR流量数据'
+                    token={importHistoryharToken}
+                    apiKey='ImportHTTPFlowStream'
+                    onClose={() => {
+                        setPercentVisible(false)
+                        emiter.emit(
+                            "menuOpenPage",
+                            JSON.stringify({route: YakitRoute.DB_HTTPHistory})
+                        )
+                        emiter.emit("onRefreshHistoryTable")
+                    }}
+                />
+            )}
         </div>
     )
 })
