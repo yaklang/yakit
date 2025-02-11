@@ -29,11 +29,46 @@ import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
 import {WaterMark} from "@ant-design/pro-layout"
 import {isCommunityEdition} from "@/utils/envfile"
+import {shallow} from "zustand/shallow"
+import { PageNodeItemProps, usePageInfo } from "@/store/pageInfo"
+import { YakitRoute } from "@/enums/yakitRoute"
+import { defaultRiskPageInfo } from "@/defaultConstants/RiskPage"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
+    const {queryPagesDataById} = usePageInfo(
+        (s) => ({
+            queryPagesDataById: s.queryPagesDataById
+        }),
+        shallow
+    )
+
+    const initPageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.YakRunner_Audit_Hole, YakitRoute.YakRunner_Audit_Hole)
+        if (currentItem && currentItem.pageParamsInfo.riskPageInfo) {
+            return currentItem.pageParamsInfo.riskPageInfo
+        } else {
+            return {...defaultRiskPageInfo}
+        }
+    })
+
+    useEffect(() => {
+        const auditHoleVulnerabilityLevel = (params: string) => {
+            try {
+                const Severity = JSON.parse(params) || []
+                setQuery((query) => ({...query, Severity}))
+            } catch (error) {}
+        }
+        emiter.on("auditHoleVulnerabilityLevel", auditHoleVulnerabilityLevel)
+        return () => {
+            emiter.off("auditHoleVulnerabilityLevel", auditHoleVulnerabilityLevel)
+        }
+    }, [])
+
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
-    const [query, setQuery] = useState<SSARisksFilter>({})
+    const [query, setQuery] = useState<SSARisksFilter>({
+        Severity: initPageInfo().SeverityList || []
+    })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
     const waterMarkStr = useMemo(() => {

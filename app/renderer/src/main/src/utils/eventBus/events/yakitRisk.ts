@@ -9,4 +9,6 @@ export type YakitRiskProps = {
     /** 刷新audit risk页面 统计 数据 */
     onRefAuditRiskFieldGroup?: string
     
+    /** 以下为审计漏洞 */
+    auditHoleVulnerabilityLevel: string
 }

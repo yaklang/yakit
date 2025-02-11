@@ -526,6 +526,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
                 break
+            case YakitRoute.YakRunner_Audit_Hole:
+                addYakRunnerAuditHolePage(params)
+                break
             case YakitRoute.Modify_Notepad:
                 addModifyNotepad(params)
                 break
@@ -578,6 +581,44 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                               ...data
                           }
                         : undefined
+                }
+            }
+        )
+    })
+
+    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps)=>{
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Hole).length
+        if (isExist) {
+            if (data.SeverityList) {
+                emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data.SeverityList))
+            }
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.YakRunner_Audit_Hole,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.YakRunner_Audit_Hole,
+                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]?.label || "",
+                    pageParamsInfo: {
+                        riskPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.YakRunner_Audit_Hole,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.YakRunner_Audit_Hole, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.YakRunner_Audit_Hole},
+            {
+                pageParams: {
+                    riskPageInfoProps: {
+                        ...data
+                    }
                 }
             }
         )
