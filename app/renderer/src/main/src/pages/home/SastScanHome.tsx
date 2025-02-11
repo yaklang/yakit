@@ -14,6 +14,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {FieldName, Fields} from "../risks/RiskTable"
 import { QueryGeneralResponse } from "../invoker/schema"
 import { SSAProgramResponse } from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import { apiGetSSARiskFieldGroup } from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
 interface SastScanHomeProps {}
 const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
@@ -32,8 +33,8 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
 
     // 更新漏洞数据
     const undateRiskLevel = () => {
-        ipcRenderer.invoke("QueryAvailableRiskLevel", {}).then((i: Fields) => {
-            setRiskLevelData(i.Values)
+        apiGetSSARiskFieldGroup().then((res) => {
+            setRiskLevelData(res.SeverityField)
         })
     }
 
@@ -170,8 +171,8 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                                     className={classNames(styles["risk-tag"], styles["seriousRisk-tag"])}
                                     onClick={() =>
                                         onMenuParams({
-                                            route: YakitRoute.DB_Risk,
-                                            params: {SeverityList: ["严重"]}
+                                            route: YakitRoute.YakRunner_Audit_Hole,
+                                            params: {SeverityList: ["critical"]}
                                         })
                                     }
                                 >
@@ -184,8 +185,8 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                                     className={classNames(styles["risk-tag"], styles["highRisk-tag"])}
                                     onClick={() =>
                                         onMenuParams({
-                                            route: YakitRoute.DB_Risk,
-                                            params: {SeverityList: ["高危"]}
+                                            route: YakitRoute.YakRunner_Audit_Hole,
+                                            params: {SeverityList: ["high"]}
                                         })
                                     }
                                 >
@@ -198,8 +199,8 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                                     className={classNames(styles["risk-tag"], styles["mediumRisk-tag"])}
                                     onClick={() =>
                                         onMenuParams({
-                                            route: YakitRoute.DB_Risk,
-                                            params: {SeverityList: ["中危"]}
+                                            route: YakitRoute.YakRunner_Audit_Hole,
+                                            params: {SeverityList: ["middle"]}
                                         })
                                     }
                                 >
@@ -212,8 +213,8 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                                     className={classNames(styles["risk-tag"], styles["lowRisk-tag"])}
                                     onClick={() =>
                                         onMenuParams({
-                                            route: YakitRoute.DB_Risk,
-                                            params: {SeverityList: ["低危"]}
+                                            route: YakitRoute.YakRunner_Audit_Hole,
+                                            params: {SeverityList: ["low"]}
                                         })
                                     }
                                 >
