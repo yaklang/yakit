@@ -87,6 +87,10 @@ export const startupDuplexConn = () => {
                 case "fuzzer_server_push":
                     emiter.emit("onGetDiscardPackageCount", JSON.stringify(obj))
                     break
+                // 通知QuerySSARisks轮询更新
+                case "ssa_risk":
+                    emiter.emit("onRefreshQuerySSARisks", JSON.stringify(obj))
+                    break
                 // rps
                 case "rps":
                     handleConcurrentLoadData("rps", obj)

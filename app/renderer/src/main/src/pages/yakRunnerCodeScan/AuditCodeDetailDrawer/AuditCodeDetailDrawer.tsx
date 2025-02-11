@@ -20,6 +20,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {AuditCodeDetailTopId} from "./defaultConstant"
+import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 const {ipcRenderer} = window.require("electron")
 export interface AuditCodeDetailDrawerProps {
     rowData: SyntaxFlowResult
@@ -261,33 +262,31 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
     const [isShowAuditDetail, setShowAuditDetail] = useState<boolean>(false)
 
     const [bugHash, setBugHash] = useState<string>()
-    const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
-        // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
-            try {
-                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                if (arr.length > 0) {
-                    const hash = arr[0].Value
-                    setBugHash(hash)
-                    setShowAuditDetail(true)
-                    setBugId(node.id)
+        try {
+            const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+            // 预留打开BUG详情
+            if (arr.length > 0 && node.isBug) {
+                const hash = arr[0]?.Value
+                setBugHash(hash)
+                setShowAuditDetail(true)
+            }
+            if (node.ResourceType === "value") {
+                setFoucsedKey(node.id)
+                const rightParams: AuditEmiterYakUrlProps = {
+                    Schema: "syntaxflow",
+                    Location: rowData.ProgramName,
+                    Path: node.id,
+                    Query: [{Key: "result_id", Value: rowData.ResultID}]
                 }
-            } catch (error) {
-                failed(`打开错误${error}`)
+                setAuditRightParams(rightParams)
+                setShowAuditDetail(true)
             }
-        }
-        if (node.ResourceType === "value") {
-            setBugId(undefined)
-            setFoucsedKey(node.id)
-            const rightParams: AuditEmiterYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: rowData.ProgramName,
-                Path: node.id,
-                Query: [{Key: "result_id", Value: rowData.ResultID}]
+            if(!node.isBug){
+                setBugHash(undefined)
             }
-            setAuditRightParams(rightParams)
-            setShowAuditDetail(true)
+        } catch (error) {
+            failed(`打开错误${error}`)
         }
     })
 
@@ -356,7 +355,6 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                                     onJump={onJump}
                                     onlyJump={true}
                                     wrapClassName={styles["audit-tree-wrap"]}
-                                    bugId={bugId}
                                 />
                             )}
                         </div>
@@ -365,7 +363,7 @@ export const AuditCodeDetailDrawer: React.FC<AuditCodeDetailDrawerProps> = (prop
                         <>
                             {isShowAuditDetail ? (
                                 <>
-                                    {bugId && bugHash ? (
+                                    {bugHash ? (
                                         <HoleBugDetail bugHash={bugHash} />
                                     ) : (
                                         <RightAuditDetail
@@ -394,13 +392,19 @@ interface HoleBugDetailProps {
 
 export const HoleBugDetail: React.FC<HoleBugDetailProps> = React.memo((props) => {
     const {bugHash} = props
-    const [info, setInfo] = useState<Risk>()
+    const [info, setInfo] = useState<SSARisk>()
     useEffect(() => {
         ipcRenderer
-            .invoke("QueryRisk", {Hash: bugHash})
-            .then((res: Risk) => {
-                if (!res) return
-                setInfo(res)
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    Hash: [bugHash]
+                }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                if (Data.length > 0) {
+                    setInfo(Data[0])
+                }
             })
             .catch((err) => {})
     }, [bugHash])

@@ -1,0 +1,167 @@
+.audit-hole-page {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+
+%flex-row {
+    display: flex;
+    flex-direction: row;
+}
+%flex-row-center {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+%flex-column {
+    display: flex;
+    flex-direction: column;
+}
+@mixin heard($name) {
+    .#{$name}-heard {
+        @extend %flex-row;
+        justify-content: space-between;
+        align-items: center;
+        height: 24px;
+        @content;
+        .#{$name}-heard-title {
+            @extend %flex-row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 16px; /* 133.333% */
+        }
+    }
+}
+.audit-hole-page {
+    @extend %flex-row;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+.hole-query {
+    @extend %flex-column;
+    width: 300px;
+    flex-shrink: 0;
+    max-width: 300px;
+    border-right: 1px solid var(--yakit-border-color);
+    overflow: hidden;
+    height: 100%;
+    opacity: 1;
+    transition:
+        width 0.2s ease,
+        opacity 0.2s ease;
+    :global {
+        .ant-collapse {
+            padding: 8px 12px 0px;
+        }
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+            padding: 0;
+        }
+    }
+    .hole-query-heard {
+        @extend %flex-row-center;
+        justify-content: space-between;
+        padding: 16px 12px 12px;
+        border-bottom: 1px solid var(--yakit-border-color);
+        height: 44px;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--yakit-header-color);
+    }
+    .hole-query-body {
+        @extend %flex-column;
+        flex: 1;
+        overflow-y: auto;
+    }
+}
+
+.hole-query-hidden {
+    width: 0;
+    opacity: 0;
+}
+
+.program-list-body {
+    @extend %flex-column;
+    overflow: hidden;
+    flex: 1;
+    padding: 8px 12px 4px;
+    min-height: 150px;
+    @include heard("program-list");
+    .program-list-content {
+        @extend %flex-column;
+        flex: 1;
+        overflow-y: auto;
+        .program-list-item {
+            @extend %flex-row-center;
+            justify-content: space-between;
+            padding: 4px 8px;
+            margin-bottom: 8px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            gap: 4px;
+            &:hover {
+                background-color: var(--yakit-background-color);
+            }
+            .program-list-item-label {
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+            .program-list-item-value {
+                color: var(--yakit-helper-text-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+        }
+        .program-list-item-active {
+            .program-list-item-label,
+            .program-list-item-value {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+
+.vulnerability-level {
+    min-height: 270px;
+    max-height: 270px;
+    padding: 8px 0;
+    @include heard("vulnerability-level") {
+        padding: 0 12px;
+    }
+}
+.vulnerability-type {
+    flex: 1;
+    padding: 8px 12px;
+    @include heard("vulnerability-type");
+    .info-icon {
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}
+
+.btn-padding-right-0 {
+    padding-right: 0;
+}
+
+.to-end {
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+    padding-top: 24px;
+    padding-bottom: 12px;
+}

@@ -11,7 +11,7 @@ import {
 import styles from "./YakitRiskTable.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {Risk} from "../schema"
-import {Badge, Descriptions, Divider, Form, Tooltip} from "antd"
+import {Badge, CollapseProps, Descriptions, Divider, Form, Tooltip} from "antd"
 import {YakScript, genDefaultPagination} from "@/pages/invoker/schema"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -95,7 +95,8 @@ import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditC
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -480,23 +481,23 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                     filterMultiple: true,
                     filters: [
                         {
-                            value: "严重",
+                            value: "critical",
                             label: "严重"
                         },
                         {
-                            value: "高危",
+                            value: "high",
                             label: "高危"
                         },
                         {
-                            value: "中危",
+                            value: "warning",
                             label: "中危"
                         },
                         {
-                            value: "低危",
+                            value: "low",
                             label: "低危"
                         },
                         {
-                            value: "信息",
+                            value: "info",
                             label: "信息"
                         }
                     ]
@@ -517,7 +518,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 dataKey: "Url"
             },
             {
-                title: "Tag",
+                title: "处置状态",
                 dataKey: "Tags",
                 filterProps: {
                     filterKey: "TagList",
@@ -910,11 +911,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         setQuery(newQuery)
         limitRef.current = defLimitRef.current
     })
-    const getQuerySeverity = useMemoizedFn((list: string[]) => {
-        return SeverityMapTag.filter((ele) => list.includes(ele.name))
-            .map((ele) => ele.key)
-            .join(",")
-    })
+
     const getQueryNetwork = useMemoizedFn((network: string, ipList: string[]) => {
         let ip = network
         if (ipList.length > 0) {
@@ -927,7 +924,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         const finalParams: QueryRisksRequest = {
             ...query,
             RiskType: !!query.RiskTypeList ? query.RiskTypeList.join(",") : "",
-            Severity: !!query.SeverityList ? getQuerySeverity(query.SeverityList) : "",
+            Severity: !!query.SeverityList ? query.SeverityList.join(",") : "",
             Tags: !!query.TagList ? query.TagList.join("|") : "",
             Network: getQueryNetwork(query.Network, query.IPList || []),
             IsRead: type === "all" ? "" : "false"
@@ -1057,7 +1054,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setCurrentSelectItem(val)
         }
         if (!val.IsRead) {
-            apiNewRiskRead({Ids: [val.Id]}).then(() => {
+            apiNewRiskRead({Filter:{...query,Ids: [val.Id]}}).then(() => {
                 setResponse({
                     ...response,
                     Data: response.Data.map((ele) => {
@@ -1073,7 +1070,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onAllRead = useMemoizedFn(() => {
-        apiNewRiskRead({Ids: []}).then(() => {
+        apiNewRiskRead({Filter:{...query,Ids: []}}).then(() => {
             onRefRiskList()
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })
@@ -1840,6 +1837,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
+            
             emiter.emit(
                 "openPage",
                 JSON.stringify({
@@ -1939,7 +1937,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
 })
 
 export interface AuditResultDescribeProps {
-    info: Risk
+    info: Risk | SSARisk
     columnSize?: number
 }
 
@@ -1950,6 +1948,11 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
         if (columnSize) return columnSize
         return 1
     }, [])
+
+    const getRule = useMemoizedFn(() => {
+        const newInfo = info as any
+        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+    })
     return (
         <div className={styles["content-resize-second"]}>
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
@@ -1957,7 +1960,7 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                 </Descriptions.Item>
                 <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                         {info.Description || "-"}
@@ -2009,6 +2012,11 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
             name: severity?.name || info?.Severity || "-"
         }
     }, [info.Severity])
+
+    const getRule = useMemoizedFn(() => {
+        const newInfo = info as any
+        return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
+    })
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
@@ -2051,7 +2059,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                         {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
                     </Descriptions.Item>
                     <Descriptions.Item label='Hash'>{info?.Hash || "-"}</Descriptions.Item>
-                    <Descriptions.Item label='扫描规则'>{info?.FromYakScript || "漏洞检测"}</Descriptions.Item>
+                    <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
                             {info.Description || "-"}
@@ -2071,10 +2079,11 @@ interface AuditResultCollapseProps {
     data: YakURLDataItemProps[]
     jumpCodeScanPage: (v: string) => void
     isShowExtra?: boolean
+    collapseProps?: CollapseProps
 }
 
 export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.memo((props) => {
-    const {data, jumpCodeScanPage, isShowExtra} = props
+    const {data, jumpCodeScanPage, isShowExtra, collapseProps} = props
 
     const titleRender = (info: YakURLDataItemProps) => {
         const {index, code_range, source, ResourceName} = info
@@ -2126,10 +2135,11 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
         <div className={styles["audit-result-collapse"]}>
             <CollapseList
                 type='sideBar'
-                onlyKey='index'
+                // onlyKey='index'
                 list={data}
                 titleRender={titleRender}
                 renderItem={renderItem}
+                collapseProps={collapseProps}
             />
         </div>
     )

@@ -135,7 +135,11 @@ const {ipcRenderer} = window.require("electron")
 export const isBugFun = (info: AuditNodeProps) => {
     try {
         const arr = info.Extra.filter((item) => item.Key === "risk_hash")
-        if (info.ResourceType === "variable" && info.VerboseType === "alert" && arr.length > 0) return true
+        // 第一层BUG展示
+        if (info.ResourceType === "variable" && info.VerboseType === "alert") return true
+        // 第二层BUG展示
+        if (arr.length > 0) return true
+
         return false
     } catch (error) {
         return false
@@ -163,7 +167,7 @@ export const getDetailFun = (info: AuditNodeProps) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onJump, bugId} = props
+    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onJump} = props
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info, getDetail)
     })
@@ -227,7 +231,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
     const goBUGDetail = useMemoizedFn((e) => {
         e.stopPropagation()
-        onJump(info)
+        onJump({...info, isBug: true})
     })
     return (
         <>
@@ -269,7 +273,8 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                         {isBugFun(info) && (
                             <div
                                 className={classNames(styles["bug"], {
-                                    [styles["active-bug"]]: bugId === info.id
+                                    [styles["active-bug"]]:
+                                        info.Extra.filter((item) => item.Key === "risk_hash").length > 0
                                 })}
                                 onClick={goBUGDetail}
                             >
@@ -294,8 +299,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         setFoucsedKey,
         onJump,
         onlyJump,
-        wrapClassName,
-        bugId
+        wrapClassName
     } = props
     const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
@@ -401,7 +405,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             onExpanded={handleExpand}
                             setFoucsedKey={setFoucsedKey}
                             onJump={onJump}
-                            bugId={bugId}
                         />
                     )
                 }}
@@ -432,7 +435,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     const [isShowEmpty, setShowEmpty] = useState<boolean>(false)
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
-    const [refreshTree, setRefreshTree] = useState<boolean>(false)
+    const [refreshTree, setRefreshTree, getRefreshTree] = useGetState<boolean>(false)
     const [removeVisible, setRemoveVisible] = useState<boolean>(false)
     /** 子组件方法传递给父组件 */
     const auditHistoryListRef = useRef<AuditHistoryListRefProps>(null)
@@ -653,7 +656,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         setMapAuditChildDetail(TopId, messageIds)
                     }
                     setMapAuditChildDetail("/", [...topIds, ...variableIds])
-                    setRefreshTree(!refreshTree)
+                    setRefreshTree(!getRefreshTree())
                 } else {
                     setShowEmpty(true)
                 }
@@ -785,42 +788,40 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         }
     }, [pageInfo])
 
-    const [bugId, setBugId] = useState<string>()
     const onJump = useMemoizedFn((node: AuditNodeProps) => {
-        // 预留打开BUG详情
-        if (node.ResourceType === "variable" && node.VerboseType === "alert") {
-            try {
-                const arr = node.Extra.filter((item) => item.Key === "risk_hash")
-                if (arr.length > 0) {
-                    const hash = arr[0].Value
-                    setBugId(node.id)
+        try {
+            const arr = node.Extra.filter((item) => item.Key === "risk_hash")
+            if (arr.length > 0 && node.isBug) {
+                const hash = arr[0]?.Value
+                if (hash) {
                     emiter.emit("onCodeAuditOpenBugDetail", hash)
                     emiter.emit("onCodeAuditOpenBottomDetail", JSON.stringify({type: "holeDetail"}))
                 }
-            } catch (error) {
-                failed(`打开错误${error}`)
             }
-        }
-        if (node.ResourceType === "value") {
-            setBugId(undefined)
-            emiter.emit("onCodeAuditOpenBugDetail", "")
-            let rightParams: AuditEmiterYakUrlProps = {
-                Schema: "syntaxflow",
-                Location: projectName || "",
-                Path: node.id,
-                Body: auditRule
+            if (arr.length === 0) {
+                emiter.emit("onCodeAuditOpenBugDetail", "")
             }
-            if (pageInfo) {
-                const {...rest} = pageInfo
-                rightParams = {
-                    ...rest,
-                    Path: node.id
+            if (node.ResourceType === "value") {
+                let rightParams: AuditEmiterYakUrlProps = {
+                    Schema: "syntaxflow",
+                    Location: projectName || "",
+                    Path: node.id,
+                    Body: auditRule
                 }
+                if (pageInfo) {
+                    const {...rest} = pageInfo
+                    rightParams = {
+                        ...rest,
+                        Path: node.id
+                    }
+                }
+                if (node.query) {
+                    rightParams.Query = node.query
+                }
+                emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
             }
-            if (node.query) {
-                rightParams.Query = node.query
-            }
-            emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
+        } catch (error) {
+            failed(`打开错误${error}`)
         }
     })
 
@@ -939,7 +940,6 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         foucsedKey={foucsedKey}
                                         setFoucsedKey={setFoucsedKey}
                                         onJump={onJump}
-                                        bugId={bugId}
                                     />
                                 )}
                             </>
@@ -2036,15 +2036,20 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                 record.Recompile ? "该项目是由旧引擎编译，现在编译规则已更新，建议重新编译" : "重新编译"
                             }
                         >
-                            <Badge dot={record.Recompile} style={{top: 6, right: 7}}>
-                                <YakitButton
-                                    type='text'
-                                    icon={<OutlineReloadScanIcon />}
-                                    onClick={() => {
-                                        setAfreshName(record.Name)
-                                    }}
-                                />
-                            </Badge>
+                            <YakitPopconfirm
+                                title={
+                                    <>
+                                        重新编译将会删掉该项目所有数据后再编译,
+                                        <br />
+                                        请问是否重新编译？
+                                    </>
+                                }
+                                onConfirm={() => setAfreshName(record.Name)}
+                            >
+                                <Badge dot={record.Recompile} style={{top: 6, right: 7}}>
+                                    <YakitButton type='text' icon={<OutlineReloadScanIcon />} />
+                                </Badge>
+                            </YakitPopconfirm>
                         </Tooltip>
 
                         <Tooltip title={"代码扫描"}>
@@ -2057,7 +2062,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                                         JSON.stringify({
                                             route: YakitRoute.YakRunner_Code_Scan,
                                             params: {
-                                                projectName: [record.Name]
+                                                projectName: [record.Name],
+                                                selectGroupListByKeyWord: [record.Language]
                                             }
                                         })
                                     )
