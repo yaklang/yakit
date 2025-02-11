@@ -8,6 +8,16 @@ const events = require("events")
 const fs = require("fs")
 const path = require("path")
 const {loadExtraFilePath} = require("../../filePath")
+const {HttpsProxyAgent} = require("hpagent")
+
+const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
+
+const agent = !!add_proxy
+    ? new HttpsProxyAgent({
+          proxy: add_proxy,
+          rejectUnauthorized: false // 忽略 HTTPS 错误
+      })
+    : undefined
 
 const ossDomains = [
     "oss-qn.yaklang.com",
@@ -74,7 +84,10 @@ async function getAvailableOSSDomain() {
                 const url = `https://${domain}/yak/latest/version.txt`
                 try {
                     console.info(`start to do axios.get to ${url}`)
-                    const response = await axios.get(url, {httpsAgent: getHttpsAgentByDomain(domain)})
+                    const response = await axios.get(url, {
+                        httpsAgent: getHttpsAgentByDomain(domain),
+                        ...(agent ? {httpsAgent: agent, proxy: false} : {})
+                    })
                     if (response.status !== 200) {
                         console.error(`Failed to access (StatusCode) ${url}: ${response.status}`)
                         continue
@@ -155,21 +168,30 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
 const fetchLatestYakEngineVersion = async () => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/yak/latest/version.txt`
-    return axios.get(versionUrl, {httpsAgent: getHttpsAgentByDomain(domain)}).then((response) => {
-        const versionData = `${response.data}`.trim()
-        if (versionData.length > 0) {
-            return versionData.startsWith("v") ? versionData : `v${versionData}`
-        } else {
-            throw new Error("Failed to fetch version data")
-        }
-    })
+    return axios
+        .get(versionUrl, {
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? {httpsAgent: agent, proxy: false} : {})
+        })
+        .then((response) => {
+            const versionData = `${response.data}`.trim()
+            if (versionData.length > 0) {
+                return versionData.startsWith("v") ? versionData : `v${versionData}`
+            } else {
+                throw new Error("Failed to fetch version data")
+            }
+        })
 }
 /** 获取最新 yakit 版本号 */
 const fetchLatestYakitVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
     return axios
-        .get(versionUrl, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(domain)})
+        .get(versionUrl, {
+            ...(requestConfig || {}),
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? {httpsAgent: agent, proxy: false} : {})
+        })
         .then((response) => {
             const versionData = `${response.data}`.trim()
             if (versionData.length > 0) {
@@ -184,7 +206,11 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/vip/latest/yakit-version.txt`
     return axios
-        .get(versionUrl, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(domain)})
+        .get(versionUrl, {
+            ...(requestConfig || {}),
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? {httpsAgent: agent, proxy: false} : {})
+        })
         .then((response) => {
             const versionData = `${response.data}`.trim()
             if (versionData.length > 0) {

@@ -1,5 +1,4 @@
-import {UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
-import {setRemoteValue} from "@/utils/kv"
+import {UserInfoProps} from "@/store"
 import {loginOutLocal} from "@/utils/login"
 import {failed} from "@/utils/notification"
 import {AxiosRequestConfig, AxiosResponse} from "./axios"
@@ -37,7 +36,7 @@ export function NetWorkApi<T, D>(params: requestConfig<T>): Promise<D> {
             .invoke("axios-api", params)
             .then((res) => {
                 // 埋点接口 不论结果如何 不可影响页面及交互
-                if(params.url==="tourist"&&params.method==="POST"){
+                if (params.url === "tourist" && params.method === "POST") {
                     resolve("" as any)
                     return
                 }
@@ -79,7 +78,7 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
 export const tokenOverdue = (res) => {
     if (res.userInfo) loginOutLocal(res.userInfo)
     // 异常过期 无法通过接口更新连接状态 故只作退出远程处理
-    ipcRenderer.invoke("lougin-out-dynamic-control",{loginOut:false})
+    ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
     globalUserLogout()
     failed("401,登录过期/未登录，请重新登录")
 }

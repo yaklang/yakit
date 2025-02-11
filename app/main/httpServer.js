@@ -3,6 +3,7 @@ const https = require("https")
 const {ipcMain} = require("electron")
 const {USER_INFO, HttpSetting} = require("./state")
 const url = require("url")
+const {HttpsProxyAgent} = require("hpagent")
 
 // 请求超时时间
 const DefaultTimeOut = 30 * 1000
@@ -34,12 +35,23 @@ ipcMain.on("sync-edit-baseUrl", (event, arg) => {
     event.returnValue = arg
 })
 
+const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
+const agent = !!add_proxy
+    ? new HttpsProxyAgent({
+          proxy: add_proxy,
+          rejectUnauthorized: false // 忽略 HTTPS 错误
+      })
+    : new https.Agent({
+          rejectUnauthorized: false // 忽略 HTTPS 错误
+      })
+
 const service = axios.create({
     // baseURL: "http://onlinecs.vaiwan.cn/api/",
     baseURL: `${HttpSetting.httpBaseURL}/api/`,
     timeout: DefaultTimeOut, // 请求超时时间
     maxBodyLength: Infinity, //设置适当的大小
-    httpsAgent: new https.Agent({rejectUnauthorized: false}) // 忽略 HTTPS 错误
+    httpsAgent: agent,
+    proxy: false
 })
 
 // request拦截器,拦截每一个请求加上请求头
@@ -94,6 +106,14 @@ service.interceptors.response.use(
         if (error.response && error.response.status === 501 && error.response.data) {
             const res = {
                 code: 501,
+                message: error.response.data,
+                userInfo: USER_INFO
+            }
+            return Promise.resolve(res)
+        }
+        if (error.response && error.response.status && error.response.data) {
+            const res = {
+                code: error.response.status,
                 message: error.response.data,
                 userInfo: USER_INFO
             }
