@@ -163,7 +163,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         setAllTotal && setAllTotal(tableTotal)
     }, [tableTotal])
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         const newParams: QuerySSARisksRequest = {
             Pagination: {
                 ...tableParams.Pagination,
