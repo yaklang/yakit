@@ -1,4 +1,11 @@
 $fileDivHeight: 64px;
+.file-custom-block {
+    position: relative;
+    border-radius: 4px;
+}
+.file-custom-diff-history-block {
+    padding: 4px;
+}
 .file-custom {
     display: flex;
     width: 400px;
@@ -149,5 +156,23 @@ $fileDivHeight: 64px;
             margin-left: 0;
             margin-top: 2px;
         }
+    }
+}
+
+.file-diff-history {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 20px);
+    top: 0;
+    left: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+        width: 42px;
+        height: 42px;
     }
 }

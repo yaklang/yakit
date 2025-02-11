@@ -9,6 +9,7 @@
 @use "./blockquote.scss";
 @use "./table.scss";
 @use "./cursor.scss";
+@use "./historyDiff.scss";
 
 .milkdown {
     overscroll-behavior: none;

@@ -23,8 +23,8 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import numeral from "numeral"
 import classNames from "classnames"
 import {TooltipIcon} from "../Tooltip/Tooltip"
-import {useMemoizedFn} from "ahooks"
-import {SolidXcircleIcon} from "@/assets/icon/solid"
+import {useCreation, useMemoizedFn} from "ahooks"
+import {SolidXIcon, SolidXcircleIcon} from "@/assets/icon/solid"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import React from "react"
 import {SolidCloudDownloadIcon} from "@/assets/newIcon"
@@ -38,6 +38,8 @@ import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {getYChangeType} from "../utils/historyPlugin"
+import {YChange} from "../MilkdownEditorType"
 
 interface CustomFileItem {
     name: string
@@ -108,6 +110,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                 setFileInfo(item)
                 onUpload(path)
             })
+        } else {
+            setQueryFileErrorInfo("文件信息不存在")
         }
     }, [attrs.fileId, attrs.uploadUserId])
     const {onStart: onStartUpload, onCancel: onUploadCancel} = useUploadOSSHooks({
@@ -156,6 +160,8 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                         setLoadingRefresh(false)
                     }, 200)
                 )
+        } else {
+            setQueryFileErrorInfo("文件信息不存在")
         }
     })
     const onUpload = (filePath) => {
@@ -275,8 +281,14 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             </Tooltip>
         )
     })
+    const ychange: YChange = useCreation(() => attrs.ychange, [attrs])
     return (
-        <>
+        <div
+            className={classNames(styles["file-custom-block"], {
+                [styles["file-custom-diff-history-block"]]: ychange
+            })}
+            style={{color: ychange ? ychange.color?.dark : ""}}
+        >
             <div
                 contentEditable={false}
                 className={classNames(styles["file-custom"], {
@@ -377,6 +389,22 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     />
                 )}
             </div>
+            {ychange && (
+                <>
+                    <span className='ychange-hover' style={{backgroundColor: ychange.color?.dark}}>{`${
+                        ychange.user
+                    } ${getYChangeType(ychange)}`}</span>
+
+                    <div
+                        contentEditable={false}
+                        className={classNames(styles["file-diff-history"])}
+                        style={{backgroundColor: ychange.color?.light}}
+                    >
+                        {ychange.type === "removed" && <SolidXIcon />}
+                    </div>
+                </>
+            )}
+
             {downFileInfo && (
                 <DownFilesModal
                     url={downFileInfo.url}
@@ -389,7 +417,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     isEncodeURI={false}
                 />
             )}
-        </>
+        </div>
     )
 }
 

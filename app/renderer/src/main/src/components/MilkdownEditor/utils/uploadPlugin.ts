@@ -1,6 +1,7 @@
 import {$command, $nodeSchema, $nodeAttr} from "@milkdown/utils"
 import {Attrs} from "@milkdown/kit/prose/model"
 import {TextSelection} from "@milkdown/kit/prose/state"
+import {calcYchangeDomAttrs} from "./historyPlugin"
 
 export const fileCustomId = "file-custom"
 export const fileCustomAttr = $nodeAttr("file-custom", () => ({
@@ -38,7 +39,7 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
             "data-notepad-hash": node.attrs.notepadHash,
             "data-upload-user-id": node.attrs.uploadUserId
         }
-        return ["div", {...attrs}]
+        return ["div", {...attrs, ...calcYchangeDomAttrs(node.attrs, attrs)}]
     },
 
     parseMarkdown: {
@@ -81,7 +82,8 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
         fileId: {default: "0"},
         path: {default: ""},
         notepadHash: {default: ""},
-        uploadUserId: {default: 0}
+        uploadUserId: {default: 0},
+        ychange: {default: null}
     }
 }))
 

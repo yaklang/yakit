@@ -1,0 +1,43 @@
+.milkdown {
+    [ychange_type] {
+        position: relative;
+    }
+    .ychange-hover {
+        display: none;
+    }
+    *:hover > .ychange-hover {
+        position: absolute;
+        top: -24px;
+        left: 0;
+        font-size: 12px;
+        padding: 0px 8px;
+        border-radius: 4px 4px 4px 0px;
+        color: #ffffff;
+        user-select: none;
+        word-break: normal;
+
+        font-weight: 600;
+        height: 24px;
+        width: max-content;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    ychange[ychange_type="removed"],
+    p[ychange_type="removed"] {
+        text-decoration: line-through;
+    }
+    /*
+      p[ychange_type='removed'] > span > br {
+        display: none;
+      }
+      */
+    *:not(ychange)[ychange_type="removed"] {
+        background-color: var(--yakit-danger-5);
+        color: inherit !important;
+    }
+    img[ychange_type="removed"] {
+        padding: 2px;
+    }
+}

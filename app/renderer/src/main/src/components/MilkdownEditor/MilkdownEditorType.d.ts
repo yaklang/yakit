@@ -78,3 +78,9 @@ export interface DeleteOSSFileItem {
     fileName: string
     time: number
 }
+
+export interface YChange {
+    user: string | null
+    type: "removed" | "added" | null
+    color: {light: string; dark: string} | null
+}
