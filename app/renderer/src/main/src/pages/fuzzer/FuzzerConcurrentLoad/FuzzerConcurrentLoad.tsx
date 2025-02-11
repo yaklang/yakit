@@ -15,15 +15,28 @@ const lineDefaultOption: echarts.EChartsOption = {
         type: "category",
         data: []
     },
+    grid: {
+        left: "20%"
+    },
     yAxis: {
         type: "value",
         nameLocation: "end",
-        nameGap: 30, // 设置名称与轴线之间的间距
+        nameGap: 30,
         nameTextStyle: {
             fontSize: 16,
             fontWeight: "bold",
             padding: [0, 0, 0, 0],
             align: "left"
+        },
+        axisLabel: {
+            formatter: function (value) {
+                // 如果值大于等于 1,000,000,000,000 使用科学计数法
+                if (value >= 1e12) {
+                    return value.toExponential(2) // 使用科学计数法，保留两位有效数字
+                }
+                // 否则返回原值
+                return value.toString()
+            }
         }
     },
     series: [
@@ -136,7 +149,8 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
             }
         },
         legend: {
-            top: "0%",
+            top: "3%",
+            left: "45%",
             data: ["TLS握手", "TCP连接", "总时长"]
         },
         xAxis: [
@@ -146,6 +160,9 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
                 data: []
             }
         ],
+        grid: {
+            left: "20%" // 增加左侧的空白区域
+        },
         yAxis: [
             {
                 type: "value",
@@ -157,6 +174,16 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
                     fontWeight: "bold",
                     padding: [0, 0, 0, 0],
                     align: "left"
+                },
+                axisLabel: {
+                    formatter: function (value) {
+                        // 如果值大于等于 1,000,000,000,000 使用科学计数法
+                        if (value >= 1e12) {
+                            return value.toExponential(2) // 使用科学计数法，保留两位有效数字
+                        }
+                        // 否则返回原值
+                        return value.toString()
+                    }
                 }
             }
         ],
