@@ -166,7 +166,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 RuleVerbose: []
             },
             Page: 1,
-            Limit: 10000
+            Limit: 10,
+            OnlyName: true
         }
         ipcRenderer
             .invoke("QueryMITMRuleExtractedData", newParams)
