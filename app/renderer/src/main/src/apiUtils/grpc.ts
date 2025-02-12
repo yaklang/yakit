@@ -1,6 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc, APINoRequestFunc, APIOptionalFunc} from "./type"
-import {isCommunityEdition} from "@/utils/envfile"
+import {getReleaseEditionName} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -14,7 +14,7 @@ export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps
         ipcRenderer
             .invoke("fetch-latest-yakit-version", {
                 config: config,
-                isEnterprise: !isCommunityEdition()
+                releaseEditionName: getReleaseEditionName()
             })
             .then(resolve)
             .catch((e) => {
