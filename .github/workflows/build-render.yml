@@ -1,0 +1,62 @@
+name: Build-render-To-OSS
+# 社区版
+
+on:
+    push:
+        branches:
+            - "release-render"
+
+jobs:
+    build_yakit:
+        runs-on: ubuntu-latest
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+                  # 缓存 yarn 依赖包 ↓↓↓
+                  cache: "yarn"
+                  cache-dependency-path: app/renderer/src/main/yarn.lock
+
+            - run: echo ${{ github.ref }}
+
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Install Render Dependencies"
+              run: yarn install-render
+              working-directory: ./
+
+            - name: "Build CE Render"
+              working-directory: ./
+              run: yarn build-render
+            - name: "zip CE Render"
+              run: zip -r ./app/renderer/ce.zip ./app/renderer/pages && rm -rf ./app/renderer/pages
+
+            - name: "Show Folder"
+              run: ls ./app/renderer
+
+            - name: "Build EE Render"
+              working-directory: ./
+              run: yarn build-render-ee
+            - name: "zip EE Render"
+              run: zip -r ./app/renderer/ee.zip ./app/renderer/pages
+
+            - name: View Published Content
+              run: ls ./app/renderer
+
+            # - name: Upload Render to oss
+            #   uses: tvrcgo/upload-to-oss@master
+            #   with:
+            #       key-id: ${{ secrets.OSS_KEY_ID }}
+            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
+            #       region: oss-accelerate
+            #       bucket: yaklang
+            #       assets: |
+            #           ./app/renderer/ce.zip:/yak/render/ce.zip
+            #           ./app/renderer/ee.zip:/yak/render/ee.zip
