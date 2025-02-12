@@ -457,7 +457,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         const {RuntimeID} = query
         let removeQuery: DeleteSSARisksRequest = {
             Filter: {
-                RuntimeID
+                RuntimeID,
+                ...tableParams.Filter
             }
         }
         if (!allCheck && selectList.length > 0) {
