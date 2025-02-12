@@ -8,6 +8,8 @@ const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
     fetchLatestYakitVersion,
+    fetchLatestYakitSastScanVersion,
+    fetchLatestYakitSastScanEEVersion,
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
@@ -43,9 +45,17 @@ module.exports = (win, getClient) => {
 
     /** 获取Yakit最新版本号 */
     const asyncFetchLatestYakitVersion = (params) => {
-        const {config, isEnterprise} = params
+        const {config, releaseEditionName} = params
         return new Promise((resolve, reject) => {
-            const fetchPromise = isEnterprise ? fetchLatestYakitEEVersion : fetchLatestYakitVersion
+            const versionFetchers = {
+                Yakit: fetchLatestYakitVersion,
+                EnpriTrace: fetchLatestYakitEEVersion,
+                SastScan: fetchLatestYakitSastScanVersion,
+                "SS-EnpriTrace": fetchLatestYakitSastScanEEVersion
+            }
+            const fetchPromise = versionFetchers[releaseEditionName]
+                ? versionFetchers[releaseEditionName]
+                : fetchLatestYakitEEVersion
             fetchPromise(config)
                 .then((version) => {
                     resolve(version)

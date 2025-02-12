@@ -225,6 +225,44 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
             }
         })
 }
+/** 获取最新 SAST Scan 版本号 */
+const fetchLatestYakitSastScanVersion = async (requestConfig) => {
+    const domain = await getAvailableOSSDomain()
+    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
+    return axios
+        .get(versionUrl, {
+            ...(requestConfig || {}),
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? {httpsAgent: agent, proxy: false} : {})
+        })
+        .then((response) => {
+            const versionData = `${response.data}`.trim()
+            if (versionData.length > 0) {
+                return versionData.startsWith("v") ? versionData : `v${versionData}`
+            } else {
+                throw new Error("Failed to fetch version data")
+            }
+        })
+}
+/** 获取最新 SAST Scan EE版本号 */
+const fetchLatestYakitSastScanEEVersion = async (requestConfig) => {
+    const domain = await getAvailableOSSDomain()
+    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
+    return axios
+        .get(versionUrl, {
+            ...(requestConfig || {}),
+            httpsAgent: getHttpsAgentByDomain(domain),
+            ...(agent ? {httpsAgent: agent, proxy: false} : {})
+        })
+        .then((response) => {
+            const versionData = `${response.data}`.trim()
+            if (versionData.length > 0) {
+                return versionData.startsWith("v") ? versionData : `v${versionData}`
+            } else {
+                throw new Error("Failed to fetch version data")
+            }
+        })
+}
 /** 引擎下载地址 */
 const getYakEngineDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
@@ -349,6 +387,8 @@ module.exports = {
     fetchLatestYakEngineVersion,
     fetchLatestYakitVersion,
     fetchLatestYakitEEVersion,
+    fetchLatestYakitSastScanVersion,
+    fetchLatestYakitSastScanEEVersion,
     downloadYakitCommunity,
     downloadYakEngine,
     downloadYakitEE,
