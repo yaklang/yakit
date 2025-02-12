@@ -147,6 +147,7 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
+import useGetSetState from "../pluginHub/hooks/useGetSetState"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -614,11 +615,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     // 切换【配置】/【规则】高级内容显示 type
-    const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
-    const advancedConfigShowTypeRef = useRef<WebFuzzerType>(advancedConfigShowType)
-    useEffect(() => {
-        advancedConfigShowTypeRef.current = advancedConfigShowType
-    }, [advancedConfigShowType])
+    const [advancedConfigShowType, setAdvancedConfigShowType, getAdvancedConfigShowType] = useGetSetState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -1168,7 +1165,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedBuffer.push(r)
             }
-            if (inViewportRef.current && advancedConfigShowTypeRef.current !== "sequence" && r.Count) {
+            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence" && r.Count) {
                 fuzzerResChartDataBuffer.push({
                     Count: r.Count,
                     TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
