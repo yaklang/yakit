@@ -15,9 +15,8 @@ import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {safeFormatDownloadProcessState} from "../utils"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
-import {grpcFetchLatestOSSDomain, grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
+import {grpcFetchBuildInYakVersion, grpcFetchLatestOSSDomain, grpcFetchLatestYakVersion} from "@/apiUtils/grpc"
 import emiter from "@/utils/eventBus/eventBus"
-import {WebsiteGV} from "@/enums/website"
 import {setClipboardText} from "@/utils/clipboard"
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
@@ -46,8 +45,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-and-arch").then((e: string) => setPlatformArch(e))
-        ipcRenderer
-            .invoke("GetBuildInEngineVersion")
+        grpcFetchBuildInYakVersion(true)
             .then((ver) => setBuildInEngineVersion(ver))
             .catch(() => {})
     }, [])
@@ -638,7 +636,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
     const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
     const draggleRef = useRef<HTMLDivElement>(null)
 
-    const [ossDomain, setOSSDomain] = useState<string>("");
+    const [ossDomain, setOSSDomain] = useState<string>("")
 
     useEffect(() => {
         grpcFetchLatestOSSDomain().then(setOSSDomain)

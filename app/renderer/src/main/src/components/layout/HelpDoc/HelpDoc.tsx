@@ -7,6 +7,7 @@ import {useMemoizedFn} from "ahooks"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
 import {WebsiteGV} from "@/enums/website"
+import {SystemInfo} from "@/constants/hardware"
 
 import classNames from "classnames"
 import styles from "./HelpDoc.module.scss"
@@ -15,13 +16,12 @@ const {ipcRenderer} = window.require("electron")
 
 interface HelpDocProps {
     system: YakitSystem
-    arch: string
     engineLink: boolean
 }
 
 /** @name Yakit软件更新下载弹窗 */
 export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
-    const {system, arch, engineLink} = props
+    const {system, engineLink} = props
 
     const [currentYakit, setCurrentYakit] = useState<string>("")
     const [currentYaklang, setCurrentYaklang] = useState<string>("")
@@ -29,12 +29,12 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     const info = useMemo(() => {
         const info: LocalInfoProps = {
             system: system,
-            arch: arch,
+            arch: SystemInfo.architecture || "",
             localYakit: currentYakit,
             localYaklang: currentYaklang
         }
         return info
-    }, [system, arch, currentYakit, currentYaklang])
+    }, [system, currentYakit, currentYaklang])
 
     useEffect(() => {
         grpcFetchLocalYakitVersion(true)

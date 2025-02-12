@@ -1,14 +1,23 @@
-import {SetStateAction, useRef, useState} from "react"
+import {Dispatch, SetStateAction, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
+
+type GetStateAction<S> = () => S
+
+function useGetSetState<S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>, GetStateAction<S>]
+function useGetSetState<S = undefined>(): [
+    S | undefined,
+    Dispatch<SetStateAction<S | undefined>>,
+    GetStateAction<S | undefined>
+]
 
 /**
  * @description 在设置值时，注意对象类型使用的是引用
  */
-function useGetSetState<T>(target: T): [T, (initState: SetStateAction<T>) => void, () => T] {
-    const [value, setValue] = useState<T>(target)
-    const valueRef = useRef<T>(target)
+function useGetSetState<S>(target?: S) {
+    const [value, setValue] = useState(target)
+    const valueRef = useRef(target)
 
-    const onSetValue = useMemoizedFn((initState: SetStateAction<T>) => {
+    const onSetValue = useMemoizedFn((initState: SetStateAction<S>) => {
         try {
             if (typeof initState === "function") {
                 setValue((old) => {

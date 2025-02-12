@@ -156,7 +156,7 @@ function yakitCancelRequestWithProgress() {
     return new Promise((resolve, reject) => {
         if (writer) {
             writer.on("close", () => {
-                reject(new Error("Write operation cancelled"))
+                reject(new Error("Write operation stoped"))
             })
             writer.destroy(new Error("Write operation cancelled"))
         } else {
