@@ -16,7 +16,8 @@ const lineDefaultOption: echarts.EChartsOption = {
         data: []
     },
     grid: {
-        left: "20%"
+        left: "15%",
+        right: "2%"
     },
     yAxis: {
         type: "value",
@@ -30,8 +31,8 @@ const lineDefaultOption: echarts.EChartsOption = {
         },
         axisLabel: {
             formatter: function (value) {
-                // 如果值大于等于 1,000,000,000,000 使用科学计数法
-                if (value >= 1e12) {
+                // 如果值大于等于 1,000,000,000 使用科学计数法
+                if (value >= 1e9) {
                     return value.toExponential(2) // 使用科学计数法，保留两位有效数字
                 }
                 // 否则返回原值
@@ -161,7 +162,8 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
             }
         ],
         grid: {
-            left: "20%" // 增加左侧的空白区域
+            left: "15%", // 增加左侧的空白区域
+            right: "2%"
         },
         yAxis: [
             {
@@ -177,8 +179,8 @@ const RequestDelayStackedAreaChart: React.FC<RequestDelayStackedAreaChartProps> 
                 },
                 axisLabel: {
                     formatter: function (value) {
-                        // 如果值大于等于 1,000,000,000,000 使用科学计数法
-                        if (value >= 1e12) {
+                        // 如果值大于等于 1,000,000,000 使用科学计数法
+                        if (value >= 1e9) {
                             return value.toExponential(2) // 使用科学计数法，保留两位有效数字
                         }
                         // 否则返回原值
