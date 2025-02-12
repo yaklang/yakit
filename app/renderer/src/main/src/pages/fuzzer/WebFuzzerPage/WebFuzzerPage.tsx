@@ -110,6 +110,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         switch (key) {
             case "sequence":
                 onSetSequence()
+                // 发送到HTTPFuzzerPage组件中 选中type
+                emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
                 break
             default:
                 // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】

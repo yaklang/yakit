@@ -4631,6 +4631,9 @@ message FuzzerResponse {
   int64 DNSDurationMs = 40;
   int64 FirstByteDurationMs = 41;
   int64 TotalDurationMs = 42;
+  int64 TLSHandshakeDurationMs = 56;
+  int64 TCPDurationMs = 57;
+  int64 ConnectDurationMs = 58;
 
   // 给一个随机 ID
   string UUID = 9;
@@ -5259,6 +5262,9 @@ message TraceInfo {
   int64 DNSDurationMs = 3; // DNSTime
   int64 ConnDurationMs = 4; // ConnTime
   int64 TotalDurationMs = 5; // TotalTime
+  int64 TLSHandshakeDurationMs = 6;
+  int64 TCPDurationMs = 7;
+  int64 ConnectDurationMs = 8;
 }
 
 message YakScriptHooks {
