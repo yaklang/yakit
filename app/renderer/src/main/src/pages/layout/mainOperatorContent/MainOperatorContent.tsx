@@ -2345,6 +2345,11 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                     : "8px 16px 13px 16px"
                         }}
                         className={styles["page-body"]}
+                        id={
+                            currentTabKey === pageItem.routeKey
+                                ? "main-operator-page-body-current"
+                                : "main-operator-page-body-" + pageItem.routeKey
+                        }
                     >
                         {pageItem.singleNode ? (
                             <React.Suspense fallback={<>loading page ...</>}>

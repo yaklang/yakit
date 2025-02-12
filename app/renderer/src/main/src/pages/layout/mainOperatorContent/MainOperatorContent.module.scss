@@ -596,6 +596,16 @@ $keyColor: map-keys($colors);
     // overflow: hidden;
     overflow-y: overlay;
     overflow-x: hidden;
+    
+    position: relative;
+    :global {
+        .ant-modal-mask {
+            position: absolute;
+        }
+        .ant-modal-wrap {
+            position: absolute;
+        }
+    }
 }
 
 .toolTip-overlay {

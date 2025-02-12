@@ -340,6 +340,7 @@ export interface HTTPFlowTableProp {
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
+    importRefresh?: boolean
     httpHistoryTableTitleStyle?: React.CSSProperties
     historyId?: string
     // 筛选控件隐藏
@@ -675,6 +676,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setOnlyShowFirstNode,
         inViewport = true,
         refresh,
+        importRefresh,
         onlyShowSearch = false,
         pageType,
         historyId,
@@ -3415,6 +3417,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             updateData()
         }, 100)
     })
+    /**@description 导入重置查询条件并刷新 */
+    const onImportResetRefresh = useMemoizedFn(() => {
+        sortRef.current = defSort
+        const newParams: YakQueryHTTPFlowRequest = {
+            SourceType: "",
+            ExcludeId: params.ExcludeId,
+            ExcludeInUrl: params.ExcludeInUrl,
+            WithPayload: toWebFuzzer,
+            RuntimeIDs: undefined,
+            RuntimeId: undefined,
+            ProcessName: []
+        }
+        setParams(newParams)
+        setIsReset(!isReset)
+        setColor([])
+        setCheckBodyLength(false)
+        refreshTabsContRef.current = true
+        setTimeout(() => {
+            updateData()
+        }, 100)
+    })
+    useUpdateEffect(() => {
+        onImportResetRefresh()
+    }, [importRefresh])
+
     /**
      * @description 分享数据包
      * @param ids 分享数据得ids
@@ -3779,7 +3806,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [updateCacheData, data])
 
     return (
-        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div ref={ref as Ref<any>} tabIndex={-1} className={style['http-history-flow-table-wrapper']}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -4175,11 +4202,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ></EditTagsModal>
             {percentVisible && (
                 <ImportExportHttpFlowProgress
+                    getContainer={document.getElementById('main-operator-page-body-current') || undefined}
                     visible={percentVisible}
-                    title='导出HAR'
+                    title='导出HAR流量数据'
                     token={exportToken}
                     apiKey='ExportHTTPFlowStream'
-                    onClose={() => {
+                    onClose={(finish) => {
                         setPercentVisible(false)
                     }}
                 />
@@ -4813,7 +4841,7 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
 declare type getContainerFunc = () => HTMLElement
 interface ImportExportHttpFlowProgressProps {
     visible: boolean
-    onClose: () => void
+    onClose: (finish: boolean) => void
     getContainer?: string | HTMLElement | getContainerFunc | false
     title: string
     token: string
@@ -4854,7 +4882,7 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
     }, [token])
 
     const closeModal = () => {
-        onClose()
+        onClose(importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1)
         cancelImportExportHTTPFlowStream()
     }
     useEffect(() => {

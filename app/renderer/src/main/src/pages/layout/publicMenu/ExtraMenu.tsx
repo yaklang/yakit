@@ -69,7 +69,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                         wrapperCol: {span: 17}
                                     }}
                                     onChange={(val) => {
-                                        console.log(val)
                                         setHistoryharPath(val)
                                         form.setFieldsValue({historyharPath: val})
                                     }}
@@ -211,13 +210,15 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     title='导入HAR流量数据'
                     token={importHistoryharToken}
                     apiKey='ImportHTTPFlowStream'
-                    onClose={() => {
+                    onClose={(finish) => {
                         setPercentVisible(false)
-                        emiter.emit(
-                            "menuOpenPage",
-                            JSON.stringify({route: YakitRoute.DB_HTTPHistory})
-                        )
-                        emiter.emit("onRefreshHistoryTable")
+                        if (finish) {
+                            emiter.emit(
+                                "menuOpenPage",
+                                JSON.stringify({route: YakitRoute.DB_HTTPHistory})
+                            )
+                            emiter.emit("onRefreshImportHistoryTable")
+                        }
                     }}
                 />
             )}
