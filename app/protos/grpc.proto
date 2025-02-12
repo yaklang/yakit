@@ -1723,6 +1723,7 @@ message QueryMITMRuleExtractedDataRequest {
   string HTTPFlowHash = 2;
   string HTTPFlowHiddenIndex = 3;
   ExtractedDataFilter Filter = 4;
+  bool OnlyName = 5;
 }
 
 message ExtractedDataFilter {
