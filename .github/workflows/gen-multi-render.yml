@@ -66,4 +66,7 @@ jobs:
             - name: Upload Multi-Platform Render Zip
               run: |
                   bucket="yaklang"
-                  ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/*.zip:/yak/render/
+                  for arch in ce ee se; do
+                    echo "Start to upload ${arch}.zip"
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${arch}.zip:/yak/render/
+                  done
