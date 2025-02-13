@@ -24,6 +24,7 @@ export interface YakQueryHTTPFlowRequest {
     IncludeSuffix?: string[]
     ExcludeSuffix?: string[]
     ExcludeId?: number[]
+    IncludeId?: number[]
     Tags?: string[]
     HaveParamsTotal?: string
     BeforeUpdatedAt?: number

@@ -783,6 +783,10 @@ service Yak {
   rpc SetMITMHijackFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
   rpc GetMITMHijackFilter(Empty) returns (SetMITMFilterRequest);
   rpc ResetMITMHijackFilter(Empty) returns (SetMITMFilterRequest);
+
+  // HTTPFlow
+  rpc ExportHTTPFlowStream(ExportHTTPFlowStreamRequest) returns(stream ExportHTTPFlowStreamResponse);
+  rpc ImportHTTPFlowStream(ImportHTTPFlowStreamRequest) returns(stream ImportHTTPFlowStreamResponse);
 }
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -6169,4 +6173,25 @@ message UploadHotPatchTemplateToOnlineRequest {
 message DownloadHotPatchTemplateRequest {
   string Name = 1;
   string Type = 2; // fuzzer/mitm
+}
+
+message ExportHTTPFlowStreamRequest {
+    QueryHTTPFlowRequest Filter = 1;
+    repeated string FieldName = 2;
+    string ExportType = 3; // csv/har
+    string TargetPath = 4;
+}
+
+message ExportHTTPFlowStreamResponse {
+    double Percent = 1;
+    string Verbose = 2; 
+}
+
+message ImportHTTPFlowStreamRequest {
+    string InputPath = 1;
+}
+
+message ImportHTTPFlowStreamResponse {
+    double Percent = 1;
+    string Verbose = 2; 
 }

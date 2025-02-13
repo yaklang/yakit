@@ -156,7 +156,7 @@ export interface PluginHubPageInfoProps {
      * @param tabActive 主动跳到详情里的指定 tab 上
      * @description tabActive-如果想打开指定 tab 页面里的指定子 tab，可以使用'/'进行分割，例如：'log/check'，log是主tab，check是子tab
      */
-    detailInfo?: {uuid: string; name: string; tabActive?: string, isCorePlugin?: boolean}
+    detailInfo?: {uuid: string; name: string; tabActive?: string; isCorePlugin?: boolean}
     /**是否刷新列表(传 true-刷新列表和高级筛选, false-刷新列表, 不传不刷新) */
     refeshList?: boolean
     /**是否打开管理分组抽屉 */
@@ -205,6 +205,8 @@ interface PageInfoStoreProps {
 
     selectGroupId: Map<string, string>
 
+    currentPageTabRouteKey: YakitRoute | string
+
     /**设置 pages数据，例如：fuzzer缓存页面；未分组的关闭其他页面只保留当前页面*/
     setPagesData: (key: string, p: PageProps) => void
     /**设置组内的数据，例如:组内的关闭其他页面 */
@@ -244,6 +246,9 @@ interface PageInfoStoreProps {
     getPageInfoByRuntimeId: (routeKey: string, pageId: string) => PageNodeItemProps | undefined
     /**展开或者收起所有的组 isExpand:true展开/false收起*/
     updateGroupExpandOrRetract: (routeKey: string, isExpand: boolean) => void
+    
+    setCurrentPageTabRouteKey: (route: YakitRoute | string) => void
+    getCurrentPageTabRouteKey: () => YakitRoute | string
 }
 export const defPage: PageProps = {
     pageList: [],
@@ -263,6 +268,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
             (set, get) => ({
                 pages: new Map(),
                 selectGroupId: new Map(),
+                currentPageTabRouteKey: "",
 
                 setPagesData: (key, values) => {
                     const newVal = new Map(get().pages).set(key, values)
@@ -451,6 +457,16 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                         ...get(),
                         pages: newPages
                     })
+                },
+                setCurrentPageTabRouteKey: (route: YakitRoute | string) => {
+                    set({
+                        ...get(),
+                        currentPageTabRouteKey: route
+                    })
+                },
+                getCurrentPageTabRouteKey: () => {
+                    const {currentPageTabRouteKey} = get()
+                    return currentPageTabRouteKey
                 }
             }),
             {

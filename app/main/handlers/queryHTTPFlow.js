@@ -413,6 +413,21 @@ module.exports = (win, getClient) => {
         return await asyncExportHTTPFlows(params)
     })
 
+    const handlerHelper = require("./handleStreamWithContext");
+    const streamExportHTTPFlowMap = new Map()
+    ipcMain.handle("cancel-ExportHTTPFlowStream", handlerHelper.cancelHandler(streamExportHTTPFlowMap))
+    ipcMain.handle("ExportHTTPFlowStream", (e, params, token) => {
+        let stream = getClient().ExportHTTPFlowStream(params)
+        handlerHelper.registerHandler(win, stream, streamExportHTTPFlowMap, token)
+    })
+
+    const streamImportHTTPFlowMap = new Map()
+    ipcMain.handle("cancel-ImportHTTPFlowStream", handlerHelper.cancelHandler(streamImportHTTPFlowMap))
+    ipcMain.handle("ImportHTTPFlowStream", (e, params, token) => {
+        let stream = getClient().ImportHTTPFlowStream(params)
+        handlerHelper.registerHandler(win, stream, streamImportHTTPFlowMap, token)
+    })
+
     const asyncHTTPFlowsToOnline = (params) => {
         return new Promise((resolve, reject) => {
             getClient().HTTPFlowsToOnline(params, (err, data) => {
