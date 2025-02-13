@@ -141,8 +141,63 @@ export declare namespace API {
         operation: string
         role?: string
     }
+    export interface TouristUsedDetailResponse extends Paging {
+        data: TouristUsedDetail[]
+    }
+    export interface TouristUsedDetailRequest {
+        /**
+         * ip搜索
+         */
+        ip?: string
+        name?: string
+        /**
+         * 自选起始时间
+         */
+        startTime?: number
+        /**
+         * 自选结束时间
+         */
+        endTime?: number
+        afterId?: number
+        beforeId?: number
+    }
+    export interface TouristUsedDetail extends GormBaseModel {
+        userName?: string
+        ip: string
+        totalRequestTimes: string
+    }
+    export interface TouristTimesResponse {
+        dayTimes: number
+        /**
+         * 当天时长增率
+         */
+        dayTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        dayTimesGainUpOrDown: string
+        weekTimes: number
+        /**
+         * 本周时长增率
+         */
+        weekTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        weekTimesGainUpOrDown: string
+        monthTimes: number
+        /**
+         * 本月时长增率
+         */
+        monthTimesGain: string
+        /**
+         * up 增 down 减
+         */
+        monthTimesGainUpOrDown: string
+    }
     export interface TouristRequest {
         macCode: string
+        token?: string
     }
     export interface TouristIncrResponse {
         data: TouristIncrDetail[]
@@ -192,7 +247,37 @@ export declare namespace API {
         /**
          * up 增 down 减
          */
-        dayGainUpOrDown?: string
+        dayGainUpOrDown: string
+        /**
+         * 周增量
+         */
+        weekNew: number
+        /**
+         * 周增率
+         */
+        weekGain: string
+        /**
+         * up 增 down 减
+         */
+        weekGainUpOrDown: string
+        /**
+         * 月增量
+         */
+        monthNew: number
+        /**
+         * 月增率
+         */
+        monthGain: string
+        /**
+         * up 增 down 减
+         */
+        monthGainUpOrDown: string
+        /**
+         * 机构总数
+         */
+        institutionTotal: number
+    }
+    export interface TouristActivityRateResponse {
         /**
          * 日活
          */
@@ -206,18 +291,6 @@ export declare namespace API {
          */
         dayActiveGainUpOrDown: string
         /**
-         * 周增量
-         */
-        weekNew: number
-        /**
-         * 周增率
-         */
-        weekGain: string
-        /**
-         * up 增 down 减
-         */
-        weekGainUpOrDown?: string
-        /**
          * 周活
          */
         weekActive: number
@@ -230,18 +303,6 @@ export declare namespace API {
          */
         weekActiveGainUpOrDown: string
         /**
-         * 月增量
-         */
-        monthNew: number
-        /**
-         * 月增率
-         */
-        monthGain: string
-        /**
-         * up 增 down 减
-         */
-        monthGainUpOrDown?: string
-        /**
          * 月活
          */
         monthActive: number
@@ -253,37 +314,6 @@ export declare namespace API {
          * up 增 down 减
          */
         monthActiveGainUpOrDown: string
-        dayTimes: number
-        /**
-         * 当天时长增率
-         */
-        dayTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        dayTimesGainUpOrDown: string
-        weekTimes: number
-        /**
-         * 本周时长增率
-         */
-        weekTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        weekTimesGainUpOrDown: string
-        monthTimes: number
-        /**
-         * 本月时长增率
-         */
-        monthTimesGain: string
-        /**
-         * up 增 down 减
-         */
-        monthTimesGainUpOrDown: string
-        /**
-         * 机构总数
-         */
-        institutionTotal: number
     }
     export interface TouristActiveResponse {
         data: TouristActiveDetail[]
