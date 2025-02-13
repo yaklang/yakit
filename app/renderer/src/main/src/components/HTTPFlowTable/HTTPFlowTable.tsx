@@ -90,6 +90,8 @@ import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {filterColorTag, isCellRedSingleColor, TableCellToColorTag} from "../TableVirtualResize/utils"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -688,6 +690,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         showBatchActions = true,
         downstreamProxyStr = ""
     } = props
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -2573,12 +2581,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
      */
     const [exportToken, setExportToken] = useState<string>("")
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const onHarExport = (ids: number[]) => {
         handleSaveFileSystemDialog({
             title: "保存文件",
             defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
             filters: [
-                {name: "HAR Files", extensions: ["har"]}, // 只允许保存 .har 文件
+                {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
             ]
         }).then((file) => {
             if (!file.canceled) {
@@ -2598,6 +2607,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     ipcRenderer
                         .invoke("ExportHTTPFlowStream", exportParams, token)
                         .then(() => {
+                            percentContainerRef.current = currentPageTabRouteKey
                             setPercentVisible(true)
                         })
                         .catch((error) => {
@@ -3805,8 +3815,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [updateCacheData, data])
 
+    console.log(YakitRoute.DB_HTTPHistory, currentPageTabRouteKey)
+
     return (
-        <div ref={ref as Ref<any>} tabIndex={-1} className={style['http-history-flow-table-wrapper']}>
+        <div ref={ref as Ref<any>} tabIndex={-1} className={style["http-history-flow-table-wrapper"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -4202,13 +4214,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ></EditTagsModal>
             {percentVisible && (
                 <ImportExportHttpFlowProgress
-                    getContainer={document.getElementById('main-operator-page-body-current') || undefined}
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
                     visible={percentVisible}
                     title='导出HAR流量数据'
                     token={exportToken}
                     apiKey='ExportHTTPFlowStream'
                     onClose={(finish) => {
                         setPercentVisible(false)
+                        if (finish) {
+                            yakitNotify("success", "导出成功")
+                        }
                     }}
                 />
             )}
@@ -4871,27 +4888,25 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
             importExportHTTPFlowStreamRef.current.push(data)
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            if (`${error}`.includes(`Cancelled on client`)) {
-                return
-            }
             yakitNotify("error", `error: ${error}`)
+            closeModal()
         })
         return () => {
             cancelImportExportHTTPFlowStream()
         }
     }, [token])
 
-    const closeModal = () => {
+    const closeModal = useMemoizedFn(() => {
         onClose(importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1)
         cancelImportExportHTTPFlowStream()
-    }
+    })
     useEffect(() => {
         if (importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1) {
             setTimeout(() => {
                 closeModal()
             }, 500)
         }
-    }, [importExportHTTPFlowStream])
+    }, [JSON.stringify(importExportHTTPFlowStream)])
 
     return (
         <YakitModal

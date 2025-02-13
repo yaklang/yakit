@@ -261,7 +261,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 menu: [
                     {
                         key: "new-web-fuzzer-tab",
-                        label: "发送到 WebFuzzer",
+                        label: "发送到 Web Fuzzer",
                         children: [
                             {
                                 key: "发送并跳转",
@@ -308,6 +308,9 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     }
                                 })
                                 .then(() => {
+                                    if (!openFlag) {
+                                        info("发送成功")
+                                    }
                                     webFuzzerCallBack && webFuzzerCallBack()
                                 })
                         }
@@ -334,6 +337,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                     downstreamProxyStr,
                                     openFlag: false
                                 }).finally(() => {
+                                    info("发送成功")
                                     webFuzzerCallBack && webFuzzerCallBack()
                                 })
                             }

@@ -60,7 +60,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                 <YakitFormDragger
                                     multiple={false}
                                     isShowPathNumber={false}
-                                    fileExtensionIsExist={false}
+                                    accept='.har'
+                                    help='可将har文件拖入框内或'
                                     selectType='file'
                                     formItemProps={{
                                         name: "historyharPath",
@@ -82,6 +83,10 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                         const formValue = form.getFieldsValue()
                                         if (!formValue.historyharPath) {
                                             yakitNotify("error", "请输入HAR流量数据路径")
+                                            return
+                                        }
+                                        if (!formValue.historyharPath.endsWith(".har")) {
+                                            yakitNotify("error", "仅支持.har格式的文件")
                                             return
                                         }
                                         m.destroy()
@@ -213,10 +218,8 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     onClose={(finish) => {
                         setPercentVisible(false)
                         if (finish) {
-                            emiter.emit(
-                                "menuOpenPage",
-                                JSON.stringify({route: YakitRoute.DB_HTTPHistory})
-                            )
+                            yakitNotify("success", "导入成功")
+                            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
                             emiter.emit("onRefreshImportHistoryTable")
                         }
                     }}
