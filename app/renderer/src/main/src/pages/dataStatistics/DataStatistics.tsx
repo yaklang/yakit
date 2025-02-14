@@ -613,7 +613,12 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
         </div>
     )
 }
-interface TouristUsedDetailRequest extends API.TouristUsedDetailRequest, PaginationSchema {}
+interface TouristUsedDetailRequest extends API.TouristUsedDetailRequest {
+    page: number
+    limit: number
+    order_by: string
+    order: string
+}
 const batchRefreshMenuData: YakitMenuItemProps[] = [
     {
         key: "noResetRefresh",
@@ -727,10 +732,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const [tableQuery, setTableQuery] = useState<TouristUsedDetailRequest>({
         startTime: moment().startOf("day").unix(),
         endTime: moment().endOf("day").unix(),
-        Page: 1,
-        Limit: 20,
-        OrderBy: "updated_at",
-        Order: "desc"
+        page: 1,
+        limit: 20,
+        order_by: "updated_at",
+        order: "desc"
     })
     const [tableResponse, setTableResponse] = useState<API.TouristUsedDetailResponse>({
         data: [],
@@ -808,7 +813,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const update = useMemoizedFn((page: number) => {
         const params: TouristUsedDetailRequest = {
             ...tableQuery,
-            Page: page
+            page
         }
         const isInit = page === 1
         isInitRequestRef.current = false
@@ -867,10 +872,10 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 setTableQuery({
                     startTime: moment().startOf("day").unix(),
                     endTime: moment().endOf("day").unix(),
-                    Page: 1,
-                    Limit: 20,
-                    OrderBy: "updated_at",
-                    Order: "desc"
+                    page: 1,
+                    limit: 20,
+                    order_by: "updated_at",
+                    order: "desc"
                 })
                 break
             default:
