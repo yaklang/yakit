@@ -1,9 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./DataStatistics.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
+import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {UserIcon} from "./icon"
 import {SolidCalendarIcon, SolidTrendingdownIcon, SolidTrendingupIcon} from "@/assets/icon/solid"
@@ -18,9 +18,14 @@ import locale from "antd/es/date-picker/locale/zh_CN"
 import {RangePickerProps} from "antd/lib/date-picker"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {PaginationSchema} from "../invoker/schema"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {isEnpriTrace} from "@/utils/envfile"
 const {RangePicker} = YakitDatePicker
-const {ipcRenderer} = window.require("electron")
 
 // 将分钟转换为小时，并保留两位小数
 const minutesToHours = (minutes: number) => {
@@ -608,6 +613,22 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
         </div>
     )
 }
+interface TouristUsedDetailRequest extends API.TouristUsedDetailRequest {
+    page: number
+    limit: number
+    order_by: string
+    order: string
+}
+const batchRefreshMenuData: YakitMenuItemProps[] = [
+    {
+        key: "noResetRefresh",
+        label: "仅刷新"
+    },
+    {
+        key: "resetRefresh",
+        label: "重置查询条件刷新"
+    }
+]
 type RangeValue = [Moment | null, Moment | null] | null
 type showTypeValue = "day" | "week" | "month" | "year"
 export interface DataStatisticsProps {}
@@ -640,6 +661,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const [cityDate, setCityDate] = useState<number>()
 
     const [activeOrTime, setActiveOrTime] = useState<"active" | "times">("active")
+    const [activeData, setActiveData] = useState<API.TouristActivityRateResponse>()
+    const [timeData, setTimeData] = useState<API.TouristTimesResponse>()
+    const [activeOrTimeLoading, setActiveOrTimeLoading] = useState<boolean>(false)
 
     const getActiveShowType = useMemo(() => {
         return [
@@ -685,8 +709,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
     useEffect(() => {
         getUserData()
-    }, [activeLineParams, activeOrTime])
-
+    }, [])
     const getUserData = useMemoizedFn(() => {
         setLoading(true)
         NetWorkApi<null, API.TouristAndUserResponse>({
@@ -699,6 +722,201 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             .catch((err) => {})
             .finally(() => {
                 setLoading(false)
+            })
+    })
+
+    /** 使用详情 start */
+    const [detailOrIPDistribution, setDetailOrIPDistribution] = useState<"useDetail" | "IPDistribution">(
+        isEnpriTrace() ? "useDetail" : "IPDistribution"
+    )
+    const [tableQuery, setTableQuery] = useState<TouristUsedDetailRequest>({
+        startTime: moment().startOf("day").unix(),
+        endTime: moment().endOf("day").unix(),
+        page: 1,
+        limit: 20,
+        order_by: "updated_at",
+        order: "desc"
+    })
+    const [tableResponse, setTableResponse] = useState<API.TouristUsedDetailResponse>({
+        data: [],
+        pagemeta: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            total_page: 0
+        }
+    })
+    const isInitRequestRef = useRef<boolean>(true)
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [tableLoading, setTableLoading] = useState(false)
+
+    const columns: ColumnsTypeProps[] = [
+        {
+            title: "用户名",
+            dataKey: "userName",
+            filterProps: {
+                filterKey: "name",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+            },
+            render: (text, record) => text || record.ip
+        },
+        {
+            title: "ip",
+            dataKey: "ip",
+            width: 120,
+            filterProps: {
+                filterKey: "ip",
+                filtersType: "input",
+                filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+            }
+        },
+        {
+            title: "最近一次登录时间",
+            dataKey: "updated_at",
+            ellipsis: true,
+            render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
+        },
+        {
+            title: "使用时长",
+            dataKey: "totalRequestTimes",
+            render: (text) => <span>{text}h</span>
+        }
+    ]
+
+    useEffect(() => {
+        if (isEnpriTrace()) {
+            update(1)
+        }
+    }, [])
+
+    const queyChangeUpdateData = useDebounceFn(
+        () => {
+            // 初次不通过此处请求数据
+            if (!isInitRequestRef.current) {
+                update(1)
+            }
+        },
+        {wait: 300}
+    ).run
+    useUpdateEffect(() => {
+        queyChangeUpdateData()
+    }, [tableQuery])
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        const newQuery = {
+            ...tableQuery,
+            ...filter
+        }
+        setTableQuery(newQuery)
+    })
+
+    const update = useMemoizedFn((page: number) => {
+        const params: TouristUsedDetailRequest = {
+            ...tableQuery,
+            page
+        }
+        const isInit = page === 1
+        isInitRequestRef.current = false
+        if (isInit) {
+            setTableLoading(true)
+        }
+        NetWorkApi<TouristUsedDetailRequest, API.TouristUsedDetailResponse>({
+            method: "get",
+            url: "tourist/used/detail",
+            params: {
+                ...params
+            }
+        })
+            .then((res) => {
+                const data = res.data || []
+                const d = isInit ? data : tableResponse.data.concat(data)
+                setTableResponse({
+                    ...res,
+                    data: d
+                })
+                if (isInit) {
+                    setIsRefresh((prevIsRefresh) => !prevIsRefresh)
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取使用详情列表失败：" + e)
+            })
+            .finally(() => {
+                setTableLoading(false)
+            })
+    })
+
+    useUpdateEffect(() => {
+        if (detailOrIPDistribution === "IPDistribution") {
+            onRefreshMenuSelect("resetRefresh")
+        }
+    }, [detailOrIPDistribution])
+
+    const [detailHackValue, setDetailHackValue] = useState<RangeValue>(null)
+    const [detailDates, setDetailDates] = useState<RangeValue>(null)
+    const disabledDetailDate: RangePickerProps["disabledDate"] = (current) => {
+        if (detailDates) {
+            const tooLate = (detailDates[0] && current.diff(detailDates[0], "days") > 30) || false
+            const tooEarly = (detailDates[1] && detailDates[1].diff(current, "days") > 30) || false
+            return current && (current < beginDate || current >= moment().endOf("day") || tooLate || tooEarly)
+        }
+        return current && (current < beginDate || current >= moment().endOf("day"))
+    }
+
+    const onRefreshMenuSelect = (key: string) => {
+        switch (key) {
+            case "noResetRefresh":
+                update(1)
+                break
+            case "resetRefresh":
+                setTableQuery({
+                    startTime: moment().startOf("day").unix(),
+                    endTime: moment().endOf("day").unix(),
+                    page: 1,
+                    limit: 20,
+                    order_by: "updated_at",
+                    order: "desc"
+                })
+                break
+            default:
+                break
+        }
+    }
+    /** 使用详情 end */
+
+    useEffect(() => {
+        if (activeOrTime === "active") {
+            getActivityTourist()
+        } else {
+            getTimeTourist()
+        }
+    }, [activeLineParams, activeOrTime])
+    const getActivityTourist = useMemoizedFn(() => {
+        setActiveOrTimeLoading(true)
+        NetWorkApi<null, API.TouristActivityRateResponse>({
+            url: "tourist/activity/rate",
+            method: "get"
+        })
+            .then((data) => {
+                setActiveData(data)
+            })
+            .catch((err) => {})
+            .finally(() => {
+                setActiveOrTimeLoading(false)
+            })
+    })
+    const getTimeTourist = useMemoizedFn(() => {
+        setActiveOrTimeLoading(true)
+        NetWorkApi<null, API.TouristTimesResponse>({
+            url: "tourist/time/count",
+            method: "get"
+        })
+            .then((data) => {
+                setTimeData(data)
+            })
+            .catch((err) => {})
+            .finally(() => {
+                setActiveOrTimeLoading(false)
             })
     })
 
@@ -864,24 +1082,142 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
                 <div className={styles["v-line"]} />
                 <div className={styles["pie-charts-box"]}>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>IP地理位置分布 Top10</div>
-                        <div className={styles["extra"]}>
-                            {cityDate && (
-                                <>
-                                    <div className={styles["icon"]}>
-                                        <SolidCalendarIcon />
+                    {isEnpriTrace() && (
+                        <YakitRadioButtons
+                            value={detailOrIPDistribution}
+                            onChange={(e) => {
+                                setDetailOrIPDistribution(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "useDetail",
+                                    label: "使用详情"
+                                },
+                                {
+                                    value: "IPDistribution",
+                                    label: "IP分布"
+                                }
+                            ]}
+                        />
+                    )}
+                    <div
+                        className={styles["pie-charts-box-cont"]}
+                        style={{
+                            height: isEnpriTrace() ? "calc(100% - 30px)" : "100%",
+                            paddingTop: detailOrIPDistribution === "useDetail" ? 0 : 8
+                        }}
+                    >
+                        {detailOrIPDistribution === "useDetail" ? (
+                            <div style={{width: "100%", height: "calc(100% - 30px)"}}>
+                                <TableVirtualResize<API.TouristUsedDetail>
+                                    renderKey={"id"}
+                                    loading={tableLoading}
+                                    query={tableQuery}
+                                    isRefresh={isRefresh}
+                                    titleHeight={42}
+                                    title={<div className={styles["text"]}>各账号使用时长统计</div>}
+                                    extra={
+                                        <div className={styles["table-extra"]}>
+                                            <RangePicker
+                                                locale={locale}
+                                                value={
+                                                    detailHackValue || [
+                                                        moment.unix(tableQuery.startTime || moment(today).unix()),
+                                                        moment.unix(tableQuery.endTime || moment(today).unix())
+                                                    ]
+                                                }
+                                                format={getDateFormat("day")}
+                                                allowClear={false}
+                                                disabledDate={disabledDetailDate}
+                                                onOpenChange={(open: boolean) => {
+                                                    if (open) {
+                                                        setDetailHackValue([null, null])
+                                                        setDetailDates([null, null])
+                                                    } else {
+                                                        setDetailHackValue(null)
+                                                    }
+                                                }}
+                                                picker={getPicker("day")}
+                                                onCalendarChange={(val) => setDetailDates(val)}
+                                                onChange={(time) => {
+                                                    const riseDates = time as [Moment, Moment] | null
+
+                                                    if (riseDates) {
+                                                        let firstDate = riseDates[0]
+                                                        let secondDate = riseDates[1]
+                                                        if (firstDate.isBefore(beginDate)) {
+                                                            firstDate = beginDate
+                                                        } else {
+                                                            firstDate = moment(firstDate).startOf("day")
+                                                        }
+                                                        if (secondDate.isSame(today, "day")) {
+                                                            secondDate = today
+                                                        } else {
+                                                            secondDate = moment(secondDate).endOf("day")
+                                                        }
+                                                        setTableQuery((prevTableQuery) => ({
+                                                            ...prevTableQuery,
+                                                            startTime: moment(firstDate).unix(),
+                                                            endTime: moment(secondDate).unix()
+                                                        }))
+                                                    }
+                                                }}
+                                            />
+                                            <YakitDropdownMenu
+                                                menu={{
+                                                    data: batchRefreshMenuData,
+                                                    onClick: ({key}) => {
+                                                        onRefreshMenuSelect(key)
+                                                    }
+                                                }}
+                                                dropdown={{
+                                                    trigger: ["hover"],
+                                                    placement: "bottom"
+                                                }}
+                                            >
+                                                <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                                            </YakitDropdownMenu>
+                                        </div>
+                                    }
+                                    enableDrag={false}
+                                    data={tableResponse.data}
+                                    columns={columns}
+                                    useUpAndDown
+                                    pagination={{
+                                        total: tableResponse.pagemeta.total,
+                                        limit: tableResponse.pagemeta.limit,
+                                        page: tableResponse.pagemeta.page,
+                                        onChange: (page) => {
+                                            update(page)
+                                        }
+                                    }}
+                                    onChange={onTableChange}
+                                ></TableVirtualResize>
+                            </div>
+                        ) : (
+                            <>
+                                <div className={styles["header"]}>
+                                    <div className={styles["title"]}>IP地理位置分布 Top10</div>
+                                    <div className={styles["extra"]}>
+                                        {cityDate && (
+                                            <>
+                                                <div className={styles["icon"]}>
+                                                    <SolidCalendarIcon />
+                                                </div>
+                                                <div className={styles["date"]}>
+                                                    {moment.unix(cityDate).format("YYYY-MM-DD HH:mm:ss")}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    <div className={styles["date"]}>
-                                        {moment.unix(cityDate).format("YYYY-MM-DD HH:mm:ss")}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                    <div className={styles["pie-charts"]}>
-                        {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
-                        <PieEcharts inViewport={inViewport} setCityDate={setCityDate} />
+                                </div>
+                                <div className={styles["pie-charts"]}>
+                                    {/* 放大窗口图表宽度确实会自适应，但是缩小就挂掉了（并不自适应），原因：如果Chart组件的父组件Father采用flex布局 就会出现上述的问题 建议采用百分比*/}
+                                    <PieEcharts inViewport={inViewport} setCityDate={setCityDate} />
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1084,18 +1420,18 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                         </div>
                     </div>
                     <div>
-                        <YakitSpin spinning={loading}>
+                        <YakitSpin spinning={activeOrTimeLoading}>
                             <div className={styles["card-box"]}>
                                 {activeOrTime === "active" ? (
                                     <>
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? numeral(userData.dayActive).format("0,0") : ""}
+                                                    {activeData ? numeral(activeData.dayActive).format("0,0") : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.dayActiveGainUpOrDown}
-                                                    value={userData?.dayActiveGain}
+                                                    type={activeData?.dayActiveGainUpOrDown}
+                                                    value={activeData?.dayActiveGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>日活</div>
@@ -1103,11 +1439,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? numeral(userData.weekActive).format("0,0") : ""}
+                                                    {activeData ? numeral(activeData.weekActive).format("0,0") : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.weekActiveGainUpOrDown}
-                                                    value={userData?.weekActiveGain}
+                                                    type={activeData?.weekActiveGainUpOrDown}
+                                                    value={activeData?.weekActiveGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>周活</div>
@@ -1115,11 +1451,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? numeral(userData.monthActive).format("0,0") : ""}
+                                                    {activeData ? numeral(activeData.monthActive).format("0,0") : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.monthActiveGainUpOrDown}
-                                                    value={userData?.monthActiveGain}
+                                                    type={activeData?.monthActiveGainUpOrDown}
+                                                    value={activeData?.monthActiveGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>月活</div>
@@ -1130,11 +1466,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? minutesToHours(userData.dayTimes) : ""}
+                                                    {timeData ? minutesToHours(timeData.dayTimes) : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.dayTimesGainUpOrDown}
-                                                    value={userData?.dayTimesGain}
+                                                    type={timeData?.dayTimesGainUpOrDown}
+                                                    value={timeData?.dayTimesGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>今日总时长/h</div>
@@ -1142,11 +1478,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? minutesToHours(userData.weekTimes) : ""}
+                                                    {timeData ? minutesToHours(timeData.weekTimes) : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.weekTimesGainUpOrDown}
-                                                    value={userData?.weekTimesGain}
+                                                    type={timeData?.weekTimesGainUpOrDown}
+                                                    value={timeData?.weekTimesGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>本周总时长/h</div>
@@ -1154,11 +1490,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                                         <div className={styles["card-item"]}>
                                             <div className={styles["show"]}>
                                                 <div className={styles["count"]}>
-                                                    {userData ? minutesToHours(userData.monthTimes) : ""}
+                                                    {timeData ? minutesToHours(timeData.monthTimes) : ""}
                                                 </div>
                                                 <UpsOrDowns
-                                                    type={userData?.monthTimesGainUpOrDown}
-                                                    value={userData?.monthTimesGain}
+                                                    type={timeData?.monthTimesGainUpOrDown}
+                                                    value={timeData?.monthTimesGain}
                                                 />
                                             </div>
                                             <div className={styles["title"]}>本月总时长/h</div>

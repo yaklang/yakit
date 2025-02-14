@@ -1,22 +1,18 @@
 .data-statistics {
     padding: 16px;
     display: flex;
-    flex-direction: row;
-    gap: 12px;
+    justify-content: space-between;
     height: 100%;
     min-height: 700px;
     .left-box {
-        flex: 1;
+        width: 40%;
         border-radius: 8px;
         border: 1px solid #eaecf3;
         padding: 16px 20px;
-        display: flex;
-        gap: 20px;
-        flex-direction: column;
+        overflow: hidden;
         .user-box {
             .user-sum {
                 margin-bottom: 20px;
-                // padding-top: 8px;
                 display: flex;
                 flex-direction: row;
                 gap: 40px;
@@ -142,58 +138,82 @@
             height: 1px;
             width: 100%;
             background-color: #eaecf3;
+            margin: 20px 0;
         }
         .pie-charts-box {
             gap: 8px;
-            height: 100%;
-            .header {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                padding-bottom: 8px;
-                .title {
+            height: calc(100% - 200px);
+            &-cont {
+                padding-top: 15px;
+                .header {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-bottom: 8px;
+                    .title {
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 24px;
+                    }
+                    .extra {
+                        display: flex;
+                        flex-direction: row;
+                        gap: 8px;
+                        align-items: center;
+                        .icon {
+                            color: #85899e;
+                            height: 18px;
+                            svg {
+                                height: 18px;
+                                width: 18px;
+                            }
+                        }
+                        .date {
+                            color: #85899e;
+                            font-size: 12px;
+                            font-weight: 400;
+                            line-height: 16px;
+                        }
+                    }
+                }
+                .pie-charts {
+                    margin-top: 8px;
+                    height: calc(100% - 40px);
+                    .echarts-box {
+                        height: 100%;
+                        width: 100%;
+                        opacity: 0;
+                    }
+                    .echarts-box-show {
+                        opacity: 1;
+                    }
+                }
+                .filter-icon {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .table-extra {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .text {
                     font-size: 16px;
                     font-weight: 600;
                     line-height: 24px;
-                }
-                .extra {
-                    display: flex;
-                    flex-direction: row;
-                    gap: 8px;
-                    align-items: center;
-                    .icon {
-                        color: #85899e;
-                        height: 18px;
-                        svg {
-                            height: 18px;
-                            width: 18px;
-                        }
-                    }
-                    .date {
-                        color: #85899e;
-                        font-size: 12px;
-                        font-weight: 400;
-                        line-height: 16px;
-                    }
-                }
-            }
-            .pie-charts {
-                margin-top: 8px;
-                height: calc(100% - 40px);
-                .echarts-box {
-                    height: 100%;
-                    width: 100%;
-                    opacity: 0;
-                }
-                .echarts-box-show {
-                    opacity: 1;
+                    flex: 1;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
                 }
             }
         }
     }
     .right-box {
-        flex: 2;
+        width: 58%;
         display: flex;
         flex-direction: column;
         gap: 12px;
