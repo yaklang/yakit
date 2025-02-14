@@ -816,12 +816,8 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             method: "get",
             url: "tourist/used/detail",
             params: {
-                Page: params.Page,
-                Order: params.Order,
-                Limit: params.Limit,
-                OrderBy: params.OrderBy
-            },
-            data: params
+                ...params
+            }
         })
             .then((res) => {
                 const data = res.data || []
