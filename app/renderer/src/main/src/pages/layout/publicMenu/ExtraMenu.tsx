@@ -29,7 +29,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
     const [loadPluginMode, setLoadPluginMode] = useState<LoadPluginMode>("giturl")
     const [importMenuShow, setImportMenuShow] = useState<boolean>(false)
     const [form] = Form.useForm()
-    const [historyharPath, setHistoryharPath] = useState<string>("")
     const [importHistoryharToken, setImportHistoryharToken] = useState<string>("")
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
 
@@ -48,7 +47,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                 setImportMenuShow(false)
                 return
             case "import-history-har":
-                setHistoryharPath("")
                 form.setFieldsValue({historyharPath: ""})
 
                 const m = showYakitModal({
@@ -69,11 +67,6 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                                         labelCol: {span: 8},
                                         wrapperCol: {span: 17}
                                     }}
-                                    onChange={(val) => {
-                                        setHistoryharPath(val)
-                                        form.setFieldsValue({historyharPath: val})
-                                    }}
-                                    value={historyharPath}
                                 />
                             </Form>
                             <div style={{width: "100%", textAlign: "right"}}>

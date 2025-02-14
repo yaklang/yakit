@@ -3815,8 +3815,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [updateCacheData, data])
 
-    console.log(YakitRoute.DB_HTTPHistory, currentPageTabRouteKey)
-
     return (
         <div ref={ref as Ref<any>} tabIndex={-1} className={style["http-history-flow-table-wrapper"]}>
             <ReactResizeDetector
