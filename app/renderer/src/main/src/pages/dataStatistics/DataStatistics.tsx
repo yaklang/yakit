@@ -768,7 +768,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
         },
         {
             title: "最近一次登录时间",
-            dataKey: "created_at",
+            dataKey: "updated_at",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
