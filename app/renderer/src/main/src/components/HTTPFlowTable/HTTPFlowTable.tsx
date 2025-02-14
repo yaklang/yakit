@@ -1,5 +1,5 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge} from "antd"
+import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress} from "antd"
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
@@ -88,6 +88,10 @@ import {YakitCombinationSearch} from "../YakitCombinationSearch/YakitCombination
 import {v4 as uuidv4} from "uuid"
 import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
 import {filterColorTag, isCellRedSingleColor, TableCellToColorTag} from "../TableVirtualResize/utils"
+import {randomString} from "@/utils/randomUtil"
+import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -338,6 +342,7 @@ export interface HTTPFlowTableProp {
     onlyShowFirstNode?: boolean
     setOnlyShowFirstNode?: (i: boolean) => void
     refresh?: boolean
+    importRefresh?: boolean
     httpHistoryTableTitleStyle?: React.CSSProperties
     historyId?: string
     // 筛选控件隐藏
@@ -655,12 +660,25 @@ export interface ColumnAllInfoItem {
     isChecked: boolean
 }
 
+interface ExportHTTPFlowStreamRequest {
+    Filter: YakQueryHTTPFlowRequest
+    FieldName?: string[]
+    ExportType: "csv" | "har"
+    TargetPath: string
+}
+
+interface ImportExportHTTPFlowStreamResponse {
+    Percent: number
+    Verbose: string
+}
+
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {
         onlyShowFirstNode,
         setOnlyShowFirstNode,
         inViewport = true,
         refresh,
+        importRefresh,
         onlyShowSearch = false,
         pageType,
         historyId,
@@ -672,6 +690,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         showBatchActions = true,
         downstreamProxyStr = ""
     } = props
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -2359,7 +2383,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [total])
 
-    // 数据导出
+    /**
+     * @description 导出为Excel
+     */
     const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
         let exportData: any = []
         const header: string[] = []
@@ -2387,7 +2413,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             response: rsp
         })
     }
-
     const getExcelData = useMemoizedFn((pagination, list: HTTPFlow[]) => {
         return new Promise((resolve) => {
             const l = data.length
@@ -2522,7 +2547,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
         })
     })
-
     const onExcelExport = (list) => {
         const titleValue = configColumnRef.current.map((item) => item.title)
         const exportValue = [...titleValue, "请求包", "响应包"]
@@ -2549,6 +2573,48 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             width: 650,
             footer: null,
             maskClosable: false
+        })
+    }
+
+    /**
+     * @description 导出为HAR
+     */
+    const [exportToken, setExportToken] = useState<string>("")
+    const [percentVisible, setPercentVisible] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+    const onHarExport = (ids: number[]) => {
+        handleSaveFileSystemDialog({
+            title: "保存文件",
+            defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
+            filters: [
+                {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
+            ]
+        }).then((file) => {
+            if (!file.canceled) {
+                const filePath = file?.filePath?.toString()
+                if (filePath) {
+                    const exportParams: ExportHTTPFlowStreamRequest = {
+                        Filter: {
+                            IncludeId: ids,
+                            ...params
+                        },
+                        ExportType: "har",
+                        TargetPath: filePath
+                    }
+
+                    const token = randomString(40)
+                    setExportToken(token)
+                    ipcRenderer
+                        .invoke("ExportHTTPFlowStream", exportParams, token)
+                        .then(() => {
+                            percentContainerRef.current = currentPageTabRouteKey
+                            setPercentVisible(true)
+                        })
+                        .catch((error) => {
+                            yakitNotify("error", `[ExportHTTPFlowStream] error: ${error}`)
+                        })
+                }
+            }
         })
     }
 
@@ -3063,8 +3129,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             default: true,
             webSocket: false,
             toWebFuzzer: true,
-            onClickSingle: (v) => onExcelExport([v]),
-            onClickBatch: (list, n) => onExcelExport(list)
+            onClickSingle: () => {},
+            onClickBatch: () => {},
+            children: [
+                {
+                    key: "导出为Excel",
+                    label: "导出为Excel",
+                    onClick: (v) => onExcelExport([v]),
+                    onClickBatch: (list) => {
+                        onExcelExport(list)
+                    }
+                },
+                {
+                    key: "导出为HAR",
+                    label: "导出为HAR",
+                    onClick: (v) => onHarExport([v.Id]),
+                    onClickBatch: (list) => {
+                        onHarExport(list.map((item) => item.Id))
+                    }
+                }
+            ]
         },
         {
             key: "编辑tag",
@@ -3243,6 +3327,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         case "sendToWS":
                             newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
                             break
+                        case "导出为Excel":
+                            onExcelExport([rowData])
+                            break
+                        case "导出为HAR":
+                            onHarExport([rowData.Id])
+                            break
                         default:
                             const currentItem = menuData.find((f) => f.key === key)
                             if (!currentItem) return
@@ -3337,6 +3427,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             updateData()
         }, 100)
     })
+    /**@description 导入重置查询条件并刷新 */
+    const onImportResetRefresh = useMemoizedFn(() => {
+        sortRef.current = defSort
+        const newParams: YakQueryHTTPFlowRequest = {
+            SourceType: "",
+            ExcludeId: params.ExcludeId,
+            ExcludeInUrl: params.ExcludeInUrl,
+            WithPayload: toWebFuzzer,
+            RuntimeIDs: undefined,
+            RuntimeId: undefined,
+            ProcessName: []
+        }
+        setParams(newParams)
+        setIsReset(!isReset)
+        setColor([])
+        setCheckBodyLength(false)
+        refreshTabsContRef.current = true
+        setTimeout(() => {
+            updateData()
+        }, 100)
+    })
+    useUpdateEffect(() => {
+        onImportResetRefresh()
+    }, [importRefresh])
+
     /**
      * @description 分享数据包
      * @param ids 分享数据得ids
@@ -3521,6 +3636,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     selectedRowKeys.length === total
                 )
                 break
+            case "导出为Excel":
+                onExcelExport(selectedRows)
+                break
+            case "导出为HAR":
+                onHarExport(isAllSelect ? [] : selectedRows.map((item) => item.Id))
+                break
             default:
                 const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
                 if (!currentItem) return
@@ -3695,7 +3816,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [updateCacheData, data])
 
     return (
-        <div ref={ref as Ref<any>} tabIndex={-1} style={{width: "100%", height: "100%", overflow: "hidden"}}>
+        <div ref={ref as Ref<any>} tabIndex={-1} className={style["http-history-flow-table-wrapper"]}>
             <ReactResizeDetector
                 onResize={(width, height) => {
                     if (!width || !height) {
@@ -4089,6 +4210,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onCancel={() => setEditTagsVisible(false)}
                 onOk={editTagsSuccess}
             ></EditTagsModal>
+            {percentVisible && (
+                <ImportExportHttpFlowProgress
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
+                    visible={percentVisible}
+                    title='导出HAR流量数据'
+                    token={exportToken}
+                    apiKey='ExportHTTPFlowStream'
+                    onClose={(finish) => {
+                        setPercentVisible(false)
+                        if (finish) {
+                            yakitNotify("success", "导出成功")
+                        }
+                    }}
+                />
+            )}
         </div>
     )
 })
@@ -4711,6 +4849,92 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
                     <YakitInput.TextArea placeholder='多个tag请用逗号分割' rows={5}></YakitInput.TextArea>
                 </Form.Item>
             </Form>
+        </YakitModal>
+    )
+})
+
+declare type getContainerFunc = () => HTMLElement
+interface ImportExportHttpFlowProgressProps {
+    visible: boolean
+    onClose: (finish: boolean) => void
+    getContainer?: string | HTMLElement | getContainerFunc | false
+    title: string
+    token: string
+    apiKey: string
+}
+export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgressProps> = React.memo((props) => {
+    const {visible, onClose, getContainer, title, token, apiKey} = props
+    const timeRef = useRef<any>(null)
+    const [importExportHTTPFlowStream, setImportExportHTTPFlowStream] = useState<ImportExportHTTPFlowStreamResponse[]>(
+        []
+    )
+    const importExportHTTPFlowStreamRef = useRef<ImportExportHTTPFlowStreamResponse[]>([])
+
+    const cancelImportExportHTTPFlowStream = () => {
+        ipcRenderer.invoke(`cancel-${apiKey}`, token)
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+        clearInterval(timeRef.current)
+    }
+    useEffect(() => {
+        const updateImportExportHTTPFlowStream = () => {
+            setImportExportHTTPFlowStream(importExportHTTPFlowStreamRef.current.slice())
+        }
+        timeRef.current = setInterval(updateImportExportHTTPFlowStream, 300)
+        ipcRenderer.on(`${token}-data`, async (e, data: ImportExportHTTPFlowStreamResponse) => {
+            importExportHTTPFlowStreamRef.current.push(data)
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            yakitNotify("error", `error: ${error}`)
+            closeModal()
+        })
+        return () => {
+            cancelImportExportHTTPFlowStream()
+        }
+    }, [token])
+
+    const closeModal = useMemoizedFn(() => {
+        onClose(importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1)
+        cancelImportExportHTTPFlowStream()
+    })
+    useEffect(() => {
+        if (importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1) {
+            setTimeout(() => {
+                closeModal()
+            }, 500)
+        }
+    }, [JSON.stringify(importExportHTTPFlowStream)])
+
+    return (
+        <YakitModal
+            visible={visible}
+            getContainer={getContainer}
+            type='white'
+            title={title}
+            onCancel={closeModal}
+            width={680}
+            closable={true}
+            maskClosable={false}
+            destroyOnClose={true}
+            bodyStyle={{padding: 0}}
+            footerStyle={{justifyContent: "flex-end"}}
+            footer={
+                <YakitButton type={"outline2"} onClick={closeModal}>
+                    {importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1 ? "完成" : "取消"}
+                </YakitButton>
+            }
+        >
+            <div style={{padding: 15}}>
+                <Progress
+                    strokeColor='#F28B44'
+                    trailColor='#F0F2F5'
+                    percent={Math.trunc(
+                        importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent * 100
+                    )}
+                    format={(percent) => `${percent}%`}
+                />
+            </div>
         </YakitModal>
     )
 })

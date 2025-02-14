@@ -4,4 +4,5 @@ export type HistoryEventProps = {
     onDeleteToUpdate: string
     onHistoryJumpWebTree: string // 跳转到指定树节点
     onEditTag: string
+    onRefreshImportHistoryTable?: string
 }

@@ -93,6 +93,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
     // 控制刷新数据
     const [refresh, setRefresh] = useState<boolean>(false)
+    const [importRefresh, setImportRefresh] = useState<boolean>(false)
     const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
     const [highlightSearch, setHighlightSearch] = useState("")
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
@@ -104,6 +105,18 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             setIsRefreshHistory(false)
         }
     }, [inViewport])
+
+    const onRefreshImportHistoryTable = useMemoizedFn(() => {
+        setImportRefresh(!importRefresh)
+    })
+    useEffect(() => {
+        if (pageType === "History") {
+            emiter.on("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
+            return () => {
+                emiter.off("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
+            }
+        }
+    }, [pageType])
 
     const [defaultFold, setDefaultFold] = useState<boolean>()
     useEffect(() => {
@@ -390,6 +403,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     onlyShowFirstNode={onlyShowFirstNode}
                                     setOnlyShowFirstNode={setOnlyShowFirstNode}
                                     refresh={refresh}
+                                    importRefresh={importRefresh}
                                     pageType={pageType}
                                     historyId={historyId}
                                     onQueryParams={onQueryParams}

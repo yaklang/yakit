@@ -354,7 +354,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
-    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, getCurrentSelectPageId} =
+    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, getCurrentSelectPageId, setCurrentPageTabRouteKey} =
         usePageInfo(
             (s) => ({
                 setPagesData: s.setPagesData,
@@ -362,7 +362,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 addPagesDataCache: s.addPagesDataCache,
                 pages: s.pages,
                 clearAllData: s.clearAllData,
-                getCurrentSelectPageId: s.getCurrentSelectPageId
+                getCurrentSelectPageId: s.getCurrentSelectPageId,
+                setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
             }),
             shallow
         )
@@ -370,6 +371,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
+    useEffect(() => {
+        setCurrentPageTabRouteKey(currentTabKey)
+    }, [currentTabKey])
 
     // 发送到专项漏洞检测modal-show变量
     const [bugTestShow, setBugTestShow] = useState<boolean>(false)
@@ -2345,6 +2349,7 @@ const TabChildren: React.FC<TabChildrenProps> = React.memo((props) => {
                                     : "8px 16px 13px 16px"
                         }}
                         className={styles["page-body"]}
+                        id={"main-operator-page-body-" + pageItem.routeKey}
                     >
                         {pageItem.singleNode ? (
                             <React.Suspense fallback={<>loading page ...</>}>
