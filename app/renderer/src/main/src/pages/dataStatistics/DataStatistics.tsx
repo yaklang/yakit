@@ -780,7 +780,9 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     ]
 
     useEffect(() => {
-        update(1)
+        if (isEnpriTrace()) {
+            update(1)
+        }
     }, [])
 
     const queyChangeUpdateData = useDebounceFn(
@@ -875,7 +877,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 break
         }
     }
-    /** 使用响应 end */
+    /** 使用详情 end */
 
     useEffect(() => {
         if (activeOrTime === "active") {
