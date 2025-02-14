@@ -658,6 +658,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     const [activeOrTime, setActiveOrTime] = useState<"active" | "times">("active")
     const [activeData, setActiveData] = useState<API.TouristActivityRateResponse>()
     const [timeData, setTimeData] = useState<API.TouristTimesResponse>()
+    const [activeOrTimeLoading, setActiveOrTimeLoading] = useState<boolean>(false)
 
     const getActiveShowType = useMemo(() => {
         return [
@@ -884,6 +885,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
         }
     }, [activeLineParams, activeOrTime])
     const getActivityTourist = useMemoizedFn(() => {
+        setActiveOrTimeLoading(true)
         NetWorkApi<null, API.TouristActivityRateResponse>({
             url: "tourist/activity/rate",
             method: "get"
@@ -893,10 +895,11 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             })
             .catch((err) => {})
             .finally(() => {
-                setLoading(false)
+                setActiveOrTimeLoading(false)
             })
     })
     const getTimeTourist = useMemoizedFn(() => {
+        setActiveOrTimeLoading(true)
         NetWorkApi<null, API.TouristTimesResponse>({
             url: "tourist/time/count",
             method: "get"
@@ -906,7 +909,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             })
             .catch((err) => {})
             .finally(() => {
-                setLoading(false)
+                setActiveOrTimeLoading(false)
             })
     })
 
@@ -1410,7 +1413,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                         </div>
                     </div>
                     <div>
-                        <YakitSpin spinning={loading}>
+                        <YakitSpin spinning={activeOrTimeLoading}>
                             <div className={styles["card-box"]}>
                                 {activeOrTime === "active" ? (
                                     <>
