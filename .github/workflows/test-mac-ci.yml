@@ -1,0 +1,115 @@
+name: Test-Mac-CI
+
+on:
+    push:
+        branches:
+            - chore/prod-ci-*
+
+jobs:
+    build_yakit:
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - run: echo ${{ github.ref }}
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
+            - name: "Fetch Latest EngineVersion"
+              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
+            - run: ls ./bins && cat bins/engine-version.txt
+
+            - name: Extract Package.json Version
+              id: extract_version
+              uses: Saionaro/extract-package-version@v1.1.1
+            - name: Crop Yakit-CE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_ce_version
+              with:
+                  source: ${{ steps.extract_version.outputs.version }}
+                  find: "-ce"
+                  replace: ""
+            - name: Crop Yakit-EE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_version
+              with:
+                  source: ${{ steps.package_ce_version.outputs.value }}
+                  find: "-ee"
+                  replace: ""
+            - name: Echo Yakit Package Version
+              run: echo ${{ steps.package_version.outputs.value }}
+
+            - run: yarn install
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: "Install Render"
+              run: |
+                  wget https://oss-qn.yaklang.com/yak/render/ce.zip -O ce.zip && \
+                  ls
+                  unzip ce.zip "pages/*" -d temp && \
+                  ls ./temp
+                  mkdir -p app/renderer && \
+                  mv temp/pages app/renderer/ && \
+                  ls app/renderer && ls app/renderer/pages
+                  rm -rf temp ce.zip
+
+            # 导入证书
+            - name: Install the Apple certificate
+              env:
+                  APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+              run: |
+                  # 创建证书
+                  echo $APPLE_CERTIFICATE_BASE64 | base64 --decode > certificate.p12
+
+                  # 创建钥匙串并导入证书
+                  security create-keychain -p "" build.keychain
+                  security default-keychain -s build.keychain
+                  security unlock-keychain -p "" build.keychain
+                  security import certificate.p12 -k build.keychain -P $APPLE_CERTIFICATE_PASSWORD -T /usr/bin/codesign
+                  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+
+            - name: Build Yakit (MAC)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+                  APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+                  APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+              working-directory: ./
+              run: yarn pack-mac
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # EnpriTraceAgent  -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+                  # EnpriTrace       -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+                  # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+
+            - name: Generate software prefix name
+              run: echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
+
+            - name: Show ENV_Software_Name
+              run: echo "ENV_Software_Name： $ENV_Software_Name"
+
+            - name: Upload Yakit(CE) Artifacts Windows
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ inputs.platform }}-${{ inputs.version }}-${{env.ENV_Software_Name}}-artifacts
+                  path: ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.dmg
+                  if-no-files-found: error

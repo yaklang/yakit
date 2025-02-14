@@ -52,7 +52,10 @@ publish:
       url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
+    hardenedRuntime: true
     gatekeeperAssess: false
+    entitlements: "build/entitlements.mac.plist"
+    entitlementsInherit: "build/entitlements.mac.plist"
     target:
         - target: dmg
           arch:
@@ -91,6 +94,7 @@ nsis:
     createStartMenuShortcut: true
 
 beforePack: "buildHooks/before_pack.js"
+afterSign: "scripts/notarize.js"
 
 releaseInfo:
     releaseName: ${version}
