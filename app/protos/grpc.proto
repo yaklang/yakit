@@ -754,6 +754,7 @@ service Yak {
   rpc DeleteSSAPrograms(DeleteSSAProgramRequest)returns(DbOperateMessage);
   // SSA Risk CURD
   rpc QuerySSARisks(QuerySSARisksRequest)returns(QuerySSARisksResponse);
+  rpc QueryNewSSARisks(QueryNewSSARisksRequest) returns(QueryNewSSARisksResponse);
   rpc DeleteSSARisks(DeleteSSARisksRequest)returns(DbOperateMessage);
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
@@ -6138,6 +6139,17 @@ message QuerySSARisksResponse {
   Paging Pagination = 1;
   repeated SSARisk Data = 2;
   int64 Total = 3;
+}
+
+message QueryNewSSARisksRequest{
+  int64 AfterID = 1; 
+}
+
+message QueryNewSSARisksResponse{
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  int64 NewRiskTotal = 2; // new ssa-risk unread count
+  int64 Total = 3; // total ssa-risk count 
+  int64 Unread = 4;// total unread ssa-risk count
 }
 
 message DeleteSSARisksRequest {
