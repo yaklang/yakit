@@ -49,6 +49,19 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
 
+    const [regexpGroupsValue, setRegexpGroupsValue] = useState<number[]>([])
+    const [regexpGroupsSearchVal, setRegexpGroupsSearchVal] = useState("")
+    const handleRegexpGroupsSearch = (searchText) => {
+        // 如果输入的文本符合正则规则（0或非零开头的数字），则更新输入框的内容
+        if (/^(0|[1-9]\d*)?$/.test(searchText)) {
+            setRegexpGroupsSearchVal(searchText)
+        }
+    }
+    const handleRegexpGroupsChange = (newValue) => {
+        setRegexpGroupsValue(newValue)
+        setRegexpGroupsSearchVal("")
+    }
+
     const resultType = Form.useWatch("ResultType", form)
     const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
     const cookies: HTTPCookieSetting[] = Form.useWatch("ExtraCookies", form) || []
@@ -70,6 +83,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 } else {
                     newValues.NoReplace = true
                 }
+                newValues.RegexpGroups = newValues.RegexpGroups.map((item) => Number(item))
                 onSave(newValues)
             })
             .catch((errorInfo) => {})
@@ -160,6 +174,24 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     <Form.Item label='规则内容' name='Rule' rules={[{required: true, message: "该项为必填"}]}>
                         <RuleContent getRule={getRule} ref={ruleContentRef} />
                     </Form.Item>
+
+                    <Form.Item
+                        label='规则组'
+                        name='RegexpGroups'
+                        help={"输入0匹配所有，输入数字匹配输入的组，不写默认匹配第一组"}
+                    >
+                        <YakitSelect
+                            mode='tags'
+                            size='middle'
+                            wrapperStyle={{width: "100%"}}
+                            value={regexpGroupsValue}
+                            onChange={handleRegexpGroupsChange}
+                            searchValue={regexpGroupsSearchVal}
+                            onSearch={handleRegexpGroupsSearch}
+                            onBlur={() => setRegexpGroupsSearchVal("")}
+                        ></YakitSelect>
+                    </Form.Item>
+
                     <Row>
                         <Col span={5}>&nbsp;</Col>
                         <Col span={16}>

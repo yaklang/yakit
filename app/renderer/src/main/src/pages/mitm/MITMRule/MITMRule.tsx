@@ -515,6 +515,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 NoReplace: false,
                 Result: "",
                 Rule: "",
+                RegexpGroups: [],
                 ExtraTag: [],
                 Disabled: false,
                 VerboseName: "RULE:" + randomString(10),
