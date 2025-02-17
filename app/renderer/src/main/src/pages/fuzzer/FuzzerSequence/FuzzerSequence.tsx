@@ -452,9 +452,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
 
             let fuzzerResChartData = fuzzerResChartDataBufferRef.current.get(FuzzerIndex)
-            if (inViewportRef.current && fuzzerResChartData && r.Count) {
+            if (fuzzerResChartData) {
                 fuzzerResChartData.push({
-                    Count: r.Count,
+                    Count: (r.Count as number) + 1,
                     TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
                     TCPDurationMs: +r.TCPDurationMs,
                     ConnectDurationMs: +r.ConnectDurationMs,
@@ -466,7 +466,15 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
                 fuzzerResChartDataBufferRef.current.set(FuzzerIndex, fuzzerResChartData)
             } else {
-                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, [])
+                fuzzerResChartDataBufferRef.current.set(FuzzerIndex, [
+                    {
+                        Count: (r.Count as number) + 1,
+                        TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                        TCPDurationMs: +r.TCPDurationMs,
+                        ConnectDurationMs: +r.ConnectDurationMs,
+                        DurationMs: +r.DurationMs
+                    }
+                ])
             }
         })
         ipcRenderer.on(endToken, () => {
@@ -581,7 +589,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 failedFuzzer: [...failedBuffer],
                 runtimeIdFuzzer: [...runtimeIdBuffer],
                 fuzzerTableMaxData: fuzzerTableMaxData,
-                fuzzerResChartData: fuzzerResChartDataBuffer
+                fuzzerResChartData: []
+            }
+            if (inViewportRef.current) {
+                newResponse.fuzzerResChartData = fuzzerResChartDataBuffer
             }
             setResponse(fuzzerIndex, newResponse)
         },

@@ -615,7 +615,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     // 切换【配置】/【规则】高级内容显示 type
-    const [advancedConfigShowType, setAdvancedConfigShowType, getAdvancedConfigShowType] = useGetSetState<WebFuzzerType>("config")
+    const [advancedConfigShowType, setAdvancedConfigShowType, getAdvancedConfigShowType] =
+        useGetSetState<WebFuzzerType>("config")
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -1118,7 +1119,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
+            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence") {
+                setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
+            }
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
@@ -1165,19 +1168,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedBuffer.push(r)
             }
-            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence" && r.Count) {
-                fuzzerResChartDataBuffer.push({
-                    Count: r.Count,
-                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                    TCPDurationMs: +r.TCPDurationMs,
-                    ConnectDurationMs: +r.ConnectDurationMs,
-                    DurationMs: +r.DurationMs
-                })
-                if (fuzzerResChartDataBuffer.length > 5000) {
-                    fuzzerResChartDataBuffer.shift()
-                }
-            } else {
-                fuzzerResChartDataBuffer = []
+            fuzzerResChartDataBuffer.push({
+                Count: (r.Count as number) + 1,
+                TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                TCPDurationMs: +r.TCPDurationMs,
+                ConnectDurationMs: +r.ConnectDurationMs,
+                DurationMs: +r.DurationMs
+            })
+            if (fuzzerResChartDataBuffer.length > 5000) {
+                fuzzerResChartDataBuffer.shift()
             }
         })
 
