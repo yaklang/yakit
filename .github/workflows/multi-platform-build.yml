@@ -249,3 +249,4 @@ jobs:
                       ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.dmg
                       ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.AppImage
                   if-no-files-found: error
+                  retention-days: 7
