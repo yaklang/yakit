@@ -884,6 +884,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             if (type === YakitRoute.YakRunner_Audit_Code) {
                 openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
             }
+            if (type === YakitRoute.YakRunner_Audit_Hole) {
+                openMenuPage({route: YakitRoute.YakRunner_Audit_Hole})
+            }
             console.info("send to tab: ", type)
         })
 

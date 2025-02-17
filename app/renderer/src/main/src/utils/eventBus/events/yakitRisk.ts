@@ -11,4 +11,6 @@ export type YakitRiskProps = {
     
     /** 以下为审计漏洞 */
     auditHoleVulnerabilityLevel: string
+    /** 刷新审计risk页面表格数据 */
+    onRefAuditRiskList?: string
 }
