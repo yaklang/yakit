@@ -212,7 +212,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [])
 
     /**重新加载表格 */
-    const onRefAuditRiskList = useMemoizedFn(()=>{
+    const onRefAuditRiskList = useMemoizedFn(() => {
         debugVirtualTableEvent.noResetRefreshT()
     })
 
@@ -884,7 +884,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
-    const {info, className, border, isShowExtra} = props
+    const {info, className, border, isShowExtra, isExtraClick} = props
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
 
     useEffect(() => {
@@ -1040,6 +1040,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                 icon={<OutlineTerminalIcon />}
                                 onClick={(e) => {
                                     e.stopPropagation()
+                                    isExtraClick && isExtraClick()
                                     jumpCodeScanPage(info.Index ? `/${info.Index}` : undefined)
                                 }}
                             >

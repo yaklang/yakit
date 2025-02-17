@@ -1,5 +1,5 @@
 import {yakitNotify} from "@/utils/notification"
-import {DeleteSSARisksRequest, QuerySSARisksRequest, QuerySSARisksResponse, SSARisksFilter} from "./YakitAuditHoleTableType"
+import {DeleteSSARisksRequest, QueryNewSSARisksRequest, QueryNewSSARisksResponse, QuerySSARisksRequest, QuerySSARisksResponse, SSARisksFilter} from "./YakitAuditHoleTableType"
 import {FieldGroup} from "@/pages/risks/YakitRiskTable/utils"
 import { FieldName } from "@/pages/risks/RiskTable"
 const {ipcRenderer} = window.require("electron")
@@ -98,3 +98,15 @@ export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<Gr
     })
 }
 
+/** QueryNewSSARisks */
+export const apiQueryNewSSARisks: (query?: QueryNewSSARisksRequest) => Promise<QueryNewSSARisksResponse> = (query) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryNewSSARisks", query)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `查询失败: ${e}`)
+                reject(e)
+            })
+    })
+}
