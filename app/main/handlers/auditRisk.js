@@ -112,4 +112,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("SSARiskFeedbackToOnline", async (e, params) => {
         return await asyncSSARiskFeedbackToOnline(params)
     })
+
+    const asyncQueryNewSSARisks = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryNewSSARisks(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryNewSSARisks", async (e, params) => {
+        return await asyncQueryNewSSARisks(params)
+    })
 }
