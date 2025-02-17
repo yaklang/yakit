@@ -23,7 +23,7 @@ import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -96,6 +96,9 @@ import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAnd
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import { apiNewRiskRead, apiQueryNewSSARisks, apiQuerySSARisks } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import { QueryNewSSARisksResponse, QuerySSARisksResponse, SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import { YakitAuditRiskDetails } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -503,7 +506,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
-                    {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && !isSastScan() && <UIOpRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && isSastScan() && <UIOpSastScanRisk isEngineLink={isEngineLink}/>}
                     {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
@@ -2400,6 +2404,242 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             placement={"bottomRight"}
             trigger={"click"}
             content={notice}
+            onVisibleChange={(visible) => setShow(visible)}
+        >
+            <div className={styles["ui-op-btn-wrapper"]}>
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
+                        <RiskStateSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                    </Badge>
+                </div>
+            </div>
+        </YakitPopover>
+    )
+})
+const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
+    const {isEngineLink} = props
+
+    const [show, setShow] = useState<boolean>(false)
+
+    /** 查询最新风险与漏洞信息节点 */
+    const fetchNode = useRef<number>(0)
+    const [risks, setRisks] = useState<QueryNewSSARisksResponse>({
+        Data: [],
+        Total: 0,
+        NewRiskTotal: 0,
+        Unread: 0
+    })
+
+    /** 定时器 */
+    const timeRef = useRef<any>(null)
+
+    /** 查询最新的风险数据 */
+    const update = useMemoizedFn(() => {
+        apiQueryNewSSARisks({
+            AfterID: fetchNode.current
+        }).then((res: QueryNewSSARisksResponse) => {
+            if(JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
+            risks.NewRiskTotal === res.NewRiskTotal &&
+            risks.Total === res.Total){
+                return
+            }
+            setRisks({...res})
+        })
+    })
+
+    /** 获取最新的风险与漏洞信息(5秒一次) */
+    useEffect(() => {
+        if (isEngineLink) {
+            if (timeRef.current) clearInterval(timeRef.current)
+                apiQuerySSARisks({
+                    Pagination:{
+                        Limit: 1, Page: 1, Order: "desc", OrderBy: "id"
+                    },
+                    Filter:{}
+                }).then((res)=>{
+                    const {Data} = res
+                    fetchNode.current = Data.length === 0 ? 0 : Data[0].Id
+                })
+                .catch((e) => {})
+                .finally(() => {
+                    update()
+                    emiter.on("onRefreshQuerySSARisks", update)
+                    // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
+                    if (!serverPushStatus) {
+                        timeRef.current = setInterval(() => {
+                            if (serverPushStatus) {
+                                if (timeRef.current) clearInterval(timeRef.current)
+                                timeRef.current = null
+                                return
+                            }
+                            update()
+                        }, 5000)
+                    }
+                })
+            emiter.on("onRefRisksRead", onRefRisksRead)
+            return () => {
+                clearInterval(timeRef.current)
+                emiter.off("onRefreshQuerySSARisks", update)
+                emiter.off("onRefRisksRead", onRefRisksRead)
+            }
+        } else {
+            if (timeRef.current) clearInterval(timeRef.current)
+            timeRef.current = null
+            fetchNode.current = 0
+            setRisks({Data: [], Total: 0, NewRiskTotal: 0, Unread: 0})
+        }
+    }, [isEngineLink])
+
+    const onRefRisksRead = useMemoizedFn((res) => {
+        try {
+            const value = JSON.parse(res)
+            if (!!value.isAllRead) {
+                // 全部已读
+                setRisks({
+                    ...risks,
+                    Unread: 0,
+                    NewRiskTotal: 0,
+                    Data: risks.Data.map((item) => ({...item, IsRead: true}))
+                })
+            } else if (!!value.Id) {
+                // 单条已读
+                const newRiskTotal = risks.NewRiskTotal - 1
+                const newUnread = risks.Unread - 1
+                setRisks({
+                    ...risks,
+                    Unread: newUnread > 0 ? newUnread : 0,
+                    NewRiskTotal: newRiskTotal > 0 ? newRiskTotal : 0,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === value.Id) item.IsRead = true
+                        return item
+                    })
+                })
+            }
+        } catch (error) {}
+    })
+
+    /** 单条点击阅读 */
+    const singleRead = useMemoizedFn((info: SSARisk) => {
+        apiNewRiskRead({ID: [info.Id]}).then(()=>{
+            const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
+                const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
+                setRisks({
+                    ...risks,
+                    NewRiskTotal: info.IsRead ? risks.NewRiskTotal : newRiskTotal,
+                    Unread: info.IsRead ? risks.Unread : newUnread,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
+                        return item
+                    })
+                })
+        })
+        apiQuerySSARisks({
+            Pagination:{...genDefaultPagination()},
+            Filter:{
+                ID:[info.Id]
+            }
+        }).then((res)=>{
+            if (!res || res.Data.length===0) return
+            setShow(false)
+            let m = showModal({
+                width: "80%",
+                title: "详情",
+                content: (
+                    <div style={{overflow: "auto", maxHeight: "70vh"}}>
+                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={()=>m.destroy()}/>
+                    </div>
+                )
+            })
+        })
+    })
+    /** 全部已读 */
+    const allRead = useMemoizedFn(() => {
+        apiNewRiskRead({ID: []}).then(() => {
+            setRisks({
+                ...risks,
+                Unread: 0,
+                NewRiskTotal: 0,
+                Data: risks.Data.map((item) => {
+                    item.IsRead = true
+                    return item
+                })
+            })
+            emiter.emit("onRefAuditRiskList")
+        })
+    })
+    /** 查看全部 */
+    const viewAll = useMemoizedFn(() => {
+        addToTab(YakitRoute.YakRunner_Audit_Hole)
+        emiter.emit("onRefAuditRiskList")
+    })
+
+    const notice = useMemo(() => {
+        return (
+            <div className={styles["ui-op-plus-wrapper"]}>
+                <div className={styles["ui-op-risk-body"]}>
+                    <div className={styles["risk-header"]}>
+                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                    </div>
+
+                    <div className={styles["risk-info"]}>
+                        {risks.Data.map((item) => {
+                            const title = Object.keys(RiskType).filter(key => RiskType[key] === item.Severity)?.[0]
+                            if (!!title) {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <div
+                                            className={classNames(styles["opt-icon-style"], styles[`opt-${item.Severity}-icon`])}
+                                        >
+                                            {title}
+                                        </div>
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
+                                            <YakitEllipsis
+                                                text={item.TitleVerbose || item.Title}
+                                                width={item.Severity === "info" ? 280 : 310}
+                                            />
+                                        </Badge>
+                                    </div>
+                                )
+                            } else {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
+                                            <YakitEllipsis text={`${item.Title} ${title}}`} width={350} />
+                                        </Badge>
+                                    </div>
+                                )
+                            }
+                        })}
+                    </div>
+
+                    <div className={styles["risk-footer"]}>
+                        <div className={styles["risk-footer-btn"]} onClick={allRead}>
+                            全部已读
+                        </div>
+                        <div className={styles["risk-footer-btn"]} onClick={viewAll}>
+                            查看全部
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }, [risks])
+
+    return (
+        <YakitPopover
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
+            placement={"bottomRight"}
+            trigger={"click"}
+            content={notice}
+            visible={show}
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>
