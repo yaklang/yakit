@@ -214,12 +214,18 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [type])
 
     useEffect(() => {
-        // 组件存在既不卸载
+        emiter.on("onRefAuditRiskList", onRefAuditRiskList)
         emiter.on("onRefreshQuerySSARisks", onStartInterval)
         return () => {
+            emiter.off("onRefAuditRiskList", onRefAuditRiskList)
             emiter.off("onRefreshQuerySSARisks", onStartInterval)
         }
     }, [])
+
+    /**重新加载表格 */
+    const onRefAuditRiskList = useMemoizedFn(()=>{
+        debugVirtualTableEvent.noResetRefreshT()
+    })
 
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn((data) => {
