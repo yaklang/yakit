@@ -3190,17 +3190,23 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
         // 一个响应的编辑器美化渲染缓存
         const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
         // 编辑器编码
-        const [codeKey, setCodeKey] = useState<string>("utf-8")
+        const [codeKey, setCodeKey] = useState<string>("")
         const [codeLoading, setCodeLoading] = useState<boolean>(false)
         const [codeValue, setCodeValue] = useState<string>("")
         useEffect(() => {
             if (fuzzerResponse.ResponseRaw) {
-                setCodeKey("utf-8")
                 getRemoteValue(FuzzerRemoteGV.WebFuzzerOneResEditorBeautifyRender).then((res) => {
                     if (!!res) {
                         setResTypeOptionVal(res)
                     } else {
                         setResTypeOptionVal(undefined)
+                    }
+                })
+                getRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding).then((res) => {
+                    if (!!res) {
+                        setCodeKey(res)
+                    } else {
+                        setCodeKey("utf-8")
                     }
                 })
             }
@@ -3259,6 +3265,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     codeKey={codeKey}
                                     onSetCodeKey={(codeKey) => {
                                         setCodeKey(codeKey)
+                                        setRemoteValue(FuzzerRemoteGV.FuzzerCodeEnCoding, codeKey)
                                     }}
                                     onSetCodeValue={setCodeValue}
                                 />
