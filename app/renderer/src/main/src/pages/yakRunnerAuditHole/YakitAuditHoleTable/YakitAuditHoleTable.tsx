@@ -397,7 +397,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                         Path: `/`,
                                         Variable: record.Variable,
                                         Value: record.Index ? `/${record.Index}` : undefined,
-                                        Query: [{Key: "result_id", Value: record.ResultID || 0}]
+                                        Query: [{Key: "result_id", Value: record.ResultID || 0}],
+                                        CodeRange: record.CodeRange
                                     }
                                     emiter.emit(
                                         "openPage",
@@ -1046,7 +1047,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
     // 跳转到代码审计页面
     const jumpCodeScanPage = useMemoizedFn((value?: string) => {
-        const {ProgramName, Variable, ResultID} = info
+        const {ProgramName, Variable, ResultID, CodeRange} = info
         if (ResultID && Variable && ProgramName) {
             // 跳转到审计页面的参数
             const params: AuditCodePageInfoProps = {
@@ -1055,7 +1056,8 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 Path: `/`,
                 Variable,
                 Value: value,
-                Query: [{Key: "result_id", Value: ResultID}]
+                Query: [{Key: "result_id", Value: ResultID}],
+                CodeRange
             }
             emiter.emit(
                 "openPage",

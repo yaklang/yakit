@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useMemo, useRef, useState} from "react"
 import {
     AreaInfoProps,
     AuditCodeStatusInfoProps,
@@ -8,8 +8,8 @@ import {
     YakRunnerAuditCodeProps,
     YakRunnerHistoryProps
 } from "./YakRunnerAuditCodeType"
-import {Divider, Progress, Tooltip} from "antd"
-import {AuditModalForm, AuditModalFormModal} from "./AuditCode/AuditCode"
+import {Progress} from "antd"
+import {AuditModalFormModal} from "./AuditCode/AuditCode"
 import {useMemoizedFn} from "ahooks"
 import {
     addAreaFileInfo,
@@ -26,17 +26,9 @@ import {
     updateAreaFileInfo
 } from "./utils"
 import styles from "./YakRunnerAuditCode.module.scss"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinCompileIcon} from "@/assets/icon/outline"
 import emiter from "@/utils/eventBus/eventBus"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {SavePayloadProgress, UploadStatusInfo} from "../payloadManager/newPayload"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {randomString} from "@/utils/randomUtil"
 import {failed, yakitNotify} from "@/utils/notification"
-import {apiDebugPlugin, DebugPluginRequest} from "../plugins/utils"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakRunnerContext, {YakRunnerContextDispatcher, YakRunnerContextStore} from "./hooks/YakRunnerContext"
 import {clearMapAuditChildDetail} from "./AuditCode/AuditTree/ChildMap"
 import {clearMapAuditDetail} from "./AuditCode/AuditTree/AuditMap"
@@ -47,7 +39,7 @@ import moment from "moment"
 import {WaterMark} from "@ant-design/pro-layout"
 import {isCommunityEdition} from "@/utils/envfile"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {JumpSourceDataProps, RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
+import {CodeRangeProps, JumpSourceDataProps, RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import classNames from "classnames"
 import {DragDropContext, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import cloneDeep from "lodash/cloneDeep"
@@ -55,16 +47,15 @@ import {SplitView} from "../yakRunner/SplitView/SplitView"
 
 import {LeftAudit} from "./LeftAudit/LeftAudit"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
-import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
+import {JumpToAuditEditorProps, ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {AuditCodeWelcomePage, RunnerTabs} from "./RunnerTabs/RunnerTabs"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {Selection} from "./RunnerTabs/RunnerTabsType"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -107,6 +98,40 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
             emiter.off("onAuditCodePageInfo", setAuditCodePageInfo)
         }
     }, [])
+
+    useEffect(() => {
+        // 直接打开文件且高亮
+        if (pageInfo?.CodeRange) {
+            try {
+                const code_range: CodeRangeProps = JSON.parse(pageInfo.CodeRange)
+                const {url, start_column, start_line, end_column, end_line} = code_range
+                const name = url.split("/").pop() || ""
+                const highLightRange: Selection = {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
+                }
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path: url,
+                        name,
+                        highLightRange
+                    }
+                }
+                onOpenFileByPathFun(JSON.stringify(OpenFileByPathParams))
+                // 纯跳转行号
+                setTimeout(() => {
+                    const obj: JumpToAuditEditorProps = {
+                        selections: highLightRange,
+                        path: url,
+                        isSelect: false
+                    }
+                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
+            } catch (error) {}
+        }
+    }, [pageInfo])
 
     const onCloseCompileModal = useMemoizedFn(() => {
         setShowCompileModal(false)
@@ -305,8 +330,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                 setAreaInfo && setAreaInfo(newAreaInfo)
                 setActiveFile && setActiveFile({...file, highLightRange})
                 // 完全一样且存在widget数据 通知再次打开widget
-                if(JSON.stringify(file) === JSON.stringify({...file, highLightRange}) && file.highLightRange?.source){
-                    emiter.emit("onWidgetOpenAgain",file.path)
+                if (JSON.stringify(file) === JSON.stringify({...file, highLightRange}) && file.highLightRange?.source) {
+                    emiter.emit("onWidgetOpenAgain", file.path)
                 }
             } else {
                 // 如若为打开外部文件 则无需校验是否为审计树 直接按照文件树打开

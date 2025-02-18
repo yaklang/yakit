@@ -44,7 +44,7 @@ export const LeftAudit: React.FC<LeftAuditProps> = (props) => {
         return p
     }, [isOnlyFileTree])
 
-    // 当跳转打开时，没有则关闭
+    // 当跳转时打开，没有则关闭
     useEffect(() => {
         if (!pageInfo?.Query) {
             setOnlyFileTree(true)
