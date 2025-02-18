@@ -1238,14 +1238,12 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
         // 关闭选中的内容
         const closeFizzRangeWidget = () => {
-            console.log(2);
             fizzRangeWidget.isOpen = false
             editor.removeContentWidget(fizzRangeWidget)
         }
 
         // 打开选中的内容
         const openFizzRangeWidget = () => {
-            console.log(1);
             closeFizzRangeWidget()
             editor.addContentWidget(fizzRangeWidget)
             fizzRangeWidget.isOpen = true
