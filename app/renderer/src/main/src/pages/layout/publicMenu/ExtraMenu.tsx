@@ -17,7 +17,6 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {ImportLocalPlugin, LoadPluginMode} from "@/pages/mitm/MITMPage"
 import {isSastScan} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
