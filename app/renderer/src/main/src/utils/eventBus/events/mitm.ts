@@ -1,6 +1,7 @@
 export type MitmEventProps = {
     cleanMitmLogEvent?: string
     cancleMitmFilterEvent: string
+    cancleMitmAllFilterEvent?: string
     onGetMITMShieldDataEvent: string
     /** 是否配置过过滤器白名单文案 */
     onSetFilterWhiteListEvent: string

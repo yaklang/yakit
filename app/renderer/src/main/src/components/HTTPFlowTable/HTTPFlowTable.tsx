@@ -1607,6 +1607,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const newObj = {...shieldData, data: newArr}
         setShieldData(newObj)
     })
+    // 取消所有屏蔽筛选
+    const cancleAllFilter = useMemoizedFn(() => {
+        const newObj = {...shieldData, data: []}
+        setShieldData(newObj)
+    })
 
     const cancleMitmFilter = useMemoizedFn((str: string) => {
         const value = JSON.parse(str)
@@ -3767,7 +3772,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }, 20)
     })
 
-    // mitm页面带参数跳转过来
+    // mitm页面发送事件跳转过来
     useEffect(() => {
         if (pageType === "MITM") {
             emiter.on("onHasParamsJumpHistory", onHasParamsJumpHistory)
@@ -3775,6 +3780,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             emiter.on("onMitmSearchInputVal", onMitmSearchInputVal)
             emiter.on("onMitmCurProcess", onMitmCurProcess)
             emiter.on("cancleMitmFilterEvent", cancleMitmFilter)
+            emiter.on("cancleMitmAllFilterEvent", cancleAllFilter)
             emiter.on("cleanMitmLogEvent", cleanLogTableData)
         }
         return () => {
@@ -3784,6 +3790,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 emiter.off("onMitmSearchInputVal", onMitmSearchInputVal)
                 emiter.off("onMitmCurProcess", onMitmCurProcess)
                 emiter.off("cancleMitmFilterEvent", cancleMitmFilter)
+                emiter.off("cancleMitmAllFilterEvent", cancleAllFilter)
                 emiter.off("cleanMitmLogEvent", cleanLogTableData)
             }
         }
@@ -3902,6 +3909,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     <HTTPFlowShield
                                                         shieldData={shieldData}
                                                         cancleFilter={cancleFilter}
+                                                        cancleAllFilter={cancleAllFilter}
                                                     />
                                                 </div>
                                             )}
@@ -4234,10 +4242,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 interface HTTPFlowShieldProps {
     shieldData: ShieldData
     cancleFilter: (s: string | number) => void
+    cancleAllFilter: () => void
 }
 
 export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {
-    const {shieldData, cancleFilter} = props
+    const {shieldData, cancleFilter, cancleAllFilter} = props
     return (
         <>
             {shieldData?.data.length > 0 && (
@@ -4259,6 +4268,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                                     </div>
                                 </div>
                             ))}
+                            <YakitButton type="text" className={style['shield-reset']} onClick={() => cancleAllFilter()}>重置</YakitButton>
                         </div>
                     }
                     overlayClassName={style["http-history-table-shield-popover"]}

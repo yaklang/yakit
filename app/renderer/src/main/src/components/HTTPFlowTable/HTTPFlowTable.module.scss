@@ -312,10 +312,17 @@
     }
 
     .title-header {
+        position: relative;
         max-width: 345px;
         max-height: 60vh;
         overflow-y: auto;
         padding: 12px;
+        padding-right: 50px;
+        .shield-reset {
+            position: absolute;
+            top: 8px;
+            right: 0px;
+        }
 
         .title-selected-tag {
             display: flex;
