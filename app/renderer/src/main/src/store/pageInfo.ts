@@ -185,6 +185,8 @@ export interface AuditCodePageInfoProps {
     // 正常操作查询
     Location: string
     Query?: {Key: string; Value: number}[]
+    // 文件与高亮信息
+    CodeRange?: string
 }
 
 export interface CodeScanPageInfoProps {
