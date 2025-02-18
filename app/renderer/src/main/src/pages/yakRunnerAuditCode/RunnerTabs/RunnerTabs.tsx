@@ -1154,7 +1154,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const nowShowRef = useRef<FileDetailInfo>()
     // 代码扫描编辑器提示
     const editerMenuFun = (editor: YakitIMonacoEditor) => {
-        if (!editorInfo?.highLightRange || !nowShowRef.current?.highLightRange?.source) return
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.range.code.scan.widget`
 
@@ -1251,6 +1250,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
         // 编辑器更新 关闭之前展示
         closeFizzRangeWidget()
+        // 当文件切换时没有必要数据时则无需打开
+        if (!editorInfo?.highLightRange || !nowShowRef.current?.highLightRange?.source) return
         openFizzRangeWidget()
         editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
     }
