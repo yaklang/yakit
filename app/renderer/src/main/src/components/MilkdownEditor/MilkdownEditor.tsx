@@ -1,5 +1,13 @@
-import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
-import React, {useEffect, useRef, useState} from "react"
+import {
+    defaultValueCtx,
+    Editor,
+    editorViewCtx,
+    editorViewOptionsCtx,
+    nodesCtx,
+    rootCtx,
+    schemaCtx
+} from "@milkdown/kit/core"
+import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
 
 import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
 import {
@@ -7,6 +15,7 @@ import {
     codeBlockSchema,
     commonmark,
     hrSchema,
+    listItemAttr,
     listItemSchema,
     syncHeadingIdPlugin
 } from "@milkdown/kit/preset/commonmark"
@@ -14,12 +23,17 @@ import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 
-import {ProsemirrorAdapterProvider, useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
+import {
+    ProsemirrorAdapterProvider,
+    useNodeViewContext,
+    useNodeViewFactory,
+    usePluginViewFactory
+} from "@prosemirror-adapter/react"
 import {tooltip, TooltipView} from "./Tooltip/Tooltip"
 import {BlockView} from "./Block/Block"
 import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {cursor} from "@milkdown/kit/plugin/cursor"
-import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
+import {imageBlockComponent, imageBlockConfig, imageBlockSchema} from "@milkdown/kit/component/image-block"
 
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
@@ -37,7 +51,7 @@ import {
     MilkdownCollabProps,
     MilkdownEditorProps
 } from "./MilkdownEditorType"
-import {alterCustomPlugin} from "./utils/alertPlugin"
+import {alterCustomPlugin, alterCustomSchema} from "./utils/alertPlugin"
 import {commentCustomPlugin} from "./utils/commentPlugin"
 
 import {diffLines} from "diff"
@@ -56,7 +70,7 @@ import {Ctx, MilkdownPlugin} from "@milkdown/kit/ctx"
 import {trailing} from "@milkdown/kit/plugin/trailing"
 
 import {upload, uploadConfig} from "@milkdown/kit/plugin/upload"
-import type {Node} from "@milkdown/kit/prose/model"
+import {Node, NodeSpec, NodeType, Schema} from "@milkdown/kit/prose/model"
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
 
 import {html} from "atomico"
@@ -81,12 +95,17 @@ import emiter from "@/utils/eventBus/eventBus"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
-import {isBoolean} from "lodash"
+import {forIn, isBoolean} from "lodash"
 import {notepadSaveStatus} from "./WebsocketProvider/constants"
 import {toAddNotepad, toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {API} from "@/services/swagger/resposeType"
 import {apiSaveNotepad} from "@/pages/notepadManage/notepadManage/utils"
-
+import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
+import {historyCustomPlugin} from "./utils/historyPlugin"
+import {CustomAlter} from "./CustomAlter/CustomAlter"
+import {CustomImageBlock} from "./CustomImageBlock/CustomImageBlock"
+import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 const markdown1 = `
 
 1. 5565
@@ -123,658 +142,779 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     // 判断是否大于30秒（10秒 = 10000毫秒）
     return difference > 1000 * 30
 }
-const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
-    const {
-        type,
-        readonly,
-        defaultValue,
-        collabProps,
-        setEditor,
-        customPlugin,
-        onMarkdownUpdated,
-        onSaveContentBeforeDestroy
-    } = props
+const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {
+            type,
+            readonly,
+            defaultValue,
+            collabProps,
+            setEditor,
+            customPlugin,
+            onMarkdownUpdated,
+            onSaveContentBeforeDestroy
+        } = props
 
-    const milkdownRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(milkdownRef)
+        const milkdownRef = useRef<HTMLDivElement>(null)
+        const [inViewport = true] = useInViewport(milkdownRef)
 
-    const nodeViewFactory = useNodeViewFactory()
-    const pluginViewFactory = usePluginViewFactory()
+        const nodeViewFactory = useNodeViewFactory()
+        const pluginViewFactory = usePluginViewFactory()
 
-    const userInfo = useStore((s) => s.userInfo)
+        const collabManagerRef = useRef<CollabManager>()
 
-    const collabParams: MilkdownCollabProps = useCreation(() => {
-        if (!collabProps) {
-            const def: MilkdownCollabProps = {
-                title: "",
-                enableCollab: false,
-                milkdownHash: "",
-                routeInfo: {
-                    pageId: "",
-                    route: null
-                },
-                onChangeWSLinkStatus: () => {},
-                onChangeOnlineUser: () => {},
-                onSetTitle: () => {}
+        useImperativeHandle(
+            ref,
+            () => ({
+                onVersionComparison: (version, prevVersion) => {
+                    
+                    const editorview = get()?.ctx.get(editorViewCtx)
+                    collabManagerRef.current?.versionComparison(editorview, version, prevVersion)
+                }
+            }),
+            [collabManagerRef]
+        )
+
+        const userInfo = useStore((s) => s.userInfo)
+
+        const collabParams: MilkdownCollabProps = useCreation(() => {
+            if (!collabProps) {
+                const def: MilkdownCollabProps = {
+                    title: "",
+                    enableCollab: false,
+                    milkdownHash: "",
+                    routeInfo: {
+                        pageId: "",
+                        route: null
+                    },
+                    onChangeWSLinkStatus: () => {},
+                    onChangeOnlineUser: () => {},
+                    onSetTitle: () => {}
+                }
+                return def
             }
-            return def
-        }
-        return collabProps
-    }, [collabProps])
+            return collabProps
+        }, [collabProps])
 
-    const uploadImg = useMemoizedFn(async (image) => {
-        if (image.size > ImgMaxSize) {
-            yakitNotify("error", "图片大小不能超过1M")
-            return ""
-        }
-        try {
-            const base64 = await getBase64(image)
-            const src = await httpUploadImgBase64({
-                base64,
-                imgInfo: {
-                    filename: image.name || "image.png",
-                    contentType: image.type || "image/png"
-                },
-                type: collabParams.enableCollab ? "notepad" : "img",
-                filedHash: collabParams.milkdownHash
-            })
-            return src
-        } catch (error) {
-            return ""
-        }
-    })
-
-    useEffect(() => {
-        return () => {
-            // 统一
-            collabManagerRef.current?.destroy()
-            collabManagerRef.current = undefined
-            clearRemove()
-            onDeleteAllFiles()
-        }
-    }, [])
-
-    //#region 编辑器初始
-    const {get, loading} = useEditor(
-        (root) => {
-            //#region 编辑器引用的相关插件 start
-            const blockPlugins = [
-                block,
-                (ctx: Ctx) => () => {
-                    ctx.set(block.key, {
-                        view: pluginViewFactory({
-                            component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
-                        })
-                    })
-                },
-                (ctx: Ctx) => () => {
-                    ctx.update(blockConfig.key, () => ({
-                        filterNodes: (pos, node) => {
-                            if (node.type.name === "paragraph" && !node.content.size) {
-                                return true
-                            }
-                            return false
-                        }
-                    }))
-                }
-            ].flat()
-            const placeholder = [placeholderConfig, placeholderPlugin]
-            const uploadPlugins = [
-                ...uploadCustomPlugin(),
-                upload,
-                $view(fileCustomSchema.node, () =>
-                    nodeViewFactory({
-                        component: () => <CustomFile type={type} />
-                    })
-                ),
-                (ctx: Ctx) => () => {
-                    ctx.update(uploadConfig.key, (prev) => ({
-                        ...prev,
-                        uploader: async (files, schema) => {
-                            const images: File[] = []
-                            for (let i = 0; i < files.length; i++) {
-                                const file = files.item(i)
-                                if (!file) {
-                                    continue
-                                }
-
-                                // You can handle whatever the file type you want, we handle image here.
-                                if (!file.type.includes("image")) {
-                                    continue
-                                }
-                                if (file.size > ImgMaxSize) {
-                                    yakitNotify("error", "图片大小不能超过1M")
-                                    continue
-                                }
-                                images.push(file)
-                            }
-                            const nodes: Node[] = await Promise.all(
-                                images.map(async (image) => {
-                                    const alt = image.name
-                                    try {
-                                        const src = await uploadImg(image)
-                                        return schema.nodes["image-block"].createAndFill({
-                                            src,
-                                            alt
-                                        }) as Node
-                                    } catch (error) {
-                                        return schema.nodes.image.createAndFill({
-                                            src: "",
-                                            alt
-                                        }) as Node
-                                    }
-                                })
-                            )
-                            return nodes
-                        }
-                    }))
-                }
-            ].flat()
-
-            const imagePlugin = [
-                imageBlockComponent,
-                imageInlineComponent,
-                insertImageBlockCommand,
-                (ctx: Ctx) => () => {
-                    ctx.update(imageBlockConfig.key, (value) => ({
-                        ...value,
-                        captionIcon: () => html`
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                            >
-                                <path
-                                    d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                        `,
-                        onUpload: async (image: File) => {
-                            const url = uploadImg(image)
-                            return url
-                        }
-                    }))
-                },
-                (ctx: Ctx) => () => {
-                    ctx.update(inlineImageConfig.key, (value) => ({
-                        ...value,
-                        imageIcon: () =>
-                            html`<svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M4 16L8.58579 11.4142C9.36683 10.6332 10.6332 10.6332 11.4142 11.4142L16 16M14 14L15.5858 12.4142C16.3668 11.6332 17.6332 11.6332 18.4142 12.4142L20 14M14 8H14.01M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                                <circle cx="14" cy="8" r="1" fill="currentColor" />
-                            </svg> `,
-                        onUpload: async (image: File) => {
-                            const url = uploadImg(image)
-                            return url
-                        }
-                    }))
-                }
-            ].flat()
-
-            const linkTooltip = [
-                linkTooltipPlugin,
-                (ctx: Ctx) => () => {
-                    ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
-                        ...defaultConfig,
-                        linkIcon: () => "🔗",
-                        editButton: () => "✎",
-                        removeButton: () => "❌",
-                        confirmButton: () => "✔️",
-                        onCopyLink: (link: string) => {
-                            yakitInfo("Link copied")
-                        }
-                    }))
-                }
-            ].flat()
-
-            const listPlugin = [
-                ...listCustomPlugin(),
-                $view(listItemSchema.node, () =>
-                    nodeViewFactory({
-                        component: ListItem
-                    })
-                )
-            ].flat()
-            const headingPlugin = [...headingCustomPlugin()].flat()
-            const codePlugin = [
-                ...codeCustomPlugin(),
-                $view(codeBlockSchema.node, () => {
-                    return nodeViewFactory({
-                        component: CustomCodeComponent,
-                        stopEvent: (e) => true
-                    })
+        const uploadImg = useMemoizedFn(async (image) => {
+            if (image.size > ImgMaxSize) {
+                yakitNotify("error", "图片大小不能超过1M")
+                return ""
+            }
+            try {
+                const base64 = await getBase64(image)
+                const src = await httpUploadImgBase64({
+                    base64,
+                    imgInfo: {
+                        filename: image.name || "image.png",
+                        contentType: image.type || "image/png"
+                    },
+                    type: collabParams.enableCollab ? "notepad" : "img",
+                    filedHash: collabParams.milkdownHash
                 })
-            ].flat()
-            const blockquotePlugin = [
-                $view(blockquoteSchema.node, () =>
-                    nodeViewFactory({
-                        component: Blockquote
-                    })
-                )
-            ].flat()
+                return src
+            } catch (error) {
+                return ""
+            }
+        })
 
-            const alterPlugin = [...alterCustomPlugin()].flat()
+        useEffect(() => {
+            return () => {
+                // 统一
+                collabManagerRef.current?.destroy()
+                collabManagerRef.current = undefined
+                clearRemove()
+                onDeleteAllFiles()
+            }
+        }, [])
 
-            const underlinePlugin = [...underlineCustomPlugin()].flat()
+        const nextMarkdownRef = useRef<string>("")
 
-            const commentPlugin = [...commentCustomPlugin()].flat()
-
-            const hrPlugin = [
-                $view(hrSchema.node, () =>
-                    nodeViewFactory({
-                        component: MilkdownHr
-                    })
-                )
-            ].flat()
-            //#endregion
-            return (
-                Editor.make()
-                    .config((ctx) => {
-                        ctx.set(rootCtx, root)
-                        ctx.set(tooltip.key, {
+        //#region 编辑器初始
+        const {get, loading} = useEditor(
+            (root) => {
+                //#region 编辑器引用的相关插件 start
+                const blockPlugins = [
+                    block,
+                    (ctx: Ctx) => () => {
+                        ctx.set(block.key, {
                             view: pluginViewFactory({
-                                component: TooltipView
+                                component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
                             })
                         })
-                        // 配置为只读
-                        ctx.set(editorViewOptionsCtx, {
-                            editable: () => !readonly
-                        })
-                        ctx.set(defaultValueCtx, defaultValue || "")
-                        onCollab(ctx)
-                        const listener = ctx.get(listenerCtx)
-                        listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
-                            const isSave = nextMarkdown !== prevMarkdown
-                            if (collabParams.enableCollab && isSave) {
-                                onSaveHistory(nextMarkdown)
+                    },
+                    (ctx: Ctx) => () => {
+                        ctx.update(blockConfig.key, () => ({
+                            filterNodes: (pos, node) => {
+                                if (node.type.name === "paragraph" && !node.content.size) {
+                                    return true
+                                }
+                                return false
                             }
-                            onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                        }))
+                    }
+                ].flat()
+                const placeholder = [placeholderConfig, placeholderPlugin]
+                const uploadPlugins = [
+                    ...uploadCustomPlugin(),
+                    upload,
+                    $view(fileCustomSchema.node, () =>
+                        nodeViewFactory({
+                            component: () => <CustomFile type={type} />
+                        })
+                    ),
+                    (ctx: Ctx) => () => {
+                        ctx.update(uploadConfig.key, (prev) => ({
+                            ...prev,
+                            uploader: async (files, schema) => {
+                                const images: File[] = []
+                                for (let i = 0; i < files.length; i++) {
+                                    const file = files.item(i)
+                                    if (!file) {
+                                        continue
+                                    }
+
+                                    // You can handle whatever the file type you want, we handle image here.
+                                    if (!file.type.includes("image")) {
+                                        continue
+                                    }
+                                    if (file.size > ImgMaxSize) {
+                                        yakitNotify("error", "图片大小不能超过1M")
+                                        continue
+                                    }
+                                    images.push(file)
+                                }
+                                const nodes: Node[] = await Promise.all(
+                                    images.map(async (image) => {
+                                        const alt = image.name
+                                        try {
+                                            const src = await uploadImg(image)
+                                            return schema.nodes["image-block"].createAndFill({
+                                                src,
+                                                alt
+                                            }) as Node
+                                        } catch (error) {
+                                            return schema.nodes.image.createAndFill({
+                                                src: "",
+                                                alt
+                                            }) as Node
+                                        }
+                                    })
+                                )
+                                return nodes
+                            }
+                        }))
+                    }
+                ].flat()
+
+                const imagePlugin = [
+                    imageBlockComponent,
+                    imageInlineComponent,
+                    insertImageBlockCommand,
+                    // TODO 自定义imageBlockSchema.node
+                    // $view(imageBlockSchema.node, () =>
+                    //     nodeViewFactory({
+                    //         component: () => <CustomImageBlock />
+                    //     })
+                    // ),
+                    (ctx: Ctx) => () => {
+                        ctx.update(imageBlockConfig.key, (value) => ({
+                            ...value,
+                            captionIcon: () => html`
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            `,
+                            onUpload: async (image: File) => {
+                                const url = uploadImg(image)
+                                return url
+                            }
+                        }))
+                    },
+                    (ctx: Ctx) => () => {
+                        ctx.update(inlineImageConfig.key, (value) => ({
+                            ...value,
+                            imageIcon: () =>
+                                html`<svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <path
+                                        d="M4 16L8.58579 11.4142C9.36683 10.6332 10.6332 10.6332 11.4142 11.4142L16 16M14 14L15.5858 12.4142C16.3668 11.6332 17.6332 11.6332 18.4142 12.4142L20 14M14 8H14.01M6 20H18C19.1046 20 20 19.1046 20 18V6C20 4.89543 19.1046 4 18 4H6C4.89543 4 4 4.89543 4 6V18C4 19.1046 4.89543 20 6 20Z"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                    <circle cx="14" cy="8" r="1" fill="currentColor" />
+                                </svg> `,
+                            onUpload: async (image: File) => {
+                                const url = uploadImg(image)
+                                return url
+                            }
+                        }))
+                    }
+                ].flat()
+
+                const linkTooltip = [
+                    linkTooltipPlugin,
+                    (ctx: Ctx) => () => {
+                        ctx.update(linkTooltipConfig.key, (defaultConfig) => ({
+                            ...defaultConfig,
+                            linkIcon: () => "🔗",
+                            editButton: () => "✎",
+                            removeButton: () => "❌",
+                            confirmButton: () => "✔️",
+                            onCopyLink: (link: string) => {
+                                yakitInfo("Link copied")
+                            }
+                        }))
+                    }
+                ].flat()
+
+                const listPlugin = [
+                    ...listCustomPlugin(),
+                    $view(listItemSchema.node, () =>
+                        nodeViewFactory({
+                            component: ListItem
+                        })
+                    )
+                ].flat()
+                const headingPlugin = [...headingCustomPlugin()].flat()
+                const codePlugin = [
+                    ...codeCustomPlugin(),
+                    $view(codeBlockSchema.node, () => {
+                        return nodeViewFactory({
+                            component: CustomCodeComponent,
+                            stopEvent: (e) => true
                         })
                     })
-                    .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
-                    .use(gfm)
-                    .use(cursor)
-                    .use(tooltip)
-                    .use(history)
-                    .use(clipboard)
-                    // trailing
-                    .use(trailing)
-                    // collab
-                    .use(collab)
-                    // listener
-                    .use(listener)
-                    // blockquote
-                    .use(blockquotePlugin)
-                    // block
-                    .use(blockPlugins)
-                    // upload
-                    .use(uploadPlugins)
-                    // image
-                    .use(imagePlugin)
-                    // listItem
-                    .use(listPlugin)
-                    .use(headingPlugin)
-                    // code
-                    .use(codePlugin)
-                    // linkTooltip
-                    .use(linkTooltip)
-                    // placeholder
-                    .use(placeholder)
-                    // table
-                    .use(tableBlock)
-                    // alterCustomPlugin
-                    .use(alterPlugin)
-                    // underlinePlugin
-                    .use(underlinePlugin)
-                    // commentPlugin
-                    .use(commentPlugin)
-                    // hrPlugin
-                    .use(hrPlugin)
-                    // trackDeletePlugin
-                    .use(trackDeletePlugin())
-                    .use(customPlugin || [])
-            )
-        },
-        [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash]
-    )
-    /**更新最新的editor */
-    useEffect(() => {
-        if (loading) return
-        const editor = get()
-        if (editor) {
-            if (setEditor) setEditor(editor)
-            // DeletedFiles
-            editor.action(onSetDeletedFiles)
-        }
-    }, [loading, get])
-    useEffect(() => {
-        return () => {
-            const value = get()?.action(getMarkdown()) || ""
-            onSaveContentBeforeDestroy && onSaveContentBeforeDestroy(value)
-        }
-    }, [])
-    //#endregion
+                ].flat()
+                const blockquotePlugin = [
+                    $view(blockquoteSchema.node, () =>
+                        nodeViewFactory({
+                            component: Blockquote
+                        })
+                    )
+                ].flat()
 
-    //#region 删除资源
-    const [deletedFiles, setDeletedFiles] = useState<DeleteOSSFileItem[]>([])
-    const [interval, setInterval] = useState<number | undefined>(undefined) // 文件删除间隔
-    const clearRemove = useRafInterval(() => {
-        onDeleteFiles()
-    }, interval)
-    /** 设置当前文档中被删除的文件名称 */
-    const onSetDeletedFiles = useDebounceFn(
-        useMemoizedFn((ctx) => {
-            // 获取 trackDeletePlugin 插件共享的值
-            const urls = ctx.get(deletedFileUrlsCtx)
-            if (urls.length > 0) {
-                setInterval(1000)
-            } else {
-                setInterval(undefined)
+                const alterPlugin = [
+                    ...alterCustomPlugin(),
+                    $view(alterCustomSchema.node, () =>
+                        nodeViewFactory({
+                            component: CustomAlter
+                        })
+                    )
+                ].flat()
+
+                const underlinePlugin = [...underlineCustomPlugin()].flat()
+
+                const commentPlugin = [...commentCustomPlugin()].flat()
+                const historyPlugin = [...historyCustomPlugin()].flat()
+
+                const hrPlugin = [
+                    $view(hrSchema.node, () =>
+                        nodeViewFactory({
+                            component: MilkdownHr
+                        })
+                    )
+                ].flat()
+                //#endregion
+                return (
+                    Editor.make()
+                        .config((ctx) => {
+                            ctx.set(rootCtx, root)
+                            ctx.set(tooltip.key, {
+                                view: pluginViewFactory({
+                                    component: TooltipView
+                                })
+                            })
+
+                            // 配置为只读
+                            ctx.set(editorViewOptionsCtx, {
+                                editable: () => !readonly
+                            })
+                            console.log("defaultValue", defaultValue)
+                            ctx.set(defaultValueCtx, defaultValue || "")
+                            onCollab(ctx)
+                            const listener = ctx.get(listenerCtx)
+                            listener.markdownUpdated((ctx, nextMarkdown, prevMarkdown) => {
+                                const isSave = nextMarkdown !== prevMarkdown
+                                if (collabParams.enableCollab && isSave) {
+                                    nextMarkdownRef.current = nextMarkdown
+                                    onSaveHistory(nextMarkdown)
+                                }
+                                onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                            })
+                        })
+                        .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
+                        .use(gfm)
+                        .use(cursor)
+                        .use(tooltip)
+                        .use(history)
+                        .use(clipboard)
+                        // trailing
+                        .use(trailing)
+                        // collab
+                        .use(collab)
+                        // listener
+                        .use(listener)
+                        // blockquote
+                        .use(blockquotePlugin)
+                        // block
+                        .use(blockPlugins)
+                        // upload
+                        .use(uploadPlugins)
+                        // image
+                        .use(imagePlugin)
+                        // listItem
+                        .use(listPlugin)
+                        .use(headingPlugin)
+                        // code
+                        .use(codePlugin)
+                        // linkTooltip
+                        .use(linkTooltip)
+                        // placeholder
+                        .use(placeholder)
+                        // table
+                        .use(tableBlock)
+                        // alterCustomPlugin
+                        .use(alterPlugin)
+                        // underlinePlugin
+                        .use(underlinePlugin)
+                        // commentPlugin
+                        .use(commentPlugin)
+                        // historyPlugin
+                        .use(historyPlugin)
+                        // hrPlugin
+                        .use(hrPlugin)
+                        // trackDeletePlugin
+                        .use(trackDeletePlugin())
+                        .use(customPlugin || [])
+                )
+            },
+            [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash]
+        )
+        /**更新最新的editor */
+        useEffect(() => {
+            if (loading) return
+            const editor = get()
+            if (editor) {
+                if (setEditor) setEditor(editor)
+                // DeletedFiles
+                editor.action(onSetDeletedFiles)
             }
-            setDeletedFiles(urls)
-        }),
-        {wait: 200}
-    ).run
+        }, [loading, get])
 
-    /**删除文档中被删除的所有文件 */
-    const onDeleteAllFiles = useMemoizedFn(() => {
-        if (deletedFiles.length > 0) {
-            httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
-        }
-    })
-    /**删除在文档中被删除30s的文件 */
-    const onDeleteFiles = useMemoizedFn(() => {
-        const fileName: string[] = []
-        const newDeletedFiles: DeleteOSSFileItem[] = []
-        const length = deletedFiles.length
-        for (let index = 0; index < length; index++) {
-            const element = deletedFiles[index]
-            if (isDifferenceGreaterThan30Seconds(element.time, moment().valueOf())) {
-                fileName.push(element.fileName)
-            } else {
-                newDeletedFiles.push(element)
+        useEffect(() => {
+            if (loading) return
+            const editor = get()
+            if (editor) {
+                editor.action((ctx) => {
+                    const schema = ctx.get(schemaCtx)
+                    console.log("schema", schema)
+                })
             }
-        }
-        if (fileName.length > 0) {
-            setInterval(undefined)
-            httpDeleteOSSResource({file_name: fileName}, true).finally(() => {
-                // 暂不考虑删除失败的情况
-                get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
-            })
-        }
-    })
-    //#endregion 删除资源 end
+        }, [loading])
 
-    //#region 协作文档
-    const collabManagerRef = useRef<CollabManager>()
-    const wsStatusRef = useRef<CollabStatus>({
-        status: "disconnected",
-        isSynced: false,
-        saveStatus: notepadSaveStatus.saveProgress
-    }) // 记录当前链接状态
-    // TODO - 共享标题
-    useUpdateEffect(() => {
-        if (collabManagerRef.current) {
-            collabManagerRef.current.setTitle(collabParams.title)
-        }
-    }, [collabParams.title])
+        useEffect(() => {
+            return () => {
+                const value = get()?.action(getMarkdown()) || ""
+                onSaveContentBeforeDestroy && onSaveContentBeforeDestroy(value)
+            }
+        }, [])
+        //#endregion
 
-    useUpdateEffect(() => {
-        if (inViewport) {
-            // 直接连接会collabService有意外报错情况
-            // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留,传入defaultValue编辑器内部会自己做对比显示最新的内容
-            collabManagerRef.current?.flush(defaultValue || "")
-        } else {
-            onCollabDisconnect()
-        }
-    }, [inViewport])
+        //#region 删除资源
+        const [deletedFiles, setDeletedFiles] = useState<DeleteOSSFileItem[]>([])
+        const [interval, setInterval] = useState<number | undefined>(undefined) // 文件删除间隔
+        const clearRemove = useRafInterval(() => {
+            onDeleteFiles()
+        }, interval)
+        /** 设置当前文档中被删除的文件名称 */
+        const onSetDeletedFiles = useDebounceFn(
+            useMemoizedFn((ctx) => {
+                // 获取 trackDeletePlugin 插件共享的值
+                const urls = ctx.get(deletedFileUrlsCtx)
+                if (urls.length > 0) {
+                    setInterval(1000)
+                } else {
+                    setInterval(undefined)
+                }
+                setDeletedFiles(urls)
+            }),
+            {wait: 200}
+        ).run
 
-    const onCollab = useMemoizedFn((ctx) => {
-        const {milkdownHash, title} = collabParams
-        if (!collabParams.enableCollab) {
-            onCollabDisconnect()
-            return
-        }
-        if (!milkdownHash) {
-            // yakitNotify("error", "enableCollab true,启用协作文档时,hash值必须存在")
-            return
-        }
-        if (collabManagerRef.current) return
-        const user = {
-            userId: userInfo.user_id || 0,
-            name: userInfo.companyName || "",
-            color: `${randomUserColor()}`,
-            heardImg: userInfo.companyHeadImg || ""
-        }
-        const collabService = ctx.get(collabServiceCtx)
-        collabManagerRef.current = new CollabManager(collabService, user, {
-            token: userInfo.token,
-            notepadHash: milkdownHash,
-            title
+        /**删除文档中被删除的所有文件 */
+        const onDeleteAllFiles = useMemoizedFn(() => {
+            if (deletedFiles.length > 0) {
+                httpDeleteOSSResource({file_name: deletedFiles.map((ele) => ele.fileName)}, true)
+            }
         })
-        collabManagerRef.current.flush(defaultValue || "")
-        collabManagerRef.current.on("offline-after", onLinkError)
-        collabManagerRef.current.on("online-users", onSetOnlineUsers)
-        collabManagerRef.current.on("link-status-onchange", onLineStatus)
-        collabManagerRef.current.on("sync-title", onSetTitle)
-    })
+        /**删除在文档中被删除30s的文件 */
+        const onDeleteFiles = useMemoizedFn(() => {
+            const fileName: string[] = []
+            const newDeletedFiles: DeleteOSSFileItem[] = []
+            const length = deletedFiles.length
+            for (let index = 0; index < length; index++) {
+                const element = deletedFiles[index]
+                if (isDifferenceGreaterThan30Seconds(element.time, moment().valueOf())) {
+                    fileName.push(element.fileName)
+                } else {
+                    newDeletedFiles.push(element)
+                }
+            }
+            if (fileName.length > 0) {
+                setInterval(undefined)
+                httpDeleteOSSResource({file_name: fileName}, true).finally(() => {
+                    // 暂不考虑删除失败的情况
+                    get()?.action((ctx) => ctx.update(deletedFileUrlsCtx, () => [...newDeletedFiles]))
+                })
+            }
+        })
+        //#endregion 删除资源 end
 
-    /**同步标题 */
-    const onSetTitle = useDebounceFn(
-        useMemoizedFn((value: string) => {
-            collabParams?.onSetTitle(value)
-        }),
-        {wait: 200, leading: true}
-    ).run
+        //#region 协作文档
 
-    /**在线链接状态 */
-    const onLineStatus = useDebounceFn(
-        useMemoizedFn((value: CollabStatus) => {
-            wsStatusRef.current = value
-            collabParams?.onChangeWSLinkStatus(value)
-        }),
-        {wait: 200, leading: true}
-    ).run
+        const wsStatusRef = useRef<CollabStatus>({
+            status: "disconnected",
+            isSynced: false,
+            saveStatus: notepadSaveStatus.saveProgress
+        }) // 记录当前链接状态
+        // TODO - 共享标题
+        useUpdateEffect(() => {
+            if (collabManagerRef.current) {
+                collabManagerRef.current.setTitle(collabParams.title)
+            }
+        }, [collabParams.title])
 
-    /**获取到所有的在线用户，然后设置在线用户数据 */
-    const onSetOnlineUsers = useDebounceFn(
-        useMemoizedFn((userList: CollabUserInfo[]) => {
-            collabParams?.onChangeOnlineUser(userList)
-        }),
-        {wait: 200, leading: true}
-    ).run
+        useUpdateEffect(() => {
+            if (inViewport) {
+                // 直接连接会collabService有意外报错情况
+                // 第二次flush,之前的collabService只是断开连接没有销毁,所以值有保留,传入defaultValue编辑器内部会自己做对比显示最新的内容
+                collabManagerRef.current?.flush(defaultValue || "")
+            } else {
+                onCollabDisconnect()
+            }
+        }, [inViewport])
 
-    /**处理ws链接出错 */
-    const onLinkError = useDebounceFn(
-        useMemoizedFn((event: CloseEvent) => {
-            const {routeInfo} = collabParams
-            if (!routeInfo) {
-                yakitNotify("error", "当enableCollab为true,routeInfo必传")
+        const onCollab = useMemoizedFn((ctx) => {
+            const {milkdownHash, title} = collabParams
+            if (!collabParams.enableCollab) {
+                onCollabDisconnect()
                 return
             }
-            switch (event.code) {
-                case 200: // 正常关闭
-                    break
-                case 401: // 401是指没有传token或者token过期
-                    loginOut(event)
-                    break
-
-                case 404: // 文档不存在/已经被删除
-                    onShowSave(event)
-                    break
-                case 403: //没有编辑或者阅读的权限
-                case 209: // 209 这种可以能处理出错，例如没传messageType
-                case 500: // 就可能是后端从http升级websocket失败啊，这种服务相关的
-                    onShowErrorModal(event)
-                    break
-                default:
-                    break
+            if (!milkdownHash) {
+                // yakitNotify("error", "enableCollab true,启用协作文档时,hash值必须存在")
+                return
             }
-        }),
-        {wait: 200, leading: true}
-    ).run
-    const loginOut = useMemoizedFn((event: CloseEvent) => {
-        const {routeInfo} = collabParams
-        if (!routeInfo) return
-        // 退出登录
-        tokenOverdue({
-            code: 401,
-            message: event.reason,
-            userInfo
+            if (collabManagerRef.current) return
+            const user = {
+                userId: userInfo.user_id || 0,
+                name: userInfo.companyName || "",
+                color: `${randomUserColor()}`,
+                heardImg: userInfo.companyHeadImg || ""
+            }
+            const collabService = ctx.get(collabServiceCtx)
+            collabManagerRef.current = new CollabManager(collabService, user, {
+                token: userInfo.token,
+                notepadHash: milkdownHash,
+                title
+            })
+            collabManagerRef.current.flush(defaultValue || "")
+            collabManagerRef.current.on("offline-after", onLinkError)
+            collabManagerRef.current.on("online-users", onSetOnlineUsers)
+            collabManagerRef.current.on("link-status-onchange", onLineStatus)
+            collabManagerRef.current.on("sync-title", onSetTitle)
         })
-        // 关闭笔记本编辑一级菜单
-        setTimeout(() => {
-            emiter.emit(
-                "onCloseFirstMenu",
-                JSON.stringify({
-                    route: routeInfo.route
-                })
-            )
-        }, 1000)
-    })
-    const onShowSave = useMemoizedFn((event: CloseEvent) => {
-        const {title} = collabParams
-        // 弹出框，显示网络异常，关闭/保存按钮
-        const s = showYakitModal({
-            title: "文档不存在/已经被删除",
-            content: <span>错误原因:{event.reason}</span>,
-            closable: false,
-            showConfirmLoading: true,
-            onOkText: "保存当前文档",
-            onCancelText: "不保存",
-            onOk: () => {
-                const markdownContent = get()?.action(getMarkdown()) || ""
-                // 有内容才保存，没有内容新建
-                if (markdownContent) {
-                    const params: API.PostNotepadRequest = {
-                        title,
-                        content: markdownContent
-                    }
-                    apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({notepadHash: hash, title})
+
+        /**同步标题 */
+        const onSetTitle = useDebounceFn(
+            useMemoizedFn((value: string) => {
+                collabParams?.onSetTitle(value)
+            }),
+            {wait: 200, leading: true}
+        ).run
+
+        /**在线链接状态 */
+        const onLineStatus = useDebounceFn(
+            useMemoizedFn((value: CollabStatus) => {
+                wsStatusRef.current = value
+                collabParams?.onChangeWSLinkStatus(value)
+            }),
+            {wait: 200, leading: true}
+        ).run
+
+        /**获取到所有的在线用户，然后设置在线用户数据 */
+        const onSetOnlineUsers = useDebounceFn(
+            useMemoizedFn((userList: CollabUserInfo[]) => {
+                collabParams?.onChangeOnlineUser(userList)
+            }),
+            {wait: 200, leading: true}
+        ).run
+
+        /**处理ws链接出错 */
+        const onLinkError = useDebounceFn(
+            useMemoizedFn((event: CloseEvent) => {
+                const {routeInfo} = collabParams
+                if (!routeInfo) {
+                    yakitNotify("error", "当enableCollab为true,routeInfo必传")
+                    return
+                }
+                switch (event.code) {
+                    case 200: // 正常关闭
+                        break
+                    case 401: // 401是指没有传token或者token过期
+                        loginOut(event)
+                        break
+
+                    case 404: // 文档不存在/已经被删除
+                        onShowSave(event)
+                        break
+                    case 403: //没有编辑或者阅读的权限
+                    case 209: // 209 这种可以能处理出错，例如没传messageType
+                    case 500: // 就可能是后端从http升级websocket失败啊，这种服务相关的
+                        onShowErrorModal(event)
+                        break
+                    default:
+                        break
+                }
+            }),
+            {wait: 200, leading: true}
+        ).run
+        const loginOut = useMemoizedFn((event: CloseEvent) => {
+            const {routeInfo} = collabParams
+            if (!routeInfo) return
+            // 退出登录
+            tokenOverdue({
+                code: 401,
+                message: event.reason,
+                userInfo
+            })
+            // 关闭笔记本编辑一级菜单
+            setTimeout(() => {
+                emiter.emit(
+                    "onCloseFirstMenu",
+                    JSON.stringify({
+                        route: routeInfo.route
+                    })
+                )
+            }, 1000)
+        })
+        const onShowSave = useMemoizedFn((event: CloseEvent) => {
+            const {title} = collabParams
+            // 弹出框，显示网络异常，关闭/保存按钮
+            const s = showYakitModal({
+                title: "文档不存在/已经被删除",
+                content: <span>错误原因:{event.reason}</span>,
+                maskClosable: false,
+                closable: false,
+                showConfirmLoading: true,
+                onOkText: "保存当前文档",
+                onCancelText: "不保存",
+                onOk: () => {
+                    const markdownContent = get()?.action(getMarkdown()) || ""
+                    // 有内容才保存，没有内容新建
+                    if (markdownContent) {
+                        const params: API.PostNotepadRequest = {
+                            title,
+                            content: markdownContent
+                        }
+                        apiSaveNotepad(params).then((hash) => {
+                            toEditNotepad({notepadHash: hash, title})
+                            onCloseCurrentPage()
+                            s.destroy()
+                        })
+                    } else {
+                        toAddNotepad()
                         onCloseCurrentPage()
                         s.destroy()
-                    })
-                } else {
-                    toAddNotepad()
+                    }
+                },
+                onCancel: () => {
                     onCloseCurrentPage()
                     s.destroy()
-                }
-            },
-            onCancel: () => {
-                onCloseCurrentPage()
-                s.destroy()
-            },
-            bodyStyle: {padding: 24}
+                },
+                bodyStyle: {padding: 24}
+            })
         })
-    })
-    const onShowErrorModal = useMemoizedFn((event: CloseEvent) => {
-        // 弹出框，显示网络异常，关闭/保存按钮
-        const m = showYakitModal({
-            title: "网络异常",
-            content: (
-                <span>
-                    错误原因:{event.code}:{event.reason}
-                </span>
-            ),
-            closable: false,
-            onOkText: "关闭页面",
-            cancelButtonProps: {style: {display: "none"}},
-            onOk: () => {
-                onCloseCurrentPage()
-                m.destroy()
-            },
-            bodyStyle: {padding: 24}
+        const onShowErrorModal = useMemoizedFn((event: CloseEvent) => {
+            // 弹出框，显示网络异常，关闭/保存按钮
+            const m = showYakitModal({
+                title: "网络异常",
+                content: (
+                    <span>
+                        错误原因:{event.code}:{event.reason}
+                    </span>
+                ),
+                maskClosable: false,
+                closable: false,
+                onOkText: "关闭页面",
+                cancelButtonProps: {style: {display: "none"}},
+                onOk: () => {
+                    onCloseCurrentPage()
+                    m.destroy()
+                },
+                bodyStyle: {padding: 24}
+            })
+            yakitNotify("error", event.reason)
         })
-        yakitNotify("error", event.reason)
-    })
-    const onCloseCurrentPage = useMemoizedFn(() => {
-        const {routeInfo} = collabParams
-        if (!routeInfo) return
-        emiter.emit("onCloseCurrentPage", routeInfo.pageId)
-    })
-    const onCollabDisconnect = useMemoizedFn(() => {
-        collabManagerRef.current?.disconnect()
-    })
-    //#endregion
+        const onCloseCurrentPage = useMemoizedFn(() => {
+            const {routeInfo} = collabParams
+            if (!routeInfo) return
+            emiter.emit("onCloseCurrentPage", routeInfo.pageId)
+        })
+        const onCollabDisconnect = useMemoizedFn(() => {
+            collabManagerRef.current?.disconnect()
+        })
+        //#endregion
 
-    //#region 保存历史
-    //是否保存历史,开启协作文档后,才有保存历史
-    const isSaveHistory = useCreation(() => {
-        if (!collabParams.enableCollab) {
-            return false
-        }
-        if (isBoolean(collabParams.enableSaveHistory)) {
-            return collabParams.enableSaveHistory
-        }
-        return !!collabParams.enableSaveHistory?.enable
-    }, [collabParams.enableCollab, collabParams.enableSaveHistory])
-    // 保存历史的间隔时间 默认每隔1min
-    const historyIntervalTime = useCreation(() => {
-        if (isBoolean(collabParams.enableSaveHistory)) {
-            return saveHistoryIntervalTime
-        }
-        return collabParams.enableSaveHistory?.interval || saveHistoryIntervalTime
-    }, [collabParams.enableSaveHistory])
-    /**默认每隔1min 保存历史 */
-    const onSaveHistory = useThrottleFn(
-        useMemoizedFn((value: string) => {
-            if (isSaveHistory) collabManagerRef.current?.sendContent({content: value, title: collabParams.title})
-        }),
-        {wait: historyIntervalTime}
-    ).run
-    //#endregion
-
-    /*TODO - 历史文档差异对比 */
-    const onDifferences = useMemoizedFn((ctx) => {
-        // 获取两个文档的差异
-        const differences = diffLines(markdown1, markdown2)
-
-        let content = ""
-
-        differences.forEach((part) => {
-            if (part.removed) {
-                content += `~~${part.value}~~\n` // 用删除线标记删除内容
-            } else if (part.added) {
-                content += "`" + `${part.value}` + "`" + "\n" // 用高亮标记新增内容
-            } else {
-                content += part.value // 未改变的内容保持原样
+        //#region 保存历史
+        //是否保存历史,开启协作文档后,才有保存历史
+        const isSaveHistory = useCreation(() => {
+            if (!collabParams.enableCollab) {
+                return false
             }
+            if (isBoolean(collabParams.enableSaveHistory)) {
+                return collabParams.enableSaveHistory
+            }
+            return !!collabParams.enableSaveHistory?.enable
+        }, [collabParams.enableCollab, collabParams.enableSaveHistory])
+        // 保存历史的间隔时间 默认每隔1min
+        const historyIntervalTime = useCreation(() => {
+            if (isBoolean(collabParams.enableSaveHistory)) {
+                return saveHistoryIntervalTime
+            }
+            return collabParams.enableSaveHistory?.interval || saveHistoryIntervalTime
+        }, [collabParams.enableSaveHistory])
+        /**默认每隔1min 保存历史 */
+        const onSaveHistory = useThrottleFn(
+            useMemoizedFn((value: string) => {
+                if (isSaveHistory) collabManagerRef.current?.sendContent({content: value, title: collabParams.title})
+            }),
+            {wait: historyIntervalTime}
+        ).run
+        //#endregion
+
+        /*TODO - 历史文档差异对比 */
+        const onDifferences = useMemoizedFn((ctx) => {
+            // 获取两个文档的差异
+            const differences = diffLines(markdown1, markdown2)
+
+            let content = ""
+
+            differences.forEach((part) => {
+                if (part.removed) {
+                    content += `~~${part.value}~~\n` // 用删除线标记删除内容
+                } else if (part.added) {
+                    content += "`" + `${part.value}` + "`" + "\n" // 用高亮标记新增内容
+                } else {
+                    content += part.value // 未改变的内容保持原样
+                }
+            })
+
+            ctx.set(defaultValueCtx, content)
         })
+        const renderVersions = useMemoizedFn(() => {
+            const list = collabManagerRef.current?.getVersions()
+            const editorview = get()?.ctx.get(editorViewCtx)
+            if (!editorview) return
+            console.log("list", list)
+            const m = showYakitModal({
+                title: "历史版本",
+                content: (
+                    <div>
+                        {list?.map((version: any, index) => {
+                            return (
+                                <div
+                                    key={index}
+                                    onClick={() => {
+                                        const prevSnapshot = index > 0 ? (list.get(index - 1) as any) : null
+                                        console.log("editorview", editorview)
+                                        collabManagerRef.current?.renderVersion(editorview, version, prevSnapshot)
+                                    }}
+                                >
+                                    {moment(version.date).format("YYYY-MM-DD HH:mm:ss")}-{version.userName}
+                                </div>
+                            )
+                        })}
+                    </div>
+                )
+            })
+        })
+        const [checked, setChecked] = useState<boolean>(false)
+        const diff = useMemoizedFn((e) => {
+            const check = e.target.checked
+            setChecked(check)
+            const editorview = get()?.ctx.get(editorViewCtx)
+            if (!editorview) return
+            collabManagerRef.current?.liveTracking(editorview, check)
+        })
+        const onSaveVersions = useMemoizedFn(() => {
+            collabManagerRef.current?.addVersion(get()?.action(getMarkdown()))
+        })
+        const onBatchSaveVersions = useMemoizedFn(() => {
+            collabManagerRef.current?.onBatchSaveVersions(get()?.action(getMarkdown()))
+        })
+        const unrenderVersion = useMemoizedFn(() => {
+            const editorview = get()?.ctx.get(editorViewCtx)
+            if (!editorview) return
+            collabManagerRef.current?.unrenderVersion(editorview)
+        })
+        const setVersions = useMemoizedFn(() => {
+            collabManagerRef.current?.setVersions()
+        })
+        const setSession = useMemoizedFn(() => {
+            collabManagerRef.current?.setSession()
+        })
+        const onDiff = useMemoizedFn(() => {
+            collabManagerRef.current?.onDiff()
+        })
+        return (
+            <div ref={milkdownRef}>
+                <div>
+                    <YakitButton onClick={renderVersions}>历史</YakitButton>
+                    <YakitButton onClick={onSaveVersions}>保存历史</YakitButton>
+                    <YakitButton onClick={onBatchSaveVersions}>批量保存历史</YakitButton>
+                    <YakitButton onClick={unrenderVersion}>恢复</YakitButton>
+                    <YakitButton onClick={setVersions}>get versions</YakitButton>
+                    <YakitButton onClick={setSession}>set Session</YakitButton>
+                    <YakitButton onClick={onDiff}>diff历史</YakitButton>
 
-        ctx.set(defaultValueCtx, content)
+                    <YakitCheckbox checked={checked} onChange={diff}>
+                        对比
+                    </YakitCheckbox>
+                </div>
+                <Milkdown />
+            </div>
+        )
     })
-    return (
-        <div ref={milkdownRef}>
-            <Milkdown />
-        </div>
-    )
-})
+)
 
-export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo((props) => {
-    return (
-        <MilkdownProvider>
-            <ProsemirrorAdapterProvider>
-                <CustomMilkdown {...props} />
-            </ProsemirrorAdapterProvider>
-        </MilkdownProvider>
-    )
-})
+export const MilkdownEditor: React.FC<MilkdownEditorProps> = React.memo(
+    React.forwardRef((props, ref) => {
+        return (
+            <MilkdownProvider>
+                <ProsemirrorAdapterProvider>
+                    <CustomMilkdown {...props} ref={ref} />
+                </ProsemirrorAdapterProvider>
+            </MilkdownProvider>
+        )
+    })
+)

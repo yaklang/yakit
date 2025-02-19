@@ -4,16 +4,30 @@ import {useNodeViewContext} from "@prosemirror-adapter/react"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import React, {useState, useEffect, useRef} from "react"
 import {TextSelection} from "@milkdown/kit/prose/state"
+import classNames from "classnames"
+import styles from "./CodeBlock.module.scss"
+import {YChangeProps} from "../YChange/YChangeType"
+import {YChange} from "../YChange/YChange"
+import {ySyncPluginKey} from "y-prosemirror"
+import * as Y from "yjs" // eslint-disable-line
 
 interface CustomCodeComponent {}
 export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
-    const {node, view, getPos} = useNodeViewContext()
+    const {node, view, getPos, contentRef} = useNodeViewContext()
+
+    const {attrs} = node
+
     // 编辑器实例
     const [editor, setEditor] = useState<IMonacoEditor>()
+
 
     const codeRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(codeRef)
     const isFocusRef = useRef<boolean>(false) // 是否已经初次聚焦
+
+    useEffect(() => {
+        console.log("CustomCodeComponent-node", node)
+    }, [node])
 
     useEffect(() => {
         if (!editor) return
@@ -50,15 +64,26 @@ export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
             }
         } catch (error) {}
     })
+
+    const ychange: YChangeProps = useCreation(() => attrs.ychange || {}, [attrs])
     return (
-        <div style={{height: 200, marginBottom: 20}} ref={codeRef}>
-            <YakitEditor
-                type='yak'
-                readOnly={readonly}
-                value={node.textContent}
-                setValue={updateEditorContent}
-                editorDidMount={setEditor}
-            />
+        <div
+            className={classNames(styles["code-block-custom-block"], {
+                [styles["code-block-custom-diff-history-block"]]: ychange
+            })}
+            style={{color: ychange ? ychange.color?.dark : ""}}
+            // ref={contentRef}
+        >
+            <div style={{height: 200, marginBottom: 20}} ref={codeRef}>
+                <YakitEditor
+                    type='yak'
+                    readOnly={readonly}
+                    value={node.textContent}
+                    setValue={updateEditorContent}
+                    editorDidMount={setEditor}
+                />
+            </div>
+            <YChange {...ychange} />
         </div>
     )
 }

@@ -1,0 +1,9 @@
+@mixin custom-block($type) {
+    .#{$type}-custom-block {
+        position: relative;
+    }
+    .#{$type}-custom-diff-history-block {
+        border-radius: 4px;
+        padding: 8px;
+    }
+}

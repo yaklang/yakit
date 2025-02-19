@@ -1,15 +1,17 @@
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {useNodeViewContext} from "@prosemirror-adapter/react"
-import React from "react"
+import React, {useEffect} from "react"
 import styles from "./ListItem.module.scss"
 import classNames from "classnames"
 import {useCreation} from "ahooks"
 
 export const ListItem: React.FC = () => {
-    const {node, view, contentRef, setAttrs} = useNodeViewContext()
+    const {node, view, contentRef, getPos, setAttrs} = useNodeViewContext()
 
     const {label, checked, listType} = node.attrs
-
+    useEffect(() => {
+        console.log("ListItem-node", node)
+    }, [node])
     const disabled = useCreation(() => {
         return !view.editable
     }, [view.editable])

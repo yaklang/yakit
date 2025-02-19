@@ -38,8 +38,8 @@ import {getFileNameByUrl} from "../utils/trackDeletePlugin"
 import {httpDeleteOSSResource} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {getYChangeType} from "../utils/historyPlugin"
-import {YChange} from "../MilkdownEditorType"
+import {YChangeProps} from "../YChange/YChangeType"
+import {YChange} from "../YChange/YChange"
 
 interface CustomFileItem {
     name: string
@@ -281,7 +281,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             </Tooltip>
         )
     })
-    const ychange: YChange = useCreation(() => attrs.ychange, [attrs])
+    const ychange: YChangeProps = useCreation(() => attrs.ychange, [attrs])
     return (
         <div
             className={classNames(styles["file-custom-block"], {
@@ -389,21 +389,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     />
                 )}
             </div>
-            {ychange && (
-                <>
-                    <span className='ychange-hover' style={{backgroundColor: ychange.color?.dark}}>{`${
-                        ychange.user
-                    } ${getYChangeType(ychange)}`}</span>
-
-                    <div
-                        contentEditable={false}
-                        className={classNames(styles["file-diff-history"])}
-                        style={{backgroundColor: ychange.color?.light}}
-                    >
-                        {ychange.type === "removed" && <SolidXIcon />}
-                    </div>
-                </>
-            )}
+            <YChange {...ychange} />
 
             {downFileInfo && (
                 <DownFilesModal

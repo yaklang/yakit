@@ -144,6 +144,7 @@ import {AddYakitPlugin} from "@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin
 import {WebsocketFuzzer} from "@/pages/websocket/WebsocketFuzzer"
 import {YakRunnerProjectManager} from "@/pages/YakRunnerProjectManager/YakRunnerProjectManager"
 import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
+import {NotepadDiff} from "@/pages/notepadManage/notepadManage/NotepadDiff"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -432,6 +433,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     switch (routeKey) {
         case YakitRoute.NewHome:
             return <Home />
+            // return <NotepadDiff />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

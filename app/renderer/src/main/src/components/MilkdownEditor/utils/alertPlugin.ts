@@ -1,10 +1,10 @@
-import {$command, $nodeSchema, $nodeAttr, $remark} from "@milkdown/utils"
+import {$command, $inputRule, $nodeSchema, $nodeAttr, $remark} from "@milkdown/kit/utils"
 
 import {wrappingInputRule} from "@milkdown/prose/inputrules"
-import {$inputRule} from "@milkdown/kit/utils"
 import {wrapIn} from "@milkdown/kit/prose/commands"
 import directive from "remark-directive"
-import {Node} from "@milkdown/kit/prose/model"
+import {Attrs, Node} from "@milkdown/kit/prose/model"
+import {calcYChangeStyle, calcYchangeDomAttrs, hoverWrapper} from "./historyPlugin"
 
 const alterCustomId = "alter-custom"
 const alterCustomAttr = $nodeAttr("alter-custom", () => ({"data-type": alterCustomId}))
@@ -20,6 +20,7 @@ export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
     group: "block",
     content: `block*`,
     atom: true,
+    defining: true,
     // 从 DOM 中解析节点，动态设置属性
     parseDOM: [
         {
@@ -34,7 +35,15 @@ export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
     toDOM: (node) => {
         const type = node.attrs.type
         const className = `alter-custom alter-custom-${type}`
-        return ["div", {...ctx.get(alterCustomAttr.key)(node), class: className, "data-custom-type": type}, 0] // 0表示内嵌内容节点
+        return [
+            "div",
+            {
+                ...ctx.get(alterCustomAttr.key)(node),
+                class: className,
+                "data-custom-type": type
+            },
+            0
+        ] // 0表示内嵌内容节点
     },
 
     parseMarkdown: {
@@ -61,7 +70,8 @@ export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
         }
     },
     attrs: {
-        type: {default: "tip"}
+        type: {default: "tip"},
+        ychange: {default: null}
     }
 }))
 

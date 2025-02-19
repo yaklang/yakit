@@ -13,7 +13,8 @@ import {
 export type EditorMilkdownProps = Editor
 
 export interface MilkdownRefProps {
-    collabManager: CollabManager
+    // collabManager: CollabManager
+    onVersionComparison:(version,perVersion)=>void
 }
 
 export interface CollabStatus {
@@ -79,8 +80,3 @@ export interface DeleteOSSFileItem {
     time: number
 }
 
-export interface YChange {
-    user: string | null
-    type: "removed" | "added" | null
-    color: {light: string; dark: string} | null
-}

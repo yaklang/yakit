@@ -113,6 +113,7 @@ const setupWS = (provider: WebsocketProvider) => {
                 const bytes = Buffer.from(event.data).toString()
                 const data: NotepadWsRequest = JSON.parse(bytes)
                 const yjsParams = Buffer.from(data.yjsParams, "base64")
+                // console.log('websocket.onmessage',bytes)
                 provider.wsLastMessageReceived = time.getUnixTime()
                 const encoder = readMessage(provider, yjsParams, true)
 
@@ -135,9 +136,11 @@ const setupWS = (provider: WebsocketProvider) => {
             } catch (error) {}
         }
         websocket.onerror = (event) => {
+            console.log('websocket.onerror',event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
+            console.log('websocket.onclose',event)
             closeWebsocketConnection(provider, websocket, event)
         }
         websocket.onopen = () => {
@@ -408,6 +411,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
                     token
                 }
                 const jsonString = JSON.stringify(value)
+                // console.log("getSendData", jsonString)
                 const finalArrayBuffer = Buffer.from(jsonString)
                 return finalArrayBuffer
             } catch (error) {
