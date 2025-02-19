@@ -10,7 +10,7 @@ import {
 } from "./YakRunnerAuditCodeType"
 import {Progress} from "antd"
 import {AuditModalFormModal} from "./AuditCode/AuditCode"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {
     addAreaFileInfo,
     getCodeByPath,
@@ -44,8 +44,6 @@ import classNames from "classnames"
 import {DragDropContext, DropResult, ResponderProvided} from "@hello-pangea/dnd"
 import cloneDeep from "lodash/cloneDeep"
 import {SplitView} from "../yakRunner/SplitView/SplitView"
-
-import {LeftAudit} from "./LeftAudit/LeftAudit"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {JumpToAuditEditorProps, ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
 import {AuditCodeWelcomePage, RunnerTabs} from "./RunnerTabs/RunnerTabs"
@@ -56,6 +54,8 @@ import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
+import { LeftSideType } from "./LeftSideBar/LeftSideBarType"
+import { LeftSideBar } from "./LeftSideBar/LeftSideBar"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -644,6 +644,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         })
     })
 
+    const [isUnShow, setUnShow] = useState<boolean>(false)
+
     const store: YakRunnerContextStore = useMemo(() => {
         return {
             pageInfo: pageInfo,
@@ -670,6 +672,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     }, [])
 
     const [auditRightParams, setAuditRightParams] = useState<AuditEmiterYakUrlProps>()
+    const [active, setActive, getActive] = useGetState<LeftSideType>("audit")
 
     const onOpenAuditRightDetailFun = useMemoizedFn((value: string) => {
         try {
@@ -731,17 +734,26 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                     <div className={styles["audit-code-page"]}>
                         <div className={styles["audit-code-body"]}>
                             <YakitResizeBox
-                                // freeze={!isUnShow}
-                                firstRatio={"300px"}
-                                firstNodeStyle={{padding: 0}}
+                                freeze={!isUnShow}
+                                firstRatio={isUnShow ? "25px" : "300px"}
+                                firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                                 lineDirection='right'
-                                firstMinSize={200}
+                                firstMinSize={isUnShow ? 25 : 200}
                                 lineStyle={{width: 4}}
                                 secondMinSize={480}
                                 firstNode={
-                                    <LeftAudit fileTreeLoad={fileTreeLoad} onOpenEditorDetails={onOpenEditorDetails} />
+                                    <LeftSideBar
+                                        fileTreeLoad={fileTreeLoad}
+                                        onOpenEditorDetails={onOpenEditorDetails}
+                                        isUnShow={isUnShow}
+                                        setUnShow={setUnShow}
+                                        active={active}
+                                        setActive={setActive}
+                                    />
                                 }
-                                secondNodeStyle={{overflow: "unset", padding: 0}}
+                                secondNodeStyle={
+                                    isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                                }
                                 secondNode={
                                     <YakitResizeBox
                                         freeze={isShowAuditDetail}
