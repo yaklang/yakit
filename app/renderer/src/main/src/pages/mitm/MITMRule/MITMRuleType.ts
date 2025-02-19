@@ -7,6 +7,7 @@ export interface MITMContentReplacerRule {
     Id: number
     Index: number
     Rule: string
+    RegexpGroups: number[]
     NoReplace: boolean
     Result: string
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan" | ""
