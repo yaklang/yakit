@@ -129,6 +129,29 @@ export const fetchCursorContent = (editor: YakitIMonacoEditor, isGetRow?: boolea
 
     return model.getValueInRange(range)
 }
+/**
+ * @name 获取编辑器光标选中内容字节数
+ * @param editor 编辑器对象实例
+ */
+export const getSelectionEditorByteCount = (
+    editor: YakitIMonacoEditor,
+    updateCallback: (byteCount: number) => void
+): void => {
+    editor.onDidChangeCursorSelection(() => {
+        const selection = editor.getSelection()
+        if (selection && !selection.isEmpty()) {
+            const model = editor.getModel()
+            if (model) {
+                const selectedText = model.getValueInRange(selection)
+                const encoder = new TextEncoder()
+                const byteCount = encoder.encode(selectedText).length
+                updateCallback(byteCount)
+            }
+        } else {
+            updateCallback(0)
+        }
+    })
+}
 
 /**
  * @name 获取自定义菜单所有项的key值，并整合成一个一维数组

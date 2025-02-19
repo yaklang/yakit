@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {Card} from "antd"
 import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {Uint8ArrayToString} from "@/utils/str"
@@ -16,6 +16,8 @@ import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {newWebsocketFuzzerTab} from "./WebsocketFuzzer"
 import {HistoryHighLightText} from "@/components/HTTPFlowDetail"
 import styles from "./HTTPFlowForWebsocketViewer.module.scss"
+import {IMonacoEditor} from "@/utils/editors"
+import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 export interface HTTPFlowForWebsocketViewerProp {
     pageType?: HTTPHistorySourcePageType
     historyId?: string
@@ -28,6 +30,24 @@ export interface HTTPFlowForWebsocketViewerProp {
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
     const [mode, setMode] = useState<"request" | "response">("request")
     const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass} = props
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [resEditor, setResEditor] = useState<IMonacoEditor>()
+    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
+    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
+    useEffect(() => {
+        try {
+            if (reqEditor) {
+                getSelectionEditorByteCount(reqEditor, (byteCount) => {
+                    setReqSelectionByteCount(byteCount)
+                })
+            }
+            if (resEditor) {
+                getSelectionEditorByteCount(resEditor, (byteCount) => {
+                    setResSelectionByteCount(byteCount)
+                })
+            }
+        } catch (e) {}
+    }, [reqEditor, resEditor])
 
     const onScrollTo = useMemoizedFn(() => {
         if (historyId) {
@@ -80,6 +100,11 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                     {pageType === "History" && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                     )}
+                    {mode === "request" ? (
+                        <>{reqSelectionByteCount > 0 && <YakitTag>{reqSelectionByteCount} bytes</YakitTag>}</>
+                    ) : (
+                        <>{resSelectionByteCount > 0 && <YakitTag>{resSelectionByteCount} bytes</YakitTag>}</>
+                    )}
                 </div>
             }
             extra={
@@ -106,6 +131,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                         highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
                         highLightFindClass={highLightFindClass}
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
+                        onSetEditor={setReqEditor}
                     />
                 )}
                 {mode === "response" && (
@@ -116,6 +142,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                         highLightFind={highLightItem ? (highLightItem.IsMatchRequest ? [] : [highLightItem]) : []}
                         highLightFindClass={highLightFindClass}
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
+                        onSetEditor={setResEditor}
                     />
                 )}
             </div>
@@ -131,9 +158,19 @@ interface WebSocketEditorProps {
     highLightFind?: HighLightText[]
     highLightFindClass?: string
     isPositionHighLightCursor?: boolean
+    onSetEditor?: (editor: IMonacoEditor) => void
 }
 export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
-    const {flow, value, contextMenu = {}, highLightText, highLightFind, highLightFindClass, isPositionHighLightCursor} = props
+    const {
+        flow,
+        value,
+        contextMenu = {},
+        highLightText,
+        highLightFind,
+        highLightFindClass,
+        isPositionHighLightCursor,
+        onSetEditor
+    } = props
 
     // 发送到WS Fuzzer
     const sendWebSocketMenuItem: OtherMenuListProps = useMemo(() => {
@@ -194,6 +231,9 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
             contextMenu={{
                 ...contextMenu,
                 ...sendWebSocketMenuItem
+            }}
+            editorDidMount={(editor) => {
+                onSetEditor && onSetEditor(editor)
             }}
         />
     )
