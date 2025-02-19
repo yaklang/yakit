@@ -118,21 +118,34 @@ jobs:
             - run: ls
               name: Ls Published Artifacts...
 
-            # - name: Create Release and Upload Assets
-            #   if: matrix.artifact == 'Yakit'
-            #   uses: ncipollo/release-action@v1
-            #   with:
-            #       artifacts: ./*
-            #       token: ${{ secrets.GITHUB_TOKEN }}
-            #       name: Release ${{ github.ref_name }}
-            #       tag: ${{ github.ref_name }}
+            - name: Create Release and Upload Assets
+              if: ${{ matrix.artifact == 'Yakit' }}
+              uses: ncipollo/release-action@v1
+              with:
+                  artifacts: ./*
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  name: Release ${{ github.ref_name }}
+                  tag: ${{ github.ref_name }}
 
-            # - name: Upload Yakit To OSS
-            #   uses: tvrcgo/upload-to-oss@master
-            #   with:
-            #       key-id: ${{ secrets.OSS_KEY_ID }}
-            #       key-secret: ${{ secrets.OSS_KEY_SECRET }}
-            #       region: oss-accelerate
-            #       bucket: yaklang
-            #       assets: |
-            #           *:/yak/${{ steps.generate_version.outputs.value }}/
+            - name: Generate OSS File Path
+              run: |
+                  if [ "${{ matrix.artifact }}" = "Yakit" ]; then
+                    echo "FILE_PATH=yak" >> $GITHUB_ENV
+                  elif [ "${{ matrix.artifact }}" = "EnpriTrace" ]; then
+                    echo "FILE_PATH=vip" >> $GITHUB_ENV
+                  else
+                    echo "No corresponding file path" >&2
+                    exit 1
+                  fi
+            - name: Show ENV.FILE_PATH
+              run: echo "FILE_PATH： $FILE_PATH"
+
+            - name: Upload Yakit To OSS
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
