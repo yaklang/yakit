@@ -99,10 +99,8 @@ const RpsAndCpsLineChart: React.FC<RpsAndCpsLineChartProps> = React.memo((props)
     const resetData = useMemoizedFn(() => {
         if (type === "rps") {
             emiter.off("onRefreshRps", updateData)
-            updateConcurrentLoad(type, [])
         } else if (type === "cps") {
             emiter.off("onRefreshCps", updateData)
-            updateConcurrentLoad(type, [])
         }
     })
 

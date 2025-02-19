@@ -1119,7 +1119,9 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
+            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence") {
+                setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
+            }
         }
 
         ipcRenderer.on(dataToken, (e: any, data: any) => {
@@ -1166,19 +1168,15 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 failedCount++
                 failedBuffer.push(r)
             }
-            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence" && r.Count) {
-                fuzzerResChartDataBuffer.push({
-                    Count: r.Count,
-                    TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
-                    TCPDurationMs: +r.TCPDurationMs,
-                    ConnectDurationMs: +r.ConnectDurationMs,
-                    DurationMs: +r.DurationMs
-                })
-                if (fuzzerResChartDataBuffer.length > 5000) {
-                    fuzzerResChartDataBuffer.shift()
-                }
-            } else {
-                fuzzerResChartDataBuffer = []
+            fuzzerResChartDataBuffer.push({
+                Count: (r.Count as number) + 1,
+                TLSHandshakeDurationMs: +r.TLSHandshakeDurationMs,
+                TCPDurationMs: +r.TCPDurationMs,
+                ConnectDurationMs: +r.ConnectDurationMs,
+                DurationMs: +r.DurationMs
+            })
+            if (fuzzerResChartDataBuffer.length > 5000) {
+                fuzzerResChartDataBuffer.shift()
             }
         })
 
