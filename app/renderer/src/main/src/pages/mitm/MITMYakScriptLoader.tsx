@@ -55,7 +55,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         setShowPluginHistoryList = () => {},
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey,
+        curTabKey
     } = p
     const [i, setI] = useState(script)
     useEffect(() => {
@@ -458,7 +458,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
         onSubmitYakScriptId,
         onSetTempShowPluginHistory,
         onSetDrawerWidth,
-        onSetMitmParamsDrawer,
+        onSetMitmParamsDrawer
     } = props
     const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const [initWidth, setInitWidth] = useState<number>(drawerWidth)
@@ -610,15 +610,18 @@ const MitmHasParamsForm = React.forwardRef((props: MitmHasParamsFormProps, ref) 
             if (!form) return resolve(undefined)
             form.validateFields()
                 .then((values) => {
-                    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-                    if (result.jsonSchemaError.length > 0) {
-                        failed(`jsonSchema校验失败`)
-                        return
-                    }
-                    result.jsonSchemaSuccess.forEach((item) => {
-                        values[item.key] = JSON.stringify(item.value)
-                    })
-                    resolve(values)
+                    // 需要等jsonSchema表格数据保存成功后再提交数据，否则可能拿不到最新的值
+                    setTimeout(() => {
+                        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+                        if (result.jsonSchemaError.length > 0) {
+                            failed(`jsonSchema校验失败`)
+                            return
+                        }
+                        result.jsonSchemaSuccess.forEach((item) => {
+                            values[item.key] = JSON.stringify(item.value)
+                        })
+                        resolve(values)
+                    }, 300)
                 })
                 .catch(() => {
                     resolve(undefined)
