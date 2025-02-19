@@ -44,6 +44,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const cancleFilter = useMemoizedFn((value) => {
         emiter.emit("cancleMitmFilterEvent", JSON.stringify(value))
     })
+    const cancleAllFilter = useMemoizedFn(() => {
+        emiter.emit("cancleMitmAllFilterEvent")
+    })
 
     const onHistorySourceTypeToMitm = useMemoizedFn((sourceType: string) => {
         onSetSourceType(sourceType)
@@ -249,7 +252,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                 >
                     重置
                 </YakitButton>
-                <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} />
+                <HTTPFlowShield shieldData={shieldData} cancleFilter={cancleFilter} cancleAllFilter={cancleAllFilter} />
             </div>
         </div>
     )
