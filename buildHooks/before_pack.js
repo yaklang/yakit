@@ -1,3 +1,5 @@
+const packageJson = require("../package.json");
+
 module.exports = async function (context) {
     const archMap = {
         1: "x64",
@@ -5,7 +7,7 @@ module.exports = async function (context) {
     };
     const arch = archMap[context.arch];
     const baseInfo = context.packager.appInfo;
-    let productVersion = baseInfo.version;
+    let productVersion = packageJson.version || baseInfo.version;
     // CE
     if (productVersion.endsWith("-ce")) {
         productVersion = productVersion.replace("-ce", "");
