@@ -713,6 +713,10 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isSastScan()?[
             {
                 page: YakitRoute.Rule_Management,
                 ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
+            },
+            {
+                page: YakitRoute.YakRunner_Audit_Hole,
+                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
             }
         ]
     },
@@ -841,32 +845,6 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isSastScan()?[
             {
                 page: YakitRoute.ShellReceiver,
                 ...YakitRouteToPageInfo[YakitRoute.ShellReceiver]
-            }
-        ]
-    },
-    {
-        page: undefined,
-        label: "代码审计",
-        children: [
-            {
-                page: YakitRoute.YakRunner_Project_Manager,
-                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Project_Manager]
-            },
-            {
-                page: YakitRoute.YakRunner_Audit_Code,
-                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]
-            },
-            {
-                page: YakitRoute.YakRunner_Code_Scan,
-                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Code_Scan]
-            },
-            {
-                page: YakitRoute.Rule_Management,
-                ...YakitRouteToPageInfo[YakitRoute.Rule_Management]
-            },
-            {
-                page: YakitRoute.YakRunner_Audit_Hole,
-                ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
             }
         ]
     },
@@ -1223,16 +1201,6 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isSastScan()
                       describe: getFixedPluginDescribe(ResidentPluginName.DirectoryScanning),
                       yakScripName: ResidentPluginName.DirectoryScanning
                   }
-              ]
-          },
-          {
-              page: undefined,
-              label: "代码审计",
-              children: [
-                  PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
-                  PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
-                  PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-                  PrivateAllMenus[YakitRoute.Rule_Management]
               ]
           },
           {
