@@ -112,7 +112,7 @@ jobs:
             - name: Download Yakit And Legacy Yakit
               uses: actions/download-artifact@v4
               with:
-                  name: ${{ matrix.artifact }}--artifacts
+                  name: ${{ matrix.artifact }}-artifacts
                   merge-multiple: true
 
             - run: ls
