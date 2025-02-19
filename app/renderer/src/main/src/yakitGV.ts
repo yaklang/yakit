@@ -76,6 +76,8 @@ export enum RemoteGV {
     PocPluginKeywords = "poc-plugin-keywords",
     /**@name 代码扫描关键词搜索缓存 */
     CodeScanKeywords = "code-scan-keywords",
+    /**@name 代码审计关键词搜索缓存 */
+    AuditCodeKeywords = "audit-code-keywords",
     /**@name MITM 用户数据是否保存 */
     MITMUserDataSave = "mitm_user_data_save",
     /**@name MITM热加载代码保存 */
