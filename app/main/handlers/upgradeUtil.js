@@ -1,4 +1,4 @@
-const {ipcMain, shell} = require("electron")
+const { ipcMain, shell, app } = require("electron")
 const childProcess = require("child_process")
 const process = require("process")
 const path = require("path")
@@ -9,6 +9,7 @@ const https = require("https")
 const EventEmitter = require("events")
 const zip = require("node-stream-zip")
 const crypto = require("crypto")
+const electronIsDev = require("electron-is-dev")
 
 const {
     YakitProjectPath,
@@ -27,8 +28,8 @@ const {
     getYakitCommunityDownloadUrl,
     downloadYakEngine
 } = require("./utils/network")
-const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
-const {getCheckTextUrl} = require("../handlers/utils/network")
+const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require("./utils/requestWithProgress")
+const { getCheckTextUrl } = require("../handlers/utils/network")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
 const authMeta = []
@@ -36,11 +37,11 @@ const authMeta = []
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
         try {
-            fs.mkdirSync(remoteLinkDir, {recursive: true})
-            fs.mkdirSync(basicDir, {recursive: true})
-            fs.mkdirSync(userChromeDataDir, {recursive: true})
-            fs.mkdirSync(yaklangEngineDir, {recursive: true})
-            fs.mkdirSync(codeDir, {recursive: true})
+            fs.mkdirSync(remoteLinkDir, { recursive: true })
+            fs.mkdirSync(basicDir, { recursive: true })
+            fs.mkdirSync(userChromeDataDir, { recursive: true })
+            fs.mkdirSync(yaklangEngineDir, { recursive: true })
+            fs.mkdirSync(codeDir, { recursive: true })
 
             try {
                 console.info("Start checking bins/resources")
@@ -87,7 +88,7 @@ const loadSecrets = () => {
                 caPem: i["caPem"] || ""
             })
         })
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function saveSecret(name, host, port, tls, password, caPem) {
@@ -111,7 +112,7 @@ const isWindows = process.platform === "win32"
 const saveAllSecret = (authInfos) => {
     try {
         fs.unlinkSync(remoteLinkFile)
-    } catch (e) {}
+    } catch (e) { }
 
     const authFileStr = JSON.stringify([
         ...authInfos.filter((v, i, arr) => {
@@ -154,7 +155,7 @@ module.exports = {
     },
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
-            let {name, host, port, tls, caPem, password} = params
+            let { name, host, port, tls, caPem, password } = params
             name = name || `${host}:${port}`
             saveAllSecret([
                 ...authMeta.filter((i) => {
@@ -180,7 +181,7 @@ module.exports = {
             return remoteLinkDir
         })
 
-        class YakVersionEmitter extends EventEmitter {}
+        class YakVersionEmitter extends EventEmitter { }
 
         const yakVersionEmitter = new YakVersionEmitter()
         let isFetchingVersion = false
@@ -265,7 +266,7 @@ module.exports = {
                         return
                     }
 
-                    childProcess.execFile(commandPath, ["-v"], {timeout: 20000}, (error, stdout, stderr) => {
+                    childProcess.execFile(commandPath, ["-v"], { timeout: 20000 }, (error, stdout, stderr) => {
                         if (error) {
                             let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
                             if (error.code === "ENOENT") {
@@ -299,7 +300,7 @@ module.exports = {
                 )
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {}
+                } catch (e) { }
                 await downloadYakEngine(
                     version,
                     dest,
@@ -378,11 +379,11 @@ module.exports = {
                     ? await getYakitEEDownloadUrl(version)
                     : await getYakitCommunityDownloadUrl(version)
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, { recursive: true })
                 const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {}
+                } catch (e) { }
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
 
@@ -429,7 +430,7 @@ module.exports = {
         })
 
         ipcMain.handle("update-enpritrace-info", async () => {
-            return await {version: getYakitPlatform()}
+            return await { version: getYakitPlatform() }
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
@@ -749,6 +750,66 @@ module.exports = {
 
         ipcMain.handle("generate-start-engine", async (e) => {
             return await generateStartEngineGRPC()
+        })
+
+        // 插件压缩包和解压目录
+        const generateChromePlugin = () => {
+            return new Promise((resolve, reject) => {
+                const all = "google-chrome-plugin.zip"
+                const output_name = 'google-chrome-plugin'
+                const zipFilePath = loadExtraFilePath(path.join("bins", "scripts", all))
+                const zipDir = path.dirname(zipFilePath)  // 获取压缩包所在目录
+                const targetPath = path.join(zipDir, output_name)
+                const devTargetPath = path.join(app.getAppPath(), targetPath)
+
+                // 确保压缩包存在
+                if (!fs.existsSync(zipFilePath)) {
+                    reject(all + " not found")
+                    return
+                }
+
+                // 确保输出文件夹存在，不存在则进行创建
+                if (!fs.existsSync(targetPath)) {
+                    fs.mkdirSync(output_name, { recursive: true })
+                } else {
+                    if (electronIsDev) {
+                        resolve(devTargetPath)
+                    } else {
+                        resolve(targetPath)
+                    }
+                    return
+                }
+
+                const zipHandler = new zip({
+                    file: zipFilePath,
+                    storeEntries: true
+                })
+
+                zipHandler.on("ready", () => {
+                    // 执行解压
+                    zipHandler.extract(null, electronIsDev ? devTargetPath : targetPath, (err, res) => {
+                        if (err) {
+                            reject(`Extract Google Chrome Plugin Failed: ${err}`)
+                        } else {
+                            if (electronIsDev) {
+                                resolve(devTargetPath)
+                            } else {
+                                resolve(targetPath)
+                            }
+                        }
+                        zipHandler.close()
+                    });
+                });
+
+                zipHandler.on("error", (err) => {
+                    reject(`Zip error: ${err}`)
+                    zipHandler.close()
+                })
+            })
+        };
+
+        ipcMain.handle('generate-chrome-plugin', async (e) => {
+            return await generateChromePlugin()
         })
     }
 }

@@ -9,6 +9,8 @@ extraFiles:
       to: "bins/scripts/auto-install-cert.zip"
     - from: "bins/scripts/start-engine.zip"
       to: "bins/scripts/start-engine.zip"
+    - from: "bins/scripts/google-chrome-plugin.zip"
+      to: "bins/scripts/google-chrome-plugin.zip"
     - from: "bins/flag.txt"
       to: "bins/flag.txt"
     - from: "bins/engine-version.txt"

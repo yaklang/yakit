@@ -29,6 +29,7 @@ import {OutlineSaveIcon} from "@/assets/icon/outline"
 import {v4 as uuidv4} from "uuid"
 import {chromeLauncherParamsArr} from "@/defaultConstants/mitm"
 import {SolidStoreIcon} from "@/assets/icon/solid"
+import {useGoogleChromePluginPath} from "@/store"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -70,6 +71,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         data: [],
         tempEditItem: undefined
     })
+    const {googleChromePluginPath} = useGoogleChromePluginPath()
 
     useEffect(() => {
         // 获取连接引擎的地址参数
@@ -133,20 +135,17 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         }
                     }
 
+                    let chromeFlags: ChromeLauncherParams[] = chromeLauncherParamsArr
                     if (res[1].status === "fulfilled") {
                         const value = res[1].value
                         if (value) {
                             try {
-                                newParams.chromeFlags = JSON.parse(value)
-                            } catch (error) {
-                                newParams.chromeFlags = chromeLauncherParamsArr
-                            }
-                        } else {
-                            newParams.chromeFlags = chromeLauncherParamsArr
+                                chromeFlags = JSON.parse(value)
+                            } catch (error) {}
                         }
-                    } else {
-                        newParams.chromeFlags = chromeLauncherParamsArr
                     }
+                    newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
+                    console.log(newParams.chromeFlags)
 
                     ipcRenderer
                         .invoke("LaunchChromeWithParams", newParams)
@@ -299,17 +298,16 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                             }
 
                             const saveChromeLauncherParamsArr = chromeLauncherParamsSetRef.current.data.filter(
-                                (item) =>
-                                    item["parameterName"] &&
-                                    !["--proxy-server", "--disable-extensions-except", "--load-extension"].includes(
-                                        item["parameterName"]
-                                    )
+                                (item) => item["parameterName"] && !["--proxy-server"].includes(item["parameterName"])
                             )
                             setRemoteValue(RemoteGV.ChromeLauncherParams, JSON.stringify(saveChromeLauncherParamsArr))
                             setChromeLauncherParamsVisible(false)
                         }}
                     >
-                        <ChromeLauncherParamsSet ref={chromeLauncherParamsSetRef} />
+                        <ChromeLauncherParamsSet
+                            ref={chromeLauncherParamsSetRef}
+                            googleChromePluginPath={googleChromePluginPath}
+                        />
                     </YakitModal>
                 )}
             </Form.Item>
@@ -458,14 +456,43 @@ export interface ChromeLauncherParams {
     default: boolean
     cellStyle?: CSSProperties
 }
+
+function setGoogleChromePlugin(parameterName: string, googleChromePluginPath: string, disabled: boolean) {
+    return {
+        id: uuidv4(),
+        parameterName: parameterName,
+        variableValues: googleChromePluginPath,
+        variableType: "input",
+        disabled: disabled,
+        desc: "",
+        default: true
+    } as ChromeLauncherParams
+}
+function handleChromeLauncherParams(arr: ChromeLauncherParams[], googleChromePluginPath: string) {
+    const index = arr.findIndex((item) => item.parameterName === "--load-extension")
+    if (index === -1) {
+        arr.push(setGoogleChromePlugin("--load-extension", googleChromePluginPath, false))
+    } else {
+        arr[index] = setGoogleChromePlugin("--load-extension", googleChromePluginPath, arr[index].disabled)
+    }
+    const index2 = arr.findIndex((item) => item.parameterName === "--disable-extensions-except")
+    if (index2 === -1) {
+        arr.push(setGoogleChromePlugin("--disable-extensions-except", googleChromePluginPath, false))
+    } else {
+        arr[index2] = setGoogleChromePlugin("--disable-extensions-except", googleChromePluginPath, arr[index2].disabled)
+    }
+    return arr
+}
 interface ChromeLauncherParamsSetRefProps {
     data: ChromeLauncherParams[]
     tempEditItem?: ChromeLauncherParams
 }
 interface ChromeLauncherParamsSetProps {
     ref?: React.ForwardedRef<ChromeLauncherParamsSetRefProps>
+    googleChromePluginPath: string
 }
 const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.forwardRef((props, ref) => {
+    const {googleChromePluginPath} = props
     const [currentItem, setCurrentItem] = useState<ChromeLauncherParams>()
     const [data, setData] = useState<ChromeLauncherParams[]>([])
     const tempEditItem = useRef<ChromeLauncherParams>()
@@ -484,16 +511,13 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
 
     useEffect(() => {
         getRemoteValue(RemoteGV.ChromeLauncherParams).then((setting) => {
+            let arr: ChromeLauncherParams[] = chromeLauncherParamsArr
             if (setting) {
                 try {
-                    const arr = JSON.parse(setting)
-                    setData(arr)
-                } catch (error) {
-                    setData(chromeLauncherParamsArr)
-                }
-            } else {
-                setData(chromeLauncherParamsArr)
+                    arr = JSON.parse(setting)
+                } catch (error) {}
             }
+            setData(handleChromeLauncherParams(arr, googleChromePluginPath))
         })
     }, [])
 
@@ -576,7 +600,10 @@ const ChromeLauncherParamsSet: React.FC<ChromeLauncherParamsSetProps> = React.fo
 
     const disabledEdit = useMemoizedFn((record: ChromeLauncherParams) => {
         return (
-            record.variableType === "bool" || record.disabled || !(tempEditId === undefined || tempEditId === record.id)
+            record.variableType === "bool" ||
+            record.disabled ||
+            !(tempEditId === undefined || tempEditId === record.id) ||
+            ["--load-extension", "--disable-extensions-except"].includes(record.parameterName)
         )
     })
     const disabledBan1 = useMemoizedFn((record: ChromeLauncherParams) => {

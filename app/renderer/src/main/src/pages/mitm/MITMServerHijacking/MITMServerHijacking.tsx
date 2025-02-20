@@ -27,6 +27,7 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
+import { useGoogleChromePluginPath } from "@/store"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography

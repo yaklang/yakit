@@ -95,3 +95,12 @@ export const useEeSystemConfig = create<EeSystemConfigProps>((set, get) => ({
     eeSystemConfig: [],
     setEeSystemConfig: (config) => set({eeSystemConfig: config})
 }))
+
+interface GoogleChromePluginPathProps {
+    googleChromePluginPath: string
+    setGoogleChromePluginPath: (path: string) => void
+}
+export const useGoogleChromePluginPath = create<GoogleChromePluginPathProps>((set, get) => ({
+    googleChromePluginPath: "",
+    setGoogleChromePluginPath: (path) => set({googleChromePluginPath: path})
+}))
