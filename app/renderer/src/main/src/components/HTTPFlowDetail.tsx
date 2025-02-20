@@ -172,6 +172,16 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             }
         } catch (e) {}
     }, [wsReqEditor, wsResEditor, reqEditor, resEditor])
+    const reqByte = useMemo(() => {
+        if (!flow) return null
+        if (flow.IsWebsocket) return wsReqSelectionByteCount
+        return reqSelectionByteCount
+    }, [flow, wsReqSelectionByteCount, reqSelectionByteCount])
+    const resByte = useMemo(() => {
+        if (!flow) return null
+        if (flow.IsWebsocket) return wsResSelectionByteCount
+        return resSelectionByteCount
+    }, [flow, wsResSelectionByteCount, resSelectionByteCount])
 
     useEffect(() => {
         setLoading(props.loading || false)
@@ -403,22 +413,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 请求
-                                            {flow.IsWebsocket ? (
-                                                <>
-                                                    {wsReqSelectionByteCount > 0 && (
-                                                        <YakitTag style={{marginLeft: 8}}>
-                                                            {wsReqSelectionByteCount} bytes
-                                                        </YakitTag>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {reqSelectionByteCount > 0 && (
-                                                        <YakitTag style={{marginLeft: 8}}>
-                                                            {reqSelectionByteCount} bytes
-                                                        </YakitTag>
-                                                    )}
-                                                </>
+                                            {reqByte && reqByte > 0 && (
+                                                <YakitTag style={{marginLeft: 8}}>{reqByte} bytes</YakitTag>
                                             )}
                                         </>
                                     }
@@ -463,22 +459,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                     title={
                                         <>
                                             原始 HTTP 响应
-                                            {flow.IsWebsocket ? (
-                                                <>
-                                                    {wsResSelectionByteCount > 0 && (
-                                                        <YakitTag style={{marginLeft: 8}}>
-                                                            {wsResSelectionByteCount} bytes
-                                                        </YakitTag>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {resSelectionByteCount > 0 && (
-                                                        <YakitTag style={{marginLeft: 8}}>
-                                                            {resSelectionByteCount} bytes
-                                                        </YakitTag>
-                                                    )}
-                                                </>
+                                            {resByte && resByte > 0 && (
+                                                <YakitTag style={{marginLeft: 8}}>{resByte} bytes</YakitTag>
                                             )}
                                         </>
                                     }
@@ -1214,7 +1196,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             if (!resEditor) {
                 return
             }
-            
         } catch (e) {}
     }, [resEditor])
 
