@@ -2,14 +2,15 @@ name: Publish OSS Version Tag
 
 on:
     workflow_dispatch:
-        version:
-            description: "Select version type"
-            required: true
-            type: choice
-            default: ce
-            options:
-                - ce
-                - ee
+        inputs:
+            version:
+                description: "Select version type"
+                required: true
+                type: choice
+                default: ce
+                options:
+                    - ce
+                    - ee
 
 jobs:
     build_yakit:
