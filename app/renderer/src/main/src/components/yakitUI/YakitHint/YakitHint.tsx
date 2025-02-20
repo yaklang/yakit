@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom"
 import React, {memo, useMemo, useState} from "react"
-import {YakitHintModal} from "./YakitHintModal"
-import {YakitHintProps} from "./YakitHintType"
+import {HintModal, YakitHintModal} from "./YakitHintModal"
+import {YakitHintProps, YakitHintWhiteProps} from "./YakitHintType"
 import {usePrevious} from "ahooks"
 
 import classNames from "classnames"
@@ -71,6 +71,34 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
                         />
                     )
                 })}
+            </div>
+        </div>,
+        container
+    )
+})
+
+// 拖拽白板 支持自定义
+export const YakitHintWhite: React.FC<YakitHintWhiteProps> = memo((props) => {
+    const {getContainer, maskColor, onClose, isMask, visible, ...rest} = props
+    const container = useMemo(() => {
+        if (!getContainer) return document.body
+        return getContainer
+    }, [getContainer])
+
+    return ReactDOM.createPortal(
+        <div
+            style={{backgroundColor: isMask && maskColor ? maskColor : ""}}
+            className={classNames(visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"], {
+                [styles["yakit-hint-mask-wrapper"]]: isMask
+            })}
+        >
+            <div
+                className={styles["yakit-hint-body"]}
+                onClick={() => {
+                    onClose && onClose()
+                }}
+            >
+                <HintModal {...rest} visible={visible} isMask={isMask}/>
             </div>
         </div>,
         container
