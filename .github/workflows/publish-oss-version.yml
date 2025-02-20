@@ -1,0 +1,60 @@
+name: Multi-Platform Build Develop
+
+on:
+    workflow_dispatch:
+        version:
+            description: "Select version type"
+            required: true
+            type: choice
+            default: ce
+            options:
+                - ce
+                - ee
+
+jobs:
+    build_yakit:
+        runs-on: ubuntu-latest
+        env:
+            CI: ""
+
+        steps:
+            - name: Display incoming configuration parameters
+              run: echo ${{ env.GITHUB_REF_NAME }} ${{ inputs.version }}
+
+            - name: Check if the version number is correct
+              run: |
+                  VERSION_INPUT="${{ env.GITHUB_REF_NAME }}"
+                  if [[ $VERSION_INPUT != v* ]]; then
+                    echo "Error: Version must start with 'v'." >&2
+                    exit 1
+                  else
+                    echo "Version starts with 'v': $VERSION_INPUT"
+                    # Remove the 'v' prefix and store in SOFTWARE_VERSION
+                    SOFTWARE_VERSION="${VERSION_INPUT:1}"
+                    echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+                  fi
+
+            - name: Generate OSS File Path
+              run: |
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    echo "FILE_PATH=yak" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "ee" ]; then
+                    echo "FILE_PATH=vip" >> $GITHUB_ENV
+                  else
+                    echo "No corresponding file path" >&2
+                    exit 1
+                  fi
+            - name: Show ENV.FILE_PATH
+              run: echo "FILE_PATH： $FILE_PATH"
+
+            - name: Update OSS latest file
+              run: echo ${{ env.SOFTWARE_VERSION }} > ./yakit-version.txt
+            - name: Upload Yakit Version to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      ./yakit-version.txt:/${{ env.FILE_PATH }}/latestss/yakit-version.txt
