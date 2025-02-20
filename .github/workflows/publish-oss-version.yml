@@ -58,4 +58,4 @@ jobs:
                   region: oss-accelerate
                   bucket: yaklang
                   assets: |
-                      ./yakit-version.txt:/${{ env.FILE_PATH }}/latestss/yakit-version.txt
+                      ./yakit-version.txt:/${{ env.FILE_PATH }}/latest/yakit-version.txt
