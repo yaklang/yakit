@@ -877,7 +877,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 info={currentSelectItem}
                                 onClickIP={onClickIP}
                                 className={styles["yakit-code-scan-SSARisk-details"]}
-                                isShowExtra={true}
+                                isShowExtra={!misstatementPage}
                             />
                         </>
                     )
