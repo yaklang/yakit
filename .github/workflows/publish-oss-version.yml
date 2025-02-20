@@ -1,4 +1,4 @@
-name: Multi-Platform Build Develop
+name: Publish OSS Version Tag
 
 on:
     workflow_dispatch:
