@@ -20,11 +20,11 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ env.GITHUB_REF_NAME }} ${{ inputs.version }}
+              run: echo $GITHUB_REF_NAME ${{ inputs.version }}
 
             - name: Check if the version number is correct
               run: |
-                  VERSION_INPUT="${{ env.GITHUB_REF_NAME }}"
+                  VERSION_INPUT=$GITHUB_REF_NAME
                   if [[ $VERSION_INPUT != v* ]]; then
                     echo "Error: Version must start with 'v'." >&2
                     exit 1
