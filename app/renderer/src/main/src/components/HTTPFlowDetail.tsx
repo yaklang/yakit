@@ -1191,13 +1191,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             }
         } catch (e) {}
     }, [reqEditor, resEditor])
-    useEffect(() => {
-        try {
-            if (!resEditor) {
-                return
-            }
-        } catch (e) {}
-    }, [resEditor])
 
     useUpdateEffect(() => {
         setOriginResValue(fetchSsafeHTTPRequest() || "")
