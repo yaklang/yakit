@@ -38,6 +38,7 @@ import {CodingPopover} from "@/components/HTTPFlowDetail"
 import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
+import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -932,6 +933,17 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             }
         })
 
+        const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
+        useEffect(() => {
+            try {
+                if (editor) {
+                    getSelectionEditorByteCount(editor, (byteCount) => {
+                        setSelectionByteCount(byteCount)
+                    })
+                }
+            } catch (e) {}
+        }, [editor])
+
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
                 <YakitResizeBox
@@ -1034,6 +1046,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                                             <YakitTag style={{marginLeft: 8}} color='danger'>
                                                 超大响应
                                             </YakitTag>
+                                        )}
+                                        {selectionByteCount > 0 && (
+                                            <YakitTag style={{marginLeft: 8}}>{selectionByteCount} bytes</YakitTag>
                                         )}
                                     </div>
                                 </div>

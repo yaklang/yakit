@@ -65,7 +65,7 @@ import {
 import {randomString} from "@/utils/randomUtil"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {HTTP_PACKET_EDITOR_Response_Info} from "@/utils/editors"
+import {HTTP_PACKET_EDITOR_Response_Info, IMonacoEditor} from "@/utils/editors"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {HTTPFuzzerPageTable, HTTPFuzzerPageTableQuery} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {
@@ -106,6 +106,7 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
+import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 
 const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
@@ -1808,6 +1809,18 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         const secondNodeRef = useRef(null)
         const secondNodeSize = useSize(secondNodeRef)
 
+        const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
+        const [onlyOneResSelectionByteCount, setOnlyOneResSelectionByteCount] = useState<number>(0)
+        useEffect(() => {
+            try {
+                if (onlyOneResEditor) {
+                    getSelectionEditorByteCount(onlyOneResEditor, (byteCount) => {
+                        setOnlyOneResSelectionByteCount(byteCount)
+                    })
+                }
+            } catch (e) {}
+        }, [onlyOneResEditor])
+
         const successTableRef = useRef<any>()
         const requestHttpRef = useRef<string>(request)
 
@@ -1967,6 +1980,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         setQuery({})
                     }}
                     showConcurrentAndLoad={true}
+                    selectionByteCount={onlyOneResSelectionByteCount}
                 />
             </>
         )
@@ -2088,6 +2102,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                     setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                     secondNodeTitle={secondNodeTitle}
                                     secondNodeExtra={secondNodeExtra}
+                                    onSetOnlyOneResEditor={setOnlyOneResEditor}
                                 />
                             ) : (
                                 <>

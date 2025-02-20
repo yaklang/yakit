@@ -148,6 +148,7 @@ import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -676,6 +677,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
 
     const [visibleDrawer, setVisibleDrawer] = useState<boolean>(false)
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
+
+    const [onlyOneResEditor, setOnlyOneResEditor] = useState<IMonacoEditor>()
+    const [onlyOneResSelectionByteCount, setOnlyOneResSelectionByteCount] = useState<number>(0)
+    useEffect(() => {
+        try {
+            if (onlyOneResEditor) {
+                getSelectionEditorByteCount(onlyOneResEditor, (byteCount) => {
+                    setOnlyOneResSelectionByteCount(byteCount)
+                })
+            }
+        } catch (e) {}
+    }, [onlyOneResEditor])
 
     useEffect(() => {
         fuzzerTableMaxDataRef.current = fuzzerTableMaxData
@@ -1638,6 +1651,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                         setQuery(undefined)
                     }}
                     showConcurrentAndLoad={true}
+                    selectionByteCount={onlyOneResSelectionByteCount}
                 />
             </>
         )
@@ -2058,6 +2072,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                         setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                                         secondNodeTitle={secondNodeTitle}
                                         secondNodeExtra={secondNodeExtra}
+                                        onSetOnlyOneResEditor={setOnlyOneResEditor}
                                     />
                                 ) : (
                                     <div
@@ -2920,6 +2935,7 @@ interface SecondNodeTitleProps {
     setShowSuccess: (b: FuzzerShowSuccess) => void
     size?: YakitButtonProp["size"]
     showConcurrentAndLoad: boolean
+    selectionByteCount?: number
 }
 
 /**
@@ -2935,7 +2951,8 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         showSuccess,
         setShowSuccess,
         size = "small",
-        showConcurrentAndLoad
+        showConcurrentAndLoad,
+        selectionByteCount
     } = props
 
     if (onlyOneResponse) {
@@ -2949,9 +2966,13 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         return (
             <>
                 {rsp.IsHTTPS && <YakitTag>{rsp.IsHTTPS ? "https" : ""}</YakitTag>}
-                <YakitTag>
-                    {rsp.BodyLength}bytes / {rsp.DurationMs}ms
-                </YakitTag>
+                {selectionByteCount ? (
+                    <YakitTag>{selectionByteCount} bytes</YakitTag>
+                ) : (
+                    <YakitTag>
+                        {rsp.BodyLength}bytes / {rsp.DurationMs}ms
+                    </YakitTag>
+                )}
             </>
         )
     }
@@ -3058,6 +3079,7 @@ interface ResponseViewerProps {
     setShowResponseInfoSecondEditor: (b: boolean) => void
     secondNodeTitle?: () => JSX.Element
     secondNodeExtra?: () => JSX.Element
+    onSetOnlyOneResEditor: (editor: IMonacoEditor) => void
 }
 
 export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
@@ -3079,7 +3101,8 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
             secondNodeTitle,
             secondNodeExtra,
             webFuzzerValue,
-            request
+            request,
+            onSetOnlyOneResEditor
         } = props
 
         const [showMatcherAndExtraction, setShowMatcherAndExtraction] = useControllableValue<boolean>(props, {
@@ -3328,6 +3351,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             onClickUrlMenu={copyUrl}
                             onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                             downbodyParams={editorDownBodyParams}
+                            onEditor={(editor) => {
+                                onSetOnlyOneResEditor && onSetOnlyOneResEditor(editor)
+                            }}
                             {...otherEditorProps}
                         />
                     }

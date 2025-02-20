@@ -44,6 +44,7 @@ import PluginTabs from "./businessUI/PluginTabs/PluginTabs"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {asynSettingState} from "@/utils/optimizeRender"
 import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
+import {getSelectionEditorByteCount} from "./yakitUI/YakitEditor/editorUtils"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -138,6 +139,49 @@ export const FuzzerResponseToHTTPFlowDetail = (rsp: FuzzerResponseToHTTPFlowDeta
 export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     const [flow, setFlow] = useState<HTTPFlow>()
     const [loading, setLoading] = useState(false)
+
+    const [wsReqEditor, setWsReqEditor] = useState<IMonacoEditor>()
+    const [wsResEditor, setWsResEditor] = useState<IMonacoEditor>()
+    const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+    const [resEditor, setResEditor] = useState<IMonacoEditor>()
+    const [wsReqSelectionByteCount, setWsReqSelectionByteCount] = useState<number>(0)
+    const [wsResSelectionByteCount, setWsResSelectionByteCount] = useState<number>(0)
+    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
+    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
+    useEffect(() => {
+        try {
+            if (wsReqEditor) {
+                getSelectionEditorByteCount(wsReqEditor, (byteCount) => {
+                    setWsReqSelectionByteCount(byteCount)
+                })
+            }
+            if (wsResEditor) {
+                getSelectionEditorByteCount(wsResEditor, (byteCount) => {
+                    setWsResSelectionByteCount(byteCount)
+                })
+            }
+            if (reqEditor) {
+                getSelectionEditorByteCount(reqEditor, (byteCount) => {
+                    setReqSelectionByteCount(byteCount)
+                })
+            }
+            if (resEditor) {
+                getSelectionEditorByteCount(resEditor, (byteCount) => {
+                    setResSelectionByteCount(byteCount)
+                })
+            }
+        } catch (e) {}
+    }, [wsReqEditor, wsResEditor, reqEditor, resEditor])
+    const reqByte = useMemo(() => {
+        if (!flow) return null
+        if (flow.IsWebsocket) return wsReqSelectionByteCount
+        return reqSelectionByteCount
+    }, [flow, wsReqSelectionByteCount, reqSelectionByteCount])
+    const resByte = useMemo(() => {
+        if (!flow) return null
+        if (flow.IsWebsocket) return wsResSelectionByteCount
+        return resSelectionByteCount
+    }, [flow, wsResSelectionByteCount, resSelectionByteCount])
 
     useEffect(() => {
         setLoading(props.loading || false)
@@ -365,10 +409,25 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
 
                         <Row gutter={8}>
                             <Col span={12}>
-                                <Card title={"原始 HTTP 请求"} size={"small"} bodyStyle={{padding: 0}}>
+                                <Card
+                                    title={
+                                        <>
+                                            原始 HTTP 请求
+                                            {reqByte && reqByte > 0 && (
+                                                <YakitTag style={{marginLeft: 8}}>{reqByte} bytes</YakitTag>
+                                            )}
+                                        </>
+                                    }
+                                    size={"small"}
+                                    bodyStyle={{padding: 0}}
+                                >
                                     <div style={{height: 350}}>
                                         {flow.IsWebsocket ? (
-                                            <WebSocketEditor flow={flow} value={flow.RequestString} />
+                                            <WebSocketEditor
+                                                flow={flow}
+                                                value={flow.RequestString}
+                                                onSetEditor={setWsReqEditor}
+                                            />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
@@ -387,16 +446,34 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
                                                 downbodyParams={{Id: flow.Id, IsRequest: true}}
+                                                onEditor={(editor) => {
+                                                    setReqEditor(editor)
+                                                }}
                                             />
                                         )}
                                     </div>
                                 </Card>
                             </Col>
                             <Col span={12}>
-                                <Card title={"原始 HTTP 响应"} size={"small"} bodyStyle={{padding: 0}}>
+                                <Card
+                                    title={
+                                        <>
+                                            原始 HTTP 响应
+                                            {resByte && resByte > 0 && (
+                                                <YakitTag style={{marginLeft: 8}}>{resByte} bytes</YakitTag>
+                                            )}
+                                        </>
+                                    }
+                                    size={"small"}
+                                    bodyStyle={{padding: 0}}
+                                >
                                     <div style={{height: 350}}>
                                         {flow.IsWebsocket ? (
-                                            <WebSocketEditor flow={flow} value={flow.ResponseString} />
+                                            <WebSocketEditor
+                                                flow={flow}
+                                                value={flow.ResponseString}
+                                                onSetEditor={setWsResEditor}
+                                            />
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
@@ -416,6 +493,9 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 url={flow.Url}
                                                 downstreamProxyStr={props.downstreamProxyStr}
                                                 downbodyParams={{Id: flow.Id, IsRequest: false}}
+                                                onEditor={(editor) => {
+                                                    setResEditor(editor)
+                                                }}
                                             />
                                         )}
                                     </div>
@@ -1095,6 +1175,23 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器实例
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
+    const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
+    const [resSelectionByteCount, setResSelectionByteCount] = useState<number>(0)
+    useEffect(() => {
+        try {
+            if (reqEditor) {
+                getSelectionEditorByteCount(reqEditor, (byteCount) => {
+                    setReqSelectionByteCount(byteCount)
+                })
+            }
+            if (resEditor) {
+                getSelectionEditorByteCount(resEditor, (byteCount) => {
+                    setResSelectionByteCount(byteCount)
+                })
+            }
+        } catch (e) {}
+    }, [reqEditor, resEditor])
+
     useUpdateEffect(() => {
         setOriginResValue(fetchSsafeHTTPRequest() || "")
     }, [flowRequestLoad])
@@ -1339,7 +1436,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             let titleEle: ReactNode[] = []
                             if (isShowBeforeData && beforeResValue.length > 0) {
                                 titleEle.push(
-                                    <div className={classNames(styles["type-options-checkable-tag"])}>
+                                    <div
+                                        className={classNames(styles["type-options-checkable-tag"])}
+                                        key='type-options-checkable-tag'
+                                    >
                                         <YakitCheckableTag
                                             checked={resType === "current"}
                                             onChange={(checked) => {
@@ -1363,13 +1463,18 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     </div>
                                 )
                             } else {
-                                titleEle.push(<span style={{fontSize: 12}}>Request</span>)
+                                titleEle.push(
+                                    <span style={{fontSize: 12}} key='Request'>
+                                        Request
+                                    </span>
+                                )
                             }
                             titleEle.push(
                                 <YakitTag
                                     color={"info"}
-                                    style={{marginLeft: 6, cursor: "pointer"}}
+                                    style={{marginLeft: 8, cursor: "pointer"}}
                                     onClick={onScrollTo}
+                                    key='reqId'
                                 >
                                     id：{id}
                                 </YakitTag>
@@ -1377,7 +1482,21 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             // history页面
                             if (pageType === "History") {
                                 titleEle.push(
-                                    <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
+                                    <OutlineLog2Icon
+                                        className={styles["jump-web-tree"]}
+                                        onClick={handleJumpWebTree}
+                                        key='jump-web-tree'
+                                    />
+                                )
+                            }
+                            if (reqSelectionByteCount > 0) {
+                                titleEle.push(
+                                    <YakitTag
+                                        style={{marginLeft: pageType === "MITM" ? 0 : 8}}
+                                        key='reqSelectionByteCount'
+                                    >
+                                        {reqSelectionByteCount} bytes
+                                    </YakitTag>
                                 )
                             }
                             return titleEle
@@ -1456,7 +1575,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isShowBeautifyRender={!flow?.IsTooLargeResponse}
                         title={(() => {
                             let titleEle = [
-                                <span style={{fontSize: 12}} key={"title-Response"}>
+                                <span
+                                    style={{fontSize: 12, display: "inline-block", height: 20}}
+                                    key={"title-Response"}
+                                >
                                     Response
                                 </span>
                             ]
@@ -1491,6 +1613,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 titleEle.push(
                                     <YakitTag style={{marginLeft: 8}} color='danger' key={"title-IsTooLargeResponse"}>
                                         超大响应
+                                    </YakitTag>
+                                )
+                            }
+                            if (resSelectionByteCount > 0) {
+                                titleEle.push(
+                                    <YakitTag style={{marginLeft: 8}} key='resSelectionByteCount'>
+                                        {resSelectionByteCount} bytes
                                     </YakitTag>
                                 )
                             }
