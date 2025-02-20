@@ -422,15 +422,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                 </Card>
                             </Col>
                         </Row>
-
-                        {/*<Collapse>*/}
-                        {/*    <Collapse.Panel key={"request-raw"} header={"原始 HTTP 请求数据包内容"}>*/}
-
-                        {/*    </Collapse.Panel>*/}
-                        {/*    <Collapse.Panel key={"response-raw"} header={"原始 HTTP 响应数据包内容"}>*/}
-
-                        {/*    </Collapse.Panel>*/}
-                        {/*</Collapse>*/}
                         <Row gutter={8}>
                             <Col span={12}>
                                 <YakitCollapse defaultActiveKey={"request"}>

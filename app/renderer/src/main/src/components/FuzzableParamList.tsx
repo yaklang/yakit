@@ -19,7 +19,7 @@ export const FuzzableParamList: React.FC<FuzzableParamListProp> = (props) => {
         <Table<FuzzableParams>
             pagination={false}
             dataSource={props.data}
-            rowKey={(row) => row.ParamName}
+            rowKey={(row) => JSON.stringify(row)}
             columns={[
                 {
                     title: "参数名",
