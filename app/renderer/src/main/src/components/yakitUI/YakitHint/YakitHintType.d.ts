@@ -62,3 +62,32 @@ export interface YakitHintModalProps {
     onCancel?: () => any
     children?: ReactNode
 }
+
+export interface HintModalProps {
+    /** 是否存在遮罩层 */
+    isMask?: boolean
+    /** 是否可以拖拽 */
+    isDrag?: boolean
+    /** 是否展示弹窗 */
+    visible: boolean
+    /** 弹窗宽度，默认为448px */
+    width?: number
+    /** 设置弹窗置顶 */
+    setTop?: () => any
+    /** 弹窗修饰-样式类 */
+    wrapClassName?: string
+    /** 弹窗内样式 */
+    containerClassName?: string
+    /** 是否弹窗置顶 */
+    isTop?: boolean
+    children?: ReactNode
+}
+
+export interface YakitHintWhiteProps extends HintModalProps {
+    /** 指定弹窗挂载的节点，默认为body节点 */
+    getContainer?: HTMLElement
+    /** 遮罩层背景色(需要自带透明度的颜色) */
+    maskColor?: string
+    /** 关闭的回调 */
+    onClose?: () => void
+}
