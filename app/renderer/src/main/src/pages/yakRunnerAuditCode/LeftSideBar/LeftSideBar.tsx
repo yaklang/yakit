@@ -7,7 +7,6 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {RunnerFileTree} from "../RunnerFileTree/RunnerFileTree"
 import useStore from "../hooks/useStore"
 import {LeftSideBarProps, LeftSideType} from "./LeftSideBarType"
-import {AuditSearch} from "../AuditSearch/AuditSearch"
 
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
     const {fileTreeLoad, onOpenEditorDetails, isUnShow, setUnShow, active, setActive} = props
@@ -127,9 +126,7 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
                         className={classNames(styles["content-wrapper"], {
                             [styles["hidden-content"]]: active !== "search" || isUnShow
                         })}
-                    >
-                        <AuditSearch />
-                    </div>
+                    ></div>
                 )}
             </div>
         </div>

@@ -26,12 +26,8 @@ import {
 } from "../utils"
 
 import emiter from "@/utils/eventBus/eventBus"
-import {
-    getMapFileDetail,
-} from "../FileTreeMap/FileMap"
-import {
-    getMapFolderDetail,
-} from "../FileTreeMap/ChildMap"
+import {getMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {Tooltip} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AfreshAuditModal, AuditHistoryTable} from "../AuditCode/AuditCode"
@@ -44,7 +40,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
-import { YakitHint } from "@/components/yakitUI/YakitHint/YakitHint"
+import {AuditSearchModal} from "../AuditSearchModal/AuditSearch"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
@@ -52,7 +48,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {handleFileLoadData} = useDispatcher()
     const [afreshName, setAfreshName] = useState<string>()
     const [visible, setVisible] = useState<boolean>(false)
-    const [searchVisible,setSearchVisible] = useState<boolean>(false)
+    const [searchVisible, setSearchVisible] = useState<boolean>(false)
     const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
@@ -212,7 +208,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     JSON.stringify({
                         route: YakitRoute.YakRunner_Code_Scan,
                         params: {
-                            projectName:[projectName]
+                            projectName: [projectName]
                         }
                     })
                 )
@@ -366,14 +362,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 }}
             />
 
-            {/* <YakitHint
-                mask={false}
-                isDrag={true}
+            <AuditSearchModal
                 visible={searchVisible}
-                footer={null}
-            >
-                123
-                </YakitHint> */}
+                onClose={() => setSearchVisible(false)}
+                programName={projectName||""}
+            />
         </div>
     )
 })
