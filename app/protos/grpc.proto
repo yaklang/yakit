@@ -187,6 +187,8 @@ service Yak {
   rpc ExportLocalYakScriptStream(ExportLocalYakScriptRequest) returns (stream ExportYakScriptLocalResponse);
 
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
+  rpc SetYakScriptSkipUpdate(SetYakScriptSkipUpdateRequest) returns (Empty);
+  rpc QueryYakScriptSkipUpdate(QueryYakScriptRequest) returns (QueryYakScriptSkipUpdateResponse);
 
   // YakScript Group
   rpc QueryYakScriptGroup(QueryYakScriptGroupRequest) returns (QueryYakScriptGroupResponse);
@@ -434,11 +436,13 @@ service Yak {
   rpc QueryAvailableTarget(Empty) returns (Fields);
   rpc QueryNewRisk(QueryNewRiskRequest) returns (QueryNewRiskResponse);
   rpc NewRiskRead(NewRiskReadRequest) returns (Empty);
+  // 风险漏洞自动同步
   rpc UploadRiskToOnline(UploadRiskToOnlineRequest) returns (Empty);
   rpc SetTagForRisk(SetTagForRiskRequest) returns (Empty);
   rpc QueryRiskTags(Empty) returns (QueryRiskTagsResponse);
   rpc RiskFieldGroup(Empty) returns (RiskFieldGroupResponse);
-
+  // 误报反馈
+  rpc RiskFeedbackToOnline(UploadRiskToOnlineRequest) returns (Empty);
 
   // Report
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
@@ -537,6 +541,9 @@ service Yak {
   rpc DownloadOnlinePluginBatch(DownloadOnlinePluginsRequest) returns (Empty);
   rpc DownloadOnlinePluginByPluginName(DownloadOnlinePluginByScriptNamesRequest) returns (DownloadOnlinePluginByScriptNamesResponse);
   rpc DownloadOnlinePluginByUUID(DownloadOnlinePluginByUUIDRequest) returns (YakScript);
+
+  rpc QueryOnlinePlugins(QueryOnlinePluginsRequest) returns(QueryOnlinePluginsResponse);
+
 
   // 新的扫描模式
   rpc ExecPacketScan(ExecPacketScanRequest) returns (stream ExecResult);
@@ -752,6 +759,8 @@ service Yak {
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
   rpc NewSSARiskRead(NewSSARiskReadRequest) returns (NewSSARiskReadResponse);
 
+  rpc SSARiskFeedbackToOnline(SSARiskFeedbackToOnlineRequest) returns (Empty);
+
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
   rpc QueryPluginEnv(QueryPluginEnvRequest) returns (PluginEnvData);
   rpc CreatePluginEnv(PluginEnvData) returns (Empty); // create
@@ -779,6 +788,7 @@ service Yak {
   rpc UploadHotPatchTemplateToOnline(UploadHotPatchTemplateToOnlineRequest) returns (Empty);
   rpc DownloadHotPatchTemplate(DownloadHotPatchTemplateRequest) returns (Empty);
 
+
   // MITM hijack filter
   rpc SetMITMHijackFilter(SetMITMFilterRequest) returns (SetMITMFilterResponse);
   rpc GetMITMHijackFilter(Empty) returns (SetMITMFilterRequest);
@@ -788,6 +798,8 @@ service Yak {
   rpc ExportHTTPFlowStream(ExportHTTPFlowStreamRequest) returns(stream ExportHTTPFlowStreamResponse);
   rpc ImportHTTPFlowStream(ImportHTTPFlowStreamRequest) returns(stream ImportHTTPFlowStreamResponse);
 }
+
+
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
   string Key = 2;
@@ -2123,15 +2135,15 @@ message YaklangLanguageSuggestionRequest {
   string YakScriptCode = 3;
   // }
 
-  Range Range = 4; // selected range 
-  string ModelID = 5; // monaco model id 
+  Range Range = 4; // selected range
+  string ModelID = 5; // monaco model id
 
   // {
-  // from database : support getReference 
-  // if set this progranName will use this from database 
+  // from database : support getReference
+  // if set this progranName will use this from database
   string ProgramName = 6;
   string FileName = 7;
-  // } 
+  // }
 }
 
 
@@ -2303,6 +2315,13 @@ message DownloadOnlinePluginsRequest {
   repeated int64 Status = 11;
   repeated string UUID = 12;
   repeated string ScriptName = 13;
+  repeated string ExcludeTypes = 14;
+  string FieldKeywords = 15;
+}
+
+message QueryPluginGroup {
+  bool UnSetGroup = 1;
+  repeated string Group = 2;
 }
 
 message DownloadOnlinePluginByScriptNamesRequest {
@@ -2323,6 +2342,42 @@ message DownloadOnlinePluginByScriptName {
 message DownloadOnlinePluginByUUIDRequest {
   string UUID = 1;
   string Token = 2;
+}
+
+message QueryOnlinePluginsRequest {
+  Paging Pagination = 1;
+  DownloadOnlinePluginsRequest Data = 2;
+}
+
+message QueryOnlinePluginsResponse {
+  Paging Pagination = 1;
+  int64 Total = 2;
+  repeated OnlinePlugin Data = 3;
+}
+
+message OnlinePlugin {
+  int64 Id = 1;
+  int64 UpdatedAt = 2;
+  int64 CreatedAt = 3;
+  string Content = 4;
+  string Type = 5;
+  repeated YakScriptParam Params = 6;
+  bool IsPrivate = 7;
+  string ScriptName = 8;
+  string Help = 9;
+  string Author = 10;
+  string Tags = 11;
+  bool EnablePluginSelector = 12;
+  string PluginSelectorTypes = 13;
+  string UUID = 14;
+  string HeadImg = 15;
+  bool Official = 16;
+  string Group = 17;
+  bool IsCorePlugin = 18;
+  // 协作者
+  repeated Collaborator CollaboratorInfo = 19;
+  repeated YakRiskInfo RiskInfo = 20;
+  repeated string PluginEnvKey = 21;
 }
 
 message OnlineProfile {
@@ -3111,7 +3166,7 @@ message QueryRisksRequest {
 
   string RuntimeId = 15;
 
-  // ssa program 
+  // ssa program
   repeated string SSAProgramNames = 16;
 }
 
@@ -3160,12 +3215,13 @@ message NewRisk {
 message NewRiskReadRequest {
   int64 AfterId = 1;
   repeated int64 Ids = 2;
-  QueryRisksRequest Filter = 3; 
+  QueryRisksRequest Filter = 3;
 }
 
 message UploadRiskToOnlineRequest {
   string Token = 1;
   string ProjectName = 2;
+  repeated string Hash = 3;
 }
 
 message SetTagForRiskRequest {
@@ -4059,6 +4115,7 @@ message YakScript {
   repeated YakRiskInfo RiskInfo = 36;
   bool IsUpdate = 37;
   repeated string PluginEnvKey =38;
+  bool SkipUpdate = 39;
 }
 
 message Collaborator {
@@ -4142,6 +4199,15 @@ message ImportYakScriptResult {
   double Progress = 1;
   string Message = 2;
   string MessageType = 3;
+}
+
+message SetYakScriptSkipUpdateRequest{
+  bool SkipUpdate = 1;
+  QueryYakScriptRequest Field = 2;
+}
+
+message QueryYakScriptSkipUpdateResponse {
+  bool SkipUpdate = 1;
 }
 
 message QueryYakScriptGroupRequest {
@@ -4785,7 +4851,7 @@ message QueryHTTPFlowRequest {
 
   repeated string IncludeHash = 41;
   repeated string HiddenIndex = 42;
-  
+
   repeated string ProcessName = 43;
   repeated string ExcludeKeywords = 44;
   string KeywordType = 45; // <empty> = all/response/request
@@ -4804,7 +4870,7 @@ message ExportHTTPFlowsRequest {
 }
 
 message QueryHTTPFlowsProcessNamesResponse {
-    repeated string ProcessNames = 1;
+  repeated string ProcessNames = 1;
 }
 
 message DeleteHTTPFlowRequest {
@@ -5061,7 +5127,7 @@ message MITMRequest {
   bool setPluginMode = 36;
   repeated string initPluginNames = 37;
 
-  // 设置内容替代器
+  // 设置规则
   bool setContentReplacers = 38;
   repeated MITMContentReplacer replacers = 39;
 
@@ -5191,8 +5257,6 @@ message MITMContentReplacer {
   bool Drop = 17;
 
   string EffectiveURL = 18;
-
-  repeated int64 RegexpGroups = 19;
 }
 
 message RemoveHookParams {
@@ -5224,7 +5288,7 @@ message MITMResponse {
   repeated string includeUri = 115;
   MITMFilterData FilterData = 116;
 
-  // 替代过滤器的内容
+  // 替代规则的内容
   bool justContentReplacer = 120;
   repeated MITMContentReplacer replacers = 121;
 
@@ -5324,7 +5388,7 @@ message ExecParamItem {
   string Value = 2;
 }
 message ExecRequest {
-  // 执行优先级为：ScriptPath > Script > ScriptId 
+  // 执行优先级为：ScriptPath > Script > ScriptId
   repeated ExecParamItem Params = 1;
   string Script = 2;
   string ScriptId = 3;
@@ -5697,8 +5761,8 @@ message SSAProgramFilter{
 
 
 message QuerySSAProgramRequest{
-  Paging Paging = 1; // abort 
-  Paging Pagination = 2; 
+  Paging Paging = 1; // abort
+  Paging Pagination = 2;
   SSAProgramFilter Filter = 3;
 }
 
@@ -5712,7 +5776,7 @@ message DeleteSSAProgramRequest{
 }
 
 message QuerySSAProgramResponse{
-  Paging Paging = 1; // abort 
+  Paging Paging = 1; // abort
   Paging Pagination = 5;
   repeated SSAProgram Programs = 2; // abort
   repeated SSAProgram Data = 4;
@@ -5724,7 +5788,7 @@ message CreateSyntaxFlowRuleRequest{
 }
 
 message CreateSyntaxFlowRuleResponse {
-  DbOperateMessage Message = 1; 
+  DbOperateMessage Message = 1;
   SyntaxFlowRule Rule = 2;
 }
 
@@ -5733,7 +5797,7 @@ message UpdateSyntaxFlowRuleRequest{
 }
 
 message UpdateSyntaxFlowRuleResponse{
-  DbOperateMessage Message = 1; 
+  DbOperateMessage Message = 1;
   SyntaxFlowRule Rule = 2;
 }
 
@@ -5781,10 +5845,10 @@ message UpdateSyntaxFlowRuleGroupRequest {
 }
 
 message UpdateSyntaxFlowRuleAndGroupRequest{
-   SyntaxFlowRuleFilter Filter = 1;
-   repeated string AddGroups= 2;
-   repeated string RemoveGroups = 3;
-   bool All = 4; // abort
+  SyntaxFlowRuleFilter Filter = 1;
+  repeated string AddGroups= 2;
+  repeated string RemoveGroups = 3;
+  bool All = 4; // abort
 }
 
 message QuerySyntaxFlowSameGroupRequest{
@@ -5808,10 +5872,10 @@ message SyntaxFlowScanRequest{
   // 恢复扫描任务
   string ResumeTaskId = 5;         // 恢复任务ID
 
-  // 其他参数 
+  // 其他参数
   bool IgnoreLanguage = 4; // 是否忽略语言 默认为false 将会只运行和当前项目语言一致的规则，最后运行的规则可能会比当前选中的规则少一些。
 
-  // for new rule scan task 
+  // for new rule scan task
   SyntaxFlowRuleInput RuleInput = 6; // 用于新建规则时的调试功能
 }
 
@@ -5826,7 +5890,7 @@ message SyntaxFlowScanTaskFilter{
   repeated string TaskIds = 3;
   int64 FromId = 4;
   int64  UntilId = 5;
-  string Keyword = 6; // fuzz search program-name 
+  string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
 }
 
@@ -5837,26 +5901,26 @@ message QuerySyntaxFlowScanTaskResponse{
 }
 
 message SyntaxFlowScanTask {
-    uint64 Id = 1;
-    int64 CreatedAt = 2;
-    int64 UpdatedAt = 3;
+  uint64 Id = 1;
+  int64 CreatedAt = 2;
+  int64 UpdatedAt = 3;
 
-    string TaskId = 4;
-    repeated string Programs = 5;
-    int64 RuleCount = 6;
-    string Status = 7; // executing / paused / done / error
-    string Reason = 8;
-    // query execute
-    int64 FailedQuery= 9;
-    int64 SkipQuery=10;
-    int64 SuccessQuery = 11;
-    // risk
-    int64 RiskCount =12;
-    // query process
-    int64 TotalQuery =13;
+  string TaskId = 4;
+  repeated string Programs = 5;
+  int64 RuleCount = 6;
+  string Status = 7; // executing / paused / done / error
+  string Reason = 8;
+  // query execute
+  int64 FailedQuery= 9;
+  int64 SkipQuery=10;
+  int64 SuccessQuery = 11;
+  // risk
+  int64 RiskCount =12;
+  // query process
+  int64 TotalQuery =13;
 
-    SyntaxFlowScanRequest Config = 14;
-    string Kind =  15; // "debug" | "scan"
+  SyntaxFlowScanRequest Config = 14;
+  string Kind =  15; // "debug" | "scan"
 }
 
 message DeleteSyntaxFlowScanTaskRequest{
@@ -5871,7 +5935,7 @@ message SyntaxFlowScanResponse{
 
   ExecResult ExecResult = 3;
 
-  // result 
+  // result
   SyntaxFlowResult Result = 4;
   repeated Risk risks = 5;
   repeated SSARisk SSARisks = 6;
@@ -5914,7 +5978,7 @@ message SyntaxFlowResult {
   uint64 ResultID = 1;
   string TaskID = 2;
 
-  // rule info 
+  // rule info
   string RuleName = 3;
   string Title = 4;
   string TitleZh = 5;
@@ -5922,11 +5986,11 @@ message SyntaxFlowResult {
   string Severity = 7; //  "info", "low", "middle", "critical", "high"
   string Purpose = 8;
 
-  // target info 
+  // target info
   string ProgramName = 9;
   string Language = 10;
 
-  // runtime info 
+  // runtime info
   uint64 RiskCount = 11;
 
   string RuleContent = 12;
@@ -6035,7 +6099,7 @@ message SSARisk {
   string FunctionName = 26;
   int64 Line = 27;
 
-  // other mesg 
+  // other mesg
   string Solution = 28;
   string Description = 29 ;
 }
@@ -6089,6 +6153,11 @@ message NewSSARiskReadRequest {
 message NewSSARiskReadResponse {
 }
 
+message SSARiskFeedbackToOnlineRequest {
+  string Token = 1;
+  SSARisksFilter Filter = 2;
+}
+
 message ExportSyntaxFlowsRequest {
   SyntaxFlowRuleFilter Filter = 1;
   string Password = 2;
@@ -6108,53 +6177,53 @@ message SyntaxflowsProgress {
 
 // hot-patch template
 message HotPatchTemplate {
-    string Name = 1;
-    string Content = 2;
-    string Type = 3; // fuzzer/mitm
+  string Name = 1;
+  string Content = 2;
+  string Type = 3; // fuzzer/mitm
 }
 
 message HotPatchTemplateRequest {
-    repeated int64 Id = 1;
-    repeated string Name = 2;
-    repeated string ContentKeyword = 3;
-    string Type = 4; // fuzzer/mitm
+  repeated int64 Id = 1;
+  repeated string Name = 2;
+  repeated string ContentKeyword = 3;
+  string Type = 4; // fuzzer/mitm
 }
 
 message UpdateHotPatchTemplateRequest {
-    HotPatchTemplateRequest Condition = 1;
-    HotPatchTemplate Data = 2;
+  HotPatchTemplateRequest Condition = 1;
+  HotPatchTemplate Data = 2;
 }
 
 message DeleteHotPatchTemplateRequest {
-    HotPatchTemplateRequest Condition = 1;
-    bool All = 2;
+  HotPatchTemplateRequest Condition = 1;
+  bool All = 2;
 }
 
 message CreateHotPatchTemplateResponse {
-    DbOperateMessage Message = 1;
+  DbOperateMessage Message = 1;
 }
 
 message DeleteHotPatchTemplateResponse {
-    DbOperateMessage Message = 1;
+  DbOperateMessage Message = 1;
 }
 
 message UpdateHotPatchTemplateResponse {
-    DbOperateMessage Message = 1;
+  DbOperateMessage Message = 1;
 }
 
 message QueryHotPatchTemplateResponse {
-    DbOperateMessage Message = 1;
-    repeated HotPatchTemplate Data = 2;
+  DbOperateMessage Message = 1;
+  repeated HotPatchTemplate Data = 2;
 }
 
 message QueryHotPatchTemplateListRequest {
-    string Type = 1; // fuzzer/mitm
+  string Type = 1; // fuzzer/mitm
 }
 
 message QueryHotPatchTemplateListResponse {
-    Paging Pagination = 1;
-    repeated string Name = 2;
-    int64 Total = 3;
+  Paging Pagination = 1;
+  repeated string Name = 2;
+  int64 Total = 3;
 }
 
 message GroupTableColumnRequest {
@@ -6176,7 +6245,6 @@ message DownloadHotPatchTemplateRequest {
   string Name = 1;
   string Type = 2; // fuzzer/mitm
 }
-
 message ExportHTTPFlowStreamRequest {
     QueryHTTPFlowRequest Filter = 1;
     repeated string FieldName = 2;
