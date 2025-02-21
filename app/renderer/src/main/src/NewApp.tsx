@@ -1,11 +1,11 @@
 import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
-import {failed, warn, yakitFailed} from "./utils/notification"
+import {failed, warn, yakitFailed, yakitNotify} from "./utils/notification"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./utils/kv"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
-import {useEeSystemConfig, useStore, yakitDynamicStatus} from "./store"
+import {useEeSystemConfig, useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
 import {getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
@@ -37,7 +37,7 @@ function NewApp() {
     /** 是否展示用户协议 */
     const [agreed, setAgreed] = useState(false)
     const {userInfo} = useStore()
-
+    const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
     //设置echarts 颜色
     useEffect(() => {
         setChartsColorList()
@@ -46,6 +46,10 @@ function NewApp() {
     useEffect(() => {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
+        // 解压Google 插件压缩包
+        ipcRenderer.invoke("generate-chrome-plugin").then(res => {
+            setGoogleChromePluginPath(res)
+        })
         // 获取系统信息
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
