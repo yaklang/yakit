@@ -145,7 +145,6 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                         }
                     }
                     newParams.chromeFlags = handleChromeLauncherParams(chromeFlags, googleChromePluginPath)
-                    console.log(newParams.chromeFlags)
 
                     ipcRenderer
                         .invoke("LaunchChromeWithParams", newParams)
