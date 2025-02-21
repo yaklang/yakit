@@ -1,0 +1,234 @@
+name: Publish SE to OSS
+
+on:
+    workflow_dispatch:
+
+jobs:
+    build_render:
+        runs-on: ubuntu-latest
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            RENDER_PATH: ./app/renderer
+
+        steps:
+            - name: Check if the version number is correct
+              run: |
+                  VERSION_INPUT=$GITHUB_REF_NAME
+                  if [[ $VERSION_INPUT != v* ]]; then
+                    echo "Error: Version must start with 'v'." >&2
+                    exit 1
+                  else
+                    echo "Version starts with 'v': $VERSION_INPUT"
+                  fi
+
+            - name: Checkout release-render branch
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.ref_name }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - name: "Install Render Dependencies"
+              run: yarn install-render
+              working-directory: ./
+
+            - name: "Build Render"
+              working-directory: ./
+              run: yarn build-render-simple-enterprise
+            - name: "zip EE Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r se.zip ./pages && cd ../../
+
+            - name: View Published Content
+              run: ls ${{ env.RENDER_PATH }}
+
+            - name: Upload Yakit(SE) Render
+              uses: actions/upload-artifact@v4
+              with:
+                  name: se.zip
+                  path: ${{ env.RENDER_PATH }}/se.zip
+                  if-no-files-found: error
+                  retention-days: 1
+
+    build_electron:
+        needs:
+            - build_render
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+
+        steps:
+            - name: Set SOFTWARE_VERSION
+              run: |
+                  echo "Version starts with 'v': $GITHUB_REF_NAME"
+                  SOFTWARE_VERSION="${GITHUB_REF_NAME:1}"
+                  echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
+
+            - uses: actions/checkout@v4
+              with:
+                  ref: ${{ github.ref_name }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - name: Download Yakit And Legacy Yakit
+              uses: actions/download-artifact@v4
+              with:
+                  name: se.zip
+            - name: Extract Render ZIP
+              run: |
+                  ls
+                  unzip -n ./se.zip -d ./app/renderer
+                  rm ./se.zip
+
+            - run: echo $GITHUB_REF_NAME
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
+            - name: "Download Yak Engine via wget(Linux)"
+              id: download-linux-engine
+              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+            - name: "Download Yak Engine via wget(Linux-arm64)"
+              id: download-linux-engine-arm64
+              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/latest/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+
+            - name: "Download Yak Engine via wget(Windows)"
+              id: download-windows-engine
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
+            - name: "Fetch Latest EngineVersion"
+              id: fetch-version-engine
+              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
+            - run: ls ./bins && cat bins/engine-version.txt
+
+            - run: yarn install
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: Build Yakit (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: |
+                  yarn add -D dmg-license
+
+                  max_attempts=3
+                  attempt=1
+                  while [ $attempt -le $max_attempts ]; do
+                      echo "Start to building normal, try-count: ${attempt}"
+                      yarn electron-publish-se && break # 如果成功则退出循环
+                      attempt=$((attempt + 1))
+                      sleep 2 # 失败后等待2000ms再重试
+                  done
+                  [ $attempt -gt $max_attempts ] && {
+                      echo "normal build exceeded retry attempts" >&2
+                      exit 1
+                  } # 超过重试次数则失败
+                  exit 0
+
+            - run: yarn remove electron && yarn add electron@22.3.27 --dev
+              working-directory: ./
+              name: "Install Legacy Electron"
+
+            - name: "Download Yak Legacy Engine via wget(Windows)"
+              id: download-windows-leagacy-engine
+              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
+            - name: Build Yakit Legacy (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: |
+                  yarn add -D dmg-license
+
+                  max_attempts=3
+                  attempt=1
+                  while [ $attempt -le $max_attempts ]; do
+                      echo "Start to building legacy, try-count: ${attempt}"
+                      yarn electron-publish-se-legacy && break # 如果成功则退出循环
+                      attempt=$((attempt + 1))
+                      sleep 2 # 失败后等待2000ms再重试
+                  done
+                  [ $attempt -gt $max_attempts ] && {
+                      echo "legacy build rxceeded retry attempts" >&2
+                      exit 1
+                  } # 超过重试次数则失败
+                  exit 0
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # EnpriTraceAgent-1.3.4-sp6-darwin-arm64.dmg
+                  # EnpriTraceAgent-1.3.4-sp6-darwin-x64.dmg
+                  # EnpriTraceAgent-1.3.4-sp6-linux-amd64.AppImage
+                  # EnpriTraceAgent-1.3.4-sp6-linux-arm64.AppImage
+                  # EnpriTraceAgent-1.3.4-sp6-windows-amd64.exe
+                  # EnpriTraceAgent-1.3.4-sp6-darwin-legacy-arm64.dmg
+                  # EnpriTraceAgent-1.3.4-sp6-darwin-legacy-x64.dmg
+                  # EnpriTraceAgent-1.3.4-sp6-linux-legacy-amd64.AppImage
+                  # EnpriTraceAgent-1.3.4-sp6-linux-legacy-arm64.AppImage
+                  # EnpriTraceAgent-1.3.4-sp6-windows-legacy-amd64.exe
+
+            - name: Upload Yakit(SE) Artifacts Windows
+              uses: actions/upload-artifact@v4
+              with:
+                  name: se-artifacts
+                  path: |
+                      ./release/EnpriTraceAgent-${{ env.SOFTWARE_VERSION }}-*.exe
+                      ./release/EnpriTraceAgent-${{ env.SOFTWARE_VERSION }}-*.dmg
+                      ./release/EnpriTraceAgent-${{ env.SOFTWARE_VERSION }}-*.AppImage
+                  if-no-files-found: error
+                  retention-days: 1
+
+    publish_yakit_se_to_oss:
+        needs:
+            - build_electron
+        runs-on: ubuntu-latest
+        steps:
+            - name: Echo Package Version To Env
+              run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
+
+            - name: Download Yakit And Legacy Yakit
+              uses: actions/download-artifact@v4
+              with:
+                  name: se-artifacts
+                  merge-multiple: true
+
+            - run: ls
+              name: Ls Published Artifacts...
+
+            # - name: Download CI Needed Yak Linux(amd64) Version to operator
+            #   run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/latest/yak_linux_amd64 && chmod +x ./yak
+            # 后面写个脚本，直接通过传入参数，使用引擎上传到oss
+
+            - name: Upload Yakit To OSS
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      *:/vip-se/${{ env.ENV_TAG }}/
+
+            - name: Update OSS latest file
+              run: echo ${{ env.ENV_TAG }} > ./yakit-version.txt
+            - name: Upload Yakit Version to oss
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      ./yakit-version.txt:/vip-se/latest/yakit-version.txt
