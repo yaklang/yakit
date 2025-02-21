@@ -57,7 +57,7 @@ jobs:
               run: ls ${{ env.RENDER_PATH }}
 
             - name: Download CI Needed Yak Linux(amd64) Version to operator
-              run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/latest/yak_linux_amd64 && chmod +x ./yak
+              run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/ci/yak_linux_amd64 && chmod +x ./yak
 
             - name: Upload Multi-Platform Render Zip
               run: |
