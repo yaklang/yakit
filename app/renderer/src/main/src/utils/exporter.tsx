@@ -105,13 +105,19 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
 }
 
 export const exportData = (data: ExtractableData[], onlyPayloads: boolean) => {
-    showYakitModal({
+    const m = showYakitModal({
         title: "导出数据",
-        width: "60%",
+        width: 700,
         footer: null,
         content: (
             <>
-                <GeneralExporterForm Data={data} onlyPayloads={onlyPayloads} />
+                <GeneralExporterForm
+                    Data={data}
+                    onlyPayloads={onlyPayloads}
+                    destroyModal={() => {
+                        m.destroy()
+                    }}
+                />
             </>
         )
     })
@@ -127,10 +133,11 @@ interface GeneralExporterFormProp {
     Config?: basicConfig
     Data: ExtractableData[]
     onlyPayloads: boolean
+    destroyModal: () => void
 }
 
 const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
-    const {Config, Data, onlyPayloads} = props
+    const {Config, Data, onlyPayloads, destroyModal} = props
     const [params, setParams] = useState<basicConfig>(
         !!Config
             ? Config
@@ -247,8 +254,9 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
     return (
         <Form
             labelCol={{span: 5}}
-            wrapperCol={{span: 14}}
+            wrapperCol={{span: 19}}
             onSubmitCapture={(e) => {
+                destroyModal()
                 const filteredData = Data.map((i) => {
                     const result: Partial<ExtractableData> = {}
                     exportColumns.forEach((column) => {
@@ -297,7 +305,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
 
                 showYakitModal({
                     title: "生成导出文件",
-                    width: "50%",
+                    width: 700,
                     footer: null,
                     content: (
                         <GeneralExporter

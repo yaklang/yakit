@@ -2359,6 +2359,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
     const bodyLengthRef = useRef<any>()
     const durationMsRef = useRef<any>()
 
+    const [exportDataVisible, setExportDataVisible] = useState<boolean>(false)
+
     useEffect(() => {
         setStatusCode(query?.StatusCode)
         setKeyWord(query?.keyWord)
@@ -2785,6 +2787,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
+                                            setExportDataVisible(false)
                                             emiter.emit(
                                                 "onGetExportFuzzer",
                                                 JSON.stringify({
@@ -2794,12 +2797,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        导出所有请求
+                                        导出所有
                                     </YakitButton>
                                     <YakitButton
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
+                                            setExportDataVisible(false)
                                             emiter.emit(
                                                 "onGetExportFuzzer",
                                                 JSON.stringify({
@@ -2814,6 +2818,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 </Space>
                             </>
                         }
+                        visible={exportDataVisible}
+                        onVisibleChange={(visible) => {
+                            setExportDataVisible(visible)
+                        }}
                     >
                         <YakitButton type='outline2' size={size}>
                             导出数据
@@ -2830,6 +2838,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
+                                            setExportDataVisible(false)
                                             emiter.emit(
                                                 "onGetExportFuzzer",
                                                 JSON.stringify({
@@ -2839,12 +2848,13 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                             )
                                         }}
                                     >
-                                        导出所有请求
+                                        导出所有
                                     </YakitButton>
                                     <YakitButton
                                         size={size}
                                         type={"primary"}
                                         onClick={() => {
+                                            setExportDataVisible(false)
                                             emiter.emit(
                                                 "onGetExportFuzzer",
                                                 JSON.stringify({
@@ -2859,6 +2869,10 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                                 </Space>
                             </>
                         }
+                        visible={exportDataVisible}
+                        onVisibleChange={(visible) => {
+                            setExportDataVisible(visible)
+                        }}
                     >
                         <Tooltip title='导出数据'>
                             <YakitButton type='outline2' icon={<OutlineExportIcon />} size={size} />
