@@ -754,20 +754,18 @@ module.exports = {
         // 插件压缩包和解压目录
         const generateChromePlugin = () => {
             return new Promise((resolve, reject) => {
-                const all = "google-chrome-plugin.zip"
-                const output_name = 'google-chrome-plugin'
-                const zipFilePath = loadExtraFilePath(path.join("bins/scripts", all))
-                const targetPath = path.join(YakitProjectPath, output_name)
+                const zipFilePath = loadExtraFilePath(path.join("bins/scripts", "google-chrome-plugin.zip"))
+                const targetPath = path.join(YakitProjectPath, 'google-chrome-plugin')
 
                 // 确保压缩包存在
                 if (!fs.existsSync(zipFilePath)) {
-                    reject(all + " not found")
+                    reject(zipFilePath + " not found")
                     return
                 }
 
                 // 确保输出文件夹存在，不存在则进行创建
                 if (!fs.existsSync(targetPath)) {
-                    fs.mkdirSync(output_name, { recursive: true })
+                    fs.mkdirSync(targetPath, { recursive: true })
                 }
 
                 const zipHandler = new zip({
