@@ -27,6 +27,7 @@ import {
     OutlinePaperclipIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
+    OutlineRefreshIcon,
     OutlineSparklesIcon,
     OutlineTrashIcon,
     OutlineXIcon
@@ -1256,6 +1257,7 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 <div className={styles["title-box"]}>
                     <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "Payload 字典管理"}</div>
                     <div className={styles["count"]}>{getPayloadCount}</div>
+                    {!onlyInsert && <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefreshListEvent} />}
                 </div>
                 <div className={styles["extra"]}>
                     {onlyInsert ? (
