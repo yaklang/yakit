@@ -11,10 +11,13 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import {getRemoteValue, setRemoteValue} from "./kv"
 
 export interface ExtractableValue {
-    StringValue: string
-    BytesValue: Uint8Array
+    StringValue?: string
+    BytesValue?: Uint8Array
 }
 
 export interface ExtractableData {
@@ -23,6 +26,7 @@ export interface ExtractableData {
 
 export interface GeneralExporterProp extends basicConfig {
     Data: ExtractableData[]
+    onFinish: () => void
 }
 
 interface basicConfig {
@@ -50,6 +54,7 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
         })
         ipcRenderer.on(`${token}-end`, () => {
             info("导出结束")
+            props.onFinish()
         })
         ipcRenderer.on(`${token}-error`, (_, e) => {})
 
@@ -99,36 +104,43 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
     )
 }
 
-export const exportData = (data: ExtractableData[]) => {
-    showYakitModal({
+export const exportData = (data: ExtractableData[], onlyPayloads: boolean) => {
+    const m = showYakitModal({
         title: "导出数据",
-        width: "60%",
+        width: 700,
         footer: null,
         content: (
             <>
-                <GeneralExporterForm Data={data} />
+                <GeneralExporterForm
+                    Data={data}
+                    onlyPayloads={onlyPayloads}
+                    destroyModal={() => {
+                        m.destroy()
+                    }}
+                />
             </>
         )
     })
 }
 
-export const testExportData = () => {
-    exportData([
-        {KYE: {StringValue: "asdfasdfasdfasdfasdf", BytesValue: new Uint8Array()}},
-        {KYE: {StringValue: "asdfasasdf", BytesValue: new Uint8Array()}},
-        {KYE: {StringValue: "asdfassdf", BytesValue: new Uint8Array()}}
-    ])
+interface ExportColumns {
+    dataKey: string
+    title: string
+    isChecked: boolean
+    disabled: boolean
 }
-
 interface GeneralExporterFormProp {
     Config?: basicConfig
     Data: ExtractableData[]
+    onlyPayloads: boolean
+    destroyModal: () => void
 }
 
 const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
+    const {Config, Data, onlyPayloads, destroyModal} = props
     const [params, setParams] = useState<basicConfig>(
-        !!props.Config
-            ? props.Config
+        !!Config
+            ? Config
             : {
                   CSVOutput: true,
                   DirName: "",
@@ -136,20 +148,209 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                   JsonOutput: true
               }
     )
+
+    const [exportColumns, setExportColumns] = useState<ExportColumns[]>(() => {
+        const arr = [
+            {
+                dataKey: "Method",
+                title: "Method",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "StatusCode",
+                title: "状态",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "BodyLength",
+                title: "响应大小",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "DurationMs",
+                title: "延迟(ms)",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "Payloads",
+                title: "Payloads",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "ExtractedResults",
+                title: "提取数据",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "ContentType",
+                title: "Content-Type",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "Https",
+                title: "Https",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "Host",
+                title: "Host",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "Request",
+                title: "请求包",
+                isChecked: true,
+                disabled: false
+            },
+            {
+                dataKey: "Response",
+                title: "响应包",
+                isChecked: true,
+                disabled: false
+            }
+        ]
+        if (onlyPayloads) {
+            arr.forEach((item) => {
+                if (item.dataKey === "Payloads") {
+                    item.isChecked = true
+                    item.disabled = true
+                } else {
+                    item.isChecked = false
+                    item.disabled = true
+                }
+            })
+        }
+        return arr
+    })
+    useEffect(() => {
+        if (!onlyPayloads) {
+            getRemoteValue(FuzzerRemoteGV.FuzzerExportCustomFields).then((res) => {
+                if (res) {
+                    try {
+                        const arr = JSON.parse(res) || []
+                        setExportColumns((prev) =>
+                            prev.map((item) => {
+                                if (arr.includes(item.dataKey)) {
+                                    return {...item, isChecked: true}
+                                } else {
+                                    return {...item, isChecked: false}
+                                }
+                            })
+                        )
+                    } catch (error) {}
+                }
+            })
+        }
+    }, [onlyPayloads])
+
     return (
         <Form
             labelCol={{span: 5}}
-            wrapperCol={{span: 14}}
+            wrapperCol={{span: 19}}
             onSubmitCapture={(e) => {
+                destroyModal()
+                const filteredData = Data.map((i) => {
+                    const result: Partial<ExtractableData> = {}
+                    exportColumns.forEach((column) => {
+                        if (column.isChecked) {
+                            switch (column.dataKey) {
+                                case "Method":
+                                    result.Method = {StringValue: i.Method.StringValue}
+                                    break
+                                case "StatusCode":
+                                    result.StatusCode = {StringValue: i.StatusCode.StringValue}
+                                    break
+                                case "BodyLength":
+                                    result.BodyLength = {StringValue: i.BodyLength.StringValue}
+                                    break
+                                case "DurationMs":
+                                    result.DurationMs = {StringValue: i.DurationMs.StringValue}
+                                    break
+                                case "Payloads":
+                                    result.Payloads = {StringValue: i.Payloads.StringValue}
+                                    break
+                                case "ExtractedResults":
+                                    result.ExtractedResults = {StringValue: i.ExtractedResults.StringValue}
+                                    break
+                                case "ContentType":
+                                    result.ContentType = {StringValue: i.ContentType.StringValue}
+                                    break
+                                case "Https":
+                                    result.Https = {StringValue: i.Https.StringValue}
+                                    break
+                                case "Host":
+                                    result.Host = {StringValue: i.Host.StringValue}
+                                    break
+                                case "Request":
+                                    result.Request = {BytesValue: i.Request.BytesValue}
+                                    break
+                                case "Response":
+                                    result.Response = {BytesValue: i.Response.BytesValue}
+                                    break
+                                default:
+                                    break
+                            }
+                        }
+                    })
+                    return result
+                }) as ExtractableData[]
+
                 showYakitModal({
                     title: "生成导出文件",
-                    width: "50%",
+                    width: 700,
                     footer: null,
-                    content: <GeneralExporter {...params} Data={props.Data} />
+                    content: (
+                        <GeneralExporter
+                            {...params}
+                            Data={filteredData}
+                            onFinish={() => {
+                                if (!onlyPayloads) {
+                                    setRemoteValue(
+                                        FuzzerRemoteGV.FuzzerExportCustomFields,
+                                        JSON.stringify(
+                                            exportColumns.filter((item) => item.isChecked).map((item) => item.dataKey)
+                                        )
+                                    )
+                                }
+                            }}
+                        />
+                    )
                 })
             }}
             style={{padding: 24}}
         >
+            <Form.Item label='导出字段' name='exportColumns'>
+                <div style={{display: "flex", flexWrap: "wrap", gap: "8px"}}>
+                    {exportColumns.map((item) => (
+                        <YakitCheckbox
+                            key={item.dataKey}
+                            checked={item.isChecked}
+                            disabled={item.disabled}
+                            onChange={(e) => {
+                                setExportColumns((prev) =>
+                                    prev.map((i) => {
+                                        if (i.dataKey === item.dataKey) {
+                                            return {...i, isChecked: e.target.checked}
+                                        }
+                                        return i
+                                    })
+                                )
+                            }}
+                        >
+                            {item.title}
+                        </YakitCheckbox>
+                    ))}
+                </div>
+            </Form.Item>
             <Form.Item label={"导出 JSON"} valuePropName='checked'>
                 <YakitSwitch
                     onChange={(JsonOutput) => setParams({...params, JsonOutput})}
