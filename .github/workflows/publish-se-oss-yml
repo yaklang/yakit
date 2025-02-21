@@ -142,7 +142,7 @@ jobs:
 
             - name: "Download Yak Legacy Engine via wget(Windows)"
               id: download-windows-leagacy-engine
-              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: rm ./bins/yak_windows_amd64.zip && wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
             - name: Build Yakit Legacy (MultiPlatform)
               env:
