@@ -237,14 +237,15 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                 if (res) {
                     try {
                         const arr = JSON.parse(res) || []
-                        const updatedColumns = exportColumns.map((item) => {
-                            if (arr.includes(item.dataKey)) {
-                                return {...item, isChecked: true}
-                            } else {
-                                return {...item, isChecked: false}
-                            }
-                        })
-                        setExportColumns(updatedColumns)
+                        setExportColumns((prev) =>
+                            prev.map((item) => {
+                                if (arr.includes(item.dataKey)) {
+                                    return {...item, isChecked: true}
+                                } else {
+                                    return {...item, isChecked: false}
+                                }
+                            })
+                        )
                     } catch (error) {}
                 }
             })
@@ -335,13 +336,14 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
                             checked={item.isChecked}
                             disabled={item.disabled}
                             onChange={(e) => {
-                                const updatedColumns = exportColumns.map((i) => {
-                                    if (i.dataKey === item.dataKey) {
-                                        return {...i, isChecked: e.target.checked}
-                                    }
-                                    return i
-                                })
-                                setExportColumns(updatedColumns)
+                                setExportColumns((prev) =>
+                                    prev.map((i) => {
+                                        if (i.dataKey === item.dataKey) {
+                                            return {...i, isChecked: e.target.checked}
+                                        }
+                                        return i
+                                    })
+                                )
                             }}
                         >
                             {item.title}
