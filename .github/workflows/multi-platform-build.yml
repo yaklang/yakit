@@ -67,33 +67,6 @@ jobs:
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
 
-            - name: "Download Yak Engine via wget(MacOS)"
-              if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
-              id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-            - name: "Download Yak Engine via wget(MacOS-arm64)"
-              if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
-              id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
-
-            - name: "Download Yak Engine via wget(Linux)"
-              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
-              id: download-linux-engine
-              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
-            - name: "Download Yak Engine via wget(Linux-arm64)"
-              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
-              id: download-linux-engine-arm64
-              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
-
-            - name: "Download Yak Engine via wget(Windows)"
-              if: ${{ inputs.engine && !inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
-              id: download-windows-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
-            - name: "Download Yak Legacy Engine via wget(Windows)"
-              if: ${{ inputs.engine && inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
-              id: download-windows-leagacy-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || 'latest' }}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
-
             - name: "Fetch Latest EngineVersion"
               if: ${{ inputs.engine && !inputs.engineVersion }}
               run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
@@ -103,7 +76,37 @@ jobs:
                   mkdir -p bins
                   echo "${{ inputs.engineVersion }}" > bins/engine-version.txt
             - if: ${{ inputs.engine }}
-              run: ls ./bins && cat bins/engine-version.txt
+              run: | 
+                  cat bins/engine-version.txt
+                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
+            - name: "Download Yak Engine via wget(Linux)"
+              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              id: download-linux-engine
+              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+            - name: "Download Yak Engine via wget(Linux-arm64)"
+              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              id: download-linux-engine-arm64
+              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+
+            - name: "Download Yak Engine via wget(Windows)"
+              if: ${{ inputs.engine && !inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
+              id: download-windows-engine
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+            - name: "Download Yak Legacy Engine via wget(Windows)"
+              if: ${{ inputs.engine && inputs.legacy && contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
+              id: download-windows-leagacy-engine
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
             - name: Extract Package.json Version
               id: extract_version
