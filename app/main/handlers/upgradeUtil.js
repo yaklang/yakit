@@ -1,4 +1,4 @@
-const { ipcMain, shell, app } = require("electron")
+const { ipcMain, shell } = require("electron")
 const childProcess = require("child_process")
 const process = require("process")
 const path = require("path")
@@ -9,7 +9,6 @@ const https = require("https")
 const EventEmitter = require("events")
 const zip = require("node-stream-zip")
 const crypto = require("crypto")
-const electronIsDev = require("electron-is-dev")
 
 const {
     YakitProjectPath,
@@ -757,10 +756,8 @@ module.exports = {
             return new Promise((resolve, reject) => {
                 const all = "google-chrome-plugin.zip"
                 const output_name = 'google-chrome-plugin'
-                const zipFilePath = loadExtraFilePath(path.join("bins", "scripts", all))
-                const zipDir = path.dirname(zipFilePath)  // 获取压缩包所在目录
-                const targetPath = path.join(zipDir, output_name)
-                const devTargetPath = path.join(app.getAppPath(), targetPath)
+                const zipFilePath = loadExtraFilePath(path.join("bins/scripts", all))
+                const targetPath = path.join(YakitProjectPath, output_name)
 
                 // 确保压缩包存在
                 if (!fs.existsSync(zipFilePath)) {
@@ -771,13 +768,6 @@ module.exports = {
                 // 确保输出文件夹存在，不存在则进行创建
                 if (!fs.existsSync(targetPath)) {
                     fs.mkdirSync(output_name, { recursive: true })
-                } else {
-                    if (electronIsDev) {
-                        resolve(devTargetPath)
-                    } else {
-                        resolve(targetPath)
-                    }
-                    return
                 }
 
                 const zipHandler = new zip({
@@ -787,15 +777,11 @@ module.exports = {
 
                 zipHandler.on("ready", () => {
                     // 执行解压
-                    zipHandler.extract(null, electronIsDev ? devTargetPath : targetPath, (err, res) => {
+                    zipHandler.extract(null, targetPath, (err, res) => {
                         if (err) {
                             reject(`Extract Google Chrome Plugin Failed: ${err}`)
                         } else {
-                            if (electronIsDev) {
-                                resolve(devTargetPath)
-                            } else {
-                                resolve(targetPath)
-                            }
+                            resolve(targetPath)
                         }
                         zipHandler.close()
                     });

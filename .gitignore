@@ -55,4 +55,3 @@ package-lock.json
 yarn.lock
 .vscode/
 .history/
-bins/scripts/google-chrome-plugin
