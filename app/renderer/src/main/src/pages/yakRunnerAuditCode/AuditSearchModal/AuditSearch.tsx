@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import styles from "./AuditSearchModal.module.scss"
@@ -22,10 +22,19 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {Progress} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {AuditYakUrlProps} from "../AuditCode/AuditCodeType"
-import {loadAuditFromYakURLRaw} from "../utils"
+import {AuditDetailItemProps, AuditYakUrlProps} from "../AuditCode/AuditCodeType"
+import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import {YakURLResource} from "@/pages/webShell/yakURLTree/data"
+import {AuditNodeSearchItem} from "../AuditCode/AuditCode"
+import {AuditResultCollapse, YakRiskCodemirror} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {Selection} from "../RunnerTabs/RunnerTabsType"
+import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
-    const {visible, programName, onClose} = props
+    const {visible, projectName, onClose} = props
     const [checked, setChecked] = useState<boolean>(true)
     const [keywords, setKeywords] = useState<string>("")
     const [extraSettingData, setExtraSettingData] = useState<ExtraSettingDataProps[]>([])
@@ -45,18 +54,41 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
         }
     })
-
-    console.log("streamInfo---", streamInfo)
+    const [auditDetail, setAuditDetail] = useState<AuditDetailItemProps[]>([])
 
     const getData = useMemoizedFn(async (result_id: number) => {
         const params: AuditYakUrlProps = {
             Schema: "syntaxflow",
-            Location: programName,
+            Location: projectName,
             Path: `/${activeKey}`,
             Query: [{Key: "result_id", Value: result_id}]
         }
         const result = await loadAuditFromYakURLRaw(params)
-        console.log("result---", result)
+        console.log("result---", params, result)
+
+        if (result) {
+            const newAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
+                (item, index) => {
+                    const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
+                    let value: string = `${index}`
+                    const arr = Extra.filter((item) => item.Key === "index")
+                    if (arr.length > 0) {
+                        value = arr[0].Value
+                    }
+                    const newId = `/${value}`
+                    return {
+                        id: newId,
+                        name: ResourceName,
+                        ResourceType,
+                        VerboseType,
+                        Size,
+                        Extra
+                    }
+                }
+            )
+            setIsRefresh(!isRefresh)
+            setAuditDetail(newAuditDetail)
+        }
     })
 
     useUpdateEffect(() => {
@@ -64,11 +96,21 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
         if (startLog && startLog.data) {
             getData(startLog.data)
         }
-    }, [streamInfo,activeKey])
+    }, [streamInfo])
+
+    useDebounceEffect(
+        () => {
+            rightContextRef.current?.destroy()
+            onSearch()
+        },
+        [activeKey],
+        {wait: 500}
+    )
 
     const onSearch = useMemoizedFn(() => {
         if (keywords.length === 0) {
-            warn("请输入关键词")
+            setActivbeInfo(undefined)
+            setAuditDetail([])
             return
         }
         if (executing) {
@@ -83,7 +125,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             ExecParams: [
                 {
                     Key: "progName",
-                    Value: programName || ""
+                    Value: projectName || ""
                 },
                 {
                     Key: "rule",
@@ -120,7 +162,6 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             const newPlugin = await grpcFetchLocalPluginDetail({Name: "SyntaxFlow Searcher"}, true)
             const ExtraSetting = newPlugin?.Params.find((item) => item.Field === "kind")?.ExtraSetting || ""
             let obj = JSON.parse(ExtraSetting) as ExtraSettingProps
-            console.log("ooioo", obj, newPlugin)
             setExtraSettingData(obj.data)
         }),
         {wait: 300}
@@ -134,6 +175,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
         if (visible && extraSettingData.length > 0) {
             const currentIndex = extraSettingData.findIndex((item) => item.value === activeKey)
             const nextIndex = currentIndex === extraSettingData.length - 1 ? 0 : currentIndex + 1
+            setActivbeInfo(undefined)
             setActiveKey(extraSettingData[nextIndex].value)
         }
     })
@@ -168,6 +210,86 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
         visible && inputRef.current?.focus()
     }, [visible])
 
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [activeInfo, setActivbeInfo] = useState<AuditDetailItemProps>()
+
+    const yakURLData = useMemo(() => {
+        try {
+            const Index = activeInfo?.Extra.find((item) => item.Key === "index")?.Value
+            const CodeRange = activeInfo?.Extra.find((item) => item.Key === "code_range")?.Value
+            const CodeFragment = activeInfo?.Extra.find((item) => item.Key === "source")?.Value
+            if (Index && CodeRange && CodeFragment) {
+                const code_range: CodeRangeProps = JSON.parse(CodeRange)
+                return {
+                    index: Index,
+                    code_range,
+                    source: CodeFragment,
+                    ResourceName: activeInfo.name
+                }
+            }
+        } catch (error) {}
+    }, [activeInfo])
+
+    const onJump = useMemoizedFn(async (data: AuditDetailItemProps) => {
+        try {
+            const arr = data.Extra.filter((item) => item.Key === "code_range")
+            if (arr.length > 0) {
+                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const {url, start_line, start_column, end_line, end_column} = item
+                const name = await getNameByPath(url)
+                // console.log("monaca跳转", item, name)
+                const highLightRange: Selection = {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
+                }
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path: url,
+                        name,
+                        highLightRange
+                    }
+                }
+                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                // 纯跳转行号
+                setTimeout(() => {
+                    const obj: JumpToAuditEditorProps = {
+                        selections: highLightRange,
+                        path: url,
+                        isSelect: false
+                    }
+                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
+                onClose && onClose()
+            }
+        } catch (error) {}
+    })
+
+    const rightContextRef = useRef<any>()
+    const onContextMenu = useMemoizedFn((info) => {
+        rightContextRef.current = showByRightContext({
+            width: 180,
+            data: [
+                {
+                    label: "跳转",
+                    key: "jump"
+                }
+            ],
+            onClick: ({key, keyPath}) => {
+                switch (key) {
+                    case "jump":
+                        onJump(info)
+                        break
+                    default:
+                        break
+                }
+            }
+        })
+    })
+
     return (
         <YakitHintWhite
             isDrag={true}
@@ -175,7 +297,15 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             onClose={() => onClose && onClose()}
             containerClassName={styles["hint-white-container"]}
             children={
-                <div className={styles["audit-search-box"]} tabIndex={-1} ref={keyDownRef}>
+                <div
+                    className={styles["audit-search-box"]}
+                    tabIndex={-1}
+                    ref={keyDownRef}
+                    onClick={() => {
+                        // 此处 showByRightContext 不会正常关闭 因此需特殊处理
+                        rightContextRef.current?.destroy()
+                    }}
+                >
                     <div className={styles["title"]}>搜索</div>
                     <div className={styles["header"]}>
                         <div className={styles["filter-box"]}>
@@ -185,6 +315,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                                 onChange={(e) => setKeywords(e.target.value)}
                                 placeholder='请输入关键词搜索'
                                 onSearch={onSearch}
+                                allowClear={false}
                                 onPressEnter={onPressEnter}
                             />
                         </div>
@@ -200,28 +331,30 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                             </YakitCheckbox>
                         </div>
                     </div>
-                    {executing && (
-                        <div className={styles["progress-opt"]}>
-                            <Progress
-                                strokeColor='#F28B44'
-                                trailColor='#F0F2F5'
-                                percent={Math.floor(
-                                    (streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100
-                                )}
-                            />
 
-                            <div className={styles["extra"]}>
-                                <YakitButton danger onClick={onStopExecute} size='small'>
-                                    停止
-                                </YakitButton>
-                            </div>
-                        </div>
-                    )}
+                    <div className={styles["progress-opt"]}>
+                        <Progress
+                            size='small'
+                            strokeColor='#F28B44'
+                            trailColor='#F0F2F5'
+                            percent={Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100)}
+                        />
+
+                        {/* <div className={styles["extra"]}>
+                            <YakitButton danger onClick={onStopExecute} size='small'>
+                                停止
+                            </YakitButton>
+                        </div> */}
+                    </div>
+
                     {extraSettingData.length > 0 && (
                         <div className={styles["tabs-box"]}>
                             <YakitTabs
                                 activeKey={activeKey}
-                                onChange={(v) => setActiveKey(v)}
+                                onChange={(v) => {
+                                    setActivbeInfo(undefined)
+                                    setActiveKey(v)
+                                }}
                                 tabBarStyle={{marginBottom: 5}}
                                 className='scan-port-tabs no-theme-tabs'
                             >
@@ -234,6 +367,55 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                                     )
                                 })}
                             </YakitTabs>
+                        </div>
+                    )}
+                    {auditDetail.length <= 10 && (
+                        <div className={styles["search-list"]}>
+                            {auditDetail.map((record) => (
+                                <AuditNodeSearchItem
+                                    key={record.id}
+                                    info={record}
+                                    foucsedKey={activeInfo?.id || ""}
+                                    setActivbeInfo={setActivbeInfo}
+                                    onJump={onJump}
+                                    onContextMenu={onContextMenu}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    {auditDetail.length > 10 && (
+                        <div
+                            className={styles["search-list"]}
+                            style={{
+                                maxHeight: 230
+                            }}
+                        >
+                            <RollingLoadList<AuditDetailItemProps>
+                                isRef={isRefresh}
+                                data={auditDetail}
+                                page={-1} //response.Pagination.Page
+                                hasMore={hasMore}
+                                loadMoreData={() => {
+                                    // 请求下一页数据
+                                }}
+                                loading={loading}
+                                rowKey='name'
+                                defItemHeight={23}
+                                renderRow={(record, index: number) => (
+                                    <AuditNodeSearchItem
+                                        info={record}
+                                        foucsedKey={activeInfo?.id || ""}
+                                        setActivbeInfo={setActivbeInfo}
+                                        onJump={onJump}
+                                        onContextMenu={onContextMenu}
+                                    />
+                                )}
+                            />
+                        </div>
+                    )}
+                    {yakURLData && (
+                        <div className={styles["content"]}>
+                            <YakRiskCodemirror info={yakURLData} />
                         </div>
                     )}
                 </div>

@@ -5,6 +5,7 @@ import {
     AuditHistoryListProps,
     AuditHistoryListRefProps,
     AuditHistoryTableProps,
+    AuditNodeSearchItemProps,
     AuditMainItemFormProps,
     AuditModalFormModalProps,
     AuditModalFormProps,
@@ -15,7 +16,8 @@ import {
     AuditYakUrlProps,
     ProjectManagerEditFormProps,
     QuerySSAProgramsProps,
-    SSAProgramResponse
+    SSAProgramResponse,
+    AuditDetailItemProps
 } from "./AuditCodeType"
 import classNames from "classnames"
 import styles from "./AuditCode.module.scss"
@@ -128,6 +130,8 @@ import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStart
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -146,7 +150,7 @@ export const isBugFun = (info: AuditNodeProps) => {
     }
 }
 
-export const getDetailFun = (info: AuditNodeProps) => {
+export const getDetailFun = (info: AuditNodeProps | AuditDetailItemProps) => {
     try {
         if (info.ResourceType === "value") {
             const arr = info.Extra.filter((item) => item.Key === "code_range")
@@ -166,8 +170,40 @@ export const getDetailFun = (info: AuditNodeProps) => {
     } catch (error) {}
 }
 
+const showIcon = (severity) => {
+    switch (severity) {
+        case "hint":
+            return (
+                <div className={classNames(styles["hint-icon"], styles["icon-box"])}>
+                    <OutlineDeprecatedIcon />
+                </div>
+            )
+        case "info":
+            return (
+                <div className={classNames(styles["info-icon"], styles["icon-box"])}>
+                    <SolidInformationcircleIcon />
+                </div>
+            )
+        case "warning":
+            return (
+                <div className={classNames(styles["warn-icon"], styles["icon-box"])}>
+                    <SolidExclamationIcon />
+                </div>
+            )
+        case "error":
+            return (
+                <div className={classNames(styles["error-icon"], styles["icon-box"])}>
+                    <SolidXcircleIcon />
+                </div>
+            )
+
+        default:
+            return <></>
+    }
+}
+
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, setFoucsedKey, onSelected, onExpanded, expandedKeys, onJump} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump} = props
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info, getDetail)
     })
@@ -191,38 +227,6 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
     const isFoucsed = useMemo(() => {
         return foucsedKey === info.id
     }, [foucsedKey, info.id])
-
-    const showIcon = useMemoizedFn((severity) => {
-        switch (severity) {
-            case "hint":
-                return (
-                    <div className={classNames(styles["hint-icon"], styles["icon-box"])}>
-                        <OutlineDeprecatedIcon />
-                    </div>
-                )
-            case "info":
-                return (
-                    <div className={classNames(styles["info-icon"], styles["icon-box"])}>
-                        <SolidInformationcircleIcon />
-                    </div>
-                )
-            case "warning":
-                return (
-                    <div className={classNames(styles["warn-icon"], styles["icon-box"])}>
-                        <SolidExclamationIcon />
-                    </div>
-                )
-            case "error":
-                return (
-                    <div className={classNames(styles["error-icon"], styles["icon-box"])}>
-                        <SolidXcircleIcon />
-                    </div>
-                )
-
-            default:
-                return <></>
-        }
-    })
 
     // 获取详情
     const getDetail = useMemo(() => {
@@ -260,10 +264,11 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                         <div className={classNames(styles["content-body"])}>
                             {getDetail && (
                                 <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
-                                    <div
-                                        className={classNames(styles["detail"], "yakit-content-single-ellipsis")}
-                                    >{getDetail.fileName}
-                                    <YakitTag className={styles['detail-tag']} size="small" color="info">{getDetail.start_line}</YakitTag>
+                                    <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
+                                        {getDetail.fileName}
+                                        <YakitTag className={styles["detail-tag"]} size='small' color='info'>
+                                            {getDetail.start_line}
+                                        </YakitTag>
                                     </div>
                                 </Tooltip>
                             )}
@@ -288,6 +293,65 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                 </div>
             )}
         </>
+    )
+})
+
+export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((props) => {
+    const {info, foucsedKey, setActivbeInfo, onJump, onContextMenu} = props
+
+    // 获取详情
+    const getDetail = useMemo(() => {
+        return getDetailFun(info)
+    }, [info])
+
+    const isFoucsed = useMemo(() => {
+        return foucsedKey === info.id
+    }, [foucsedKey, info.id])
+
+    const handleClick = useMemoizedFn(() => {
+        setActivbeInfo(info)
+    })
+
+    const getIconByName = useMemoizedFn((name: string) => {
+        const suffix = name.indexOf(".") > -1 ? name.split(".").pop() : ""
+        return KeyToIcon[suffix ? FileSuffix[suffix] || FileDefault : FileDefault].iconPath
+    })
+    return (
+        <div
+            className={classNames(styles["audit-tree-node"], {
+                [styles["node-foucsed"]]: isFoucsed
+            })}
+            style={{paddingLeft: 8}}
+            onClick={handleClick}
+            onContextMenu={() => {
+                onContextMenu(info)
+            }}
+            onDoubleClick={() => onJump(info)}
+        >
+            {info.ResourceType === "message" && showIcon(info.VerboseType)}
+
+            <div className={styles["node-loading"]}>
+                <LoadingOutlined />
+            </div>
+            {getDetail?.fileName && <img className={styles["img-box"]} src={getIconByName(getDetail.fileName)} />}
+            <div className={styles["node-content"]}>
+                <div className={classNames(styles["content-body"])}>
+                    {getDetail && (
+                        <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
+                            <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
+                                {getDetail.fileName}
+                                <YakitTag className={styles["detail-tag"]} size='small' color='info'>
+                                    {getDetail.start_line}
+                                </YakitTag>
+                            </div>
+                        </Tooltip>
+                    )}
+
+                    <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>{info.name}</div>
+                </div>
+                {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
+            </div>
+        </div>
     )
 })
 
@@ -404,7 +468,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             expandedKeys={expandedKeys}
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
-                            setFoucsedKey={setFoucsedKey}
                             onJump={onJump}
                         />
                     )

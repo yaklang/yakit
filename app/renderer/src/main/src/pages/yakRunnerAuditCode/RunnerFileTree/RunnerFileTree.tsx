@@ -365,7 +365,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             <AuditSearchModal
                 visible={searchVisible}
                 onClose={() => setSearchVisible(false)}
-                programName={projectName||""}
+                projectName={projectName||""}
             />
         </div>
     )

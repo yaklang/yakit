@@ -35,7 +35,6 @@ export interface AuditTreeNodeProps {
     onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
-    setFoucsedKey: (v: string) => void
     onJump: (info: AuditNodeProps) => void
 }
 
@@ -81,6 +80,25 @@ export interface AuditNodeProps {
 
     // 前端所需校验属性
     isBug?: boolean
+}
+
+export interface AuditDetailItemProps {
+    /** id */
+    id: string
+    // 可能存在的名称
+    name: string
+    Extra: YakURLKVPair[]
+    ResourceType: string
+    VerboseType: string
+    Size: number
+}
+
+export interface AuditNodeSearchItemProps {
+    info: AuditDetailItemProps
+    foucsedKey: string
+    setActivbeInfo: (v: AuditDetailItemProps) => void
+    onJump: (v: AuditDetailItemProps) => void
+    onContextMenu: (v: AuditDetailItemProps) => void
 }
 
 export interface AuditYakUrlProps {
