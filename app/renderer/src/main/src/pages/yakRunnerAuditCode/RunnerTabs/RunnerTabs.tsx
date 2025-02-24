@@ -1369,7 +1369,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                 </div>
                 <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>
-            <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {}}>
+            <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {padding:"0px 145px"}}>
                 <div className={styles["operate"]}>
                     <div className={styles["title-style"]}>快捷创建</div>
                     <div className={styles["operate-btn-group"]}>
