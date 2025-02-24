@@ -1,6 +1,6 @@
 export interface AuditSearchProps {
     visible: boolean
-    programName: string
+    projectName: string
     onClose?: () => void
 }
 

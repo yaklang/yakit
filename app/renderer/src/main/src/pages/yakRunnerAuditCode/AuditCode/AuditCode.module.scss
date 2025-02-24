@@ -166,6 +166,10 @@
             color: #f28b44;
         }
     }
+    .img-box {
+        width: 16px;
+        height: 16px;
+    }
 
     .node-content {
         flex: 1;
@@ -189,7 +193,7 @@
                 overflow: hidden;
 
                 flex-shrink: 0; /* 防止这个元素被压缩  */
-                .detail-tag{
+                .detail-tag {
                     margin-left: 4px;
                 }
             }
@@ -478,9 +482,9 @@
     border-bottom: 1px solid #eaecf3;
 }
 
-.tooltip-line-feed{
+.tooltip-line-feed {
     :global {
-        .ant-tooltip-inner{
+        .ant-tooltip-inner {
             white-space: pre-wrap;
         }
     }

@@ -2136,7 +2136,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
 
 interface AuditResultCollapseProps {
     data: YakURLDataItemProps[]
-    jumpCodeScanPage: (v: string) => void
+    jumpCodeScanPage?: (v: string) => void
     isShowExtra?: boolean
     collapseProps?: CollapseProps
 }
@@ -2165,7 +2165,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                             icon={<OutlineTerminalIcon />}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                jumpCodeScanPage(`/${index}`)
+                                jumpCodeScanPage && jumpCodeScanPage(`/${index}`)
                             }}
                         />
                     </Tooltip>
@@ -2175,20 +2175,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
     }
 
     const renderItem = (info: YakURLDataItemProps) => {
-        const filename = info.code_range.url.split("/").pop()
-        const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
-        return (
-            <YakCodemirror
-                readOnly={true}
-                fileName={filename}
-                value={info.source}
-                firstLineNumber={source_code_line}
-                highLight={{
-                    from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
-                    to: {line: end_line - source_code_line, ch: end_column} // 结束位置
-                }}
-            />
-        )
+        return <YakRiskCodemirror info={info} />
     }
     return (
         <div className={styles["audit-result-collapse"]}>
@@ -2201,5 +2188,27 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
                 collapseProps={collapseProps}
             />
         </div>
+    )
+})
+
+interface YakRiskCodemirrorProps {
+    info: YakURLDataItemProps
+}
+
+export const YakRiskCodemirror: React.FC<YakRiskCodemirrorProps> = React.memo((props) => {
+    const {info} = props
+    const filename = info.code_range.url.split("/").pop()
+    const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
+    return (
+        <YakCodemirror
+            readOnly={true}
+            fileName={filename}
+            value={info.source}
+            firstLineNumber={source_code_line}
+            highLight={{
+                from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
+                to: {line: end_line - source_code_line, ch: end_column} // 结束位置
+            }}
+        />
     )
 })
