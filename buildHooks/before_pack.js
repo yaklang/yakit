@@ -1,6 +1,15 @@
 const packageJson = require("../package.json");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = async function (context) {
+    const licensePath = path.join(".", "LICENSE.md");
+
+    if (fs.existsSync(licensePath)) {
+        fs.unlinkSync(licensePath);
+        console.log("Removed LICENSE.md from app bundle");
+    }
+
     const archMap = {
         1: "x64",
         3: "arm64",

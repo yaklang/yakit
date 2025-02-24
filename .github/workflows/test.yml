@@ -1,0 +1,100 @@
+name: Test Mac Code Signing
+
+on:
+    push:
+        branches:
+            - "chore/prod-ci-mac"
+
+jobs:
+    build_yakit:
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            APPLE_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - run: echo "The length of APPLE_PASSWORD is ${#APPLE_PASSWORD}"
+            - run: echo ${{ github.ref }}
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Fetch Latest EngineVersion"
+              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
+            - run: |
+                  cat bins/engine-version.txt
+                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${{ env.ENGINE_VERSION }}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${{ env.ENGINE_VERSION }}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+
+            - name: Extract Package.json Version
+              id: extract_version
+              uses: Saionaro/extract-package-version@v1.1.1
+            - name: Crop Yakit-CE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_ce_version
+              with:
+                  source: ${{ steps.extract_version.outputs.version }}
+                  find: "-ce"
+                  replace: ""
+            - name: Crop Yakit-EE Package.json Version
+              uses: mad9000/actions-find-and-replace-string@5
+              id: package_version
+              with:
+                  source: ${{ steps.package_ce_version.outputs.value }}
+                  find: "-ee"
+                  replace: ""
+            - name: Echo Yakit Package Version
+              run: echo ${{ steps.package_version.outputs.value }}
+
+            - name: Install Render
+              run: |
+                  wget -O ce.zip https://oss-qn.yaklang.com/yak/render/ce.zip
+                  unzip -n ce.zip -d ./app/renderer
+                  rm ./ce.zip
+
+            - run: yarn install
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: Import Signing Certificate
+              run: |
+                  echo "$CERT_BASE64" | base64 --decode > cert.p12
+                  echo "CSC_LINK=$(pwd)/cert.p12" >> $GITHUB_ENV
+                  echo "CSC_KEY_PASSWORD=$CERT_PASSWORD" >> $GITHUB_ENV
+
+            - name: Build Yakit (MAC)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              run: yarn pack-mac
+
+            - run: |
+                  codesign -dv --verbose=4 ./release/mac/Yakit.app
+              shell: bash
+
+            - name: View Published Content
+              run: ls -al ./release
+
+            - name: Upload Yakit(CE) Artifacts Windows
+              uses: actions/upload-artifact@v4
+              with:
+                  name: Yakit-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  path: ./release/Yakit-${{ steps.package_version.outputs.value }}-darwin-arm64.dmg
+                  if-no-files-found: error
+                  retention-days: 1
