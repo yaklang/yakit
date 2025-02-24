@@ -258,17 +258,19 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
                     <div className={styles["node-content"]}>
                         <div className={classNames(styles["content-body"])}>
-                            <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>
-                                {info.name}
-                            </div>
-
                             {getDetail && (
                                 <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
                                     <div
                                         className={classNames(styles["detail"], "yakit-content-single-ellipsis")}
-                                    >{`${getDetail.fileName}:${getDetail.start_line}`}</div>
+                                    >{getDetail.fileName}
+                                    <YakitTag className={styles['detail-tag']} size="small" color="info">{getDetail.start_line}</YakitTag>
+                                    </div>
                                 </Tooltip>
                             )}
+
+                            <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>
+                                {info.name}
+                            </div>
                         </div>
                         {isBugFun(info) && (
                             <div
