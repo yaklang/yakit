@@ -30,7 +30,7 @@ for item in "${versions[@]}"; do
         sleep 2 # 失败后等待2000ms再重试
     done
     [ $attempt -gt $max_attempts ] && {
-        echo "${item} legacy build xceeded retry attempts" >&2
+        echo "${item} legacy build exceeded retry attempts" >&2
         exit 1
     } # 超过重试次数则失败
 
@@ -52,7 +52,7 @@ for item in "${versions[@]}"; do
         sleep 2 # 失败后等待2000ms再重试
     done
     [ $attempt -gt $max_attempts ] && {
-        echo "${item} legacy build xceeded retry attempts" >&2
+        echo "${item} legacy build exceeded retry attempts" >&2
         exit 1
     } # 超过重试次数则失败
 done

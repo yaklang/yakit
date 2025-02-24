@@ -25,8 +25,8 @@ extraFiles:
           - "*.txt"
           - "*.gzip"
           - "!*.db"
-    - from: "LICENSE.md"
-      to: "LICENSE.md"
+    # - from: "LICENSE.md"
+    #   to: "LICENSE.md"
     - from: "report/template.zip"
       to: "report/template.zip"
 
@@ -54,7 +54,11 @@ publish:
       url: https://yaklang.oss-cn-beijing.aliyuncs.com/yak/latest/
 
 mac:
+    # category: public.app-category.developer-tools
+    hardenedRuntime: true
     gatekeeperAssess: false
+    entitlements: "build/entitlements.mac.plist"
+    entitlementsInherit: "build/entitlements.mac.plist"
     target:
         - target: dmg
           arch:
@@ -93,6 +97,8 @@ nsis:
     createStartMenuShortcut: true
 
 beforePack: "buildHooks/before_pack.js"
+afterSign: "buildHooks/afterSign.js"
+# afterSign: "./scripts/notarize.js"
 
 releaseInfo:
     releaseName: ${version}
