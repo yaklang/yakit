@@ -23,6 +23,9 @@ jobs:
               with:
                   node-version: 18.18.2
 
+            - name: "test"
+              run: xcrun altool --notarization-history -u ${{ env.APPLE_ID }} -p ${{ env.APPLE_PASSWORD }} --asc-provider ${{ env.TEAM_ID }}
+
             - run: echo "The length of APPLE_PASSWORD is ${#APPLE_PASSWORD}"
             - run: echo ${{ github.ref }}
             - run: cp buildutil/zip /usr/local/bin/zip
