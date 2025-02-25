@@ -81,6 +81,10 @@ export interface HintModalProps {
     /** 是否弹窗置顶 */
     isTop?: boolean
     children?: ReactNode
+    /** 是否可以放大缩小 */
+    isResize?: boolean
+    resizeMinWidth?: number
+    resizeMinWHeight?: number
 }
 
 export interface YakitHintWhiteProps extends HintModalProps {
