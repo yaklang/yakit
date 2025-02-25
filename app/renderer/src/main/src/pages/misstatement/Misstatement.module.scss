@@ -4,8 +4,8 @@
 }
 %flex-row-center {
     display: flex;
-    flex-direction: row;
     align-items: center;
+    flex-direction: row;
 }
 %flex-column {
     display: flex;
@@ -14,40 +14,74 @@
 
 @mixin heard($name) {
     .#{$name}-heard {
-        @extend %flex-row;
         justify-content: space-between;
         align-items: center;
         height: 24px;
+
+        @extend %flex-row;
+
         @content;
         .#{$name}-heard-title {
-            @extend %flex-row;
             justify-content: space-between;
             align-items: center;
-            gap: 4px;
             color: var(--yakit-header-color);
             font-size: 12px;
-            font-style: normal;
             font-weight: 500;
+            font-style: normal;
             line-height: 16px; /* 133.333% */
+
+            @extend %flex-row;
+            gap: 4px;
         }
     }
 }
-
 .misstatement-page {
-    @extend %flex-row;
-    height: 100%;
-    width: 100%;
     overflow: hidden;
+    width: 100%;
+    height: 100%;
+
+    @extend %flex-row;
+
     &-right {
         .renderTitle-wrapper {
             display: flex;
-            gap: 8px;
+            justify-content: space-between;
             padding: 12px 12px 0;
-            .renderTitle-text {
-                color: var(--yakit-header-color);
-                font-size: 16px;
-                font-weight: 600;
-                line-height: 24px;
+
+            &-left {
+                display: flex;
+                gap: 8px;
+                .renderTitle-text {
+                    color: var(--yakit-header-color);
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .virtual-table-heard-right {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+
+                    .virtual-table-heard-right-item {
+                        display: flex;
+                        align-items: center;
+
+                        .virtual-table-heard-right-text {
+                            color: var(--yakit-helper-text-color);
+                            font-size: 12px;
+                            margin-right: 4px;
+                        }
+
+                        .virtual-table-heard-right-number {
+                            color: var(--yakit-primary-5);
+                            font-size: 12px;
+                        }
+                    }
+                }
+            }
+            &-right {
+                display: flex;
+                gap: 8px;
             }
         }
         .misstatement-table {
@@ -55,19 +89,20 @@
         }
     }
 }
-
 .misstatement-query {
-    @extend %flex-column;
-    width: 300px;
-    flex-shrink: 0;
-    max-width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
     overflow: hidden;
+    width: 300px;
+    max-width: 300px;
     height: 100%;
-    opacity: 1;
     transition:
         width 0.2s ease,
         opacity 0.2s ease;
+    opacity: 1;
+    border-right: 1px solid var(--yakit-border-color);
+
+    @extend %flex-column;
+    flex-shrink: 0;
+
     :global {
         .ant-collapse {
             padding: 8px 12px 0px;
@@ -77,45 +112,52 @@
         }
     }
     .misstatement-query-heard {
-        @extend %flex-row-center;
         justify-content: space-between;
-        padding: 16px 12px 12px;
-        border-bottom: 1px solid var(--yakit-border-color);
         height: 44px;
+        padding: 16px 12px 12px;
+        color: var(--yakit-header-color);
+        border-bottom: 1px solid var(--yakit-border-color);
         font-size: 12px;
         line-height: 16px;
-        color: var(--yakit-header-color);
+
+        @extend %flex-row-center;
     }
     .misstatement-query-body {
-        @extend %flex-column;
-        flex: 1;
         overflow-y: auto;
+        flex: 1;
+
+        @extend %flex-column;
     }
 }
-
 .misstatement-query-hidden {
     width: 0;
     opacity: 0;
 }
-
 .misstatement-list-body {
-    @extend %flex-column;
     overflow: hidden;
     flex: 1;
-    padding: 8px 12px 4px;
     min-height: 150px;
+    padding: 8px 12px 4px;
+
+    @extend %flex-column;
+
     @include heard("misstatement-list");
+
     .misstatement-list-content {
-        @extend %flex-column;
-        flex: 1;
         overflow-y: auto;
+        flex: 1;
+
+        @extend %flex-column;
+
         .misstatement-list-item {
-            @extend %flex-row-center;
             justify-content: space-between;
-            padding: 4px 8px;
-            margin-bottom: 8px;
             height: 24px;
+            margin-bottom: 8px;
+            padding: 4px 8px;
             border-radius: 4px;
+
+            @extend %flex-row-center;
+
             // cursor: pointer;
             // &:hover {
             //     background-color: var(--yakit-background-color);
@@ -141,11 +183,10 @@
         }
     }
 }
-
 .to-end {
+    padding-top: 24px;
+    padding-bottom: 12px;
     text-align: center;
     color: var(--yakit-disable-text-color);
     font-size: 11px;
-    padding-top: 24px;
-    padding-bottom: 12px;
 }

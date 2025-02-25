@@ -249,7 +249,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["trustList"],
                         UserMenusMap["licenseAdmin"],
                         UserMenusMap["pluginAudit"],
-                        UserMenusMap["dataStatistics"]
+                        UserMenusMap["dataStatistics"],
+                        UserMenusMap["misstatement"]
                     ].concat(signOutMenu)
                 )
             }
@@ -279,7 +280,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             }
             // CE-非权限人员
             if (!isNew) {
-                setUserMenu([UserMenusMap["misstatement"], UserMenusMap["singOut"]])
+                setUserMenu([UserMenusMap["singOut"]])
             }
         } else {
             // EE|SE 版本

@@ -342,6 +342,56 @@ export declare namespace API {
         isOpen: boolean
         content: string
     }
+    export interface SSARiskWhereRequest extends Pagination, SSARiskWhere {}
+    export interface SSARiskWhere {
+        id?: number[]
+        search?: string
+        programName?: string[]
+        codeSourceUrl?: string[]
+        riskType?: string[]
+        severity?: string[]
+        fromRule?: string[]
+        runtimeID?: string[]
+        resultID?: number[]
+        tags?: string[]
+        title?: string
+        hash?: string[]
+    }
+    export interface SSARiskResponse extends Paging {
+        data: SSARiskResponseData[]
+    }
+    export interface SSARiskResponseData extends GormBaseModel, SSARisk {}
+    export interface SSARiskRequest {
+        content: string
+    }
+    export interface SSARisk {
+        hash?: string
+        programName?: string
+        codeSourceUrl?: string
+        codeRange?: string
+        codeFragment?: string
+        title?: string
+        titleVerbose?: string
+        riskType?: string
+        riskTypeVerbose?: string
+        details?: string
+        severity?: string
+        fromRule?: string
+        runtimeID?: string
+        isPotential?: boolean
+        cVE?: string
+        cveAccessVector?: string
+        cveAccessComplexity?: string
+        tags?: string
+        resultID?: number
+        variable?: string
+        index?: number
+        functionName?: string
+        line?: number
+        solution?: string
+        description?: string
+        ssaRiskCreatedAt?: number
+    }
     export interface ShareResponse {
         share_id: string
         extract_code?: string
@@ -914,6 +964,12 @@ export declare namespace API {
     }
     export interface Paging {
         pagemeta: PageMeta
+    }
+    export interface Pagination {
+        page: number
+        limit: number
+        order_by: string
+        order: string
     }
     export interface PageMeta {
         /**

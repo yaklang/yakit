@@ -1,32 +1,98 @@
-import React, {useEffect, useState} from "react"
-import {defQueryRisksRequest} from "../risks/YakitRiskTable/constants"
-import {QueryRisksRequest} from "../risks/YakitRiskTable/YakitRiskTableType"
-import {YakitRiskTable} from "../risks/YakitRiskTable/YakitRiskTable"
+import React, {useEffect, useRef, useState} from "react"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineCloseIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineCloseIcon, OutlineOpenIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {FieldGroup} from "../risks/YakitRiskTable/utils"
-import styles from "./Misstatement.module.scss"
 import {RemoteMisstatementGV} from "@/enums/misstatement"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitAuditHoleTable} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
-import {SSARisksFilter} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {MisstatementRiskTable} from "./MisstatementRiskTable/MisstatementRiskTable"
+import {
+    MisstatementRiskTableRefProps,
+    RiskFeedBackPage,
+    RiskFeedBackRequest
+} from "./MisstatementRiskTable/MisstatementRiskTableType"
+import {MisstatementAuditHoleTable} from "./MisstatementAuditHoleTable/MisstatementAuditHoleTable"
+import {API} from "@/services/swagger/resposeType"
+import {defSSARiskWhereRequest} from "./MisstatementAuditHoleTable/constants"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {defRiskFeedBackPage} from "./MisstatementRiskTable/constants"
+import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {MisstatementAuditHoleTableRefProps} from "./MisstatementAuditHoleTable/MisstatementAuditHoleTableType"
+import styles from "./Misstatement.module.scss"
+
+const batchRefreshMenuData: YakitMenuItemProps[] = [
+    {
+        key: "noResetRefresh",
+        label: "仅刷新"
+    },
+    {
+        key: "resetRefresh",
+        label: "重置查询条件刷新"
+    }
+]
 
 type TableType = "risk" | "auditHole"
 interface MisstatementProp {}
 export const Misstatement: React.FC<MisstatementProp> = (props) => {
     const [tableType, setTableType] = useState<TableType>("risk")
+    const riskRef = useRef<MisstatementRiskTableRefProps>(null)
+    const auditHoleRef = useRef<MisstatementAuditHoleTableRefProps>(null)
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
-    const [riskLoading, setRiskLoading] = useState<boolean>(false)
-    const [query, setQuery] = useState<QueryRisksRequest>({
-        ...defQueryRisksRequest
+    const [query, setQuery] = useState<RiskFeedBackRequest>({})
+    const [pageParams, setPageParams] = useState<RiskFeedBackPage>(defRiskFeedBackPage)
+    const [auditHoleQuery, setAuditHoleQuery] = useState<API.SSARiskWhereRequest>({...defSSARiskWhereRequest})
+    const [keywords, setKeywords] = useState<string>("")
+
+    const onSearch = useMemoizedFn((val) => {
+        if (tableType === "risk") {
+            setQuery({
+                ...query,
+                search: val
+            })
+        } else {
+            setAuditHoleQuery({
+                ...auditHoleQuery,
+                search: val
+            })
+        }
+    })
+    const onPressEnter = useMemoizedFn(() => {
+        onSearch(keywords)
     })
 
-    const [auditHoleQuery, setAuditHoleQuery] = useState<SSARisksFilter>({})
+    const onRefreshMenuSelect = useMemoizedFn((key: string) => {
+        switch (key) {
+            case "noResetRefresh":
+                noResetRefresh()
+                break
+            case "resetRefresh":
+                resetRefresh()
+                break
+            default:
+                break
+        }
+    })
+    const noResetRefresh = useMemoizedFn(() => {
+        if (tableType === "risk") {
+            riskRef.current && riskRef.current.update(1)
+        } else {
+            auditHoleRef.current && auditHoleRef.current.update(1)
+        }
+    })
+    const resetRefresh = useMemoizedFn(() => {
+        setKeywords("")
+        if (tableType === "risk") {
+            setPageParams(defRiskFeedBackPage)
+            setQuery({})
+        } else {
+            setAuditHoleQuery({...defSSARiskWhereRequest})
+        }
+    })
 
     // 获取筛选展示状态
     useEffect(() => {
@@ -38,6 +104,9 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
         setAdvancedQuery(val)
         setRemoteValue(RemoteMisstatementGV.MisstatementQueryShow, `${val}`)
     })
+    const onExpend = useMemoizedFn(() => {
+        setAdvancedQuery(true)
+    })
 
     return (
         <div className={styles["misstatement-page"]}>
@@ -47,45 +116,90 @@ export const Misstatement: React.FC<MisstatementProp> = (props) => {
                 style={{width: advancedQuery ? "calc(100% - 300px)" : "100%"}}
             >
                 <div className={styles["renderTitle-wrapper"]}>
-                    <div className={styles["renderTitle-text"]}>误报提交记录</div>
-                    <YakitRadioButtons
-                        value={tableType}
-                        onChange={(e) => {
-                            setTableType(e.target.value)
-                        }}
-                        buttonStyle='solid'
-                        options={[
-                            {
-                                value: "risk",
-                                label: "插件"
-                            },
-                            {
-                                value: "auditHole",
-                                label: "规则"
-                            }
-                        ]}
-                    />
+                    <div className={styles["renderTitle-wrapper-left"]}>
+                        {!advancedQuery && (
+                            <Tooltip title='展开筛选' placement='topLeft' overlayClassName='plugins-tooltip'>
+                                <YakitButton
+                                    type='text2'
+                                    onClick={onExpend}
+                                    icon={<OutlineOpenIcon />}
+                                ></YakitButton>
+                            </Tooltip>
+                        )}
+                        <div className={styles["renderTitle-text"]}>误报提交记录</div>
+                        <YakitRadioButtons
+                            value={tableType}
+                            onChange={(e) => {
+                                setKeywords("")
+                                setPageParams(defRiskFeedBackPage)
+                                setQuery({})
+                                setAuditHoleQuery({...defSSARiskWhereRequest})
+                                setTableType(e.target.value)
+                            }}
+                            buttonStyle='solid'
+                            options={[
+                                {
+                                    value: "risk",
+                                    label: "插件"
+                                },
+                                {
+                                    value: "auditHole",
+                                    label: "规则"
+                                }
+                            ]}
+                        />
+                        <div className={styles["virtual-table-heard-right"]}>
+                            <div className={styles["virtual-table-heard-right-item"]}>
+                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
+                                <span className={styles["virtual-table-heard-right-number"]}>
+                                    {tableType === "risk" &&
+                                        riskRef.current &&
+                                        riskRef.current.tableResponse.pagemeta.total}
+                                    {tableType === "auditHole" &&
+                                        auditHoleRef.current &&
+                                        auditHoleRef.current.tableResponse.pagemeta.total}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={styles["renderTitle-wrapper-right"]}>
+                        <YakitInput.Search
+                            value={keywords}
+                            onChange={(e) => setKeywords(e.target.value)}
+                            placeholder='请输入关键词搜索'
+                            onSearch={onSearch}
+                            onPressEnter={onPressEnter}
+                        />
+                        <YakitDropdownMenu
+                            menu={{
+                                data: batchRefreshMenuData,
+                                onClick: ({key}) => {
+                                    onRefreshMenuSelect(key)
+                                }
+                            }}
+                            dropdown={{
+                                trigger: ["hover"],
+                                placement: "bottom"
+                            }}
+                        >
+                            <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                        </YakitDropdownMenu>
+                    </div>
                 </div>
                 <div className={styles["misstatement-table"]}>
                     {tableType === "risk" ? (
-                        <YakitRiskTable
-                            misstatementPage={true}
+                        <MisstatementRiskTable
+                            ref={riskRef}
+                            pageParams={pageParams}
+                            setPageParams={setPageParams}
                             query={query}
                             setQuery={setQuery}
-                            advancedQuery={advancedQuery}
-                            setAdvancedQuery={onSetQueryShow}
-                            setRiskLoading={setRiskLoading}
-                            excludeColumnsKey={["action"]}
                         />
                     ) : (
-                        <YakitAuditHoleTable
-                            misstatementPage={true}
+                        <MisstatementAuditHoleTable
+                            ref={auditHoleRef}
                             query={auditHoleQuery}
                             setQuery={setAuditHoleQuery}
-                            advancedQuery={advancedQuery}
-                            setAdvancedQuery={onSetQueryShow}
-                            setRiskLoading={setRiskLoading}
-                            excludeColumnsKey={["action"]}
                         />
                     )}
                 </div>

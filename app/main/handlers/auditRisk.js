@@ -96,4 +96,20 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GroupTableColumn", async (e, params) => {
         return await asyncGroupTableColumn(params)
     })
+
+    // 审计漏洞误报反馈
+    const asyncSSARiskFeedbackToOnline = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SSARiskFeedbackToOnline(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SSARiskFeedbackToOnline", async (e, params) => {
+        return await asyncSSARiskFeedbackToOnline(params)
+    })
 }

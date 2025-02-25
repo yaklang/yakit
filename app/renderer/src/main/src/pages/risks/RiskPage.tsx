@@ -97,7 +97,6 @@ export const RiskPage: React.FC<RiskPageProp> = (props) => {
                     advancedQuery={advancedQuery}
                     setAdvancedQuery={onSetQueryShow}
                     setRiskLoading={setRiskLoading}
-                    excludeColumnsKey={["提交时间"]}
                 />
             </div>
         </YakitSpin>

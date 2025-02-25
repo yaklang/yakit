@@ -98,3 +98,19 @@ export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<Gr
     })
 }
 
+export interface SSARiskFeedbackToOnlineRequest {
+    Token: string
+    Filter: SSARisksFilter
+}
+/** SSARiskFeedbackToOnline */
+export const apiSSARiskFeedbackToOnline: (params: SSARiskFeedbackToOnlineRequest) => Promise<unknown> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("SSARiskFeedbackToOnline", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `反馈失败: ${e}`)
+                reject(e)
+            })
+    })
+}
