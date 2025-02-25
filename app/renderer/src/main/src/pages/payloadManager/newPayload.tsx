@@ -79,6 +79,7 @@ import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 import {setClipboardText} from "@/utils/clipboard"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 interface UploadStatusInfoProps {
@@ -799,6 +800,7 @@ const droppable = "droppable"
 const droppableGroup = "droppableGroup"
 
 export interface NewPayloadListProps {
+    listLoading: boolean
     data: DataItem[]
     setData: (v: DataItem[]) => void
     onQueryGroup: (obj?: {Group: string; Folder: string}) => void
@@ -822,6 +824,7 @@ export interface NewPayloadListProps {
 
 export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
     const {
+        listLoading,
         data,
         setData,
         onQueryGroup,
@@ -1257,7 +1260,15 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                 <div className={styles["title-box"]}>
                     <div className={styles["title"]}>{onlyInsert ? "选择想要插入的字典" : "Payload 字典管理"}</div>
                     <div className={styles["count"]}>{getPayloadCount}</div>
-                    {!onlyInsert && <YakitButton type='text2' icon={<OutlineRefreshIcon />} onClick={onRefreshListEvent} />}
+                    {!onlyInsert && (
+                        <YakitButton
+                            type='text2'
+                            icon={<OutlineRefreshIcon />}
+                            onClick={() => {
+                                onQueryGroup()
+                            }}
+                        />
+                    )}
                 </div>
                 <div className={styles["extra"]}>
                     {onlyInsert ? (
@@ -1351,149 +1362,151 @@ export const NewPayloadList: React.FC<NewPayloadListProps> = (props) => {
                     )}
                 </div>
             </div>
-            <div className={styles["content"]}>
-                <div className={styles["drag-list"]}>
-                    {onlyInsert ? (
-                        <>
-                            {data.map((item, index) => {
-                                const fileOutside =
-                                    moveLevel?.draggableId === item.id ? moveLevel.level === "outside" : true
-                                const isCombine = combineIds[0] === item.id
-                                /* 渲染你的文件夹或文件组件 */
-                                /* 使用 item.type 来区分文件夹和文件 */
-                                return item.type === "Folder" ? (
-                                    // 渲染文件夹组件
-                                    <FolderComponent
-                                        key={`${item.id}-${index}`}
-                                        folder={item}
-                                        selectItem={selectItem}
-                                        setSelectItem={setSelectItem}
-                                        data={data}
-                                        setData={setData}
-                                        subDropType={subDropType}
-                                        moveLevel={moveLevel}
-                                        isCombine={isCombine}
-                                        codePath={codePath}
-                                        notExpandArr={notExpandArr}
-                                        setNotExpandArr={setNotExpandArr}
-                                        onQueryGroup={onQueryGroup}
-                                        setContentType={setContentType}
-                                        onlyInsert={onlyInsert}
-                                        checkedItem={checkedItem}
-                                        onCheckedItem={onCheckedItem}
-                                        floderChecked={floderChecked}
-                                        onSetFloderChecked={onSetFloderChecked}
-                                    />
-                                ) : (
-                                    // 渲染文件组件
-                                    <FileComponent
-                                        key={`${item.id}-${index}`}
-                                        file={item}
-                                        selectItem={selectItem}
-                                        setSelectItem={setSelectItem}
-                                        data={data}
-                                        setData={setData}
-                                        isInside={!fileOutside}
-                                        isCombine={isCombine}
-                                        codePath={codePath}
-                                        onQueryGroup={onQueryGroup}
-                                        setContentType={setContentType}
-                                        onlyInsert={onlyInsert}
-                                        checkedItem={checkedItem}
-                                        onCheckedItem={onCheckedItem}
-                                    />
-                                )
-                            })}
-                            <div className={styles["to-end"]}>已经到底啦～</div>
-                        </>
-                    ) : (
-                        <>
-                            <DragDropContext
-                                onDragEnd={onDragEnd}
-                                onDragStart={onDragStart}
-                                onDragUpdate={onDragUpdate}
-                                onBeforeCapture={onBeforeCapture}
-                            >
-                                <Droppable
-                                    droppableId='droppable-payload'
-                                    direction='vertical'
-                                    type={dropType}
-                                    isCombineEnabled={isCombineEnabled}
+            <YakitSpin spinning={listLoading}>
+                <div className={styles["content"]}>
+                    <div className={styles["drag-list"]}>
+                        {onlyInsert ? (
+                            <>
+                                {data.map((item, index) => {
+                                    const fileOutside =
+                                        moveLevel?.draggableId === item.id ? moveLevel.level === "outside" : true
+                                    const isCombine = combineIds[0] === item.id
+                                    /* 渲染你的文件夹或文件组件 */
+                                    /* 使用 item.type 来区分文件夹和文件 */
+                                    return item.type === "Folder" ? (
+                                        // 渲染文件夹组件
+                                        <FolderComponent
+                                            key={`${item.id}-${index}`}
+                                            folder={item}
+                                            selectItem={selectItem}
+                                            setSelectItem={setSelectItem}
+                                            data={data}
+                                            setData={setData}
+                                            subDropType={subDropType}
+                                            moveLevel={moveLevel}
+                                            isCombine={isCombine}
+                                            codePath={codePath}
+                                            notExpandArr={notExpandArr}
+                                            setNotExpandArr={setNotExpandArr}
+                                            onQueryGroup={onQueryGroup}
+                                            setContentType={setContentType}
+                                            onlyInsert={onlyInsert}
+                                            checkedItem={checkedItem}
+                                            onCheckedItem={onCheckedItem}
+                                            floderChecked={floderChecked}
+                                            onSetFloderChecked={onSetFloderChecked}
+                                        />
+                                    ) : (
+                                        // 渲染文件组件
+                                        <FileComponent
+                                            key={`${item.id}-${index}`}
+                                            file={item}
+                                            selectItem={selectItem}
+                                            setSelectItem={setSelectItem}
+                                            data={data}
+                                            setData={setData}
+                                            isInside={!fileOutside}
+                                            isCombine={isCombine}
+                                            codePath={codePath}
+                                            onQueryGroup={onQueryGroup}
+                                            setContentType={setContentType}
+                                            onlyInsert={onlyInsert}
+                                            checkedItem={checkedItem}
+                                            onCheckedItem={onCheckedItem}
+                                        />
+                                    )
+                                })}
+                                <div className={styles["to-end"]}>已经到底啦～</div>
+                            </>
+                        ) : (
+                            <>
+                                <DragDropContext
+                                    onDragEnd={onDragEnd}
+                                    onDragStart={onDragStart}
+                                    onDragUpdate={onDragUpdate}
+                                    onBeforeCapture={onBeforeCapture}
                                 >
-                                    {(provided) => (
-                                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                                            {data.map((item, index) => {
-                                                const fileOutside =
-                                                    moveLevel?.draggableId === item.id
-                                                        ? moveLevel.level === "outside"
-                                                        : true
-                                                const isCombine = combineIds[0] === item.id
-                                                return (
-                                                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                                                        {(provided, snapshot) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                style={{
-                                                                    // ...provided.draggableProps.style
-                                                                    ...getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )
-                                                                }}
-                                                            >
-                                                                {/* 渲染你的文件夹或文件组件 */}
-                                                                {/* 使用 item.type 来区分文件夹和文件 */}
-                                                                {item.type === "Folder" ? (
-                                                                    // 渲染文件夹组件
-                                                                    <FolderComponent
-                                                                        folder={item}
-                                                                        selectItem={selectItem}
-                                                                        setSelectItem={setSelectItem}
-                                                                        data={data}
-                                                                        setData={setData}
-                                                                        subDropType={subDropType}
-                                                                        moveLevel={moveLevel}
-                                                                        isCombine={isCombine}
-                                                                        codePath={codePath}
-                                                                        notExpandArr={notExpandArr}
-                                                                        setNotExpandArr={setNotExpandArr}
-                                                                        onQueryGroup={onQueryGroup}
-                                                                        setContentType={setContentType}
-                                                                        isDragging={snapshot.isDragging}
-                                                                    />
-                                                                ) : (
-                                                                    // 渲染文件组件
-                                                                    <FileComponent
-                                                                        file={item}
-                                                                        selectItem={selectItem}
-                                                                        setSelectItem={setSelectItem}
-                                                                        data={data}
-                                                                        setData={setData}
-                                                                        isInside={!fileOutside}
-                                                                        isCombine={isCombine}
-                                                                        codePath={codePath}
-                                                                        onQueryGroup={onQueryGroup}
-                                                                        setContentType={setContentType}
-                                                                        isDragging={snapshot.isDragging}
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                )
-                                            })}
-                                            {provided.placeholder}
-                                        </div>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                            <div className={styles["to-end"]}>已经到底啦～</div>
-                        </>
-                    )}
+                                    <Droppable
+                                        droppableId='droppable-payload'
+                                        direction='vertical'
+                                        type={dropType}
+                                        isCombineEnabled={isCombineEnabled}
+                                    >
+                                        {(provided) => (
+                                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                                                {data.map((item, index) => {
+                                                    const fileOutside =
+                                                        moveLevel?.draggableId === item.id
+                                                            ? moveLevel.level === "outside"
+                                                            : true
+                                                    const isCombine = combineIds[0] === item.id
+                                                    return (
+                                                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={{
+                                                                        // ...provided.draggableProps.style
+                                                                        ...getItemStyle(
+                                                                            snapshot.isDragging,
+                                                                            provided.draggableProps.style
+                                                                        )
+                                                                    }}
+                                                                >
+                                                                    {/* 渲染你的文件夹或文件组件 */}
+                                                                    {/* 使用 item.type 来区分文件夹和文件 */}
+                                                                    {item.type === "Folder" ? (
+                                                                        // 渲染文件夹组件
+                                                                        <FolderComponent
+                                                                            folder={item}
+                                                                            selectItem={selectItem}
+                                                                            setSelectItem={setSelectItem}
+                                                                            data={data}
+                                                                            setData={setData}
+                                                                            subDropType={subDropType}
+                                                                            moveLevel={moveLevel}
+                                                                            isCombine={isCombine}
+                                                                            codePath={codePath}
+                                                                            notExpandArr={notExpandArr}
+                                                                            setNotExpandArr={setNotExpandArr}
+                                                                            onQueryGroup={onQueryGroup}
+                                                                            setContentType={setContentType}
+                                                                            isDragging={snapshot.isDragging}
+                                                                        />
+                                                                    ) : (
+                                                                        // 渲染文件组件
+                                                                        <FileComponent
+                                                                            file={item}
+                                                                            selectItem={selectItem}
+                                                                            setSelectItem={setSelectItem}
+                                                                            data={data}
+                                                                            setData={setData}
+                                                                            isInside={!fileOutside}
+                                                                            isCombine={isCombine}
+                                                                            codePath={codePath}
+                                                                            onQueryGroup={onQueryGroup}
+                                                                            setContentType={setContentType}
+                                                                            isDragging={snapshot.isDragging}
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    )
+                                                })}
+                                                {provided.placeholder}
+                                            </div>
+                                        )}
+                                    </Droppable>
+                                </DragDropContext>
+                                <div className={styles["to-end"]}>已经到底啦～</div>
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            </YakitSpin>
         </div>
     )
 }
@@ -2750,7 +2763,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             reset()
             // 获取table数据
             if (showContentType === "table") {
-                onQueryPayload()
+                onQueryPayload(undefined, undefined, true)
             }
             // 获取editor数据
             else {
@@ -2798,7 +2811,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             })
     })
 
-    const onQueryPayload = useMemoizedFn((page?: number, limit?: number) => {
+    const onQueryPayload = useMemoizedFn((page?: number, limit?: number, isNoRefreshList?: boolean) => {
         const obj: QueryPayloadParams = {
             ...getParams(),
             Group: group,
@@ -2813,8 +2826,10 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
             .invoke("QueryPayload", obj)
             .then((data: QueryGeneralResponse<Payload>) => {
                 setResponse(data)
-                // 通知刷新列表
-                emiter.emit("refreshListEvent")
+                if (!isNoRefreshList) {
+                    // 通知刷新列表
+                    emiter.emit("refreshListEvent")
+                }
             })
             .catch((e: any) => {
                 failed(`QueryPayload failed：${e}`)
@@ -2857,8 +2872,6 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                         success("操作成功")
                         onQueryPayload()
                         resolve(true)
-                        // 通知刷新列表
-                        emiter.emit("refreshListEvent")
                     })
                     .catch((e: any) => {
                         failed(`操作字典失败${e}`)
@@ -3013,7 +3026,7 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                             }}
                             style={{maxWidth: 200}}
                             onSearch={() => {
-                                onQueryPayload()
+                                onQueryPayload(undefined, undefined, true)
                             }}
                         />
                         <Divider type='vertical' style={{top: 1, height: 16}} />
@@ -3095,7 +3108,9 @@ export const PayloadContent: React.FC<PayloadContentProps> = (props) => {
                                         <CreateDictionaries
                                             title={`扩充到 ${group}`}
                                             type='payload'
-                                            onQueryGroup={() => emiter.emit("refreshListEvent")}
+                                            onQueryGroup={() => {
+                                                emiter.emit("refreshListEvent")
+                                            }}
                                             folder={folder}
                                             group={group}
                                             onClose={() => {
@@ -3399,6 +3414,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
 
     const [codePath, setCodePath] = useState<string>("")
 
+    const [listLoading, setListLoading] = useState<boolean>(false)
     const [data, setData] = useState<DataItem[]>([])
 
     // 关闭Payload
@@ -3426,6 +3442,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
     const cacheNodesRef = useRef<PayloadGroupNodeProps[]>([])
 
     const onQueryGroup = (obj?: {Group: string; Folder: string}) => {
+        setListLoading(true)
         ipcRenderer
             .invoke("GetAllPayloadGroup")
             .then((res: {Nodes: PayloadGroupNodeProps[]}) => {
@@ -3495,7 +3512,11 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
             .catch((e: any) => {
                 failed(`获取字典列表失败：${e}`)
             })
-            .finally()
+            .finally(() => {
+                setTimeout(() => {
+                    setListLoading(false)
+                }, 100)
+            })
     }
 
     useEffect(() => {
@@ -3586,6 +3607,7 @@ export const NewPayload: React.FC<NewPayloadProps> = (props) => {
         <div className={styles["new-payload"]} id='new-payload'>
             <div className={styles["payload-list-box"]} style={isExpand ? {width: 0, opacity: 0} : {}}>
                 <NewPayloadList
+                    listLoading={listLoading}
                     data={data}
                     setData={setData}
                     cacheNodesRef={cacheNodesRef}
@@ -3766,6 +3788,7 @@ export const ReadOnlyNewPayload: React.FC<ReadOnlyNewPayloadProps> = (props) => 
         >
             <div className={styles["payload-list-box"]}>
                 <NewPayloadList
+                    listLoading={false}
                     data={data}
                     setData={setData}
                     cacheNodesRef={cacheNodesRef}
