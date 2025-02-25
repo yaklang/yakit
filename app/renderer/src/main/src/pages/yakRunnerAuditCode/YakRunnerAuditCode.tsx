@@ -835,7 +835,7 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
-                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
+                        <div className={styles["progress-title"]}>进度 {(streamData.Progress * 100).toFixed(2)}%</div>
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>

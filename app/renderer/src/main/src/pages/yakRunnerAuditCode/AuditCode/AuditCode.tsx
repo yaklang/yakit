@@ -1647,7 +1647,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         }
 
         if (isRealStartRef.current) {
-            const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+            const progress = Number((streamInfo.progressState.map((item) => item.progress)[0] || 0).toFixed(4))
             // 当任务结束时 跳转打开编译列表
             if (progress === 1) {
                 setTimeout(() => {
@@ -1780,7 +1780,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
     }
 
     useEffect(() => {
-        const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
+        const progress = Number((streamInfo.progressState.map((item) => item.progress)[0] || 0).toFixed(4))
         // 当任务结束时 跳转打开编译列表
         if (progress === 1) {
             setTimeout(() => {
