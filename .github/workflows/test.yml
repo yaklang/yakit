@@ -24,7 +24,7 @@ jobs:
                   node-version: 18.18.2
 
             - name: "test"
-              run: xcrun altool --notarization-history -u ${{ env.APPLE_ID }} -p ${{ env.APPLE_PASSWORD }} --asc-provider ${{ env.TEAM_ID }}
+              run: xcrun notarytool history --apple-id ${{ secrets.APPLE_DEVELOPER_ID }} --team-id ${{ secrets.APPLE_TEAM_ID }} --password ${{ secrets.APPLE_APP_PASSWORD }}
 
             - run: echo "The length of APPLE_PASSWORD is ${#APPLE_PASSWORD}"
             - run: echo ${{ github.ref }}
