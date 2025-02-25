@@ -50,7 +50,7 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.devTool }} ${{ inputs.engineVersion }}
+              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -62,7 +62,7 @@ jobs:
                       yarn.lock
                       app/renderer/src/main/yarn.lock
 
-            - run: echo ${{ github.ref }}
+            - run: echo ${{ github.ref_name }}
             - run: cp buildutil/zip /usr/local/bin/zip
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
@@ -76,7 +76,7 @@ jobs:
                   mkdir -p bins
                   echo "${{ inputs.engineVersion }}" > bins/engine-version.txt
             - if: ${{ inputs.engine }}
-              run: | 
+              run: |
                   cat bins/engine-version.txt
                   YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
                   echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
@@ -126,15 +126,15 @@ jobs:
                   find: "-ee"
                   replace: ""
             - name: Echo Yakit Package Version
-              run: echo ${{ steps.package_version.outputs.value }}
+              run: echo "SOFTWARE_VERSION=${{ steps.package_version.outputs.value }}" >> $GITHUB_ENV
 
-            - run: yarn install && yarn install-render
+            - name: "Install Dependencies"
+              run: yarn install && yarn install-render
               working-directory: ./
-              name: "Install Dependencies"
-            - run: yarn add electron@22.3.27
+            - name: "Install Legacy Electron"
+              run: yarn remove electron && yarn add electron@22.3.27 --dev
               if: ${{ inputs.legacy }}
               working-directory: ./
-              name: "Install Legacy Electron"
 
             - name: "Build CE Render"
               if: ${{ inputs.version == 'ce' }}
@@ -244,12 +244,46 @@ jobs:
               run: echo "ENV_Software_Name： $ENV_Software_Name"
 
             - name: Upload Yakit(CE) Artifacts Windows
+              if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
               uses: actions/upload-artifact@v4
               with:
-                  name: ${{ inputs.platform }}-${{ inputs.version }}-${{env.ENV_Software_Name}}-artifacts
-                  path: |
-                      ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.exe
-                      ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.dmg
-                      ./release/${{env.ENV_Software_Name}}-${{ steps.package_version.outputs.value }}-*.AppImage
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts Mac Amd
+              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts Mac Arm
+              if: ${{ contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts Linux Amd
+              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts Linux Arm
+              if: ${{ contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
                   if-no-files-found: error
                   retention-days: 7
