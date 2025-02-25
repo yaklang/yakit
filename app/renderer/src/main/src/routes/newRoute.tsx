@@ -202,7 +202,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "db-http-request": {label: "History"},
     "db-reports-results": {label: "报告"},
     "db-risks": {label: "漏洞"},
-    "misstatement": {label: "误报记录"},
+    misstatement: {label: "误报记录"},
     "db-ports": {label: "端口"},
     "db-domains": {label: "域名"},
     cve: {label: "CVE 管理"},

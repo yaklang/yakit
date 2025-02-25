@@ -62,7 +62,6 @@ export interface YakitAuditHoleTableProps {
     setQuery?: (v: SSARisksFilter) => void
     /**外界只使用，不设值 */
     setAllTotal?: (b: number) => void
-    misstatementPage?: boolean
 }
 
 export interface YakitRiskDetailsProps {
@@ -119,6 +118,8 @@ export interface SSARisksFilter {
     // 此处需等待后端写入
     /** >0 true  <0 false =0 all */
     IsRead?: number
+
+    Hash?: string[]
 }
 
 export interface DeleteSSARisksRequest {

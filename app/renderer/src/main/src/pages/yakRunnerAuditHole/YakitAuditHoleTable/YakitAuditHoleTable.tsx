@@ -32,11 +32,13 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {
     GroupTableColumnRequest,
+    SSARiskFeedbackToOnlineRequest,
     UpdateSSARiskTagsRequest,
     apiDeleteSSARisks,
     apiGroupTableColumn,
     apiNewRiskRead,
     apiQuerySSARisks,
+    apiSSARiskFeedbackToOnline,
     apiUpdateSSARiskTags
 } from "./utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -67,6 +69,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteAuditHoleGV} from "@/enums/auditHole"
+import {useStore} from "@/store"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -127,9 +130,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         excludeColumnsKey = [],
         query,
         setQuery,
-        setAllTotal,
-        misstatementPage = false
+        setAllTotal
     } = props
+    const {userInfo} = useStore()
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -360,12 +363,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {
-                title: "提交时间",
-                dataKey: "提交时间",
-                fixed: "right",
-                render: (text) => (text ? formatTimestamp(text) : "-")
-            },
-            {
                 title: "操作",
                 dataKey: "action",
                 width: 140,
@@ -417,11 +414,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 className={styles["misstatement-icon"]}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    if (!misstatementHintCache.current) {
-                                        setMisstatementVisible(true)
-                                    } else {
-                                        fetchMisstatement()
-                                    }
+                                    onClickSSARiskFeedbackToOnline(record)
                                 }}
                             />
                         </Tooltip>
@@ -435,6 +428,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     /**误报上传 start */
     const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
     const misstatementHintCache = useRef<boolean>(false)
+    const ssaRiskFeedbackToOnlineParams = useRef<SSARiskFeedbackToOnlineRequest>()
     useEffect(() => {
         getRemoteValue(RemoteAuditHoleGV.AuditHoleMisstatementNoPrompt).then((res) => {
             misstatementHintCache.current = res === "true"
@@ -447,8 +441,30 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
         setMisstatementVisible(false)
     }
+    const onClickSSARiskFeedbackToOnline = useMemoizedFn((record: SSARisk) => {
+        if (!userInfo.isLogin) {
+            yakitNotify("info", "请先登录账号")
+            return
+        }
+        ssaRiskFeedbackToOnlineParams.current = {
+            Token: userInfo.token,
+            Filter: {
+                Hash: [record.Hash]
+            }
+        }
+        if (!misstatementHintCache.current) {
+            setMisstatementVisible(true)
+        } else {
+            fetchMisstatement()
+        }
+    })
     const fetchMisstatement = () => {
-        yakitNotify("success", "反馈成功")
+        const params = ssaRiskFeedbackToOnlineParams.current
+        if (params) {
+            apiSSARiskFeedbackToOnline(params).then(() => {
+                yakitNotify("success", "反馈成功")
+            })
+        }
     }
     /**误报上传 end */
 
@@ -682,70 +698,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }
     })
 
-    const expendEle = useMemo(() => {
-        return (
-            !advancedQuery &&
-            !query.RuntimeID && (
-                <Tooltip title='展开筛选' placement='topLeft' overlayClassName='plugins-tooltip'>
-                    <YakitButton
-                        type='text2'
-                        onClick={onExpend}
-                        icon={<OutlineOpenIcon onClick={onExpend} />}
-                    ></YakitButton>
-                </Tooltip>
-            )
-        )
-    }, [advancedQuery])
-
-    const virtualTableHeardRightEle = useMemo(() => {
-        return (
-            <div className={styles["virtual-table-heard-right"]}>
-                <div className={styles["virtual-table-heard-right-item"]}>
-                    <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                    <span className={styles["virtual-table-heard-right-number"]}>{tableTotal}</span>
-                </div>
-                <Divider type='vertical' />
-                <div className={styles["virtual-table-heard-right-item"]}>
-                    <span className={styles["virtual-table-heard-right-text"]}>Selected</span>
-                    <span className={styles["virtual-table-heard-right-number"]}>{selectNum}</span>
-                </div>
-            </div>
-        )
-    }, [tableTotal, selectNum])
-
-    const searchEle = useMemo(() => {
-        return (
-            <YakitInput.Search
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                placeholder='请输入关键词搜索'
-                onSearch={onSearch}
-                onPressEnter={onPressEnter}
-            />
-        )
-    }, [keywords])
-
-    const batchRefreshEle = useMemo(() => {
-        return (
-            <YakitDropdownMenu
-                menu={{
-                    data: batchRefreshMenuData,
-                    onClick: ({key}) => {
-                        onRefreshMenuSelect(key)
-                    }
-                }}
-                dropdown={{
-                    trigger: ["hover"],
-                    placement: "bottom"
-                }}
-            >
-                <Badge dot={offsetData.length > 0} offset={[-5, 4]}>
-                    <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
-                </Badge>
-            </YakitDropdownMenu>
-        )
-    }, [batchRefreshMenuData, offsetData])
-
     return (
         <div className={classNames(styles["yakit-audit-hole-table"], riskWrapperClassName)} ref={tableBoxRef}>
             <ReactResizeDetector
@@ -778,73 +730,106 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 renderTitle
                             ) : (
                                 <div className={styles["table-renderTitle"]}>
-                                    {misstatementPage ? (
-                                        <>
-                                            <div className={styles["table-renderTitle-left"]}>
-                                                {expendEle}
-                                                {virtualTableHeardRightEle}
+                                    <div className={styles["table-renderTitle-left"]}>
+                                        {!advancedQuery && !query.RuntimeID && (
+                                            <Tooltip
+                                                title='展开筛选'
+                                                placement='topLeft'
+                                                overlayClassName='plugins-tooltip'
+                                            >
+                                                <YakitButton
+                                                    type='text2'
+                                                    onClick={onExpend}
+                                                    icon={<OutlineOpenIcon onClick={onExpend} />}
+                                                ></YakitButton>
+                                            </Tooltip>
+                                        )}
+                                        <div className={styles["table-renderTitle-text"]}>审计漏洞</div>
+                                        <YakitRadioButtons
+                                            value={type}
+                                            onChange={(e) => {
+                                                setType(e.target.value)
+                                            }}
+                                            buttonStyle='solid'
+                                            options={[
+                                                {
+                                                    value: "all",
+                                                    label: "全部"
+                                                },
+                                                {
+                                                    value: "false",
+                                                    label: "未读"
+                                                }
+                                            ]}
+                                        />
+                                        <div className={styles["virtual-table-heard-right"]}>
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {tableTotal}
+                                                </span>
                                             </div>
-                                            <div className={styles["table-head-extra"]}>
-                                                {searchEle}
-                                                <Divider type='vertical' style={{margin: 0}} />
-                                                {batchRefreshEle}
+                                            <Divider type='vertical' />
+                                            <div className={styles["virtual-table-heard-right-item"]}>
+                                                <span className={styles["virtual-table-heard-right-text"]}>
+                                                    Selected
+                                                </span>
+                                                <span className={styles["virtual-table-heard-right-number"]}>
+                                                    {selectNum}
+                                                </span>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className={styles["table-renderTitle-left"]}>
-                                                {expendEle}
-                                                <div className={styles["table-renderTitle-text"]}>审计漏洞</div>
-                                                <YakitRadioButtons
-                                                    value={type}
-                                                    onChange={(e) => {
-                                                        setType(e.target.value)
-                                                    }}
-                                                    buttonStyle='solid'
-                                                    options={[
-                                                        {
-                                                            value: "all",
-                                                            label: "全部"
-                                                        },
-                                                        {
-                                                            value: "false",
-                                                            label: "未读"
-                                                        }
-                                                    ]}
-                                                />
-                                                {virtualTableHeardRightEle}
-                                            </div>
-                                            <div className={styles["table-head-extra"]}>
-                                                {searchEle}
-                                                <Divider type='vertical' style={{margin: 0}} />
-                                                <FuncBtn
-                                                    maxWidth={1200}
-                                                    type='outline2'
-                                                    icon={<OutlineEyeIcon />}
-                                                    onClick={onAllRead}
-                                                    name='全部已读'
-                                                />
-                                                <YakitPopconfirm
-                                                    title={
-                                                        allCheck
-                                                            ? "确定删除所有风险与漏洞吗? 不可恢复"
-                                                            : "确定删除选择的风险与漏洞吗?不可恢复"
-                                                    }
-                                                    onConfirm={onRemove}
-                                                >
-                                                    <FuncBtn
-                                                        maxWidth={1200}
-                                                        type='outline1'
-                                                        colors='danger'
-                                                        icon={<OutlineTrashIcon />}
-                                                        disabled={tableTotal === 0}
-                                                        name={selectNum === 0 ? "清空" : "删除"}
-                                                    />
-                                                </YakitPopconfirm>
-                                                {batchRefreshEle}
-                                            </div>
-                                        </>
-                                    )}
+                                        </div>
+                                    </div>
+                                    <div className={styles["table-head-extra"]}>
+                                        <YakitInput.Search
+                                            value={keywords}
+                                            onChange={(e) => setKeywords(e.target.value)}
+                                            placeholder='请输入关键词搜索'
+                                            onSearch={onSearch}
+                                            onPressEnter={onPressEnter}
+                                        />
+                                        <Divider type='vertical' style={{margin: 0}} />
+                                        <FuncBtn
+                                            maxWidth={1200}
+                                            type='outline2'
+                                            icon={<OutlineEyeIcon />}
+                                            onClick={onAllRead}
+                                            name='全部已读'
+                                        />
+                                        <YakitPopconfirm
+                                            title={
+                                                allCheck
+                                                    ? "确定删除所有风险与漏洞吗? 不可恢复"
+                                                    : "确定删除选择的风险与漏洞吗?不可恢复"
+                                            }
+                                            onConfirm={onRemove}
+                                        >
+                                            <FuncBtn
+                                                maxWidth={1200}
+                                                type='outline1'
+                                                colors='danger'
+                                                icon={<OutlineTrashIcon />}
+                                                disabled={tableTotal === 0}
+                                                name={selectNum === 0 ? "清空" : "删除"}
+                                            />
+                                        </YakitPopconfirm>
+                                        <YakitDropdownMenu
+                                            menu={{
+                                                data: batchRefreshMenuData,
+                                                onClick: ({key}) => {
+                                                    onRefreshMenuSelect(key)
+                                                }
+                                            }}
+                                            dropdown={{
+                                                trigger: ["hover"],
+                                                placement: "bottom"
+                                            }}
+                                        >
+                                            <Badge dot={offsetData.length > 0} offset={[-5, 4]}>
+                                                <YakitButton type='text2' icon={<OutlineRefreshIcon />} />
+                                            </Badge>
+                                        </YakitDropdownMenu>
+                                    </div>
                                 </div>
                             )
                         }
@@ -877,7 +862,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 info={currentSelectItem}
                                 onClickIP={onClickIP}
                                 className={styles["yakit-code-scan-SSARisk-details"]}
-                                isShowExtra={!misstatementPage}
+                                isShowExtra={true}
                             />
                         </>
                     )

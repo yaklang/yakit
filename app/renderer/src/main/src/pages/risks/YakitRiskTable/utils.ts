@@ -20,10 +20,8 @@ export const apiQueryRisks: (query?: QueryRisksRequest) => Promise<QueryRisksRes
 /**
  * @description QueryRisks 获取降序的增量数据
  */
-export const apiQueryRisksIncrementOrderDesc: (params: QueryRisksRequest) => Promise<QueryRisksResponse> = (
-    params
-) => {
-    const newParams:QueryRisksRequest = {...params, UntilId:0}
+export const apiQueryRisksIncrementOrderDesc: (params: QueryRisksRequest) => Promise<QueryRisksResponse> = (params) => {
+    const newParams: QueryRisksRequest = {...params, UntilId: 0}
     return apiQueryRisks(newParams)
 }
 export interface NewRiskReadRequest {
@@ -155,6 +153,24 @@ export const apiRiskFieldGroup: () => Promise<RiskFieldGroupResponse> = () => {
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", `查询失败: ${e}`)
+                reject(e)
+            })
+    })
+}
+
+export interface UploadRiskToOnlineRequest {
+    Token: string
+    ProjectName?: string
+    Hash: string[]
+}
+/** RiskFeedbackToOnline */
+export const apiRiskFeedbackToOnline: (params: UploadRiskToOnlineRequest) => Promise<unknown> = (params) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("RiskFeedbackToOnline", params)
+            .then(resolve)
+            .catch((e) => {
+                yakitNotify("error", `反馈失败: ${e}`)
                 reject(e)
             })
     })
