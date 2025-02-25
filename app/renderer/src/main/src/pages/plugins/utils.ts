@@ -1069,8 +1069,9 @@ export const apiDebugPlugin: (request: {
     params: DebugPluginRequest
     token: string
     pluginCustomParams?: YakParamProps[]
+    isShowStartInfo?: boolean
 }) => Promise<null> = (request) => {
-    const {params, token, pluginCustomParams = []} = request
+    const {params, token, pluginCustomParams = [],isShowStartInfo = true} = request
     return new Promise((resolve, reject) => {
         try {
             let executeParams: DebugPluginRequest = {
@@ -1105,7 +1106,7 @@ export const apiDebugPlugin: (request: {
             ipcRenderer
                 .invoke("DebugPlugin", executeParams, token)
                 .then(() => {
-                    yakitNotify("info", "启动任务成功")
+                    isShowStartInfo && yakitNotify("info", "启动任务成功")
                     resolve(null)
                 })
                 .catch((e: any) => {
