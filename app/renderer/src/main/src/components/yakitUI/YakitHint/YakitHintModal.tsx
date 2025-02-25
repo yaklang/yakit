@@ -8,6 +8,7 @@ import {YakitButton} from "../YakitButton/YakitButton"
 
 import classNames from "classnames"
 import styles from "./YakitHint.module.scss"
+import {Resizable} from "re-resizable"
 
 export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
     const {
@@ -43,7 +44,7 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
                 isMask={isMask}
                 isDrag={isDrag}
                 setTop={setTop}
-                containerClassName={styles['container-wrapper-padding']}
+                containerClassName={styles["container-wrapper-padding"]}
                 children={
                     <>
                         <div className={styles["container-left-wrapper"]}>
@@ -99,7 +100,20 @@ export const YakitHintModal: React.FC<YakitHintModalProps> = memo((props) => {
 })
 
 export const HintModal: React.FC<HintModalProps> = memo((props) => {
-    const {visible, wrapClassName,containerClassName, isTop, width, isMask, isDrag, setTop, children} = props
+    const {
+        visible,
+        wrapClassName,
+        containerClassName,
+        isTop,
+        width,
+        isMask,
+        isDrag,
+        setTop,
+        children,
+        isResize,
+        resizeMinWidth,
+        resizeMinWHeight
+    } = props
     const [disabled, setDisabled] = useState(true)
     const [bounds, setBounds] = useState({left: 0, top: 0, bottom: 0, right: 0})
     const debouncedBounds = useDebounce(bounds, {wait: 500})
@@ -109,7 +123,6 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
         const {clientWidth, clientHeight} = window.document.documentElement
         const targetRect = draggleRef.current?.getBoundingClientRect()
         if (!targetRect) return
-
         setBounds({
             left: -targetRect.left + uiData.x,
             right: clientWidth - (targetRect.right - uiData.x),
@@ -118,42 +131,87 @@ export const HintModal: React.FC<HintModalProps> = memo((props) => {
         })
     })
 
+    const getContent = useMemoizedFn(() => {
+        return (
+            <div
+                className={classNames(styles["yakit-hint-modal-container"], {
+                    [styles["yakit-hint-modal-container-box-shadow"]]: !isMask,
+                    [styles["yakit-hint-modal-container-resize"]]: isResize
+                })}
+                onClick={() => {
+                    if (!isTop && setTop) setTop()
+                }}
+            >
+                <div
+                    className={classNames(
+                        styles["container-wrapper"],
+                        {
+                            [styles["container-wrapper-resize"]]: isResize
+                        },
+                        containerClassName
+                    )}
+                >
+                    <div
+                        className={styles["container-draggle"]}
+                        onMouseEnter={() => {
+                            if (isDrag && disabled) setDisabled(false)
+                        }}
+                        onMouseLeave={() => {
+                            if (isDrag && !disabled) setDisabled(true)
+                        }}
+                        onMouseDown={() => {
+                            if (!isTop && setTop) setTop()
+                        }}
+                    />
+                    {children}
+                </div>
+            </div>
+        )
+    })
+
     return (
         <Draggable
             defaultClassName={classNames(
-                visible ? styles["yakit-hint-modal-wrapper"] : styles["yakit-hint-modal-hidden"],
-                {[styles["yakit-hint-modal-top"]]: isTop},
+                {
+                    [styles["yakit-hint-modal-top"]]: isTop,
+                    [styles["yakit-hint-modal-wrapper"]]: visible && !isResize,
+                    [styles["yakit-hint-modal-resize-wrapper"]]: visible && isResize,
+                    [styles["yakit-hint-modal-hidden"]]: !visible,
+                    [styles["yakit-hint-modal-resize"]]: isResize,
+                },
                 wrapClassName
             )}
             disabled={disabled}
             bounds={debouncedBounds}
             onStart={(event, uiData) => onStart(event, uiData)}
         >
-            <div style={{width: width || 448}} ref={draggleRef} onClick={(e) => e.stopPropagation()}>
-                <div
-                    className={classNames(styles["yakit-hint-modal-container"], {
-                        [styles["yakit-hint-modal-container-box-shadow"]]: !isMask
-                    })}
-                    onClick={() => {
-                        if (!isTop && setTop) setTop()
-                    }}
-                >
-                    <div className={classNames(styles["container-wrapper"],containerClassName) }>
-                        <div
-                            className={styles["container-draggle"]}
-                            onMouseEnter={() => {
-                                if (isDrag && disabled) setDisabled(false)
-                            }}
-                            onMouseLeave={() => {
-                                if (isDrag && !disabled) setDisabled(true)
-                            }}
-                            onMouseDown={() => {
-                                if (!isTop && setTop) setTop()
-                            }}
-                        />
-                        {children}
-                    </div>
-                </div>
+            <div
+                style={!isResize ? {width: width || 448} : undefined}
+                ref={draggleRef}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {isResize ? (
+                    <Resizable
+                        defaultSize={{width: width || 400, height: 400}}
+                        minWidth={resizeMinWidth || 256}
+                        minHeight={resizeMinWHeight || 176}
+                        bounds={"window"}
+                        enable={{
+                            top: false,
+                            right: true,
+                            bottom: true,
+                            left: false,
+                            topRight: false,
+                            bottomRight: true,
+                            bottomLeft: false,
+                            topLeft: false
+                        }}
+                    >
+                        {getContent()}
+                    </Resizable>
+                ) : (
+                    getContent()
+                )}
             </div>
         </Draggable>
     )
