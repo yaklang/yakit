@@ -50,24 +50,31 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             setExecuting(false)
         },
         onError: () => {},
-        setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
-        }
+        setRuntimeId: (rId) => {},
+        isShowEnd: false
     })
     const [auditDetail, setAuditDetail] = useState<AuditDetailItemProps[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+    const [activeInfo, setActivbeInfo] = useState<AuditDetailItemProps>()
+    // 当前页数
+    const [cureentPage, setCureentPage] = useState<number>(1)
+    const resultIdRef = useRef<number>()
 
-    const getData = useMemoizedFn(async (result_id: number) => {
+    const getData = useMemoizedFn(async (page: number, pageSize: number = 10) => {
+        if (!resultIdRef.current) return
+        setLoading(true)
         const params: AuditYakUrlProps = {
             Schema: "syntaxflow",
             Location: projectName,
             Path: `/${activeKey}`,
-            Query: [{Key: "result_id", Value: result_id}]
+            Query: [{Key: "result_id", Value: resultIdRef.current}]
         }
-        const result = await loadAuditFromYakURLRaw(params)
-        console.log("result---", params, result)
+        const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
 
         if (result) {
-            const newAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
+            const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
                 (item, index) => {
                     const {ResourceType, VerboseType, ResourceName, Size, Extra} = item
                     let value: string = `${index}`
@@ -86,15 +93,25 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                     }
                 }
             )
-            setIsRefresh(!isRefresh)
+            let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+            const newAuditDetail = page === 1 ? initAuditDetail : auditDetail.concat(initAuditDetail)
+            if (isEnd) {
+                setHasMore(false)
+            }
+
+            page === 1 && setIsRefresh(!isRefresh)
             setAuditDetail(newAuditDetail)
+            setCureentPage(page)
         }
+        setLoading(false)
     })
 
     useUpdateEffect(() => {
         const startLog = streamInfo.logState.find((item) => item.level === "json")
         if (startLog && startLog.data) {
-            getData(startLog.data)
+            resultIdRef.current = startLog.data
+            setHasMore(true)
+            getData(1)
         }
     }, [streamInfo])
 
@@ -142,9 +159,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             ],
             PluginName: "SyntaxFlow Searcher"
         }
-        console.log("requestParams---", requestParams)
 
-        apiDebugPlugin({params: requestParams, token: tokenRef.current})
+        apiDebugPlugin({params: requestParams, token: tokenRef.current, isShowStartInfo: false})
             .then(() => {
                 debugPluginStreamEvent.start()
                 setExecuting(true)
@@ -209,11 +225,6 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
     useEffect(() => {
         visible && inputRef.current?.focus()
     }, [visible])
-
-    const [loading, setLoading] = useState<boolean>(false)
-    const [hasMore, setHasMore] = useState<boolean>(false)
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [activeInfo, setActivbeInfo] = useState<AuditDetailItemProps>()
 
     const yakURLData = useMemo(() => {
         try {
@@ -296,6 +307,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             visible={visible}
             onClose={() => onClose && onClose()}
             containerClassName={styles["hint-white-container"]}
+            isResize={true}
+            resizeMinWHeight={500}
             children={
                 <div
                     className={styles["audit-search-box"]}
@@ -369,50 +382,37 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                             </YakitTabs>
                         </div>
                     )}
-                    {auditDetail.length <= 10 && (
-                        <div className={styles["search-list"]}>
-                            {auditDetail.map((record) => (
+
+                    <div
+                        className={styles["search-list"]}
+                        style={{
+                            maxHeight: 230
+                        }}
+                    >
+                        <RollingLoadList<AuditDetailItemProps>
+                            isRef={isRefresh}
+                            data={auditDetail}
+                            page={cureentPage} // response.Pagination.Page
+                            hasMore={hasMore}
+                            loadMoreData={() => {
+                                // 请求下一页数据
+                                getData(cureentPage + 1)
+                            }}
+                            loading={loading}
+                            rowKey='name'
+                            defItemHeight={23}
+                            renderRow={(record, index: number) => (
                                 <AuditNodeSearchItem
-                                    key={record.id}
                                     info={record}
                                     foucsedKey={activeInfo?.id || ""}
                                     setActivbeInfo={setActivbeInfo}
                                     onJump={onJump}
                                     onContextMenu={onContextMenu}
                                 />
-                            ))}
-                        </div>
-                    )}
-                    {auditDetail.length > 10 && (
-                        <div
-                            className={styles["search-list"]}
-                            style={{
-                                maxHeight: 230
-                            }}
-                        >
-                            <RollingLoadList<AuditDetailItemProps>
-                                isRef={isRefresh}
-                                data={auditDetail}
-                                page={-1} //response.Pagination.Page
-                                hasMore={hasMore}
-                                loadMoreData={() => {
-                                    // 请求下一页数据
-                                }}
-                                loading={loading}
-                                rowKey='name'
-                                defItemHeight={23}
-                                renderRow={(record, index: number) => (
-                                    <AuditNodeSearchItem
-                                        info={record}
-                                        foucsedKey={activeInfo?.id || ""}
-                                        setActivbeInfo={setActivbeInfo}
-                                        onJump={onJump}
-                                        onContextMenu={onContextMenu}
-                                    />
-                                )}
-                            />
-                        </div>
-                    )}
+                            )}
+                        />
+                    </div>
+
                     {yakURLData && (
                         <div className={styles["content"]}>
                             <YakRiskCodemirror info={yakURLData} />

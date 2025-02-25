@@ -56,6 +56,8 @@ export interface HoldGRPCStreamParams {
     setRuntimeId?: (runtimeId: string) => any
     /** @name 是否提示error信息 */
     isShowError?: boolean
+    /** @name 是否提示end信息 */
+    isShowEnd?: boolean
     /** @name 是否限制缓存多少条logState信息（默认100） */
     isLimitLogs?: boolean
 }
@@ -72,6 +74,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         dataFilter,
         setRuntimeId,
         isShowError = true,
+        isShowEnd = true,
         isLimitLogs = true
     } = params
 
@@ -314,7 +317,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-end
         ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
-            info(`[Mod] ${taskName} finished`)
+            isShowEnd && info(`[Mod] ${taskName} finished`)
             handleResults()
             if (onEnd) {
                 onEnd()
