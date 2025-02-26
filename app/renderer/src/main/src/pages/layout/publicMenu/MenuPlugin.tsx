@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useMemo, useState} from "react"
 import {ChevronDownIcon, ChevronUpIcon, SMViewGridAddIcon} from "@/assets/newIcon"
 import {PublicDefaultPluginIcon} from "@/routes/publicIcon"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -14,8 +14,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./MenuPlugin.module.scss"
-import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
-import {RemoteMenuGV} from "@/enums/menu"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -47,26 +46,13 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     })
 
     const [restoreVisible, setRestoreVisible] = useState<boolean>(false)
-    const resetPluginMenuHintCache = useRef<boolean>(false)
-    useEffect(() => {
-        getRemoteValue(RemoteMenuGV.ResetPluginMenuHint).then((res) => {
-            resetPluginMenuHintCache.current = res === "true"
-        })
-    }, [])
-    const handleRestoreHint = (isOk: boolean, cache: boolean) => {
-        if (isOk) {
-            resetPluginMenuHintCache.current = cache
-            onRestore()
-        }
+    const handleRestoreHint = () => {
+        onRestore()
         setRestoreVisible(false)
     }
     const onClickRestore = useMemoizedFn(() => {
-        if (!resetPluginMenuHintCache.current) {
-            setListShow(false)
-            setRestoreVisible(true)
-        } else {
-            onRestore()
-        }
+        setListShow(false)
+        setRestoreVisible(true)
     })
     const onRestore = useMemoizedFn(() => {
         ipcRenderer
@@ -260,12 +246,14 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                 </div>
             </div>
             {/* 复原菜单提醒 */}
-            <NoPromptHint
+            <YakitHint
                 visible={restoreVisible}
-                title='复原菜单提醒'
-                content='确认复原后，将重置常用插件菜单栏。是否确认复原？'
-                cacheKey={RemoteMenuGV.ResetPluginMenuHint}
-                onCallback={handleRestoreHint}
+                title={"复原菜单提醒"}
+                content={"确认复原后，将重置常用插件菜单栏。是否确认复原？"}
+                onOk={handleRestoreHint}
+                onCancel={() => {
+                    setRestoreVisible(false)
+                }}
             />
         </div>
     )
