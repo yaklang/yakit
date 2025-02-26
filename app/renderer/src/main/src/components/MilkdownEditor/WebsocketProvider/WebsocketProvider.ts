@@ -434,6 +434,7 @@ export class WebsocketProvider extends ObservableV2<ObservableEvents> {
          */
         this._updateHandler = (update: Uint8Array, origin: any, ydoc: Y.Doc, tr: Y.Transaction) => {
             if (origin !== this) {
+                this.emit("update-diff", [update])
                 const encoder = encoding.createEncoder()
                 encoding.writeVarUint(encoder, messageSync)
                 syncProtocol.writeUpdate(encoder, update)

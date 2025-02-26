@@ -7,6 +7,8 @@ import {CollabStatus} from "./MilkdownEditorType"
 import {yakitNotify} from "@/utils/notification"
 import {NotepadWsRequest} from "./WebsocketProvider/WebsocketProviderType"
 import {notepadActions, notepadSaveStatus} from "./WebsocketProvider/constants"
+import * as Y from "yjs" // eslint-disable-line
+import debounce from "lodash/debounce"
 
 const {ipcRenderer} = window.require("electron")
 export interface CollabUserInfo {
@@ -21,6 +23,7 @@ interface CollabManagerEvents {
     "link-status-onchange": (s: CollabStatus) => void
     "online-users": (s: CollabUserInfo[]) => void
     "sync-title": (s: string) => void
+    "update-diff": (v: any) => void
 }
 
 interface CollabNotepadWsRequest {
@@ -36,6 +39,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
     private collabStatus: CollabStatus
     private users: CollabUserInfo[]
     private title: string
+    private prevSnapshot: Y.Snapshot
 
     constructor(
         private collabService: CollabService,
@@ -50,6 +54,7 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         }
         this.users = []
         this.title = wsRequest.title || ""
+        this.prevSnapshot = Y.emptySnapshot
     }
 
     flush = async (template: string) => {
@@ -68,6 +73,8 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
         this.doc = new Doc()
 
+        const permanentUserData = new Y.PermanentUserData(this.doc)
+        // this.doc.gc = false
         const docTitle = this.doc.getText("title") // 使用 Y.Text 存储标题
         docTitle.observe((yTextEvent, transaction) => this.docObserveTitle(yTextEvent, transaction))
 
@@ -102,18 +109,55 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             } else {
                 this.setCollabStatus({...this.collabStatus, status: payload.status})
             }
+            if (payload.status === "disconnected") {
+                this.saveHistory()
+            }
         })
         this.wsProvider.on("connection-close", (payload) => {
             this.emit("offline-after", [payload])
         })
-        this.collabService.bindDoc(this.doc).setAwareness(this.wsProvider.awareness)
+
+        this.collabService
+            .bindDoc(this.doc)
+            .setAwareness(this.wsProvider.awareness)
+            .mergeOptions({
+                ySyncOpts: {
+                    permanentUserData: permanentUserData
+                }
+            })
+
+        // 应输出所有注册用户的 clientID 和用户名
+
         this.wsProvider.once("synced", (isSynced: boolean) => {
             this.setCollabStatus({...this.collabStatus, isSynced})
+            if (isSynced) {
+                permanentUserData.setUserMapping(this.doc, this.doc.clientID, this.user.name)
+            }
         })
 
         this.wsProvider.once("online-user-count", (onlineUserCount: number) => {
             if (onlineUserCount < 2 && this.collabStatus.isSynced) {
                 this.collabService.applyTemplate(template).connect()
+                // const value = sessionStorage.getItem("versions")
+                // try {
+                //     if (value) {
+                //         const versionList = JSON.parse(value)
+                //         if (versionList.length > 0) {
+                //             this.collabService.connect()
+                //             const item = versionList[versionList.length - 1]
+                //             const encodeStateAsUpdate = Buffer.from(item.encodeStateAsUpdate, "base64")
+                //             const snapshot = Buffer.from(item.snapshot, "base64")
+
+                //             Y.applyUpdate(this.doc, encodeStateAsUpdate)
+
+                //             this.prevSnapshot = Y.decodeSnapshot(snapshot)
+                //         }
+                //     } else {
+                //         this.collabService.applyTemplate(template).connect()
+                //     }
+                // } catch (error) {
+                //     console.log("error", error)
+                // }
             } else if (this.collabStatus.isSynced) {
                 this.collabService.connect()
             }
@@ -128,7 +172,39 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
             const users = this.getOnlineUser()
             this.setOnlineUsers([...users])
         })
+        this.wsProvider.on("update-diff", (update) => {
+            this.saveHistory()
+        })
     }
+
+    private saveHistory = debounce(() => {
+        const snapshot = Y.snapshot(this.doc)
+        if (!Y.equalSnapshots(this.prevSnapshot, snapshot)) {
+            const item = {
+                clientID: this.doc.clientID,
+                timestamp: new Date().getTime(),
+                userName: this.user.name,
+                encodeStateAsUpdate: Buffer.from(Y.encodeStateAsUpdate(this.doc)).toString("base64"),
+                snapshot: Buffer.from(Y.encodeSnapshot(snapshot)).toString("base64")
+            }
+
+            this.prevSnapshot = snapshot
+
+            // const value = sessionStorage.getItem("versions")
+            // try {
+            //     if (value) {
+            //         const versionList = value ? JSON.parse(value) : []
+            //         console.log("versionList", versionList)
+            //         versionList.push(item)
+            //         sessionStorage.setItem("versions", JSON.stringify(versionList))
+            //     } else {
+            //         sessionStorage.setItem("versions", JSON.stringify([item]))
+            //     }
+            // } catch (error) {
+            //     console.log("error", error)
+            // }
+        }
+    }, 1000)
 
     private docObserveTitle(yarrayEvent: YTextEvent, tr: Transaction) {
         if (tr.local) return

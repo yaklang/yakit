@@ -4,7 +4,7 @@ import {CollabStatus, EditorMilkdownProps, MilkdownCollabProps} from "@/componen
 import styles from "./ModifyNotepad.module.scss"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {CatalogueTreeNodeProps, MilkdownCatalogueProps, ModifyNotepadProps} from "./ModifyNotepadType"
+import {CatalogueTreeNodeProps, EditNotepadProps, MilkdownCatalogueProps, ModifyNotepadProps} from "./ModifyNotepadType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {Divider, Tooltip, Tree} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -25,7 +25,6 @@ import {useMenuHeight} from "@/store/menuHeight"
 import {shallow} from "zustand/shallow"
 import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {AuthorIcon, AuthorImg, FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import {getMarkdown} from "@milkdown/kit/utils"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -53,12 +52,24 @@ import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {NotepadDiff} from "../notepadDiff/NotepadDiff"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 
 const notepadMixWidth = 1200
+
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const {pageId} = props
+    const [showHistory, setShowHistory] = useState<boolean>(false)
+    return showHistory ? (
+        <NotepadDiff pageId={pageId} onClose={() => setShowHistory(false)} />
+    ) : (
+        <EditNotepad {...props} setShowHistory={setShowHistory} />
+    )
+})
+export default ModifyNotepad
+const EditNotepad: React.FC<EditNotepadProps> = React.memo((props) => {
+    const {pageId, setShowHistory} = props
     const userInfo = useStore((s) => s.userInfo)
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
@@ -112,7 +123,8 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         userName: "",
         headImg: "",
         collaborator: [],
-        hash: ""
+        hash: "",
+        notepadUserId: 0
     })
 
     const [documentLinkStatus, setDocumentLinkStatus] = useState<CollabStatus>({
@@ -152,7 +164,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     setNotepadDetail(res)
                 })
                 .catch((error) => {
-                    onErrorModal(error)
+                    onErrorModal(`${error}`)
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -181,7 +193,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     })
                 })
                 .catch((error) => {
-                    onErrorModal(error)
+                    onErrorModal(`${error}`)
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -189,10 +201,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                     }, 200)
                 )
         }
-        // return () => {
-        //     const notepadContent = notepadContentRef.current
-        //     onSaveNewContent(notepadContent)
-        // }
     }, [])
 
     /**查询或者新建异常处理 */
@@ -202,6 +210,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
             title: "网络异常",
             content: <span>错误原因:{error}</span>,
             closable: false,
+            maskClosable: false,
             onOkText: "关闭页面",
             cancelButtonProps: {style: {display: "none"}},
             onOk: () => {
@@ -547,6 +556,7 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
                         >
                             下载
                         </YakitButton>
+                        <YakitButton onClick={() => setShowHistory(true)}>历史</YakitButton>
                         {currentRole === notepadRole.adminPermission && (
                             <FuncFilterPopover
                                 icon={<OutlineDotshorizontalIcon />}
@@ -695,8 +705,6 @@ const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
         </div>
     )
 })
-
-export default ModifyNotepad
 
 const CatalogueTreeNode: React.FC<CatalogueTreeNodeProps> = React.memo((props) => {
     const {info, onClick, isExpanded, onExpand} = props

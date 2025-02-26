@@ -5,6 +5,10 @@ export interface ModifyNotepadProps {
     pageId: string
 }
 
+export interface EditNotepadProps extends ModifyNotepadProps {
+    setShowHistory: (b: boolean) => void
+}
+
 export interface MilkdownCatalogueProps {
     id: string
     /**标题级别 */

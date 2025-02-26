@@ -91,6 +91,8 @@ export type ObservableEvents = {
     saveStatus: (s: WebsocketProviderEmitOfSaveStatus) => void
     /**文档在线用户数 */
     "online-user-count": (n: number) => void
+    /**更新触发;eg:历史 */
+    "update-diff": (u: Uint8Array) => void
 }
 
 export interface NotepadSaveStatusProps {
