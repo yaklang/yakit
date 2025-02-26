@@ -38,7 +38,8 @@ import {
     OutlineArrowsexpandIcon,
     OutlineCloseIcon,
     OutlineOpenIcon,
-    OutlineQuestionmarkcircleIcon
+    OutlineQuestionmarkcircleIcon,
+    OutlineTerminalIcon
 } from "@/assets/icon/outline"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -58,7 +59,7 @@ import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
@@ -85,12 +86,13 @@ import {
     SyntaxFlowRule
 } from "../ruleManagement/RuleManagementType"
 import cloneDeep from "lodash/cloneDeep"
-import {AuditCodeDetailDrawer} from "./AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { RuleDebugAuditDetail } from "../ruleManagement/template"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -1183,6 +1185,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 })
             })
         })
+        // 审计结果表格数据
+        const [auditData, setAuditData] = useState<SyntaxFlowResult[]>([])
+        const handleUpdateAuditData = useMemoizedFn((data: SyntaxFlowResult[]) => {
+            setAuditData(data)
+        })
 
         // 审计详情抽屉
         const auditInfo = useRef<SyntaxFlowResult>()
@@ -1204,10 +1211,37 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 {tabName: "Console", type: "console"}
             ]
             if (runtimeId) {
-                return [{tabName: "审计结果", type: "result", customProps: {onDetail: handleShowDetail}}, ...tabsState]
+                return [
+                    {
+                        tabName: "审计结果",
+                        type: "result",
+                        customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
+                    },
+                    ...tabsState
+                ]
             }
             return tabsState
         }, [runtimeId])
+
+        // 跳转到代码审计页面
+        const jumpCodeScanPage = useMemoizedFn(() => {
+            if (!auditInfo.current) return
+            // 跳转到审计页面的参数
+            const params: AuditCodePageInfoProps = {
+                Schema: "syntaxflow",
+                Location: auditInfo.current.ProgramName,
+                Path: `/`,
+                Query: [{Key: "result_id", Value: auditInfo.current.ResultID}]
+            }
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.YakRunner_Audit_Code,
+                    params
+                })
+            )
+            handleCancelDetail()
+        })
 
         // 数组去重
         const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -1358,13 +1392,45 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     />
                 )}
 
-                <React.Suspense fallback={<>loading...</>}>
+                {/* <React.Suspense fallback={<>loading...</>}>
                     {auditDetailShow && auditInfo.current && (
                         <AuditCodeDetailDrawer
                             rowData={auditInfo.current}
                             visible={auditDetailShow}
                             handleCancelDetail={handleCancelDetail}
                         />
+                    )}
+                </React.Suspense> */}
+
+                <React.Suspense fallback={<>loading...</>}>
+                    {auditDetailShow && auditInfo.current && (
+                        <YakitDrawer
+                            visible={auditDetailShow}
+                            onClose={handleCancelDetail}
+                            width='90%'
+                            title='审计详情'
+                            extra={
+                                <YakitButton
+                                    icon={<OutlineTerminalIcon />}
+                                    type='outline2'
+                                    onClick={() => jumpCodeScanPage()}
+                                >
+                                    在代码审计中打开
+                                </YakitButton>
+                            }
+                            bodyStyle={{overflow: "hidden", padding: 0}}
+                        >
+                            {/* 审计详情 */}
+                            <div
+                                className={classNames(styles["drawer-body"])}
+                            >
+                                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                                    {auditDetailShow && auditInfo.current && (
+                                        <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
+                                    )}
+                                </React.Suspense>
+                            </div>
+                        </YakitDrawer>
                     )}
                 </React.Suspense>
             </>

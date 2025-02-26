@@ -346,20 +346,19 @@
     :global {
         .json-schema-form {
             display: block;
-            .json-schema-row-form{
+            .json-schema-row-form {
                 .ant-form-item-label {
-                flex: 0 0 25% !important;
+                    flex: 0 0 25% !important;
+                }
+                .ant-form-item-label + .ant-form-item-control {
+                    flex: 0 0 50% !important;
+                }
+                // 需询问后端是否可从schema中移除
+                #root_auth__error,
+                #root_proxy__error {
+                    display: none;
+                }
             }
-            .ant-form-item-label + .ant-form-item-control {
-                flex: 0 0 50% !important;
-            }
-            // 需询问后端是否可从schema中移除
-            #root_auth__error,
-            #root_proxy__error {
-                display: none;
-            }
-            }
-            
         }
     }
 }
@@ -384,7 +383,7 @@
     }
 }
 
-.agent-down-stream-proxy{
+.agent-down-stream-proxy {
     color: var(--yakit-primary-5);
     display: inline-flex;
     cursor: pointer;
@@ -395,10 +394,16 @@
     margin-left: calc(33% - 90px);
 }
 
-.extra-node-collapse{
-    :global{
-        .ant-collapse-item{
+.extra-node-collapse {
+    :global {
+        .ant-collapse-item {
             margin-left: calc(33% - 90px);
         }
     }
+}
+.drawer-body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    background: #ffffff;
 }
