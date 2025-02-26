@@ -129,6 +129,18 @@
     line-height: 22px;
 }
 
+.tree-more {
+    position: relative;
+    height: 22px;
+    text-align: center;
+    color: #31343f;
+    font-size: 11px;
+    line-height: 22px;
+    &:hover {
+        color: #f28b44;
+    }
+}
+
 .audit-tree-node {
     padding: 3px 12px 3px 8px;
     display: flex;

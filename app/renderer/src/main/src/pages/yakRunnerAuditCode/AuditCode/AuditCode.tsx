@@ -203,7 +203,7 @@ const showIcon = (severity) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump, loadTreeMore} = props
     const handleSelect = useMemoizedFn(() => {
         onSelected(true, info, getDetail)
     })
@@ -237,11 +237,18 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
         e.stopPropagation()
         onJump({...info, isBug: true})
     })
-    return (
-        <>
-            {info.isBottom ? (
-                <div className={styles["tree-bottom"]}>{info.name}</div>
-            ) : (
+
+    const dom = useMemo(() => {
+        if (info.isBottom) {
+            return <div className={styles["tree-bottom"]}>{info.name}</div>
+        } else if (info.hasMore) {
+            return (
+                <div className={styles["tree-more"]} onClick={() => loadTreeMore(info)}>
+                    加载更多...
+                </div>
+            )
+        } else {
+            return (
                 <div
                     className={classNames(styles["audit-tree-node"], {
                         [styles["node-foucsed"]]: isFoucsed
@@ -291,9 +298,11 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                         {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
                     </div>
                 </div>
-            )}
-        </>
-    )
+            )
+        }
+    }, [info, isFoucsed, isExpanded])
+
+    return <>{dom}</>
 })
 
 export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((props) => {
@@ -365,7 +374,8 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         setFoucsedKey,
         onJump,
         onlyJump,
-        wrapClassName
+        wrapClassName,
+        loadTreeMore
     } = props
     // const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
@@ -469,6 +479,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
                             onJump={onJump}
+                            loadTreeMore={loadTreeMore}
                         />
                     )
                 }}
@@ -583,17 +594,16 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
                 // 沿用审计时的Query值
                 params.Query = runQueryRef.current
-
-                const result = await loadAuditFromYakURLRaw(params, body)
-
+                // 每次拿30条
+                const result = await loadAuditFromYakURLRaw(params, body, 1, 30)
                 if (result) {
                     let variableIds: string[] = []
                     result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
                         const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
                         let value: string = `${index}`
-                        const arr = Extra.filter((item) => item.Key === "index")
-                        if (arr.length > 0) {
-                            value = arr[0].Value
+                        const obj = Extra.find((item) => item.Key === "index")
+                        if (obj) {
+                            value = obj.Value
                         }
                         const newId = `${id}/${value}`
                         variableIds.push(newId)
@@ -607,6 +617,24 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                             Extra
                         })
                     })
+                    let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                    // 如若请求数据未全部拿完 则显示加载更多
+                    if (!isEnd) {
+                        const newId = `${id}/load`
+                        setMapAuditDetail(newId, {
+                            parent: path,
+                            id: newId,
+                            name: "",
+                            ResourceType: "value",
+                            VerboseType: "",
+                            Size: 0,
+                            Extra: [],
+                            page: result.Page,
+                            hasMore: true
+                        })
+                        variableIds.push(newId)
+                    }
+
                     setMapAuditChildDetail(path, variableIds)
                     setTimeout(() => {
                         setRefreshTree(!refreshTree)
@@ -617,6 +645,77 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
             }
         })
+    })
+
+    // 树加载更多
+    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
+        if (node.parent && node.page) {
+            const path = node.parent
+            const page = parseInt(node.page + "") + 1
+            let params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                Location: projectName || "",
+                Path: path
+            }
+            const body: Buffer = StringToUint8Array(lastValue.current)
+            if (pageInfo) {
+                const {Variable, Value, ...rest} = pageInfo
+                params = {
+                    ...rest,
+                    Path: path
+                }
+            }
+            // 沿用审计时的Query值
+            params.Query = runQueryRef.current
+            // 每次拿30条
+            const result = await loadAuditFromYakURLRaw(params, body, page, 30)
+            if (result) {
+                let variableIds: string[] = []
+                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                    let value: string = `${index}`
+                    const obj = Extra.find((item) => item.Key === "index")
+                    if (obj) {
+                        value = obj.Value
+                    }
+                    const newId = `${path}/${value}`
+                    variableIds.push(newId)
+                    setMapAuditDetail(newId, {
+                        parent: path,
+                        id: newId,
+                        name: ResourceName,
+                        ResourceType,
+                        VerboseType,
+                        Size,
+                        Extra
+                    })
+                })
+                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                // 如若请求数据未全部拿完 则显示加载更多
+                const newId = `${path}/load`
+                if (!isEnd) {
+                    setMapAuditDetail(newId, {
+                        parent: path,
+                        id: newId,
+                        name: "",
+                        ResourceType: "value",
+                        VerboseType: "",
+                        Size: 0,
+                        Extra: [],
+                        page: result.Page,
+                        hasMore: true
+                    })
+                    variableIds.push(newId)
+                }
+                // 此处为累加并移除原有加载更多项
+                const auditChilds = getMapAuditChildDetail(path)
+                const childs = auditChilds.filter((item) => item !== newId)
+                setMapAuditChildDetail(path, [...childs, ...variableIds])
+                setTimeout(() => {
+                    setRefreshTree(!refreshTree)
+                }, 300)
+            }
+        }
     })
 
     const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
@@ -670,6 +769,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
                 runQueryRef.current = params.Query
                 const result = await loadAuditFromYakURLRaw(params, body)
+
                 if (result && result.Resources.length > 0) {
                     let messageIds: string[] = []
                     let variableIds: string[] = []
@@ -1004,6 +1104,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         foucsedKey={foucsedKey}
                                         setFoucsedKey={setFoucsedKey}
                                         onJump={onJump}
+                                        loadTreeMore={loadTreeMore}
                                     />
                                 )}
                             </>
