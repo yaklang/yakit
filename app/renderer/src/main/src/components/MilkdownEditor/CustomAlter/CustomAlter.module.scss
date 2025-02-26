@@ -1,4 +1,8 @@
-@use "../../../theme/themeify.scss" as tools;
+@use "../utils/utils.module.scss" as utils;
+@use "../../../theme/themeify.scss" as themeify;
+
+@include utils.custom-block("alter");
+
 .alter-custom {
     padding: 12px;
     border-radius: 0 8px 8px 0;
@@ -7,18 +11,18 @@
 
 .alter-custom-warning,
 .alter-custom-caution {
-    background-color: tools.fetch-color-transparen(var(--yakit-warning-5), 10%);
+    background-color: themeify.fetch-color-transparen(var(--yakit-warning-5), 10%);
     border-left: 3px solid var(--yakit-warning-5);
 }
 
 .alter-custom-danger {
-    background-color: tools.fetch-color-transparen(var(--yakit-danger-5), 10%);
+    background-color: themeify.fetch-color-transparen(var(--yakit-danger-5), 10%);
     border-left: 3px solid var(--yakit-danger-5);
 }
 
 .alter-custom-success,
 .alter-custom-tip {
-    background-color: tools.fetch-color-transparen(var(--yakit-success-5), 10%);
+    background-color: themeify.fetch-color-transparen(var(--yakit-success-5), 10%);
     border-left: 3px solid var(--yakit-success-5);
 }
 
