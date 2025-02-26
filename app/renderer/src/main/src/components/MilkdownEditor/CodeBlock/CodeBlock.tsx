@@ -4,10 +4,15 @@ import {useNodeViewContext} from "@prosemirror-adapter/react"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import React, {useState, useEffect, useRef} from "react"
 import {TextSelection} from "@milkdown/kit/prose/state"
+import classNames from "classnames"
+import styles from "./CodeBlock.module.scss"
+import {YChangeProps} from "../YChange/YChangeType"
+import {YChange} from "../YChange/YChange"
 
 interface CustomCodeComponent {}
 export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
     const {node, view, getPos} = useNodeViewContext()
+    const {attrs} = node
     // 编辑器实例
     const [editor, setEditor] = useState<IMonacoEditor>()
 
@@ -50,15 +55,25 @@ export const CustomCodeComponent: React.FC<CustomCodeComponent> = () => {
             }
         } catch (error) {}
     })
+
+    const ychange: YChangeProps = useCreation(() => attrs.ychange || {}, [attrs])
     return (
-        <div style={{height: 200, marginBottom: 20}} ref={codeRef}>
-            <YakitEditor
-                type='yak'
-                readOnly={readonly}
-                value={node.textContent}
-                setValue={updateEditorContent}
-                editorDidMount={setEditor}
-            />
+        <div
+            className={classNames(styles["code-block-custom-block"], {
+                [styles["code-block-custom-diff-history-block"]]: ychange
+            })}
+            style={{color: ychange ? ychange.color?.dark : ""}}
+        >
+            <div style={{height: 200, marginBottom: 20}} ref={codeRef}>
+                <YakitEditor
+                    type='yak'
+                    readOnly={readonly}
+                    value={node.textContent}
+                    setValue={updateEditorContent}
+                    editorDidMount={setEditor}
+                />
+            </div>
+            <YChange {...ychange} />
         </div>
     )
 }
