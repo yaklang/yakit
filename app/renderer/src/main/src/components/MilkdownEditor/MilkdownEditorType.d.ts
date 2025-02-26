@@ -12,10 +12,6 @@ import {
 
 export type EditorMilkdownProps = Editor
 
-export interface MilkdownRefProps {
-    collabManager: CollabManager
-}
-
 export interface CollabStatus {
     /**ws链接状态 */
     status: WSConnectedStatusType
@@ -46,7 +42,6 @@ export interface MilkdownCollabProps {
 export interface CustomMilkdownProps {
     /**编辑器使用的模块名称，目前只有记事本中使用 */
     type: "notepad"
-    ref?: React.ForwardedRef<MilkdownRefProps>
     /**设置为只读 */
     readonly?: boolean
     /**编辑器默认值*/
