@@ -1,7 +1,6 @@
-import {$command, $nodeSchema, $nodeAttr, $remark} from "@milkdown/utils"
+import {$command, $inputRule, $nodeSchema, $nodeAttr, $remark} from "@milkdown/kit/utils"
 
 import {wrappingInputRule} from "@milkdown/prose/inputrules"
-import {$inputRule} from "@milkdown/kit/utils"
 import {wrapIn} from "@milkdown/kit/prose/commands"
 import directive from "remark-directive"
 import {Node} from "@milkdown/kit/prose/model"
@@ -20,6 +19,7 @@ export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
     group: "block",
     content: `block*`,
     atom: true,
+    defining: true,
     // 从 DOM 中解析节点，动态设置属性
     parseDOM: [
         {
@@ -61,7 +61,8 @@ export const alterCustomSchema = $nodeSchema(alterCustomId, (ctx) => ({
         }
     },
     attrs: {
-        type: {default: "tip"}
+        type: {default: "tip"},
+        ychange: {default: null}
     }
 }))
 

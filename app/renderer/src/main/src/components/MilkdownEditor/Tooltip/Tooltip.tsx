@@ -376,7 +376,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 <TooltipIcon title='删除线:~文本~空格' icon={<IconStrikethrough />} onClick={onStrikethrough} />
                 <TooltipIcon title='斜体:*文本*空格' icon={<IconItalic />} onClick={onEmphasis} />
                 <TooltipIcon title='下划线: :u[文本]' icon={<IconUnderline />} onClick={onUnderline} />
-                <TooltipIcon title='代码块:```空格' icon={<IconCode2 />} onClick={onAddCode} />
+                <TooltipIcon title='代码:`文本`' icon={<IconCode2 />} onClick={onAddCode} />
                 {/* <TooltipIcon icon={<OutlineAnnotationIcon />} onClick={onAddComment} /> */}
             </div>
         </div>
