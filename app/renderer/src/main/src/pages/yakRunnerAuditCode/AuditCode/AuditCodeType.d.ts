@@ -21,6 +21,7 @@ export interface AuditTreeProps {
     onJump: (v: AuditNodeProps) => void
     onlyJump?: boolean
     wrapClassName?: string
+    loadTreeMore: (info: AuditNodeProps) => void
 }
 
 export interface AuditNodeDetailProps {
@@ -36,6 +37,7 @@ export interface AuditTreeNodeProps {
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     onJump: (info: AuditNodeProps) => void
+    loadTreeMore: (info: AuditNodeProps) => void
 }
 
 // Map存储列表详情
@@ -51,6 +53,11 @@ export interface AuditNodeMapProps {
     name: string
     Size: number
     Extra: YakURLKVPair[]
+
+    // 记录所请求数据的页数
+    page?: number
+    // 是否未加载完毕
+    hasMore?: boolean
 }
 
 export interface AuditNodeProps {
@@ -80,6 +87,10 @@ export interface AuditNodeProps {
 
     // 前端所需校验属性
     isBug?: boolean
+    // 记录所请求数据的页数
+    page?: number
+    // 是否未加载完毕
+    hasMore?: boolean
 }
 
 export interface AuditDetailItemProps {

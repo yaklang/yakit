@@ -1663,7 +1663,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
 })
 
 /** @name 规则编写-调试页面的审计详情 */
-const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) => {
+export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) => {
     const {auditData, info} = props
 
     const currentInfo = useRef<SyntaxFlowResult>()
@@ -1868,15 +1868,15 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                     Path: path,
                     Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
                 }
-                const result = await loadAuditFromYakURLRaw(params)
+                const result = await loadAuditFromYakURLRaw(params, undefined, 1, 30)
                 if (result) {
                     let variableIds: string[] = []
                     result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
                         const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
                         let value: string = `${index}`
-                        const arr = Extra.filter((item) => item.Key === "index")
-                        if (arr.length > 0) {
-                            value = arr[0].Value
+                        const obj = Extra.find((item) => item.Key === "index")
+                        if (obj) {
+                            value = obj.Value
                         }
                         const newId = `${id}/${value}`
                         variableIds.push(newId)
@@ -1890,6 +1890,24 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                             Extra
                         })
                     })
+                    let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                    // 如若请求数据未全部拿完 则显示加载更多
+                    if (!isEnd) {
+                        const newId = `${id}/load`
+                        setAuditMap(newId, {
+                            parent: path,
+                            id: newId,
+                            name: "",
+                            ResourceType: "value",
+                            VerboseType: "",
+                            Size: 0,
+                            Extra: [],
+                            page: result.Page,
+                            hasMore: true
+                        })
+                        variableIds.push(newId)
+                    }
+
                     setAuditChildMap(path, variableIds)
                     setTimeout(() => {
                         setRefreshTree(!refreshTree)
@@ -1901,6 +1919,69 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
             }
         })
     })
+
+    // 树加载更多
+    const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
+        if (node.parent && node.page && currentInfo.current) {
+            const path = node.parent
+            const page = parseInt(node.page + "") + 1
+            const params: AuditYakUrlProps = {
+                Schema: "syntaxflow",
+                ProgramName: currentInfo.current.ProgramName,
+                Path: path,
+                Query: [{Key: "result_id", Value: currentInfo.current.ResultID}]
+            }
+            // 每次拿30条
+            const result = await loadAuditFromYakURLRaw(params, undefined, page, 30)
+            if (result) {
+                let variableIds: string[] = []
+                result.Resources.filter((item) => item.VerboseType !== "result_id").forEach((item, index) => {
+                    const {ResourceType, VerboseType, VerboseName, ResourceName, Size, Extra} = item
+                    let value: string = `${index}`
+                    const obj = Extra.find((item) => item.Key === "index")
+                    if (obj) {
+                        value = obj.Value
+                    }
+                    const newId = `${path}/${value}`
+                    variableIds.push(newId)
+                    setAuditMap(newId, {
+                        parent: path,
+                        id: newId,
+                        name: ResourceName,
+                        ResourceType,
+                        VerboseType,
+                        Size,
+                        Extra
+                    })
+                })
+                let isEnd: boolean = !!result.Resources.find((item) => item.VerboseType === "result_id")
+                // 如若请求数据未全部拿完 则显示加载更多
+                const newId = `${path}/load`
+                if (!isEnd) {
+                    setAuditMap(newId, {
+                        parent: path,
+                        id: newId,
+                        name: "",
+                        ResourceType: "value",
+                        VerboseType: "",
+                        Size: 0,
+                        Extra: [],
+                        page: result.Page,
+                        hasMore: true
+                    })
+                    variableIds.push(newId)
+                }
+                // 此处为累加并移除原有加载更多项
+                const auditChilds = getMapAuditChildDetail(path)
+                const childs = auditChilds.filter((item) => item !== newId)
+                setAuditChildMap(path, [...childs, ...variableIds])
+                setTimeout(() => {
+                    setRefreshTree(!refreshTree)
+                }, 300)
+            }
+        }
+    })
+
     const onLoadData = useMemoizedFn((node: AuditNodeProps) => {
         if (node.parent === null) return Promise.reject()
         if (handleAuditLoadData) return handleAuditLoadData(node.id)
@@ -1922,7 +2003,7 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                 bugHash.current = hash
                 setShowAuditDetail(true)
             }
-            if(!node.isBug){
+            if (!node.isBug) {
                 bugHash.current = undefined
             }
             if (node.ResourceType === "value") {
@@ -1981,6 +2062,7 @@ const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) =
                         onJump={onJump}
                         onlyJump={true}
                         wrapClassName={styles["code-tree-wrap"]}
+                        loadTreeMore={loadTreeMore}
                     />
                 )}
             </div>
