@@ -28,6 +28,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         // ref: autoRef = null,
         initValue = "",
         wrapperStyle,
+        isInit = true,
         ...restProps
     } = props
     const autoCompleteRef = useRef<HTMLDivElement>(null)
@@ -40,7 +41,7 @@ export const YakitAutoComplete: React.FC<YakitAutoCompleteProps> = React.forward
         defaultValue: ""
     })
     useEffect(() => {
-        inViewport && onGetRemoteValues(true)
+        inViewport && onGetRemoteValues(isInit)
     }, [initValue, inViewport])
     useImperativeHandle(
         ref,

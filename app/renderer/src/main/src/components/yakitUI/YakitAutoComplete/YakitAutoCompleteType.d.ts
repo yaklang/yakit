@@ -22,6 +22,8 @@ export interface YakitAutoCompleteProps extends AutoCompleteProps {
     /** 初始默认值 主要用于缓存值不存在时*/
     initValue?: string
     wrapperStyle?: CSSProperties
+    /** 是否在显隐时使用Loading，Loading会导致控件闪烁 默认为true*/
+    isInit?: boolean
 }
 
 export interface YakitAutoCompleteRefProps {
