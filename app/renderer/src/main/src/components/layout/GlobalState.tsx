@@ -314,10 +314,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
          */
         if (!isEnpriTraceAgent()) {
             if (!systemProxy.Enable) status = "help"
-            if (!reverseState || !reverseDetails.PublicReverseIP || !reverseDetails.PublicReversePort) {
-                status = "warning"
-                count = count + 1
-            }
+            if (!isReverseState) status = "help"
         }
         if (showChromeWarn) {
             status = "warning"
@@ -700,16 +697,44 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     {!isEnpriTraceAgent() && (
                         <>
                             {/* 全局反连 */}
-                            {!isReverseState && (
-                                <div className={styles["body-info"]}>
-                                    <div className={styles["info-left"]}>
-                                        <WarningIcon />
-                                        <div className={styles["left-body"]}>
-                                            <div className={styles["title-style"]}>全局反连未配置</div>
-                                            <div className={styles["subtitle-style"]}>可能会影响部分功能的使用</div>
+                            <div className={styles["body-info"]}>
+                                <div className={styles["info-left"]}>
+                                    {isReverseState ? <SuccessIcon /> : <HelpIcon />}
+                                    <div className={styles["left-body"]}>
+                                        <div className={styles["title-style"]} style={{marginBottom: 2}}>
+                                            全局反连未配置{" "}
+                                            <YakitTag color={isReverseState ? "success" : "danger"}>
+                                                {isReverseState ? "已启用" : "未启用"}
+                                            </YakitTag>
                                         </div>
+                                        <div className={styles["subtitle-style"]}>可能会影响部分功能的使用</div>
                                     </div>
-                                    <div className={styles["info-right"]}>
+                                </div>
+                                <div className={styles["info-right"]}>
+                                    {isReverseState ? (
+                                        <YakitButton
+                                            type='text'
+                                            colors='danger'
+                                            className={styles["btn-style"]}
+                                            onClick={() => {
+                                                setShow(false)
+                                                showYakitModal({
+                                                    type: "white",
+                                                    title: "配置全局反连",
+                                                    width: 800,
+                                                    content: (
+                                                        <div style={{width: 800}}>
+                                                            <ConfigGlobalReverse />
+                                                        </div>
+                                                    ),
+                                                    footer: null
+                                                })
+                                            }}
+                                        >
+                                            {" "}
+                                            停用
+                                        </YakitButton>
+                                    ) : (
                                         <YakitButton
                                             type='text'
                                             className={styles["btn-style"]}
@@ -730,9 +755,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         >
                                             去配置
                                         </YakitButton>
-                                    </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                             {/* Chrome启动路径 */}
                             {showChromeWarn && (
                                 <div className={styles["body-info"]}>
@@ -921,10 +946,19 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 visible={pcapHintShow}
                 heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
                 title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
+                width={600}
                 content={
-                    pcapResult
-                        ? "网卡修复需要时间，请耐心等待"
-                        : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"
+                    pcapResult ? (
+                        "网卡修复需要时间，请耐心等待"
+                    ) : (
+                        <>
+                            Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限。如无法修复可以执行命令行{" "}
+                            <YakitTag enableCopy={true} color='yellow' copyText={`chmod +rw /dev/bpf*`}></YakitTag>
+                            或者{" "}
+                            <YakitTag enableCopy={true} color='purple' copyText={`sudo chmod +rw /dev/bpf*`}></YakitTag>
+                            可以开放网卡读写权限
+                        </>
+                    )
                 }
                 okButtonText='开启 PCAP 权限'
                 cancelButtonText={pcapResult ? "知道了～" : "稍后再说"}
