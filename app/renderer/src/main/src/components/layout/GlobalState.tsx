@@ -14,7 +14,6 @@ import {
     SuccessIcon,
     WarningIcon,
     RocketIcon,
-    RocketOffIcon
 } from "./globalStateIcon"
 import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
@@ -36,6 +35,7 @@ import {serverPushStatus} from "@/utils/duplex/duplex"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {grpcFetchBuildInYakVersion, grpcFetchLocalYakVersion, grpcFetchSpecifiedYakVersionHash} from "@/apiUtils/grpc"
+import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,14 +44,14 @@ const ShowIcon: Record<string, ReactNode> = {
     error: <ExclamationIcon className={styles["icon-style"]} />,
     warning: <ExclamationIcon className={styles["icon-style"]} />,
     success: <RocketIcon className={styles["icon-style"]} />,
-    help: <RocketOffIcon className={styles["icon-style"]} />
+    help: <OutlineShieldcheckIcon className={styles["icon-style"]} />
 }
 /** 不同状态下组件展示的颜色 */
 const ShowColorClass: Record<string, string> = {
     error: styles["error-wrapper-bgcolor"],
     warning: styles["warning-wrapper-bgcolor"],
     success: styles["success-wrapper-bgcolor"],
-    help: styles["help-wrapper-bgcolor"]
+    help: styles["success-wrapper-bgcolor"]
 }
 
 export interface GlobalReverseStateProp {
@@ -313,8 +313,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
          * 级别顺序: 'error' > 'warning' > 'help' > 'success'
          */
         if (!isEnpriTraceAgent()) {
-            if (!systemProxy.Enable) status = "help"
-            if (!isReverseState) status = "help"
+            if (!systemProxy.Enable && !isReverseState) {
+                status = "help"
+            }
         }
         if (showChromeWarn) {
             status = "warning"
@@ -923,6 +924,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         timeInterval,
         isAlreadyChromePath,
         showMITMCertWarn,
+        state,
         stateNum,
         showCheckEngine,
         Array.from(runNodeList).length
