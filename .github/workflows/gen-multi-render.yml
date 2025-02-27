@@ -28,7 +28,7 @@ jobs:
                   cache: "yarn"
                   cache-dependency-path: ${{ env.RENDER_PATH }}/src/main/yarn.lock
 
-            - run: echo ${{ github.ref }}
+            - run: echo ${{ github.ref_name }}
 
             - name: "Install Render Dependencies"
               run: yarn install-render
