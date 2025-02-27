@@ -280,7 +280,11 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                                 </Tooltip>
                             )}
 
-                            <div className={classNames(styles["name"], "yakit-content-single-ellipsis")}>
+                            <div
+                                className={classNames("yakit-content-single-ellipsis", styles["name"], {
+                                    [styles["name-active"]]: !info.isLeaf
+                                })}
+                            >
                                 {info.name}
                             </div>
                         </div>
@@ -306,7 +310,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 })
 
 export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((props) => {
-    const {info, foucsedKey, activeInfo,setActivbeInfo, onJump, onContextMenu} = props
+    const {info, foucsedKey, activeInfo, setActivbeInfo, onJump, onContextMenu} = props
 
     // 获取详情
     const getDetail = useMemo(() => {
@@ -318,7 +322,7 @@ export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((pro
     }, [foucsedKey, info.id])
 
     const handleClick = useMemoizedFn(() => {
-        if(activeInfo?.id === info.id){
+        if (activeInfo?.id === info.id) {
             setActivbeInfo(undefined)
             return
         }
