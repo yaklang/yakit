@@ -192,6 +192,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             const currentIndex = extraSettingData.findIndex((item) => item.value === activeKey)
             const nextIndex = currentIndex === extraSettingData.length - 1 ? 0 : currentIndex + 1
             setActivbeInfo(undefined)
+            setAuditDetail([])
             setActiveKey(extraSettingData[nextIndex].value)
         }
     })
@@ -366,6 +367,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                                 activeKey={activeKey}
                                 onChange={(v) => {
                                     setActivbeInfo(undefined)
+                                    setAuditDetail([])
                                     setActiveKey(v)
                                 }}
                                 tabBarStyle={{marginBottom: 5}}
@@ -386,7 +388,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                     <div
                         className={styles["search-list"]}
                         style={{
-                            maxHeight: 230
+                            flex:1,
+                            overflow:"hidden"
                         }}
                     >
                         <RollingLoadList<AuditDetailItemProps>
@@ -405,6 +408,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                                 <AuditNodeSearchItem
                                     info={record}
                                     foucsedKey={activeInfo?.id || ""}
+                                    activeInfo={activeInfo}
                                     setActivbeInfo={setActivbeInfo}
                                     onJump={onJump}
                                     onContextMenu={onContextMenu}
