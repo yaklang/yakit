@@ -1,7 +1,5 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
 import styles from "./AuditSearchModal.module.scss"
 import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
@@ -12,7 +10,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RemoteGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
-import {YakScript} from "@/pages/invoker/schema"
 import {YakitHintWhite} from "@/components/yakitUI/YakitHint/YakitHint"
 import YakitTabs from "@/components/yakitUI/YakitTabs/YakitTabs"
 import emiter from "@/utils/eventBus/eventBus"
@@ -21,19 +18,17 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {Progress} from "antd"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AuditDetailItemProps, AuditYakUrlProps} from "../AuditCode/AuditCodeType"
 import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
-import {YakURLResource} from "@/pages/webShell/yakURLTree/data"
 import {AuditNodeSearchItem} from "../AuditCode/AuditCode"
-import {AuditResultCollapse, YakRiskCodemirror} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {YakRiskCodemirror} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
-import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
+export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const {visible, projectName, onClose} = props
     const [checked, setChecked] = useState<boolean>(true)
     const [keywords, setKeywords] = useState<string>("")
@@ -162,6 +157,9 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
 
         apiDebugPlugin({params: requestParams, token: tokenRef.current, isShowStartInfo: false})
             .then(() => {
+                if (auditSearchKeywordsRef.current) {
+                    auditSearchKeywordsRef.current?.onSetRemoteValues(keywords)
+                }
                 debugPluginStreamEvent.start()
                 setExecuting(true)
             })
@@ -302,6 +300,16 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
         })
     })
 
+    const auditSearchKeywordsRef = useRef<YakitAutoCompleteRefProps>({
+        ...defYakitAutoCompleteRef
+    })
+    const onSelectKeywords = useMemoizedFn((value) => {
+        setKeywords(value)
+        setTimeout(() => {
+            onSearch()
+        }, 200)
+    })
+
     return (
         <YakitHintWhite
             isDrag={true}
@@ -323,15 +331,24 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                     <div className={styles["title"]}>搜索</div>
                     <div className={styles["header"]}>
                         <div className={styles["filter-box"]}>
-                            <YakitInput.Search
-                                ref={inputRef}
+                            <YakitAutoComplete
+                                ref={auditSearchKeywordsRef}
+                                isCacheDefaultValue={false}
+                                cacheHistoryDataKey={RemoteGV.AuditCodeKeywords}
+                                onSelect={onSelectKeywords}
                                 value={keywords}
-                                onChange={(e) => setKeywords(e.target.value)}
-                                placeholder='请输入关键词搜索'
-                                onSearch={onSearch}
-                                allowClear={false}
-                                onPressEnter={onPressEnter}
-                            />
+                                isInit={false}
+                            >
+                                <YakitInput.Search
+                                    ref={inputRef}
+                                    value={keywords}
+                                    onChange={(e) => setKeywords(e.target.value)}
+                                    placeholder='请输入关键词搜索'
+                                    onSearch={onSearch}
+                                    allowClear={false}
+                                    onPressEnter={onPressEnter}
+                                />
+                            </YakitAutoComplete>
                         </div>
                         <div className={styles["extra"]}>
                             <YakitCheckbox
@@ -388,8 +405,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
                     <div
                         className={styles["search-list"]}
                         style={{
-                            flex:1,
-                            overflow:"hidden"
+                            flex: 1,
+                            overflow: "hidden"
                         }}
                     >
                         <RollingLoadList<AuditDetailItemProps>
@@ -426,4 +443,4 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = (props) => {
             }
         />
     )
-}
+})
