@@ -146,3 +146,16 @@ export const grpcFetchSpecifiedYakVersionHash: APIFunc<{version: string; config:
             })
     })
 }
+
+/** @name 获取本地Yak引擎的校验Hash值 */
+export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("CalcEngineSha265")
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取本地引擎 hash 失败:" + e)
+                reject(e)
+            })
+    })
+}

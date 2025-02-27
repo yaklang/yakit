@@ -15,6 +15,7 @@ import {
     grpcFetchLatestYakitVersion,
     grpcFetchLocalYakitVersion,
     grpcFetchLocalYakVersion,
+    grpcFetchLocalYakVersionHash,
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
 
@@ -95,7 +96,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             if (!isEnpriTraceAgent()) setLog(["检查软件是否有更新..."])
             else setLog([])
 
-            if (SystemInfo.isDev) {
+            if (false && SystemInfo.isDev) {
                 setLog((old) => old.concat(["开发环境，直接连接引擎"]))
                 setTimeout(() => {
                     handleLinkLocalEnging()
@@ -210,10 +211,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     // 远端
                     grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
                     // 本地
-                    ipcRenderer.invoke("CalcEngineSha265")
+                    grpcFetchLocalYakVersionHash()
                 ])
 
-                if (res1 === res2) {
+                if (res2.includes(res1)) {
                     setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {

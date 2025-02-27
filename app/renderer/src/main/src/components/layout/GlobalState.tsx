@@ -13,7 +13,7 @@ import {
     ShieldCheckIcon as AllShieldCheckIcon,
     SuccessIcon,
     WarningIcon,
-    RocketIcon,
+    RocketIcon
 } from "./globalStateIcon"
 import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
@@ -34,7 +34,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import {grpcFetchBuildInYakVersion, grpcFetchLocalYakVersion, grpcFetchSpecifiedYakVersionHash} from "@/apiUtils/grpc"
+import {grpcFetchBuildInYakVersion, grpcFetchLocalYakVersion, grpcFetchLocalYakVersionHash, grpcFetchSpecifiedYakVersionHash} from "@/apiUtils/grpc"
 import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
@@ -276,9 +276,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 // 远端
                 grpcFetchSpecifiedYakVersionHash({version: localYaklang, config: {timeout: 3000}}, true),
                 // 本地
-                ipcRenderer.invoke("CalcEngineSha265")
+                grpcFetchLocalYakVersionHash()
             ])
-            if (res1 === res2) {
+            if (res2.includes(res1)) {
                 setShowCheckEngine(false)
             } else {
                 setShowCheckEngine(true)

@@ -3,7 +3,8 @@ name: Build Multi-Platform Prod
 on:
     push:
         tags:
-            - "v*"
+            - "v*-*"
+            - "!v*-render"
 
 jobs:
     build_yakit:
@@ -11,6 +12,11 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
         steps:
             - uses: actions/checkout@v4
@@ -18,24 +24,26 @@ jobs:
               with:
                   node-version: 18.18.2
 
-            - run: echo ${{ github.ref }}
+            - run: echo ${{ github.ref_name }}
             - run: cp buildutil/zip /usr/local/bin/zip
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
 
-            - name: "Fetch Latest EngineVersion"
-              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
-            - run: | 
+            - name: "Download yakit-chrome-extension"
+              run: |
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+                      echo "Failed to download!" >&2
+                      exit 1
+                  }
+                  wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+              shell: bash
+
+            - name: "Fetch Latest Engine Version And Set To Env"
+              run: |
+                  wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
                   cat bins/engine-version.txt
                   YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
                   echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
-
-            - name: "Download Yak Engine via wget(MacOS)"
-              id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-            - name: "Download Yak Engine via wget(MacOS-arm64)"
-              id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
 
             - name: "Download Yak Engine via wget(Linux)"
               id: download-linux-engine
@@ -51,7 +59,21 @@ jobs:
               id: download-windows-leagacy-engine
               run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
 
+            - name: Signature Mac Engine
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+              shell: bash
+
+            - name: "Fetch Mac-Amd Sha256"
+              run: wget -O bins/yak_darwin_amd64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+            - name: "Fetch Mac-Arm Sha256"
+              run: wget -O bins/yak_darwin_arm64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
 
             - name: Echo Yakit Package Version To Env
               run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
@@ -65,7 +87,9 @@ jobs:
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
-              run: chmod +x ./scripts/electron-build.sh && ./scripts/electron-build.sh
+              run: |
+                  chmod +x ./packageScript/script/electron-builder.sh 
+                  ./packageScript/script/electron-builder.sh || { exit 1; }
               shell: bash
 
             - name: View Published Content
@@ -76,7 +100,9 @@ jobs:
                   # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
             - name: Check Yakit if the output is correct
-              run: chmod +x ./scripts/check-build-package.sh && ./scripts/check-build-package.sh Yakit
+              run: |
+                  chmod +x ./packageScript/script/check-build-package.sh 
+                  (./packageScript/script/check-build-package.sh Yakit) || { exit 1; }
               shell: bash
             - name: Upload Yakit(CE) Artifacts
               uses: actions/upload-artifact@v4
@@ -90,7 +116,7 @@ jobs:
                   retention-days: 1
 
             - name: Check EnpriTrace if the output is correct
-              run: ./scripts/check-build-package.sh EnpriTrace
+              run: (./packageScript/script/check-build-package.sh EnpriTrace) || { exit 1; }
               shell: bash
             - name: Upload Yakit(EE) Artifacts
               uses: actions/upload-artifact@v4
@@ -123,14 +149,14 @@ jobs:
             - run: ls
               name: Ls Published Artifacts...
 
-            - name: Create Release and Upload Assets
-              if: ${{ matrix.artifact == 'Yakit' }}
-              uses: ncipollo/release-action@v1
-              with:
-                  artifacts: ./*
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  name: Release ${{ github.ref_name }}
-                  tag: ${{ github.ref_name }}
+            # - name: Create Release and Upload Assets
+            #   if: ${{ matrix.artifact == 'Yakit' }}
+            #   uses: ncipollo/release-action@v1
+            #   with:
+            #       artifacts: ./*
+            #       token: ${{ secrets.GITHUB_TOKEN }}
+            #       name: Release ${{ github.ref_name }}
+            #       tag: ${{ github.ref_name }}
 
             - name: Generate OSS File Path
               run: |
