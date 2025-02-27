@@ -218,6 +218,9 @@
 
                 flex-shrink: 1; /* 允许这个元素被压缩 */
             }
+            .name-active{
+                color: #31343f;
+            }
         }
         .bug {
             color: var(--yakit-body-text-color);
