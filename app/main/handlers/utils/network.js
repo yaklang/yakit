@@ -155,10 +155,21 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
     if (url === "") {
         throw new Error(`No Find ${version} Hash Url`)
     }
+
+    const hashs = []
+    const hashTxt = path.join("bins", "engine-sha256.txt")
+    if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+        let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+        hashData = (hashData || "").replace(/\r?\n/g, "")
+        hashs.push(hashData)
+    }
+
     return axios.get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)}).then((response) => {
         const versionData = Buffer.from(response.data).toString("utf8")
         if (versionData.length > 0) {
-            return Buffer.from(response.data).toString("utf8")
+            let urlHash = Buffer.from(response.data).toString("utf8")
+            hashs.push(urlHash)
+            return hashs
         } else {
             throw new Error("校验值不存在")
         }

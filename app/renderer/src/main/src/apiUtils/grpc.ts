@@ -130,7 +130,7 @@ export const grpcFetchBuildInYakVersion: APINoRequestFunc<string> = (hiddenError
 }
 
 /** @name 获取指定Yak引擎版本号的校验Hash值 */
-export const grpcFetchSpecifiedYakVersionHash: APIFunc<{version: string; config: GrpcToHTTPRequestProps}, string> = (
+export const grpcFetchSpecifiedYakVersionHash: APIFunc<{version: string; config: GrpcToHTTPRequestProps}, string[]> = (
     request,
     hiddenError
 ) => {
