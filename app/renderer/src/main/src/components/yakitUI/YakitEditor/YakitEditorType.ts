@@ -85,6 +85,8 @@ export interface YakitEditorProps {
     highLightFind?: HighLightText[] | Selection[]
     highLightFindClass?: string
     isPositionHighLightCursor?: boolean
+    /** @name 配置项-是否禁用Unicode解码 */
+    disableUnicodeDecode?: boolean
 }
 
 /**
