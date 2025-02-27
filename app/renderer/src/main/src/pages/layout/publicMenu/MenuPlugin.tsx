@@ -14,6 +14,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 import classNames from "classnames"
 import styles from "./MenuPlugin.module.scss"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -44,6 +45,15 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
         ipcRenderer.invoke("open-customize-menu")
     })
 
+    const [restoreVisible, setRestoreVisible] = useState<boolean>(false)
+    const handleRestoreHint = () => {
+        onRestore()
+        setRestoreVisible(false)
+    }
+    const onClickRestore = useMemoizedFn(() => {
+        setListShow(false)
+        setRestoreVisible(true)
+    })
     const onRestore = useMemoizedFn(() => {
         ipcRenderer
             .invoke("DeleteAllNavigation", {Mode: CodeGV.PublicMenuModeValue})
@@ -147,7 +157,7 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                         <SMViewGridAddIcon />
                         自定义...
                     </div>
-                    <div className={classNames(styles["btn-style"], styles["restore-style"])} onClick={onRestore}>
+                    <div className={classNames(styles["btn-style"], styles["restore-style"])} onClick={onClickRestore}>
                         复原菜单
                     </div>
                 </div>
@@ -235,6 +245,16 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
                     </div>
                 </div>
             </div>
+            {/* 复原菜单提醒 */}
+            <YakitHint
+                visible={restoreVisible}
+                title={"复原菜单提醒"}
+                content={"确认复原后，将重置常用插件菜单栏。是否确认复原？"}
+                onOk={handleRestoreHint}
+                onCancel={() => {
+                    setRestoreVisible(false)
+                }}
+            />
         </div>
     )
 })
