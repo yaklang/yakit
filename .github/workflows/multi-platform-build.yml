@@ -192,7 +192,7 @@ jobs:
                   if [ "${{ inputs.version }}" = "ce" ]; then
                     echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=CSG" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irify" ]; then
@@ -359,7 +359,7 @@ jobs:
               run:
                   ls ./release
                   # EnpriTraceAgent    -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
-                  # EnpriTrace         -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+                  # CSG         -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # Yakit              -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRify           -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
