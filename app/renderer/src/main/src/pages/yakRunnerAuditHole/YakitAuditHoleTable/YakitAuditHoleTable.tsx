@@ -172,8 +172,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             Filter: {
                 ...tableParams.Filter,
                 ...query,
-                Severity: query.Severity ? query.Severity : []
             }
+        }
+        if(query.Severity){
+            newParams.Filter.Severity = query.Severity
         }
         debugVirtualTableEvent.setP(newParams)
     }, [query, Pagination])

@@ -404,6 +404,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     // 切换劫持类型
     const onSetHijackResponseType = useMemoizedFn((val) => {
         switch (val) {
+            case "onlyOne":
+                allowHijackedResponseByRequest(currentPacketId)
+                break
             case "all":
                 if (currentPacketId > 0) {
                     allowHijackedResponseByRequest(currentPacketId)

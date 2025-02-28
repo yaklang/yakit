@@ -180,7 +180,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         try {
             // columnSchema
             const {minItems, maxItems = 50, items} = columnSchema
-            const {require, properties} = items
+            const {require = [], properties} = items
             const newColumns: any[] = []
             const defObj: DefaultObjProps = {}
             // uiSchema

@@ -46,13 +46,6 @@ jobs:
             - name: "zip EE Render"
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
-            # SE 版本暂时不需要, 需要时可解开注释
-            # - name: "Build SE Render"
-            #   working-directory: ./
-            #   run: yarn build-render-simple-enterprise
-            # - name: "zip EE Render"
-            #   run: cd ${{ env.RENDER_PATH }} && zip -r se.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
-
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
 

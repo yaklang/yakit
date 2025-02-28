@@ -22,12 +22,14 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {defaultAdvancedConfigShow} from "@/defaultConstants/HTTPFuzzerPage"
 import {v4 as uuidv4} from "uuid"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
-import {getRemoteValue} from "@/utils/kv"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {HTTPFlowBodyByIdRequest} from "@/components/HTTPHistory"
 import {setClipboardText} from "@/utils/clipboard"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import { useWhyDidYouUpdate } from "ahooks"
+import {useWhyDidYouUpdate} from "ahooks"
 const {ipcRenderer} = window.require("electron")
+
+const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
 
 interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     defaultHttps?: boolean
@@ -79,11 +81,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     )
 
     const [system, setSystem] = useState<YakitSystem>("Darwin")
+    const [disableUnicodeDecode, setDisableUnicodeDecode] = useState<boolean>(false)
 
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
             setSystem(systemType)
         })
+
+        getRemoteValue(HTTP_PACKET_EDITOR_DisableUnicodeDecode)
+            .then((res) => {
+                const boolValue = res === "true" || res === true
+                setDisableUnicodeDecode(boolValue)
+            })
+            .catch((error) => {
+                setDisableUnicodeDecode(false)
+            })
     }, [])
 
     const rightMenuType: YakitEditorExtraRightMenuType[] = useMemo(() => {
@@ -202,6 +214,19 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     } catch (e) {
                         failed("editor exec auto-decode failed")
                     }
+                }
+            },
+            disableUnicodeDecode: {
+                menu: [
+                    {
+                        key: "disable-unicode-decode",
+                        label: disableUnicodeDecode ? "启用自动 Unicode 解码" : "禁用自动 Unicode 解码"
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    setDisableUnicodeDecode(!disableUnicodeDecode)
+
+                    setRemoteValue(HTTP_PACKET_EDITOR_DisableUnicodeDecode, `${!disableUnicodeDecode}`)
                 }
             }
         }
@@ -468,6 +493,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         webFuzzerValue,
         webSocketToServer,
         downstreamProxyStr,
+        disableUnicodeDecode,
         JSON.stringify(downbodyParams),
         onClickUrlMenu,
         onClickOpenBrowserMenu
@@ -478,6 +504,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             menuType={rightMenuType}
             readOnly={readOnly}
             contextMenu={rightContextMenu}
+            disableUnicodeDecode={disableUnicodeDecode}
             {...restProps}
             {...extraEditorProps}
         />

@@ -180,6 +180,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const [showBreak, setShowBreak, getShowBreak] = useGetState<boolean>(showLineBreaks)
     const [nowFontsize, setNowFontsize] = useState<number>(fontSize)
 
+    const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
     useEffect(() => {
         // 控制编辑器失焦
         if (disabled) {
@@ -833,7 +834,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     } catch (e) {}
                 })()
             }
-            if (props.type === "html" || props.type === "http") {
+            if ((props.type === "html" || props.type === "http") && !disableUnicodeDecodeRef.current) {
                 ;(() => {
                     // http html
                     const text = model.getValue()
@@ -962,7 +963,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             "_" +
                             range.endColumn,
                         ownerId: 3,
-                        range: new monaco.Range(range.startLineNumber, range.startColumn, range.endLineNumber, range.endColumn),
+                        range: new monaco.Range(
+                            range.startLineNumber,
+                            range.startColumn,
+                            range.endLineNumber,
+                            range.endColumn
+                        ),
                         options: {
                             isWholeLine: false,
                             className: highLightFindClass ? highLightFindClass : "hight-light-find-default-bg-color",
@@ -992,9 +998,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }, [editor])
     useEffect(() => {
         if (deltaDecorationsRef.current) {
+            disableUnicodeDecodeRef.current = props.disableUnicodeDecode
             deltaDecorationsRef.current()
         }
-    }, [JSON.stringify(highLightText), JSON.stringify(highLightFind)])
+    }, [JSON.stringify(highLightText), JSON.stringify(highLightFind), props.disableUnicodeDecode])
     // 定位高亮光标位置
     useDebounceEffect(
         () => {

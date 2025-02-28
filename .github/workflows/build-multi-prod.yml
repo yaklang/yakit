@@ -23,30 +23,35 @@ jobs:
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
 
+            - name: "Fetch Latest EngineVersion"
+              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
+            - run: | 
+                  cat bins/engine-version.txt
+                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+
             - name: "Download Yak Engine via wget(MacOS)"
               id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
             - name: "Download Yak Engine via wget(MacOS-arm64)"
               id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/latest/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
 
             - name: "Download Yak Engine via wget(Linux)"
               id: download-linux-engine
-              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/latest/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
             - name: "Download Yak Engine via wget(Linux-arm64)"
               id: download-linux-engine-arm64
-              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/latest/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
 
             - name: "Download Yak Engine via wget(Windows)"
               id: download-windows-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/latest/yak_windows_amd64.exe && zip ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
             - name: "Download Yak Legacy Engine via wget(Windows)"
               id: download-windows-leagacy-engine
-              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/latest/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
-            - name: "Fetch Latest EngineVersion"
-              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
-            - run: ls ./bins && cat bins/engine-version.txt
+
 
             - name: Echo Yakit Package Version To Env
               run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
