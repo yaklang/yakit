@@ -118,7 +118,7 @@ FunctionEnd
             StrCpy $EXE_NAME "EnpriTrace"
         ${Else}
             ; 默认为 渗透测试平台V2.0
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V1.0_InstallPath"
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "渗透测试平台V2.0_InstallPath"
             StrCpy $EXE_NAME "渗透测试平台V2.0"
         ${EndIf}
     ${EndIf}
