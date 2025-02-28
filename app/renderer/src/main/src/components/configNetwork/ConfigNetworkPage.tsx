@@ -1040,7 +1040,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
 
     const onOk = useMemoizedFn(() => {
         const AuthInfos = data.map((item) => ({
-            AuthUsername: item.AuthPassword,
+            AuthUsername: item.AuthUsername,
             AuthPassword: item.AuthPassword,
             AuthType: item.AuthType,
             Host: item.Host,
