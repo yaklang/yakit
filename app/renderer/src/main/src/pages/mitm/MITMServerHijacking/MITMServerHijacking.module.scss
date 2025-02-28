@@ -514,9 +514,12 @@
 }
 
 .unconfiguredIcon {
+    color: var(--yakit-body-text-color);
     svg {
-        color: var(--yakit-body-text-color);
         width: 16px;
         height: 16px;
+    }
+    &:hover {
+        color: var(--yakit-primary-5);
     }
 }

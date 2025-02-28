@@ -87,6 +87,7 @@ import {SolidBorderDocumentTextIcon} from "@/assets/icon/colors"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../mitm/MITMPage"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {WebsiteGV} from "@/enums/website"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const {ipcRenderer} = window.require("electron")
 
 interface ToolInfo {
@@ -1102,10 +1103,28 @@ const Home: React.FC<HomeProp> = (props) => {
                                     visible={pcapHintShow}
                                     heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
                                     title={pcapResult ? "已有网卡操作权限" : "当前引擎不具有网卡操作权限"}
+                                    width={600}
                                     content={
-                                        pcapResult
-                                            ? "网卡修复需要时间，请耐心等待"
-                                            : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"
+                                        pcapResult ? (
+                                            "网卡修复需要时间，请耐心等待"
+                                        ) : (
+                                            <>
+                                                Linux 与 MacOS
+                                                可通过设置权限与组为用户态赋予网卡完全权限。如无法修复可以执行命令行{" "}
+                                                <YakitTag
+                                                    enableCopy={true}
+                                                    color='yellow'
+                                                    copyText={`chmod +rw /dev/bpf*`}
+                                                ></YakitTag>
+                                                或者{" "}
+                                                <YakitTag
+                                                    enableCopy={true}
+                                                    color='purple'
+                                                    copyText={`sudo chmod +rw /dev/bpf*`}
+                                                ></YakitTag>
+                                                可以开放网卡读写权限
+                                            </>
+                                        )
                                     }
                                     okButtonText='开启 PCAP 权限'
                                     cancelButtonText={pcapResult ? "知道了～" : "稍后再说"}
