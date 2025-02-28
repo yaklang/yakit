@@ -32,9 +32,14 @@ on:
                 type: boolean
                 default: false
             engineVersion:
-                description: "Specify engine version(need check built-in engine)"
+                description: "Specify engine version(need check built-in engine"
                 required: false
                 type: string
+            noBuiltInYakVersion:
+                description: "No built-in yak version number"
+                required: false
+                type: boolean
+                default: false
             devTool:
                 description: "Display developer tools"
                 required: false
@@ -80,6 +85,8 @@ jobs:
                   cat bins/engine-version.txt
                   YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
                   echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+            - if: ${{ inputs.engine && inputs.noBuiltInYakVersion }}
+              run: rm ./bins/engine-version.txt
 
             - name: "Download Yak Engine via wget(MacOS)"
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
