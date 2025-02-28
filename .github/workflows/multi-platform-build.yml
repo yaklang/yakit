@@ -363,7 +363,7 @@ jobs:
                   # Yakit              -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRify           -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
-                  # EnpriTrace      -1.4.1-0426-linux-legacy-arm64.run
+                  # CSG      -1.4.1-0426-linux-legacy-arm64.run
 
             - name: Upload Yakit(CE) Artifacts Windows
               if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}

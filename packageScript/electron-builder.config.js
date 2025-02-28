@@ -13,13 +13,13 @@ const platform = process.env.PLATFORM
 switch (platform) {
     case "ee":
         appInfoOption = {
-            appId: "io.yaklang.enpritrace",
-            extraMetadata: {name: "enpritrace"},
-            productName: "EnpriTrace",
+            appId: "io.yaklang.CSG",
+            extraMetadata: {name: "CSG"},
+            productName: "CSG",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakiteelogo.icns"
-        linuxIcon = "app/assets/yakiteelogo.icns"
+        linuxIcon = "app/assets/yakiteelogo.png"
         winIcon = "app/assets/yakiteelogo.ico"
         nsisInstallerIcon = "app/assets/yakiteelogo.ico"
         nsisUninstallerIcon = "app/assets/yakiteelogo.ico"

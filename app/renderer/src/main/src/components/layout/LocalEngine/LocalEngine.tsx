@@ -242,6 +242,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setTimeout(() => {
                             handleLinkLocalEnging()
                         }, 500)
+                    
+                    }
+                    if (!!buildInYak.current && buildInYak.current.startsWith("dev/")) {
+                        handleLinkLocalEnging()
                         return
                     }
 
@@ -254,8 +258,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
                         setShowYak(true)
                     } else {
-                        setLog((old) => old.concat(["引擎无更新"]))
-                        handleCheckEngineSource(currentYak.current)
+                        if (!!currentYak.current && !!buildInYak.current && buildInYak.current > currentYak.current) {
+                            setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
+                            setShowYak(true)
+                        } else {
+                            setLog((old) => old.concat(["引擎无更新"]))
+                            handleCheckEngineSource(currentYak.current)
+                        }
                     }
                 } else {
                     setLog((old) => old.concat([`错误: ${res1.reason}`]))
