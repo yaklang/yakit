@@ -569,6 +569,10 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     onClickUrlMenu?: () => void
     onClickOpenBrowserMenu?: () => void
     onClickOpenPacketNewWindowMenu?: () => void
+
+    fixContentType?: string
+    originalContentType?: string
+    fixContentTypeHoverMessage?: string
 }
 
 export type RenderTypeOptionVal = "beautify" | "render"
@@ -1211,6 +1215,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             onClickUrlMenu={props.onClickUrlMenu}
                             onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
                             onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
+                            fixContentType={props.fixContentType}
+                            originalContentType={props.originalContentType}
+                            fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
                             {...props.extraEditorProps}
                         />
                     )}

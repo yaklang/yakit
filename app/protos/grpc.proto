@@ -4756,6 +4756,7 @@ message FuzzerResponse {
 
   string RuntimeID = 53;
   bool Discard = 54;
+
   bool IsAutoFixContentType = 55;
   string OriginalContentType = 59;
   string FixContentType = 60;

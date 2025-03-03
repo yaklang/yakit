@@ -254,6 +254,11 @@ export interface FuzzerResponse {
 
     RuntimeID: string
     Discard: boolean
+
+    IsAutoFixContentType: boolean
+    OriginalContentType: string
+    FixContentType: string
+    IsSetContentTypeOptions: boolean
 }
 
 export interface HistoryHTTPFuzzerTask {
@@ -2978,7 +2983,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         setShowSuccess,
         size = "small",
         showConcurrentAndLoad,
-        selectionByteCount
+        selectionByteCount,
     } = props
 
     if (onlyOneResponse) {
@@ -2997,6 +3002,11 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
                 ) : (
                     <YakitTag>
                         {rsp.BodyLength}bytes / {rsp.DurationMs}ms
+                    </YakitTag>
+                )}
+                {rsp.IsAutoFixContentType && (
+                    <YakitTag color='danger'>
+                        <Tooltip title='Content-Type被修改，修改前的内容展示在对应字段旁'>Content-Type</Tooltip>
                     </YakitTag>
                 )}
             </>
@@ -3391,6 +3401,9 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                                     }
                                 })
                             }}
+                            fixContentType={fuzzerResponse.FixContentType}
+                            originalContentType={fuzzerResponse.OriginalContentType}
+                            fixContentTypeHoverMessage={fuzzerResponse.IsSetContentTypeOptions === true ? "返回包中设置了X-Content-Type-Options字段，content-type是否应该被修复请关注此字段" : ""}
                             {...otherEditorProps}
                         />
                     }
