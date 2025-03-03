@@ -1,10 +1,6 @@
 # 解码 p12 文件
 echo "$CERT_BASE64" | base64 --decode >cert.p12
 
-# 将证书路径和密码设置为环境变量, 供打包使用
-# echo "CSC_LINK=$(pwd)/cert.p12" >>$GITHUB_ENV
-# echo "CSC_KEY_PASSWORD=$CERT_PASSWORD" >>$GITHUB_ENV
-
 ls -la cert.p12
 
 # 创建一个临时钥匙串，并导入证书（这里不设置密码）
@@ -23,8 +19,9 @@ CERT_ID=$(security find-identity -v -p codesigning | grep "$TEAM_ID" | head -n1 
 echo "Using certificate: $CERT_ID"
 
 # 对 yak 可执行文件进行签名（请替换为你的可执行文件路径）
+echo "signing mac amd64 engine"
 codesign --timestamp --options runtime --sign "$CERT_ID" ./bins/yak_darwin_amd64
 zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-
+echo "signing mac arm64 engine"
 codesign --timestamp --options runtime --sign "$CERT_ID" ./bins/yak_darwin_arm64
 zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64

@@ -13,7 +13,7 @@ import {
     ShieldCheckIcon as AllShieldCheckIcon,
     SuccessIcon,
     WarningIcon,
-    RocketIcon,
+    RocketIcon
 } from "./globalStateIcon"
 import {showConfigSystemProxyForm, showConfigChromePathForm} from "@/utils/ConfigSystemProxy"
 import {showModal} from "@/utils/showModal"
@@ -278,7 +278,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 // 本地
                 ipcRenderer.invoke("CalcEngineSha265")
             ])
-            if (res1 === res2) {
+            if (res1.includes(res2)) {
                 setShowCheckEngine(false)
             } else {
                 setShowCheckEngine(true)

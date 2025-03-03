@@ -213,7 +213,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     ipcRenderer.invoke("CalcEngineSha265")
                 ])
 
-                if (res1 === res2) {
+                if (res1.includes(res2)) {
                     setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {

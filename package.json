@@ -25,12 +25,12 @@
     "pack-win": "env-cmd -e nonMacNormal -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
     "pack-win-legacy": "env-cmd -e nonMacLegacy -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
     "pack-win-ee": "env-cmd -e nonMacNormal,EE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
-    "pack-win-ee-legacy": "env-cmd -e nonMacLegacy,EE -r packageScript/.env-cmdrc THE_LEGACY=true  electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-ee-legacy": "env-cmd -e nonMacLegacy,EE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
     "pack-win-se": "env-cmd -e nonMacNormal,SE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
     "pack-win-se-legacy": "env-cmd -e nonMacLegacy,SE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
 
 
-    "pack-mac": "env-cmd -e macNormal -r packageScript/.env-cmdrc electron-builder build --mac --config packageScript/electron-builder-mac.yaml --config ./packageScript/electron-builder.config.js",
+    "pack-mac": "env-cmd -e macNormal -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
     "pack-mac-legacy": "env-cmd -e macLegacy -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
     "pack-mac-ee": "env-cmd -e macNormal,EE -r ./packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
     "pack-mac-ee-legacy": "env-cmd -e macLegacy,EE -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",

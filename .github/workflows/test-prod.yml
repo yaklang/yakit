@@ -23,7 +23,7 @@ jobs:
               with:
                   node-version: 18.18.2
 
-            - run: echo ${{ github.ref }}
+            - run: echo ${{ github.ref_name }}
             - run: cp buildutil/zip /usr/local/bin/zip
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
