@@ -229,6 +229,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         return
                     }
 
+                    if (!!buildInYak.current && buildInYak.current.startsWith("dev/")) {
+                        handleLinkLocalEnging()
+                        return
+                    }
+
                     if (isResetBuiltInReason.current && !!buildInYak.current) {
                         setShowYak(true)
                         return
