@@ -146,7 +146,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         highLightClass,
         highLightFind = [],
         highLightFindClass,
-        isPositionHighLightCursor
+        isPositionHighLightCursor,
+        fixContentType,
+        originalContentType,
+        fixContentTypeHoverMessage
     } = props
 
     const systemRef = useRef<YakitSystem>("Darwin")
@@ -739,6 +742,9 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const deltaDecorationsRef = useRef<() => any>()
     const highLightTextFun = useMemoizedFn(() => highLightText)
     const highLightFindFun = useMemoizedFn(() => highLightFind)
+    const fixContentTypeFun = useMemoizedFn(() => fixContentType)
+    const originalContentTypeFun = useMemoizedFn(() => originalContentType)
+    const fixContentTypeHoverMessageFun = useMemoizedFn(() => fixContentTypeHoverMessage)
     useEffect(() => {
         if (!editor) {
             return
@@ -863,6 +869,42 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
                 })()
             }
+            
+            ;(() => {
+                const targetValue = fixContentTypeFun()
+                if (!targetValue) return
+                const text = model.getValue()
+                let match
+
+                // 匹配 Content-Type: 后面的值（非贪婪匹配，避免匹配多余空格）
+                const regex = /Content-Type:\s*(.+?)(?=\s|$)/gi
+
+                while ((match = regex.exec(text)) !== null) {
+                    const contentTypeValue = match[1].trim() // 获取 Content-Type 后的值并去除多余空格
+
+                    if (contentTypeValue === targetValue) {
+                        // 计算 Content-Type: 后具体值的起始位置，避免空格问题
+                        const textBeforeMatch = text.substring(match.index, regex.lastIndex) // 获取匹配到的完整文本
+                        const contentStartIndex = match.index + textBeforeMatch.indexOf(contentTypeValue) // 确保起始位置精确匹配
+
+                        const start = model.getPositionAt(contentStartIndex)
+                        const end = model.getPositionAt(match.index + match[0].length)
+
+                        dec.push({
+                            id: "decode" + match.index,
+                            ownerId: 1,
+                            range: new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column),
+                            options: {
+                                className: "unicode-decode",
+                                hoverMessage: {value: fixContentTypeHoverMessageFun()},
+                                afterContentClassName: "unicode-decode",
+                                after: {content: originalContentTypeFun(), inlineClassName: "unicode-decode-after"}
+                            }
+                        } as IModelDecoration)
+                    }
+                }
+            })()
+
             ;(() => {
                 // all
                 const keywordRegExp = /\r?\n/g
@@ -1001,7 +1043,13 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             disableUnicodeDecodeRef.current = props.disableUnicodeDecode
             deltaDecorationsRef.current()
         }
-    }, [JSON.stringify(highLightText), JSON.stringify(highLightFind), props.disableUnicodeDecode])
+    }, [
+        JSON.stringify(highLightText),
+        JSON.stringify(highLightFind),
+        props.disableUnicodeDecode,
+        props.fixContentType,
+        props.originalContentType
+    ])
     // 定位高亮光标位置
     useDebounceEffect(
         () => {

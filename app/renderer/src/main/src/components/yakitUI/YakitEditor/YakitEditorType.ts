@@ -87,6 +87,9 @@ export interface YakitEditorProps {
     isPositionHighLightCursor?: boolean
     /** @name 配置项-是否禁用Unicode解码 */
     disableUnicodeDecode?: boolean
+    fixContentType?: string
+    originalContentType?: string
+    fixContentTypeHoverMessage?: string
 }
 
 /**
