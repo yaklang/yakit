@@ -18,28 +18,34 @@
     "build-render-test-simple-enterprise": "cd app/renderer/src/main && yarn build-test-simple-enterprise",
     "dev": "concurrently -k \"yarn start-render\" \"wait-on tcp:3000 && yarn start-electron \" ",
     "postinstall": "electron-builder install-app-deps",
-    "pack-win": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --win",
-    "pack-win-legacy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false THE_LEGACY=true  electron-builder build --win --config ./multibuilder/electron-builder-legacy.yaml",
-    "pack-win-ee": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --win --config ./multibuilder/electron-builder-ee.yaml",
-    "pack-win-ee-legacy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false THE_LEGACY=true  electron-builder build --win --config ./multibuilder/electron-builder-ee-legacy.yaml",
-    "pack-win-se": "electron-builder build --win --config ./multibuilder/electron-builder-se.yaml",
-    "pack-win-se-legacy": "cross-env THE_LEGACY=true  electron-builder build --win --config ./multibuilder/electron-builder-se-legacy.yaml",
-    "pack-mac": "electron-builder build --mac",
-    "pack-sign-mac": "electron-builder build --mac --config ./packageScript/electron-builder-mac.yaml",
-    "pack-mac-legacy": "electron-builder build --mac --config ./multibuilder/electron-builder-legacy.yaml",
-    "pack-sign-mac-legacy": "cross-env THE_LEGACY=true electron-builder build --mac --config ./packageScript/electron-builder-mac-legacy.yaml",
-    "pack-mac-ee": "electron-builder build --mac --config ./multibuilder/electron-builder-ee.yaml",
-    "pack-sign-mac-ee": "electron-builder build --mac --config ./packageScript/electron-builder-mac-ee.yaml",
-    "pack-mac-ee-legacy": "electron-builder build --mac --config ./multibuilder/electron-builder-ee-legacy.yaml",
-    "pack-sign-mac-ee-legacy": "cross-env THE_LEGACY=true electron-builder build --mac --config ./packageScript/electron-builder-mac-ee-legacy.yaml",
-    "pack-mac-se": "electron-builder build --mac --config ./multibuilder/electron-builder-se.yaml",
-    "pack-mac-se-legacy": "electron-builder build --mac --config ./multibuilder/electron-builder-se-legacy.yaml",
-    "pack-linux": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --linux",
-    "pack-linux-legacy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false THE_LEGACY=true  electron-builder build --linux --config ./multibuilder/electron-builder-legacy.yaml",
-    "pack-linux-ee": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder build --linux --config ./multibuilder/electron-builder-ee.yaml",
-    "pack-linux-ee-legacy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false THE_LEGACY=true  electron-builder build --linux --config ./multibuilder/electron-builder-ee-legacy.yaml",
-    "pack-linux-se": "electron-builder build --linux --config ./multibuilder/electron-builder-se.yaml",
-    "pack-linux-se-legacy": "cross-env THE_LEGACY=true  electron-builder build --linux --config ./multibuilder/electron-builder-se-legacy.yaml",
+
+
+
+
+    "pack-win": "env-cmd -e nonMacNormal -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-legacy": "env-cmd -e nonMacLegacy -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-ee": "env-cmd -e nonMacNormal,EE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-ee-legacy": "env-cmd -e nonMacLegacy,EE -r packageScript/.env-cmdrc THE_LEGACY=true  electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-se": "env-cmd -e nonMacNormal,SE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
+    "pack-win-se-legacy": "env-cmd -e nonMacLegacy,SE -r packageScript/.env-cmdrc electron-builder build --win --config ./packageScript/electron-builder.config.js",
+
+
+    "pack-mac": "env-cmd -e macNormal -r packageScript/.env-cmdrc electron-builder build --mac --config packageScript/electron-builder-mac.yaml --config ./packageScript/electron-builder.config.js",
+    "pack-mac-legacy": "env-cmd -e macLegacy -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
+    "pack-mac-ee": "env-cmd -e macNormal,EE -r ./packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
+    "pack-mac-ee-legacy": "env-cmd -e macLegacy,EE -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
+    "pack-mac-se": "env-cmd -e macNormal,SE -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
+    "pack-mac-se-legacy": "env-cmd -e macLegacy,SE -r packageScript/.env-cmdrc electron-builder build --mac --config ./packageScript/electron-builder.config.js",
+
+    "pack-linux": "env-cmd -e nonMacNormal -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+    "pack-linux-legacy": "env-cmd -e nonMacLegacy -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+    "pack-linux-ee": "env-cmd -e nonMacNormal,EE -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+    "pack-linux-ee-legacy": "env-cmd -e nonMacLegacy,EE -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+    "pack-linux-se": "env-cmd -e nonMacNormal,SE -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+    "pack-linux-se-legacy": "env-cmd -e nonMacLegacy,SE -r packageScript/.env-cmdrc electron-builder build --linux --config ./packageScript/electron-builder.config.js",
+
+
+
     "electron-publish": "electron-builder --publish always -mwl",
     "electron-publish-legacy": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-legacy.yaml",
     "electron-publish-ee": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-ee.yaml",
@@ -47,7 +53,8 @@
     "electron-publish-se": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-se.yaml",
     "electron-publish-se-legacy": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-se-legacy.yaml",
     "release-enpritrace": "electron-builder --publish always -mwl --config ./multibuilder/enpritrace.yml",
-    "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml"
+    "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml",
+    "release-render": "cd app/renderer/src/main && yarn release"
   },
   "keywords": [],
   "author": "",
@@ -57,6 +64,7 @@
     "concurrently": "^6.2.0",
     "electron": "27.0.0",
     "electron-builder": "23.6.0",
+    "env-cmd": "^10.1.0",
     "protoc-gen-ts": "^0.3.9",
     "typescript": "^4.1.2",
     "wait-on": "^6.0.0",
@@ -68,7 +76,6 @@
     "axios": "^0.26.1",
     "chrome-launcher": "^0.15.0",
     "compressing": "^1.8.0",
-    "cross-env": "^7.0.3",
     "dompurify": "^3.0.5",
     "electron-is-dev": "^2.0.0",
     "electron-updater": "^4.3.9",

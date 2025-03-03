@@ -3,7 +3,8 @@ name: Build Multi-Platform Prod
 on:
     push:
         tags:
-            - "v*"
+            - "v*-*"
+            - "!v*-render"
 
 jobs:
     build_yakit:
@@ -25,7 +26,7 @@ jobs:
 
             - name: "Fetch Latest EngineVersion"
               run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
-            - run: | 
+            - run: |
                   cat bins/engine-version.txt
                   YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
                   echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
@@ -50,8 +51,6 @@ jobs:
             - name: "Download Yak Legacy Engine via wget(Windows)"
               id: download-windows-leagacy-engine
               run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
-
-
 
             - name: Echo Yakit Package Version To Env
               run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
