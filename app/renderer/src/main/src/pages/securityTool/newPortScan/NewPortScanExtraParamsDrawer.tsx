@@ -428,7 +428,6 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                                     </Tooltip>
                                 </div>
                             }
-                            rules={[{required: true, message: "请输入扫描端口"}]}
                             initialValue={defaultPorts}
                         >
                             <YakitInput.TextArea rows={3} />
