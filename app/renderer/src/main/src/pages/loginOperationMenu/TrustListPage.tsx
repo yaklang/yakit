@@ -216,7 +216,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 const d = isInit ? res.data : response.data.concat(res.data)
                 setResponse({
                     ...res,
-                    data: d
+                    data: d || []
                 })
                 if (isInit) {
                     setIsRefresh((prevIsRefresh) => !prevIsRefresh)
