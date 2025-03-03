@@ -307,6 +307,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
                         UserMenusMap["pluginAudit"],
+                        UserMenusMap["misstatement"],
                         ...signOutMenu
                     ]
                     if (dynamicConnect) {
