@@ -12,7 +12,7 @@ import {ShareValueProps, newWebFuzzerTab} from "@/pages/fuzzer/HTTPFuzzerPage"
 import {generateCSRFPocByRequest} from "@/pages/invoker/fromPacketToYakCode"
 import {StringToUint8Array} from "@/utils/str"
 import {showResponseViaResponseRaw} from "@/components/ShowInBrowser"
-import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
+import {openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {Modal} from "antd"
 import {execAutoDecode, execCodec} from "@/utils/encodec"
 import {YakitSystem} from "@/yakitGVDefine"
@@ -140,6 +140,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    openPacketNewWindow(url || "").catch((e) => {
+                        yakitNotify("error", `打开数据包失败: ${e}`)
+                    })
+
                     if (onClickUrlMenu) {
                         onClickUrlMenu()
                     } else {

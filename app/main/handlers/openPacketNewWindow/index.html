@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packet Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="content"></div>
+    <script>
+        const electron = require("electron")
+        const {ipcRenderer} = electron
+        console.log(electron);
+        ipcRenderer.invoke("QueryHTTPFlows", {
+            Page: 1,
+            PageSize: 10
+        }).then((data) => {
+            console.log(data)
+            const contentDiv = document.getElementById("content");
+            const resultDiv = document.createElement("div");
+            resultDiv.innerHTML = `<h3>HTTP Flow Results</h3><pre>${JSON.stringify(data, null, 2)}</pre>`;
+            document.body.appendChild(resultDiv);
+        }).catch((error) => {
+            console.log("Error querying HTTP flows:", error)
+            const errorDiv = document.createElement("div");
+            errorDiv.innerHTML = `<h3>Error</h3><pre>${JSON.stringify(error, null, 2)}</pre>`;
+            document.body.appendChild(errorDiv);
+        })
+    </script>
+</body>
+</html>
