@@ -213,10 +213,11 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
             params: params
         })
             .then((res) => {
-                const d = isInit ? res.data : response.data.concat(res.data)
+                const data = res.data || []
+                const d = isInit ? data : response.data.concat(data)
                 setResponse({
                     ...res,
-                    data: d || []
+                    data: d
                 })
                 if (isInit) {
                     setIsRefresh((prevIsRefresh) => !prevIsRefresh)
@@ -345,7 +346,7 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
                 }
                 data={response.data}
                 enableDrag={false}
-                renderKey='appid'
+                renderKey='id'
                 columns={columns}
                 useUpAndDown
                 pagination={{
