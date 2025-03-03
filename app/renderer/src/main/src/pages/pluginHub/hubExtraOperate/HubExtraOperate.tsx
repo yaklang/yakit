@@ -547,7 +547,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         return (
             <div className={styles["hub-extra-operate"]}>
                 {active === "local" && !!local && (
-                    <YakitCheckbox>
+                    <YakitCheckbox checked={local.OnlineScriptName}>
                         不下载{" "}
                         <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
                             <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />

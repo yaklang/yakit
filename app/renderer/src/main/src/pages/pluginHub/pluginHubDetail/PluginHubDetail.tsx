@@ -677,7 +677,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     onCallback={operateCallback}
                 />
             )
-        }, [operateRef.current, wrapperId, onlinePlugin, localPlugin])
+        }, [operateRef.current, active, wrapperId, onlinePlugin, localPlugin])
 
         const infoExtraNode = useMemo(() => {
             if (!onlinePlugin) return null
