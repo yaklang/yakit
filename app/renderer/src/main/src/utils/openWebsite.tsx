@@ -7,6 +7,10 @@ export const openExternalWebsite = (u: string) => {
     ipcRenderer.invoke("shell-open-external", u)
 }
 
+export const openPacketNewWindow = (u: string) => {
+    return ipcRenderer.invoke("open-packet-new-window", u)
+}
+
 export const openABSFile = (u: string) => {
     ipcRenderer.invoke("shell-open-abs-file", u)
 }
