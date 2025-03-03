@@ -330,16 +330,30 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
                     UserMenusMap["pluginAudit"],
+                    UserMenusMap["misstatement"],
                     ...signOutMenu
                 ]
                 if (userInfo.role !== "auditor") {
                     // 不为审核员时 移除插件管理
                     isNew = true
-                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["plugin-audit"].includes((item as YakitMenuItemProps).key)
+                    )
                 }
+
+                // 不为审核员或超级管理员时 移除误报记录
+                if (!["superAdmin", "auditor"].includes(userInfo.role || "")) {
+                    isNew = true
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["misstatement"].includes((item as YakitMenuItemProps).key)
+                    )
+                }
+                
                 if (isEnpriTraceAgent()) {
                     isNew = true
-                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "upload-data")
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["upload-data", "misstatement"].includes((item as YakitMenuItemProps).key)
+                    )
                 }
                 // 远程中时不显示发起远程 显示退出远程
                 if (dynamicConnect) {
