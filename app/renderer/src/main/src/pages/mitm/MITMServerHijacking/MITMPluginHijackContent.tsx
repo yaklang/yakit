@@ -166,9 +166,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         if (hasParamsCheckList.includes(tempShowPluginHistory)) {
             setShowPluginHistoryList([tempShowPluginHistory])
             emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistory].join(","))
-        } else {
-            setShowPluginHistoryList([])
-            emiter.emit("onHasParamsJumpHistory", "")
         }
     }, [compareHasParamsCheckList])
 
@@ -552,6 +549,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                         hasParamsCheckList={hasParamsCheckList}
                                         showPluginHistoryList={showPluginHistoryList}
                                         setShowPluginHistoryList={setShowPluginHistoryList}
+                                        tempShowPluginHistory={tempShowPluginHistory}
                                         setTempShowPluginHistory={setTempShowPluginHistory}
                                         curTabKey={curTabKey}
                                     />
@@ -652,6 +650,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                 showPluginHistoryList={showPluginHistoryList}
                                 setShowPluginHistoryList={setShowPluginHistoryList}
                                 curTabKey={curTabKey}
+                                tempShowPluginHistory={tempShowPluginHistory}
                                 setTempShowPluginHistory={setTempShowPluginHistory}
                             />
                         </YakitSpin>
