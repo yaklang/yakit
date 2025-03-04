@@ -188,7 +188,7 @@ service Yak {
 
   rpc ImportYakScript(ImportYakScriptRequest) returns (stream ImportYakScriptResult);
   rpc SetYakScriptSkipUpdate(SetYakScriptSkipUpdateRequest) returns (Empty);
-  rpc QueryYakScriptSkipUpdate(QueryYakScriptSkipUpdateRequest) returns (QueryYakScriptSkipUpdateResponse);
+  rpc QueryYakScriptSkipUpdate(QueryYakScriptRequest) returns (QueryYakScriptSkipUpdateResponse);
 
   // YakScript Group
   rpc QueryYakScriptGroup(QueryYakScriptGroupRequest) returns (QueryYakScriptGroupResponse);
@@ -4203,12 +4203,6 @@ message ImportYakScriptResult {
 
 message SetYakScriptSkipUpdateRequest{
   bool SkipUpdate = 1;
-  QueryYakScriptRequest Field = 2;
-  repeated int64 ID = 3;
-}
-
-message QueryYakScriptSkipUpdateRequest {
-  repeated int64 ID = 1;
   QueryYakScriptRequest Field = 2;
 }
 
