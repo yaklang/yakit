@@ -65,8 +65,6 @@ import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import useHoldGRPCStream, {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {isCommunityEdition} from "@/utils/envfile"
-import {WaterMark} from "@ant-design/pro-layout"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
@@ -301,15 +299,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         return groups
     }, [pageInfo.selectGroupListByKeyWord])
 
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition()) {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [])
-
     return (
-        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
                 <div
                     className={classNames(styles["left-wrapper"], {
@@ -344,7 +334,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     onSetSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
                 />
             </div>
-        </WaterMark>
     )
 }
 

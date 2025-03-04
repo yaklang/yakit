@@ -64,6 +64,11 @@ export const isCommunitySastScan = () => {
     return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan
 }
 
+/** EE SAST Scan  */
+export const isEnterpriseSastScan = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+}
+
 /** SAST Scan独立于Yakit企业版社区版之外，其自身拥有企业版  */
 export const isSastScan = () => {
     return (
