@@ -47,6 +47,7 @@ import {Tooltip} from "antd"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
+import {grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate} from "../utils/grpc"
 
 export interface HubExtraOperateRef {
     downloadedNext: (flag: boolean) => void
@@ -544,10 +545,35 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 .catch(() => {})
         })
 
+        const [skipUpdate, setSkipUpdate] = useState<boolean>(false)
+        useEffect(() => {
+            if (active === "local" && !!local) {
+                grpcQueryYakScriptSkipUpdate({
+                    ID: [local.Id]
+                }).then((res) => {
+                    setSkipUpdate(res.SkipUpdate)
+                }).catch(() => {
+                    setSkipUpdate(false)
+                })
+            } else {
+                setSkipUpdate(false)
+            }
+        }, [active, local])
+
         return (
             <div className={styles["hub-extra-operate"]}>
                 {active === "local" && !!local && (
-                    <YakitCheckbox>
+                    <YakitCheckbox
+                        checked={skipUpdate}
+                        onChange={() => {
+                            grpcSetYakScriptSkipUpdate({
+                                SkipUpdate: !skipUpdate,
+                                ID: [local.Id]
+                            }).then((res) => {
+                                setSkipUpdate(!skipUpdate)
+                            })
+                        }}
+                    >
                         不下载{" "}
                         <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
                             <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />

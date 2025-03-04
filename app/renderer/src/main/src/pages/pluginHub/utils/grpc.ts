@@ -180,11 +180,11 @@ export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undef
 }
 
 /** @name 查询插件批量下载是否跳过 */
-export interface QueryYakScriptSkipUpdateRequest {
-    ID?: number[]
+interface QueryYakScriptSkipUpdateRequest {
+    ID: number[]
     Field?: QueryYakScriptRequest
 }
-export interface QueryYakScriptSkipUpdateResponse {
+interface QueryYakScriptSkipUpdateResponse {
     SkipUpdate: boolean
 }
 export const grpcQueryYakScriptSkipUpdate: APIFunc<
@@ -197,23 +197,27 @@ export const grpcQueryYakScriptSkipUpdate: APIFunc<
             .then(resolve)
             .catch((e) => {
                 reject(e)
+                yakitNotify("error", e + "")
             })
     })
 }
 
 /** @name 设置插件批量下载是否跳过 */
-export interface SetYakScriptSkipUpdateRequest {
+interface SetYakScriptSkipUpdateRequest {
     SkipUpdate: boolean
-    ID?: number[]
+    ID: number[]
     Field?: QueryYakScriptRequest
 }
 export const grpcSetYakScriptSkipUpdate: APIFunc<SetYakScriptSkipUpdateRequest, unknown> = (request) => {
+    console.log(request);
+    
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("SetYakScriptSkipUpdate", request)
             .then(resolve)
             .catch((e) => {
                 reject(e)
+                yakitNotify("error", e + "")
             })
     })
 }

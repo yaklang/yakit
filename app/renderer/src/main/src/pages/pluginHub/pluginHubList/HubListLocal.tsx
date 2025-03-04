@@ -64,7 +64,7 @@ import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/
 import {Tooltip} from "antd"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
-import {grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {grpcFetchLocalPluginDetail, grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate} from "../utils/grpc"
 import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
 import {PluginGroupDrawer} from "../group/PluginGroupDrawer"
@@ -624,6 +624,55 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         )
     })
 
+    const [skipUpdate, setSkipUpdate] = useState<boolean>(false)
+    // 查询插件批量下载是否跳过
+    const queryYakScriptSkipUpdate = useMemoizedFn(() => {
+        const page: PluginListPageMeta = {
+            page: +response.Pagination.Page,
+            limit: +response.Pagination.Limit || 20
+        }
+        const queryFilters = {...getFilters()}
+        const querySearch = {...getSearch()}
+        const query: QueryYakScriptRequest = {
+            ...convertLocalPluginsRequestParams({
+                filter: queryFilters,
+                search: querySearch,
+                pageParams: page
+            })
+        }
+        grpcQueryYakScriptSkipUpdate({
+            ID: allChecked ? [] : selectList.map((item) => item.Id),
+            Field: allChecked ? query : undefined
+        }).then((res) => {
+            setSkipUpdate(res.SkipUpdate)
+        }).catch(() => {
+            setSkipUpdate(false)
+        })
+    })
+    // 设置插件批量下载是否跳过
+    const setYakScriptSkipUpdate = useMemoizedFn(() => {
+        const page: PluginListPageMeta = {
+            page: +response.Pagination.Page,
+            limit: +response.Pagination.Limit || 20
+        }
+        const queryFilters = {...getFilters()}
+        const querySearch = {...getSearch()}
+        const query: QueryYakScriptRequest = {
+            ...convertLocalPluginsRequestParams({
+                filter: queryFilters,
+                search: querySearch,
+                pageParams: page
+            })
+        }
+        grpcSetYakScriptSkipUpdate({
+            SkipUpdate: !skipUpdate,
+            ID: allChecked ? [] : selectList.map((item) => item.Id),
+            Field: allChecked ? query : undefined
+        }).then((res) => {
+            setSkipUpdate(!skipUpdate)
+        })
+    })
+
     /** ---------- 分组 Start ---------- */
     // 组抽屉列表
     const [pluginGroupMagDrawer, setPluginGroupMagDrawer] = useState<boolean>(false)
@@ -728,8 +777,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         () => {
             if (selectList.length || allChecked) {
                 getYakScriptGroupLocal(selectList.map((item) => item.ScriptName))
+                queryYakScriptSkipUpdate()
             } else {
                 setGroupList([])
+                setSkipUpdate(false)
             }
         },
         [selectList, allChecked],
@@ -1081,9 +1132,16 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             }
                             listHeaderRightExtra={
                                 <div className={styles["hub-list-header-right-extra"]}>
-                                    <YakitCheckbox>
+                                    <YakitCheckbox
+                                        disabled={!(selectList.length || allChecked)}
+                                        checked={skipUpdate}
+                                        onChange={setYakScriptSkipUpdate}
+                                    >
                                         不下载{" "}
-                                        <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
+                                        <Tooltip
+                                            title='勾选不下载插件后，批量下载插件时将跳过此插件'
+                                            align={{offset: [0, 10]}}
+                                        >
                                             <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
                                         </Tooltip>
                                     </YakitCheckbox>
