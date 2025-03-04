@@ -31,7 +31,7 @@ jobs:
 
             - name: "Download yakit-chrome-extension"
               run: |
-                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/yak/render/version.txt") || {
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
                       echo "Failed to download!" >&2
                       exit 1
                   }
