@@ -585,17 +585,21 @@ service Yak {
 
   // 操作项目的相关接口，通过设置 ProjectDatabase
   rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
-  rpc GetCurrentProject(Empty) returns (ProjectDescription);
+  rpc GetCurrentProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetCurrentProjectEx(GetCurrentProjectExRequest) returns (ProjectDescription);
+
   rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty);
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription);
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
   rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
@@ -1782,6 +1786,7 @@ message ImportProjectRequest {
   string Password = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -1821,7 +1826,11 @@ message GetProjectsRequest {
   Paging Pagination = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  string Type = 6;
+  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(sast)
+  string Type = 6; 
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // "project"(yakit) | "ssa_project"(sast)
+  string FrontendType = 7;
 }
 
 message ProjectDescription {
@@ -1855,15 +1864,31 @@ message SetCurrentProjectRequest {
   // ProjectName
   string ProjectName = 1;
   int64 Id = 2;
+  string Type = 3; // "project"(yakit) | "ssa_project"(sast) 
 }
+
+message GetCurrentProjectExRequest {
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+}
+
 
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
+  string Type = 3;  // "project"(yakit) | "ssa_project"(sast)
+}
+
+message GetDefaultProjectExRequest {
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
 }
 
 message QueryProjectDetailRequest {
   int64 Id = 1;
+}
+
+
+message GetTemporaryProjectExRequest{
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
 }
 
 
