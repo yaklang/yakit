@@ -444,10 +444,8 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
             return userInfo.companyName || ""
-        } else if (isSastScan()) {
-            return getEnpriTraceWaterMark("SastScan-试用版")
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark("EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(isSastScan() ? "SastScan-试用版" : "EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
