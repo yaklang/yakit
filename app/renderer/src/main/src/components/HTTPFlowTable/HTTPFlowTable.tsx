@@ -3720,28 +3720,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [props.params?.SourceType])
 
     const onHasParamsJumpHistory = useMemoizedFn((mitmHasParamsNames: string) => {
-        const mitmHasParamsNamesArr = mitmHasParamsNames.split(",")
-        let selectTypeList = params.SourceType?.split(",") || [""]
-        if (mitmHasParamsNamesArr[0] !== "" || !mitmHasParamsNamesArr.length) {
+        const mitmHasParamsNamesArr = mitmHasParamsNames.split(",").filter(item => item)
+        let selectTypeList = (params.SourceType?.split(",") || []).filter(item => item)
+        if (mitmHasParamsNamesArr.length) {
             selectTypeList = ["mitm", "scan"]
         } else {
             selectTypeList = selectTypeList.filter((item) => item !== "scan")
-            if (selectTypeList[0] === "" || !selectTypeList.length) {
+            if (!selectTypeList.length) {
                 selectTypeList = ["mitm"]
             }
         }
         const newParams = {...params, SourceType: selectTypeList.join(","), FromPlugin: mitmHasParamsNames}
-        if (JSON.stringify(params.SourceType?.split(",") || [""]) === JSON.stringify(selectTypeList)) {
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 20)
-        } else {
-            setParams(newParams)
-            setTimeout(() => {
-                emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
-            }, 20)
-        }
+        setParams(newParams)
+        setTimeout(() => {
+            updateData()
+            emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
+        }, 20)
     })
 
     const onMitmClearFromPlugin = useMemoizedFn(() => {

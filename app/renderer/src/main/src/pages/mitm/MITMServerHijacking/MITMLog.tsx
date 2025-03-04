@@ -21,9 +21,10 @@ interface MITMLogHeardExtraProps {
     sourceType: string
     onSetSourceType: (s: string) => void
     setShowPluginHistoryList: (s: string[]) => void
+    setTempShowPluginHistory?: (s: string) => void
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
-    const {sourceType, onSetSourceType, setShowPluginHistoryList} = props
+    const {sourceType, onSetSourceType, setShowPluginHistoryList, setTempShowPluginHistory} = props
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
@@ -152,6 +153,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         onChange={(checked) => {
                             emiter.emit("onMitmClearFromPlugin")
                             setShowPluginHistoryList([])
+                            setTempShowPluginHistory && setTempShowPluginHistory("")
+
                             if (checked) {
                                 const selectTypeList = [...(sourceType.split(",") || []), tag.value]
                                 onSetSourceType(selectTypeList.join(","))

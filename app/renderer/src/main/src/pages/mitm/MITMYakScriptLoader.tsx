@@ -203,6 +203,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         [style["history-icon-light"]]: showPluginHistoryList.includes(i.ScriptName)
                     })}
                     onClick={() => {
+                        setTempShowPluginHistory &&
+                            setTempShowPluginHistory(showPluginHistoryList.includes(i.ScriptName) ? "" : i.ScriptName)
+
                         // 单个
                         let arr = [...showPluginHistoryList]
                         if (arr.includes(i.ScriptName)) {
@@ -210,8 +213,6 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         } else {
                             arr = [i.ScriptName]
                         }
-
-                        setTempShowPluginHistory && setTempShowPluginHistory("")
 
                         setShowPluginHistoryList(arr)
                         emiter.emit("onHasParamsJumpHistory", arr.join(","))

@@ -937,6 +937,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }

@@ -38,6 +38,7 @@ interface MITMHijackedContentProps {
     loadedPluginLen: number
     onSelectAll: (e: boolean) => void
     setShowPluginHistoryList: (l: string[]) => void
+    setTempShowPluginHistory?: (s: string) => void
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
@@ -49,7 +50,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         downstreamProxyStr,
         loadedPluginLen,
         onSelectAll,
-        setShowPluginHistoryList
+        setShowPluginHistoryList,
+        setTempShowPluginHistory
     } = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward] = useState<"manual" | "log" | "passive">("log")
@@ -505,6 +507,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         sourceType={sourceType}
                         onSetSourceType={setSourceType}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 </div>
             </>

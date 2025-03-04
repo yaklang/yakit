@@ -166,9 +166,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         if (hasParamsCheckList.includes(tempShowPluginHistory)) {
             setShowPluginHistoryList([tempShowPluginHistory])
             emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistory].join(","))
-        } else {
-            setShowPluginHistoryList([])
-            emiter.emit("onHasParamsJumpHistory", "")
         }
     }, [compareHasParamsCheckList])
 
