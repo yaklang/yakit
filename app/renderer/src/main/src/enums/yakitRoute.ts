@@ -90,5 +90,7 @@ export enum YakitRoute {
     /**笔记本内容编辑页面 */
     Modify_Notepad = "modify-notepad",
     // YakRunner漏洞管理
-    YakRunner_Audit_Hole = "yakrunner-audit-hole"
+    YakRunner_Audit_Hole = "yakrunner-audit-hole",
+    // 系统配置（目前仅供SAST企业版配置水印）
+    System_Config = "system-config"
 }

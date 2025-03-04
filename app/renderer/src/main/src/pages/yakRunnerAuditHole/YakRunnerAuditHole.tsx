@@ -27,8 +27,6 @@ import {VulnerabilityTypePie} from "../risks/VulnerabilityTypePie/VulnerabilityT
 import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
-import {WaterMark} from "@ant-design/pro-layout"
-import {isCommunityEdition} from "@/utils/envfile"
 import {shallow} from "zustand/shallow"
 import { PageNodeItemProps, usePageInfo } from "@/store/pageInfo"
 import { YakitRoute } from "@/enums/yakitRoute"
@@ -71,12 +69,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     })
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition()) {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [])
+
     // 获取筛选展示状态
     useEffect(() => {
         getRemoteValue(RemoteGV.AuditHoleShow).then((value: string) => {
@@ -88,7 +81,6 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
         setRemoteValue(RemoteGV.AuditHoleShow, `${val}`)
     })
     return (
-        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
             <YakitSpin spinning={riskLoading}>
                 <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
                     <HoleQuery
@@ -107,7 +99,6 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                     />
                 </div>
             </YakitSpin>
-        </WaterMark>
     )
 }
 

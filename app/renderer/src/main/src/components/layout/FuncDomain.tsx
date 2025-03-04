@@ -28,7 +28,7 @@ import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan, showDevTool} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseSastScan, isSastScan, showDevTool} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
@@ -167,7 +167,8 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     controlAdmin: {key: "control-admin", label: "远程管理"},
     dynamicControl: {key: "dynamic-control", label: "发起远程"},
     closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
-    holeCollect: {key: "hole-collect", label: "漏洞汇总"}
+    holeCollect: {key: "hole-collect", label: "漏洞汇总"},
+    systemConfig: {key: "system-config", label: "系统配置"}
 }
 
 export interface FuncDomainProp {
@@ -314,8 +315,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["setPassword"],
                         UserMenusMap["pluginAudit"],
                         UserMenusMap["misstatement"],
+                        UserMenusMap["systemConfig"],
                         ...signOutMenu
                     ]
+                    // 仅在sast scan 企业版本时显示系统配置
+                    if (!isEnterpriseSastScan()) {
+                        cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "system-config")
+                    }
                     if (dynamicConnect) {
                         // 远程中时不显示发起远程 显示退出远程
                         cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "dynamic-control")
@@ -613,6 +619,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 }
                                                 if (key === "data-statistics") {
                                                     onOpenPage({route: YakitRoute.Data_Statistics})
+                                                }
+                                                if (key === "system-config") {
+                                                    onOpenPage({route: YakitRoute.System_Config})
                                                 }
                                                 if (key === "dynamic-control") {
                                                     setDynamicControlModal(true)

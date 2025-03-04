@@ -36,8 +36,6 @@ import {clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail
 import {clearMapFolderDetail, getMapFolderDetail, hasMapFolderDetail, setMapFolderDetail} from "./FileTreeMap/ChildMap"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import moment from "moment"
-import {WaterMark} from "@ant-design/pro-layout"
-import {isCommunityEdition} from "@/utils/envfile"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {CodeRangeProps, JumpSourceDataProps, RightAuditDetail} from "./RightAuditDetail/RightAuditDetail"
 import classNames from "classnames"
@@ -54,8 +52,8 @@ import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {FileNodeMapProps, FileTreeListProps} from "./FileTree/FileTreeType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
-import { LeftSideType } from "./LeftSideBar/LeftSideBarType"
-import { LeftSideBar } from "./LeftSideBar/LeftSideBar"
+import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
+import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -712,13 +710,6 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
     }, [])
 
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition()) {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [])
-
     const onSuccee = (path: string) => {
         onCloseCompileModal()
         setProjectName(path)
@@ -728,83 +719,79 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     }
 
     return (
-        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
-            <YakRunnerContext.Provider value={{store, dispatcher}}>
-                <div className={styles["audit-code"]} id='audit-code'>
-                    <div className={styles["audit-code-page"]}>
-                        <div className={styles["audit-code-body"]}>
-                            <YakitResizeBox
-                                freeze={!isUnShow}
-                                firstRatio={isUnShow ? "25px" : "300px"}
-                                firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
-                                lineDirection='right'
-                                firstMinSize={isUnShow ? 25 : 200}
-                                lineStyle={{width: 4}}
-                                secondMinSize={480}
-                                firstNode={
-                                    <LeftSideBar
-                                        fileTreeLoad={fileTreeLoad}
-                                        onOpenEditorDetails={onOpenEditorDetails}
-                                        isUnShow={isUnShow}
-                                        setUnShow={setUnShow}
-                                        active={active}
-                                        setActive={setActive}
-                                    />
-                                }
-                                secondNodeStyle={
-                                    isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
-                                }
-                                secondNode={
-                                    <YakitResizeBox
-                                        freeze={isShowAuditDetail}
-                                        secondRatio={!isShowAuditDetail ? "0px" : "300px"}
-                                        lineDirection='left'
-                                        firstMinSize={300}
-                                        lineStyle={{width: 4}}
-                                        firstNodeStyle={
-                                            !isShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}
-                                        }
-                                        secondNodeStyle={
-                                            !isShowAuditDetail
-                                                ? {padding: 0, maxWidth: 0, minWidth: 0}
-                                                : {overflow: "unset", padding: 0}
-                                        }
-                                        firstNode={
-                                            <div className={classNames(styles["audit-code-code"])}>
-                                                <div className={styles["code-container"]}>
-                                                    {onFixedEditorDetails(onChangeArea())}
-                                                </div>
+        <YakRunnerContext.Provider value={{store, dispatcher}}>
+            <div className={styles["audit-code"]} id='audit-code'>
+                <div className={styles["audit-code-page"]}>
+                    <div className={styles["audit-code-body"]}>
+                        <YakitResizeBox
+                            freeze={!isUnShow}
+                            firstRatio={isUnShow ? "25px" : "300px"}
+                            firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
+                            lineDirection='right'
+                            firstMinSize={isUnShow ? 25 : 200}
+                            lineStyle={{width: 4}}
+                            secondMinSize={480}
+                            firstNode={
+                                <LeftSideBar
+                                    fileTreeLoad={fileTreeLoad}
+                                    onOpenEditorDetails={onOpenEditorDetails}
+                                    isUnShow={isUnShow}
+                                    setUnShow={setUnShow}
+                                    active={active}
+                                    setActive={setActive}
+                                />
+                            }
+                            secondNodeStyle={
+                                isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                            }
+                            secondNode={
+                                <YakitResizeBox
+                                    freeze={isShowAuditDetail}
+                                    secondRatio={!isShowAuditDetail ? "0px" : "300px"}
+                                    lineDirection='left'
+                                    firstMinSize={300}
+                                    lineStyle={{width: 4}}
+                                    firstNodeStyle={!isShowAuditDetail ? {padding: 0, minWidth: "100%"} : {padding: 0}}
+                                    secondNodeStyle={
+                                        !isShowAuditDetail
+                                            ? {padding: 0, maxWidth: 0, minWidth: 0}
+                                            : {overflow: "unset", padding: 0}
+                                    }
+                                    firstNode={
+                                        <div className={classNames(styles["audit-code-code"])}>
+                                            <div className={styles["code-container"]}>
+                                                {onFixedEditorDetails(onChangeArea())}
                                             </div>
-                                        }
-                                        secondNode={
-                                            <>
-                                                {isShowAuditDetail && (
-                                                    <RightAuditDetail
-                                                        auditRightParams={auditRightParams}
-                                                        isShowAuditDetail={isShowAuditDetail}
-                                                        setShowAuditDetail={setShowAuditDetail}
-                                                    />
-                                                )}
-                                            </>
-                                        }
-                                    />
-                                }
-                            />
-                        </div>
-                        <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
+                                        </div>
+                                    }
+                                    secondNode={
+                                        <>
+                                            {isShowAuditDetail && (
+                                                <RightAuditDetail
+                                                    auditRightParams={auditRightParams}
+                                                    isShowAuditDetail={isShowAuditDetail}
+                                                    setShowAuditDetail={setShowAuditDetail}
+                                                />
+                                            )}
+                                        </>
+                                    }
+                                />
+                            }
+                        />
                     </div>
-
-                    {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
-                    <YakitHint
-                        visible={isShowModal}
-                        title={"代码审计执行中"}
-                        content={"请等待执行完成后重试"}
-                        okButtonProps={{style: {display: "none"}}}
-                        onCancel={() => setShowModal(false)}
-                    />
+                    <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
                 </div>
-            </YakRunnerContext.Provider>
-        </WaterMark>
+
+                {isShowCompileModal && <AuditModalFormModal onCancel={onCloseCompileModal} onSuccee={onSuccee} />}
+                <YakitHint
+                    visible={isShowModal}
+                    title={"代码审计执行中"}
+                    content={"请等待执行完成后重试"}
+                    okButtonProps={{style: {display: "none"}}}
+                    onCancel={() => setShowModal(false)}
+                />
+            </div>
+        </YakRunnerContext.Provider>
     )
 }
 
