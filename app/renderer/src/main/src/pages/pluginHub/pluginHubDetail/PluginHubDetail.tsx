@@ -16,7 +16,7 @@ import {HubExtraOperate, HubExtraOperateRef} from "../hubExtraOperate/HubExtraOp
 import {v4 as uuidv4} from "uuid"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {PluginToDetailInfo} from "../type"
+import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {thousandthConversion} from "@/pages/plugins/pluginReducer"
 import {YakitPluginOnlineDetail} from "@/pages/plugins/online/PluginsOnlineType"
 import {PluginDetailAvailableTab, PluginOperateHint} from "../defaultConstant"
@@ -54,6 +54,7 @@ export interface PluginHubDetailRefProps {
 interface PluginHubDetailProps {
     ref?: ForwardedRef<PluginHubDetailRefProps>
     rootElementId?: string
+    active?: PluginSourceType
     onBack: () => void
 
     // 主动打开插件详情页时，是否需要主动跳到指定 tab 页面
@@ -63,7 +64,7 @@ interface PluginHubDetailProps {
 
 export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
     forwardRef((props, ref) => {
-        const {rootElementId, onBack, autoOpenDetailTab, setAutoOpenDetailTab} = props
+        const {rootElementId, active, onBack, autoOpenDetailTab, setAutoOpenDetailTab} = props
 
         const userinfo = useStore((s) => s.userInfo)
         const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -668,6 +669,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 <HubExtraOperate
                     ref={operateRef}
                     getContainer={wrapperId}
+                    active={active}
                     online={onlinePlugin}
                     local={localPlugin}
                     onDownload={handleDownload}
@@ -675,7 +677,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                     onCallback={operateCallback}
                 />
             )
-        }, [operateRef.current, wrapperId, onlinePlugin, localPlugin])
+        }, [operateRef.current, active, wrapperId, onlinePlugin, localPlugin])
 
         const infoExtraNode = useMemo(() => {
             if (!onlinePlugin) return null
