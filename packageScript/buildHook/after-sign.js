@@ -8,7 +8,8 @@ module.exports = async function afterSign(context) {
     const appName = packager.appInfo.productFilename
     const appBundleId = packager.appInfo.id
 
-    console.log(`Start ${appName} 进行公证，输出目录：${appOutDir}`, `app 所处路径: ${appOutDir}/${appName}.app`)
+    console.log(`Start notarizing ${appName}`)
+    console.log(`Output Directory ${appOutDir}\n`, `App Path: ${appOutDir}/${appName}.app`)
 
     return await notarize({
         appBundleId: appBundleId,

@@ -30,6 +30,10 @@ module.exports = async function (context) {
             {
                 from: "bins/yak_windows_amd64.zip",
                 to: "bins/yak.zip"
+            },
+            {
+                from: "LICENSE.md",
+                to: "LICENSE.md"
             }
         ]
         win32Config.artifactName = `${"${productName}"}-${productVersion}-windows${
@@ -46,6 +50,10 @@ module.exports = async function (context) {
             {
                 from: "bins/flag.linux.txt",
                 to: "bins/flag.linux.txt"
+            },
+            {
+                from: "LICENSE.md",
+                to: "LICENSE.md"
             }
         ]
         switch (arch) {

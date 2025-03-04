@@ -1,9 +1,9 @@
 #!/bin/sh
-# 用法: ./verify_packages.sh <prefix>
+# 用法: ./verify_packages.sh <file_name>
 # 示例: ./verify_packages.sh Yakit
 
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <prefix>"
+    echo "Usage: $0 <file_name>"
     exit 1
 fi
 

@@ -1,7 +1,70 @@
-const ConfigOption = {
-    appId: "io.yaklang.yakit",
-    productName: "Yakit",
-    copyright: "Copyright © 2024 yaklang.io",
+console.log(
+    "process.env",
+    process.env.PLATFORM,
+    "\nCSC_IDENTITY_AUTO_DISCOVERY",
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY,
+    "\nprocess.env.THE_LEGACY",
+    process.env.THE_LEGACY,
+    process.env.THE_LEGACY == "true"
+)
+// app 信息配置
+let appInfoOption = null
+
+// 各平台图标配置
+let macIcon = null
+let linuxIcon = null
+let winIcon = null
+let nsisInstallerIcon = null
+let nsisUninstallerIcon = null
+
+// 生成构建包的自定义配置
+const platform = process.env.PLATFORM
+switch (platform) {
+    case "ee":
+        appInfoOption = {
+            appId: "io.yaklang.enpritrace",
+            extraMetadata: {name: "enpritrace"},
+            productName: "EnpriTrace",
+            copyright: "Copyright © 2021 v1ll4n"
+        }
+        macIcon = "app/assets/yakiteelogo.icns"
+        linuxIcon = "app/assets/yakiteelogo.icns"
+        winIcon = "app/assets/yakiteelogo.ico"
+        nsisInstallerIcon = "app/assets/yakiteelogo.ico"
+        nsisUninstallerIcon = "app/assets/yakiteelogo.ico"
+        break
+    case "se":
+        appInfoOption = {
+            appId: "io.yaklang.enpritraceagent",
+            extraMetadata: {name: "enpritraceagent"},
+            productName: "EnpriTraceAgent",
+            copyright: "Copyright © 2021 v1ll4n"
+        }
+        macIcon = "app/assets/yakitselogo.icns"
+        linuxIcon = "app/assets/yakitselogo.icns"
+        winIcon = "app/assets/yakitselogo.ico"
+        nsisInstallerIcon = "app/assets/yakitselogo.ico"
+        nsisUninstallerIcon = "app/assets/yakitselogo.ico"
+        break
+
+    default:
+        // ce
+        appInfoOption = {
+            appId: "io.yaklang.yakit",
+            productName: "Yakit",
+            copyright: "Copyright © 2024 yaklang.io"
+        }
+        macIcon = "app/assets/yakitlogo.icns"
+        linuxIcon = "app/assets/yakitlogo.icns"
+        winIcon = "app/assets/yakitlogo.ico"
+        nsisInstallerIcon = "app/assets/yakitlogo.ico"
+        nsisUninstallerIcon = "app/assets/yakitlogo.ico"
+        break
+}
+
+const configOption = {
+    ...(appInfoOption || {}),
+    /** @description extraFiles 可以在各自平台独立配置 */
     extraFiles: [
         {from: "bins/scripts/auto-install-cert.zip", to: "bins/scripts/auto-install-cert.zip"},
         {from: "bins/scripts/start-engine.zip", to: "bins/scripts/start-engine.zip"},
@@ -54,23 +117,23 @@ const ConfigOption = {
         entitlements: "build/entitlements.mac.plist",
         entitlementsInherit: "build/entitlements.mac.plist",
         target: [{target: "dmg", arch: ["x64", "arm64"]}],
-        icon: "app/assets/yakitlogo.icns"
+        icon: macIcon
     },
     linux: {
         target: [{target: "AppImage", arch: ["x64", "arm64"]}],
-        icon: "app/assets/yakitlogo.icns"
+        icon: linuxIcon
     },
     win: {
         target: [{target: "nsis", arch: ["x64"]}],
-        icon: "app/assets/yakitlogo.ico"
+        icon: winIcon
     },
     nsis: {
         oneClick: false,
         perMachine: false,
         deleteAppDataOnUninstall: true,
         allowToChangeInstallationDirectory: true,
-        installerIcon: "app/assets/yakitlogo.ico",
-        uninstallerIcon: "app/assets/yakitlogo.ico",
+        installerIcon: nsisInstallerIcon,
+        uninstallerIcon: nsisUninstallerIcon,
         unicode: true,
         include: "build/yakit_build.nsh",
         license: "LICENSE.md",
@@ -85,50 +148,26 @@ const ConfigOption = {
     }
 }
 
-console.log("process.env", process.env.PLATFORM, "CSC_IDENTITY_AUTO_DISCOVERY", process.env.CSC_IDENTITY_AUTO_DISCOVERY)
-const platform = process.env.PLATFORM
-switch (platform) {
-    case "ee":
-        ConfigOption.appId = "io.yaklang.enpritrace"
-        ConfigOption.productName = "EnpriTrace"
-        ConfigOption.copyright = "Copyright © 2021 v1ll4n"
-        ConfigOption.extraMetadata = {name: "enpritrace"}
-        ConfigOption.mac.icon = "app/assets/yakiteelogo.icns"
-        ConfigOption.linux.icon = "app/assets/yakiteelogo.icns"
-        ConfigOption.win.icon = "app/assets/yakiteelogo.ico"
-        ConfigOption.nsis.installerIcon = "app/assets/yakiteelogo.ico"
-        ConfigOption.nsis.uninstallerIcon = "app/assets/yakiteelogo.ico"
-        break
-    case "se":
-        ConfigOption.appId = "io.yaklang.enpritraceagent"
-        ConfigOption.productName = "EnpriTraceAgent"
-        ConfigOption.copyright = "Copyright © 2021 v1ll4n"
-        ConfigOption.extraMetadata = {name: "enpritraceagent"}
-        ConfigOption.mac.icon = "app/assets/yakitselogo.icns"
-        ConfigOption.linux.icon = "app/assets/yakitselogo.icns"
-        ConfigOption.win.icon = "app/assets/yakitselogo.ico"
-        ConfigOption.nsis.installerIcon = "app/assets/yakitselogo.ico"
-        ConfigOption.nsis.uninstallerIcon = "app/assets/yakitselogo.ico"
-        break
-
-    default:
-        ConfigOption.appId = "io.yaklang.yakit"
-        ConfigOption.productName = "Yakit"
-        ConfigOption.copyright = "Copyright © 2024 yaklang.io"
-        delete ConfigOption.extraMetadata
-        ConfigOption.mac.icon = "app/assets/yakitlogo.icns"
-        ConfigOption.linux.icon = "app/assets/yakitlogo.icns"
-        ConfigOption.win.icon = "app/assets/yakitlogo.ico"
-        ConfigOption.nsis.installerIcon = "app/assets/yakitlogo.ico"
-        ConfigOption.nsis.uninstallerIcon = "app/assets/yakitlogo.ico"
-        break
+// extraFiles 是否配置-构建兼容旧平台的扩展文件
+const isLegacy = process.env.THE_LEGACY == "true"
+if (isLegacy) {
+    configOption.extraFiles.push({
+        from: "bins/yakit-system-mode.txt",
+        to: "bins/yakit-system-mode.txt"
+    })
 }
+// else {
+// }
 
+// 是否执行公证流程
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
 if (autoDiscoveryIdentity == "true") {
-    ConfigOption.afterSign = "packageScript/buildHook/after-sign.js"
-} else {
-    delete ConfigOption.afterSign
+    configOption.afterSign = "packageScript/buildHook/after-sign.js"
 }
+// else {
+//     delete configOption.afterSign
+// }
 
-module.exports = {...ConfigOption}
+console.log("configOption", configOption.extraFiles, configOption.afterSign)
+
+module.exports = {...configOption}
