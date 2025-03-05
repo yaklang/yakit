@@ -613,7 +613,7 @@ const Home: React.FC<HomeProp> = (props) => {
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
         ipcRenderer.invoke("GetCurrentProjectEx",{
-            type: getEnvTypeByProjects()
+            Type: getEnvTypeByProjects()
         }).then((res: ProjectDescription) => {
             setCurProjectInfo(res)
         })
