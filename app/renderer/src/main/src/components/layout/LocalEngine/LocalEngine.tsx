@@ -96,7 +96,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             if (!isEnpriTraceAgent()) setLog(["检查软件是否有更新..."])
             else setLog([])
 
-            if (false && SystemInfo.isDev) {
+            if (SystemInfo.isDev) {
                 setLog((old) => old.concat(["开发环境，直接连接引擎"]))
                 setTimeout(() => {
                     handleLinkLocalEnging()

@@ -117,11 +117,7 @@ export const grpcFetchBuildInYakVersion: APINoRequestFunc<string> = (hiddenError
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("GetBuildInEngineVersion")
-            .then((res) => {
-                // 考虑文件里的版本号可能有换行符，需要去掉
-                const version = (res || "").replace(/\r?\n/g, "")
-                resolve(version)
-            })
+            .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "获取内置引擎版本失败:" + e)
                 reject(e)

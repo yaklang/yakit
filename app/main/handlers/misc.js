@@ -753,7 +753,11 @@ module.exports = (win, getClient) => {
         const hashTxt = path.join("bins", "engine-sha256.txt")
         if (fs.existsSync(loadExtraFilePath(hashTxt))) {
             let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+            console.log(`123(${hashData})`)
+            // 去除换行符
             hashData = (hashData || "").replace(/\r?\n/g, "")
+            // 去除首尾空格
+            hashData = hashData.trim()
             hashs.push(hashData)
         }
 
@@ -765,7 +769,13 @@ module.exports = (win, getClient) => {
                 if (fs.existsSync(enginePath)) {
                     const sum = crypto.createHash("sha256")
                     sum.update(fs.readFileSync(enginePath))
-                    hashs.push(sum.digest("hex"))
+                    let localHash = sum.digest("hex")
+                    console.log(`345(${localHash})`)
+                    // 去除换行符
+                    localHash = (localHash || "").replace(/\r?\n/g, "")
+                    // 去除首尾空格
+                    localHash = localHash.trim()
+                    hashs.push(localHash)
                     resolve(hashs)
                 } else {
                     reject("get engine content failed")
