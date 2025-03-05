@@ -71,7 +71,7 @@ import {ShieldCheckIcon as AllShieldCheckIcon} from "@/components/layout/globalS
 import {useScreenRecorder} from "@/store/screenRecorder"
 import numeral from "numeral"
 import {CloudDownloadIcon} from "@/assets/newIcon"
-import {ProjectDescription} from "../softwareSettings/ProjectManage"
+import {getEnvTypeByProjects, ProjectDescription} from "../softwareSettings/ProjectManage"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {FieldName, Fields} from "../risks/RiskTable"
 import {apiQueryYakScriptTotal} from "../plugins/utils"
@@ -612,7 +612,9 @@ const Home: React.FC<HomeProp> = (props) => {
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
-        ipcRenderer.invoke("GetCurrentProject").then((res: ProjectDescription) => {
+        ipcRenderer.invoke("GetCurrentProjectEx",{
+            type: getEnvTypeByProjects()
+        }).then((res: ProjectDescription) => {
             setCurProjectInfo(res)
         })
     }
