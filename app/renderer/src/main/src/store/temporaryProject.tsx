@@ -31,7 +31,7 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set,
         const temporaryProjectId = get().temporaryProjectId
         if (temporaryProjectId) {
             try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true,type: getEnvTypeByProjects()})
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true,Type: getEnvTypeByProjects()})
                 set({temporaryProjectId: ""})
             } catch (error) {
                 yakitFailed(error + "")

@@ -999,7 +999,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     const onOkEnterProjectMag = useMemoizedFn(() => {
-        ipcRenderer.invoke("SetCurrentProject", {})
+        ipcRenderer.invoke("SetCurrentProject", {
+            Type: getEnvTypeByProjects()
+        })
         setYakitMode("soft")
         // 刷新项目管理列表
         if (showProjectManage) {
@@ -1015,7 +1017,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setYakitMode("")
         setShowProjectManage(false)
         ipcRenderer.invoke("GetCurrentProjectEx",{
-            type: getEnvTypeByProjects()
+            Type: getEnvTypeByProjects()
         }).then((rsp: ProjectDescription) => {
             setCurrentProject(rsp || undefined)
             setNowProjectDescription(rsp || undefined)
@@ -1391,10 +1393,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
             if (SystemInfo.isDev) {
                 const res = await ipcRenderer.invoke("GetDefaultProjectEx",{
-                    type: getEnvTypeByProjects()
+                    Type: getEnvTypeByProjects()
                 })
                 if (res) {
-                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
+                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id,Type: getEnvTypeByProjects()})
                     setCurrentProject(res)
                     setNowProjectDescription(res)
                     setShowProjectManage(false)
