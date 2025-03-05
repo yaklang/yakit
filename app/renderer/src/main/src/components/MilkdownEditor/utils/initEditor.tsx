@@ -16,7 +16,6 @@ import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTe
 import {yakitNotify, yakitInfo} from "@/utils/notification"
 import {Blockquote} from "../Blockquote"
 import {CustomCodeComponent} from "../CodeBlock/CodeBlock"
-import {CustomAlter} from "../CustomAlter/CustomAlter"
 import {ListItem} from "../ListItem/ListItem"
 import {MilkdownHr} from "../MilkdownHr/MilkdownHr"
 import {tooltip, TooltipView} from "../Tooltip/Tooltip"
@@ -24,7 +23,6 @@ import {alterCustomPlugin, alterCustomSchema} from "./alertPlugin"
 import {codeCustomPlugin} from "./codePlugin"
 import {commentCustomPlugin} from "./commentPlugin"
 import {headingCustomPlugin} from "./headingPlugin"
-import {historyCustomPlugin} from "./historyPlugin"
 import {insertImageBlockCommand} from "./imageBlock"
 import {listCustomPlugin} from "./listPlugin"
 import {trackDeletePlugin} from "./trackDeletePlugin"
@@ -286,19 +284,11 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 )
             ].flat()
 
-            const alterPlugin = [
-                ...alterCustomPlugin(),
-                $view(alterCustomSchema.node, () =>
-                    nodeViewFactory({
-                        component: CustomAlter
-                    })
-                )
-            ].flat()
+            const alterPlugin = [...alterCustomPlugin()].flat()
 
             const underlinePlugin = [...underlineCustomPlugin()].flat()
 
             const commentPlugin = [...commentCustomPlugin()].flat()
-            const historyPlugin = [...historyCustomPlugin()].flat()
 
             const hrPlugin = [
                 $view(hrSchema.node, () =>
@@ -372,8 +362,6 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(underlinePlugin)
                     // commentPlugin
                     .use(commentPlugin)
-                    // historyPlugin
-                    .use(historyPlugin)
                     // hrPlugin
                     .use(hrPlugin)
                     // trackDeletePlugin

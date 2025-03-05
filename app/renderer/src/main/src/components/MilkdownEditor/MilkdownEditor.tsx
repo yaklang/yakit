@@ -239,7 +239,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         collabManagerRef.current.on("online-users", onSetOnlineUsers)
         collabManagerRef.current.on("link-status-onchange", onLineStatus)
         collabManagerRef.current.on("sync-title", onSetTitle)
-        collabManagerRef.current.on("update-diff", onUpdateDiff)
     })
 
     /**同步标题 */
@@ -248,29 +247,6 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
             collabParams?.onSetTitle(value)
         }),
         {wait: 200, leading: true}
-    ).run
-
-    /*TODO - 保存历史暂时在CollabManager内部，后续将content也要保存在历史中，确保容错*/
-    const onUpdateDiff = useDebounceFn(
-        useMemoizedFn((val) => {
-            // const content = get()?.action(getMarkdown())
-            // const item = {
-            //     ...val,
-            //     content
-            // }
-            // const value = sessionStorage.getItem("versions")
-            // try {
-            //     if (value) {
-            //         const versionList = value ? JSON.parse(value) : []
-            //         versionList.push(item)
-            //         sessionStorage.setItem("versions", JSON.stringify(versionList))
-            //     } else {
-            //         sessionStorage.setItem("versions", JSON.stringify([item]))
-            //     }
-            // } catch (error) {
-            // }
-        }),
-        {wait: 1000}
     ).run
 
     /**在线链接状态 */
