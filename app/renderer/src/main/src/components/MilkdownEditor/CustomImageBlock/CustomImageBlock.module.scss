@@ -1,0 +1,89 @@
+@use "../utils/utils.module.scss" as utils;
+
+@include utils.custom-block("image") {
+    border-radius: 4px;
+    margin-bottom: 20px;
+    padding-bottom: 4px;
+}
+
+.image-none-block {
+    padding: 4px 12px;
+    border-radius: 4px;
+    color: var(--yakit-header-color);
+    font-size: 12px;
+    background-color: var(--yakit-background-color);
+}
+.image-custom-block-selected {
+    background: color-mix(in srgb, #e1e2e8, transparent 60%);
+
+    img {
+        opacity: 0.6;
+        box-shadow: 0 0 0 2px var(--yakit-primary-3);
+    }
+}
+.image-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 8px;
+}
+.image-wrapper {
+    padding: 4px;
+    border-radius: 4px;
+    position: relative;
+    &:hover {
+        .operation-item {
+            opacity: 0.6;
+        }
+    }
+    img {
+        width: 100%;
+        border-radius: 4px;
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+    .operation-item {
+        opacity: 0;
+        color: var(--yakit-helper-text-color);
+        padding: 4px;
+        background: var(--yakit-body-text-color);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        svg {
+            width: 24px;
+            height: 24px;
+        }
+    }
+}
+
+.image-wrapper-disable {
+    pointer-events: none;
+}
+
+.image-caption {
+    width: 100%;
+    text-align: center;
+    border: 0;
+    outline: none;
+    background: none;
+    box-shadow: none;
+    // margin: 8px auto 4px;
+    display: block;
+    color: var(--yakit-body-text-color);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    height: 24px;
+    padding: 0;
+}
+
+.diff-warp {
+    height: 100%;
+}

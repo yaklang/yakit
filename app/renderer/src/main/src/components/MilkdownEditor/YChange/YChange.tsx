@@ -5,9 +5,9 @@ import styles from "./YChange.module.scss"
 import {YChangeProps} from "./YChangeType"
 
 export const YChange: React.FC<YChangeProps> = (props) => {
-    const {user, color, type} = props
+    const {user, color, type, diffWrapStyle = {}, diffWrapClassName = ""} = props
 
-    return user ? (
+    return type ? (
         <>
             <span className='ychange-hover' style={{backgroundColor: color?.dark}}>
                 {`${user} ${getYChangeType(type)}`}
@@ -15,8 +15,8 @@ export const YChange: React.FC<YChangeProps> = (props) => {
 
             <div
                 contentEditable={false}
-                className={classNames(styles["y-change-diff-history"])}
-                style={{backgroundColor: color?.light}}
+                className={classNames(styles["y-change-diff-history"], diffWrapClassName)}
+                style={{backgroundColor: color?.light, ...diffWrapStyle}}
             >
                 {type === "removed" && <SolidXIcon />}
             </div>

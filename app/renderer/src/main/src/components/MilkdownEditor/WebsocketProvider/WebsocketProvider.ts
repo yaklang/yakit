@@ -135,6 +135,7 @@ const setupWS = (provider: WebsocketProvider) => {
             } catch (error) {}
         }
         websocket.onerror = (event) => {
+            console.log("websocket.onerror", event)
             provider.emit("connection-error", [event, provider])
         }
         websocket.onclose = (event) => {
@@ -185,11 +186,15 @@ const setupWS = (provider: WebsocketProvider) => {
  *
  * @param {WebsocketProvider} provider
  * @param {WebSocket} ws
- * @param {CloseEvent} event
+ * @param {CloseEvent} event 没有这个值传进来，都是前端主动断开，前端主动断开不需要重连后端的逻辑
  */
 const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, event?: CloseEvent) => {
     if (ws === provider.ws) {
-        if (event) provider.emit("connection-close", [event, provider])
+        let isSetupWS = false
+        if (event) {
+            isSetupWS = true
+            provider.emit("connection-close", [event, provider])
+        }
         provider.ws = null
         ws.close()
         provider.wsconnecting = false
@@ -223,11 +228,13 @@ const closeWebsocketConnection = (provider: WebsocketProvider, ws: WebSocket, ev
             default:
                 // Start with no reconnect timeout and increase timeout by
                 // using exponential backoff starting with 100ms
-                setTimeout(
-                    setupWS,
-                    math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
-                    provider
-                )
+                if (isSetupWS) {
+                    setTimeout(
+                        setupWS,
+                        math.min(math.pow(2, provider.wsUnsuccessfulReconnects) * 100, provider.maxBackoffTime),
+                        provider
+                    )
+                }
                 break
         }
     }

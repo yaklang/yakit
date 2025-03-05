@@ -17,7 +17,6 @@ export const insertImageBlockCommand = $command("insertImageBlock", (ctx) => (pr
         if (dispatch) {
             dispatch(transaction)
         }
-
         return true // 表示命令成功执行
     }
 })

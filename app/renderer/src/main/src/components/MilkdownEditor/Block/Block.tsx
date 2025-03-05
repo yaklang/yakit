@@ -173,19 +173,28 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
                                         yakitNotify("error", "图片大小不能超过1M")
                                         return
                                     }
-                                    httpUploadImgPath({path, type, filedHash: notepadHash})
-                                        .then((src) => {
-                                            action(
-                                                callCommand(insertImageBlockCommand.key, {
-                                                    src,
-                                                    alt: path,
-                                                    title: ""
-                                                })
-                                            )
+                                    // httpUploadImgPath({path, type, filedHash: notepadHash})
+                                    //     .then((src) => {
+                                    //         action(
+                                    //             callCommand(insertImageBlockCommand.key, {
+                                    //                 src,
+                                    //                 alt: path,
+                                    //                 title: ""
+                                    //             })
+                                    //         )
+                                    //     })
+                                    //     .catch((e) => {
+                                    //         yakitNotify("error", `上传图片失败:${e}`)
+                                    //     })
+                                    action(
+                                        callCommand(insertImageBlockCommand.key, {
+                                            src: "",
+                                            alt: "",
+                                            title: "",
+                                            path,
+                                            uploadUserId: userInfo.user_id
                                         })
-                                        .catch((e) => {
-                                            yakitNotify("error", `上传图片失败:${e}`)
-                                        })
+                                    )
                                 } else {
                                     action(
                                         callCommand(fileCommand.key, {

@@ -65,6 +65,8 @@ import {cursor} from "@milkdown/kit/plugin/cursor"
 import {trailing} from "@milkdown/kit/plugin/trailing"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
+import {CustomImageBlock} from "../CustomImageBlock/CustomImageBlock"
+import {codeBlockComponent, codeBlockConfig} from "@milkdown/kit/component/code-block"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -185,37 +187,44 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 imageInlineComponent,
                 insertImageBlockCommand,
                 // TODO 自定义imageBlockSchema.node
-                // $view(imageBlockSchema.node, () =>
-                //     nodeViewFactory({
-                //         component: () => <CustomImageBlock />
-                //     })
-                // ),
-                (ctx: Ctx) => () => {
-                    ctx.update(imageBlockConfig.key, (value) => ({
-                        ...value,
-                        captionIcon: () => html`
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                            >
-                                <path
-                                    d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </svg>
-                        `,
-                        onUpload: async (image: File) => {
-                            const url = uploadImg(image)
-                            return url
+                $view(imageBlockSchema.node, () =>
+                    nodeViewFactory({
+                        component: () => <CustomImageBlock type={type} notepadHash={collabParams?.milkdownHash} />,
+                        stopEvent: (e) => {
+                            if (e.target instanceof HTMLInputElement) return true
+                            return false
+                        },
+                        ignoreMutation: (mutation: MutationRecord) => {
+                            console.log("mutation", mutation)
                         }
-                    }))
-                },
+                    })
+                ),
+                // (ctx: Ctx) => () => {
+                //     ctx.update(imageBlockConfig.key, (value) => ({
+                //         ...value,
+                //         captionIcon: () => html`
+                //             <svg
+                //                 xmlns="http://www.w3.org/2000/svg"
+                //                 width="24"
+                //                 height="24"
+                //                 viewBox="0 0 24 24"
+                //                 fill="none"
+                //             >
+                //                 <path
+                //                     d="M7 8H17M7 12H11M12 20L8 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H16L12 20Z"
+                //                     stroke="currentColor"
+                //                     stroke-width="1.5"
+                //                     stroke-linecap="round"
+                //                     stroke-linejoin="round"
+                //                 />
+                //             </svg>
+                //         `,
+                //         onUpload: async (image: File) => {
+                //             const url = uploadImg(image)
+                //             return url
+                //         }
+                //     }))
+                // },
                 (ctx: Ctx) => () => {
                     ctx.update(inlineImageConfig.key, (value) => ({
                         ...value,
@@ -264,7 +273,10 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 ...listCustomPlugin(),
                 $view(listItemSchema.node, () =>
                     nodeViewFactory({
-                        component: ListItem
+                        component: ListItem,
+                        ignoreMutation: (mutationRecord: MutationRecord) => {
+                            console.log("mutationRecord", mutationRecord)
+                        }
                     })
                 )
             ].flat()
@@ -277,6 +289,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         stopEvent: (e) => true
                     })
                 })
+                // codeBlockComponent
             ].flat()
             const blockquotePlugin = [
                 $view(blockquoteSchema.node, () =>
@@ -322,7 +335,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly
                         })
-                        console.log("defaultValue", defaultValue)
+                        // console.log("defaultValue", defaultValue)
                         ctx.set(defaultValueCtx, defaultValue || "")
                         collabParams.onCollab(ctx)
                         diffProps?.onDiff(ctx)

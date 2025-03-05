@@ -92,7 +92,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
     const userInfo = useStore((s) => s.userInfo)
 
     useEffect(() => {
-        const {fileId, path: initPath, uploadUserId = ""} = attrs
+        const {fileId, path: initPath, uploadUserId = "0"} = attrs
         const path = initPath.replace(/\\/g, "\\")
         if (fileId !== "0") {
             getFileInfoByLink()
@@ -281,7 +281,11 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             </Tooltip>
         )
     })
-    const ychange: YChangeProps = useCreation(() => attrs.ychange, [attrs])
+    /**文件url或者本地地址是否存在 */
+    const isFileLinkExist = useCreation(() => {
+        return !!(fileInfo.path || fileInfo.url)
+    }, [fileInfo.path, fileInfo.url])
+    const ychange: YChangeProps = useCreation(() => attrs?.ychange|| {}, [attrs])
     return (
         <div
             className={classNames(styles["file-custom-block"], {
@@ -300,7 +304,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     e.preventDefault()
                 }}
             >
-                {!!(fileInfo.path || fileInfo.url) ? (
+                {isFileLinkExist ? (
                     <CustomFileItem
                         title={renderType()}
                         subTitle={fileInfo.name}

@@ -9,7 +9,7 @@ export const CustomAlter: React.FC = () => {
     const {node, contentRef} = useNodeViewContext()
     const {attrs} = node
 
-    const ychange: YChangeProps = useCreation(() => attrs.ychange, [attrs])
+    const ychange: YChangeProps = useCreation(() => attrs?.ychange || {}, [attrs])
 
     return (
         <div

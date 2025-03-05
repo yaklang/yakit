@@ -190,19 +190,19 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
 
             this.prevSnapshot = snapshot
 
-            // const value = sessionStorage.getItem("versions")
-            // try {
-            //     if (value) {
-            //         const versionList = value ? JSON.parse(value) : []
-            //         console.log("versionList", versionList)
-            //         versionList.push(item)
-            //         sessionStorage.setItem("versions", JSON.stringify(versionList))
-            //     } else {
-            //         sessionStorage.setItem("versions", JSON.stringify([item]))
-            //     }
-            // } catch (error) {
-            //     console.log("error", error)
-            // }
+            const value = sessionStorage.getItem("versions")
+            try {
+                if (value) {
+                    const versionList = value ? JSON.parse(value) : []
+                    console.log("versionList", versionList)
+                    versionList.push(item)
+                    sessionStorage.setItem("versions", JSON.stringify(versionList))
+                } else {
+                    sessionStorage.setItem("versions", JSON.stringify([item]))
+                }
+            } catch (error) {
+                console.log("error", error)
+            }
         }
     }, 1000)
 

@@ -6,6 +6,7 @@
     align-items: center;
 }
 .list-item-wrapper {
+    position: relative;
     display: inline-flex;
     align-items: flex-start;
     gap: 8px;
@@ -28,6 +29,7 @@
 
     .checked-dot-wrapper {
         @extend %dot-wrapper;
+        position: relative;
         color: var(--yakit-primary-5);
         padding-bottom: 2px;
     }

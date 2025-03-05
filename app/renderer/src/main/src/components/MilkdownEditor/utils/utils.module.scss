@@ -1,9 +1,16 @@
 @mixin custom-block($type) {
     .#{$type}-custom-block {
         position: relative;
+        @content;
     }
     .#{$type}-custom-diff-history-block {
         border-radius: 4px;
         padding: 8px;
     }
+}
+
+@mixin select-item {
+    background-color: var(--yakit-primary-2);
+    color: var(--yakit-header-color);
+    @content;
 }

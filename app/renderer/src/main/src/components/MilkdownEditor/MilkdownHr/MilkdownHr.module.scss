@@ -1,3 +1,11 @@
+@use "../utils/utils.module.scss" as utils;
+@include utils.custom-block("hr");
+
+.hr-custom-diff-history-block > .hr-body {
+    &:hover {
+        background-color: transparent;
+    }
+}
 .hr-body {
     padding: 12px 4px;
     margin-bottom: 24px;

@@ -83,7 +83,7 @@ export const fileCustomSchema = $nodeSchema(fileCustomId, (ctx) => ({
         path: {default: ""},
         notepadHash: {default: ""},
         uploadUserId: {default: 0},
-        ychange: {default: null}
+        yChange: {default: null}
     }
 }))
 

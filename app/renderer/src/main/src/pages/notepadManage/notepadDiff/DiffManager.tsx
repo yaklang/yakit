@@ -3,13 +3,44 @@ import {CollabService} from "@milkdown/plugin-collab"
 import {ObservableV2} from "lib0/observable"
 import * as Y from "yjs" // eslint-disable-line
 import {CollabUserInfo} from "@/components/MilkdownEditor/CollabManager"
-import {ySyncPluginKey} from "y-prosemirror"
+import {ySyncPluginKey, ProsemirrorBinding} from "y-prosemirror"
 import * as awarenessProtocol from "y-protocols/awareness"
+import * as math from "lib0/math"
 
 interface DiffMilkdownManagerEvents {}
 interface ColorDef {
     light: string
     dark: string
+}
+
+const isVisible = (item, snapshot) =>
+    snapshot === undefined
+        ? !item.deleted
+        : snapshot.sv.has(item.id.client) &&
+          (snapshot.sv.get(item.id.client) || 0) > item.id.clock &&
+          !isDeleted(snapshot.ds, item.id)
+
+const isDeleted = (ds, id) => {
+    const dis = ds.clients.get(id.client)
+    return dis !== undefined && findIndexDS(dis, id.clock) !== null
+}
+const findIndexDS = (dis, clock) => {
+    let left = 0
+    let right = dis.length - 1
+    while (left <= right) {
+        const midindex = math.floor((left + right) / 2)
+        const mid = dis[midindex]
+        const midclock = mid.clock
+        if (midclock <= clock) {
+            if (clock < midclock + mid.len) {
+                return midindex
+            }
+            left = midindex + 1
+        } else {
+            right = midindex - 1
+        }
+    }
+    return null
 }
 export class DiffMilkdownManager extends ObservableV2<DiffMilkdownManagerEvents> {
     private doc!: Doc
@@ -34,7 +65,7 @@ export class DiffMilkdownManager extends ObservableV2<DiffMilkdownManagerEvents>
         colorMapping.set(this.user.name, {light: "#ecd44433", dark: "#ecd444"})
         colorMapping.set("luoluo-test", {light: "#6eeb8333", dark: "#6eeb83"})
 
-        this.doc.gc = false
+        // this.doc.gc = false
         const awareness = new awarenessProtocol.Awareness(this.doc)
 
         awareness.setLocalStateField("user", {
@@ -63,16 +94,29 @@ export class DiffMilkdownManager extends ObservableV2<DiffMilkdownManagerEvents>
 
     versionComparison = (editorview, version, prevVersion) => {
         if (prevVersion) {
+            // const prevSnapshot = Y.snapshot(this.doc)
+
             const update = Buffer.from(version.encodeStateAsUpdate, "base64")
+            // const stateVector = Y.encodeStateVectorFromUpdate(update)
+
+            // const diff = Y.encodeStateAsUpdate(this.doc, stateVector)
+
             Y.applyUpdate(this.doc, update)
+            // const snapshot = Y.snapshot(this.doc)
             const prevSnapshot = Y.decodeSnapshot(Buffer.from(prevVersion.snapshot, "base64"))
             const snapshot = Y.decodeSnapshot(Buffer.from(version.snapshot, "base64"))
-            editorview.dispatch(
-                editorview.state.tr.setMeta(ySyncPluginKey, {
-                    snapshot: snapshot,
-                    prevSnapshot: prevSnapshot
-                })
-            )
+
+            // editorview.dispatch(
+            //     editorview.state.tr.setMeta(ySyncPluginKey, {
+            //         snapshot: snapshot,
+            //         prevSnapshot: prevSnapshot
+            //     })
+            // )
+
+            const binding: ProsemirrorBinding | null = ySyncPluginKey.getState(editorview.state).binding
+            if (binding) {
+                binding.renderSnapshot(snapshot, prevSnapshot)
+            }
         } else {
             const update = Buffer.from(version.encodeStateAsUpdate, "base64")
             const prevSnapshot = Y.snapshot(this.doc)
@@ -85,6 +129,7 @@ export class DiffMilkdownManager extends ObservableV2<DiffMilkdownManagerEvents>
             )
         }
     }
+
     /**
      * @param {Y.Doc} doc
      */
