@@ -549,12 +549,20 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         useEffect(() => {
             if (active === "local" && !!local) {
                 grpcQueryYakScriptSkipUpdate({
-                    ID: [local.Id]
-                }).then((res) => {
-                    setSkipUpdate(res.SkipUpdate)
-                }).catch(() => {
-                    setSkipUpdate(false)
+                    IncludedScriptNames: [local.ScriptName],
+                    Pagination: {
+                        Limit: 10,
+                        Page: 1,
+                        OrderBy: "updated_at",
+                        Order: "desc"
+                    }
                 })
+                    .then((res) => {
+                        setSkipUpdate(res.SkipUpdate)
+                    })
+                    .catch(() => {
+                        setSkipUpdate(false)
+                    })
             } else {
                 setSkipUpdate(false)
             }
@@ -568,7 +576,15 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         onChange={() => {
                             grpcSetYakScriptSkipUpdate({
                                 SkipUpdate: !skipUpdate,
-                                ID: [local.Id]
+                                Field: {
+                                    IncludedScriptNames: [local.ScriptName],
+                                    Pagination: {
+                                        Limit: 10,
+                                        Page: 1,
+                                        OrderBy: "updated_at",
+                                        Order: "desc"
+                                    }
+                                }
                             }).then((res) => {
                                 setSkipUpdate(!skipUpdate)
                             })

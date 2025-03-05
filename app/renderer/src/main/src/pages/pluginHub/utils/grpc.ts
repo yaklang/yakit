@@ -180,15 +180,11 @@ export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undef
 }
 
 /** @name 查询插件批量下载是否跳过 */
-interface QueryYakScriptSkipUpdateRequest {
-    ID: number[]
-    Field?: QueryYakScriptRequest
-}
 interface QueryYakScriptSkipUpdateResponse {
     SkipUpdate: boolean
 }
 export const grpcQueryYakScriptSkipUpdate: APIFunc<
-    QueryYakScriptSkipUpdateRequest,
+    QueryYakScriptRequest,
     QueryYakScriptSkipUpdateResponse
 > = (request) => {
     return new Promise(async (resolve, reject) => {
@@ -205,12 +201,9 @@ export const grpcQueryYakScriptSkipUpdate: APIFunc<
 /** @name 设置插件批量下载是否跳过 */
 interface SetYakScriptSkipUpdateRequest {
     SkipUpdate: boolean
-    ID: number[]
-    Field?: QueryYakScriptRequest
+    Field: QueryYakScriptRequest
 }
 export const grpcSetYakScriptSkipUpdate: APIFunc<SetYakScriptSkipUpdateRequest, unknown> = (request) => {
-    console.log(request);
-    
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("SetYakScriptSkipUpdate", request)

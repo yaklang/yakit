@@ -625,6 +625,17 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     })
 
     const [skipUpdate, setSkipUpdate] = useState<boolean>(false)
+    useDebounceEffect(
+        () => {
+            if (selectList.length || allChecked) {
+                queryYakScriptSkipUpdate()
+            } else {
+                setSkipUpdate(false)
+            }
+        },
+        [selectList, allChecked, inViewPort],
+        {wait: 200}
+    )
     // 查询插件批量下载是否跳过
     const queryYakScriptSkipUpdate = useMemoizedFn(() => {
         const page: PluginListPageMeta = {
@@ -640,14 +651,20 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 pageParams: page
             })
         }
-        grpcQueryYakScriptSkipUpdate({
-            ID: allChecked ? [] : selectList.map((item) => item.Id),
-            Field: allChecked ? query : undefined
-        }).then((res) => {
-            setSkipUpdate(res.SkipUpdate)
-        }).catch(() => {
-            setSkipUpdate(false)
-        })
+        grpcQueryYakScriptSkipUpdate(
+            allChecked
+                ? query
+                : {
+                      ...query,
+                      IncludedScriptNames: selectList.map((item) => item.ScriptName)
+                  }
+        )
+            .then((res) => {
+                setSkipUpdate(res.SkipUpdate)
+            })
+            .catch(() => {
+                setSkipUpdate(false)
+            })
     })
     // 设置插件批量下载是否跳过
     const setYakScriptSkipUpdate = useMemoizedFn(() => {
@@ -666,8 +683,12 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         }
         grpcSetYakScriptSkipUpdate({
             SkipUpdate: !skipUpdate,
-            ID: allChecked ? [] : selectList.map((item) => item.Id),
-            Field: allChecked ? query : undefined
+            Field: allChecked
+                ? query
+                : {
+                      ...query,
+                      IncludedScriptNames: selectList.map((item) => item.ScriptName)
+                  }
         }).then((res) => {
             setSkipUpdate(!skipUpdate)
         })
@@ -777,10 +798,8 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         () => {
             if (selectList.length || allChecked) {
                 getYakScriptGroupLocal(selectList.map((item) => item.ScriptName))
-                queryYakScriptSkipUpdate()
             } else {
                 setGroupList([])
-                setSkipUpdate(false)
             }
         },
         [selectList, allChecked],
