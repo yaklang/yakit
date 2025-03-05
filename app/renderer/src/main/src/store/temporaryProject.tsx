@@ -1,3 +1,4 @@
+import { getEnvTypeByProjects } from "@/pages/softwareSettings/ProjectManage"
 import {setRemoteValue} from "@/utils/kv"
 import {yakitFailed} from "@/utils/notification"
 import {RemoteGV} from "@/yakitGV"
@@ -30,7 +31,7 @@ export const useTemporaryProjectStore = create<TemporaryProjectStoreProps>((set,
         const temporaryProjectId = get().temporaryProjectId
         if (temporaryProjectId) {
             try {
-                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true})
+                await ipcRenderer.invoke("DeleteProject", {Id: +temporaryProjectId, IsDeleteLocal: true,type: getEnvTypeByProjects()})
                 set({temporaryProjectId: ""})
             } catch (error) {
                 yakitFailed(error + "")

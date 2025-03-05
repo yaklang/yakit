@@ -36,6 +36,7 @@ import {PolygonIcon, StopIcon} from "@/assets/newIcon"
 import EnterpriseJudgeLogin from "@/pages/EnterpriseJudgeLogin"
 import {
     ExportProjectProps,
+    getEnvTypeByProjects,
     NewProjectAndFolder,
     ProjectDescription,
     TransferProject
@@ -1013,7 +1014,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
         setShowProjectManage(false)
-        ipcRenderer.invoke("GetCurrentProject").then((rsp: ProjectDescription) => {
+        ipcRenderer.invoke("GetCurrentProjectEx",{
+            type: getEnvTypeByProjects()
+        }).then((rsp: ProjectDescription) => {
             setCurrentProject(rsp || undefined)
             setNowProjectDescription(rsp || undefined)
         })
@@ -1387,7 +1390,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
             // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
             if (SystemInfo.isDev) {
-                const res = await ipcRenderer.invoke("GetDefaultProject")
+                const res = await ipcRenderer.invoke("GetDefaultProjectEx",{
+                    type: getEnvTypeByProjects()
+                })
                 if (res) {
                     ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id})
                     setCurrentProject(res)

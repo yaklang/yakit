@@ -6,7 +6,7 @@ import {PublicAuditCodeIcon, PublicCodeScanIcon, PublicRuleManagementIcon} from 
 import {SolidExclamationIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {Divider, Tooltip} from "antd"
 import {convertToBytes} from "./Home"
-import {ProjectDescription} from "../softwareSettings/ProjectManage"
+import {getEnvTypeByProjects, ProjectDescription} from "../softwareSettings/ProjectManage"
 import {useDebounceEffect, useInViewport} from "ahooks"
 import classNames from "classnames"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -26,7 +26,9 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
-        ipcRenderer.invoke("GetCurrentProject").then((res: ProjectDescription) => {
+        ipcRenderer.invoke("GetCurrentProjectEx",{
+            type: getEnvTypeByProjects()
+        }).then((res: ProjectDescription) => {
             setCurProjectInfo(res)
         })
     }

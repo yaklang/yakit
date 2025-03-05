@@ -18,9 +18,9 @@ module.exports = (win, getClient) => {
     })
 
     // asyncGetCurrentProject wrapper
-    const asyncGetCurrentProject = (params) => {
+    const asyncGetCurrentProjectEx = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetCurrentProject(params, (err, data) => {
+            getClient().GetCurrentProjectEx(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -29,8 +29,8 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("GetCurrentProject", async (e, params) => {
-        return await asyncGetCurrentProject(params)
+    ipcMain.handle("GetCurrentProjectEx", async (e, params) => {
+        return await asyncGetCurrentProjectEx(params)
     })
 
     // asyncGetProjects wrapper
@@ -129,10 +129,10 @@ module.exports = (win, getClient) => {
         return await asyncDeleteProject(params)
     })
 
-    // asyncGetDefaultProject wrapper
-    const asyncGetDefaultProject = (params) => {
+    // asyncGetDefaultProjectEx wrapper
+    const asyncGetDefaultProjectEx = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetDefaultProject(params, (err, data) => {
+            getClient().GetDefaultProjectEx(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -141,13 +141,13 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("GetDefaultProject", async (e) => {
-        return await asyncGetDefaultProject()
+    ipcMain.handle("GetDefaultProjectEx", async (e, params) => {
+        return await asyncGetDefaultProjectEx(params)
     })
 
-    const asyncGetTemporaryProject = (params) => {
+    const asyncGetTemporaryProjectEx = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().GetTemporaryProject(params, (err, data) => {
+            getClient().GetTemporaryProjectEx(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -156,8 +156,8 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("GetTemporaryProject", async (e) => {
-        return await asyncGetTemporaryProject()
+    ipcMain.handle("GetTemporaryProjectEx", async (e, params) => {
+        return await asyncGetTemporaryProjectEx(params)
     })
 
     const handlerHelper = require("./handleStreamWithContext")
