@@ -120,7 +120,6 @@ import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrap
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {NewHTTPPacketEditor} from "@/utils/editors"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
@@ -128,6 +127,7 @@ import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AgentConfigModal} from "@/pages/mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
+import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1178,14 +1178,12 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
                                         placement={"rightTop"}
                                         content={
                                             <div style={{width: 600, height: 300}}>
-                                                <NewHTTPPacketEditor
-                                                    originValue={rowData.RuleContent}
+                                                <YakitEditor
+                                                    value={rowData.RuleContent}
                                                     readOnly={true}
-                                                    noMinimap={true}
-                                                    noHeader={true}
-                                                    showDownBodyMenu={false}
-                                                    language={SyntaxFlowMonacoSpec}
-                                                />
+                                                    noMiniMap={true}
+                                                    type={SyntaxFlowMonacoSpec}
+                                                ></YakitEditor>
                                             </div>
                                         }
                                     >

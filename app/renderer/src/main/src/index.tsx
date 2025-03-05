@@ -10,6 +10,26 @@ import "./yakitUI.scss"
 import "./theme/yakit.scss"
 import "./yakitLib.scss"
 import "./assets/global.scss"
+import {useEffect, useState} from "react"
+import ChildNewApp from "./ChildNewApp"
+
+const getQueryParam = (param) => {
+    return new URLSearchParams(window.location.search).get(param)
+}
+
+const App = () => {
+    const [windowType, setWindowType] = useState(getQueryParam("window"))
+
+    useEffect(() => {
+        const onPopState = () => {
+            setWindowType(getQueryParam("window"))
+        }
+
+        window.addEventListener("popstate", onPopState)
+        return () => window.removeEventListener("popstate", onPopState)
+    }, [])
+    return windowType === "child" ? <ChildNewApp /> : <NewApp />
+}
 
 // const divRoot = document.getElementById("root")
 // if (divRoot) {
@@ -29,7 +49,7 @@ import "./assets/global.scss"
 ReactDOM.render(
     // <React.StrictMode>
     <DndProvider backend={HTML5Backend}>
-        <NewApp />
+        <App />
     </DndProvider>,
     // </React.StrictMode>,
     document.getElementById("root")

@@ -30,6 +30,7 @@ import {
 } from "./MisstatementDetailType"
 import styles from "./MisstatementDetail.module.scss"
 import {API} from "@/services/swagger/resposeType"
+import {openPacketNewWindow} from "@/utils/openWebsite"
 
 export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: MisstatementDetailsProps<T>) => {
     const {info, className = "", border = true} = props
@@ -126,6 +127,16 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
                     />
                 }
                 showDownBodyMenu={false}
+                onClickOpenPacketNewWindowMenu={() => {
+                    openPacketNewWindow({
+                        request: {
+                            originValue: requestString(info)
+                        },
+                        response: {
+                            originValue: responseString(info)
+                        }
+                    })
+                }}
                 {...extraParams}
             />
         )

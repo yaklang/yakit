@@ -89,9 +89,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     const {currentPacket, currentPacketId, isHttp, requestPacket, traceInfo} = currentPacketInfo
 
-    const modifiedPacketRef = useRef<string>("")
+    const [modifiedPacket, setModifiedPacket] = useState<string>("")
     useEffect(() => {
-        modifiedPacketRef.current = currentPacket
+        setModifiedPacket(currentPacket)
     }, [currentPacket])
 
     const [width, setWidth] = useState<number>(0)
@@ -385,16 +385,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     // 美化
     const [beautifyTriggerRefresh, setBeautifyTriggerRefresh] = useState<boolean>(false) // 美化触发编辑器刷新
     const onSetBeautifyTrigger = useMemoizedFn((flag: boolean) => {
-        if (modifiedPacketRef.current === "") {
+        if (modifiedPacket === "") {
             return
         }
         const encoder = new TextEncoder()
-        const bytes = encoder.encode(modifiedPacketRef.current)
+        const bytes = encoder.encode(modifiedPacket)
         const mb = bytes.length / 1024 / 1024
         if (mb > 0.5) {
             return
         } else {
-            prettifyPacketCode(modifiedPacketRef.current).then((res) => {
+            prettifyPacketCode(modifiedPacket).then((res) => {
                 if (!!res) {
                     setCurrentPacketInfo((prev) => ({...prev, currentPacket: Uint8ArrayToString(res as Uint8Array)}))
                     setBeautifyTriggerRefresh(flag)
@@ -456,7 +456,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             setHijackResponseType("never")
         }
         setForResponse(false)
-        const modifiedPacketBytes = StringToUint8Array(modifiedPacketRef.current)
+        const modifiedPacketBytes = StringToUint8Array(modifiedPacket)
         if (forResponse) {
             ipcRenderer.invoke("mitm-forward-modified-response", modifiedPacketBytes, currentPacketId).finally(() => {
                 clearCurrentPacket()
@@ -539,7 +539,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             currentIsWebsocket={currentIsWebsocket}
                             currentPacket={currentPacket}
                             beautifyTriggerRefresh={beautifyTriggerRefresh}
-                            setModifiedPacket={(val) => (modifiedPacketRef.current = val)}
+                            modifiedPacket={modifiedPacket}
+                            setModifiedPacket={setModifiedPacket}
                             forResponse={forResponse}
                             currentPacketId={currentPacketId}
                             handleAutoForward={handleAutoForward}

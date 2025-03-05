@@ -2077,6 +2077,14 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                             firstNodeExtra={firstNodeExtra}
                             pageId={pageId}
+                            oneResponseValue={
+                                onlyOneResponse
+                                    ? {
+                                          originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
+                                          originalPackage: httpResponse.ResponseRaw
+                                      }
+                                    : undefined
+                            }
                         />
                     }
                     secondNode={

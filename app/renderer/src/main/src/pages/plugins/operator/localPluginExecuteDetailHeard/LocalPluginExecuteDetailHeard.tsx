@@ -758,7 +758,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                     validateStatus={validateStatus}
                     help={validateStatus === "error" ? `${formProps.label} 是必填字段` : ""}
                 >
-                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} />
+                    <HTTPPacketYakitEditor originValue={defaultValue} readOnly={disabled} onlyBasicMenu={true} />
                 </Form.Item>
             )
         case "yak":

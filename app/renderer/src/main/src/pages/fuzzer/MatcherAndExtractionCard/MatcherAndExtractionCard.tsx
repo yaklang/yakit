@@ -66,6 +66,7 @@ import {
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
 import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
+import {openPacketNewWindow} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -99,6 +100,13 @@ export const MatcherAndExtractionCard: React.FC<MatcherAndExtractionCardProps> =
                             noHeader={true}
                             originValue={codeValue}
                             onChange={setCodeValue}
+                            onClickOpenPacketNewWindowMenu={() => {
+                                openPacketNewWindow({
+                                    request: {
+                                        originValue: codeValue
+                                    }
+                                })
+                            }}
                         />
                     </div>
                 }

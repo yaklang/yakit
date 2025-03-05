@@ -12,6 +12,9 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 import {TraceInfo} from "../MITMPage"
+import {useMemoizedFn} from "ahooks"
+import {yakitNotify} from "@/utils/notification"
+import {openPacketNewWindow} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -214,6 +217,7 @@ interface MITMManualEditorProps {
     isHttp: boolean
     currentIsWebsocket: boolean
     currentPacket: string
+    modifiedPacket: string
     setModifiedPacket: (u: string) => void
     forResponse: boolean
     currentPacketId: number
@@ -233,6 +237,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         isHttp,
         currentIsWebsocket,
         currentPacket,
+        modifiedPacket,
         setModifiedPacket,
         forResponse,
         currentPacketId,
@@ -381,6 +386,13 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
                 isShowSelectRangeMenu: true
             }}
             showDownBodyMenu={false}
+            onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
+                openPacketNewWindow({
+                    request: {
+                        originValue: modifiedPacket
+                    }
+                })
+            })}
         />
     )
 })

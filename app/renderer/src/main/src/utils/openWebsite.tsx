@@ -1,10 +1,19 @@
 import React from "react"
-import {success, yakitFailed} from "./notification"
+import {success, yakitFailed, yakitNotify} from "./notification"
+import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
 
 const {ipcRenderer} = window.require("electron")
 
 export const openExternalWebsite = (u: string) => {
     ipcRenderer.invoke("shell-open-external", u)
+}
+
+export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
+    yakitNotify("info", "新窗口打开中...")
+    ipcRenderer.send("open-new-child-window", {
+        type: "openPacketNewWindow",
+        data: data
+    })
 }
 
 export const openABSFile = (u: string) => {
