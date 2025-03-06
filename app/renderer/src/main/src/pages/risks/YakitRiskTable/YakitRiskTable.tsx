@@ -642,8 +642,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
     const fetchMisstatement = () => {
         const params = riskFeedbackToOnlineParams.current
         if (params) {
-            console.log(params);
-            
             apiRiskFeedbackToOnline(params).then(() => {
                 yakitNotify("success", "反馈成功")
             })
@@ -1010,8 +1008,6 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 const resData = getResData(res.Data)
                 const d = isInit ? resData : (response?.Data || []).concat(resData)
                 prePage.current += 1
-                console.log(111, d);
-                
                 setResponse({
                     ...res,
                     Data: d,
