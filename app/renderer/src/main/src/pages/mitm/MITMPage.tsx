@@ -610,7 +610,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         setEnableInitialPlugin(checked)
     })
     /**
-     * @description 劫持开启后不带参数的全选 启动插件
+     * @description 劫持开启后的全选和清空 启动插件
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
         if (checked) {
@@ -627,13 +627,18 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                     yakitFailed("清空失败:" + err)
                 })
         } else {
+            // 点按钮清空
             ipcRenderer
                 .invoke("mitm-remove-hook", {
                     HookName: [],
-                    RemoveHookID: listNames.concat(noParamsCheckList)
+                    RemoveHookID: [...new Set([...listNames, ...hasParamsCheckList, ...noParamsCheckList])]
                 } as any)
                 .then(() => {
                     setIsSelectAll(checked)
+                    emiter.emit("onMitmClearFromPlugin")
+                    setShowPluginHistoryList([])
+                    setTempShowPluginHistory && setTempShowPluginHistory("")
+                    emiter.emit("onHasParamsJumpHistory", "")
                 })
                 .catch((err) => {
                     yakitFailed("清空失败:" + err)
@@ -937,6 +942,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         loadedPluginLen={loadedPluginLen}
                         onSelectAll={onSelectAll}
                         setShowPluginHistoryList={setShowPluginHistoryList}
+                        setTempShowPluginHistory={setTempShowPluginHistory}
                     />
                 )
         }
@@ -966,13 +972,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
             isVer={false}
             freeze={openTabsFlag}
             isRecalculateWH={openTabsFlag}
-            firstNode={() => (
-                <div
-                    className={style["mitm-server-start-pre-first"]}
-                >
-                    {onRenderFirstNode()}
-                </div>
-            )}
+            firstNode={() => <div className={style["mitm-server-start-pre-first"]}>{onRenderFirstNode()}</div>}
             lineStyle={{display: isFullScreenFirstNode ? "none" : ""}}
             firstMinSize={openTabsFlag ? "400px" : "24px"}
             secondMinSize={720}
