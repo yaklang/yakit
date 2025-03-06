@@ -40,7 +40,8 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     overwriteSNI: "auto",
     resNumlimit: DefFuzzerTableMaxData,
     actualHost: "",
-    timeout: 30.0,
+    dialTimeoutSeconds: 10,
+    timeout: 30,
     // 批量目标
     batchTarget: new Uint8Array(),
     // 发包配置
