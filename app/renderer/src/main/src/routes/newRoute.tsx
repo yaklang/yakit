@@ -1177,7 +1177,8 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = [
             PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
             PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
             PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
-            PrivateAllMenus[YakitRoute.Rule_Management]
+            PrivateAllMenus[YakitRoute.Rule_Management],
+            PrivateAllMenus[YakitRoute.YakRunner_Audit_Hole],
         ]
     },
     {
