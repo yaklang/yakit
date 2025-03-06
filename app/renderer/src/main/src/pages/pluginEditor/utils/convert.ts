@@ -29,7 +29,10 @@ export const pluginParamsConvertLocalToOnline = (local: YakParamProps[]) => {
             extra_setting: item.ExtraSetting,
             help: item.Help,
             group: item.Group,
-            method_type: item.MethodType || ""
+            method_type: item.MethodType || "",
+            json_schema: item.JsonSchema || "",
+            suggestion_data_expression: item.SuggestionDataExpression || "",
+            ui_schema: item.UISchema || ""
         }
         return obj
     })
@@ -49,7 +52,9 @@ export const pluginParamsConvertOnlineToLocal = (online: API.YakitPluginParam[])
             ExtraSetting: item.extra_setting,
             Help: item.help,
             Group: item.group,
-            MethodType: item.method_type || ""
+            MethodType: item.method_type || "",
+            JsonSchema: item.json_schema || "",
+            UISchema: item.ui_schema || ""
         }
         return obj
     })
