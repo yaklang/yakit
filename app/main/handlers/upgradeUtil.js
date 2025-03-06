@@ -660,7 +660,6 @@ module.exports = {
                 }
                 const versionPath = path.join("bins", "engine-version.txt")
                 let buildInVersion = fs.readFileSync(loadExtraFilePath(versionPath)).toString("utf8")
-                console.log(`888(${buildInVersion})`)
                 // 去除换行符
                 buildInVersion = (buildInVersion || "").replace(/\r?\n/g, "")
                 // 去除首尾空格

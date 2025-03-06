@@ -155,12 +155,10 @@ const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
     if (url === "") {
         throw new Error(`No Find ${version} Hash Url`)
     }
-
     return axios.get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)}).then((response) => {
         const versionData = Buffer.from(response.data).toString("utf8")
         if (versionData.length > 0) {
             let onlineHash = Buffer.from(response.data).toString("utf8")
-            console.log(`666(${onlineHash})`)
             // 去除换行符
             onlineHash = (onlineHash || "").replace(/\r?\n/g, "")
             // 去除首尾空格
