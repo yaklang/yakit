@@ -1,6 +1,6 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {KVPair} from "@/models/kv"
-import {YakScript} from "@/pages/invoker/schema"
+import {QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
 import {yakitNotify} from "@/utils/notification"
 import {
     DeletePluginEnvRequest,
@@ -175,6 +175,42 @@ export const grpcDeletePluginEnvVariables: APIFunc<DeletePluginEnvRequest, undef
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "删除插件环境变量失败:" + e)
                 reject(e)
+            })
+    })
+}
+
+/** @name 查询插件批量下载是否跳过 */
+interface QueryYakScriptSkipUpdateResponse {
+    SkipUpdate: boolean
+}
+export const grpcQueryYakScriptSkipUpdate: APIFunc<
+    QueryYakScriptRequest,
+    QueryYakScriptSkipUpdateResponse
+> = (request) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryYakScriptSkipUpdate", request)
+            .then(resolve)
+            .catch((e) => {
+                reject(e)
+                yakitNotify("error", e + "")
+            })
+    })
+}
+
+/** @name 设置插件批量下载是否跳过 */
+interface SetYakScriptSkipUpdateRequest {
+    SkipUpdate: boolean
+    Field: QueryYakScriptRequest
+}
+export const grpcSetYakScriptSkipUpdate: APIFunc<SetYakScriptSkipUpdateRequest, unknown> = (request) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("SetYakScriptSkipUpdate", request)
+            .then(resolve)
+            .catch((e) => {
+                reject(e)
+                yakitNotify("error", e + "")
             })
     })
 }

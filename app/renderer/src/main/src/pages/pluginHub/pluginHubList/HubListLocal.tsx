@@ -2,6 +2,7 @@ import React, {memo, useRef, useMemo, useState, useReducer, useEffect} from "rea
 import {useMemoizedFn, useDebounceFn, useUpdateEffect, useInViewport, useDebounceEffect} from "ahooks"
 import {
     OutlineClouduploadIcon,
+    OutlineExclamationcircleIcon,
     OutlinePluscircleIcon,
     OutlinePlusIcon,
     OutlineRefreshIcon,
@@ -63,7 +64,7 @@ import {PluginGroup, TagsAndGroupRender, YakFilterRemoteObj} from "@/pages/mitm/
 import {Tooltip} from "antd"
 import {ModifyYakitPlugin} from "@/pages/pluginEditor/modifyYakitPlugin/ModifyYakitPlugin"
 import {ModifyPluginCallback} from "@/pages/pluginEditor/pluginEditor/PluginEditor"
-import {grpcFetchLocalPluginDetail} from "../utils/grpc"
+import {grpcFetchLocalPluginDetail, grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate} from "../utils/grpc"
 import {KeyParamsFetchPluginDetail} from "@/pages/pluginEditor/base"
 import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
 import {PluginGroupDrawer} from "../group/PluginGroupDrawer"
@@ -72,12 +73,12 @@ import {UpdateGroupList, UpdateGroupListItem} from "../group/UpdateGroupList"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ListDelGroupConfirmPop} from "../group/PluginOperationGroupList"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
-import {getRemoteHttpSettingGV} from "@/utils/envfile"
-
 interface HubListLocalProps extends HubListBaseProps {
     rootElementId?: string
     openGroupDrawer: boolean
@@ -623,6 +624,76 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         )
     })
 
+    const [skipUpdate, setSkipUpdate] = useState<boolean>(false)
+    useDebounceEffect(
+        () => {
+            if (selectList.length || allChecked) {
+                queryYakScriptSkipUpdate()
+            } else {
+                setSkipUpdate(false)
+            }
+        },
+        [selectList, allChecked, inViewPort],
+        {wait: 200}
+    )
+    // 查询插件批量下载是否跳过
+    const queryYakScriptSkipUpdate = useMemoizedFn(() => {
+        const page: PluginListPageMeta = {
+            page: +response.Pagination.Page,
+            limit: +response.Pagination.Limit || 20
+        }
+        const queryFilters = {...getFilters()}
+        const querySearch = {...getSearch()}
+        const query: QueryYakScriptRequest = {
+            ...convertLocalPluginsRequestParams({
+                filter: queryFilters,
+                search: querySearch,
+                pageParams: page
+            })
+        }
+        grpcQueryYakScriptSkipUpdate(
+            allChecked
+                ? query
+                : {
+                      ...query,
+                      IncludedScriptNames: selectList.map((item) => item.ScriptName)
+                  }
+        )
+            .then((res) => {
+                setSkipUpdate(res.SkipUpdate)
+            })
+            .catch(() => {
+                setSkipUpdate(false)
+            })
+    })
+    // 设置插件批量下载是否跳过
+    const setYakScriptSkipUpdate = useMemoizedFn(() => {
+        const page: PluginListPageMeta = {
+            page: +response.Pagination.Page,
+            limit: +response.Pagination.Limit || 20
+        }
+        const queryFilters = {...getFilters()}
+        const querySearch = {...getSearch()}
+        const query: QueryYakScriptRequest = {
+            ...convertLocalPluginsRequestParams({
+                filter: queryFilters,
+                search: querySearch,
+                pageParams: page
+            })
+        }
+        grpcSetYakScriptSkipUpdate({
+            SkipUpdate: !skipUpdate,
+            Field: allChecked
+                ? query
+                : {
+                      ...query,
+                      IncludedScriptNames: selectList.map((item) => item.ScriptName)
+                  }
+        }).then((res) => {
+            setSkipUpdate(!skipUpdate)
+        })
+    })
+
     /** ---------- 分组 Start ---------- */
     // 组抽屉列表
     const [pluginGroupMagDrawer, setPluginGroupMagDrawer] = useState<boolean>(false)
@@ -1080,6 +1151,20 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             }
                             listHeaderRightExtra={
                                 <div className={styles["hub-list-header-right-extra"]}>
+                                    <YakitCheckbox
+                                        disabled={!(selectList.length || allChecked)}
+                                        checked={skipUpdate}
+                                        onChange={setYakScriptSkipUpdate}
+                                    >
+                                        不下载{" "}
+                                        <Tooltip
+                                            title='勾选不下载插件后，批量下载插件时将跳过此插件'
+                                            align={{offset: [0, 10]}}
+                                        >
+                                            <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                                        </Tooltip>
+                                    </YakitCheckbox>
+                                    <div className={styles["divider-style"]}></div>
                                     {showGroupList.length > 0 && (
                                         <div className={styles["header-filter-tag"]}>
                                             {showGroupList.length <= 2 ? (

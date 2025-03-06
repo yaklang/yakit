@@ -302,6 +302,22 @@ module.exports = (win, getClient) => {
         })
     }
 
+    // 风险漏洞误报反馈
+    const asyncRiskFeedbackToOnline = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().RiskFeedbackToOnline(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("RiskFeedbackToOnline", async (e, params) => {
+        return await asyncRiskFeedbackToOnline(params)
+    })
+
     /** 同步数据 */
     ipcMain.handle("upload-risk-to-online", async (e, params) => {
         return await asyncUploadRiskToOnline(params)

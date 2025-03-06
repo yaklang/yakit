@@ -153,6 +153,7 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     divider: {type: "divider"},
     singOut: {key: "sign-out", label: "退出登录", type: "danger"},
     pluginAudit: {key: "plugin-audit", label: "插件管理"},
+    misstatement: {key: "misstatement", label: "误报记录"},
     // CE
     trustList: {key: "trust-list", label: "用户管理"},
     licenseAdmin: {key: "license-admin", label: "License管理"},
@@ -248,14 +249,19 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["trustList"],
                         UserMenusMap["licenseAdmin"],
                         UserMenusMap["pluginAudit"],
-                        UserMenusMap["dataStatistics"]
+                        UserMenusMap["dataStatistics"],
+                        UserMenusMap["misstatement"]
                     ].concat(signOutMenu)
                 )
             }
             // CE-管理员
             if (userInfo.role === "admin") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"]].concat(signOutMenu))
+                setUserMenu(
+                    [UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"], UserMenusMap["misstatement"]].concat(
+                        signOutMenu
+                    )
+                )
             }
             // CE-操作员
             if (userInfo.role === "operate") {
@@ -270,7 +276,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-审核员
             if (userInfo.role === "auditor") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAudit"]].concat(signOutMenu))
+                setUserMenu([UserMenusMap["pluginAudit"], UserMenusMap["misstatement"]].concat(signOutMenu))
             }
             // CE-非权限人员
             if (!isNew) {
@@ -301,6 +307,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["accountAdmin"],
                         UserMenusMap["setPassword"],
                         UserMenusMap["pluginAudit"],
+                        UserMenusMap["misstatement"],
                         ...signOutMenu
                     ]
                     if (dynamicConnect) {
@@ -323,16 +330,30 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
                     UserMenusMap["pluginAudit"],
+                    UserMenusMap["misstatement"],
                     ...signOutMenu
                 ]
                 if (userInfo.role !== "auditor") {
                     // 不为审核员时 移除插件管理
                     isNew = true
-                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["plugin-audit"].includes((item as YakitMenuItemProps).key)
+                    )
                 }
+
+                // 不为审核员或超级管理员时 移除误报记录
+                if (!["superAdmin", "auditor"].includes(userInfo.role || "")) {
+                    isNew = true
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["misstatement"].includes((item as YakitMenuItemProps).key)
+                    )
+                }
+                
                 if (isEnpriTraceAgent()) {
                     isNew = true
-                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "upload-data")
+                    cacheMenus = cacheMenus.filter(
+                        (item) => !["upload-data", "misstatement"].includes((item as YakitMenuItemProps).key)
+                    )
                 }
                 // 远程中时不显示发起远程 显示退出远程
                 if (dynamicConnect) {
@@ -588,6 +609,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 }
                                                 if (key === "close-dynamic-control") {
                                                     ipcRenderer.invoke("lougin-out-dynamic-control", {loginOut: false})
+                                                }
+                                                if (key === "misstatement") {
+                                                    onOpenPage({route: YakitRoute.Misstatement})
                                                 }
                                             }
                                         }}

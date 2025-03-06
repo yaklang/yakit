@@ -27,6 +27,7 @@ export enum YakitRoute {
     DB_HTTPHistory = "db-http-request",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
+    Misstatement = "misstatement",
     DB_Ports = "db-ports",
     DB_Domain = "db-domains",
     DB_CVE = "cve",

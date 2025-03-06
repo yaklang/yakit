@@ -4,6 +4,7 @@ import {
     OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineDotshorizontalIcon,
+    OutlineExclamationcircleIcon,
     OutlineExportIcon,
     OutlineLockclosedIcon,
     OutlineLockopenIcon,
@@ -40,9 +41,13 @@ import {defaultSearch} from "@/pages/plugins/builtInData"
 import cloneDeep from "lodash/cloneDeep"
 import {PluginUploadModal} from "../pluginUploadModal/PluginUploadModal"
 import {setClipboardText} from "@/utils/clipboard"
+import {PluginSourceType} from "../type"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {Tooltip} from "antd"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
+import {grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate} from "../utils/grpc"
 
 export interface HubExtraOperateRef {
     downloadedNext: (flag: boolean) => void
@@ -52,6 +57,7 @@ export interface HubExtraOperateProps {
     ref?: ForwardedRef<HubExtraOperateRef>
     /** 上层元素的id */
     getContainer?: string
+    active?: PluginSourceType
     online?: YakitPluginOnlineDetail
     local?: YakScript
     /** 下载loading状态 */
@@ -66,7 +72,7 @@ export interface HubExtraOperateProps {
 
 export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     forwardRef((props, ref) => {
-        const {getContainer, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
+        const {getContainer, active, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
 
         useImperativeHandle(
             ref,
@@ -539,8 +545,57 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 .catch(() => {})
         })
 
+        const [skipUpdate, setSkipUpdate] = useState<boolean>(false)
+        useEffect(() => {
+            if (active === "local" && !!local) {
+                grpcQueryYakScriptSkipUpdate({
+                    IncludedScriptNames: [local.ScriptName],
+                    Pagination: {
+                        Limit: 10,
+                        Page: 1,
+                        OrderBy: "updated_at",
+                        Order: "desc"
+                    }
+                })
+                    .then((res) => {
+                        setSkipUpdate(res.SkipUpdate)
+                    })
+                    .catch(() => {
+                        setSkipUpdate(false)
+                    })
+            } else {
+                setSkipUpdate(false)
+            }
+        }, [active, local])
+
         return (
             <div className={styles["hub-extra-operate"]}>
+                {active === "local" && !!local && (
+                    <YakitCheckbox
+                        checked={skipUpdate}
+                        onChange={() => {
+                            grpcSetYakScriptSkipUpdate({
+                                SkipUpdate: !skipUpdate,
+                                Field: {
+                                    IncludedScriptNames: [local.ScriptName],
+                                    Pagination: {
+                                        Limit: 10,
+                                        Page: 1,
+                                        OrderBy: "updated_at",
+                                        Order: "desc"
+                                    }
+                                }
+                            }).then((res) => {
+                                setSkipUpdate(!skipUpdate)
+                            })
+                        }}
+                    >
+                        不下载{" "}
+                        <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
+                            <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
+                        </Tooltip>
+                    </YakitCheckbox>
+                )}
                 {!isCorePlugin && (
                     <div className={styles["btn-group"]}>
                         <HubButton

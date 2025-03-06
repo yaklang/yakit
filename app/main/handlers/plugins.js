@@ -264,4 +264,36 @@ module.exports = (win, getClient) => {
     ipcMain.handle("DeletePluginEnv", async (e, params) => {
         return await asyncDeletePluginEnv(params)
     })
+
+    // 查询插件批量下载是否跳过
+    const asyncQueryYakScriptSkipUpdate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryYakScriptSkipUpdate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryYakScriptSkipUpdate", async (e, params) => {
+        return await asyncQueryYakScriptSkipUpdate(params)
+    })
+    
+    // 设置插件批量下载是否跳过
+    const asyncSetYakScriptSkipUpdate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().SetYakScriptSkipUpdate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("SetYakScriptSkipUpdate", async (e, params) => {
+        return await asyncSetYakScriptSkipUpdate(params)
+    })
 }

@@ -1,0 +1,258 @@
+@use "../../theme/themeify.scss" as tools;
+
+%flex-row {
+    display: flex;
+    flex-direction: row;
+}
+%flex-row-center {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+}
+%flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+%display-flex-center {
+    display: flex;
+    align-items: center;
+}
+
+$tagColor: (
+    "success": (
+        color: var(--yakit-success-5)
+    ),
+    "warning": (
+        color: var(--yakit-warning-5)
+    ),
+    "info": (
+        color: var(--yakit-primary-5)
+    ),
+    "danger": (
+        color: var(--yakit-danger-5)
+    ),
+    "serious": (
+        color: var(--yakit-serious-5)
+    ),
+    "default": (
+        color: var(--yakit-helper-text-color)
+    )
+);
+$keyColor: map-keys($tagColor);
+@for $c from 1 through length($keyColor) {
+    $name: nth($keyColor, $c);
+    $currentColor: map-get($tagColor, $name);
+    .severity-#{$name} {
+        color: map-get($currentColor, "color");
+    }
+}
+
+@mixin heard($name) {
+    .#{$name}-heard {
+        justify-content: space-between;
+        align-items: center;
+        height: 24px;
+
+        @extend %flex-row;
+
+        @content;
+        .#{$name}-heard-title {
+            justify-content: space-between;
+            align-items: center;
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 500;
+            font-style: normal;
+            line-height: 16px; /* 133.333% */
+
+            @extend %flex-row;
+            gap: 4px;
+        }
+    }
+}
+.misstatement-page {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+
+    @extend %flex-row;
+
+    &-right {
+        .renderTitle-wrapper {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 12px 0;
+
+            &-left {
+                display: flex;
+                gap: 8px;
+                .renderTitle-text {
+                    color: var(--yakit-header-color);
+                    font-size: 16px;
+                    font-weight: 600;
+                    line-height: 24px;
+                }
+                .virtual-table-heard-right {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-end;
+
+                    .virtual-table-heard-right-item {
+                        display: flex;
+                        align-items: center;
+
+                        .virtual-table-heard-right-text {
+                            color: var(--yakit-helper-text-color);
+                            font-size: 12px;
+                            margin-right: 4px;
+                        }
+
+                        .virtual-table-heard-right-number {
+                            color: var(--yakit-primary-5);
+                            font-size: 12px;
+                        }
+                    }
+                }
+            }
+            &-right {
+                display: flex;
+                gap: 8px;
+            }
+        }
+        .misstatement-table {
+            height: calc(100% - 40px);
+
+            .yakit-misstatement-table {
+                @extend %flex-column;
+                height: 100%;
+                width: 100%;
+                overflow: hidden;
+                padding: 12px;
+                .table-severity-tag {
+                    margin-right: 0;
+                }
+                .filter-icon {
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+                .yakit-misstatement-details {
+                    @extend %flex-column;
+                    border-radius: 0 0 4px 4px;
+                    position: relative;
+                    height: 100%;
+                    border-top: 0;
+                }
+            }
+
+            .table-tag {
+                @extend %display-flex-center;
+                justify-content: space-between;
+                gap: 4px;
+            }
+        }
+    }
+}
+.misstatement-query {
+    overflow: hidden;
+    width: 300px;
+    max-width: 300px;
+    height: 100%;
+    transition:
+        width 0.2s ease,
+        opacity 0.2s ease;
+    opacity: 1;
+    border-right: 1px solid var(--yakit-border-color);
+
+    @extend %flex-column;
+    flex-shrink: 0;
+
+    :global {
+        .ant-collapse {
+            padding: 8px 12px 0px;
+        }
+        .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+            padding: 0;
+        }
+    }
+    .misstatement-query-heard {
+        justify-content: space-between;
+        height: 44px;
+        padding: 16px 12px 12px;
+        color: var(--yakit-header-color);
+        border-bottom: 1px solid var(--yakit-border-color);
+        font-size: 12px;
+        line-height: 16px;
+
+        @extend %flex-row-center;
+    }
+    .misstatement-query-body {
+        overflow-y: auto;
+        flex: 1;
+
+        @extend %flex-column;
+    }
+}
+.misstatement-query-hidden {
+    width: 0;
+    opacity: 0;
+}
+.misstatement-list-body {
+    overflow: hidden;
+    flex: 1;
+    min-height: 150px;
+    padding: 8px 12px 4px;
+
+    @extend %flex-column;
+
+    @include heard("misstatement-list");
+
+    .misstatement-list-content {
+        overflow-y: auto;
+        flex: 1;
+
+        @extend %flex-column;
+
+        .misstatement-list-item {
+            justify-content: space-between;
+            height: 24px;
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+
+            @extend %flex-row-center;
+
+            cursor: pointer;
+            &:hover {
+                background-color: var(--yakit-background-color);
+            }
+            .misstatement-list-item-label {
+                color: var(--yakit-header-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+            .misstatement-list-item-value {
+                color: var(--yakit-helper-text-color);
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px; /* 133.333% */
+            }
+        }
+        .misstatement-list-item-active {
+            .misstatement-list-item-label,
+            .misstatement-list-item-value {
+                color: var(--yakit-primary-5);
+            }
+        }
+    }
+}
+.to-end {
+    padding-top: 24px;
+    padding-bottom: 12px;
+    text-align: center;
+    color: var(--yakit-disable-text-color);
+    font-size: 11px;
+}

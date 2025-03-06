@@ -342,6 +342,56 @@ export declare namespace API {
         isOpen: boolean
         content: string
     }
+    export interface SSARiskWhereRequest extends Pagination, SSARiskWhere {}
+    export interface SSARiskWhere {
+        id?: number[]
+        search?: string
+        programName?: string[]
+        codeSourceUrl?: string[]
+        riskType?: string[]
+        severity?: string[]
+        fromRule?: string[]
+        runtimeID?: string[]
+        resultID?: number[]
+        tags?: string[]
+        title?: string
+        hash?: string[]
+    }
+    export interface SSARiskResponse extends Paging {
+        data: SSARiskResponseData[]
+    }
+    export interface SSARiskResponseData extends GormBaseModel, SSARisk {}
+    export interface SSARiskRequest {
+        content: string
+    }
+    export interface SSARisk {
+        hash: string
+        programName: string
+        codeSourceUrl: string
+        codeRange: string
+        codeFragment: string
+        title: string
+        titleVerbose: string
+        riskType: string
+        riskTypeVerbose: string
+        details: string
+        severity: string
+        fromRule: string
+        runtimeID: string
+        isPotential: boolean
+        cve: string
+        cveAccessVector: string
+        cveAccessComplexity: string
+        tags: string
+        resultID: number
+        variable: string
+        index: number
+        functionName: string
+        line: number
+        solution: string
+        description: string
+        ssaRiskCreatedAt: number
+    }
     export interface ShareResponse {
         share_id: string
         extract_code?: string
@@ -408,6 +458,43 @@ export declare namespace API {
         solution: string
         risk_created_at: number
         project_name: string
+    }
+    export interface RiskFeedBackResponse extends Paging {
+        data: RiskFeedBackData[]
+    }
+    export interface RiskFeedBackRequest extends Pagination, GetRiskWhere {}
+    export interface RiskFeedBackData extends GormBaseModel, RiskFeedBack {}
+    export interface RiskFeedBack {
+        userName: string
+        riskHash: string
+        ip: string
+        url: string
+        port: number
+        host: string
+        title: string
+        titleVerbose: string
+        description: string
+        solution: string
+        riskType: string
+        riskTypeVerbose: string
+        parameter: string
+        payload: string
+        details: string
+        fromYakScript: string
+        waitingVerified: boolean
+        reverseToken: string
+        severity: string
+        request: string
+        response: string
+        ipInteger: number
+        runtimeId: string
+        cve: string
+        taskName: string
+        tags: string
+        riskCreatedAt: number
+        resultID: string
+        programName: string
+        syntaxFlowVariable: string
     }
     export interface RemoteTunnelResponse {
         server: string
@@ -915,6 +1002,12 @@ export declare namespace API {
     export interface Paging {
         pagemeta: PageMeta
     }
+    export interface Pagination {
+        page: number
+        limit: number
+        order_by: string
+        order: string
+    }
     export interface PageMeta {
         /**
          * 页面索引
@@ -1223,6 +1316,9 @@ export declare namespace API {
          */
         isAuthor?: boolean
     }
+    export interface GroupTableColumnResponse {
+        data: string[]
+    }
     export interface GroupResponseDetail {
         value: string
         total: number
@@ -1247,6 +1343,11 @@ export declare namespace API {
         waiting_verified?: boolean
         severity?: string
         user_name?: string
+        fromId?: number
+        untilId?: number
+        tags?: string
+        title?: string
+        fromYakScript?: string
     }
     export interface GetRemoteWhere {
         user_name?: string
@@ -1287,6 +1388,14 @@ export declare namespace API {
         originValue?: string
         autoTemplate?: string
         isHTTPS?: boolean
+    }
+    export interface Fields {
+        data: FieldName[]
+    }
+    export interface FieldName {
+        name?: string
+        verbose?: string
+        total?: number
     }
     export interface ExtractResponse {
         extract_content: string

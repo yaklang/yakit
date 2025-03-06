@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {PluginToDetailInfo} from "../type"
+import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {PluginHubList} from "../pluginHubList/PluginHubList"
 import {PluginHubDetail, PluginHubDetailRefProps} from "../pluginHubDetail/PluginHubDetail"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
@@ -20,6 +20,7 @@ interface PluginHubProps {}
 
 const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const {} = props
+    const [active, setActive] = useState<PluginSourceType>()
 
     useEffect(() => {
         getRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI).then((val) => {
@@ -73,6 +74,8 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
             <div className={classNames(styles["list"], {[styles["out-list"]]: hiddenDetail || !isDetail})}>
                 <PluginHubList
                     rootElementId={wrapperId}
+                    active={active}
+                    setActive={setActive}
                     isDetail={isDetail}
                     toPluginDetail={handlePluginDetail}
                     setHiddenDetailPage={setHiddenDetail}
@@ -85,6 +88,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
                     <PluginHubDetail
                         ref={detailRef}
                         rootElementId={wrapperId}
+                        active={active}
                         onBack={onBack}
                         autoOpenDetailTab={autoOpenDetailTab}
                         setAutoOpenDetailTab={setAutoOpenDetailTab}

@@ -34,7 +34,8 @@ import {
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineTerminalIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    OutlineUploadIcon
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import cloneDeep from "lodash/cloneDeep"
@@ -48,6 +49,7 @@ import {
     ExportHtmlProps,
     FieldGroup,
     SetTagForRiskRequest,
+    UploadRiskToOnlineRequest,
     apiDeleteRisk,
     apiExportHtml,
     apiNewRiskRead,
@@ -55,6 +57,7 @@ import {
     apiQueryRiskTags,
     apiQueryRisks,
     apiQueryRisksIncrementOrderDesc,
+    apiRiskFeedbackToOnline,
     apiSetTagForRisk
 } from "./utils"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -97,6 +100,10 @@ import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {getRemoteValue} from "@/utils/kv"
+import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
+import {RemoteRiskGV} from "@/enums/risk"
+import {useStore} from "@/store"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -262,6 +269,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         yakitRiskDetailsBorder = true,
         excludeColumnsKey = []
     } = props
+    const {userInfo} = useStore()
     const [loading, setLoading] = useState<boolean>(false)
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -549,7 +557,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "操作",
                 dataKey: "action",
-                width: 100,
+                width: 140,
                 fixed: "right",
                 render: (text, record: Risk, index) => (
                     <>
@@ -563,51 +571,84 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                             icon={<OutlineTrashIcon />}
                         />
                         <Divider type='vertical' />
-                        {isShowCodeScanDetail(record) ? (
-                            <Tooltip title={"在代码审计中打开"}>
-                                <YakitButton
-                                    type='text'
-                                    icon={<OutlineTerminalIcon />}
-                                    onClick={() => {
-                                        const params: AuditCodePageInfoProps = {
-                                            Schema: "syntaxflow",
-                                            Location: record.ProgramName || "",
-                                            Path: `/`,
-                                            Query: [{Key: "result_id", Value: record.ResultID || 0}]
-                                        }
-                                        emiter.emit(
-                                            "openPage",
-                                            JSON.stringify({
-                                                route: YakitRoute.YakRunner_Audit_Code,
-                                                params
-                                            })
-                                        )
-                                    }}
-                                />
-                            </Tooltip>
-                        ) : (
-                            <Tooltip
-                                title='复测'
-                                destroyTooltipOnHide={true}
-                                overlayStyle={{paddingBottom: 0}}
-                                placement='top'
-                            >
-                                <YakitButton
-                                    type='text'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onRetest(record)
-                                    }}
-                                    icon={<OutlinePlayIcon />}
-                                />
-                            </Tooltip>
-                        )}
+                        <Tooltip
+                            title='复测'
+                            destroyTooltipOnHide={true}
+                            overlayStyle={{paddingBottom: 0}}
+                            placement='top'
+                        >
+                            <YakitButton
+                                type='text'
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onRetest(record)
+                                }}
+                                icon={<OutlinePlayIcon />}
+                            />
+                        </Tooltip>
+                        <Divider type='vertical' />
+                        <Tooltip
+                            title='误报反馈'
+                            destroyTooltipOnHide={true}
+                            overlayStyle={{paddingBottom: 0}}
+                            placement='top'
+                        >
+                            <OutlineUploadIcon
+                                className={styles["misstatement-icon"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onClickRiskFeedbackToOnline(record)
+                                }}
+                            />
+                        </Tooltip>
                     </>
                 )
             }
         ]
         return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
     }, [riskTypeVerbose, tag, excludeColumnsKey])
+
+    /**误报上传 start */
+    const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
+    const misstatementHintCache = useRef<boolean>(false)
+    const riskFeedbackToOnlineParams = useRef<UploadRiskToOnlineRequest>()
+    useEffect(() => {
+        getRemoteValue(RemoteRiskGV.RiskMisstatementNoPrompt).then((res) => {
+            misstatementHintCache.current = res === "true"
+        })
+    }, [])
+    const handleMisstatementHint = (isOk: boolean, cache: boolean) => {
+        if (isOk) {
+            misstatementHintCache.current = cache
+            fetchMisstatement()
+        }
+        setMisstatementVisible(false)
+    }
+    const onClickRiskFeedbackToOnline = useMemoizedFn((record: Risk) => {
+        if (!userInfo.isLogin) {
+            yakitNotify("info", "请先登录账号")
+            return
+        }
+        riskFeedbackToOnlineParams.current = {
+            Token: userInfo.token,
+            Hash: [record.Hash]
+        }
+        if (!misstatementHintCache.current) {
+            setMisstatementVisible(true)
+        } else {
+            fetchMisstatement()
+        }
+    })
+    const fetchMisstatement = () => {
+        const params = riskFeedbackToOnlineParams.current
+        if (params) {
+            apiRiskFeedbackToOnline(params).then(() => {
+                yakitNotify("success", "反馈成功")
+            })
+        }
+    }
+    /**误报上传 end */
+
     /**复测 */
     const onRetest = useMemoizedFn((record: Risk) => {
         if (record.YakScriptUUID || record.FromYakScript) {
@@ -617,7 +658,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         route: YakitRoute.Plugin_Hub,
                         params: {
                             tabActive: "local",
-                            detailInfo: {uuid: yakScript.UUID, name: yakScript.ScriptName, isCorePlugin: !!yakScript?.IsCorePlugin}
+                            detailInfo: {
+                                uuid: yakScript.UUID,
+                                name: yakScript.ScriptName,
+                                isCorePlugin: !!yakScript?.IsCorePlugin
+                            }
                         } as PluginHubPageInfoProps
                     }
                     emiter.emit("openPage", JSON.stringify(info))
@@ -1054,7 +1099,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             setCurrentSelectItem(val)
         }
         if (!val.IsRead) {
-            apiNewRiskRead({Filter:{...query,Ids: [val.Id]}}).then(() => {
+            apiNewRiskRead({Filter: {...query, Ids: [val.Id]}}).then(() => {
                 setResponse({
                     ...response,
                     Data: response.Data.map((ele) => {
@@ -1070,7 +1115,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         }
     })
     const onAllRead = useMemoizedFn(() => {
-        apiNewRiskRead({Filter:{...query,Ids: []}}).then(() => {
+        apiNewRiskRead({Filter: {...query, Ids: []}}).then(() => {
             onRefRiskList()
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })
@@ -1224,23 +1269,27 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                                                 }
                                             ]}
                                         />
-                                        <div className={styles["virtual-table-heard-right"]}>
-                                            <div className={styles["virtual-table-heard-right-item"]}>
-                                                <span className={styles["virtual-table-heard-right-text"]}>Total</span>
-                                                <span className={styles["virtual-table-heard-right-number"]}>
-                                                    {allTotal}
-                                                </span>
+                                        {
+                                            <div className={styles["virtual-table-heard-right"]}>
+                                                <div className={styles["virtual-table-heard-right-item"]}>
+                                                    <span className={styles["virtual-table-heard-right-text"]}>
+                                                        Total
+                                                    </span>
+                                                    <span className={styles["virtual-table-heard-right-number"]}>
+                                                        {allTotal}
+                                                    </span>
+                                                </div>
+                                                <Divider type='vertical' />
+                                                <div className={styles["virtual-table-heard-right-item"]}>
+                                                    <span className={styles["virtual-table-heard-right-text"]}>
+                                                        Selected
+                                                    </span>
+                                                    <span className={styles["virtual-table-heard-right-number"]}>
+                                                        {selectNum}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <Divider type='vertical' />
-                                            <div className={styles["virtual-table-heard-right-item"]}>
-                                                <span className={styles["virtual-table-heard-right-text"]}>
-                                                    Selected
-                                                </span>
-                                                <span className={styles["virtual-table-heard-right-number"]}>
-                                                    {selectNum}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        }
                                     </div>
                                     <div className={styles["table-head-extra"]}>
                                         <YakitInput.Search
@@ -1342,28 +1391,25 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                 }
                 secondNode={
                     currentSelectItem && (
-                        <>
-                            {isShowCodeScanDetail(currentSelectItem) ? (
-                                <YakitCodeScanRiskDetails
-                                    info={currentSelectItem}
-                                    onClickIP={onClickIP}
-                                    className={styles["yakit-code-scan-risk-details"]}
-                                    isShowExtra={true}
-                                />
-                            ) : (
-                                <YakitRiskDetails
-                                    info={currentSelectItem}
-                                    className={styles["yakit-risk-details"]}
-                                    onClickIP={onClickIP}
-                                    border={yakitRiskDetailsBorder}
-                                    isShowExtra={!excludeColumnsKey.includes("action")}
-                                    onRetest={onRetest}
-                                />
-                            )}
-                        </>
+                        <YakitRiskDetails
+                            info={currentSelectItem}
+                            className={styles["yakit-risk-details"]}
+                            onClickIP={onClickIP}
+                            border={yakitRiskDetailsBorder}
+                            isShowExtra={!excludeColumnsKey.includes("action")}
+                            onRetest={onRetest}
+                        />
                     )
                 }
                 {...ResizeBoxProps}
+            />
+            {/* 误报反馈提示 */}
+            <NoPromptHint
+                visible={misstatementVisible}
+                title='误报反馈提醒'
+                content='确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？'
+                cacheKey={RemoteRiskGV.RiskMisstatementNoPrompt}
+                onCallback={handleMisstatementHint}
             />
         </div>
     )
@@ -1837,7 +1883,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                 Value: value,
                 Query: [{Key: "result_id", Value: ResultID}]
             }
-            
+
             emiter.emit(
                 "openPage",
                 JSON.stringify({

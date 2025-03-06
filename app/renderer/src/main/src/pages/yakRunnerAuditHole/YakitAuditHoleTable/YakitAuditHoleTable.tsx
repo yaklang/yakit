@@ -22,7 +22,8 @@ import {
     OutlineRefreshIcon,
     OutlineSearchIcon,
     OutlineTerminalIcon,
-    OutlineTrashIcon
+    OutlineTrashIcon,
+    OutlineUploadIcon
 } from "@/assets/icon/outline"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {formatTimestamp} from "@/utils/timeUtil"
@@ -31,11 +32,13 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {
     GroupTableColumnRequest,
+    SSARiskFeedbackToOnlineRequest,
     UpdateSSARiskTagsRequest,
     apiDeleteSSARisks,
     apiGroupTableColumn,
     apiNewRiskRead,
     apiQuerySSARisks,
+    apiSSARiskFeedbackToOnline,
     apiUpdateSSARiskTags
 } from "./utils"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
@@ -62,6 +65,11 @@ import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
 import {AuditResultCollapse, AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import {getRemoteValue} from "@/utils/kv"
+import {yakitNotify} from "@/utils/notification"
+import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
+import {RemoteAuditHoleGV} from "@/enums/auditHole"
+import {useStore} from "@/store"
 
 export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Pagination: {Page: 1, Limit: 20, OrderBy: "id", Order: "desc"},
@@ -124,6 +132,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         setQuery,
         setAllTotal
     } = props
+    const {userInfo} = useStore()
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -356,7 +365,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             {
                 title: "操作",
                 dataKey: "action",
-                width: 100,
+                width: 140,
                 fixed: "right",
                 render: (text, record: SSARisk, index) => (
                     <>
@@ -394,12 +403,70 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 }}
                             />
                         </Tooltip>
+                        <Divider type='vertical' />
+                        <Tooltip
+                            title='误报反馈'
+                            destroyTooltipOnHide={true}
+                            overlayStyle={{paddingBottom: 0}}
+                            placement='top'
+                        >
+                            <OutlineUploadIcon
+                                className={styles["misstatement-icon"]}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onClickSSARiskFeedbackToOnline(record)
+                                }}
+                            />
+                        </Tooltip>
                     </>
                 )
             }
         ]
         return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
     }, [riskTypeVerbose, excludeColumnsKey])
+
+    /**误报上传 start */
+    const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
+    const misstatementHintCache = useRef<boolean>(false)
+    const ssaRiskFeedbackToOnlineParams = useRef<SSARiskFeedbackToOnlineRequest>()
+    useEffect(() => {
+        getRemoteValue(RemoteAuditHoleGV.AuditHoleMisstatementNoPrompt).then((res) => {
+            misstatementHintCache.current = res === "true"
+        })
+    }, [])
+    const handleMisstatementHint = (isOk: boolean, cache: boolean) => {
+        if (isOk) {
+            misstatementHintCache.current = cache
+            fetchMisstatement()
+        }
+        setMisstatementVisible(false)
+    }
+    const onClickSSARiskFeedbackToOnline = useMemoizedFn((record: SSARisk) => {
+        if (!userInfo.isLogin) {
+            yakitNotify("info", "请先登录账号")
+            return
+        }
+        ssaRiskFeedbackToOnlineParams.current = {
+            Token: userInfo.token,
+            Filter: {
+                Hash: [record.Hash]
+            }
+        }
+        if (!misstatementHintCache.current) {
+            setMisstatementVisible(true)
+        } else {
+            fetchMisstatement()
+        }
+    })
+    const fetchMisstatement = () => {
+        const params = ssaRiskFeedbackToOnlineParams.current
+        if (params) {
+            apiSSARiskFeedbackToOnline(params).then(() => {
+                yakitNotify("success", "反馈成功")
+            })
+        }
+    }
+    /**误报上传 end */
 
     const getRiskType = useMemoizedFn(() => {
         const query: GroupTableColumnRequest = {DatabaseName: "SSA", TableName: "ssa_risks", ColumnName: "risk_type"}
@@ -801,6 +868,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     )
                 }
                 {...ResizeBoxProps}
+            />
+            {/* 误报反馈提示 */}
+            <NoPromptHint
+                visible={misstatementVisible}
+                title='误报反馈提醒'
+                content='确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？'
+                cacheKey={RemoteAuditHoleGV.AuditHoleMisstatementNoPrompt}
+                onCallback={handleMisstatementHint}
             />
         </div>
     )
