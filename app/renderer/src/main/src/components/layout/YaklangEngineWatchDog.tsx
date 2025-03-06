@@ -7,7 +7,7 @@ import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {getRemoteHttpSettingGV, isEnpriTraceAgent} from "@/utils/envfile"
+import {getRemoteHttpSettingGV, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
 
 export interface YaklangEngineWatchDogCredential {
@@ -165,7 +165,8 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
                                 port: props.credential.Port,
-                                isEnpriTraceAgent: isEnpriTraceAgent()
+                                isEnpriTraceAgent: isEnpriTraceAgent(),
+                                isSastScan: isSastScan()
                             })
                             .then(() => {
                                 outputToWelcomeConsole("引擎启动成功！")

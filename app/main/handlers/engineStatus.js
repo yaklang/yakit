@@ -154,10 +154,13 @@ module.exports = (win, callback, getClient, newClient) => {
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const {port, isEnpriTraceAgent} = params
+        const {port, isEnpriTraceAgent,isSastScan} = params
         return new Promise((resolve, reject) => {
             try {
                 toLog("已启动本地引擎进程")
+                if(isSastScan){
+                    dbFile = "sast-profile-rule.db"
+                }
                 const log = out ? out : "ignore"
 
                 const grpcPort = ["grpc", "--port", `${port}`]
