@@ -648,8 +648,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             if (preScrollBottom.current !== scrollBottom) {
                 if (wrapperRef && containerRef && pagination) {
                     const hasMore = pagination.total == data.length
-                    console.log(prePage.current, pagination.page, hasMore);
-                    
                     //避免频繁set
                     if (scroll.scrollBottom < 50 && scrollBottom > 50) {
                         // 不显示暂无数据
