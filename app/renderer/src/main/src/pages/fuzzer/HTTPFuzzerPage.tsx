@@ -107,7 +107,7 @@ import {shallow} from "zustand/shallow"
 import {usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData} from "@/store/pageInfo"
 import {YakitCopyText} from "@/components/yakitUI/YakitCopyText/YakitCopyText"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import {PayloadGroupNodeProps, ReadOnlyNewPayload} from "../payloadManager/newPayload"
 import {createRoot} from "react-dom/client"
 import {SolidPauseIcon, SolidPlayIcon} from "@/assets/icon/solid"
@@ -2035,6 +2035,14 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                                 firstNodeExtra={firstNodeExtra}
                                 pageId={props.id}
+                                oneResponseValue={
+                                    onlyOneResponse
+                                        ? {
+                                              originValue: Uint8ArrayToString(httpResponse.ResponseRaw),
+                                              originalPackage: httpResponse.ResponseRaw
+                                          }
+                                        : undefined
+                                }
                             />
                         }
                         secondNode={
@@ -3367,6 +3375,17 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             downbodyParams={editorDownBodyParams}
                             onEditor={(editor) => {
                                 onSetOnlyOneResEditor && onSetOnlyOneResEditor(editor)
+                            }}
+                            onClickOpenPacketNewWindowMenu={() => {
+                                openPacketNewWindow({
+                                    request: {
+                                        originValue: request
+                                    },
+                                    response: {
+                                        originValue: codeKey === "utf-8" ? responseRawString : codeValue,
+                                        originalPackage: fuzzerResponse.ResponseRaw
+                                    }
+                                })
                             }}
                             {...otherEditorProps}
                         />

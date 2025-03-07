@@ -30,7 +30,7 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import ReactResizeDetector from "react-resize-detector"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
@@ -1170,6 +1170,25 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             downbodyParams={{
                                 RuntimeId: currentSelectItem?.RuntimeID,
                                 IsRequest: currentSelectShowType === "request"
+                            }}
+                            onClickOpenPacketNewWindowMenu={() => {
+                                openPacketNewWindow({
+                                    request: {
+                                        originValue: currentSelectItem?.RequestRaw
+                                            ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
+                                            : new Uint8Array(),
+                                        originalPackage: currentSelectItem?.RequestRaw
+                                    },
+                                    response: {
+                                        originValue:
+                                            codeKey === "utf-8"
+                                                ? currentSelectItem?.ResponseRaw
+                                                    ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
+                                                    : new Uint8Array()
+                                                : codeValue,
+                                        originalPackage: currentSelectItem?.ResponseRaw
+                                    }
+                                })
                             }}
                         />
                     }

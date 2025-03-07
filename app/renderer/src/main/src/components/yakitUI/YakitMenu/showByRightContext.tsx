@@ -2,7 +2,6 @@ import ReactDOM from "react-dom"
 import React, {memo, ReactNode, useEffect, useRef} from "react"
 import {coordinate} from "@/pages/globalVariable"
 import {YakitMenu, YakitMenuProp} from "./YakitMenu"
-import {createRoot} from "react-dom/client"
 import styles from "./showByRightContext.module.scss"
 
 const roundDown = (value: number) => {

@@ -30,7 +30,7 @@ import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "./yakitUI/YakitTag/YakitCheckableTag"
 import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "./yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated, openExternalWebsite} from "@/utils/openWebsite"
+import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import emiter from "@/utils/eventBus/eventBus"
 import {OutlineLog2Icon} from "@/assets/icon/outline"
 import {useHttpFlowStore} from "@/store/httpFlow"
@@ -449,6 +449,17 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 onEditor={(editor) => {
                                                     setReqEditor(editor)
                                                 }}
+                                                onClickOpenPacketNewWindowMenu={() => {
+                                                    openPacketNewWindow({
+                                                        request: {
+                                                            originValue: flow.RequestString
+                                                        },
+                                                        response: {
+                                                            originValue: flow.ResponseString,
+                                                            originalPackage: flow.Response
+                                                        }
+                                                    })
+                                                }}
                                             />
                                         )}
                                     </div>
@@ -495,6 +506,17 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 downbodyParams={{Id: flow.Id, IsRequest: false}}
                                                 onEditor={(editor) => {
                                                     setResEditor(editor)
+                                                }}
+                                                onClickOpenPacketNewWindowMenu={() => {
+                                                    openPacketNewWindow({
+                                                        request: {
+                                                            originValue: flow.RequestString
+                                                        },
+                                                        response: {
+                                                            originValue: flow.ResponseString,
+                                                            originalPackage: flow.Response
+                                                        }
+                                                    })
                                                 }}
                                             />
                                         )}
@@ -941,7 +963,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                         })()}
                                         editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
                                         isShowBeautifyRender={false}
-                                        showDownBodyMenu={false}
+                                        onlyBasicMenu={true}
                                     />
                                 )}
                                 {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
@@ -1539,6 +1561,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: true}}
+                        onClickOpenPacketNewWindowMenu={() => {
+                            openPacketNewWindow({
+                                request: {
+                                    originValue: originResValue
+                                },
+                                response: {
+                                    originValue: codeKey === "utf-8" ? originRspValue : codeValue,
+                                    originalPackage: flow.Response
+                                }
+                            })
+                        }}
                     />
                 )
             }}
@@ -1673,6 +1706,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: false}}
+                        onClickOpenPacketNewWindowMenu={() => {
+                            openPacketNewWindow({
+                                request: {
+                                    originValue: originResValue
+                                },
+                                response: {
+                                    originValue: codeKey === "utf-8" ? originRspValue : codeValue,
+                                    originalPackage: flow.Response
+                                }
+                            })
+                        }}
                     />
                 )
             }}

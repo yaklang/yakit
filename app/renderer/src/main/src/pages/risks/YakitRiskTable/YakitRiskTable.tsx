@@ -104,6 +104,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
+import {openPacketNewWindow} from "@/utils/openWebsite"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -1589,6 +1590,18 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                     </div>
                 }
                 downbodyParams={{IsRisk: true, Id: info.Id, IsRequest: currentSelectShowType === "request"}}
+                onClickOpenPacketNewWindowMenu={() => {
+                    openPacketNewWindow({
+                        request: {
+                            originValue: requestString(info),
+                            originalPackage: info.Request
+                        },
+                        response: {
+                            originValue: responseString(info),
+                            originalPackage: info.Response
+                        }
+                    })
+                }}
                 {...extraParams}
             />
         )

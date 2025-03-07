@@ -252,6 +252,9 @@ module.exports = {
         // reverse logger
         require("./handlers/reverse-connlogger").register(win, getClient)
 
+        // register open new child window
+        require("./handlers/openNewChildWindow").register(win, getClient)
+
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {

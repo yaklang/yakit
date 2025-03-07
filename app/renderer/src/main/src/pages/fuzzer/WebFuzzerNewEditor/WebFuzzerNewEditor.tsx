@@ -11,7 +11,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
 import {HTTPFuzzerHotPatch} from "../HTTPFuzzerHotPatch"
 import {yakitNotify} from "@/utils/notification"
-import {openExternalWebsite} from "@/utils/openWebsite"
+import {openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
 import {setClipboardText} from "@/utils/clipboard"
 import {setEditorContext} from "@/utils/monacoSpec/yakEditor"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
@@ -31,6 +31,9 @@ export interface WebFuzzerNewEditorProps {
     setHotPatchCodeWithParamGetter: (s: string) => void
     firstNodeExtra?: () => JSX.Element
     pageId: string
+    oneResponseValue?: {
+        [key: string]: any
+    }
 }
 export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     React.forwardRef((props, ref) => {
@@ -44,7 +47,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             setHotPatchCode,
             setHotPatchCodeWithParamGetter,
             firstNodeExtra,
-            pageId
+            pageId,
+            oneResponseValue
         } = props
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
@@ -189,6 +193,14 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                 extraEnd={firstNodeExtra && firstNodeExtra()}
                 onClickUrlMenu={copyUrl}
                 onClickOpenBrowserMenu={onClickOpenBrowserMenu}
+                onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
+                    openPacketNewWindow({
+                        request: {
+                            originValue: newRequest
+                        },
+                        response: oneResponseValue ? {...oneResponseValue} : undefined
+                    })
+                })}
             />
         )
     })

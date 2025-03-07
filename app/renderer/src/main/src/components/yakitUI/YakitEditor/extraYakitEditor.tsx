@@ -45,9 +45,11 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     url?: string
     pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
+    onlyBasicMenu?: boolean // 是否只展示最基础菜单 默认不是
     showDownBodyMenu?: boolean
     onClickUrlMenu?: () => void
     onClickOpenBrowserMenu?: () => void
+    onClickOpenPacketNewWindowMenu?: () => void
 }
 
 export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo((props) => {
@@ -70,6 +72,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         showDownBodyMenu = true,
         onClickUrlMenu,
         onClickOpenBrowserMenu,
+        onClickOpenPacketNewWindowMenu,
+        onlyBasicMenu = false,
         ...restProps
     } = props
 
@@ -99,15 +103,23 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     }, [])
 
     const rightMenuType: YakitEditorExtraRightMenuType[] = useMemo(() => {
+        if (onlyBasicMenu) {
+            // 只展示最基础菜单
+            return []
+        }
         const init: YakitEditorExtraRightMenuType[] = ["code", "decode", "http"]
         if (noPacketModifier) {
             return init
         } else {
             return init.concat(["customcontextmenu", "aiplugin"])
         }
-    }, [noPacketModifier])
+    }, [noPacketModifier, onlyBasicMenu])
 
     const rightContextMenu: OtherMenuListProps = useMemo(() => {
+        if (onlyBasicMenu) {
+            // 只展示最基础菜单
+            return {}
+        }
         const originValueBytes = StringToUint8Array(originValue)
         let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
@@ -166,6 +178,38 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         })
                     } catch (e) {
                         failed("自动生成 CSRF 失败")
+                    }
+                }
+            },
+            openURLBrowser: {
+                menu: [
+                    {
+                        key: "open-url-in-browser",
+                        label: "浏览器中打开URL"
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    if (onClickOpenBrowserMenu) {
+                        onClickOpenBrowserMenu()
+                    } else if (url) {
+                        openExternalWebsite(url)
+                    } else {
+                        yakitNotify("info", "url 不存在")
+                    }
+                }
+            },
+            openPacketNewWindow: {
+                menu: [
+                    {
+                        key: "open-packet-new-window",
+                        label: "在新窗口打开"
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    if (onClickOpenPacketNewWindowMenu) {
+                        onClickOpenPacketNewWindowMenu()
+                    } else {
+                        console.log("展示原始编辑器内部")
                     }
                 }
             },
@@ -230,6 +274,90 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 }
             }
         }
+
+        if (showDownBodyMenu) {
+            menuItems = Object.keys(menuItems).reduce((ac, a) => {
+                if (a === "autoDecode") {
+                    ac["downloadBody"] = {
+                        menu: [
+                            {
+                                key: "download-body",
+                                label: "下载 Body"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            try {
+                                if (readOnly && downbodyParams) {
+                                    ipcRenderer
+                                        .invoke("GetHTTPFlowBodyById", {
+                                            ...downbodyParams,
+                                            uuid: uuidv4()
+                                        })
+                                        .then(() => {
+                                            yakitNotify("success", "下载成功")
+                                        })
+                                        .catch((e) => {
+                                            yakitNotify("error", `下载body：${e}`)
+                                        })
+                                    return
+                                }
+                                const text = editor.getModel()?.getValue()
+                                if (!text) {
+                                    yakitNotify("info", "无数据包-无法下载 Body")
+                                    return
+                                }
+                                ipcRenderer
+                                    .invoke("GetHTTPPacketBody", {Packet: text})
+                                    .then((bytes: {Raw: Uint8Array}) => {
+                                        saveABSFileToOpen("packet-body.txt", bytes.Raw)
+                                    })
+                            } catch (e) {
+                                failed("editor exec download body failed")
+                            }
+                        }
+                    }
+                }
+                ac[a] = menuItems[a]
+                return ac
+            }, {}) as OtherMenuListProps
+
+            menuItems = Object.keys(menuItems).reduce((ac, a) => {
+                if (a === "downloadBody") {
+                    ac["copyBodyBase64"] = {
+                        menu: [
+                            {
+                                key: "copyBodyBase64",
+                                label: "复制body（base64）"
+                            }
+                        ],
+                        onRun: (editor: YakitIMonacoEditor, key: string) => {
+                            const text = editor.getModel()?.getValue()
+                            if (!text) {
+                                yakitNotify("info", "无数据包-无法复制 Body")
+                                return
+                            }
+                            ipcRenderer
+                                .invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag: true})
+                                .then((bytes: {Raw: Uint8Array}) => {
+                                    ipcRenderer
+                                        .invoke("BytesToBase64", {
+                                            Bytes: bytes.Raw
+                                        })
+                                        .then((res: {Base64: string}) => {
+                                            setClipboardText(res.Base64)
+                                        })
+                                        .catch((err) => {
+                                            yakitNotify("error", `${err}`)
+                                        })
+                                })
+                        }
+                    }
+                }
+                ac[a] = menuItems[a]
+                return ac
+            }, {}) as OtherMenuListProps
+        }
+
         if (isWebSocket) {
             menuItems.newSocket = {
                 menu: [
@@ -372,116 +500,11 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 }
             }
-            menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "downloadBody") {
-                    ac["copyBodyBase64"] = {
-                        menu: [
-                            {
-                                key: "copyBodyBase64",
-                                label: "复制body（base64）"
-                            }
-                        ],
-                        onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            const text = editor.getModel()?.getValue()
-                            if (!text) {
-                                yakitNotify("info", "无数据包-无法复制 Body")
-                                return
-                            }
-                            ipcRenderer
-                                .invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag: true})
-                                .then((bytes: {Raw: Uint8Array}) => {
-                                    ipcRenderer
-                                        .invoke("BytesToBase64", {
-                                            Bytes: bytes.Raw
-                                        })
-                                        .then((res: {Base64: string}) => {
-                                            setClipboardText(res.Base64)
-                                        })
-                                        .catch((err) => {
-                                            yakitNotify("error", `${err}`)
-                                        })
-                                })
-                        }
-                    }
-                }
-                ac[a] = menuItems[a]
-                return ac
-            }, {}) as OtherMenuListProps
-        }
-
-        if (url || onClickOpenBrowserMenu) {
-            menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "openBrowser") {
-                    ac["openURLBrowser"] = {
-                        menu: [
-                            {
-                                key: "open-url-in-browser",
-                                label: "浏览器中打开URL"
-                            }
-                        ],
-                        onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            if (onClickOpenBrowserMenu) {
-                                onClickOpenBrowserMenu()
-                            } else if (url) {
-                                openExternalWebsite(url)
-                            }
-                        }
-                    }
-                }
-                ac[a] = menuItems[a]
-                return ac
-            }, {}) as OtherMenuListProps
-        }
-
-        if (showDownBodyMenu) {
-            menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "autoDecode") {
-                    ac["downloadBody"] = {
-                        menu: [
-                            {
-                                key: "download-body",
-                                label: "下载 Body"
-                            }
-                        ],
-                        onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            try {
-                                if (readOnly && downbodyParams) {
-                                    ipcRenderer
-                                        .invoke("GetHTTPFlowBodyById", {
-                                            ...downbodyParams,
-                                            uuid: uuidv4()
-                                        })
-                                        .then(() => {
-                                            yakitNotify("success", "下载成功")
-                                        })
-                                        .catch((e) => {
-                                            yakitNotify("error", `下载body：${e}`)
-                                        })
-                                    return
-                                }
-                                const text = editor.getModel()?.getValue()
-                                if (!text) {
-                                    yakitNotify("info", "无数据包-无法下载 Body")
-                                    return
-                                }
-                                ipcRenderer
-                                    .invoke("GetHTTPPacketBody", {Packet: text})
-                                    .then((bytes: {Raw: Uint8Array}) => {
-                                        saveABSFileToOpen("packet-body.txt", bytes.Raw)
-                                    })
-                            } catch (e) {
-                                failed("editor exec download body failed")
-                            }
-                        }
-                    }
-                }
-                ac[a] = menuItems[a]
-                return ac
-            }, {}) as OtherMenuListProps
         }
 
         return menuItems
     }, [
+        onlyBasicMenu,
         defaultHttps,
         system,
         originValue,
