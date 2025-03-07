@@ -274,7 +274,6 @@ $keyColor: map-keys($tagColor);
     }
     .audit-result-collapse {
         flex: 1;
-        overflow: auto;
         :global {
             .ant-collapse-item > .ant-collapse-header {
                 padding: 3px 0px 3px 0px !important;
@@ -285,6 +284,9 @@ $keyColor: map-keys($tagColor);
             }
         }
     }
+}
+.audit-result-collapse {
+    overflow: auto;
 }
 
 .disabled-open {

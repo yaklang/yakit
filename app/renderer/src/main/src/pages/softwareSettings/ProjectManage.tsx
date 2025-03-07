@@ -760,7 +760,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const creatTemporaryProject = useMemoizedFn(async () => {
         try {
             const res = await ipcRenderer.invoke("NewProject", {
-                Type: "project",
+                Type: getEnvTypeByProjects(),
                 ProjectName: "[temporary]"
             })
             const newTemporaryId = res.Id + ""
