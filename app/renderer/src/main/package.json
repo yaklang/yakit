@@ -129,7 +129,8 @@
         "test": "react-app-rewired test",
         "eject": "react-app-rewired eject",
         "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build",
-        "postinstall": "patch-package"
+        "postinstall": "patch-package",
+        "release": "yarn version --patch --no-git-tag-version && VERSION=$(node -p \"require('./package.json').version\") && git commit -am \"Render Version To v${VERSION}\" && git tag v${VERSION}-render"
     },
     "eslintConfig": {
         "extends": [

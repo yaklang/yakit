@@ -1,7 +1,8 @@
 const {ipcMain} = require("electron")
-const {getLocalYaklangEngine} = require("../filePath.js")
+const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath.js")
 const fs = require("fs")
-const crypto = require("crypto");
+const path = require("path")
+const crypto = require("crypto")
 
 module.exports = (win, getClient) => {
     // asyncYsoDump wrapper
@@ -397,8 +398,8 @@ module.exports = (win, getClient) => {
     })
 
     /*
-    * File Ops
-    * */
+     * File Ops
+     * */
     // asyncIsPrivilegedForNetRaw wrapper
     const asyncIsPrivilegedForNetRaw = (params) => {
         return new Promise((resolve, reject) => {
@@ -463,12 +464,12 @@ module.exports = (win, getClient) => {
         return await asyncIsCVEDatabaseReady(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
+    const handlerHelper = require("./handleStreamWithContext")
 
-    const streamUpdateCVEDatabaseMap = new Map();
-    ipcMain.handle("cancel-UpdateCVEDatabase", handlerHelper.cancelHandler(streamUpdateCVEDatabaseMap));
+    const streamUpdateCVEDatabaseMap = new Map()
+    ipcMain.handle("cancel-UpdateCVEDatabase", handlerHelper.cancelHandler(streamUpdateCVEDatabaseMap))
     ipcMain.handle("UpdateCVEDatabase", (e, params, token) => {
-        let stream = getClient().UpdateCVEDatabase(params);
+        let stream = getClient().UpdateCVEDatabase(params)
         handlerHelper.registerHandler(win, stream, streamUpdateCVEDatabaseMap, token)
     })
 
@@ -551,38 +552,38 @@ module.exports = (win, getClient) => {
         return await asyncIsVulinboxReady(params)
     })
 
-    const streamInstallVulinboxMap = new Map();
-    ipcMain.handle("cancel-InstallVulinbox", handlerHelper.cancelHandler(streamInstallVulinboxMap));
+    const streamInstallVulinboxMap = new Map()
+    ipcMain.handle("cancel-InstallVulinbox", handlerHelper.cancelHandler(streamInstallVulinboxMap))
     ipcMain.handle("InstallVulinbox", (e, params, token) => {
-        let stream = getClient().InstallVulinbox(params);
+        let stream = getClient().InstallVulinbox(params)
         handlerHelper.registerHandler(win, stream, streamInstallVulinboxMap, token)
     })
 
-    const streamStartVulinboxMap = new Map();
-    ipcMain.handle("cancel-StartVulinbox", handlerHelper.cancelHandler(streamStartVulinboxMap));
+    const streamStartVulinboxMap = new Map()
+    ipcMain.handle("cancel-StartVulinbox", handlerHelper.cancelHandler(streamStartVulinboxMap))
     ipcMain.handle("StartVulinbox", (e, params, token) => {
-        let stream = getClient().StartVulinbox(params);
+        let stream = getClient().StartVulinbox(params)
         handlerHelper.registerHandler(win, stream, streamStartVulinboxMap, token)
     })
 
-    const streamDiagnoseNetworkMap = new Map();
-    ipcMain.handle("cancel-DiagnoseNetwork", handlerHelper.cancelHandler(streamDiagnoseNetworkMap));
+    const streamDiagnoseNetworkMap = new Map()
+    ipcMain.handle("cancel-DiagnoseNetwork", handlerHelper.cancelHandler(streamDiagnoseNetworkMap))
     ipcMain.handle("DiagnoseNetwork", (e, params, token) => {
-        let stream = getClient().DiagnoseNetwork(params);
+        let stream = getClient().DiagnoseNetwork(params)
         handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkMap, token)
     })
 
-    const streamDiagnoseNetworkDNSMap = new Map();
-    ipcMain.handle("cancel-DiagnoseNetworkDNS", handlerHelper.cancelHandler(streamDiagnoseNetworkDNSMap));
+    const streamDiagnoseNetworkDNSMap = new Map()
+    ipcMain.handle("cancel-DiagnoseNetworkDNS", handlerHelper.cancelHandler(streamDiagnoseNetworkDNSMap))
     ipcMain.handle("DiagnoseNetworkDNS", (e, params, token) => {
-        let stream = getClient().DiagnoseNetworkDNS(params);
+        let stream = getClient().DiagnoseNetworkDNS(params)
         handlerHelper.registerHandler(win, stream, streamDiagnoseNetworkDNSMap, token)
     })
 
-    const streamTracerouteMap = new Map();
-    ipcMain.handle("cancel-Traceroute", handlerHelper.cancelHandler(streamTracerouteMap));
+    const streamTracerouteMap = new Map()
+    ipcMain.handle("cancel-Traceroute", handlerHelper.cancelHandler(streamTracerouteMap))
     ipcMain.handle("Traceroute", (e, params, token) => {
-        let stream = getClient().TraceRoute(params);
+        let stream = getClient().TraceRoute(params)
         handlerHelper.registerHandler(win, stream, streamTracerouteMap, token)
     })
 
@@ -602,17 +603,15 @@ module.exports = (win, getClient) => {
         return await asyncRequestYakURL(params)
     })
 
-
-    const streamReadFileMap = new Map();
-    ipcMain.handle("cancel-ReadFile", handlerHelper.cancelHandler(streamReadFileMap));
+    const streamReadFileMap = new Map()
+    ipcMain.handle("cancel-ReadFile", handlerHelper.cancelHandler(streamReadFileMap))
     ipcMain.handle("ReadFile", (e, params, token) => {
-        let stream = getClient().ReadFile(params);
+        let stream = getClient().ReadFile(params)
         handlerHelper.registerHandler(win, stream, streamReadFileMap, token)
     })
 
-
-    const streamDuplexConnectionMap = new Map();
-    ipcMain.handle("cancel-DuplexConnection", handlerHelper.cancelHandler(streamDuplexConnectionMap));
+    const streamDuplexConnectionMap = new Map()
+    ipcMain.handle("cancel-DuplexConnection", handlerHelper.cancelHandler(streamDuplexConnectionMap))
     ipcMain.handle("DuplexConnectionWrite", (e, params, token) => {
         let stream = streamDuplexConnectionMap.get(token)
         if (!!stream) {
@@ -625,7 +624,7 @@ module.exports = (win, getClient) => {
             stream.write(params)
             return
         }
-        stream = getClient().DuplexConnection(params);
+        stream = getClient().DuplexConnection(params)
         handlerHelper.registerHandler(win, stream, streamDuplexConnectionMap, token)
     })
 
@@ -660,7 +659,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GetSpaceEngineAccountStatus", async (e, params) => {
         return await asyncGetSpaceEngineAccountStatus(params)
     })
-    
+
     // asyncGetSpaceEngineAccountStatusV2 wrapper
     const asyncGetSpaceEngineAccountStatusV2 = (params) => {
         return new Promise((resolve, reject) => {
@@ -677,10 +676,13 @@ module.exports = (win, getClient) => {
         return await asyncGetSpaceEngineAccountStatusV2(params)
     })
 
-    const streamFetchPortAssetFromSpaceEngineMap = new Map();
-    ipcMain.handle("cancel-FetchPortAssetFromSpaceEngine", handlerHelper.cancelHandler(streamFetchPortAssetFromSpaceEngineMap));
+    const streamFetchPortAssetFromSpaceEngineMap = new Map()
+    ipcMain.handle(
+        "cancel-FetchPortAssetFromSpaceEngine",
+        handlerHelper.cancelHandler(streamFetchPortAssetFromSpaceEngineMap)
+    )
     ipcMain.handle("FetchPortAssetFromSpaceEngine", (e, params, token) => {
-        let stream = getClient().FetchPortAssetFromSpaceEngine(params);
+        let stream = getClient().FetchPortAssetFromSpaceEngine(params)
         handlerHelper.registerHandler(win, stream, streamFetchPortAssetFromSpaceEngineMap, token)
     })
 
@@ -712,7 +714,6 @@ module.exports = (win, getClient) => {
         return await asyncYaklangLanguageSuggestion(params)
     })
 
-
     const asyncFuzzTagSuggestion = (params) => {
         return new Promise((resolve, reject) => {
             getClient().FuzzTagSuggestion(params, (err, data) => {
@@ -729,7 +730,6 @@ module.exports = (win, getClient) => {
         return await asyncFuzzTagSuggestion(params)
     })
 
-
     const asyncVerifySystemCertificate = (params) => {
         return new Promise((resolve, reject) => {
             getClient().VerifySystemCertificate(params, (err, data) => {
@@ -745,20 +745,37 @@ module.exports = (win, getClient) => {
         return await asyncVerifySystemCertificate(params)
     })
 
-    ipcMain.handle("YaklangLanguageFind",async (e, params) => {
+    ipcMain.handle("YaklangLanguageFind", async (e, params) => {
         return await asyncYaklangLanguageFind(params)
     })
-    ipcMain.handle("CalcEngineSha265",async (e, params) => {
-        return new Promise((resolve,reject)=>{
+    ipcMain.handle("CalcEngineSha265", async (e, params) => {
+        const hashs = []
+        const hashTxt = path.join("bins", "engine-sha256.txt")
+        if (fs.existsSync(loadExtraFilePath(hashTxt))) {
+            let hashData = fs.readFileSync(loadExtraFilePath(hashTxt)).toString("utf8")
+            // 去除换行符
+            hashData = (hashData || "").replace(/\r?\n/g, "")
+            // 去除首尾空格
+            hashData = hashData.trim()
+            hashs.push(hashData)
+        }
+
+        return new Promise((resolve, reject) => {
             let enginePath = getLocalYaklangEngine()
-            if (enginePath == undefined){
+            if (enginePath == undefined) {
                 reject("get engine path failed")
-            }else{
+            } else {
                 if (fs.existsSync(enginePath)) {
                     const sum = crypto.createHash("sha256")
                     sum.update(fs.readFileSync(enginePath))
-                    resolve(sum.digest("hex"));
-                }else{
+                    let localHash = sum.digest("hex")
+                    // 去除换行符
+                    localHash = (localHash || "").replace(/\r?\n/g, "")
+                    // 去除首尾空格
+                    localHash = localHash.trim()
+                    hashs.push(localHash)
+                    resolve(hashs)
+                } else {
                     reject("get engine content failed")
                 }
             }

@@ -72,6 +72,15 @@ jobs:
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
 
+            - name: "Download yakit-chrome-extension"
+              run: |
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+                      echo "Failed to download!" >&2
+                      exit 1
+                  }
+                  wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+              shell: bash
+
             - name: "Fetch Latest EngineVersion"
               if: ${{ inputs.engine && !inputs.engineVersion }}
               run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt

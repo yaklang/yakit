@@ -117,11 +117,7 @@ export const grpcFetchBuildInYakVersion: APINoRequestFunc<string> = (hiddenError
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("GetBuildInEngineVersion")
-            .then((res) => {
-                // 考虑文件里的版本号可能有换行符，需要去掉
-                const version = (res || "").replace(/\r?\n/g, "")
-                resolve(version)
-            })
+            .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "获取内置引擎版本失败:" + e)
                 reject(e)
@@ -142,6 +138,19 @@ export const grpcFetchSpecifiedYakVersionHash: APIFunc<{version: string; config:
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "获取最新软件版本失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取本地Yak引擎的校验Hash值 */
+export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("CalcEngineSha265")
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "获取本地引擎 hash 失败:" + e)
                 reject(e)
             })
     })

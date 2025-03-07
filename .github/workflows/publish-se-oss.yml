@@ -58,6 +58,11 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
         steps:
             - name: Set SOFTWARE_VERSION
@@ -88,19 +93,21 @@ jobs:
             - run: chmod +x /usr/local/bin/zip
             - run: zip -h
 
-            - name: "Fetch Latest EngineVersion"
-              run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
-            - run: |
+            - name: "Download yakit-chrome-extension"
+              run: |
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+                      echo "Failed to download!" >&2
+                      exit 1
+                  }
+                  wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+              shell: bash
+
+            - name: "Fetch Latest Engine Version And Set To Env"
+              run: |
+                  wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
                   cat bins/engine-version.txt
                   YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
                   echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
-
-            - name: "Download Yak Engine via wget(MacOS)"
-              id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
-            - name: "Download Yak Engine via wget(MacOS-arm64)"
-              id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
 
             - name: "Download Yak Engine via wget(Linux)"
               id: download-linux-engine
@@ -113,6 +120,22 @@ jobs:
               id: download-windows-engine
               run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip ./bins/yak_windows_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
 
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
+
+            - name: Signature Mac Engine
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+              shell: bash
+
+            - name: "Fetch Mac-Amd Sha256"
+              run: wget -O bins/yak_darwin_amd64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+            - name: "Fetch Mac-Arm Sha256"
+              run: wget -O bins/yak_darwin_arm64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
+
             - run: yarn install
               working-directory: ./
               name: "Install Dependencies"
@@ -123,20 +146,10 @@ jobs:
               working-directory: ./
               run: |
                   yarn add -D dmg-license
-
-                  max_attempts=3
-                  attempt=1
-                  while [ $attempt -le $max_attempts ]; do
-                      echo "Start to building normal, try-count: ${attempt}"
-                      yarn electron-publish-se && break # 如果成功则退出循环
-                      attempt=$((attempt + 1))
-                      sleep 2 # 失败后等待2000ms再重试
-                  done
-                  [ $attempt -gt $max_attempts ] && {
-                      echo "normal build exceeded retry attempts" >&2
-                      exit 1
-                  } # 超过重试次数则失败
-                  exit 0
+                  chmod +x ./packageScript/script/retryScript.sh
+                  ./packageScript/script/retryScript.sh "yarn pack-win-se" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn pack-linux-se" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn pack-mac-se" || { exit 1; }
 
             - run: yarn remove electron && yarn add electron@22.3.27 --dev
               working-directory: ./
@@ -151,20 +164,10 @@ jobs:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: |
-                  yarn add -D dmg-license
-
-                  max_attempts=3
-                  attempt=1
-                  while [ $attempt -le $max_attempts ]; do
-                      echo "Start to building legacy, try-count: ${attempt}"
-                      yarn electron-publish-se-legacy && break # 如果成功则退出循环
-                      attempt=$((attempt + 1))
-                      sleep 2 # 失败后等待2000ms再重试
-                  done
-                  [ $attempt -gt $max_attempts ] && {
-                      echo "legacy build exceeded retry attempts" >&2
-                      exit 1
-                  } # 超过重试次数则失败
+                  chmod +x ./packageScript/script/retryScript.sh
+                  ./packageScript/script/retryScript.sh "yarn pack-win-se-legacy" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn pack-linux-se-legacy" || { exit 1; }
+                  ./packageScript/script/retryScript.sh "yarn pack-mac-se-legacy" || { exit 1; }重试次数则失败
                   exit 0
 
             - name: View Published Content
@@ -208,10 +211,6 @@ jobs:
 
             - run: ls
               name: Ls Published Artifacts...
-
-            # - name: Download CI Needed Yak Linux(amd64) Version to operator
-            #   run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/latest/yak_linux_amd64 && chmod +x ./yak
-            # 后面写个脚本，直接通过传入参数，使用引擎上传到oss
 
             - name: Upload Yakit To OSS
               uses: tvrcgo/upload-to-oss@master
