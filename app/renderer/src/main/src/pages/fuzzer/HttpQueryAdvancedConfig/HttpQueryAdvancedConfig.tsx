@@ -581,6 +581,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 isHttps: false,
                                                 noFixContentLength: false,
                                                 actualHost: "",
+                                                dialTimeoutSeconds: 10,
                                                 timeout: 30,
                                                 batchTarget: new Uint8Array(),
                                                 disableHotPatch: false
@@ -640,8 +641,37 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                     <YakitSwitch />
                                 </Form.Item>
 
-                                <Form.Item label='超时时长' name='timeout' style={{marginBottom: 12}}>
-                                    <YakitInputNumber type='horizontal' size='small' />
+                                <Form.Item label='超时时长' style={{marginBottom: 12}}>
+                                    <div className={styles["advanced-config-timeout"]}>
+                                        <Form.Item
+                                            name='dialTimeoutSeconds'
+                                            noStyle
+                                            normalize={(value) => {
+                                                return value.replace(/\D/g, "")
+                                            }}
+                                        >
+                                            <YakitInput
+                                                prefix='连接'
+                                                suffix='s'
+                                                size='small'
+                                                className={styles["input-left"]}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item
+                                            name='timeout'
+                                            noStyle
+                                            normalize={(value) => {
+                                                return value.replace(/\D/g, "")
+                                            }}
+                                        >
+                                            <YakitInput
+                                                prefix='响应'
+                                                suffix='s'
+                                                size='small'
+                                                className={styles["input-right"]}
+                                            />
+                                        </Form.Item>
+                                    </div>
                                 </Form.Item>
                                 <Form.Item label='批量目标' name='batchTarget' style={{marginBottom: 0}}>
                                     <YakitButton
@@ -727,7 +757,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 prefix='Min'
                                                 suffix='s'
                                                 size='small'
-                                                className={styles["delay-input-left"]}
+                                                className={styles["input-left"]}
                                             />
                                         </Form.Item>
                                         <Form.Item
@@ -741,7 +771,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                                 prefix='Max'
                                                 suffix='s'
                                                 size='small'
-                                                className={styles["delay-input-right"]}
+                                                className={styles["input-right"]}
                                             />
                                         </Form.Item>
                                     </div>

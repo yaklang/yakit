@@ -49,6 +49,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
         overwriteSNI: value.OverwriteSNI === false ? "auto" : value.SNI ? "mandatory" : "clear",
         fuzzTagSyncIndex: value.FuzzTagSyncIndex,
         noFixContentLength: value.NoFixContentLength,
+        dialTimeoutSeconds: value.DialTimeoutSeconds,
         timeout: value.PerRequestTimeoutSeconds,
         batchTarget: value.BatchTarget || new Uint8Array(),
         repeatTimes: value.RepeatTimes,

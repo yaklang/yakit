@@ -283,6 +283,7 @@ export interface FuzzerRequestProps {
     FuzzTagSyncIndex: boolean
     Proxy: string
     PerRequestTimeoutSeconds: number
+    DialTimeoutSeconds: number
     BatchTarget?: Uint8Array
     ActualAddr: string
     NoFollowRedirect: boolean
@@ -402,6 +403,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         MaxBodySize: value.maxBodySize * 1024 * 1024,
         Concurrent: value.concurrent,
         PerRequestTimeoutSeconds: value.timeout,
+        DialTimeoutSeconds: value.dialTimeoutSeconds,
         BatchTarget: value.batchTarget || new Uint8Array(),
         NoFixContentLength: value.noFixContentLength,
         NoSystemProxy: value.noSystemProxy,
@@ -1427,6 +1429,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             fuzzTagSyncIndex: !!val.fuzzTagSyncIndex,
             minDelaySeconds: val.minDelaySeconds ? Number(val.minDelaySeconds) : 0,
             maxDelaySeconds: val.maxDelaySeconds ? Number(val.maxDelaySeconds) : 0,
+            timeout: val.timeout ? Number(val.timeout) : 0,
+            dialTimeoutSeconds: val.dialTimeoutSeconds ? Number(val.dialTimeoutSeconds) : 0,
             repeatTimes: val.repeatTimes ? Number(val.repeatTimes) : 0
         }
         setAdvancedConfigValue(newValue)

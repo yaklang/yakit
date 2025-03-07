@@ -22,6 +22,7 @@ export interface AdvancedConfigValueProps {
     overwriteSNI: string
     actualHost: string
     timeout: number
+    dialTimeoutSeconds: nnumber
     batchTarget?: Uint8Array
     // 发包配置
     concurrent: number

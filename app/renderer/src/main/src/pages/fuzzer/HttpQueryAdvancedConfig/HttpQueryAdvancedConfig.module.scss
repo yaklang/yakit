@@ -34,6 +34,7 @@
         color: var(--yakit-body-text-color);
     }
 
+    .advanced-config-timeout,
     .advanced-config-delay {
         display: flex;
         align-items: center;
@@ -47,12 +48,12 @@
             }
         }
 
-        .delay-input-left {
+        .input-left {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
 
-        .delay-input-right {
+        .input-right {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
         }
