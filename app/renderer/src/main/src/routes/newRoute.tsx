@@ -568,17 +568,9 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Rule_Management:
             return <RuleManagement />
         case YakitRoute.Notepad_Manage:
-            return (
-                <OnlineJudgment isJudgingLogin={true}>
-                    <NotepadManage />
-                </OnlineJudgment>
-            )
+            return <NotepadManage />
         case YakitRoute.Modify_Notepad:
-            return (
-                <OnlineJudgment isJudgingLogin={true}>
-                    <ModifyNotepad pageId={params?.id || ""} />
-                </OnlineJudgment>
-            )
+            return <ModifyNotepad pageId={params?.id || ""} />
         case YakitRoute.YakRunner_Audit_Hole:
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:
