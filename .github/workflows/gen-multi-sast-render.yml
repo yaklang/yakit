@@ -3,8 +3,7 @@ name: Gen-Multi-Platform-Render
 on:
     push:
         tags:
-            - "v*-render"
-            - "!v*-sast-render"
+            - "v*-sast-render"
 
 jobs:
     build_yakit:
@@ -26,7 +25,7 @@ jobs:
               run: |
                   echo $GITHUB_REF_NAME
                   tag=${GITHUB_REF_NAME#v}
-                  tag=${tag%-render}
+                  tag=${tag%-sast-render}
                   echo ${tag}
                   echo "TAG_VERSION=$tag" >> $GITHUB_ENV
 
@@ -34,17 +33,17 @@ jobs:
               run: yarn install-render
               working-directory: ./
 
-            - name: "Build CE Render"
+            - name: "Build SAST Render"
               working-directory: ./
-              run: yarn build-render
-            - name: "zip CE Render"
-              run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+              run: yarn build-render-sast-scan
+            - name: "zip SAST Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r sast.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
-            - name: "Build EE Render"
+            - name: "Build SASTEE Render"
               working-directory: ./
-              run: yarn build-render-enterprise
-            - name: "zip EE Render"
-              run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+              run: yarn build-render-sast-scan-enterprise
+            - name: "zip SASTEE Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r sastee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
@@ -55,14 +54,14 @@ jobs:
             - name: Upload Multi-Platform Render Zip
               run: |
                   bucket="yaklang"
-                  array=("ce" "ee")
+                  array=("sast" "sastee")
                   for item in "${array[@]}"; do
                     file_name="${item}.zip"
                     echo "Start to upload ${file_name}"
-                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/yak/render/${{ env.TAG_VERSION }}/${file_name}
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/yak/render/sast/${{ env.TAG_VERSION }}/${file_name}
                   done
 
             - name: Update OSS latest file
               run: echo ${{ env.TAG_VERSION }} > ./version.txt
             - name: Update OSS latest file
-              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/yak/render/version.txt'
+              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/yak/render/sast/version.txt'

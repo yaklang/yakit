@@ -37,6 +37,32 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitselogo.ico"
         nsisUninstallerIcon = "app/assets/yakitselogo.ico"
         break
+    case "sast":
+        appInfoOption = {
+            appId: "io.yaklang.sastscan",
+            extraMetadata: {name: "sastscan"},
+            productName: "SastScan",
+            copyright: "Copyright © 2021 v1ll4n"
+        }
+        macIcon = "app/assets/yakitsslogo.icns"
+        linuxIcon = "app/assets/yakitsslogo.icns"
+        winIcon = "app/assets/yakitsslogo.ico"
+        nsisInstallerIcon = "app/assets/yakitsslogo.ico"
+        nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
+        break
+    case "sastee":
+        appInfoOption = {
+            appId: "io.yaklang.sastscanee",
+            extraMetadata: {name: "sastscanee"},
+            productName: "SastScanEnterprise",
+            copyright: "Copyright © 2021 v1ll4n"
+        }
+        macIcon = "app/assets/yakitsslogo.icns"
+        linuxIcon = "app/assets/yakitsslogo.icns"
+        winIcon = "app/assets/yakitsslogo.ico"
+        nsisInstallerIcon = "app/assets/yakitsslogo.ico"
+        nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
+        break
 
     default:
         // ce
