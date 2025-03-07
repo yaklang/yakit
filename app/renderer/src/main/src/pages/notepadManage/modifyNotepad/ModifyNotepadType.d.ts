@@ -5,6 +5,25 @@ export interface ModifyNotepadProps {
     pageId: string
 }
 
+export interface NoteLocal {
+    Id: number
+    Title: string
+    Content: string
+}
+
+export interface ModifyNotepadContentRefProps {
+    getCatalogue: (m: MilkdownCatalogueProps[]) => void
+}
+export interface ModifyNotepadContentProps {
+    ref?: React.Ref<ModifyNotepadContentRefProps>
+    tabName: string
+    spinning?:boolean
+    children?: ReactNode
+    titleExtra: ReactNode
+    notepadDetailOnline?: API.GetNotepadList
+    notepadDetailLocal?: NoteLocal
+}
+
 export interface MilkdownCatalogueProps {
     id: string
     /**标题级别 */
@@ -14,7 +33,6 @@ export interface MilkdownCatalogueProps {
     title: ReactNode
     children?: MilkdownCatalogueProps[]
 }
-
 
 export interface CatalogueTreeNodeProps {
     info: MilkdownCatalogueProps
