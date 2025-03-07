@@ -21,6 +21,9 @@ export declare namespace API {
         group?: string
         extra_setting?: string
         method_type?: string
+        json_schema?: string
+        suggestion_data_expression?: string
+        ui_schema?: string
     }
     export interface WsRequest {
         /**
@@ -32,7 +35,14 @@ export declare namespace API {
          * 文档协作参数
          */
         yjsParams?: string
+        /**
+         * 当类型为notepad token必传
+         */
         token?: string
+        /**
+         * notepad hash 当类型为notepad 此项必传
+         */
+        notepadHash?: string
     }
     export interface WebsocketFlowResponse extends Paging {
         data: WebsocketFlowList[]
@@ -538,6 +548,14 @@ export declare namespace API {
         status: boolean
         user_name: string
         head_img: string
+    }
+    export interface QueryPluginsWhereListRequest extends PluginsWhere, QueryPluginsWhereList {}
+    export interface QueryPluginsWhereList {
+        page?: number
+        limit?: number
+        token?: string
+        orderBy?: string
+        order?: string
     }
     export interface ProjectListResponse extends Paging {
         data: ProjectList[]
