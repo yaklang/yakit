@@ -870,6 +870,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const progress = Math.floor((streamInfo.progressState.map((item) => item.progress)[0] || 0) * 100) / 100
         progressRef.current = progress
         logInfoRef.current = streamInfo.logState.slice(0, 8)
+        // 当任务错误时
+        if (streamInfo.logState[0]?.level === "error") {
+            onCancelAuditStream()
+            failed(streamInfo.logState[0].data)
+            return
+        }
         // 当任务结束时
         if (streamInfo.logState[0]?.level === "json") {
             onCancelAuditStream()
