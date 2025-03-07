@@ -121,15 +121,19 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 .then(async (val: boolean) => {
                     if (!val) {
                         try {
+                            const promise = new Promise((_, reject) =>
+                                setTimeout(() => reject(new Error("Check engine source request timed out")), 2100)
+                            )
                             const [res1, res2] = await Promise.allSettled([
                                 grpcFetchLocalYakitVersion(true),
-                                grpcFetchLatestYakitVersion({timeout: 2000}, true)
+                                Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise]),
+                                // grpcFetchLatestYakitVersion({timeout: 2000}, true)
                             ])
                             if (res1.status === "fulfilled") {
                                 currentYakit.current = res1.value || ""
                             }
                             if (res2.status === "fulfilled") {
-                                let latest = res2.value || ""
+                                let latest = (res2.value || "") as string
                                 latestYakit.current = latest.startsWith("v") ? latest.substring(1) : latest
                             }
                             // 只要与线上的不一样就算需要更新，不需要进行版本号比较
