@@ -22,7 +22,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCombinationSearch} from "@/components/YakitCombinationSearch/YakitCombinationSearch"
 import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
 import {GroupCount, QueryYakScriptRequest, YakScript} from "@/pages/invoker/schema"
-import {ImportLocalPlugin} from "../MITMPage"
+import {ImportLocalPlugin, MitmStatus} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {randomString} from "@/utils/randomUtil"
@@ -70,7 +70,7 @@ interface MITMPluginLocalListProps {
     noParamsCheckList: string[]
     setNoParamsCheckList: (s: string[]) => void
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
-    status: "idle" | "hijacked" | "hijacking"
+    status: MitmStatus
     tags: string[]
     searchKeyword: string
     fieldKeywords: string

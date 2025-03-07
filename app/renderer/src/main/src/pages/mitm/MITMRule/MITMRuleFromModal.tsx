@@ -44,7 +44,7 @@ const {ipcRenderer} = window.require("electron")
  * @param {Function} onClose 关闭回调
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
-    const {modalVisible, onClose, currentItem, isEdit, rules, onSave} = props
+    const {modalVisible, onClose, currentItem, isEdit, rules, onSave, ruleUse} = props
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
@@ -198,51 +198,60 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             <Divider dashed style={{marginTop: 0}} />
                         </Col>
                     </Row>
-
-                    <Form.Item
-                        label='替换结果'
-                        help='HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容'
-                        name='ResultType'
-                    >
-                        <YakitRadioButtons
-                            size='large'
-                            options={[
-                                {label: "文本", value: 1},
-                                {label: "HTTP Header/Cookie", value: 2}
-                            ]}
-                            buttonStyle='solid'
-                        />
-                    </Form.Item>
-                    {(resultType === 1 && (
-                        <Form.Item label='文本' name='Result'>
-                            <YakitInput placeholder='输入想要替换的内容，可以为空～' />
-                        </Form.Item>
-                    )) || (
+                    {ruleUse === "mitm" && (
                         <>
-                            <Form.Item label='HTTP Header' name='ExtraHeaders'>
-                                <ExtraHTTPSelect
-                                    tip='Header'
-                                    onSave={getExtraHeaders}
-                                    list={headers}
-                                    onRemove={onRemoveExtraHeaders}
+                            <Form.Item
+                                label='替换结果'
+                                help='HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容'
+                                name='ResultType'
+                            >
+                                <YakitRadioButtons
+                                    size='large'
+                                    options={[
+                                        {label: "文本", value: 1},
+                                        {label: "HTTP Header/Cookie", value: 2}
+                                    ]}
+                                    buttonStyle='solid'
                                 />
                             </Form.Item>
-                            <Form.Item label='HTTP Cookie' name='ExtraCookies'>
-                                <ExtraHTTPSelect
-                                    tip='Cookie'
-                                    onSave={getExtraCookies}
-                                    list={cookies.map((item) => ({...item, Header: item.Key, Value: item.Value}))}
-                                    onRemove={onRemoveExtraCookies}
-                                />
-                            </Form.Item>
+                            <>
+                                {(resultType === 1 && (
+                                    <Form.Item label='文本' name='Result'>
+                                        <YakitInput placeholder='输入想要替换的内容，可以为空～' />
+                                    </Form.Item>
+                                )) || (
+                                    <>
+                                        <Form.Item label='HTTP Header' name='ExtraHeaders'>
+                                            <ExtraHTTPSelect
+                                                tip='Header'
+                                                onSave={getExtraHeaders}
+                                                list={headers}
+                                                onRemove={onRemoveExtraHeaders}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item label='HTTP Cookie' name='ExtraCookies'>
+                                            <ExtraHTTPSelect
+                                                tip='Cookie'
+                                                onSave={getExtraCookies}
+                                                list={cookies.map((item) => ({
+                                                    ...item,
+                                                    Header: item.Key,
+                                                    Value: item.Value
+                                                }))}
+                                                onRemove={onRemoveExtraCookies}
+                                            />
+                                        </Form.Item>
+                                    </>
+                                )}
+                            </>
+                            <Row>
+                                <Col span={5}>&nbsp;</Col>
+                                <Col span={16}>
+                                    <Divider dashed style={{marginTop: 0}} />
+                                </Col>
+                            </Row>
                         </>
                     )}
-                    <Row>
-                        <Col span={5}>&nbsp;</Col>
-                        <Col span={16}>
-                            <Divider dashed style={{marginTop: 0}} />
-                        </Col>
-                    </Row>
                     <Form.Item label='生效url' name='EffectiveURL' help='配置后规则只对该url生效，支持填写正则'>
                         <YakitInput />
                     </Form.Item>

@@ -202,6 +202,14 @@ $keyColor: map-keys($colors);
                     width: 12px;
                 }
             }
+
+            .route-icon {
+                display: flex;
+                svg {
+                    height: 16px;
+                    width: 16px;
+                }
+            }
         }
 
         .tab-menu-first-item-active {
@@ -233,9 +241,9 @@ $keyColor: map-keys($colors);
         }
 
         .tab-menu-item-fixed {
-            padding-left: 8px;
-            max-width: 60px;
-            min-width: 40px;
+            padding-left: 6px;
+            max-width: 80px;
+            min-width: 30px;
         }
     }
 

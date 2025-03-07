@@ -124,7 +124,6 @@ import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {
     DefFuzzerTableMaxData,
-    HotPatchDefaultContent,
     defaultAdvancedConfigValue,
     defaultPostTemplate
 } from "@/defaultConstants/HTTPFuzzerPage"
@@ -155,6 +154,7 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
+import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -314,6 +314,15 @@ export const getInitPageCache: () => PageCache[] = () => {
             verbose: "History",
             menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
             route: YakitRoute.DB_HTTPHistory,
+            singleNode: true,
+            multipleNode: []
+        },
+        {
+            routeKey: routeConvertKey(YakitRoute.DB_HTTPHistoryAnalysis, ""),
+            verbose: "流量分析器",
+            routeIcon: <PublicHTTPHistoryIcon />,
+            menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
+            route: YakitRoute.DB_HTTPHistoryAnalysis,
             singleNode: true,
             multipleNode: []
         }
@@ -2627,7 +2636,13 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                         onSelect(item, item.routeKey)
                     }}
                 >
-                    <span className='content-ellipsis'>{item.verbose || ""}</span>
+                    {item.routeKey === currentTabKey || !item.routeIcon ? (
+                        <span className='content-ellipsis'>{item.verbose || ""}</span>
+                    ) : (
+                        <span className={styles["route-icon"]} title={item.verbose || ""}>
+                            {item.routeIcon}
+                        </span>
+                    )}
                 </div>
             ) : (
                 <Draggable key={item.routeKey} draggableId={item.routeKey} index={index}>

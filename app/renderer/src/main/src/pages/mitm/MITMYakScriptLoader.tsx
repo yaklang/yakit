@@ -36,6 +36,7 @@ import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrap
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Resizable} from "re-resizable"
+import { MitmStatus } from "./MITMPage"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -416,7 +417,7 @@ export const StatusCardViewer = React.memo((p: {status: StatusCardProps[]}) => {
 })
 
 export interface MITMYakScriptLoaderProps {
-    status?: "idle" | "hijacked" | "hijacking"
+    status?: MitmStatus
     script: YakScript
     hooks: Map<string, boolean>
     hooksID: Map<string, boolean>

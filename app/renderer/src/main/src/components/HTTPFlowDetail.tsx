@@ -13,7 +13,7 @@ import {HTTPFlowForWebsocketViewer, WebSocketEditor} from "@/pages/websocket/HTT
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
-import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     ExtractedDataFilter,
     HTTPFlowExtractedData,
@@ -66,7 +66,6 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     selectedFlow?: HTTPFlow
 
     refresh?: boolean
-    defaultFold?: boolean
 
     historyId?: string
     downstreamProxyStr?: string
@@ -652,7 +651,9 @@ export interface HistoryHighLightText extends HighLightText {
 }
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = true} = props
+    const {id, selectedFlow, refresh} = props
+    const ref = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(ref)
     const [flow, setFlow] = useState<HTTPFlow>()
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
@@ -660,7 +661,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
-    const [isFold, setFold] = useState<boolean>(defaultFold)
+    const [isFold, setFold] = useState<boolean>(true)
     const lastIdRef = useRef<number>()
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
@@ -680,6 +681,20 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             setCurrId(undefined)
         }
     }, [isFold])
+
+    useEffect(() => {
+        if (inViewport) {
+            getRemoteValue("HISTORY_FOLD").then((result: string) => {
+                if (!result) setFold(true)
+                try {
+                    const foldResult: boolean = JSON.parse(result)
+                    setFold(foldResult)
+                } catch (e) {
+                    setFold(true)
+                }
+            })
+        }
+    }, [inViewport])
 
     const update = useMemoizedFn((isSkip: boolean = false) => {
         if (!id) {
@@ -859,7 +874,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [flow, currId, extractedData])
 
     return isSelect ? (
-        <div className={styles["http-history-box"]}>
+        <div className={styles["http-history-box"]} ref={ref}>
             <YakitResizeBox
                 key={isFold + "" + flow?.Id + flow?.HiddenIndex}
                 freeze={!isFold}
@@ -1493,7 +1508,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "History") {
+                            if (["History"].includes(pageType || "")) {
                                 titleEle.push(
                                     <OutlineLog2Icon
                                         className={styles["jump-web-tree"]}
@@ -1505,7 +1520,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             if (reqSelectionByteCount > 0) {
                                 titleEle.push(
                                     <YakitTag
-                                        style={{marginLeft: pageType === "MITM" ? 0 : 8}}
+                                        style={{marginLeft: pageType === "History" ? 8 : 0}}
                                         key='reqSelectionByteCount'
                                     >
                                         {reqSelectionByteCount} bytes
@@ -1655,14 +1670,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={secondNodeResExtraBtn()}
                         AfterBeautifyRenderBtn={
                             <>
-                                <YakitButton
-                                    size='small'
-                                    onClick={() => {
-                                        emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
-                                    }}
-                                >
-                                    编辑tag
-                                </YakitButton>
+                                {pageType !== "History_Analysis_ruleData" && (
+                                    <YakitButton
+                                        size='small'
+                                        onClick={() => {
+                                            emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
+                                        }}
+                                    >
+                                        编辑tag
+                                    </YakitButton>
+                                )}
                                 <CodingPopover
                                     key='coding'
                                     originValue={flow.Response}

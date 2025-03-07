@@ -313,8 +313,7 @@ const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.mem
                         isOnlyTable={onlyShowFirstNode}
                         onIsOnlyTable={setOnlyShowFirstNode}
                         showDetail={secondNodeVisible}
-                        pageType='History'
-                        httpHistoryTableTitleStyle={{borderLeft: 0, borderRight: 0}}
+                        pageType='Plugin'
                         containerClassName={styles["current-http-table-container"]}
                         onQueryParams={onQueryParams}
                     />
