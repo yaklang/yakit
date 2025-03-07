@@ -18,6 +18,7 @@ import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowT
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
 import {isSastScan} from "@/utils/envfile"
+import {NotepadMenu} from "../HeardMenu/HeardMenu"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
@@ -207,6 +208,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                     >
                         Yak Runner
                     </YakitButton>
+                    <NotepadMenu isExpand={false} onRouteMenuSelect={onMenuSelect} />
                     <ImportLocalPlugin
                         visible={visibleImport}
                         setVisible={(v) => {
