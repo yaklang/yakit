@@ -146,7 +146,12 @@ export const emptyFuzzer: FuzzerResponse = {
     TooLargeResponseBodyFile: "",
     DisableRenderStyles: false,
     RuntimeID: "",
-    Discard: false
+    Discard: false,
+
+    IsAutoFixContentType: false,
+    OriginalContentType: "",
+    FixContentType: "",
+    IsSetContentTypeOptions: false
 }
 
 export const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可以触发热加载调用

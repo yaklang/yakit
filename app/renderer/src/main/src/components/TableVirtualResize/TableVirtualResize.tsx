@@ -223,7 +223,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             const tableHeight = tableRef.current?.clientHeight
             if (pagination && pagination.onChange && containerHeight && containerHeight <= tableHeight) {
                 const hasMore = pagination.total == data.length
-                if (!hasMore) pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+                if (!hasMore) {
+                    prePage.current = 1
+                    pagination.onChange(Number(pagination.page) + 1, pagination.limit)
+                }
             }
         },
         [tableRef.current?.clientHeight, isRefresh],
