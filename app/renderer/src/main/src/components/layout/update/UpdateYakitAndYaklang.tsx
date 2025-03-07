@@ -5,7 +5,7 @@ import {DownloadingState} from "@/yakitGVDefine"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {failed, info, success} from "@/utils/notification"
-import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isEnterpriseEdition, isSastScan} from "@/utils/envfile"
 import {UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 import {LocalGVS} from "@/enums/localGlobal"
@@ -60,7 +60,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     const fetchYakitUpdateContent = useMemoizedFn(() => {
         NetWorkApi<any, API.YakVersionsInfoResponse>({
             method: "get",
-            url: "yak/versions/info"
+            url: "yak/versions/info",
+            params: {
+                source: isSastScan() ? "sast" : "yakit"
+            }
         })
             .then((res: API.YakVersionsInfoResponse) => {
                 if (!res) return

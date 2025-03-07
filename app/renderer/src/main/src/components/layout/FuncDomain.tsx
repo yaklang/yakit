@@ -28,7 +28,15 @@ import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isEnterpriseSastScan, isSastScan, showDevTool} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    isCommunityEdition,
+    isEnpriTrace,
+    isEnpriTraceAgent,
+    isEnterpriseSastScan,
+    isSastScan,
+    showDevTool
+} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
@@ -96,9 +104,16 @@ import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAnd
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
-import { apiNewRiskRead, apiQueryNewSSARisks, apiQuerySSARisks } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
-import { QueryNewSSARisksResponse, QuerySSARisksResponse, SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
-import { YakitAuditRiskDetails } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import {
+    apiNewRiskRead,
+    apiQueryNewSSARisks,
+    apiQuerySSARisks
+} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {
+    QueryNewSSARisksResponse,
+    SSARisk
+} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -259,7 +274,11 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-管理员
             if (userInfo.role === "admin") {
                 isNew = true
-                let cacheMenus: YakitMenuItemType[] = [UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"],UserMenusMap["misstatement"]].concat(signOutMenu)
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["dataStatistics"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
                 // sast scan版本时管理员不显示插件管理
                 if (isSastScan()) {
                     cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
@@ -279,7 +298,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-审核员
             if (userInfo.role === "auditor") {
                 isNew = true
-                let cacheMenus: YakitMenuItemType[] = [UserMenusMap["pluginAudit"],UserMenusMap["misstatement"]].concat(signOutMenu)
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
                 // sast scan版本时管理员不显示插件管理
                 if (isSastScan()) {
                     cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
@@ -363,7 +385,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         (item) => !["misstatement"].includes((item as YakitMenuItemProps).key)
                     )
                 }
-                
+
                 if (isEnpriTraceAgent()) {
                     isNew = true
                     cacheMenus = cacheMenus.filter(
@@ -513,7 +535,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && !isSastScan() && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {!showProjectManage && isSastScan() && <UIOpSastScanRisk isEngineLink={isEngineLink}/>}
+                    {!showProjectManage && isSastScan() && <UIOpSastScanRisk isEngineLink={isEngineLink} />}
                     {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
@@ -1611,6 +1633,8 @@ export interface UpdateEnpriTraceInfoProps {
 
 interface SetUpdateContentProp extends FetchUpdateContentProp {
     updateContent: string
+    // 默认为yakit
+    source?: "yakit" | "sast"
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
@@ -1677,7 +1701,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const fetchYakitAndYaklangVersionInfo = useMemoizedFn(() => {
         NetWorkApi<any, API.YakVersionsInfoResponse>({
             method: "get",
-            url: "yak/versions/info"
+            url: "yak/versions/info",
+            params: {
+                source: isSastScan() ? "sast" : "yakit"
+            }
         })
             .then((res: API.YakVersionsInfoResponse) => {
                 if (!res) return
@@ -1860,7 +1887,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             updateContent: JSON.stringify({
                 version: editShow.type === "yakit" ? yakitLastVersion : yaklangLastVersion,
                 content: editInfo || ""
-            })
+            }),
+            source: isSastScan() ? "sast" : "yakit"
         }
 
         NetWorkApi<SetUpdateContentProp, API.ActionSucceeded>({
@@ -2447,9 +2475,11 @@ const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         apiQueryNewSSARisks({
             AfterID: fetchNode.current
         }).then((res: QueryNewSSARisksResponse) => {
-            if(JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
-            risks.NewRiskTotal === res.NewRiskTotal &&
-            risks.Total === res.Total){
+            if (
+                JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
+                risks.NewRiskTotal === res.NewRiskTotal &&
+                risks.Total === res.Total
+            ) {
                 return
             }
             setRisks({...res})
@@ -2460,12 +2490,16 @@ const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     useEffect(() => {
         if (isEngineLink) {
             if (timeRef.current) clearInterval(timeRef.current)
-                apiQuerySSARisks({
-                    Pagination:{
-                        Limit: 1, Page: 1, Order: "desc", OrderBy: "id"
-                    },
-                    Filter:{}
-                }).then((res)=>{
+            apiQuerySSARisks({
+                Pagination: {
+                    Limit: 1,
+                    Page: 1,
+                    Order: "desc",
+                    OrderBy: "id"
+                },
+                Filter: {}
+            })
+                .then((res) => {
                     const {Data} = res
                     fetchNode.current = Data.length === 0 ? 0 : Data[0].Id
                 })
@@ -2529,33 +2563,33 @@ const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
     /** 单条点击阅读 */
     const singleRead = useMemoizedFn((info: SSARisk) => {
-        apiNewRiskRead({ID: [info.Id]}).then(()=>{
+        apiNewRiskRead({ID: [info.Id]}).then(() => {
             const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
-                const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
-                setRisks({
-                    ...risks,
-                    NewRiskTotal: info.IsRead ? risks.NewRiskTotal : newRiskTotal,
-                    Unread: info.IsRead ? risks.Unread : newUnread,
-                    Data: risks.Data.map((item) => {
-                        if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
-                        return item
-                    })
+            const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
+            setRisks({
+                ...risks,
+                NewRiskTotal: info.IsRead ? risks.NewRiskTotal : newRiskTotal,
+                Unread: info.IsRead ? risks.Unread : newUnread,
+                Data: risks.Data.map((item) => {
+                    if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
+                    return item
                 })
+            })
         })
         apiQuerySSARisks({
-            Pagination:{...genDefaultPagination()},
-            Filter:{
-                ID:[info.Id]
+            Pagination: {...genDefaultPagination()},
+            Filter: {
+                ID: [info.Id]
             }
-        }).then((res)=>{
-            if (!res || res.Data.length===0) return
+        }).then((res) => {
+            if (!res || res.Data.length === 0) return
             setShow(false)
             let m = showModal({
                 width: "80%",
                 title: "详情",
                 content: (
                     <div style={{overflow: "auto", maxHeight: "70vh"}}>
-                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={()=>m.destroy()}/>
+                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
                     </div>
                 )
             })
@@ -2592,7 +2626,7 @@ const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
                     <div className={styles["risk-info"]}>
                         {risks.Data.map((item) => {
-                            const title = Object.keys(RiskType).filter(key => RiskType[key] === item.Severity)?.[0]
+                            const title = Object.keys(RiskType).filter((key) => RiskType[key] === item.Severity)?.[0]
                             if (!!title) {
                                 return (
                                     <div
@@ -2601,7 +2635,10 @@ const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                                         onClick={() => singleRead(item)}
                                     >
                                         <div
-                                            className={classNames(styles["opt-icon-style"], styles[`opt-${item.Severity}-icon`])}
+                                            className={classNames(
+                                                styles["opt-icon-style"],
+                                                styles[`opt-${item.Severity}-icon`]
+                                            )}
                                         >
                                             {title}
                                         </div>

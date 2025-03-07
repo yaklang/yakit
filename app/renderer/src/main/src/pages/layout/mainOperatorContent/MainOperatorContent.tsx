@@ -373,19 +373,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
-    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, getCurrentSelectPageId, setCurrentPageTabRouteKey} =
-        usePageInfo(
-            (s) => ({
-                setPagesData: s.setPagesData,
-                setSelectGroupId: s.setSelectGroupId,
-                addPagesDataCache: s.addPagesDataCache,
-                pages: s.pages,
-                clearAllData: s.clearAllData,
-                getCurrentSelectPageId: s.getCurrentSelectPageId,
-                setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
-            }),
-            shallow
-        )
+    const {
+        setPagesData,
+        setSelectGroupId,
+        addPagesDataCache,
+        pages,
+        clearAllData,
+        getCurrentSelectPageId,
+        setCurrentPageTabRouteKey
+    } = usePageInfo(
+        (s) => ({
+            setPagesData: s.setPagesData,
+            setSelectGroupId: s.setSelectGroupId,
+            addPagesDataCache: s.addPagesDataCache,
+            pages: s.pages,
+            clearAllData: s.clearAllData,
+            getCurrentSelectPageId: s.getCurrentSelectPageId,
+            setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey
+        }),
+        shallow
+    )
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
@@ -586,7 +593,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps)=>{
+    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Hole).length
         if (isExist) {
             if (data.SeverityList) {
@@ -1720,12 +1727,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        unFuzzerCacheData.current = usePageInfo.subscribe(
-            (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
-            (selectedState, previousSelectedState) => {
-                saveFuzzerCache(selectedState as PageProps)
-            }
-        )
+        if (!isSastScan()) {
+            unFuzzerCacheData.current = usePageInfo.subscribe(
+                (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+                (selectedState, previousSelectedState) => {
+                    saveFuzzerCache(selectedState as PageProps)
+                }
+            )
+        }
 
         return () => {
             // 注销fuzzer-tab页内数据的订阅事件
