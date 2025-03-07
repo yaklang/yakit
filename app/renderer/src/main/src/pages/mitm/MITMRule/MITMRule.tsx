@@ -34,7 +34,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {MITMRuleFromModal} from "./MITMRuleFromModal"
 import {randomString} from "@/utils/randomUtil"
 import {MITMResponse} from "../MITMPage"
-import {failed, success} from "@/utils/notification"
+import {failed, success, yakitNotify} from "@/utils/notification"
 import {MITMRuleExport, MITMRuleImport} from "./MITMRuleConfigure/MITMRuleConfigure"
 import update from "immutability-helper"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
@@ -90,24 +90,27 @@ const HitColor = {
     }
 }
 
-const batchMenuData: YakitMenuItemProps[] = [
-    {
-        key: "ban",
-        label: "禁用"
-    },
-    {
-        key: "no-replace",
-        label: "不替换"
-    },
-    {
-        key: "replace",
-        label: "替换"
-    },
-    {
-        key: "remove",
-        label: "删除"
-    }
-]
+const batchMenuData = (excludeBatchMenuKey: string[]) => {
+    const arr = [
+        {
+            key: "ban",
+            label: "禁用"
+        },
+        {
+            key: "no-replace",
+            label: "不替换"
+        },
+        {
+            key: "replace",
+            label: "替换"
+        },
+        {
+            key: "remove",
+            label: "删除"
+        }
+    ]
+    return arr.filter((ele) => !excludeBatchMenuKey.includes(ele.key))
+}
 
 export const colorSelectNode = (
     <>
@@ -122,14 +125,23 @@ export const colorSelectNode = (
     </>
 )
 
-export const MITMRule: React.FC<MITMRuleProp> = (props) => {
+export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) => {
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
         }),
         shallow
     )
-    const {visible, setVisible, getContainer, status} = props
+    const {
+        ruleUse = "mitm",
+        visible,
+        setVisible,
+        getContainer,
+        status,
+        excludeColumnsKey = [],
+        excludeBatchMenuKey = [],
+        onSetRules
+    } = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
@@ -148,6 +160,14 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
     const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
     const [currentIndex, setCurrentIndex] = useState<number>()
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            onSaveToDataBase: onSaveToDataBase
+        }),
+        []
+    )
 
     const heightDrawer = useMemo(() => {
         return menuBodyHeight.firstTabMenuBodyHeight - 58
@@ -268,7 +288,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     }, [])
 
     const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        return [
+        const columnArr: ColumnsTypeProps[] = [
             {
                 title: "执行顺序",
                 dataKey: "Index",
@@ -427,7 +447,8 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 }
             }
         ]
-    }, [])
+        return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+    }, [excludeColumnsKey])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
         record[item.value] = checked
@@ -530,19 +551,28 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
     })
 
     const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
+        const obj = {...val}
+        if (ruleUse === "historyAnalysis") {
+            obj.NoReplace = true
+            obj.Result = ""
+            obj.ExtraHeaders = []
+            obj.ExtraCookies = []
+            obj.Drop = false
+            obj.ExtraRepeat = false
+        }
         if (isEdit) {
             const index = rules.findIndex((item) => item.Id === val.Id)
             if (index === -1) return
-            rules[index] = {...val}
+            rules[index] = obj
             setRules([...rules])
         } else {
-            const newRules = [{...val}, ...rules].sort((a, b) => a.Index - b.Index)
+            const newRules = [obj, ...rules].sort((a, b) => a.Index - b.Index)
             setRules(newRules)
             setCurrentIndex(newRules.length - 1)
         }
         onOpenOrCloseModal(false)
     })
-    const onSaveToDataBase = useMemoizedFn(() => {
+    const onSaveToDataBase = useMemoizedFn((saveOk?: () => void) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
         if (status === "idle") {
             // 劫持未开启
@@ -550,7 +580,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                 .invoke("SetCurrentRules", {Rules: newRules})
                 .then((e) => {
                     setVisible(false)
-                    success("保存成功")
+                    if (saveOk) {
+                        saveOk()
+                    } else {
+                        success("保存成功")
+                    }
                 })
                 .catch((e) => {
                     failed(`保存失败: ${e}`)
@@ -560,7 +594,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             const findOpenRepRule = newRules.find(
                 (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
             )
-            if (findOpenRepRule !== undefined) {
+            if (ruleUse === "mitm" && findOpenRepRule !== undefined) {
                 Modal.confirm({
                     title: "温馨提示",
                     icon: <ExclamationCircleOutlined />,
@@ -590,7 +624,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                             .then((val) => {
                                 emiter.emit("onOpenRepRuleEvent", true + "")
                                 setVisible(false)
-                                success("保存成功")
+                                if (saveOk) {
+                                    saveOk()
+                                } else {
+                                    success("保存成功")
+                                }
                             })
                             .catch((e) => {
                                 failed(`保存失败: ${e}`)
@@ -605,7 +643,11 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                     .then((val) => {
                         emiter.emit("onOpenRepRuleEvent", false + "")
                         setVisible(false)
-                        success("保存成功")
+                        if (saveOk) {
+                            saveOk()
+                        } else {
+                            success("保存成功")
+                        }
                     })
                     .catch((e) => {
                         failed(`保存失败: ${e}`)
@@ -613,6 +655,10 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             }
         }
     })
+    useEffect(() => {
+        onSetRules && onSetRules(rules.map((item, index) => ({...item, Index: index + 1})))
+    }, [rules])
+
     const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
         if (selectedRowKeys.length === 0) return
         setLoading(true)
@@ -728,29 +774,19 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             setVisible(false)
         }
     })
-    return (
-        <>
-            <YakitDrawer
-                placement='bottom'
-                closable={false}
-                onClose={() => onClose()}
-                visible={visible}
-                getContainer={getContainer}
-                mask={false}
-                style={{height: visible ? heightDrawer : 0}}
-                className={classNames(styles["mitm-rule-drawer"])}
-                contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
-                title={<div className={styles["heard-title"]}>内容规则配置</div>}
-                extra={
-                    <div className={styles["heard-right-operation"]}>
-                        <RuleExportAndImportButton onOkImport={onOkImport} />
-                        <YakitButton
-                            type='primary'
-                            className={styles["button-save"]}
-                            onClick={() => onSaveToDataBase()}
-                        >
-                            保存
-                        </YakitButton>
+
+    const title = () => {
+        return <div className={styles["heard-title"]}>内容规则配置</div>
+    }
+    const extra = () => {
+        return (
+            <div className={styles["heard-right-operation"]}>
+                <RuleExportAndImportButton onOkImport={onOkImport} />
+                <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveToDataBase()}>
+                    保存
+                </YakitButton>
+                {ruleUse === "mitm" && (
+                    <>
                         <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
                             <YakitButton
                                 type='outline2'
@@ -762,96 +798,128 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
                         <div onClick={() => onClose()} className={styles["icon-remove"]}>
                             <RemoveIcon />
                         </div>
-                    </div>
-                }
-            >
-                <div className={styles["mitm-rule-table"]}>
-                    <TableVirtualResize<MITMContentReplacerRule>
-                        currentIndex={currentIndex}
-                        isRefresh={isRefresh}
-                        titleHeight={42}
-                        title={
-                            <div className={styles["table-title-body"]}>
-                                <div className={styles["table-title"]}>现有 MITM 内容规则</div>
-                                <div className={styles["table-total"]}>
-                                    共 <span>{rules.length}</span> 条规则
-                                </div>
+                    </>
+                )}
+            </div>
+        )
+    }
+    const content = () => {
+        return (
+            <div className={styles["mitm-rule-table"]}>
+                <TableVirtualResize<MITMContentReplacerRule>
+                    currentIndex={currentIndex}
+                    isRefresh={isRefresh}
+                    titleHeight={42}
+                    title={
+                        <div className={styles["table-title-body"]}>
+                            <div className={styles["table-title"]}>现有 MITM 内容规则</div>
+                            <div className={styles["table-total"]}>
+                                共 <span>{rules.length}</span> 条规则
                             </div>
-                        }
-                        extra={
-                            <div className={styles["table-title-body"]}>
-                                <div className={styles["table-switch"]}>
-                                    <span className={styles["switch-text"]}>全部禁用</span>
-                                    <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
-                                </div>
-                                <Divider type='vertical' style={{margin: "0 16px"}} />
+                        </div>
+                    }
+                    extra={
+                        <div className={styles["table-title-body"]}>
+                            <div className={styles["table-switch"]}>
+                                <span className={styles["switch-text"]}>全部禁用</span>
+                                <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
+                            </div>
+                            <Divider type='vertical' style={{margin: "0 16px"}} />
+                            {ruleUse === "mitm" && (
                                 <div className={styles["table-switch"]}>
                                     <span className={styles["switch-text"]}>全部不替换</span>
                                     <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
                                 </div>
-                                {/* <YakitButton type='outline2' className={styles["button-filter"]}>
-                                <FilterIcon />
-                            </YakitButton> */}
-                                <YakitPopover
-                                    placement={"bottom"}
-                                    arrowPointAtCenter={true}
-                                    content={
-                                        <YakitMenu
-                                            data={batchMenuData}
-                                            selectedKeys={[]}
-                                            width={92}
-                                            onSelect={({key}) => onMenuSelect(key)}
-                                        />
-                                    }
-                                    trigger='hover'
-                                    overlayClassName={classNames(styles["popover-remove"])}
+                            )}
+                            <YakitPopover
+                                placement={"bottom"}
+                                arrowPointAtCenter={true}
+                                content={
+                                    <YakitMenu
+                                        data={batchMenuData(excludeBatchMenuKey)}
+                                        selectedKeys={[]}
+                                        width={92}
+                                        onSelect={({key}) => onMenuSelect(key)}
+                                    />
+                                }
+                                trigger='hover'
+                                overlayClassName={classNames(styles["popover-remove"])}
+                            >
+                                <YakitButton
+                                    type='outline2'
+                                    disabled={selectedRowKeys.length === 0}
+                                    className={classNames(styles["button-batch-remove"])}
                                 >
-                                    <YakitButton
-                                        type='outline2'
-                                        disabled={selectedRowKeys.length === 0}
-                                        className={classNames(styles["button-batch-remove"])}
-                                    >
-                                        批量操作
-                                        <ChevronDownIcon />
-                                    </YakitButton>
-                                </YakitPopover>
-
-                                <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
-                                    <div className={styles["button-add-rule"]}>
-                                        <PlusIcon />
-                                        新增规则
-                                    </div>
+                                    批量操作
+                                    <ChevronDownIcon />
                                 </YakitButton>
-                            </div>
-                        }
-                        renderKey='Id'
-                        data={rules}
-                        rowSelection={{
-                            isAll: isAllSelect,
-                            type: "checkbox",
-                            selectedRowKeys,
-                            onSelectAll: onSelectAll,
-                            onChangeCheckboxSingle: onSelectChange
-                        }}
-                        pagination={{
-                            total: rules.length,
-                            limit: 20,
-                            page: 1,
-                            onChange: () => {}
-                        }}
-                        loading={loading}
-                        columns={columns}
-                        currentSelectItem={currentItem}
-                        onRowClick={onSetCurrentRow}
-                        onMoveRow={onMoveRow}
-                        enableDragSort={true}
-                        enableDrag={true}
-                        onMoveRowEnd={onMoveRowEnd}
-                    />
-                </div>
-            </YakitDrawer>
+                            </YakitPopover>
+                            <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
+                                <div className={styles["button-add-rule"]}>
+                                    <PlusIcon />
+                                    新增规则
+                                </div>
+                            </YakitButton>
+                        </div>
+                    }
+                    renderKey='Id'
+                    data={rules}
+                    rowSelection={{
+                        isAll: isAllSelect,
+                        type: "checkbox",
+                        selectedRowKeys,
+                        onSelectAll: onSelectAll,
+                        onChangeCheckboxSingle: onSelectChange
+                    }}
+                    pagination={{
+                        total: rules.length,
+                        limit: 20,
+                        page: 1,
+                        onChange: () => {}
+                    }}
+                    loading={loading}
+                    columns={columns}
+                    currentSelectItem={currentItem}
+                    onRowClick={onSetCurrentRow}
+                    onMoveRow={onMoveRow}
+                    enableDragSort={true}
+                    enableDrag={true}
+                    onMoveRowEnd={onMoveRowEnd}
+                />
+            </div>
+        )
+    }
+
+    return (
+        <>
+            {ruleUse === "mitm" ? (
+                <YakitDrawer
+                    placement='bottom'
+                    closable={false}
+                    onClose={() => onClose()}
+                    visible={visible}
+                    getContainer={getContainer}
+                    mask={false}
+                    style={{height: visible ? heightDrawer : 0}}
+                    className={classNames(styles["mitm-rule-drawer"])}
+                    contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                    title={title()}
+                    extra={extra()}
+                >
+                    {content()}
+                </YakitDrawer>
+            ) : (
+                <>
+                    <div className={styles["header"]}>
+                        <>{title()}</>
+                        {extra()}
+                    </div>
+                    {content()}
+                </>
+            )}
             {modalVisible && (
                 <MITMRuleFromModal
+                    ruleUse={ruleUse}
                     rules={rules}
                     modalVisible={modalVisible}
                     isEdit={isEdit}
@@ -862,7 +930,7 @@ export const MITMRule: React.FC<MITMRuleProp> = (props) => {
             )}
         </>
     )
-}
+})
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props

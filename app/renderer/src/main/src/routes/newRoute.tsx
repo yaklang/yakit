@@ -149,6 +149,7 @@ import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
 import {YakRunnerAuditHole} from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
 import {Misstatement} from "@/pages/misstatement/Misstatement"
 import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
+import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -202,6 +203,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
         describe: "反弹 Shell 接收工具，可以在服务器上开启一个端口，进行监听，并进行交互"
     },
     "db-http-request": {label: "History"},
+    "db-http-request-analysis": {label: "流量分析器"},
     "db-reports-results": {label: "报告"},
     "db-risks": {label: "漏洞"},
     misstatement: {label: "误报记录"},
@@ -254,6 +256,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
     YakitRoute.DB_HTTPHistory,
+    YakitRoute.DB_HTTPHistoryAnalysis,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
     YakitRoute.Misstatement,
@@ -301,6 +304,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.HTTPFuzzer,
     YakitRoute.DB_Ports,
     YakitRoute.DB_HTTPHistory,
+    YakitRoute.DB_HTTPHistoryAnalysis,
     YakitRoute.Plugin_Audit,
     YakitRoute.AddYakitScript,
     YakitRoute.PayloadManager,
@@ -327,7 +331,7 @@ export const NoPaddingRoute: YakitRoute[] = [
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory]
+export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
@@ -497,6 +501,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <ShellReceiver />
         case YakitRoute.DB_HTTPHistory:
             return <HTTPHistory pageType='History' />
+        case YakitRoute.DB_HTTPHistoryAnalysis:
+            return <HTTPHistoryAnalysis />
         case YakitRoute.DB_Report:
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:

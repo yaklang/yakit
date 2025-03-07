@@ -11,7 +11,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useInViewport, useMap, useMemoizedFn} from "ahooks"
 import React, {ReactElement, useEffect, useRef, useState} from "react"
-import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../MITMPage"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
     MITMPluginLocalList,
@@ -51,7 +51,7 @@ interface MITMPluginHijackContentProps {
     setHasParamsCheckList: (s: string[]) => void
     setNoParamsCheckList: (s: string[]) => void
     onSubmitYakScriptId: (id: number, params: YakExecutorParam[]) => any
-    status: "idle" | "hijacked" | "hijacking"
+    status: MitmStatus
     isFullScreen: boolean
     setIsFullScreen: (b: boolean) => void
     onSelectAll: (e: boolean) => void
@@ -705,6 +705,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setMitmTabs([...mitmTabs])
         onSetOpenTabsFlag(mitmTabs.some((item) => item.contShow))
         setCurTabKey(item.key)
+        setIsFullScreen(false)
     }
 
     return (

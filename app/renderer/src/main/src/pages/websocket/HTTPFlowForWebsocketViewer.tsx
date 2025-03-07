@@ -97,7 +97,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                             ? `请求大小：${flow.RequestSizeVerbose}`
                             : `Body大小: ${flow.BodySizeVerbose}`}
                     </YakitTag>
-                    {pageType === "History" && (
+                    {["History"].includes(pageType || "") && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                     )}
                     {mode === "request" ? (

@@ -36,9 +36,8 @@ const ResponseAllDataCard: React.FC<ResponseAllDataCardProps> = React.memo((prop
                     isOnlyTable={onlyShowFirstNode}
                     onIsOnlyTable={setOnlyShowFirstNode}
                     refresh={refresh}
-                    toWebFuzzer={true}
                     showBatchActions={true}
-                    pageType="History"
+                    pageType="Webfuzzer"
                 ></CurrentHttpFlow>
             </div>
         </div>
