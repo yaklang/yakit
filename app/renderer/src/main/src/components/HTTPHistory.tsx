@@ -1,6 +1,6 @@
 import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
-import {HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
+import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
 import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
@@ -8,7 +8,6 @@ import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
-import styles from "./HTTPHistory.module.scss"
 import classNames from "classnames"
 import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
@@ -48,11 +47,12 @@ import {
     WordIconIcon,
     ZSHIcon
 } from "@/assets/commonProcessIcons"
-import {yakitNotify} from "@/utils/notification"
 import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
+import styles from "./HTTPHistory.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -60,14 +60,6 @@ export interface HTTPPacketFuzzable {
     sendToWebFuzzer?: boolean | (() => any) | ((isHttps: boolean, request: string) => any)
     defaultPacket?: string
     downstreamProxyStr?: string
-}
-
-// 使用 HTTPHistory 控件的来源页面
-export type HTTPHistorySourcePageType = "MITM" | "History"
-
-export interface HTTPHistoryProp extends HTTPPacketFuzzable {
-    pageType?: HTTPHistorySourcePageType
-    params?: YakQueryHTTPFlowRequest
 }
 
 type tabKeys = "web-tree" | "process"
@@ -86,38 +78,64 @@ export interface HTTPFlowBodyByIdRequest {
     IsRisk?: boolean
 }
 
+// 使用 HTTPHistory 控件的来源页面
+export type HTTPHistorySourcePageType = "MITM" | "History" | "History_Analysis" | "Webfuzzer" | "Plugin"
+export interface HTTPHistoryProp extends HTTPPacketFuzzable, HistoryTableTitleShow {
+    pageType?: HTTPHistorySourcePageType
+    params?: YakQueryHTTPFlowRequest
+    onlyShowSearch?: boolean
+}
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
-    const {pageType, downstreamProxyStr, params} = props
-    const ref = useRef(null)
-    const [inViewport] = useInViewport(ref)
-    const {isRefreshHistory, setIsRefreshHistory} = useStore()
-    // 控制刷新数据
-    const [refresh, setRefresh] = useState<boolean>(false)
-    const [importRefresh, setImportRefresh] = useState<boolean>(false)
-    const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
-    const [highlightSearch, setHighlightSearch] = useState("")
-    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
+    const {
+        pageType,
+        downstreamProxyStr,
+        params,
+        noTableTitle = false,
+        showSourceType = true,
+        showAdvancedConfig = true,
+        showProtocolType = true,
+        showHistorySearch = true,
+        showColorSwatch = true,
+        showBatchActions = true,
+        showDelAll = true,
+        showRefresh = true
+    } = props
     // History Id 用于区分每个history控件
     const [historyId, setHistoryId] = useState<string>(uuidv4())
+    // History有左侧tab
+    const historyPage = useMemo(() => {
+        return pageType === "History"
+    }, [pageType])
+    const ref = useRef(null)
+    const [inViewport] = useInViewport(ref)
+
+    // #region mitm页面Forward数据后需要刷新history页面数据
+    const {isRefreshHistory, setIsRefreshHistory} = useStore()
+    const [refresh, setRefresh] = useState<boolean>(false)
     useUpdateEffect(() => {
-        if (isRefreshHistory) {
+        if (isRefreshHistory && historyPage) {
             setRefresh(!refresh)
             setIsRefreshHistory(false)
         }
-    }, [inViewport])
+    }, [inViewport, historyPage])
+    // #endregion
 
+    // #region 流量表导出数据，统一history页面刷新
+    const [importRefresh, setImportRefresh] = useState<boolean>(false)
     const onRefreshImportHistoryTable = useMemoizedFn(() => {
         setImportRefresh(!importRefresh)
     })
     useEffect(() => {
-        if (pageType === "History") {
+        if (historyPage) {
             emiter.on("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
             return () => {
                 emiter.off("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
             }
         }
-    }, [pageType])
+    }, [historyPage])
+    // #endregion
 
+    // #region 规则表的展开与折叠取缓存
     const [defaultFold, setDefaultFold] = useState<boolean>()
     useEffect(() => {
         getRemoteValue("HISTORY_FOLD").then((result: string) => {
@@ -130,13 +148,15 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             }
         })
     }, [])
+    // #endregion
 
+    // #region mitm页面配置代理需要在history同类型页面进行发送
     const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
     useDebounceEffect(
         () => {
             if (inViewport) {
                 getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                    if (pageType === "History" && res) {
+                    if (!["MITM"].includes(pageType || "") && res) {
                         try {
                             const obj = JSON.parse(res) || {}
                             setDownstreamProxy(obj.defaultValue || "")
@@ -152,10 +172,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         [downstreamProxyStr, inViewport, pageType],
         {wait: 300}
     )
+    // #endregion
 
-    /**
-     * 左侧tab部分
-     */
+    // #region history页面左侧tab部分
     const [hTTPHistoryTabs, setHTTPHistoryTabs] = useState<Array<HTTPHistoryTabsItem>>([
         {
             key: "web-tree",
@@ -179,29 +198,31 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     ])
     const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
     useEffect(() => {
-        getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
-            if (setting) {
-                try {
-                    const {key, contShow} = JSON.parse(setting)
-                    hTTPHistoryTabs.forEach((i) => {
-                        if (i.key === key) {
-                            i.contShow = contShow
-                        } else {
+        if (historyPage) {
+            getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
+                if (setting) {
+                    try {
+                        const {key, contShow} = JSON.parse(setting)
+                        hTTPHistoryTabs.forEach((i) => {
+                            if (i.key === key) {
+                                i.contShow = contShow
+                            } else {
+                                i.contShow = false
+                            }
+                        })
+                        setHTTPHistoryTabs([...hTTPHistoryTabs])
+                        setCurTabKey(key)
+                    } catch (error) {
+                        hTTPHistoryTabs.forEach((i) => {
                             i.contShow = false
-                        }
-                    })
-                    setHTTPHistoryTabs([...hTTPHistoryTabs])
-                    setCurTabKey(key)
-                } catch (error) {
-                    hTTPHistoryTabs.forEach((i) => {
-                        i.contShow = false
-                    })
-                    setHTTPHistoryTabs([...hTTPHistoryTabs])
-                    setCurTabKey("web-tree")
+                        })
+                        setHTTPHistoryTabs([...hTTPHistoryTabs])
+                        setCurTabKey("web-tree")
+                    }
                 }
-            }
-        })
-    }, [])
+            })
+        }
+    }, [historyPage])
     const handleTabClick = (key: tabKeys, contShow: boolean) => {
         hTTPHistoryTabs.forEach((i) => {
             if (i.key === key) {
@@ -220,10 +241,19 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const openTabsFlag = useMemo(() => {
         return hTTPHistoryTabs.some((item) => item.contShow)
     }, [hTTPHistoryTabs])
+    // #endregion
+
+    // #region history页面网站树、进程
+    const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
+    const webTreeRef = useRef<any>()
+    const treeWrapRef = useRef<any>()
+    const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
+    const [searchURL, setSearchURL] = useState<string>("")
+    const [includeInUrl, setIncludeInUrl] = useState<string>("")
+    const [treeQueryparams, setTreeQueryparams] = useState<string>("")
 
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
-    const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
 
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
@@ -249,16 +279,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         } catch (error) {}
     })
 
-    /**
-     * 网站树
-     */
-    const webTreeRef = useRef<any>()
-    const treeWrapRef = useRef<any>()
-    const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
-    const [searchURL, setSearchURL] = useState<string>("")
-    const [includeInUrl, setIncludeInUrl] = useState<string>("")
-    const [treeQueryparams, setTreeQueryparams] = useState<string>("")
-
     const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
         entries.forEach((entry) => {
             const target = entry.target
@@ -281,34 +301,41 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         }
     })
     useEffect(() => {
-        emiter.on("onHistoryJumpWebTree", onJumpWebTree)
-        return () => {
-            emiter.off("onHistoryJumpWebTree", onJumpWebTree)
+        if (historyPage) {
+            emiter.on("onHistoryJumpWebTree", onJumpWebTree)
+            return () => {
+                emiter.off("onHistoryJumpWebTree", onJumpWebTree)
+            }
         }
-    }, [])
+    }, [historyPage])
+    // #endregion
 
-    // 编辑器部分是否显示
+    // #region 编辑器部分是否显示
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
+    const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
+    const [highlightSearch, setHighlightSearch] = useState("")
     useEffect(() => {
         setSecondNodeVisible(!onlyShowFirstNode)
     }, [onlyShowFirstNode])
+    // #endregion
 
     return (
         <div
             ref={ref}
             className={styles.hTTPHistory}
             style={{
-                paddingRight: pageType === "History" ? 16 : 0
+                paddingRight: historyPage ? 16 : 0
             }}
         >
             <YakitResizeBox
-                isShowDefaultLineStyle={pageType === "History"}
-                freeze={pageType === "History" && openTabsFlag}
-                isRecalculateWH={pageType === "History" ? openTabsFlag : true}
-                firstMinSize={pageType === "History" ? (openTabsFlag ? "325px" : "24px") : 0}
-                firstRatio={pageType === "History" ? (openTabsFlag ? "25%" : "24px") : "0px"}
+                isShowDefaultLineStyle={historyPage}
+                freeze={historyPage && openTabsFlag}
+                isRecalculateWH={historyPage ? openTabsFlag : true}
+                firstMinSize={historyPage ? (openTabsFlag ? "325px" : "24px") : 0}
+                firstRatio={historyPage ? (openTabsFlag ? "25%" : "24px") : "0px"}
                 firstNode={() => {
-                    if (pageType === "History") {
+                    if (historyPage) {
                         return (
                             <div className={styles["hTTPHistory-tab-wrap"]}>
                                 <div className={styles["hTTPHistory-tab"]}>
@@ -375,30 +402,35 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     }
                     return <></>
                 }}
-                secondMinSize={pageType === "History" ? "720px" : "100%"}
-                secondRatio={pageType === "History" ? "75%" : "100%"}
+                secondMinSize={historyPage ? "720px" : "100%"}
+                secondRatio={historyPage ? "75%" : "100%"}
                 secondNode={() => (
                     <YakitResizeBox
-                        style={{paddingBottom: pageType === "History" ? 13 : 0}}
+                        style={{paddingBottom: historyPage ? 13 : 0}}
                         firstNode={() => (
                             <div
                                 style={{
-                                    paddingTop: pageType === "History" ? 8 : 0,
-                                    paddingLeft: pageType === "History" ? 12 : 0,
+                                    paddingTop: historyPage ? 8 : 0,
+                                    paddingLeft: historyPage ? 12 : 0,
                                     height: "100%"
                                 }}
                             >
                                 <HTTPFlowTable
-                                    noHeader={true}
+                                    noTableTitle={noTableTitle}
+                                    showSourceType={showSourceType}
+                                    showAdvancedConfig={showAdvancedConfig}
+                                    showProtocolType={showProtocolType}
+                                    showHistorySearch={showHistorySearch}
+                                    showColorSwatch={showColorSwatch}
+                                    showBatchActions={showBatchActions}
+                                    showDelAll={showDelAll}
+                                    showRefresh={showRefresh}
                                     params={params}
                                     searchURL={searchURL}
                                     includeInUrl={includeInUrl}
-                                    // tableHeight={200}
-                                    // tableHeight={selected ? 164 : undefined}
                                     onSelected={(i) => {
                                         setSelectedHTTPFlow(i)
                                     }}
-                                    paginationPosition={"topRight"}
                                     onSearch={setHighlightSearch}
                                     onlyShowFirstNode={onlyShowFirstNode}
                                     setOnlyShowFirstNode={setOnlyShowFirstNode}
@@ -439,7 +471,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             historyId={historyId}
                                             downstreamProxyStr={downstreamProxy}
                                             pageType={pageType}
-                                            // defaultHeight={detailHeight}
                                         />
                                     </div>
                                 )}
@@ -583,7 +614,6 @@ export const iconProcessMap = commonProcess.reduce(
     },
     {} as Record<string, ReactElement | undefined>
 )
-
 export interface ProcessItem {
     process: string
     icon?: ReactElement

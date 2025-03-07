@@ -1493,7 +1493,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "History") {
+                            if (["History"].includes(pageType || "")) {
                                 titleEle.push(
                                     <OutlineLog2Icon
                                         className={styles["jump-web-tree"]}

@@ -85,66 +85,19 @@
         }
     }
 
-    .http-history-table-flex {
-        display: flex;
-        align-items: center;
-        .refresh-button {
-            cursor: pointer;
-            border-radius: 4px;
-            width: 32px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            .refresh-icon {
-                color: var(--yakit-body-text-color);
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-            &:hover {
-                background-color: var(--yakit-background-color);
-                .refresh-icon {
-                    color: var(--yakit-primary-5);
-                }
-            }
-        }
-    }
-
-    .refresh-button {
-        cursor: pointer;
-        border-radius: 4px;
-        width: 32px;
-        height: 24px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        .refresh-icon {
-            color: var(--yakit-body-text-color);
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-        &:hover {
-            background-color: var(--yakit-background-color);
-            .refresh-icon {
-                color: var(--yakit-primary-5);
-            }
-        }
-    }
-
     .http-history-table-title-space-between {
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
 
-    .http-history-table-tip {
-        font-weight: 400;
-        font-size: 12px;
-        color: var(--yakit-helper-text-color);
+    .http-history-table-row {
+        margin-bottom: 8px;
+    }
+
+    .http-history-table-flex {
+        display: flex;
+        align-items: center;
     }
 
     .http-history-table-total {
@@ -168,57 +121,26 @@
         }
     }
 
-    .http-history-table-right-search {
-        width: 280px;
-        @extend .inputSearchModule
-    }
-
-    .empty-button {
-        margin-left: 8px;
-        display: flex;
-        align-items: center;
-    }
-
     .http-history-table-right {
         width: 100%;
         display: flex;
         justify-content: flex-end;
         align-items: center;
+        gap: 8px;
         flex: 1;
+
+        .http-history-table-right-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
 
         .http-history-table-right-label {
             white-space: nowrap;
-            padding-right: 4px;
-        }
-
-        .http-history-table-right-item {
-            padding-right: 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        .http-history-table-right-filter-large {
-            display: flex;
-
-            .http-history-table-right-filter-item {
-                display: flex;
-                padding-right: 16px;
-
-                .http-history-table-right-filter-select {
-                    width: 140px;
-                }
-            }
-        }
-
-        @media screen and (max-width: 1300px) {
-            .http-history-table-right-filter-large {
-                display: none;
-            }
         }
 
         .http-history-table-color-swatch {
             color: var(--yakit-body-text-color);
-            margin: 0 8px;
 
             .color-swatch-icon {
                 svg {
@@ -240,28 +162,21 @@
                 }
             }
         }
-    }
 
-    .http-history-table-line {
-        margin-top: 8px;
-        margin-bottom: 12px;
-        height: 1px;
-        background-color: var(--yakit-border-color);
-    }
-
-    .http-history-table-row {
-        margin-bottom: 8px;
-    }
-
-    .http-history-table-badge {
-        margin: 2px 5px;
-        .refresh-icon {
-            color: var(--yakit-body-text-color);
-            cursor: pointer;
-            &:hover {
-                color: var(--yakit-primary-5);
+        .http-history-table-badge {
+            .refresh-icon {
+                color: var(--yakit-body-text-color);
+                cursor: pointer;
+                &:hover {
+                    color: var(--yakit-primary-5);
+                }
             }
         }
+    }
+
+    .http-history-table-right-search {
+        width: 280px;
+        @extend .inputSearchModule;
     }
 }
 
@@ -367,20 +282,6 @@
     @media screen and (max-height: 600px) {
         .title-header {
             max-height: 180px;
-        }
-    }
-}
-
-.http-history-table-right-filter-popover {
-    width: 180px;
-
-    .http-history-table-filter-vertical {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 16px;
-
-        &:last-child {
-            margin-bottom: 0;
         }
     }
 }
@@ -528,30 +429,6 @@
     :global {
         .ant-popover-inner-content {
             padding: 4px;
-        }
-    }
-}
-
-.http-history-table-sub-menu {
-    :global {
-        .ant-menu-item {
-            height: 30px;
-            line-height: 30px;
-            margin: 2px 0;
-        }
-
-        .ant-menu-item:hover {
-            background-color: var(--yakit-primary-5);
-            color: #ffffff;
-        }
-
-        .ant-menu-item:not(:last-child) {
-            margin-bottom: 0;
-        }
-
-        .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
-            background-color: #ffffff;
-            color: rgba(0, 0, 0, 0.85);
         }
     }
 }
@@ -753,5 +630,5 @@
 }
 
 .http-history-search-drop-down-popover {
-    @extend .inputSearchModule
+    @extend .inputSearchModule;
 }

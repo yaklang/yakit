@@ -41,6 +41,7 @@ import {MITMConsts} from "./MITMConsts"
 import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import classNames from "classnames"
+import { useStore } from "@/store/mitmState"
 const {ipcRenderer} = window.require("electron")
 
 type idleTabKeys = "plugin"
@@ -79,10 +80,12 @@ export interface MITMResponse extends MITMFilterSchema {
 
 export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = "CONST_DEFAULT_ENABLE_INITIAL_PLUGIN"
 
+export type MitmStatus = "idle" | "hijacked" | "hijacking"
 export const MITMPage: React.FC<MITMPageProp> = (props) => {
+    const {setMitmStatus} = useStore()
     // 整体的劫持状态
-    const [status, setStatus, getStatus] = useGetState<"idle" | "hijacked" | "hijacking">("idle")
-    const statusRef = useRef<"idle" | "hijacked" | "hijacking">(status)
+    const [status, setStatus, getStatus] = useGetState<MitmStatus>("idle")
+    const statusRef = useRef<MitmStatus>(status)
     const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
     // 通过启动表单的内容
     const [addr, setAddr] = useState("")
@@ -104,6 +107,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
     useEffect(() => {
         statusRef.current = status
+        setMitmStatus(status)
     }, [status])
 
     // 检测当前劫持状态
@@ -466,7 +470,7 @@ interface MITMServerProps {
     ) => any
     visible?: boolean
     setVisible?: (b: boolean) => void
-    status: "idle" | "hijacked" | "hijacking"
+    status: MitmStatus
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
     logs: ExecResultLog[]

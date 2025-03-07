@@ -559,6 +559,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
                     <HTTPHistory
                         pageType='MITM'
+                        noTableTitle={true}
                         downstreamProxyStr={downstreamProxyStr}
                         params={{SourceType: sourceType}}
                     />
