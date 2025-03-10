@@ -6225,7 +6225,7 @@ message NoteContent {
 message NoteFilter {
     repeated uint64 Id = 1;
     repeated string Title = 2;
-    repeated string ContentKeyword = 3;
+    repeated string Keyword = 3;
 }
   
 message CreateNoteRequest {
