@@ -159,7 +159,7 @@ module.exports = (win, callback, getClient, newClient) => {
             try {
                 toLog("已启动本地引擎进程")
                 if (isSastScan) {
-                    dbFile = ["--profile-db", "sast-profile-rule.db", "--profile-db", "default-sast.db"]
+                    dbFile = ["--profile-db", "sast-profile-rule.db", "--project-db", "default-sast.db"]
                 }
                 const log = out ? out : "ignore"
 
