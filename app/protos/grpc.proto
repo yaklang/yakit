@@ -448,7 +448,7 @@ service Yak {
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom(Empty) returns (Fields);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement 
 
   rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
@@ -2683,6 +2683,7 @@ message GenerateYakCodeByPacketResponse {
 message QueryReportRequest {
   int64 Id = 1;
   string Hash = 2;
+  string Type = 3;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message DeleteReportRequest {
@@ -2691,6 +2692,7 @@ message DeleteReportRequest {
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
   bool DeleteAll = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message QueryReportsResponse {
@@ -2705,6 +2707,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message Report {
@@ -4782,7 +4785,6 @@ message FuzzerResponse {
 
   string RuntimeID = 53;
   bool Discard = 54;
-
   bool IsAutoFixContentType = 55;
   string OriginalContentType = 59;
   string FixContentType = 60;
