@@ -7,7 +7,7 @@ on:
 
 jobs:
     build_yakit:
-        if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-render') }}
+        if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-sast-render') }}
         runs-on: ubuntu-latest
         env:
             CI: ""
