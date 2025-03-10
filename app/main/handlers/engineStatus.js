@@ -159,12 +159,12 @@ module.exports = (win, callback, getClient, newClient) => {
             try {
                 toLog("已启动本地引擎进程")
                 if(isSastScan){
-                    dbFile = "sast-profile-rule.db"
+                    dbFile = ["sast-profile-rule.db","default-sast.db"]
                 }
                 const log = out ? out : "ignore"
 
                 const grpcPort = ["grpc", "--port", `${port}`]
-                const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
+                const extraParams = dbFile ? [...grpcPort, "--profile-db", ...dbFile] : grpcPort
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
