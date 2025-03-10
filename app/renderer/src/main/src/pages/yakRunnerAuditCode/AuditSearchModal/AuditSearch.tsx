@@ -66,7 +66,10 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             Schema: "syntaxflow",
             Location: projectName,
             Path: `/${activeKey}`,
-            Query: [{Key: "result_id", Value: resultIdRef.current}]
+            Query: [
+                {Key: "result_id", Value: resultIdRef.current},
+                {Key: "have_range", Value: "true"}
+            ]
         }
         const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
 
@@ -156,7 +159,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             ],
             PluginName: "SyntaxFlow Searcher"
         }
-
+        debugPluginStreamEvent.reset()
         apiDebugPlugin({params: requestParams, token: tokenRef.current, isShowStartInfo: false})
             .then(() => {
                 if (auditSearchKeywordsRef.current) {
