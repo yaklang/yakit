@@ -680,14 +680,6 @@
                     line-height: 16px;
                     color: var(--yakit-header-color);
                 }
-
-                :global {
-                    .ant-progress-text {
-                        display: block;
-                        margin-left: 0;
-                        margin-top: 2px;
-                    }
-                }
             }
 
             .modal-right-content {

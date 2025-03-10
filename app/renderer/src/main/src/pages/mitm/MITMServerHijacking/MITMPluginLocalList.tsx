@@ -127,7 +127,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
         setShowPluginHistoryList = () => {},
         setTempShowPluginHistory,
         hasParamsCheckList,
-        curTabKey = "",
+        curTabKey = ""
     } = props
 
     const [vlistHeigth, setVListHeight] = useState(0)
@@ -398,14 +398,12 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
             isDrag={true}
             mask={false}
         >
-            <div className={style["download-progress"]}>
-                <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
-                    percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
-                />
-            </div>
+            <Progress
+                strokeColor='#F28B44'
+                trailColor='#F0F2F5'
+                percent={percent}
+                format={(percent) => `已下载 ${percent}%`}
+            />
         </YakitHint>
     )
 })

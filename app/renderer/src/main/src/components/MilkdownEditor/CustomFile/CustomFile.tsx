@@ -488,14 +488,12 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             onCancel={onCancel}
             visible={visible}
         >
-            <div className={styles["download-progress"]}>
-                <Progress
-                    strokeColor='#F28B44'
-                    trailColor='#F0F2F5'
-                    percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
-                />
-            </div>
+            <Progress
+                strokeColor='#F28B44'
+                trailColor='#F0F2F5'
+                percent={percent}
+                format={(percent) => `已下载 ${percent}%`}
+            />
         </YakitHint>
     )
 })

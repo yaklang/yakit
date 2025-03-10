@@ -337,13 +337,11 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                 {install ? (
                                     <div className={styles["hint-right-download"]}>
                                         <div className={styles["hint-right-title"]}>引擎安装中...</div>
-                                        <div className={styles["download-progress"]}>
-                                            <Progress
-                                                strokeColor='#F28B44'
-                                                trailColor='#F0F2F5'
-                                                percent={Math.floor((downloadProgress?.percent || 0) * 100)}
-                                            />
-                                        </div>
+                                        <Progress
+                                            strokeColor='#F28B44'
+                                            trailColor='#F0F2F5'
+                                            percent={Math.floor((downloadProgress?.percent || 0) * 100)}
+                                        />
                                         <div className={styles["download-info-wrapper"]}>
                                             <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
                                             <div className={styles["divider-wrapper"]}>
