@@ -44,6 +44,7 @@ import {
 import {FoldHoleCard, FoldRuleCard} from "./reportRenders/ReportExtendCard"
 import {AutoCard} from "@/components/AutoCard"
 import styles from "./ReportViewerPage.module.scss"
+import {getEnvTypeByProjects} from "../softwareSettings/ProjectManage"
 const {ipcRenderer} = window.require("electron")
 
 interface ReportViewerPageProp {}
@@ -72,6 +73,7 @@ interface QueryReportsRequest extends QueryGeneralRequest {
     Owner: string
     From: string
     Keyword: string
+    Type?: "ssa_project" | "project"
 }
 interface ReportListProp {
     selectReportId?: number
@@ -131,7 +133,8 @@ const ReportList: React.FC<ReportListProp> = (props) => {
         }
         const finalParams: QueryReportsRequest = {
             ...query,
-            Pagination: paginationProps
+            Pagination: paginationProps,
+            Type: getEnvTypeByProjects()
         }
         const isInit = page === 1
         ipcRenderer
@@ -167,7 +170,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
     const onRemove = useMemoizedFn(() => {
         const transferParams = {
             selectedRowKeys,
-            params: query,
+            params: {...query, Type: getEnvTypeByProjects()},
             interfaceName: "DeleteReport",
             selectedRowKeysNmae: "IDs"
         }
@@ -337,7 +340,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         isEchartsToImg.current = true
         setLoading(true)
         ipcRenderer
-            .invoke("QueryReport", {Id: reportId})
+            .invoke("QueryReport", {Id: reportId, Type: getEnvTypeByProjects()})
             .then((r: Report) => {
                 if (r) setReport(r)
             })
