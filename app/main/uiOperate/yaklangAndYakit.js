@@ -2,8 +2,7 @@ const {ipcMain, app} = require("electron")
 const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const process = require("process")
-const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
+const {getLocalYaklangEngine} = require("../filePath")
 const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
@@ -11,7 +10,6 @@ const {
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
-const {getCheckTextUrl} = require("../handlers/utils/network")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("get-available-oss-domain", async () => {
@@ -91,5 +89,9 @@ module.exports = (win, getClient) => {
     /** 校验Yaklang来源是否正确 */
     ipcMain.handle("fetch-check-yaklang-source", async (e, version, requestConfig) => {
         return await fetchSpecifiedYakVersionHash(version, requestConfig)
+    })
+
+    ipcMain.handle("fetch-local-engine-path", async () => {
+        return getLocalYaklangEngine()
     })
 }

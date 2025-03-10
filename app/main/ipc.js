@@ -278,5 +278,12 @@ module.exports = {
 
         // (render|print)-error-log
         require("./errorCollection")(win, getClient)
+
+        // mcp client
+        try {
+            require("./handlers/mcpServere")(win, getClient)
+        } catch (error) {
+            console.log(111111,error)
+        }
     }
 }
