@@ -120,7 +120,7 @@ export interface AuditYakUrlProps {
     Location?: string
     // 带参查询
     ProgramName?: string
-    Query?: {Key: string; Value: number}[]
+    Query?: {Key: string; Value: any}[]
 }
 
 export interface AuditMainItemFormProps {}
