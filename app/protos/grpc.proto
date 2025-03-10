@@ -6234,7 +6234,7 @@ message CreateNoteRequest {
 }
   
 message UpdateNoteRequest {
-    NoteFilter filter = 1;
+    NoteFilter Filter = 1;
     bool UpdateTitle = 2;
     string Title = 3;
     bool UpdateContent = 4;
@@ -6242,11 +6242,11 @@ message UpdateNoteRequest {
 }
   
 message DeleteNoteRequest {
-      NoteFilter filter = 1;
+      NoteFilter Filter = 1;
 }
   
 message QueryNoteRequest {
-    NoteFilter filter = 1;
+    NoteFilter Filter = 1;
     Paging Pagination = 2;
 }
   
@@ -6277,7 +6277,7 @@ message ImportNoteResponse {
 }
   
 message ExportNoteRequest {
-    NoteFilter filter = 1;
+    NoteFilter Filter = 1;
     string TargetPath = 2;
 }
   
