@@ -1,1 +1,16 @@
-@use '../NotepadManage.module.scss'
+@use "../NotepadManage.module.scss";
+
+.collaborators-popover {
+    padding-top: 0;
+    :global {
+        .ant-popover-inner-content {
+            padding: 8px;
+        }
+    }
+    .collaborators-popover-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 20vw;
+    }
+}

@@ -40,6 +40,7 @@ import {
 } from "../utils"
 import styles from "./NotepadManageOnline.module.scss"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
+import {formatTimestamp} from "@/utils/timeUtil"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
@@ -118,9 +119,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             {
                 title: "最近更新时间",
                 dataIndex: sorterKey,
-                render: (text) => (
-                    <div className={styles["time-cell"]}>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</div>
-                ),
+                render: (text) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
                 filterProps: {
                     filterRender: () => (
                         <YakitDropdownMenu
@@ -171,7 +170,11 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             onSingleRemoveAfter={() => {
                                 setResponse((prev) => ({
                                     ...prev,
-                                    data: prev.data.filter((ele) => ele.hash !== record.hash)
+                                    data: prev.data.filter((ele) => ele.hash !== record.hash),
+                                    pagemeta: {
+                                        ...prev.pagemeta,
+                                        total: +prev.pagemeta.total - 1
+                                    }
                                 }))
                             }}
                         />
@@ -257,12 +260,12 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             setSelectedRowKeys(newSelectedRowKeys)
         }
     )
-    const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows) => {
+    const onSelectChange = useMemoizedFn((c: boolean, key: string, rows) => {
         if (c) {
-            setSelectedRowKeys([...selectedRowKeys, keys])
+            setSelectedRowKeys([...selectedRowKeys, key])
         } else {
             setIsAllSelect(false)
-            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
+            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== key)
             setSelectedRowKeys(newSelectedRowKeys)
         }
     })

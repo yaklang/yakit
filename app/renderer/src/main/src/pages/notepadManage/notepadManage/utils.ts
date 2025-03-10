@@ -1,10 +1,15 @@
-import {APIFunc} from "@/apiUtils/type"
+import {APIFunc, APIOptionalFunc} from "@/apiUtils/type"
 import {getTypeAndNameByPath} from "@/components/MilkdownEditor/CustomFile/CustomFile"
+import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {PluginListPageMeta, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {yakitNotify} from "@/utils/notification"
 import {openABSFileLocated} from "@/utils/openWebsite"
+import {Paging} from "@/utils/yakQueryHTTPFlow"
+import cloneDeep from "lodash/cloneDeep"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -192,25 +197,19 @@ export const saveDialogAndGetLocalFileInfo: APIFunc<string, SaveDialogResponse> 
             return
         }
         const fileName = getTypeAndNameByPath(url).fileName
-        ipcRenderer
-            .invoke("show-save-dialog", fileName)
-            .then((res) => {
-                const {filePath, name} = res
-                if (filePath) {
-                    const v = {
-                        url: url,
-                        path: filePath,
-                        fileName: name
-                    }
-                    resolve(v)
-                } else {
-                    reject("获取保存文件路径错误")
+        showSaveDialog(fileName).then((res) => {
+            const {filePath, name} = res
+            if (filePath) {
+                const v = {
+                    url: url,
+                    path: filePath,
+                    fileName: name
                 }
-            })
-            .catch((err) => {
-                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
-                reject(err)
-            })
+                resolve(v)
+            } else {
+                reject("获取保存文件路径错误")
+            }
+        })
     })
 }
 
@@ -229,6 +228,180 @@ export const onOpenLocalFileByPath: APIFunc<string, boolean> = (path, hiddenErro
             .catch((error) => {
                 if (!hiddenError) yakitNotify("error", `目标文件已不存在${error}`)
                 reject(error)
+            })
+    })
+}
+
+export interface CreateNoteRequest {
+    Title: string
+    Content: string
+}
+/**
+ * @description 新建笔记本
+ */
+export const grpcCreateNote: APIFunc<CreateNoteRequest, DbOperateMessage> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("CreateNote", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "CreateNote fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface UpdateNoteRequest {
+    Filter: NoteFilter
+    UpdateTitle: boolean
+    Title: string
+    UpdateContent: boolean
+    Content: string
+}
+/**
+ * @description 更新笔记本
+ */
+export const grpcUpdateNote: APIFunc<UpdateNoteRequest, DbOperateMessage> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("UpdateNote", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "UpdateNote fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface DeleteNoteRequest {
+    Filter: NoteFilter
+}
+/**
+ * @description 删除笔记本
+ */
+export const grpcDeleteNote: APIFunc<DeleteNoteRequest, DbOperateMessage> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DeleteNote", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "DeleteNote fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface Note {
+    Id: number
+    Title: string
+    ContentKeyword: string
+    CreateAt: number
+    UpdateAt: number
+}
+export interface NoteFilter {
+    Id: number[]
+    Title: string[]
+    ContentKeyword: string[]
+}
+export interface QueryNoteRequest {
+    Filter: NoteFilter
+    Pagination: Paging
+}
+export interface QueryNoteResponse {
+    Pagination: Paging
+    Data: Note[]
+    Total: number
+}
+/**
+ * @description 查询笔记本
+ */
+export const grpcQueryNote: APIFunc<QueryNoteRequest, QueryNoteResponse> = (params, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("QueryNote", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "QueryNote fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+/**
+ * @description 查询笔记本
+ */
+export const grpcQueryNoteById: APIFunc<number, Note> = (id, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        const data: QueryNoteRequest = {
+            Filter: {
+                ...cloneDeep(defaultNoteFilter),
+                Id: [id]
+            },
+            Pagination: genDefaultPagination(1)
+        }
+        grpcQueryNote(data)
+            .then((res) => {
+                if (res.Data.length > 0) {
+                    resolve(res.Data[0])
+                } else {
+                    const message = "No data found"
+                    yakitNotify("error", "QueryNote fail:" + message)
+                    reject(message)
+                }
+            })
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "QueryNote fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+export interface NoteContent {
+    Note: Note
+    Index: number
+    Length: number
+    LineContent: string
+}
+export interface SearchNoteContentRequest {
+    Keyword: string
+    Pagination: Paging
+}
+
+export interface SearchNoteContentResponse {
+    Pagination: Paging
+    Data: NoteContent[]
+    Total: number
+}
+/**
+ * @description 分享笔记本
+ */
+export const grpcSearchNoteContent: APIFunc<SearchNoteContentRequest, SearchNoteContentResponse> = (
+    params,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("SearchNoteContent", params)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "SearchNoteContent fail:" + e)
+                reject(e)
+            })
+    })
+}
+
+interface ShowSaveDialogResponse {
+    filePath: string
+    name: string
+}
+export const showSaveDialog: APIOptionalFunc<string, ShowSaveDialogResponse> = (fileName, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("show-save-dialog", fileName)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
+                reject(err)
             })
     })
 }
