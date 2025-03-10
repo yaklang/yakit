@@ -82,23 +82,24 @@ jobs:
               working-directory: ./
               name: "Install Dependencies"
 
+            - name: Build pre script
+              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh
+              shell: bash
+
             - name: Build SastScan Normal And Legacy (MultiPlatform)
               env:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
-              run: |
-                  chmod +x ./packageScript/script/electron-sast-builder.sh 
-                  ./packageScript/script/electron-sast-builder.sh || { exit 1; }
+              run: ./packageScript/script/electron-sast-builder.sh sast || { exit 1; }
               shell: bash
 
             - name: View Published Content
               run:
                   ls ./release
+                  # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
             - name: Check SastScan if the output is correct
-              run: |
-                  chmod +x ./packageScript/script/check-build-package.sh 
-                  (./packageScript/script/check-build-package.sh SastScan) || { exit 1; }
+              run: (./packageScript/script/check-build-package.sh SastScan) || { exit 1; }
               shell: bash
             - name: Upload SastScan(CE) Artifacts
               uses: actions/upload-artifact@v4
@@ -110,6 +111,18 @@ jobs:
                       ./release/SastScan-${{ env.ENV_TAG }}-*.AppImage
                   if-no-files-found: error
                   retention-days: 1
+
+            - name: Build EnpriTrace Normal And Legacy (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: ./packageScript/script/electron-sast-builder.sh sastee || { exit 1; }
+              shell: bash
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # EnpriTrace       -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
             - name: Check SastScanEnterprise if the output is correct
               run: (./packageScript/script/check-build-package.sh SastScanEnterprise) || { exit 1; }
@@ -145,12 +158,21 @@ jobs:
             - run: ls
               name: Ls Published Artifacts...
 
+            - name: Create Release and Upload Assets
+              if: ${{ matrix.artifact == 'SastScan' }}
+              uses: ncipollo/release-action@v1
+              with:
+                  artifacts: ./*
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  name: Release ${{ github.ref_name }}
+                  tag: ${{ github.ref_name }}
+
             - name: Generate OSS File Path
               run: |
                   if [ "${{ matrix.artifact }}" = "SastScan" ]; then
-                    echo "FILE_PATH=yak" >> $GITHUB_ENV
+                    echo "FILE_PATH=sast" >> $GITHUB_ENV
                   elif [ "${{ matrix.artifact }}" = "SastScanEnterprise" ]; then
-                    echo "FILE_PATH=vip" >> $GITHUB_ENV
+                    echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
                     exit 1
@@ -158,7 +180,7 @@ jobs:
             - name: Show ENV.FILE_PATH
               run: echo "FILE_PATH： $FILE_PATH"
 
-            - name: Upload Yakit To OSS
+            - name: Upload SastScan To OSS
               uses: tvrcgo/upload-to-oss@master
               with:
                   key-id: ${{ secrets.OSS_KEY_ID }}

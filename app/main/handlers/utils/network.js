@@ -228,7 +228,7 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
 /** 获取最新 SAST Scan 版本号 */
 const fetchLatestYakitSastScanVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
+    const versionUrl = `https://${domain}/sast/latest/yakit-version.txt`
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
@@ -247,7 +247,7 @@ const fetchLatestYakitSastScanVersion = async (requestConfig) => {
 /** 获取最新 SAST Scan EE版本号 */
 const fetchLatestYakitSastScanEEVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/yak/latest/yakit-version.txt`
+    const versionUrl = `https://${domain}/svip/latest/yakit-version.txt`
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
