@@ -9,5 +9,5 @@ export const defaultModifyNotepadPageInfo: ModifyNotepadPageInfoProps = {
 export const defaultNoteFilter: NoteFilter = {
     Id: [],
     Title: [],
-    ContentKeyword: []
+    Keyword: []
 }

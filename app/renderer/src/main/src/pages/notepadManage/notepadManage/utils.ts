@@ -294,14 +294,14 @@ export const grpcDeleteNote: APIFunc<DeleteNoteRequest, DbOperateMessage> = (par
 export interface Note {
     Id: number
     Title: string
-    ContentKeyword: string
+    Content: string
     CreateAt: number
     UpdateAt: number
 }
 export interface NoteFilter {
     Id: number[]
     Title: string[]
-    ContentKeyword: string[]
+    Keyword: string[]
 }
 export interface QueryNoteRequest {
     Filter: NoteFilter
@@ -398,6 +398,28 @@ export const showSaveDialog: APIOptionalFunc<string, ShowSaveDialogResponse> = (
     return new Promise((resolve, reject) => {
         ipcRenderer
             .invoke("show-save-dialog", fileName)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)
+                reject(err)
+            })
+    })
+}
+
+export interface OpenDialogRequest {
+    title?: string
+    properties?: string[]
+    defaultPath?: string
+}
+export interface OpenDialogResponse {
+    canceled: boolean
+    filePaths: string[]
+    bookmarks?: string[]
+}
+export const openDialog: APIOptionalFunc<OpenDialogRequest, OpenDialogResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("openDialog", params)
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", `获取保存文件路径错误${err}`)

@@ -17,6 +17,7 @@ import {
     OutlineChevrondownIcon,
     OutlineChevronupIcon,
     OutlineExportIcon,
+    OutlineImportIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
     OutlineTrashIcon
@@ -36,12 +37,13 @@ import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {NotepadExport} from "./NotepadImportAndExport"
+import {NotepadExport, NotepadImport} from "./NotepadImportAndExport"
 import {usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {shallow} from "zustand/shallow"
 import {formatTimestamp} from "@/utils/timeUtil"
 
+const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 const defaultQueryNoteRequest = {
     Filter: cloneDeep(defaultNoteFilter),
     Pagination: genDefaultPagination(20)
@@ -73,6 +75,9 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
 
     const [sorterKey, setSorterKey] = useState<string>("updated_at")
     const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
+
+    const [exportVisible, setExportVisible] = useState<boolean>(false)
+    const [importVisible, setImportVisible] = useState<boolean>(false)
 
     const totalRef = useRef<number>(0)
     const notepadRef = useRef<HTMLDivElement>(null)
@@ -256,9 +261,14 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
         {wait: 200, leading: true}
     ).run
 
-    const onBatchExport = useMemoizedFn(() => {})
+    const onBatchExport = useMemoizedFn(() => {
+        setExportVisible(true)
+    })
 
-    const onBatchImport = useMemoizedFn(() => {})
+    const onBatchImport = useMemoizedFn(() => {
+        setImportVisible(true)
+    })
+    const onShowSearch = useMemoizedFn(() => {})
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
@@ -273,6 +283,10 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={onSearch}
                         />
+                        <YakitButton type='text' onClick={onShowSearch}>
+                            全文搜索
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
                         <YakitPopconfirm
                             title={selectNumber > 0 ? "确定要删除勾选文档吗?" : "确定要删除所有文档吗?"}
                             onConfirm={onBatchRemove}
@@ -296,7 +310,7 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                         >
                             批量导出
                         </YakitButton>
-                        <YakitButton type='outline2' icon={<SolidImportIcon />} onClick={onBatchImport}>
+                        <YakitButton type='outline2' icon={<OutlineImportIcon />} onClick={onBatchImport}>
                             导入
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
@@ -335,6 +349,15 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                     />
                 )}
             </div>
+            <NotepadLocalSearch keyWord={""} />
+            {exportVisible && <NotepadExport filter={query.Filter} onClose={() => setExportVisible(false)} />}
+            {importVisible && (
+                <NotepadImport
+                    filter={query.Filter}
+                    onClose={() => setImportVisible(false)}
+                    onImportSuccessAfter={() => setRefresh(!refresh)}
+                />
+            )}
         </YakitSpin>
     )
 }

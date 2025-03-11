@@ -197,8 +197,8 @@ export interface CodeScanPageInfoProps {
 }
 
 export interface ModifyNotepadPageInfoProps {
-    /**笔记本 hash */
-    notepadHash?: string
+    /**笔记本 线上:hash(string) 本地:Id(number)*/
+    notepadHash?: string | number
     /**笔记本标题 */
     title?: string
 }

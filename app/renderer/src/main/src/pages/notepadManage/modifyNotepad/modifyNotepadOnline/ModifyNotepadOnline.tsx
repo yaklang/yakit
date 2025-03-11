@@ -45,6 +45,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {DownFilesModal} from "@/components/MilkdownEditor/CustomFile/CustomFile"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {formatTimestamp} from "@/utils/timeUtil"
 
 const NotepadShareModal = React.lazy(() => import("../../NotepadShareModal/NotepadShareModal"))
 
@@ -118,7 +119,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
             setNotepadLoading(true)
-            apiGetNotepadDetail(pageInfo.notepadHash)
+            apiGetNotepadDetail(`${pageInfo.notepadHash}`)
                 .then((res) => {
                     perTabName.current = res.title
                     notepadContentRef.current = res.content
@@ -470,7 +471,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                 </div>
             }
         >
-            <div className={styles["notepad-content"]}>
+            <div className={styles["notepad-content"]} ref={notepadRef}>
                 <div className={styles["notepad-heard"]}>
                     {/* 
                         TODO- 标题共享后续需要优化
@@ -511,10 +512,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         <span>{notepadDetail?.userName || "-"}</span>
                         <AuthorIcon />
                         <Divider type='vertical' style={{margin: "0 8px"}} />
-                        <span>
-                            最近修改时间:
-                            {moment.unix(notepadDetail?.updated_at).format("YYYY-MM-DD HH:mm")}
-                        </span>
+                        <span>最近修改时间:{formatTimestamp(notepadDetail?.updated_at)}</span>
                         <Divider type='vertical' style={{margin: "0 8px"}} />
                         {renderOnlineStatus}
                     </div>

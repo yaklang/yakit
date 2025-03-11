@@ -28,7 +28,7 @@ const notepadMixWidth = 1200
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const {pageId} = props
     return isCommunityEdition() ? (
-        <ModifyNotepadLocal />
+        <ModifyNotepadLocal pageId={pageId} />
     ) : (
         <OnlineJudgment isJudgingLogin={true}>
             <ModifyNotepadOnline pageId={pageId} />

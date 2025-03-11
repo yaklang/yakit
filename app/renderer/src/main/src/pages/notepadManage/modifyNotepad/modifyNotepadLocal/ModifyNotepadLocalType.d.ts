@@ -1,1 +1,3 @@
-export interface ModifyNotepadLocalProps {}
+export interface ModifyNotepadLocalProps {
+    pageId:string
+}
