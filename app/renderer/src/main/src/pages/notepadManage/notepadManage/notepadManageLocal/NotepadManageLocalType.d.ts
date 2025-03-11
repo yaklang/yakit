@@ -1,4 +1,4 @@
-import {Note, NoteFilter} from "../utils"
+import {Note, NoteContent, NoteFilter} from "../utils"
 
 export interface NotepadManageLocalProps {}
 export interface NotepadLocalActionProps {
@@ -27,4 +27,9 @@ export interface NotepadExportProps {
 
 export interface NotepadLocalSearchProps {
     keyWord: string
+}
+
+export interface NotepadLocalSearchItemProps {
+    record: NoteContent
+    onClick: () => void
 }

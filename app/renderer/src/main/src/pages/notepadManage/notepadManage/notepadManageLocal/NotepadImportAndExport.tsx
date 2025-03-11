@@ -4,9 +4,10 @@ import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Progress} from "antd"
-import {NoteFilter, OpenDialogRequest, OpenDialogResponse, openDialog, showSaveDialog} from "../utils"
+import {NoteFilter, OpenDialogRequest, OpenDialogResponse, onOpenLocalFileByPath, openDialog} from "../utils"
 import {OutlineExportIcon, OutlineImportIcon} from "@/assets/icon/outline"
 import {useMemoizedFn} from "ahooks"
+import moment from "moment"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,13 +55,14 @@ export const NotepadImport: React.FC<NotepadImportProps> = React.memo((props) =>
     }, [taskToken])
     useEffect(() => {
         const data: OpenDialogRequest = {
-            title: "请选择文件夹",
-            properties: ["openDirectory"]
+            title: "请选择文件",
+            properties: ["openFile"]
         }
         openDialog(data).then((data: OpenDialogResponse) => {
             if (data.filePaths.length > 0) {
+                const path = data.filePaths[0].replace(/\\/g, "\\")
                 const importParams: ImportNoteRequest = {
-                    TargetPath: data.filePaths[0]
+                    TargetPath: path
                 }
                 setVisible(true)
                 ipcRenderer
@@ -128,6 +130,9 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
     const taskToken = useMemo(() => randomString(40), [])
     const [visible, setVisible] = useState<boolean>(false)
 
+    const successRef = useRef<boolean>(true)
+    const targetPathRef = useRef<string>("")
+
     useEffect(() => {
         if (!taskToken) {
             return
@@ -137,6 +142,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
             setPercent(p)
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            successRef.current = false
             yakitNotify("error", "导出失败:" + e)
         })
         ipcRenderer.on(`${taskToken}-end`, () => {
@@ -156,8 +162,10 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         openDialog(data).then((data: OpenDialogResponse) => {
             const {filePaths} = data
             if (filePaths.length > 0) {
+                const path = filePaths[0].replace(/\\/g, "\\")
+                targetPathRef.current = `${path}\\笔记本-${moment().valueOf()}.zip`
                 const exportParams: ExportNoteRequest = {
-                    TargetPath: filePaths[0],
+                    TargetPath: targetPathRef.current,
                     Filter: filter
                 }
                 setVisible(true)
@@ -173,6 +181,9 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
         })
     }, [])
     const onEnd = useMemoizedFn(() => {
+        if (successRef.current) {
+            onOpenLocalFileByPath(targetPathRef.current)
+        }
         onClose()
         setVisible(false)
         setPercent(0)

@@ -30,7 +30,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
 import {Divider} from "antd"
-import {SolidImportIcon} from "@/assets/icon/solid"
 import {timeMap, toAddNotepad, toEditNotepad} from "../NotepadManage"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -42,13 +41,17 @@ import {usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {shallow} from "zustand/shallow"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 const defaultQueryNoteRequest = {
     Filter: cloneDeep(defaultNoteFilter),
     Pagination: genDefaultPagination(20)
 }
-
+const timeShow = {
+    created_at: "CreateAt",
+    updated_at: "UpdateAt"
+}
 const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
     const {notepadPageList} = usePageInfo(
         (s) => ({
@@ -97,8 +100,8 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
             },
             {
                 title: "最近更新时间",
-                dataIndex: sorterKey,
-                render: (text) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
+                dataIndex: timeShow[sorterKey],
+                render: (text, record: Note) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
                 filterProps: {
                     filterRender: () => (
                         <YakitDropdownMenu
@@ -116,7 +119,7 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                                 onClick: ({key}) => {
                                     setSorterKey(key)
                                     setTimeSortVisible(false)
-                                    getList()
+                                    setRefresh(!refresh)
                                 }
                             }}
                             dropdown={{
@@ -194,7 +197,10 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
         useMemoizedFn(async (page?: number) => {
             setListLoading(true)
             const newQuery: QueryNoteRequest = {
-                ...query,
+                Filter: {
+                    ...query.Filter,
+                    Keyword: [keyWord]
+                },
                 Pagination: {
                     ...query.Pagination,
                     OrderBy: sorterKey
@@ -253,13 +259,10 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
             )
     })
     /** 搜索内容 */
-    const onSearch = useDebounceFn(
-        useMemoizedFn((val: string) => {
-            setKeyWord(val)
-            setRefresh(!refresh)
-        }),
-        {wait: 200, leading: true}
-    ).run
+    const onSearch = useMemoizedFn((val: string) => {
+        setKeyWord(val)
+        setRefresh(!refresh)
+    })
 
     const onBatchExport = useMemoizedFn(() => {
         setExportVisible(true)
@@ -268,7 +271,22 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
     const onBatchImport = useMemoizedFn(() => {
         setImportVisible(true)
     })
-    const onShowSearch = useMemoizedFn(() => {})
+    const onShowSearch = useMemoizedFn(() => {
+        let m = showYakitModal({
+            title: "全文搜索",
+            width: "50vw",
+            closable: true,
+            maskClosable: false,
+            footer: null,
+            onCancel: () => m.destroy(),
+            content: (
+                <div style={{height: "60vh"}}>
+                    <NotepadLocalSearch keyWord={keyWord} />
+                </div>
+            ),
+            getContainer: notepadRef.current || undefined
+        })
+    })
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
@@ -338,7 +356,7 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                         data={response.Data}
                         page={+(response.Pagination.Page || 1)}
                         loadMoreData={loadMoreData}
-                        renderKey='hash'
+                        renderKey='Id'
                         rowSelection={{
                             isAll: allCheck,
                             type: "checkbox",
@@ -349,7 +367,6 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                     />
                 )}
             </div>
-            <NotepadLocalSearch keyWord={""} />
             {exportVisible && <NotepadExport filter={query.Filter} onClose={() => setExportVisible(false)} />}
             {importVisible && (
                 <NotepadImport
@@ -417,9 +434,10 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
                 disabled={removeItemLoading}
             />
 
-            <YakitButton type='outline2' icon={<OutlineExportIcon />} onClick={onExport}>
-                导出
-            </YakitButton>
+            <Divider type='vertical' style={{margin: "0 8px"}} />
+
+            <YakitButton type='text2' icon={<OutlineExportIcon />} onClick={onExport} />
+
             <Divider type='vertical' style={{margin: "0 8px"}} />
             <YakitPopconfirm title='确定要删掉该文档吗' onConfirm={() => onSingleRemove()}>
                 <YakitButton type='text' danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
