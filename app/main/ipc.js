@@ -281,5 +281,8 @@ module.exports = {
         
         // local note
         require("./handlers/note")(win, getClient)
+
+        // mcp client
+        require("./handlers/mcpServere")(win, getClient)
     }
 }
