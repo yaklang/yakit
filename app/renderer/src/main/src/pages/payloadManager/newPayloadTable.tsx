@@ -343,7 +343,10 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             dataIndex: "Content",
             editable: true,
             render: (text) => (
-                <div className={styles["basic"]} style={{wordBreak: "break-all", wordWrap: "break-word"}}>
+                <div
+                    className={styles["basic"]}
+                    style={{wordBreak: "break-all", wordWrap: "break-word", whiteSpace: "pre"}}
+                >
                     {text}
                 </div>
             )
@@ -650,12 +653,16 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     return (
         <div className={styles["new-payload-table"]}>
             <Table
-                rowKey={(i:Payload) => i.Id}
-                components={onlyInsert?undefined:{
-                    body: {
-                        cell: (props) => <EditableCell {...props} />
-                    }
-                }}
+                rowKey={(i: Payload) => i.Id}
+                components={
+                    onlyInsert
+                        ? undefined
+                        : {
+                              body: {
+                                  cell: (props) => <EditableCell {...props} />
+                              }
+                          }
+                }
                 bordered
                 dataSource={response?.Data}
                 // @ts-ignore
