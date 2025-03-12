@@ -236,10 +236,14 @@ export interface CreateNoteRequest {
     Title: string
     Content: string
 }
+export interface CreateNoteResponse {
+    Message: DbOperateMessage
+    NoteId: number
+}
 /**
  * @description 新建笔记本
  */
-export const grpcCreateNote: APIFunc<CreateNoteRequest, DbOperateMessage> = (params, hiddenError) => {
+export const grpcCreateNote: APIFunc<CreateNoteRequest, CreateNoteResponse> = (params, hiddenError) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("CreateNote", params)

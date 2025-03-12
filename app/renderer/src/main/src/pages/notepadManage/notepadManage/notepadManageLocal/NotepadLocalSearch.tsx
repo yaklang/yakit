@@ -54,10 +54,8 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
             }
         }
         try {
-            console.log("newQuery", newQuery)
             const res = await grpcSearchNoteContent(newQuery)
             if (!res.Data) res.Data = []
-            console.log("res.Data", res.Data)
             const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
             setHasMore(length < +res.Total)
             let newRes: SearchNoteContentResponse = {
@@ -106,7 +104,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
                 onPressEnter={onSearch}
             />
             {keyWord ? (
-                <YakitSpin spinning={spinning}>
+                <YakitSpin spinning={spinning} style={{overflow: "hidden"}}>
                     <RollingLoadList<NoteContent>
                         isRef={isRef}
                         rowKey='Id'

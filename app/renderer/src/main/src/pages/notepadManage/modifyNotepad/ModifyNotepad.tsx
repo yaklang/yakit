@@ -62,7 +62,9 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
         useImperativeHandle(
             ref,
             () => ({
-                getCatalogue
+                getCatalogue: (h) => {
+                    getCatalogue(h)
+                }
             }),
             []
         )

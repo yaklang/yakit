@@ -523,7 +523,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                             type='notepad'
                             readonly={readonly}
                             defaultValue={notepadDetail.content}
-                            customPlugin={cataloguePlugin(modifyNotepadContentRef.current.getCatalogue)}
+                            customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current.getCatalogue(v))}
                             collabProps={collabProps}
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}

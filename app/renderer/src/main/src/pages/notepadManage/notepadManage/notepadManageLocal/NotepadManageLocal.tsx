@@ -193,17 +193,21 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
             })
             .catch(() => {})
     })
+    const getFilter = useMemoizedFn(() => {
+        return {
+            ...query.Filter,
+            Keyword: [keyWord]
+        }
+    })
     const getList = useDebounceFn(
         useMemoizedFn(async (page?: number) => {
             setListLoading(true)
             const newQuery: QueryNoteRequest = {
-                Filter: {
-                    ...query.Filter,
-                    Keyword: [keyWord]
-                },
+                Filter: getFilter(),
                 Pagination: {
                     ...query.Pagination,
-                    OrderBy: sorterKey
+                    OrderBy: sorterKey,
+                    Page: page || 1
                 }
             }
             try {
@@ -243,10 +247,19 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
     ).run
 
     const onBatchRemove = useMemoizedFn(() => {
-        const filter = allCheck ? query.Filter : cloneDeep(defaultNoteFilter)
-        const removeParams: DeleteNoteRequest = {
-            Filter: filter
+        const filter = allCheck ? getFilter() : cloneDeep(defaultNoteFilter)
+        let removeParams: DeleteNoteRequest = {
+            Filter: allCheck
+                ? {
+                      ...filter,
+                      Id: []
+                  }
+                : {
+                      ...filter,
+                      Id: selectedRowKeys.map((ele) => +ele)
+                  }
         }
+
         setPageLoading(true)
         grpcDeleteNote(removeParams)
             .then(() => {

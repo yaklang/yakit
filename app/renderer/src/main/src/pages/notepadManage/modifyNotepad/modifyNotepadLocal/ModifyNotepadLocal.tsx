@@ -112,13 +112,17 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
             perTabName.current = params.Title
             setNotepadLoading(true)
             grpcCreateNote(params)
-                .then((hash) => {
+                .then((res) => {
                     filterRef.current = {
                         ...filterRef.current,
-                        Id: []
+                        Id: [res.NoteId]
                     }
+                    setNote((v) => ({
+                        ...v,
+                        Id: res.NoteId
+                    }))
                     onUpdatePageInfo({
-                        notepadHash: ""
+                        notepadHash: res.NoteId
                     })
                 })
                 .finally(() =>
@@ -155,7 +159,10 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     }, [inViewport])
     /**保存最新的文档内容 */
     const onSaveNewContent = useMemoizedFn((markdownContent) => {
-        if (!note.Id) return
+        if (!note.Id) {
+            yakitNotify("error", "笔记本Id不存在")
+            return
+        }
         const params: UpdateNoteRequest = {
             Filter: filterRef.current,
             UpdateTitle: true,
@@ -306,7 +313,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         <MilkdownEditor
                             type='notepad'
                             defaultValue={note.Content}
-                            customPlugin={cataloguePlugin(modifyNotepadContentRef.current.getCatalogue)}
+                            customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current.getCatalogue(v))}
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}
                             onSaveContentBeforeDestroy={onSaveNewContent}
