@@ -1,4 +1,4 @@
-name: Gen-Multi-Platform-Render
+name: Gen-Multi-Sast-Platform-Render
 
 on:
     push:

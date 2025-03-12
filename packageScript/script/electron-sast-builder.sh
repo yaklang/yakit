@@ -12,7 +12,7 @@ item="$1"
 rm -rf ./app/renderer/pages
 rm -rf ./release
 
-./packageScript/script/installRender.sh ${item} || { exit 1; }
+./packageScript/script/installSastRender.sh ${item} || { exit 1; }
 
 yarn remove electron && yarn add electron@27.0.0 --dev
 cp ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.zip

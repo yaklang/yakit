@@ -1,9 +1,9 @@
-name: Build Multi-Platform Prod
+name: Build Multi-Sast-Platform Prod
 
 on:
     push:
         tags:
-            - "v*-sast-pack"
+            - "v*-sast"
 
 jobs:
     build_yakit:
@@ -75,7 +75,10 @@ jobs:
               run: wget -O bins/yak_darwin_arm64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
 
             - name: Echo SastScan Package Version To Env
-              run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
+              run: |
+                ENV_TAG=${GITHUB_REF_NAME:1}
+                ENV_TAG=${ENV_TAG%-sast}
+                echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
               shell: bash
 
             - run: yarn install
@@ -83,7 +86,7 @@ jobs:
               name: "Install Dependencies"
 
             - name: Build pre script
-              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh
+              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh sast
               shell: bash
 
             - name: Build SastScan Normal And Legacy (MultiPlatform)

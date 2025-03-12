@@ -6,7 +6,7 @@ on:
             - "v*-*"
             - "!v*-render"
             - "!v*-sast-render"
-            - "!v*-sast-pack"
+            - "!v*-sast"
 
 jobs:
     build_yakit:
@@ -86,7 +86,7 @@ jobs:
               name: "Install Dependencies"
 
             - name: Build pre script
-              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh
+              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
               shell: bash
 
             - name: Build Yakit Normal And Legacy (MultiPlatform)
