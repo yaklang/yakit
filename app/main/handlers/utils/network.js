@@ -152,22 +152,31 @@ const getCheckTextUrl = async (version) => {
 }
 /** 获取指定版本号的引擎Hash值 */
 const fetchSpecifiedYakVersionHash = async (version, requestConfig) => {
-    const url = await getCheckTextUrl(version)
-    if (url === "") {
-        throw new Error(`No Find ${version} Hash Url`)
-    }
-    return axios.get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)}).then((response) => {
-        const versionData = Buffer.from(response.data).toString("utf8")
-        if (versionData.length > 0) {
-            let onlineHash = Buffer.from(response.data).toString("utf8")
-            // 去除换行符
-            onlineHash = (onlineHash || "").replace(/\r?\n/g, "")
-            // 去除首尾空格
-            onlineHash = onlineHash.trim()
-            return onlineHash
-        } else {
-            throw new Error("校验值不存在")
+    return new Promise(async (resolve, reject) => {
+        try {
+            const url = await getCheckTextUrl(version)
+            if (url === "") {
+                throw new Error(`No Find ${version} Hash Url`)
+            }
+        } catch (error) {
+            reject(error)
         }
+        axios
+            .get(url, {...(requestConfig || {}), httpsAgent: getHttpsAgentByDomain(url)})
+            .then((response) => {
+                const versionData = Buffer.from(response.data).toString("utf8")
+                if (versionData.length > 0) {
+                    let onlineHash = Buffer.from(response.data).toString("utf8")
+                    // 去除换行符
+                    onlineHash = (onlineHash || "").replace(/\r?\n/g, "")
+                    // 去除首尾空格
+                    onlineHash = onlineHash.trim()
+                    resolve(onlineHash)
+                } else {
+                    throw new Error("校验值不存在")
+                }
+            })
+            .catch(reject)
     })
 }
 /** 获取最新 yak 版本号 */

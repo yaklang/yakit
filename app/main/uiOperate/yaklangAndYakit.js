@@ -176,4 +176,8 @@ module.exports = (win, getClient) => {
     ipcMain.handle("determine-adapted-version-engine", async (e, params) => {
         return await testEngineAvaiableVersion(params)
     })
+    
+    ipcMain.handle("fetch-local-engine-path", async () => {
+        return getLocalYaklangEngine()
+    })
 }
