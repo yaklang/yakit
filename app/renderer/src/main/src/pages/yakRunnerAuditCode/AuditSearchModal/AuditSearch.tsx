@@ -59,6 +59,14 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const resultIdRef = useRef<number>()
     const [open, setOpen] = useState(false)
 
+    useEffect(()=>{
+        setActivbeInfo(undefined)
+        setAuditDetail([])
+        setActiveKey("all")
+        setKeywords("")
+        onStopExecute()
+    },[projectName])
+
     const getData = useMemoizedFn(async (page: number, pageSize: number = 10) => {
         if (!resultIdRef.current) return
         setLoading(true)
