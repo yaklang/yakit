@@ -1,9 +1,7 @@
 name: Gen-Multi-Sast-Platform-Render
 
 on:
-    push:
-        tags:
-            - "v*-sast-render"
+    workflow_dispatch:
 
 jobs:
     build_yakit:

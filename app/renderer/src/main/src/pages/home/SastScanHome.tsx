@@ -112,7 +112,7 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                         <div className={styles["content"]}>
                             <div className={styles["title"]}>代码扫描</div>
                             <div className={styles["sub-title"]}>
-                                内置丰富规则库，可自由选择规则分组进行代码扫描，帮助磅析代码结构和发现代码中的风险片段
+                                内置丰富规则库，可自由选择规则分组进行代码扫描，帮助分析代码结构和发现代码中的风险片段
                             </div>
                         </div>
 

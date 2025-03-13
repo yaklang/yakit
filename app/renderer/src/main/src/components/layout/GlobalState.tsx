@@ -20,7 +20,7 @@ import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {Tooltip, Row, Col} from "antd"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
@@ -932,7 +932,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     return (
         <>
-            <YakitPopover
+            {!isSastScan() && <YakitPopover
                 overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={content}
@@ -943,7 +943,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>
                     <div className={classNames(styles["state-body"])}>{ShowIcon[state]}</div>
                 </div>
-            </YakitPopover>
+            </YakitPopover>}
             <YakitHint
                 visible={pcapHintShow}
                 heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
