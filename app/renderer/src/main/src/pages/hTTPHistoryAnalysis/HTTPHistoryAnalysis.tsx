@@ -409,17 +409,17 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
                                                 info: [
                                                     {Id: "已处理数/总数", Data: "123", Timestamp: Math.random() * 10}
                                                 ],
-                                                tag: ""
+                                                tag: "已处理数/总数"
                                             },
                                             {
                                                 info: [
                                                     {Id: "符合条件流量", Data: "2222", Timestamp: Math.random() * 10}
                                                 ],
-                                                tag: ""
+                                                tag: "符合条件流量"
                                             },
                                             {
                                                 info: [{Id: "提取数据", Data: "3333", Timestamp: Math.random() * 10}],
-                                                tag: ""
+                                                tag: "提取数据"
                                             }
                                         ]}
                                     />
