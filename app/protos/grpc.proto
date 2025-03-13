@@ -818,6 +818,9 @@ service Yak {
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+
+  // MCP
+  rpc StartSSEMCP(StartMCPRequest) returns (stream StartMCPResponse);
 }
 
 message AIOutputEvent {
@@ -6506,4 +6509,14 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName =1;
+}
+message StartMCPRequest {
+  repeated string Tools = 1;
+  repeated string Resources = 2;
+  repeated string DisableTools = 3;
+  repeated string DisableResources = 4;
+}
+  
+message StartMCPResponse {
+  string URL = 1;
 }
