@@ -6333,7 +6333,7 @@ message Note {
 message NoteContent {
     Note Note = 1;
     uint64 Index = 2;
-    uint64 Length = 3;
+    uint64 Line = 3;
     string LineContent = 4;
 }
   
