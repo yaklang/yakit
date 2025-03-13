@@ -797,6 +797,9 @@ service Yak {
   // HTTPFlow
   rpc ExportHTTPFlowStream(ExportHTTPFlowStreamRequest) returns(stream ExportHTTPFlowStreamResponse);
   rpc ImportHTTPFlowStream(ImportHTTPFlowStreamRequest) returns(stream ImportHTTPFlowStreamResponse);
+
+  // MCP
+  rpc StartSSEMCP(StartMCPRequest) returns (stream StartMCPResponse);
 }
 
 
@@ -6272,4 +6275,15 @@ message ImportHTTPFlowStreamRequest {
 message ImportHTTPFlowStreamResponse {
   double Percent = 1;
   string Verbose = 2;
+}
+
+message StartMCPRequest {
+  repeated string Tools = 1;
+  repeated string Resources = 2;
+  repeated string DisableTools = 3;
+  repeated string DisableResources = 4;
+}
+  
+message StartMCPResponse {
+  string URL = 1;
 }
