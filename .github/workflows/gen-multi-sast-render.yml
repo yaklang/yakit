@@ -56,10 +56,10 @@ jobs:
                   for item in "${array[@]}"; do
                     file_name="${item}.zip"
                     echo "Start to upload ${file_name}"
-                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/yak/render/sast/${{ env.TAG_VERSION }}/${file_name}
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/sast/render/${{ env.TAG_VERSION }}/${file_name}
                   done
 
             - name: Update OSS latest file
               run: echo ${{ env.TAG_VERSION }} > ./version.txt
             - name: Update OSS latest file
-              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/yak/render/sast/version.txt'
+              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/sast/render/version.txt'
