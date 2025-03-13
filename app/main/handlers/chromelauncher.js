@@ -117,8 +117,12 @@ const deleteCreateFile = () => {
 
 function createCustomChromeApp(params) {
     const {appName = "YakitChrome", iconPath, chromePath} = params
-    const appBundlePath = path.join(process.env.HOME, "Applications", `${appName}.app`)
+    const appBundlePath = path.join(YakitProjectPath, "Chrome",`${appName}.app`)
 
+    // 如果应用已存在，直接返回路径
+    if (fs.existsSync(appBundlePath)) {
+        return appBundlePath
+    }
      // 创建应用程序包结构
      const dirs = [
         `${appBundlePath}/Contents/MacOS`,
