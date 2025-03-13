@@ -714,16 +714,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
-        ...(props.params || {
-            SourceType: "mitm",
-            Tags: []
-        }),
         SourceType: props.params?.SourceType || "mitm",
         WithPayload: pageType === "Webfuzzer",
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
         FromPlugin: "",
-        Full: false
+        Full: false,
+        Tags: []
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
@@ -963,7 +960,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (isOneceLoading.current) {
             getShieldList()
         } else {
-            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA + "_" + pageType, JSON.stringify(shieldData))
+            setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
             let idArr: number[] = []
             let urlArr: string[] = []
             shieldData.data.map((item) => {
@@ -1002,7 +999,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [])
 
     const getShieldList = useMemoizedFn(() => {
-        getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA + "_" + pageType)
+        getRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA)
             .then((data) => {
                 if (!data) return
                 try {
@@ -1145,20 +1142,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             return
         }
 
-        // 来源非History页面时 使其部分筛选条件失效
-        if (pageType !== "History") {
-            query = {
-                ...query,
-                ExcludePath: [],
-                ExcludeSuffix: [],
-                ExcludeContentType: [],
-                IncludeInUrl: [],
-                IncludePath: [],
-                IncludeSuffix: [],
-                SearchContentType: ""
-            }
-        }
-
         // history 页面时，判断倒序情况，并且未加载的数据超过200条时刷新页面(这里的数据是减去了缓存数据[offsetdata]数量后的数据)
         // start
         let isInitRefresh: boolean = false
@@ -1279,7 +1262,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (extraTimerRef.current) {
                         clearInterval(extraTimerRef.current)
                     }
-                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(query), 1000)
+                    extraTimerRef.current = setInterval(() => getAddDataByGrpc(realQuery), 1000)
                 }
             })
             .catch((e: any) => {
@@ -2319,15 +2302,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             .invoke("DeleteHTTPFlows", newParams)
             .then((i: HTTPFlow) => {
                 setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-                const newParams: YakQueryHTTPFlowRequest = {
-                    ...(props.params || {SourceType: "mitm"}),
-                    SourceType: props.params?.SourceType || "mitm",
-                    ExcludeId: params.ExcludeId,
-                    ExcludeInUrl: params.ExcludeInUrl,
-                    WithPayload: pageType === "Webfuzzer",
-                    RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
-                    RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined
-                }
+                const newParams: YakQueryHTTPFlowRequest = resetParams
                 setParams({...newParams})
                 refreshTabsContRef.current = true
                 updateData()
@@ -2436,8 +2411,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 //     pagination.Page === 1
                 //         ? undefined
                 //         : data[l - 1] && data[l - 1].Id && (Math.ceil(data[l - 1].Id) as number),
-                OffsetId: undefined,
-                Full: false
+                OffsetId: undefined
             }
 
             let exportParams: any = {}
@@ -3425,18 +3399,31 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setShieldData(newObj)
     })
     /**@description 重置查询条件并刷新 */
-    const onResetRefresh = useMemoizedFn(() => {
-        sortRef.current = defSort
-        const newParams: YakQueryHTTPFlowRequest = {
-            ...(props.params || {SourceType: "mitm"}),
+    const resetParams = useMemo(() => {
+        const obj: YakQueryHTTPFlowRequest = {
+            // 这里是外界传进来的条件重置时需要保留
             SourceType: props.params?.SourceType || "mitm",
-            ExcludeId: params.ExcludeId,
-            ExcludeInUrl: params.ExcludeInUrl,
             WithPayload: pageType === "Webfuzzer",
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
-            ProcessName: []
+            Full: false,
+            // 这里是屏蔽条件和高级配置里面的参数需要保留
+            ExcludeId: params.ExcludeId,
+            SearchContentType: params.SearchContentType,
+            ExcludeContentType: params.ExcludeContentType,
+            IncludeInUrl: params.IncludeInUrl,
+            ExcludeInUrl: params.ExcludeInUrl,
+            IncludePath: params.IncludePath,
+            ExcludePath: params.ExcludePath,
+            IncludeSuffix: params.IncludeSuffix,
+            ExcludeSuffix: params.ExcludeSuffix,
+            ExcludeKeywords: params.ExcludeKeywords
         }
+        return obj
+    }, [props.params, pageType, runTimeId, params])
+    const onResetRefresh = useMemoizedFn(() => {
+        sortRef.current = defSort
+        const newParams: YakQueryHTTPFlowRequest = resetParams
         setParams(newParams)
         setIsReset(!isReset)
         setColor([])
@@ -3450,13 +3437,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onImportResetRefresh = useMemoizedFn(() => {
         sortRef.current = defSort
         const newParams: YakQueryHTTPFlowRequest = {
-            SourceType: "",
-            ExcludeId: params.ExcludeId,
-            ExcludeInUrl: params.ExcludeInUrl,
-            WithPayload: pageType === "Webfuzzer",
-            RuntimeIDs: undefined,
-            RuntimeId: undefined,
-            ProcessName: []
+            ...resetParams,
+            SourceType: ""
         }
         setParams(newParams)
         setIsReset(!isReset)

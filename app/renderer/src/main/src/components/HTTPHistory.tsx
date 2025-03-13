@@ -83,7 +83,6 @@ export type HTTPHistorySourcePageType = "MITM" | "History" | "History_Analysis" 
 export interface HTTPHistoryProp extends HTTPPacketFuzzable, HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     params?: YakQueryHTTPFlowRequest
-    onlyShowSearch?: boolean
 }
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {
@@ -102,22 +101,20 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     } = props
     // History Id 用于区分每个history控件
     const [historyId, setHistoryId] = useState<string>(uuidv4())
-    // History有左侧tab
-    const historyPage = useMemo(() => {
-        return pageType === "History"
-    }, [pageType])
+    // History页面
+    const historyPage = pageType === "History"
     const ref = useRef(null)
     const [inViewport] = useInViewport(ref)
 
-    // #region mitm页面Forward数据后需要刷新history页面数据
+    // #region mitm页面Forward数据后需要刷新页面数据
     const {isRefreshHistory, setIsRefreshHistory} = useStore()
     const [refresh, setRefresh] = useState<boolean>(false)
     useUpdateEffect(() => {
-        if (isRefreshHistory && historyPage) {
+        if (isRefreshHistory && ["History", "MITM"].includes(pageType || "")) {
             setRefresh(!refresh)
             setIsRefreshHistory(false)
         }
-    }, [inViewport, historyPage])
+    }, [inViewport])
     // #endregion
 
     // #region 流量表导出数据，统一history页面刷新
@@ -135,22 +132,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [historyPage])
     // #endregion
 
-    // #region 规则表的展开与折叠取缓存
-    const [defaultFold, setDefaultFold] = useState<boolean>()
-    useEffect(() => {
-        getRemoteValue("HISTORY_FOLD").then((result: string) => {
-            if (!result) setDefaultFold(true)
-            try {
-                const foldResult: boolean = JSON.parse(result)
-                setDefaultFold(foldResult)
-            } catch (e) {
-                setDefaultFold(true)
-            }
-        })
-    }, [])
-    // #endregion
-
-    // #region mitm页面配置代理需要在history同类型页面进行发送
+    // #region mitm页面配置代理用于发送webFuzzer带过去
     const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
     useDebounceEffect(
         () => {
@@ -467,7 +449,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             sendToWebFuzzer={true}
                                             selectedFlow={selected}
                                             refresh={refresh}
-                                            defaultFold={defaultFold}
                                             historyId={historyId}
                                             downstreamProxyStr={downstreamProxy}
                                             pageType={pageType}
