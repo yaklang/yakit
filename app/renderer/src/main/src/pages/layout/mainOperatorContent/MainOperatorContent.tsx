@@ -539,9 +539,18 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Modify_Notepad:
                 addModifyNotepad(params)
                 break
+            case YakitRoute.Rule_Management:
+                addRuleManagement()
+                break
             default:
                 break
         }
+    })
+
+    const addRuleManagement = useMemoizedFn(() => {
+        openMenuPage(
+            {route: YakitRoute.Rule_Management},
+        )
     })
 
     const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {

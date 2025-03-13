@@ -1,7 +1,13 @@
 import React, {useMemo, useRef, useState} from "react"
 import styles from "./SastScanHome.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinCompileIcon, OutlineBugIcon, OutlineDatabaseIcon, OutlineScanIcon} from "@/assets/icon/outline"
+import {
+    OutlinCompileIcon,
+    OutlineBugIcon,
+    OutlineDatabaseIcon,
+    OutlineDocumentsearchIcon,
+    OutlineScanIcon
+} from "@/assets/icon/outline"
 import {PublicAuditCodeIcon, PublicCodeScanIcon, PublicRuleManagementIcon} from "@/routes/publicIcon"
 import {SolidExclamationIcon, SolidPlayIcon} from "@/assets/icon/solid"
 import {Divider, Tooltip} from "antd"
@@ -12,9 +18,9 @@ import classNames from "classnames"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
 import {FieldName, Fields} from "../risks/RiskTable"
-import { QueryGeneralResponse } from "../invoker/schema"
-import { SSAProgramResponse } from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
-import { apiGetSSARiskFieldGroup } from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {QueryGeneralResponse} from "../invoker/schema"
+import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
+import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
 interface SastScanHomeProps {}
 const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
@@ -26,11 +32,13 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
-        ipcRenderer.invoke("GetCurrentProjectEx",{
-            Type: getEnvTypeByProjects()
-        }).then((res: ProjectDescription) => {
-            setCurProjectInfo(res)
-        })
+        ipcRenderer
+            .invoke("GetCurrentProjectEx", {
+                Type: getEnvTypeByProjects()
+            })
+            .then((res: ProjectDescription) => {
+                setCurProjectInfo(res)
+            })
     }
 
     // 更新漏洞数据
@@ -139,6 +147,19 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
                                 可根据需求自定义审计规则和规则分组，支持导入导出，上传云端等分享行为，便于积累属于自己的规则库
                             </div>
                         </div>
+
+                        <YakitButton
+                            icon={<OutlineDocumentsearchIcon />}
+                            size='max'
+                            onClick={() =>
+                                onMenuParams({
+                                    route: YakitRoute.Rule_Management,
+                                    params: {}
+                                })
+                            }
+                        >
+                            查看规则
+                        </YakitButton>
                     </div>
                 </div>
             </div>

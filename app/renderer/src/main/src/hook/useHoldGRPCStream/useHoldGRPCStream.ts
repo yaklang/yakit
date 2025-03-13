@@ -1,6 +1,6 @@
 import {useState, useRef, useEffect} from "react"
 import {failed, info} from "../../utils/notification"
-import {useMemoizedFn} from "ahooks"
+import {useGetState, useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "./useHoldGRPCStreamType"
 import {DefaultTabs} from "./constant"
 import {v4 as uuidv4} from "uuid"
@@ -47,7 +47,7 @@ export interface HoldGRPCStreamParams {
     /** @name 数据流请求间隔(默认:500,单位:ms) */
     waitTime?: number
     /** @name 数据流结束的回调事件 */
-    onEnd?: () => any
+    onEnd?: (streamInfo?: HoldGRPCStreamInfo) => any
     /** @name 数据流报错的回调事件 */
     onError?: (e: any) => void
     /** @name 额外的数据过滤方法 */
@@ -78,7 +78,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         isLimitLogs = true
     } = params
 
-    const [streamInfo, setStreamInfo] = useState<HoldGRPCStreamInfo>({
+    const [streamInfo, setStreamInfo,getStreamInfo] = useGetState<HoldGRPCStreamInfo>({
         progressState: [],
         cardState: [],
         tabsState: [],
@@ -320,7 +320,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             isShowEnd && info(`[Mod] ${taskName} finished`)
             handleResults()
             if (onEnd) {
-                onEnd()
+                onEnd(getStreamInfo())
             }
         })
 
