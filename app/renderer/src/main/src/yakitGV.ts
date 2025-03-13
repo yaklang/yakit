@@ -55,7 +55,7 @@ export enum RemoteGV {
 
     /** @name chat-cs聊天记录 */
     ChatCSStorage = "chat-cs-storage",
-    
+
     /** @name history页面左侧tabs */
     HistoryLeftTabs = "new_history_left_tabs",
     /** @name 临时项目记录是否记住不给提示 */
@@ -111,7 +111,9 @@ export enum RemoteGV {
     /**@name 漏洞管理页面中,高级查询内容的显/隐 */
     AuditHoleShow = "audit-hole-show",
     /**@name 专项漏洞左侧tabs */
-    YakPocTabs = "yakpoc-tabs"
+    YakPocTabs = "yakpoc-tabs",
+    /**@name 笔记本本地全文搜索:缓存搜索的关键词列表 */
+    NotepadLocalSearch = "notepad-local-search"
 }
 
 /** 项目逻辑全局变量 */
@@ -130,7 +132,7 @@ export enum CacheDropDownGV {
     MITMDefaultHostHistoryList = "mitm_default_host_history",
     /** @name CVETable 设置代理 */
     CVEProxyList = "cev_proxy_list",
-    
+
     /** @name 配置插件源 -》设置代理 */
     ConfigProxy = "config_proxy",
     /** @name MITM 保存用户数据地址 */

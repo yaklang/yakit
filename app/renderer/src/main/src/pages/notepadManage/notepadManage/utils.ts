@@ -10,6 +10,7 @@ import {yakitNotify} from "@/utils/notification"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import cloneDeep from "lodash/cloneDeep"
+import {v4 as uuidv4} from "uuid"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -361,6 +362,7 @@ export const grpcQueryNoteById: APIFunc<number, Note> = (id, hiddenError) => {
 }
 
 export interface NoteContent {
+    Id: string
     Note: Note
     Index: number
     Length: number
@@ -368,7 +370,7 @@ export interface NoteContent {
 }
 export interface SearchNoteContentRequest {
     Keyword: string
-    Pagination: Paging
+    // Pagination: Paging
 }
 
 export interface SearchNoteContentResponse {
@@ -376,24 +378,77 @@ export interface SearchNoteContentResponse {
     Data: NoteContent[]
     Total: number
 }
+export interface SearchNoteContentTree {
+    key: string
+    title: string
+    children: NoteContent[]
+}
+export interface SearchNoteContentTreeResponse {
+    /**所有的节点key值，树形节点展开/收起 */
+    keys: React.Key[]
+    Data: SearchNoteContentTree[]
+    Total: number
+}
 /**
  * @description 分享笔记本
  */
-export const grpcSearchNoteContent: APIFunc<SearchNoteContentRequest, SearchNoteContentResponse> = (
+export const grpcSearchNoteContent: APIFunc<SearchNoteContentRequest, SearchNoteContentTreeResponse> = (
     params,
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("SearchNoteContent", params)
-            .then(resolve)
+            .then((res: SearchNoteContentResponse) => {
+                const data = SearchNoteContentGroupById(res.Data)
+                const respose: SearchNoteContentTreeResponse = {
+                    Data: data.treeData,
+                    Total: res.Total,
+                    keys: data.keys
+                }
+                resolve(respose)
+            })
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "SearchNoteContent fail:" + e)
                 reject(e)
             })
     })
 }
-
+/**
+ * @description 根据id进行分组，构建树形结构
+ */
+const SearchNoteContentGroupById = (arr: NoteContent[]) => {
+    let map = {}
+    const keys: string[] = []
+    let groupList: SearchNoteContentTree[] = []
+    const length = arr.length
+    for (var i = 0; i < length; i++) {
+        var ai = arr[i]
+        if (!map[ai.Note.Id]) {
+            const id = `${ai.Note.Id}-${uuidv4()}`
+            groupList.push({
+                key: `${ai.Note.Id}`,
+                title: ai.Note.Title,
+                children: [{...ai, Id: id}]
+            })
+            keys.push(`${ai.Note.Id}`)
+            map[ai.Note.Id] = ai
+        } else {
+            for (var j = 0; j < groupList.length; j++) {
+                var dj = groupList[j]
+                if (dj.key === `${ai.Note.Id}`) {
+                    const id = `${ai.Note.Id}-${uuidv4()}`
+                    dj.children.push({...ai, Id: id})
+                    break
+                }
+            }
+        }
+    }
+    return {
+        treeData: groupList || [],
+        keys
+    }
+}
 interface ShowSaveDialogResponse {
     filePath: string
     name: string

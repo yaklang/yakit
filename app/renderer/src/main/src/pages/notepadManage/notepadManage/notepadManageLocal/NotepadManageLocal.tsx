@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {NotepadLocalActionProps, NotepadManageLocalProps} from "./NotepadManageLocalType"
+import {NotepadLocalActionProps, NotepadManageLocalListProps, NotepadManageLocalProps} from "./NotepadManageLocalType"
 import {
     DeleteNoteRequest,
     Note,
@@ -20,6 +20,7 @@ import {
     OutlineImportIcon,
     OutlinePencilaltIcon,
     OutlinePlusIcon,
+    OutlineSearchIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
@@ -41,18 +42,61 @@ import {usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {shallow} from "zustand/shallow"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
+
+const yakitTab: YakitTabsProps[] = [
+    {
+        icon: <OutlineSearchIcon />,
+        label: "全文搜索",
+        value: "全文搜索"
+    }
+]
+const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props) => {
+    const [activeKey, setActiveKey] = useState<string>("全文搜索")
+    const [show, setShow] = useState<boolean>(true)
+    return (
+        <>
+            <YakitResizeBox
+                freeze={show}
+                lineDirection='right'
+                firstRatio={show ? "260px" : "25px"}
+                firstNodeStyle={show ? {padding: 0} : {padding: 0, maxWidth: 25}}
+                firstMinSize={show ? 260 : 25}
+                secondMinSize={600}
+                firstNode={
+                    <div className={styles["note-local-left"]}>
+                        <YakitSideTab
+                            show={show}
+                            setShow={setShow}
+                            yakitTabs={yakitTab}
+                            activeKey={activeKey}
+                            onActiveKey={setActiveKey}
+                        />
+                        <NotepadLocalSearch />
+                    </div>
+                }
+                secondNodeStyle={show ? {overflow: "unset", padding: 0} : {padding: 0, minWidth: "calc(100% - 25px)"}}
+                secondNode={<NotepadManageLocalList />}
+            />
+        </>
+    )
+})
+export default NotepadManageLocal
+
 const defaultQueryNoteRequest = {
     Filter: cloneDeep(defaultNoteFilter),
     Pagination: genDefaultPagination(20)
 }
+
 const timeShow = {
     created_at: "CreateAt",
     updated_at: "UpdateAt"
 }
-const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
+const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
     const {notepadPageList} = usePageInfo(
         (s) => ({
             notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
@@ -284,28 +328,13 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
     const onBatchImport = useMemoizedFn(() => {
         setImportVisible(true)
     })
-    const onShowSearch = useMemoizedFn(() => {
-        let m = showYakitModal({
-            title: "全文搜索",
-            width: "50vw",
-            closable: true,
-            maskClosable: false,
-            footer: null,
-            onCancel: () => m.destroy(),
-            content: (
-                <div style={{height: "60vh"}}>
-                    <NotepadLocalSearch keyWord={keyWord} />
-                </div>
-            ),
-            getContainer: notepadRef.current || undefined
-        })
-    })
+
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
                 <div className={styles["notepad-manage-heard"]}>
                     <div className={styles["heard-title"]}>
-                        <span>记事本管理</span>
+                        <span className='content-ellipsis'>记事本管理</span>
                         <TableTotalAndSelectNumber total={response.Total} selectNum={selectNumber} />
                     </div>
                     <div className={styles["heard-extra"]}>
@@ -314,9 +343,6 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={onSearch}
                         />
-                        <YakitButton type='text' onClick={onShowSearch}>
-                            全文搜索
-                        </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         <YakitPopconfirm
                             title={selectNumber > 0 ? "确定要删除勾选文档吗?" : "确定要删除所有文档吗?"}
@@ -391,7 +417,6 @@ const NotepadManageLocal: React.FC<NotepadManageLocalProps> = (props) => {
         </YakitSpin>
     )
 }
-export default NotepadManageLocal
 
 const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props) => {
     const {record, notepadPageList, onSingleRemoveAfter} = props

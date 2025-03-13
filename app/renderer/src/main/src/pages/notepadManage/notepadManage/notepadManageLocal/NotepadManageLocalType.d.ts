@@ -1,5 +1,6 @@
 import {Note, NoteContent, NoteFilter} from "../utils"
 
+export interface NotepadManageLocalListProps {}
 export interface NotepadManageLocalProps {}
 export interface NotepadLocalActionProps {
     /**@name 当前操作的数据 */
@@ -25,11 +26,4 @@ export interface NotepadExportProps {
     onClose: () => void
 }
 
-export interface NotepadLocalSearchProps {
-    keyWord: string
-}
-
-export interface NotepadLocalSearchItemProps {
-    record: NoteContent
-    onClick: () => void
-}
+export interface NotepadLocalSearchProps {}
