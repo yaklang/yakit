@@ -115,6 +115,127 @@ const deleteCreateFile = () => {
     }
 }
 
+function createCustomChromeApp(params) {
+    const {appName = "YakitChrome", iconPath, chromePath} = params
+    const appBundlePath = path.join(process.env.HOME, "Applications", `${appName}.app`)
+
+     // 创建应用程序包结构
+     const dirs = [
+        `${appBundlePath}/Contents/MacOS`,
+        `${appBundlePath}/Contents/Resources`
+    ]
+    dirs.forEach(dir => {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true })
+        }
+    })
+
+    // 生成 Info.plist
+    const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>yakit-chrome-launcher</string>
+    <key>CFBundleIconFile</key>
+    <string>app.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.yakit.chrome</string>
+    <key>CFBundleName</key>
+    <string>${appName}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.10.0</string>
+</dict>
+</plist>`
+    fs.writeFileSync(`${appBundlePath}/Contents/Info.plist`, plistContent)
+
+    // 如果提供了图标，复制图标文件
+    if (iconPath && fs.existsSync(iconPath)) {
+        const destIcon = `${appBundlePath}/Contents/Resources/app.icns`
+        fs.copyFileSync(iconPath, destIcon)
+    }
+
+    // 生成启动脚本 - 只需要简单转发所有参数
+    const scriptPath = `${appBundlePath}/Contents/MacOS/yakit-chrome-launcher`
+    const scriptContent = `#!/bin/bash
+exec "${chromePath}" "$@"
+`
+    fs.writeFileSync(scriptPath, scriptContent)
+    fs.chmodSync(scriptPath, 0o755) // 添加执行权限
+
+    // 移除 macOS 隔离属性
+    try {
+        execSync(`xattr -dr com.apple.quarantine "${appBundlePath}"`)
+    } catch (error) {
+        console.log("Failed to remove quarantine attribute:", error)
+    }
+
+
+    return appBundlePath
+}
+
+function shellEscape(str) {
+    return `'${str.replace(/'/g, "'\\''")}'`
+}
+
+
+function launchMacChrome(appBundlePath, customChromeFlags) {
+    return new Promise((resolve, reject) => {
+        // 使用 spawn 而不是 execSync，这样我们可以获取进程引用
+        const child = spawn('open', [
+            appBundlePath,
+            '--args',
+            ...customChromeFlags.map(flag => shellEscape(flag))
+        ], {
+            detached: true
+        })
+
+        // 监听错误
+        child.on('error', (err) => {
+            reject(err)
+        })
+
+        // 等待进程启动
+        child.on('close', (code) => {
+            if (code === 0) {
+                // 获取 Chrome 进程 ID
+                const getChromeProcess = spawn('pgrep', ['-f', appBundlePath])
+                let pid = ''
+
+                getChromeProcess.stdout.on('data', (data) => {
+                    pid += data.toString()
+                })
+
+                getChromeProcess.on('close', () => {
+                    if (pid) {
+                        // 监听 Chrome 进程
+                        const chromeProcess = spawn('ps', ['-p', pid.trim()])
+                        chromeProcess.on('close', () => {
+                            // Chrome 进程退出时
+                            startNum -= 1
+                            if (startNum <= 0) {
+                                started = false
+                                deleteCreateFile()
+                            }
+                        })
+                        resolve({
+                            process: chromeProcess
+                        })
+                    } else {
+                        resolve(null)
+                    }
+                })
+            } else {
+                reject(new Error(`Failed to launch Chrome: ${code}`))
+            }
+        })
+    })
+}
+
 module.exports = (win, getClient) => {
     // 启动的数量
     let startNum = 0
@@ -140,6 +261,7 @@ module.exports = (win, getClient) => {
         // opts:
         //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
         //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
+            
         let launchOpt = {
             startingUrl: disableCACertPage === false ? "http://mitm" : "chrome://newtab", // 确保在启动时打开 chrome://newtab 页面。
             chromeFlags: [
@@ -185,19 +307,41 @@ module.exports = (win, getClient) => {
                 console.log(`操作失败：${error}`)
             }
         }
-        return launch(launchOpt).then((chrome) => {
-            chrome.process.on("exit", () => {
-                // 在这里执行您想要的操作，当所有chrome实例都关闭时
-                startNum -= 1
-                if (startNum <= 0) {
-                    started = false
-                    deleteCreateFile()
-                }
+
+        if (process.platform === "darwin") {
+            const appBundlePath = createCustomChromeApp({
+                appName: "Yakit-Chrome",
+                iconPath: path.join(__dirname, "../resources/yakit-chrome.icns"),
+                chromePath: chromePath
             })
-            startNum += 1
-            started = true
-            return ""
-        })
+            const customChromeFlags = launchOpt["chromeFlags"].map(item => shellEscape(item)).join(" ")
+            // 使用 open 命令启动应用并传递参数
+            return launchMacChrome(appBundlePath, customChromeFlags).then((chrome) => {
+                if (chrome && chrome.process) {
+                    startNum += 1
+                    started = true
+                }
+                return ""
+            }).catch((error) => {
+                console.error('Failed to launch Chrome:', error)
+                throw error
+            })
+            
+        } else {
+            return launch(launchOpt).then((chrome) => {
+                chrome.process.on("exit", () => {
+                    // 在这里执行您想要的操作，当所有chrome实例都关闭时
+                    startNum -= 1
+                    if (startNum <= 0) {
+                        started = false
+                        deleteCreateFile()
+                    }
+                })
+                startNum += 1
+                started = true
+                return ""
+            })
+    }
     })
 
     function canAccess(file) {
