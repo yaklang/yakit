@@ -1,9 +1,12 @@
 const { ipcMain } = require("electron")
 const { launch, killAll, getChromePath } = require("chrome-launcher")
 const fs = require("fs")
+const {app} = require("electron")
 const path = require("path")
 const { YakitProjectPath } = require("../filePath")
 const myUserDataDir = path.join(YakitProjectPath, "chrome-profile")
+const { spawn } = require("child_process")
+const { execSync } = require("child_process")
 
 const disableExtensionsExceptStr = (host, port, username, password) => `
 var config = {
@@ -187,59 +190,6 @@ function shellEscape(str) {
 }
 
 
-function launchMacChrome(appBundlePath, customChromeFlags) {
-    return new Promise((resolve, reject) => {
-        // 使用 spawn 而不是 execSync，这样我们可以获取进程引用
-        const child = spawn('open', [
-            appBundlePath,
-            '--args',
-            ...customChromeFlags.map(flag => shellEscape(flag))
-        ], {
-            detached: true
-        })
-
-        // 监听错误
-        child.on('error', (err) => {
-            reject(err)
-        })
-
-        // 等待进程启动
-        child.on('close', (code) => {
-            if (code === 0) {
-                // 获取 Chrome 进程 ID
-                const getChromeProcess = spawn('pgrep', ['-f', appBundlePath])
-                let pid = ''
-
-                getChromeProcess.stdout.on('data', (data) => {
-                    pid += data.toString()
-                })
-
-                getChromeProcess.on('close', () => {
-                    if (pid) {
-                        // 监听 Chrome 进程
-                        const chromeProcess = spawn('ps', ['-p', pid.trim()])
-                        chromeProcess.on('close', () => {
-                            // Chrome 进程退出时
-                            startNum -= 1
-                            if (startNum <= 0) {
-                                started = false
-                                deleteCreateFile()
-                            }
-                        })
-                        resolve({
-                            process: chromeProcess
-                        })
-                    } else {
-                        resolve(null)
-                    }
-                })
-            } else {
-                reject(new Error(`Failed to launch Chrome: ${code}`))
-            }
-        })
-    })
-}
-
 module.exports = (win, getClient) => {
     // 启动的数量
     let startNum = 0
@@ -265,7 +215,7 @@ module.exports = (win, getClient) => {
         // opts:
         //   --no-system-proxy-config-service ⊗	Do not use system proxy configuration service.
         //   --no-proxy-server ⊗	Don't use a proxy server, always make direct connections. Overrides any other proxy server flags that are passed. ↪
-            
+
         let launchOpt = {
             startingUrl: disableCACertPage === false ? "http://mitm" : "chrome://newtab", // 确保在启动时打开 chrome://newtab 页面。
             chromeFlags: [
@@ -311,26 +261,45 @@ module.exports = (win, getClient) => {
                 console.log(`操作失败：${error}`)
             }
         }
-
+        const iconPath = path.join(app.getAppPath(), 'app', 'assets', 'yakit-chrome.icns')
+        console.log(iconPath)
         if (process.platform === "darwin") {
             const appBundlePath = createCustomChromeApp({
                 appName: "Yakit-Chrome",
-                iconPath: path.join(__dirname, "../resources/yakit-chrome.icns"),
+                iconPath: iconPath,
                 chromePath: chromePath
             })
-            const customChromeFlags = launchOpt["chromeFlags"].map(item => shellEscape(item)).join(" ")
-            // 使用 open 命令启动应用并传递参数
-            return launchMacChrome(appBundlePath, customChromeFlags).then((chrome) => {
-                if (chrome && chrome.process) {
-                    startNum += 1
-                    started = true
-                }
-                return ""
-            }).catch((error) => {
-                console.error('Failed to launch Chrome:', error)
-                throw error
-            })
             
+            // 使用 open 作为 chromePath
+            launchOpt.chromePath = "open";
+            
+            // 使用前缀数字来控制排序
+            // 1_ 将确保 appBundlePath 排在第一位
+            // 2_ 将确保 --args 排在第二位
+            // 原始参数将跟在后面
+            launchOpt.chromeFlags = [
+                "1_" + appBundlePath,
+                "2_--args",
+                ...launchOpt.chromeFlags
+            ];
+            
+            return launch(launchOpt)
+                .then((chrome) => {
+                    chrome.process.on("exit", () => {
+                        startNum -= 1;
+                        if (startNum <= 0) {
+                            started = false;
+                            deleteCreateFile();
+                        }
+                    });
+                    startNum += 1;
+                    started = true;
+                    return "";
+                })
+                .catch((error) => {
+                    console.error('Failed to launch Chrome:', error);
+                    throw error;
+                });
         } else {
             return launch(launchOpt).then((chrome) => {
                 chrome.process.on("exit", () => {
@@ -345,7 +314,7 @@ module.exports = (win, getClient) => {
                 started = true
                 return ""
             })
-    }
+        }
     })
 
     function canAccess(file) {
@@ -400,3 +369,40 @@ module.exports = (win, getClient) => {
         return killAll()
     })
 }
+// 在 Mac 平台上修改 chrome-launcher 库的 flags 排序
+if (process.platform === "darwin") {
+    const originalLauncher = require("chrome-launcher").Launcher;
+    const originalFlagsGetter = Object.getOwnPropertyDescriptor(originalLauncher.prototype, "flags").get;
+    
+    // 重新定义 flags getter
+    Object.defineProperty(originalLauncher.prototype, "flags", {
+        get: function() {
+            const originalFlags = originalFlagsGetter.call(this);
+        
+            if (this.chromePath === "open") {
+                // 使用更高效的方法处理前缀
+                const prefixMap = {};
+                const regularArgs = [];
+                
+                for (const flag of originalFlags) {
+                    const match = flag.match(/^(\d+)_(.+)/);
+                    if (match) {
+                        prefixMap[parseInt(match[1])] = match[2];
+                    } else {
+                        regularArgs.push(flag);
+                    }
+                }
+                
+                // 获取排序后的参数
+                const sortedArgs = Object.keys(prefixMap)
+                    .sort((a, b) => parseInt(a) - parseInt(b))
+                    .map(key => prefixMap[key]);
+                
+                return [...sortedArgs, ...regularArgs];
+            }
+            
+            return originalFlags;
+        }
+    });
+}
+
