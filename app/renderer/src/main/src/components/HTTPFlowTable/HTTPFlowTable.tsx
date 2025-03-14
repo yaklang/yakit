@@ -854,7 +854,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
-        if (pageType === "History") {
+        if (pageType === "History" && showAdvancedConfig) {
             // 筛选模式
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
                 if (!!e) {
@@ -901,7 +901,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     useDebounceEffect(
         () => {
-            if (pageType === "History") {
+            if (pageType === "History" && showAdvancedConfig) {
                 let newParams = {...params}
                 // 屏蔽
                 if (filterMode === "shield") {
@@ -3407,12 +3407,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
             Full: false,
-            // 这里是屏蔽条件和高级配置里面的参数需要保留
+            // 屏蔽条件和高级配置里面的参数需要保留
             ExcludeId: params.ExcludeId,
+            ExcludeInUrl: params.ExcludeInUrl,
+            // 高级配置里面的参数，非History类型和没有放开高级配置按钮的一开始就不会获取下面的值，传进去也没有关系
             SearchContentType: params.SearchContentType,
             ExcludeContentType: params.ExcludeContentType,
             IncludeInUrl: params.IncludeInUrl,
-            ExcludeInUrl: params.ExcludeInUrl,
             IncludePath: params.IncludePath,
             ExcludePath: params.ExcludePath,
             IncludeSuffix: params.IncludeSuffix,
@@ -3916,7 +3917,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         )}
                                         {showHistorySearch && (
                                             <HistorySearch
-                                                showPopoverSearch={size?.width ? size?.width <= 1100 : true}
+                                                showPopoverSearch={size?.width ? size?.width <= 1200 : true}
                                                 handleSearch={handleSearch}
                                             />
                                         )}
@@ -3951,7 +3952,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </YakitPopover>
                                             </div>
                                         )}
-                                        {showBatchActions && size?.width && size?.width >= 1000 && (
+                                        {showBatchActions && size?.width && size?.width >= 800 && (
                                             <>
                                                 {(selectedRowKeys.length === 0 && (
                                                     <YakitButton

@@ -2,7 +2,6 @@ import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 
 export interface HorizontalScrollCardProps {
     /**卡片的标题 */
-    showHeader?: boolean
     title?: string
     /**卡片数据源 */
     data: HoldGRPCStreamProps.InfoCards[]

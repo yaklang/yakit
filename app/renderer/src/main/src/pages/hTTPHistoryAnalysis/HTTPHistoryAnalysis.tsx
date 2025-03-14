@@ -1,10 +1,15 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
-import {OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
+import {
+    OutlineArrowscollapseIcon,
+    OutlineArrowsexpandIcon,
+    OutlineRefreshIcon,
+    OutlineSearchIcon
+} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "../fuzzer/HTTPFuzzerHotPatch"
@@ -19,8 +24,13 @@ import {ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetra
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {HorizontalScrollCard} from "../plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import styles from "./HTTPHistoryAnalysis.module.scss"
 import {HTTPHistory} from "@/components/HTTPHistory"
+import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
+import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {v4 as uuidv4} from "uuid"
+import {MITMConsts} from "../mitm/MITMConsts"
+import styles from "./HTTPHistoryAnalysis.module.scss"
+
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -31,8 +41,8 @@ interface TabsItem {
     contShow: boolean
 }
 
-export interface HTTPHistoryAnalysisProp {}
-export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) => {
+interface HTTPHistoryAnalysisProps {}
+export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) => {
     const [fullScreenFirstNode, setFullScreenFirstNode] = useState<boolean>(false)
 
     // #region 左侧tab
@@ -156,7 +166,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
     })
     // #endregion
 
-    // #region 规则
+    // #region 规则配置
     const {mitmStatus} = useStore()
     const mitmRuleRef = useRef<MITMRulePropRef>(null)
     const rulesResetFieldsRef = useRef({
@@ -236,6 +246,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
 
         if (openTabsFlag) {
             p.firstRatio = "70%"
+            if (execStatus !== "default") {
+                p.firstRatio = "50%"
+                p.secondRatio = "50%"
+            }
         } else {
             p.firstRatio = "24px"
         }
@@ -245,7 +259,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
             p.firstRatio = "100%"
         }
         return p
-    }, [fullScreenFirstNode, openTabsFlag])
+    }, [fullScreenFirstNode, openTabsFlag, execStatus])
+
     return (
         <div className={styles["HTTPHistoryAnalysis"]}>
             <YakitResizeBox
@@ -426,7 +441,9 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
                                     <div className={styles["HTTPHistoryAnalysis-result-tab"]}>
                                         <PluginTabs activeKey={activeKey} onChange={onTabChange}>
                                             <TabPane key={"ruleData"} tab={"规则数据"}>
-                                                <div className={styles["rule-data"]}>规则数据</div>
+                                                <div className={styles["rule-data"]}>
+                                                    <HttpRule />
+                                                </div>
                                             </TabPane>
                                             <TabPane key={"historyData"} tab={"流量数据"}>
                                                 <div className={styles["history-data"]}>
@@ -453,5 +470,137 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProp> = (props) =>
                 {...ResizeBoxProps}
             />
         </div>
+    )
+}
+
+interface HttpRuleProps {}
+const HttpRule: React.FC<HttpRuleProps> = (props) => {
+    const [historyId, setHistoryId] = useState<string>(uuidv4())
+    const httpRuleSecondRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(httpRuleSecondRef)
+    const [currentSelectItem, setCurrentSelectItem] = useState<any>({id: 1})
+
+    // #region mitm页面配置代理用于发送webFuzzer带过去
+    const [downstreamProxy, setDownstreamProxy] = useState<string>("")
+    useEffect(() => {
+        if (inViewport) {
+            getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+                if (res) {
+                    try {
+                        const obj = JSON.parse(res) || {}
+                        setDownstreamProxy(obj.defaultValue || "")
+                    } catch (error) {
+                        setDownstreamProxy("")
+                    }
+                } else {
+                    setDownstreamProxy("")
+                }
+            })
+        }
+    }, [inViewport])
+    // #endregion
+
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "50%",
+            secondRatio: "50%"
+        }
+        if (!currentSelectItem?.id) {
+            p.secondRatio = "0%"
+            p.firstRatio = "100%"
+        }
+        return p
+    }, [currentSelectItem])
+
+    return (
+        <YakitResizeBox
+            isVer={true}
+            firstNode={() => (
+                <div className={styles["HttpRule-first"]}>
+                    <HttpRuleTable />
+                </div>
+            )}
+            secondNode={
+                <div className={styles["HttpRule-second"]} ref={httpRuleSecondRef}>
+                    {/* <HTTPFlowDetailRequestAndResponse
+                        pageType='History_Analysis'
+                        historyId={historyId}
+                        noHeader={true}
+                        sendToWebFuzzer={true}
+                        downstreamProxyStr={downstreamProxy}
+                        // id={1 || 0}
+                        // defaultHttps={true}
+                        // Tags={""}
+                        // flow={undefined}
+                        // flowRequestLoad={false}
+                        // flowResponseLoad={false}
+                        // highLightItem={undefined}
+                    /> */}
+                </div>
+            }
+            firstMinSize={160}
+            secondMinSize={200}
+            secondNodeStyle={{
+                display: !currentSelectItem?.id ? "none" : "",
+                padding: !currentSelectItem?.id ? 0 : undefined
+            }}
+            lineStyle={{display: !!currentSelectItem?.id ? "" : "none"}}
+            lineDirection='top'
+            {...ResizeBoxProps}
+        />
+    )
+}
+
+interface HttpRuleTableProps {}
+const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
+    const ruleColumns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
+        return [
+            {
+                title: "数据包ID",
+                dataKey: "id",
+                fixed: "left",
+                ellipsis: false,
+                width: 96,
+                enableDrag: false
+            },
+            {
+                title: "规则名",
+                dataKey: "RuleName",
+                filterProps: {
+                    filterKey: "title",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+                }
+            },
+            {
+                title: "规则数据",
+                dataKey: "Data",
+                filterProps: {
+                    filterKey: "title",
+                    filtersType: "input",
+                    filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
+                }
+            }
+        ]
+    }, [])
+
+    return (
+        <TableVirtualResize
+            renderKey='id'
+            columns={ruleColumns}
+            loading={false}
+            query={{}}
+            isRefresh={true}
+            titleHeight={42}
+            isShowTotal={true}
+            extra={
+                <>
+                    <YakitButton type='primary'>导出</YakitButton>
+                </>
+            }
+            data={[]}
+            useUpAndDown
+            onChange={() => {}}
+        ></TableVirtualResize>
     )
 }
