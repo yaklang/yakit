@@ -67,12 +67,12 @@ switch (platform) {
     default:
         // ce
         appInfoOption = {
-            appId: "io.yaklang.yakit",
-            productName: "Yakit",
+            appId: "io.yaklang.NG-Penetration",
+            productName: "渗透测试平台V2.0",
             copyright: "Copyright © 2024 yaklang.io"
         }
         macIcon = "app/assets/yakitlogo.icns"
-        linuxIcon = "app/assets/yakitlogo.icns"
+        linuxIcon = "app/assets/yakitlogo.png"
         winIcon = "app/assets/yakitlogo.ico"
         nsisInstallerIcon = "app/assets/yakitlogo.ico"
         nsisUninstallerIcon = "app/assets/yakitlogo.ico"

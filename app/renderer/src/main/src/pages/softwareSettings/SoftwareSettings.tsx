@@ -13,6 +13,7 @@ import {isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitSSProject from "@/assets/yakitFontSS.png"
+import yakitCEMiniProject from "@/assets/yakit.jpg"
 import yakitEEMiniProject from "@/assets/yakitEE.png"
 import yakitSEMiniProject from "@/assets/yakitSE.png"
 import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
@@ -36,7 +37,7 @@ const ProjectLogo = (showMini: boolean) => {
     } else if (isEnpriTraceAgent()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
     } else {
-        return <YakitLogoSvgIcon />
+        return <img style={{height:"100%"}} src={yakitCEMiniProject} alt="暂无图片" />
     }
 }
 const SettingsMenu: SettingsMenuProp[] = [
