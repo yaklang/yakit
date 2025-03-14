@@ -11,6 +11,8 @@ on:
                 options:
                     - ce
                     - ee
+                    - sce
+                    - see
 
 jobs:
     build_yakit:
@@ -41,6 +43,10 @@ jobs:
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
                     echo "FILE_PATH=vip" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                    echo "FILE_PATH=sast" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "see" ]; then
+                    echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
                     exit 1

@@ -8,7 +8,7 @@ import {API} from "./services/swagger/resposeType"
 import {useEeSystemConfig, useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
+import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
@@ -320,6 +320,13 @@ function NewApp() {
             closeWebSocket()
         }
     }, [])
+
+    useEffect(()=>{
+        const titleElement = document.getElementById('app-html-title')
+        if (titleElement) {
+            titleElement.textContent = getReleaseEditionName()
+        }
+    },[])
 
     if (!agreed) {
         return (

@@ -9,7 +9,11 @@ enum PRODUCT_RELEASE_EDITION {
     EnpriTrace = 1,
     /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
-    BreachTrace = 3
+    BreachTrace = 3,
+    /**@name SAST扫描(SASTScan独立于企业版社区版之外,其自身拥有企业版) */
+    SastScan = 4,
+    /**@name SAST扫描-企业版 */
+    SastScanEnterprise = 5
 }
 
 export const getReleaseEditionName = () => {
@@ -20,13 +24,20 @@ export const getReleaseEditionName = () => {
             return "EnpriTraceAgent"
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
+        case PRODUCT_RELEASE_EDITION.SastScan:
+            return "SastScan"
+        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
+            return "SS-EnpriTrace"
         default:
             return "Yakit"
     }
 }
 /** EE */
 export const isEnpriTrace = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+    )
 }
 /** SE  */
 export const isEnpriTraceAgent = () => {
@@ -38,17 +49,39 @@ export const isBreachTrace = () => {
 }
 /** CE */
 export const isCommunityEdition = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan
+    )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition()
+    return !isCommunityEdition() && !isCommunitySastScan()
+}
+
+/** CE SAST Scan  */
+export const isCommunitySastScan = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan
+}
+
+/** EE SAST Scan  */
+export const isEnterpriseSastScan = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+}
+
+/** SAST Scan独立于Yakit企业版社区版之外，其自身拥有企业版  */
+export const isSastScan = () => {
+    return (
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+    )
 }
 
 export const isEnterpriseOrSimpleEdition = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
+        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
             return true
         default:
             return false
@@ -63,6 +96,10 @@ export const GetReleaseEdition = () => {
         case "simple-enterprise":
         case "etraceagent":
             return PRODUCT_RELEASE_EDITION.EnpriTraceAgent
+        case "sast-scan":
+            return PRODUCT_RELEASE_EDITION.SastScan
+        case "sast-scan-enterprise":
+            return PRODUCT_RELEASE_EDITION.SastScanEnterprise
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
         default:
@@ -118,6 +155,10 @@ export const getRemoteHttpSettingGV = () => {
             return RemotePrivateDomainGV.eeHttpSetting
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return RemotePrivateDomainGV.seHttpSetting
+        case PRODUCT_RELEASE_EDITION.SastScan:
+            return RemotePrivateDomainGV.ceSSHttpSetting
+        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
+            return RemotePrivateDomainGV.eeSSHttpSetting
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basHttpSetting
     }
@@ -131,6 +172,10 @@ export const getRemoteConfigBaseUrlGV = () => {
             return RemotePrivateDomainGV.eeConfigBaseUrl
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return RemotePrivateDomainGV.seConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.SastScan:
+            return RemotePrivateDomainGV.ceSSConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
+            return RemotePrivateDomainGV.eeSSConfigBaseUrl
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basConfigBaseUrl
     }

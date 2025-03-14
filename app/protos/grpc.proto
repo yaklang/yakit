@@ -448,7 +448,7 @@ service Yak {
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom(Empty) returns (Fields);
+  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement 
 
   rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
@@ -585,17 +585,21 @@ service Yak {
 
   // 操作项目的相关接口，通过设置 ProjectDatabase
   rpc SetCurrentProject(SetCurrentProjectRequest) returns (Empty);
-  rpc GetCurrentProject(Empty) returns (ProjectDescription);
+  rpc GetCurrentProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetCurrentProjectEx(GetCurrentProjectExRequest) returns (ProjectDescription);
+
   rpc GetProjects(GetProjectsRequest) returns (GetProjectsResponse);
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty);
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription);
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription);
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
+  rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
   rpc ExportProject(ExportProjectRequest) returns (stream ProjectIOProgress);
@@ -754,6 +758,7 @@ service Yak {
   rpc DeleteSSAPrograms(DeleteSSAProgramRequest)returns(DbOperateMessage);
   // SSA Risk CURD
   rpc QuerySSARisks(QuerySSARisksRequest)returns(QuerySSARisksResponse);
+  rpc QueryNewSSARisks(QueryNewSSARisksRequest) returns(QueryNewSSARisksResponse);
   rpc DeleteSSARisks(DeleteSSARisksRequest)returns(DbOperateMessage);
   rpc UpdateSSARiskTags(UpdateSSARiskTagsRequest)returns(DbOperateMessage);
   rpc GetSSARiskFieldGroup(Empty) returns (SSARiskFieldGroupResponse);
@@ -1781,6 +1786,7 @@ message ImportProjectRequest {
   string Password = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -1820,7 +1826,11 @@ message GetProjectsRequest {
   Paging Pagination = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  string Type = 6;
+  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(sast)
+  string Type = 6; 
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
+  // "project"(yakit) | "ssa_project"(sast)
+  string FrontendType = 7;
 }
 
 message ProjectDescription {
@@ -1854,15 +1864,31 @@ message SetCurrentProjectRequest {
   // ProjectName
   string ProjectName = 1;
   int64 Id = 2;
+  string Type = 3; // "project"(yakit) | "ssa_project"(sast) 
 }
+
+message GetCurrentProjectExRequest {
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+}
+
 
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
+  string Type = 3;  // "project"(yakit) | "ssa_project"(sast)
+}
+
+message GetDefaultProjectExRequest {
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
 }
 
 message QueryProjectDetailRequest {
   int64 Id = 1;
+}
+
+
+message GetTemporaryProjectExRequest{
+  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
 }
 
 
@@ -2657,6 +2683,7 @@ message GenerateYakCodeByPacketResponse {
 message QueryReportRequest {
   int64 Id = 1;
   string Hash = 2;
+  string Type = 3;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message DeleteReportRequest {
@@ -2665,6 +2692,7 @@ message DeleteReportRequest {
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
   bool DeleteAll = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message QueryReportsResponse {
@@ -2679,6 +2707,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
+  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
 }
 
 message Report {
@@ -4756,7 +4785,6 @@ message FuzzerResponse {
 
   string RuntimeID = 53;
   bool Discard = 54;
-
   bool IsAutoFixContentType = 55;
   string OriginalContentType = 59;
   string FixContentType = 60;
@@ -6138,6 +6166,17 @@ message QuerySSARisksResponse {
   Paging Pagination = 1;
   repeated SSARisk Data = 2;
   int64 Total = 3;
+}
+
+message QueryNewSSARisksRequest{
+  int64 AfterID = 1; 
+}
+
+message QueryNewSSARisksResponse{
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
+  int64 NewRiskTotal = 2; // new ssa-risk unread count
+  int64 Total = 3; // total ssa-risk count 
+  int64 Unread = 4;// total unread ssa-risk count
 }
 
 message DeleteSSARisksRequest {

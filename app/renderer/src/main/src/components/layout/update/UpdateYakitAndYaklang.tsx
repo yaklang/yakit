@@ -5,7 +5,7 @@ import {DownloadingState} from "@/yakitGVDefine"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {setLocalValue} from "@/utils/kv"
 import {failed, info, success} from "@/utils/notification"
-import {getReleaseEditionName, isEnterpriseEdition} from "@/utils/envfile"
+import {getReleaseEditionName, isEnterpriseEdition, isSastScan} from "@/utils/envfile"
 import {UpdateContentProp} from "../FuncDomain"
 import {NetWorkApi} from "@/services/fetch"
 import {LocalGVS} from "@/enums/localGlobal"
@@ -60,7 +60,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     const fetchYakitUpdateContent = useMemoizedFn(() => {
         NetWorkApi<any, API.YakVersionsInfoResponse>({
             method: "get",
-            url: "yak/versions/info"
+            url: "yak/versions/info",
+            params: {
+                source: isSastScan() ? "sast" : "yakit"
+            }
         })
             .then((res: API.YakVersionsInfoResponse) => {
                 if (!res) return
@@ -99,7 +102,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
         let version = latest.startsWith("v") ? latest.substring(1) : latest
         setStatus("install")
         ipcRenderer
-            .invoke("download-latest-yakit", version, isEnterpriseEdition())
+            .invoke("download-latest-yakit", version, {
+                isEnterprise:isEnterpriseEdition(),
+                isSastScan:isSastScan()
+            })
             .then(() => {
                 success("下载完毕")
                 setYakitProgress((old) => {

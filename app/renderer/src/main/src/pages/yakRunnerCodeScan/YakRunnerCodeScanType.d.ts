@@ -184,6 +184,7 @@ export interface CodeScanAuditExecuteFormProps {
     setIsExpand: (v: boolean) => void
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
     resetStreamInfo: () => void
+    setAuditError: (v: boolean) => void
 }
 
 interface ErrorProps {

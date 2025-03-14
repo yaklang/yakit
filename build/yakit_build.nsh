@@ -113,6 +113,18 @@ FunctionEnd
         ${If} $0 != "" ; ee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
+        ${Else}
+            ${StrStr} $0 $EXEFILE "SastScanEnterprise"
+            ${If} $0 != "" ; see
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
+                StrCpy $EXE_NAME "SastScanEnterprise"
+            ${Else}
+                ${StrStr} $0 $EXEFILE "SastScan"
+                ${If} $0 != "" ; sce
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
+                    StrCpy $EXE_NAME "SastScan"
+                ${EndIf}
+            ${EndIf}
         ${EndIf}
     ${EndIf}
 
@@ -134,6 +146,16 @@ FunctionEnd
         ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
+        ${Else}
+            ${If} ${FileExists} `$INSTDIR\SastScanEnterprise.exe` ; see
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
+                StrCpy $EXE_NAME "SastScanEnterprise"
+            ${Else}
+                ${If} ${FileExists} `$INSTDIR\SastScan.exe` ; sce
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
+                    StrCpy $EXE_NAME "SastScan"
+                ${EndIf}
+            ${EndIf}
         ${EndIf}
     ${EndIf}
 

@@ -17,6 +17,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
+import {isSastScan} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {
@@ -149,74 +150,88 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
 
     return (
         <div className={styles["extra-menu-wrapper"]}>
-            <YakitPopover
-                overlayClassName={styles["import-resource-popover"]}
-                overlayStyle={{paddingTop: 2}}
-                placement={"bottom"}
-                trigger={"click"}
-                content={importMenu}
-                visible={importMenuShow}
-                onVisibleChange={(visible) => setImportMenuShow(visible)}
-            >
+            {isSastScan() ? (
                 <YakitButton
-                    type='text'
-                    style={{fontWeight: 500}}
-                    onClick={(e) => e.preventDefault()}
-                    icon={<OutlineSaveIcon />}
-                >
-                    导入资源
-                </YakitButton>
-            </YakitPopover>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.Codec})
-                }}
-                icon={<SolidCodecIcon />}
-            >
-                Codec
-            </YakitButton>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.PayloadManager})
-                }}
-                icon={<SolidPayloadIcon />}
-            >
-                Payload
-            </YakitButton>
-            <YakitButton
-                type='secondary2'
-                onClick={() => {
-                    onMenuSelect({route: YakitRoute.YakScript})
-                }}
-                icon={<SolidTerminalIcon />}
-            >
-                Yak Runner
-            </YakitButton>
-            <ImportLocalPlugin
-                visible={visibleImport}
-                setVisible={(v) => {
-                    setVisibleImport(v)
-                }}
-                loadPluginMode={loadPluginMode}
-                sendPluginLocal={true}
-            />
-            {percentVisible && (
-                <ImportExportHttpFlowProgress
-                    visible={percentVisible}
-                    title='导入HAR流量数据'
-                    token={importHistoryharToken}
-                    apiKey='ImportHTTPFlowStream'
-                    onClose={(finish) => {
-                        setPercentVisible(false)
-                        if (finish) {
-                            yakitNotify("success", "导入成功")
-                            emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
-                            emiter.emit("onRefreshImportHistoryTable")
-                        }
+                    type='secondary2'
+                    onClick={() => {
+                        onMenuSelect({route: YakitRoute.YakScript})
                     }}
-                />
+                    icon={<SolidTerminalIcon />}
+                >
+                    Yak Runner
+                </YakitButton>
+            ) : (
+                <>
+                    <YakitPopover
+                        overlayClassName={styles["import-resource-popover"]}
+                        overlayStyle={{paddingTop: 2}}
+                        placement={"bottom"}
+                        trigger={"click"}
+                        content={importMenu}
+                        visible={importMenuShow}
+                        onVisibleChange={(visible) => setImportMenuShow(visible)}
+                    >
+                        <YakitButton
+                            type='text'
+                            style={{fontWeight: 500}}
+                            onClick={(e) => e.preventDefault()}
+                            icon={<OutlineSaveIcon />}
+                        >
+                            导入资源
+                        </YakitButton>
+                    </YakitPopover>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.Codec})
+                        }}
+                        icon={<SolidCodecIcon />}
+                    >
+                        Codec
+                    </YakitButton>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.PayloadManager})
+                        }}
+                        icon={<SolidPayloadIcon />}
+                    >
+                        Payload
+                    </YakitButton>
+                    <YakitButton
+                        type='secondary2'
+                        onClick={() => {
+                            onMenuSelect({route: YakitRoute.YakScript})
+                        }}
+                        icon={<SolidTerminalIcon />}
+                    >
+                        Yak Runner
+                    </YakitButton>
+                    <ImportLocalPlugin
+                        visible={visibleImport}
+                        setVisible={(v) => {
+                            setVisibleImport(v)
+                        }}
+                        loadPluginMode={loadPluginMode}
+                        sendPluginLocal={true}
+                    />
+                    {percentVisible && (
+                        <ImportExportHttpFlowProgress
+                            visible={percentVisible}
+                            title='导入HAR流量数据'
+                            token={importHistoryharToken}
+                            apiKey='ImportHTTPFlowStream'
+                            onClose={(finish) => {
+                                setPercentVisible(false)
+                                if (finish) {
+                                    yakitNotify("success", "导入成功")
+                                    emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.DB_HTTPHistory}))
+                                    emiter.emit("onRefreshImportHistoryTable")
+                                }
+                            }}
+                        />
+                    )}
+                </>
             )}
         </div>
     )

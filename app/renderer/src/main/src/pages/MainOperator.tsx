@@ -23,9 +23,11 @@ import {API} from "@/services/swagger/resposeType"
 import {
     globalUserLogin,
     isCommunityEdition,
+    isCommunitySastScan,
     isEnpriTrace,
     isEnpriTraceAgent,
-    isEnterpriseOrSimpleEdition
+    isEnterpriseOrSimpleEdition,
+    isSastScan
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {CodeGV, RemoteGV} from "@/yakitGV"
@@ -47,9 +49,9 @@ import {httpDeleteOSSResource} from "@/apiUtils/http"
 
 import "./main.scss"
 import "./GlobalClass.scss"
-import { setUpSyntaxFlowMonaco } from "@/utils/monacoSpec/syntaxflowEditor"
+import {setUpSyntaxFlowMonaco} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import { MessageCenterModal } from "@/components/MessageCenter/MessageCenter"
+import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -403,16 +405,16 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
     /** 消息中心 相关逻辑 */
     const [messageCenterShow, setMessageCenterShow] = useState<boolean>(false)
-    const openAllMessageNotificationFun = useMemoizedFn(()=>{
+    const openAllMessageNotificationFun = useMemoizedFn(() => {
         setChatShow(false)
         setMessageCenterShow(true)
     })
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("openAllMessageNotification", openAllMessageNotificationFun)
         return () => {
             emiter.off("openAllMessageNotification", openAllMessageNotificationFun)
         }
-    },[])
+    }, [])
 
     /** 通知软件打开页面 */
     const openMenu = (info: RouteToPageProps) => {
@@ -435,16 +437,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         return openWatermark ? eeWatermarkStr : " "
     }
     const waterMarkStr = () => {
-        // 社区版无水印
-        if (isCommunityEdition()) {
+        // Yakit社区版无水印
+        if (isCommunityEdition() && !isCommunitySastScan()) {
             return ""
-        } else if (userInfo.isLogin) {
+        }
+        // Sast社区版有水印
+        else if (isCommunitySastScan()){
+            return "Sast技术浏览版仅供技术交流使用"
+        }
+        else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark("EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(isSastScan() ? "Sast技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
@@ -610,14 +617,18 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     >
                         <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
                     </YakitModal>
-                    {(isCommunityEdition()||isEnpriTrace()) && <YakChatCS visible={chatShow} setVisible={setChatShow} />}
-                    {(isCommunityEdition()||isEnpriTrace()) && !chatShow && (
+                    {(isCommunityEdition() || isEnpriTrace()) && (
+                        <YakChatCS visible={chatShow} setVisible={setChatShow} />
+                    )}
+                    {(isCommunityEdition() || isEnpriTrace()) && !chatShow && (
                         <div className='chat-icon-wrapper' onClick={onChatCS} draggable={true} ref={chartCSDragItemRef}>
                             <img src={yakitCattle} />
                         </div>
                     )}
-                    
-                    {messageCenterShow&&<MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow}/>}
+
+                    {messageCenterShow && (
+                        <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
+                    )}
                 </Layout>
             </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}

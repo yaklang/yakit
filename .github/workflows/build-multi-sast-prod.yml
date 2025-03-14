@@ -1,0 +1,198 @@
+name: Build Multi-Sast-Platform Prod
+
+on:
+    workflow_dispatch:
+
+jobs:
+    build_yakit:
+        runs-on: macos-13
+        env:
+            CI: ""
+            NODE_OPTIONS: --max_old_space_size=4096
+            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+        steps:
+            - name: Check if the version number is correct
+              run: |
+                  VERSION_INPUT=$GITHUB_REF_NAME
+                  if [[ $VERSION_INPUT != v*-sast ]]; then
+                    echo "Error: Version must start with 'v' and end with '-sast'." >&2
+                    exit 1
+                  else
+                    echo "Version starts with 'v': $VERSION_INPUT"
+                  fi
+
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 18.18.2
+
+            - run: echo ${{ github.ref_name }}
+            - run: cp buildutil/zip /usr/local/bin/zip
+            - run: chmod +x /usr/local/bin/zip
+            - run: zip -h
+
+            - name: "Download yakit-chrome-extension"
+              run: |
+                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+                      echo "Failed to download!" >&2
+                      exit 1
+                  }
+                  wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+              shell: bash
+
+            - name: "Fetch Latest Engine Version And Set To Env"
+              run: |
+                  wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+                  cat bins/engine-version.txt
+                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+
+            - name: "Download Yak Engine via wget(Linux)"
+              id: download-linux-engine
+              run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
+            - name: "Download Yak Engine via wget(Linux-arm64)"
+              id: download-linux-engine-arm64
+              run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
+
+            - name: "Download Yak Engine via wget(Windows)"
+              id: download-windows-engine
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe && zip ./bins/yak_windows_normal_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+            - name: "Download Yak Legacy Engine via wget(Windows)"
+              id: download-windows-leagacy-engine
+              run: wget -O bins/yak_windows_amd64.exe https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe && zip ./bins/yak_windows_legacy_amd64.zip ./bins/yak_windows_amd64.exe && rm ./bins/yak_windows_amd64.exe
+
+            - name: "Download Yak Engine via wget(MacOS)"
+              id: download-darwin-engine
+              run: wget -O bins/yak_darwin_amd64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+            - name: "Download Yak Engine via wget(MacOS-arm64)"
+              id: download-darwin-engine-arm64
+              run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
+
+            - name: Signature Mac Engine
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+              shell: bash
+
+            - name: "Fetch Mac-Amd Sha256"
+              run: wget -O bins/yak_darwin_amd64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+            - name: "Fetch Mac-Arm Sha256"
+              run: wget -O bins/yak_darwin_arm64.sha256.txt https://oss-qn.yaklang.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
+
+            - name: Echo SastScan Package Version To Env
+              run: |
+                  ENV_TAG=${{ github.ref_name }}
+                  ENV_TAG=${ENV_TAG#v}
+                  ENV_TAG=${ENV_TAG%-sast}
+                  echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
+              shell: bash
+
+            - run: yarn install
+              working-directory: ./
+              name: "Install Dependencies"
+
+            - name: Build pre script
+              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh sast
+              shell: bash
+
+            - name: Build SastScan Normal And Legacy (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: ./packageScript/script/electron-sast-builder.sh sast || { exit 1; }
+              shell: bash
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+
+            - name: Check SastScan if the output is correct
+              run: (./packageScript/script/check-build-package.sh SastScan) || { exit 1; }
+              shell: bash
+            - name: Upload SastScan(CE) Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: SastScan-artifacts
+                  path: |
+                      ./release/SastScan-${{ env.ENV_TAG }}-*.exe
+                      ./release/SastScan-${{ env.ENV_TAG }}-*.dmg
+                      ./release/SastScan-${{ env.ENV_TAG }}-*.AppImage
+                  if-no-files-found: error
+                  retention-days: 1
+
+            - name: Build EnpriTrace Normal And Legacy (MultiPlatform)
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+              working-directory: ./
+              run: ./packageScript/script/electron-sast-builder.sh sastee || { exit 1; }
+              shell: bash
+
+            - name: View Published Content
+              run:
+                  ls ./release
+                  # EnpriTrace       -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+
+            - name: Check SastScanEnterprise if the output is correct
+              run: (./packageScript/script/check-build-package.sh SastScanEnterprise) || { exit 1; }
+              shell: bash
+            - name: Upload SastScan(EE) Artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: SastScanEnterprise-artifacts
+                  path: |
+                      ./release/SastScanEnterprise-${{ env.ENV_TAG }}-*.exe
+                      ./release/SastScanEnterprise-${{ env.ENV_TAG }}-*.dmg
+                      ./release/SastScanEnterprise-${{ env.ENV_TAG }}-*.AppImage
+                  if-no-files-found: error
+                  retention-days: 1
+
+    publish_software_to_oss:
+        needs:
+            - build_yakit
+        strategy:
+            matrix:
+                artifact: [SastScan, SastScanEnterprise] # 需要发布的软件名前缀
+        runs-on: ubuntu-latest
+        steps:
+            - name: Echo Package Version To Env
+              run: |
+                  ENV_TAG=${{ github.ref_name }}
+                  ENV_TAG=${ENV_TAG#v}
+                  ENV_TAG=${ENV_TAG%-sast}
+                  echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
+
+            - name: Download SastScan And Legacy SastScan
+              uses: actions/download-artifact@v4
+              with:
+                  name: ${{ matrix.artifact }}-artifacts
+                  merge-multiple: true
+
+            - run: ls
+              name: Ls Published Artifacts...
+
+            - name: Generate OSS File Path
+              run: |
+                  if [ "${{ matrix.artifact }}" = "SastScan" ]; then
+                    echo "FILE_PATH=sast" >> $GITHUB_ENV
+                  elif [ "${{ matrix.artifact }}" = "SastScanEnterprise" ]; then
+                    echo "FILE_PATH=svip" >> $GITHUB_ENV
+                  else
+                    echo "No corresponding file path" >&2
+                    exit 1
+                  fi
+            - name: Show ENV.FILE_PATH
+              run: echo "FILE_PATH： $FILE_PATH"
+
+            - name: Upload SastScan To OSS
+              uses: tvrcgo/upload-to-oss@master
+              with:
+                  key-id: ${{ secrets.OSS_KEY_ID }}
+                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
+                  region: oss-accelerate
+                  bucket: yaklang
+                  assets: |
+                      *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/

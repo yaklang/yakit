@@ -172,7 +172,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         setAllTotal && setAllTotal(tableTotal)
     }, [tableTotal])
 
-    useUpdateEffect(() => {
+    useEffect(() => {
         const newParams: QuerySSARisksRequest = {
             Pagination: {
                 ...tableParams.Pagination,
@@ -214,12 +214,18 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }, [type])
 
     useEffect(() => {
-        // 组件存在既不卸载
+        emiter.on("onRefAuditRiskList", onRefAuditRiskList)
         emiter.on("onRefreshQuerySSARisks", onStartInterval)
         return () => {
+            emiter.off("onRefAuditRiskList", onRefAuditRiskList)
             emiter.off("onRefreshQuerySSARisks", onStartInterval)
         }
     }, [])
+
+    /**重新加载表格 */
+    const onRefAuditRiskList = useMemoizedFn(() => {
+        debugVirtualTableEvent.noResetRefreshT()
+    })
 
     /**开启实时数据刷新 */
     const onStartInterval = useMemoizedFn((data) => {
@@ -391,7 +397,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                         Path: `/`,
                                         Variable: record.Variable,
                                         Value: record.Index ? `/${record.Index}` : undefined,
-                                        Query: [{Key: "result_id", Value: record.ResultID || 0}]
+                                        Query: [{Key: "result_id", Value: record.ResultID || 0}],
+                                        CodeRange: record.CodeRange
                                     }
                                     emiter.emit(
                                         "openPage",
@@ -955,7 +962,7 @@ const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props)
 })
 
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
-    const {info, className, border, isShowExtra} = props
+    const {info, className, border, isShowExtra, isExtraClick} = props
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
 
     useEffect(() => {
@@ -1040,7 +1047,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
     // 跳转到代码审计页面
     const jumpCodeScanPage = useMemoizedFn((value?: string) => {
-        const {ProgramName, Variable, ResultID} = info
+        const {ProgramName, Variable, ResultID, CodeRange} = info
         if (ResultID && Variable && ProgramName) {
             // 跳转到审计页面的参数
             const params: AuditCodePageInfoProps = {
@@ -1049,7 +1056,8 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                 Path: `/`,
                 Variable,
                 Value: value,
-                Query: [{Key: "result_id", Value: ResultID}]
+                Query: [{Key: "result_id", Value: ResultID}],
+                CodeRange
             }
             emiter.emit(
                 "openPage",
@@ -1111,6 +1119,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                 icon={<OutlineTerminalIcon />}
                                 onClick={(e) => {
                                     e.stopPropagation()
+                                    isExtraClick && isExtraClick()
                                     jumpCodeScanPage(info.Index ? `/${info.Index}` : undefined)
                                 }}
                             >

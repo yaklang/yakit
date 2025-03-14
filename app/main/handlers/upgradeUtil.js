@@ -25,7 +25,9 @@ const {
     downloadYakitCommunity,
     getYakitEEDownloadUrl,
     getYakitCommunityDownloadUrl,
-    downloadYakEngine
+    downloadYakEngine,
+    getSastCommunityDownloadUrl,
+    getSastEEDownloadUrl
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
@@ -365,18 +367,29 @@ module.exports = {
         })
 
         // asyncDownloadLatestYakit wrapper
-        async function asyncDownloadLatestYakit(version, isEnterprise) {
+        async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
+                const {isEnterprise, isSastScan} = type
+                const SastCE = isSastScan && !isEnterprise
+                const SastEE = isSastScan && isEnterprise
+                const YakitCE = !isSastScan && !isEnterprise
+                const YakitEE = !isSastScan && isEnterprise
                 // format version，下载的版本号里不能存在 V
                 if (version.startsWith("v")) {
                     version = version.substr(1)
                 }
 
                 console.info("start to fetching download-url for yakit")
-
-                const downloadUrl = isEnterprise
-                    ? await getYakitEEDownloadUrl(version)
-                    : await getYakitCommunityDownloadUrl(version)
+                let downloadUrl = ""
+                if (SastCE) {
+                    downloadUrl = getSastCommunityDownloadUrl(version)
+                } else if (SastEE) {
+                    downloadUrl = getSastEEDownloadUrl(version)
+                } else if (YakitCE) {
+                    downloadUrl = getYakitCommunityDownloadUrl(version)
+                } else {
+                    downloadUrl = getYakitEEDownloadUrl(version)
+                }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
                 const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
@@ -385,10 +398,11 @@ module.exports = {
                 } catch (e) {}
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
-
-                if (isEnterprise) {
+                // 企业版下载
+                if (YakitEE || SastEE) {
                     await downloadYakitEE(
                         version,
+                        isSastScan,
                         dest,
                         (state) => {
                             if (!!state) {
@@ -399,8 +413,10 @@ module.exports = {
                         reject
                     )
                 } else {
+                    // 社区版下载
                     await downloadYakitCommunity(
                         version,
+                        isSastScan,
                         dest,
                         (state) => {
                             if (!!state) {
@@ -418,8 +434,8 @@ module.exports = {
             return await yakitCancelRequestWithProgress()
         })
 
-        ipcMain.handle("download-latest-yakit", async (e, version, isEnterprise) => {
-            return await asyncDownloadLatestYakit(version, isEnterprise)
+        ipcMain.handle("download-latest-yakit", async (e, version, type) => {
+            return await asyncDownloadLatestYakit(version, type)
         })
 
         ipcMain.handle("download-enpriTrace-latest-yakit", async (e, url) => {

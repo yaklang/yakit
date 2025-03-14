@@ -23,13 +23,20 @@ import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import SelectUpload from "@/pages/SelectUpload"
-import {QueryGeneralResponse} from "@/pages/invoker/schema"
+import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu, YakitMenuItemProps, YakitMenuItemType} from "../yakitUI/YakitMenu/YakitMenu"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, showDevTool} from "@/utils/envfile"
+import {
+    getReleaseEditionName,
+    isCommunityEdition,
+    isEnpriTrace,
+    isEnpriTraceAgent,
+    isEnterpriseSastScan,
+    isSastScan,
+    showDevTool
+} from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {LocalGV, RemoteGV} from "@/yakitGV"
@@ -97,6 +104,16 @@ import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAnd
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
+import {
+    apiNewRiskRead,
+    apiQueryNewSSARisks,
+    apiQuerySSARisks
+} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {
+    QueryNewSSARisksResponse,
+    SSARisk
+} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -162,11 +179,11 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     roleAdmin: {key: "role-admin", label: "角色管理"},
     accountAdmin: {key: "account-admin", label: "用户管理"},
     setPassword: {key: "set-password", label: "修改密码"},
-    uploadData: {key: "upload-data", label: "上传数据"},
     controlAdmin: {key: "control-admin", label: "远程管理"},
     dynamicControl: {key: "dynamic-control", label: "发起远程"},
     closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
-    holeCollect: {key: "hole-collect", label: "漏洞汇总"}
+    holeCollect: {key: "hole-collect", label: "漏洞汇总"},
+    systemConfig: {key: "system-config", label: "系统配置"}
 }
 
 export interface FuncDomainProp {
@@ -212,8 +229,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 是否允许密码框关闭 */
     const [passwordClose, setPasswordClose] = useState<boolean>(true)
-    /** 上传数据弹框 */
-    const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
     /** 发起远程弹框 受控端 - 控制端 */
     const [dynamicControlModal, setDynamicControlModal] = useState<boolean>(false)
@@ -244,24 +259,31 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-超管
             if (userInfo.role === "superAdmin") {
                 isNew = true
-                setUserMenu(
-                    [
-                        UserMenusMap["trustList"],
-                        UserMenusMap["licenseAdmin"],
-                        UserMenusMap["pluginAudit"],
-                        UserMenusMap["dataStatistics"],
-                        UserMenusMap["misstatement"]
-                    ].concat(signOutMenu)
-                )
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["trustList"],
+                    UserMenusMap["licenseAdmin"],
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["dataStatistics"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-管理员
             if (userInfo.role === "admin") {
                 isNew = true
-                setUserMenu(
-                    [UserMenusMap["pluginAudit"], UserMenusMap["dataStatistics"], UserMenusMap["misstatement"]].concat(
-                        signOutMenu
-                    )
-                )
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["dataStatistics"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
+                // sast scan版本时管理员不显示插件管理
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-操作员
             if (userInfo.role === "operate") {
@@ -276,7 +298,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             // CE-审核员
             if (userInfo.role === "auditor") {
                 isNew = true
-                setUserMenu([UserMenusMap["pluginAudit"], UserMenusMap["misstatement"]].concat(signOutMenu))
+                let cacheMenus: YakitMenuItemType[] = [
+                    UserMenusMap["pluginAudit"],
+                    UserMenusMap["misstatement"]
+                ].concat(signOutMenu)
+                // sast scan版本时管理员不显示插件管理
+                if (isSastScan()) {
+                    cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                }
+                setUserMenu(cacheMenus)
             }
             // CE-非权限人员
             if (!isNew) {
@@ -299,7 +329,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 } else {
                     let cacheMenus: YakitMenuItemType[] = [
                         ...userAvatar,
-                        UserMenusMap["uploadData"],
                         UserMenusMap["dynamicControl"],
                         UserMenusMap["controlAdmin"],
                         UserMenusMap["closeDynamicControl"],
@@ -308,8 +337,13 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["setPassword"],
                         UserMenusMap["pluginAudit"],
                         UserMenusMap["misstatement"],
+                        UserMenusMap["systemConfig"],
                         ...signOutMenu
                     ]
+                    // 仅在sast scan 企业版本时显示系统配置
+                    if (!isEnterpriseSastScan()) {
+                        cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "system-config")
+                    }
                     if (dynamicConnect) {
                         // 远程中时不显示发起远程 显示退出远程
                         cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "dynamic-control")
@@ -319,13 +353,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
                         )
                     }
+                    // sast scan版本时管理员不显示插件管理
+                    if (isSastScan()) {
+                        cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
+                    }
                     setUserMenu([...cacheMenus])
                 }
             } else {
                 let isNew: boolean = false
                 let cacheMenus: YakitMenuItemType[] = [
                     ...userAvatar,
-                    UserMenusMap["uploadData"],
                     UserMenusMap["dynamicControl"],
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
@@ -348,7 +385,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         (item) => !["misstatement"].includes((item as YakitMenuItemProps).key)
                     )
                 }
-                
+
                 if (isEnpriTraceAgent()) {
                     isNew = true
                     cacheMenus = cacheMenus.filter(
@@ -367,6 +404,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
                     )
                 }
+
                 if (isNew) {
                     setUserMenu([...cacheMenus])
                 } else {
@@ -496,7 +534,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
-                    {!showProjectManage && <UIOpRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && !isSastScan() && <UIOpRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && isSastScan() && <UIOpSastScanRisk isEngineLink={isEngineLink} />}
                     {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
@@ -582,7 +621,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                     setPasswordClose(true)
                                                     setPasswordShow(true)
                                                 }
-                                                if (key === "upload-data") setUploadModalShow(true)
                                                 if (key === "role-admin") {
                                                     onOpenPage({route: YakitRoute.RoleAdminPage})
                                                 }
@@ -603,6 +641,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                 }
                                                 if (key === "data-statistics") {
                                                     onOpenPage({route: YakitRoute.Data_Statistics})
+                                                }
+                                                if (key === "system-config") {
+                                                    onOpenPage({route: YakitRoute.System_Config})
                                                 }
                                                 if (key === "dynamic-control") {
                                                     setDynamicControlModal(true)
@@ -658,19 +699,6 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
-            </YakitModal>
-
-            <YakitModal
-                visible={uploadModalShow}
-                title={"上传数据"}
-                destroyOnClose={true}
-                maskClosable={false}
-                bodyStyle={{padding: "10px 24px 24px 24px"}}
-                width={520}
-                onCancel={() => setUploadModalShow(false)}
-                footer={null}
-            >
-                <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </YakitModal>
 
             <DynamicControl
@@ -1605,6 +1633,8 @@ export interface UpdateEnpriTraceInfoProps {
 
 interface SetUpdateContentProp extends FetchUpdateContentProp {
     updateContent: string
+    // 默认为yakit
+    source?: "yakit" | "sast"
 }
 
 const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
@@ -1671,7 +1701,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const fetchYakitAndYaklangVersionInfo = useMemoizedFn(() => {
         NetWorkApi<any, API.YakVersionsInfoResponse>({
             method: "get",
-            url: "yak/versions/info"
+            url: "yak/versions/info",
+            params: {
+                source: isSastScan() ? "sast" : "yakit"
+            }
         })
             .then((res: API.YakVersionsInfoResponse) => {
                 if (!res) return
@@ -1854,7 +1887,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             updateContent: JSON.stringify({
                 version: editShow.type === "yakit" ? yakitLastVersion : yaklangLastVersion,
                 content: editInfo || ""
-            })
+            }),
+            source: isSastScan() ? "sast" : "yakit"
         }
 
         NetWorkApi<SetUpdateContentProp, API.ActionSucceeded>({
@@ -2407,6 +2441,251 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             placement={"bottomRight"}
             trigger={"click"}
             content={notice}
+            onVisibleChange={(visible) => setShow(visible)}
+        >
+            <div className={styles["ui-op-btn-wrapper"]}>
+                <div className={classNames(styles["op-btn-body"], {[styles["op-btn-body-hover"]]: show})}>
+                    <Badge count={risks.NewRiskTotal} offset={[2, 15]}>
+                        <RiskStateSvgIcon className={show ? styles["icon-hover-style"] : styles["icon-style"]} />
+                    </Badge>
+                </div>
+            </div>
+        </YakitPopover>
+    )
+})
+const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
+    const {isEngineLink} = props
+
+    const [show, setShow] = useState<boolean>(false)
+
+    /** 查询最新风险与漏洞信息节点 */
+    const fetchNode = useRef<number>(0)
+    const [risks, setRisks] = useState<QueryNewSSARisksResponse>({
+        Data: [],
+        Total: 0,
+        NewRiskTotal: 0,
+        Unread: 0
+    })
+
+    /** 定时器 */
+    const timeRef = useRef<any>(null)
+
+    /** 查询最新的风险数据 */
+    const update = useMemoizedFn(() => {
+        apiQueryNewSSARisks({
+            AfterID: fetchNode.current
+        }).then((res: QueryNewSSARisksResponse) => {
+            if (
+                JSON.stringify(risks.Data) === JSON.stringify(res.Data) &&
+                risks.NewRiskTotal === res.NewRiskTotal &&
+                risks.Total === res.Total
+            ) {
+                return
+            }
+            setRisks({...res})
+        })
+    })
+
+    /** 获取最新的风险与漏洞信息(5秒一次) */
+    useEffect(() => {
+        if (isEngineLink) {
+            if (timeRef.current) clearInterval(timeRef.current)
+            apiQuerySSARisks({
+                Pagination: {
+                    Limit: 1,
+                    Page: 1,
+                    Order: "desc",
+                    OrderBy: "id"
+                },
+                Filter: {}
+            })
+                .then((res) => {
+                    const {Data} = res
+                    fetchNode.current = Data.length === 0 ? 0 : Data[0].Id
+                })
+                .catch((e) => {})
+                .finally(() => {
+                    update()
+                    emiter.on("onRefreshQuerySSARisks", update)
+                    // 以下为兼容以前的引擎 PS:以前的引擎依然为轮询
+                    if (!serverPushStatus) {
+                        timeRef.current = setInterval(() => {
+                            if (serverPushStatus) {
+                                if (timeRef.current) clearInterval(timeRef.current)
+                                timeRef.current = null
+                                return
+                            }
+                            update()
+                        }, 5000)
+                    }
+                })
+            emiter.on("onRefRisksRead", onRefRisksRead)
+            return () => {
+                clearInterval(timeRef.current)
+                emiter.off("onRefreshQuerySSARisks", update)
+                emiter.off("onRefRisksRead", onRefRisksRead)
+            }
+        } else {
+            if (timeRef.current) clearInterval(timeRef.current)
+            timeRef.current = null
+            fetchNode.current = 0
+            setRisks({Data: [], Total: 0, NewRiskTotal: 0, Unread: 0})
+        }
+    }, [isEngineLink])
+
+    const onRefRisksRead = useMemoizedFn((res) => {
+        try {
+            const value = JSON.parse(res)
+            if (!!value.isAllRead) {
+                // 全部已读
+                setRisks({
+                    ...risks,
+                    Unread: 0,
+                    NewRiskTotal: 0,
+                    Data: risks.Data.map((item) => ({...item, IsRead: true}))
+                })
+            } else if (!!value.Id) {
+                // 单条已读
+                const newRiskTotal = risks.NewRiskTotal - 1
+                const newUnread = risks.Unread - 1
+                setRisks({
+                    ...risks,
+                    Unread: newUnread > 0 ? newUnread : 0,
+                    NewRiskTotal: newRiskTotal > 0 ? newRiskTotal : 0,
+                    Data: risks.Data.map((item) => {
+                        if (item.Id === value.Id) item.IsRead = true
+                        return item
+                    })
+                })
+            }
+        } catch (error) {}
+    })
+
+    /** 单条点击阅读 */
+    const singleRead = useMemoizedFn((info: SSARisk) => {
+        apiNewRiskRead({ID: [info.Id]}).then(() => {
+            const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
+            const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
+            setRisks({
+                ...risks,
+                NewRiskTotal: info.IsRead ? risks.NewRiskTotal : newRiskTotal,
+                Unread: info.IsRead ? risks.Unread : newUnread,
+                Data: risks.Data.map((item) => {
+                    if (item.Id === info.Id && item.Title === info.Title) item.IsRead = true
+                    return item
+                })
+            })
+        })
+        apiQuerySSARisks({
+            Pagination: {...genDefaultPagination()},
+            Filter: {
+                ID: [info.Id]
+            }
+        }).then((res) => {
+            if (!res || res.Data.length === 0) return
+            setShow(false)
+            let m = showModal({
+                width: "80%",
+                title: "详情",
+                content: (
+                    <div style={{overflow: "auto", maxHeight: "70vh"}}>
+                        <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
+                    </div>
+                )
+            })
+        })
+    })
+    /** 全部已读 */
+    const allRead = useMemoizedFn(() => {
+        apiNewRiskRead({ID: []}).then(() => {
+            setRisks({
+                ...risks,
+                Unread: 0,
+                NewRiskTotal: 0,
+                Data: risks.Data.map((item) => {
+                    item.IsRead = true
+                    return item
+                })
+            })
+            emiter.emit("onRefAuditRiskList")
+        })
+    })
+    /** 查看全部 */
+    const viewAll = useMemoizedFn(() => {
+        addToTab(YakitRoute.YakRunner_Audit_Hole)
+        emiter.emit("onRefAuditRiskList")
+    })
+
+    const notice = useMemo(() => {
+        return (
+            <div className={styles["ui-op-plus-wrapper"]}>
+                <div className={styles["ui-op-risk-body"]}>
+                    <div className={styles["risk-header"]}>
+                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                    </div>
+
+                    <div className={styles["risk-info"]}>
+                        {risks.Data.map((item) => {
+                            const title = Object.keys(RiskType).filter((key) => RiskType[key] === item.Severity)?.[0]
+                            if (!!title) {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <div
+                                            className={classNames(
+                                                styles["opt-icon-style"],
+                                                styles[`opt-${item.Severity}-icon`]
+                                            )}
+                                        >
+                                            {title}
+                                        </div>
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
+                                            <YakitEllipsis
+                                                text={item.TitleVerbose || item.Title}
+                                                width={item.Severity === "info" ? 280 : 310}
+                                            />
+                                        </Badge>
+                                    </div>
+                                )
+                            } else {
+                                return (
+                                    <div
+                                        className={styles["risk-info-opt"]}
+                                        key={item.Id}
+                                        onClick={() => singleRead(item)}
+                                    >
+                                        <Badge dot={!item.IsRead} offset={[3, 0]}>
+                                            <YakitEllipsis text={`${item.Title} ${title}}`} width={350} />
+                                        </Badge>
+                                    </div>
+                                )
+                            }
+                        })}
+                    </div>
+
+                    <div className={styles["risk-footer"]}>
+                        <div className={styles["risk-footer-btn"]} onClick={allRead}>
+                            全部已读
+                        </div>
+                        <div className={styles["risk-footer-btn"]} onClick={viewAll}>
+                            查看全部
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }, [risks])
+
+    return (
+        <YakitPopover
+            overlayClassName={classNames(styles["ui-op-dropdown"], styles["ui-op-plus-dropdown"])}
+            placement={"bottomRight"}
+            trigger={"click"}
+            content={notice}
+            visible={show}
             onVisibleChange={(visible) => setShow(visible)}
         >
             <div className={styles["ui-op-btn-wrapper"]}>

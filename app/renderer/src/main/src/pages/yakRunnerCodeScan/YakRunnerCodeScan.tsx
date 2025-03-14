@@ -38,7 +38,8 @@ import {
     OutlineArrowsexpandIcon,
     OutlineCloseIcon,
     OutlineOpenIcon,
-    OutlineQuestionmarkcircleIcon
+    OutlineQuestionmarkcircleIcon,
+    OutlineTerminalIcon
 } from "@/assets/icon/outline"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -58,14 +59,12 @@ import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {AuditCodePageInfoProps, CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {defaultCodeScanPageInfo} from "@/defaultConstants/CodeScan"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import useHoldGRPCStream, {convertCardInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HoldGRPCStreamProps, StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {isCommunityEdition} from "@/utils/envfile"
-import {WaterMark} from "@ant-design/pro-layout"
 import {PluginExecuteResult} from "../plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {v4 as uuidv4} from "uuid"
 import {grpcFetchLocalPluginDetail} from "../pluginHub/utils/grpc"
@@ -85,12 +84,13 @@ import {
     SyntaxFlowRule
 } from "../ruleManagement/RuleManagementType"
 import cloneDeep from "lodash/cloneDeep"
-import {AuditCodeDetailDrawer} from "./AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {FormExtraSettingProps} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType"
 import {AgentConfigModal} from "../mitm/MITMServerStartForm/MITMServerStartForm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {RuleDebugAuditDetail} from "../ruleManagement/template"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -299,50 +299,41 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         return groups
     }, [pageInfo.selectGroupListByKeyWord])
 
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition()) {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [])
-
     return (
-        <WaterMark content={waterMarkStr} style={{overflow: "hidden", height: "100%"}}>
-            <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
-                <div
-                    className={classNames(styles["left-wrapper"], {
-                        [styles["left-wrapper-hidden"]]: hidden
-                    })}
-                >
-                    <div className={styles["left-header-search"]}>
-                        <div className={styles["header-type-wrapper"]}>
-                            <span className={styles["header-text"]}>扫描规则</span>
-                        </div>
-                        <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
-                            <YakitButton
-                                type='text2'
-                                onClick={onClose}
-                                icon={<OutlineCloseIcon className={styles["header-icon"]} />}
-                            ></YakitButton>
-                        </Tooltip>
+        <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
+            <div
+                className={classNames(styles["left-wrapper"], {
+                    [styles["left-wrapper-hidden"]]: hidden
+                })}
+            >
+                <div className={styles["left-header-search"]}>
+                    <div className={styles["header-type-wrapper"]}>
+                        <span className={styles["header-text"]}>扫描规则</span>
                     </div>
-                    <CodeScanGroupByKeyWord
-                        inViewport={inViewport}
-                        selectGroupListByKeyWord={pageInfo.selectGroupListByKeyWord || []}
-                        setSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
-                    />
+                    <Tooltip title='收起' placement='top' overlayClassName='plugins-tooltip'>
+                        <YakitButton
+                            type='text2'
+                            onClick={onClose}
+                            icon={<OutlineCloseIcon className={styles["header-icon"]} />}
+                        ></YakitButton>
+                    </Tooltip>
                 </div>
-                <CodeScanExecuteContent
-                    hidden={hidden}
-                    setHidden={setHidden}
-                    selectGroupList={selectGroupListAll}
-                    onClearAll={onClearAll}
-                    pageInfo={pageInfo}
-                    pageId={pageId}
-                    onSetSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
+                <CodeScanGroupByKeyWord
+                    inViewport={inViewport}
+                    selectGroupListByKeyWord={pageInfo.selectGroupListByKeyWord || []}
+                    setSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
                 />
             </div>
-        </WaterMark>
+            <CodeScanExecuteContent
+                hidden={hidden}
+                setHidden={setHidden}
+                selectGroupList={selectGroupListAll}
+                onClearAll={onClearAll}
+                pageInfo={pageInfo}
+                pageId={pageId}
+                onSetSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
+            />
+        </div>
     )
 }
 
@@ -885,6 +876,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         })
 
         const [token, setToken] = useState(randomString(20))
+        // 新项目执行是否报错，如若报错 展示结果
+        const [auditError, setAuditError] = useState<boolean>(false)
 
         const isExecuting = useCreation(() => {
             if (executeStatus === "process") return true
@@ -893,8 +886,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         }, [executeStatus])
 
         const isShowResult = useCreation(() => {
-            return isExecuting || runtimeId
-        }, [isExecuting, runtimeId])
+            return isExecuting || runtimeId || auditError
+        }, [isExecuting, runtimeId, auditError])
 
         const [streamInfo, setStreamInfo] = useState<CodeScanStreamInfo>({
             cardState: [],
@@ -1183,6 +1176,11 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 })
             })
         })
+        // 审计结果表格数据
+        const [auditData, setAuditData] = useState<SyntaxFlowResult[]>([])
+        const handleUpdateAuditData = useMemoizedFn((data: SyntaxFlowResult[]) => {
+            setAuditData(data)
+        })
 
         // 审计详情抽屉
         const auditInfo = useRef<SyntaxFlowResult>()
@@ -1204,10 +1202,37 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 {tabName: "Console", type: "console"}
             ]
             if (runtimeId) {
-                return [{tabName: "审计结果", type: "result", customProps: {onDetail: handleShowDetail}}, ...tabsState]
+                return [
+                    {
+                        tabName: "审计结果",
+                        type: "result",
+                        customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
+                    },
+                    ...tabsState
+                ]
             }
             return tabsState
         }, [runtimeId])
+
+        // 跳转到代码审计页面
+        const jumpCodeScanPage = useMemoizedFn(() => {
+            if (!auditInfo.current) return
+            // 跳转到审计页面的参数
+            const params: AuditCodePageInfoProps = {
+                Schema: "syntaxflow",
+                Location: auditInfo.current.ProgramName,
+                Path: `/`,
+                Query: [{Key: "result_id", Value: auditInfo.current.ResultID}]
+            }
+            emiter.emit(
+                "openPage",
+                JSON.stringify({
+                    route: YakitRoute.YakRunner_Audit_Code,
+                    params
+                })
+            )
+            handleCancelDetail()
+        })
 
         // 数组去重
         const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -1257,6 +1282,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             setIsExpand={setIsExpand}
                             setExecuteStatus={setExecuteStatus}
                             resetStreamInfo={resetStreamInfo}
+                            setAuditError={setAuditError}
                         />
                     ) : (
                         <Form
@@ -1358,13 +1384,43 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     />
                 )}
 
-                <React.Suspense fallback={<>loading...</>}>
+                {/* <React.Suspense fallback={<>loading...</>}>
                     {auditDetailShow && auditInfo.current && (
                         <AuditCodeDetailDrawer
                             rowData={auditInfo.current}
                             visible={auditDetailShow}
                             handleCancelDetail={handleCancelDetail}
                         />
+                    )}
+                </React.Suspense> */}
+
+                <React.Suspense fallback={<>loading...</>}>
+                    {auditDetailShow && auditInfo.current && (
+                        <YakitDrawer
+                            visible={auditDetailShow}
+                            onClose={handleCancelDetail}
+                            width='90%'
+                            title='审计详情'
+                            extra={
+                                <YakitButton
+                                    icon={<OutlineTerminalIcon />}
+                                    type='outline2'
+                                    onClick={() => jumpCodeScanPage()}
+                                >
+                                    在代码审计中打开
+                                </YakitButton>
+                            }
+                            bodyStyle={{overflow: "hidden", padding: 0}}
+                        >
+                            {/* 审计详情 */}
+                            <div className={classNames(styles["drawer-body"])}>
+                                <React.Suspense fallback={<YakitSpin spinning={true} />}>
+                                    {auditDetailShow && auditInfo.current && (
+                                        <RuleDebugAuditDetail auditData={auditData} info={auditInfo.current} />
+                                    )}
+                                </React.Suspense>
+                            </div>
+                        </YakitDrawer>
                     )}
                 </React.Suspense>
             </>
@@ -1385,7 +1441,8 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             setExecuteType,
             setIsExpand,
             setExecuteStatus,
-            resetStreamInfo
+            resetStreamInfo,
+            setAuditError
         } = props
         const [form] = Form.useForm()
         // 是否表单校验中
@@ -1441,9 +1498,16 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
             taskName: "debug-plugin",
             apiKey: "DebugPlugin",
             token: tokenRef.current,
-            onEnd: () => {
+            onEnd: (getStreamInfo) => {
                 debugPluginStreamEvent.stop()
                 setTimeout(() => {
+                    if (getStreamInfo) {
+                        const errorLog = getStreamInfo.logState.find((item) => item.level === "error")
+                        if (errorLog) {
+                            setExecuteStatus("error")
+                            setAuditError(true)
+                        }
+                    }
                     setAuditsExecuting(false)
                     setProgressShow(undefined)
                 }, 300)
@@ -1459,6 +1523,7 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
 
         // 执行审计
         const onStartAudit = useMemoizedFn((requestParams: DebugPluginRequest) => {
+            setAuditError(false)
             debugPluginStreamEvent.reset()
             apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
                 isRealStartRef.current = false

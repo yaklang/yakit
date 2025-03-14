@@ -17,7 +17,7 @@ export const getMapAuditDetail = (id: string): AuditNodeMapProps => {
             ResourceType: "",
             VerboseType: "",
             Size: 0,
-            Extra:[]
+            Extra:[],
         }
     )
 }

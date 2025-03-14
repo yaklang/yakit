@@ -1,14 +1,12 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
-    OutlinCompileIcon,
     OutlinePluscircleIcon,
     OutlinePositionIcon,
     OutlineRefreshIcon,
-    OutlineReloadScanIcon,
-    OutlineScanIcon,
+    OutlineSearchIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 
@@ -18,7 +16,7 @@ import useDispatcher from "../hooks/useDispatcher"
 import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {YakitMenuItemProps, YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     getDefaultActiveFile,
     grpcFetchAuditTree,
@@ -28,25 +26,8 @@ import {
 } from "../utils"
 
 import emiter from "@/utils/eventBus/eventBus"
-import {
-    clearMapFileDetail,
-    getMapAllFileKey,
-    getMapFileDetail,
-    removeMapFileDetail,
-    setMapFileDetail
-} from "../FileTreeMap/FileMap"
-import {
-    clearMapFolderDetail,
-    getMapAllFolderKey,
-    getMapFolderDetail,
-    hasMapFolderDetail,
-    removeMapFolderDetail,
-    setMapFolderDetail
-} from "../FileTreeMap/ChildMap"
-import {v4 as uuidv4} from "uuid"
-import cloneDeep from "lodash/cloneDeep"
-import {failed, success} from "@/utils/notification"
-import {FileMonitorItemProps, FileMonitorProps} from "@/utils/duplex/duplex"
+import {getMapFileDetail} from "../FileTreeMap/FileMap"
+import {getMapFolderDetail} from "../FileTreeMap/ChildMap"
 import {Tooltip} from "antd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AfreshAuditModal, AuditHistoryTable} from "../AuditCode/AuditCode"
@@ -55,13 +36,11 @@ import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {FileTree} from "../FileTree/FileTree"
-import {addToTab} from "@/pages/MainTabs"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
-
-const {ipcRenderer} = window.require("electron")
+import {AuditSearchModal} from "../AuditSearchModal/AuditSearch"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
@@ -69,6 +48,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {handleFileLoadData} = useDispatcher()
     const [afreshName, setAfreshName] = useState<string>()
     const [visible, setVisible] = useState<boolean>(false)
+    const [searchVisible, setSearchVisible] = useState<boolean>(false)
     const [aduitList, setAduitList] = useState<{path: string; name: string}[]>([])
     // 选中的文件或文件夹
     const [foucsedKey, setFoucsedKey] = React.useState<string>("")
@@ -177,6 +157,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             {
                 key: "auditCode",
                 label: "编译项目"
+            },
+            {
+                key: "auditAgain",
+                label: "重新编译",
+                disabled: fileTree.length === 0
             }
         ]
 
@@ -223,13 +208,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     JSON.stringify({
                         route: YakitRoute.YakRunner_Code_Scan,
                         params: {
-                            projectName:[projectName]
+                            projectName: [projectName]
                         }
                     })
                 )
                 break
             case "auditCode":
                 auditCode()
+                break
+            case "auditAgain":
+                setAfreshName(projectName)
                 break
             case "aduitAllList":
                 setVisible(true)
@@ -295,13 +283,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         onClick={onActiveFileScrollToFileTree}
                                     />
                                 </Tooltip>
-                                <Tooltip title={"重新编译"}>
+                                <Tooltip title={"搜索"}>
                                     <YakitButton
                                         disabled={fileTree.length === 0}
                                         type='text2'
-                                        icon={<OutlineReloadScanIcon />}
+                                        icon={<OutlineSearchIcon />}
                                         onClick={() => {
-                                            setAfreshName(projectName)
+                                            setSearchVisible(true)
                                         }}
                                     />
                                 </Tooltip>
@@ -372,6 +360,12 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 onSuccee={() => {
                     emiter.emit("onCodeAuditRefreshTree")
                 }}
+            />
+
+            <AuditSearchModal
+                visible={searchVisible}
+                onClose={() => setSearchVisible(false)}
+                projectName={projectName||""}
             />
         </div>
     )

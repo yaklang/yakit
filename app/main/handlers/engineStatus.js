@@ -154,14 +154,17 @@ module.exports = (win, callback, getClient, newClient) => {
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const {port, isEnpriTraceAgent} = params
+        const {port, isEnpriTraceAgent, isSastScan} = params
         return new Promise((resolve, reject) => {
             try {
                 toLog("已启动本地引擎进程")
+                if (isSastScan) {
+                    dbFile = ["--profile-db", "sast-profile-rule.db", "--project-db", "default-sast.db"]
+                }
                 const log = out ? out : "ignore"
 
                 const grpcPort = ["grpc", "--port", `${port}`]
-                const extraParams = dbFile ? [...grpcPort, "--profile-db", dbFile] : grpcPort
+                const extraParams = dbFile ? [...grpcPort, ...dbFile] : grpcPort
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {

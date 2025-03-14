@@ -3,7 +3,7 @@ import {QueryGeneralResponse} from "@/pages/invoker/schema"
 import {ReactNode} from "react"
 import {TableVirtualResizeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
-
+import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 export interface SSARisk {
     Id: number
     CreatedAt: number
@@ -97,7 +97,7 @@ export interface YakURLDataItemProps {
 }
 
 export interface QuerySSARisksRequest {
-    Pagination: Paging
+    Pagination: VirtualPaging
     Filter: SSARisksFilter
 }
 
@@ -132,4 +132,16 @@ export interface YakitAuditRiskDetailsProps {
     onClickIP?: (info: SSARisk) => void
     border?: boolean
     isShowExtra?: boolean
+    isExtraClick?: () => void
+}
+
+export interface QueryNewSSARisksRequest {
+    AfterID: number
+}
+
+export interface QueryNewSSARisksResponse {
+    Data: SSARisk[]
+    NewRiskTotal: number
+    Total: number
+    Unread: number
 }

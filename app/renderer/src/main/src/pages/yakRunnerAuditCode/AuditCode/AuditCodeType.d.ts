@@ -21,6 +21,7 @@ export interface AuditTreeProps {
     onJump: (v: AuditNodeProps) => void
     onlyJump?: boolean
     wrapClassName?: string
+    loadTreeMore: (info: AuditNodeProps) => void
 }
 
 export interface AuditNodeDetailProps {
@@ -35,8 +36,8 @@ export interface AuditTreeNodeProps {
     onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
-    setFoucsedKey: (v: string) => void
     onJump: (info: AuditNodeProps) => void
+    loadTreeMore: (info: AuditNodeProps) => void
 }
 
 // Map存储列表详情
@@ -52,6 +53,11 @@ export interface AuditNodeMapProps {
     name: string
     Size: number
     Extra: YakURLKVPair[]
+
+    // 记录所请求数据的页数
+    page?: number
+    // 是否未加载完毕
+    hasMore?: boolean
 }
 
 export interface AuditNodeProps {
@@ -81,6 +87,30 @@ export interface AuditNodeProps {
 
     // 前端所需校验属性
     isBug?: boolean
+    // 记录所请求数据的页数
+    page?: number
+    // 是否未加载完毕
+    hasMore?: boolean
+}
+
+export interface AuditDetailItemProps {
+    /** id */
+    id: string
+    // 可能存在的名称
+    name: string
+    Extra: YakURLKVPair[]
+    ResourceType: string
+    VerboseType: string
+    Size: number
+}
+
+export interface AuditNodeSearchItemProps {
+    info: AuditDetailItemProps
+    foucsedKey: string
+    activeInfo?: AuditDetailItemProps
+    setActivbeInfo: (v?: AuditDetailItemProps) => void
+    onJump: (v: AuditDetailItemProps) => void
+    onContextMenu: (v: AuditDetailItemProps) => void
 }
 
 export interface AuditYakUrlProps {
@@ -90,7 +120,7 @@ export interface AuditYakUrlProps {
     Location?: string
     // 带参查询
     ProgramName?: string
-    Query?: {Key: string; Value: number}[]
+    Query?: {Key: string; Value: any}[]
 }
 
 export interface AuditMainItemFormProps {}

@@ -71,7 +71,7 @@ import {ShieldCheckIcon as AllShieldCheckIcon} from "@/components/layout/globalS
 import {useScreenRecorder} from "@/store/screenRecorder"
 import numeral from "numeral"
 import {CloudDownloadIcon} from "@/assets/newIcon"
-import {ProjectDescription} from "../softwareSettings/ProjectManage"
+import {getEnvTypeByProjects, ProjectDescription} from "../softwareSettings/ProjectManage"
 import {YakQueryHTTPFlowResponse} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {FieldName, Fields} from "../risks/RiskTable"
 import {apiQueryYakScriptTotal} from "../plugins/utils"
@@ -89,6 +89,17 @@ import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {WebsiteGV} from "@/enums/website"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 const {ipcRenderer} = window.require("electron")
+
+export const convertToBytes = (size: number, unit: string) => {
+    const units = {
+        B: 1,
+        KB: 1024,
+        MB: 1024 ** 2,
+        GB: 1024 ** 3,
+        TB: 1024 ** 4
+    }
+    return size * (units[unit.toUpperCase()] || 1)
+}
 
 interface ToolInfo {
     label: string
@@ -601,20 +612,13 @@ const Home: React.FC<HomeProp> = (props) => {
 
     // 更新项目数据库大小
     const updateProjectDbSize = async () => {
-        ipcRenderer.invoke("GetCurrentProject").then((res: ProjectDescription) => {
+        ipcRenderer.invoke("GetCurrentProjectEx",{
+            Type: getEnvTypeByProjects()
+        }).then((res: ProjectDescription) => {
             setCurProjectInfo(res)
         })
     }
-    const convertToBytes = (size: number, unit: string) => {
-        const units = {
-            B: 1,
-            KB: 1024,
-            MB: 1024 ** 2,
-            GB: 1024 ** 3,
-            TB: 1024 ** 4
-        }
-        return size * (units[unit.toUpperCase()] || 1)
-    }
+
     const judgeMoreTenGB = useMemo(() => {
         const arr: string[] = curProjectInfo?.FileSize.split(" ") || []
         if (arr[0] && arr[1]) {

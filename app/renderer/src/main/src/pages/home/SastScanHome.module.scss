@@ -1,0 +1,184 @@
+.sast-scan-home {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 48px; 
+    .main {  
+        .header {
+            color: #31343f;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 24px; /* 100% */
+            margin-top: 72px;
+        }
+        .card-list {
+            margin-top: 48px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            .card-item {
+                display: flex;
+                width: 276px;
+                padding: 24px 24px 32px 24px;
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+                border-radius: 8px;
+                .img {
+                    width: 88px;
+                    height: 88px;
+                    svg {
+                        width: 88px;
+                        height: 88px;
+                    }
+                }
+                .content {
+                    height: 114px;
+                    .title {
+                        color: #000;
+                        text-align: center;
+                        font-family: "PingFang SC";
+                        font-size: 18px;
+                        font-weight: 500;
+                        line-height: 26px;
+                        letter-spacing: 0px;
+                    }
+                    .sub-title {
+                        margin-top: 8px;
+                        color: #85899e;
+                        text-align: justify;
+                        font-family: "PingFang HK";
+                        font-size: 14px;
+                        font-weight: 400;
+                        line-height: 20px;
+                    }
+                }
+            }
+            .card-item:first-child {
+                border: 1px solid rgba(53, 216, 238, 0.3);
+                background: rgba(53, 216, 238, 0.1);
+            }
+            .card-item:nth-child(2) {
+                border: 1px solid rgba(86, 201, 145, 0.3);
+                background: rgba(86, 201, 145, 0.1);
+            }
+            .card-item:last-child {
+                border: 1px solid rgba(74, 148, 248, 0.3);
+                background: rgba(74, 148, 248, 0.1);
+            }
+        }
+    }
+
+    .footer {
+        padding-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        .main {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            .data-preview-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                .data-preview-item-icon {
+                    svg {
+                        width: 18px;
+                        height: 18px;
+                        color: #85899e;
+                        path {
+                            stroke-width: 1.5;
+                        }
+                    }
+                }
+                .data-preview-item-text {
+                    color: #85899e;
+                    font-size: 14px;
+                    font-weight: 400;
+                    line-height: 20px;
+                }
+                .data-preview-item-cont {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    .data-preview-item-number {
+                        font-size: 16px;
+                        font-weight: 600;
+                        line-height: 24px;
+                        color: #31343f;
+                    }
+                    .database-warning-icon {
+                        margin-top: 2px;
+                        svg {
+                            width: 18px;
+                            height: 18px;
+                            color: #d33a30;
+                        }
+                    }
+                }
+                .risk-tag-wrapper {
+                    display: flex;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    .risk-tag {
+                        display: flex;
+                        margin-right: 4px;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        flex-shrink: 0;
+                        .risk-text {
+                            padding: 2px 6px;
+                        }
+                        .risk-num {
+                            padding: 2px 6px;
+                            color: #85899e;
+                        }
+                    }
+                    .seriousRisk-tag {
+                        border: 1px solid #e99a95;
+                        .risk-text {
+                            color: #cb2318;
+                            border-right: 1px solid #e99a95;
+                            background-color: rgba(203, 35, 24, 0.2);
+                        }
+                    }
+                    .highRisk-tag {
+                        border: 1px solid #f3c2bf;
+                        .risk-text {
+                            color: #f6544a;
+                            border-right: 1px solid #f3c2bf;
+                            background-color: rgba(246, 84, 74, 0.2);
+                        }
+                    }
+                    .mediumRisk-tag {
+                        border: 1px solid #fbc6a1;
+                        .risk-text {
+                            color: #f28b44;
+                            border-right: 1px solid #fbc6a1;
+                            background-color: #fbe7d9;
+                        }
+                    }
+                    .lowRisk-tag {
+                        border: 1px solid #ffe5c6;
+                        .risk-text {
+                            color: #ffb660;
+                            border-right: 1px solid #ffe5c6;
+                            background-color: rgba(255, 213, 131, 0.1);
+                        }
+                    }
+                }
+            }
+            .divider {
+                width: 1px;
+                height: 16px;
+                background-color: #e6e8ed;
+            }
+        }
+    }
+}

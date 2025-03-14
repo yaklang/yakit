@@ -16,9 +16,7 @@ import {
     OutlinePlusIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {WaterMark} from "@ant-design/pro-layout"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition} from "@/utils/envfile"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -41,13 +39,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const {} = props
 
     const wrapperRef = useRef<HTMLDivElement>(null)
-
-    const waterMarkStr = useMemo(() => {
-        if (isCommunityEdition()) {
-            return "Yakit技术浏览版仅供技术交流使用"
-        }
-        return " "
-    }, [])
 
     /** ---------- 搜索/获取表格数据 Start ---------- */
     const initLoading = useRef<boolean>(false)
@@ -405,147 +396,145 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     })
 
     return (
-        <WaterMark content={waterMarkStr || ""} className={styles["water-mark"]} zIndex={99999}>
-            <YakitSpin spinning={initLoading.current}>
-                <div ref={wrapperRef} className={styles["rule-management-page"]}>
-                    <div className={styles["rule-management-group"]}>
-                        <div className={styles["group-list"]}>
-                            <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
-                        </div>
+        <YakitSpin spinning={initLoading.current}>
+            <div ref={wrapperRef} className={styles["rule-management-page"]}>
+                <div className={styles["rule-management-group"]}>
+                    <div className={styles["group-list"]}>
+                        <LocalRuleGroupList isrefresh={groupRefresh} onGroupChange={handleGroupChange} />
+                    </div>
 
-                        {/* 
+                    {/* 
                             <div className={styles["group-divider"]}></div>
                             <div className={styles["group-list"]}></div> 
                         */}
-                    </div>
+                </div>
 
-                    <div className={styles["rule-management-body"]}>
-                        <TableVirtualResize<SyntaxFlowRule>
-                            titleHeight={68}
-                            isHiddenLoadingUI={true}
-                            renderTitle={
-                                <div className={styles["table-header"]}>
-                                    <div className={styles["header-body"]}>
-                                        <div className={styles["header-title"]}>
-                                            <Tooltip placement='bottom' title={tableHeaderTitle}>
-                                                <span
-                                                    className={classNames(
-                                                        styles["title-style"],
-                                                        "yakit-content-single-ellipsis"
-                                                    )}
-                                                >
-                                                    {tableHeaderTitle}
-                                                </span>
-                                            </Tooltip>
-                                        </div>
-
-                                        <div className={styles["header-extra"]}>
-                                            <YakitInput.Search
-                                                size='large'
-                                                allowClear={true}
-                                                placeholder='请输入关键词搜索'
-                                                onSearch={handleSearch}
-                                            />
-                                            <div className={styles["divider-style"]}></div>
-
-                                            <div className={styles["btns-group"]}>
-                                                <YakitButton
-                                                    type='outline1'
-                                                    colors='danger'
-                                                    icon={<OutlineTrashIcon />}
-                                                    loading={delLoading}
-                                                    onClick={handleBatchDelRule}
-                                                />
-
-                                                <YakitButton
-                                                    type='outline2'
-                                                    icon={<OutlineExportIcon />}
-                                                    onClick={() =>
-                                                        handleOpenExportHint({title: "导出规则", type: "export"})
-                                                    }
-                                                >
-                                                    导出
-                                                </YakitButton>
-
-                                                <YakitButton
-                                                    type='outline2'
-                                                    icon={<OutlineImportIcon />}
-                                                    onClick={() =>
-                                                        handleOpenExportHint({title: "导入规则", type: "import"})
-                                                    }
-                                                >
-                                                    导入
-                                                </YakitButton>
-
-                                                <YakitButton
-                                                    icon={<OutlinePlusIcon />}
-                                                    onClick={() => {
-                                                        handleOpenEditHint()
-                                                    }}
-                                                >
-                                                    新建
-                                                </YakitButton>
-                                            </div>
-                                        </div>
+                <div className={styles["rule-management-body"]}>
+                    <TableVirtualResize<SyntaxFlowRule>
+                        titleHeight={68}
+                        isHiddenLoadingUI={true}
+                        renderTitle={
+                            <div className={styles["table-header"]}>
+                                <div className={styles["header-body"]}>
+                                    <div className={styles["header-title"]}>
+                                        <Tooltip placement='bottom' title={tableHeaderTitle}>
+                                            <span
+                                                className={classNames(
+                                                    styles["title-style"],
+                                                    "yakit-content-single-ellipsis"
+                                                )}
+                                            >
+                                                {tableHeaderTitle}
+                                            </span>
+                                        </Tooltip>
                                     </div>
 
-                                    <div className={styles["header-body"]}>
-                                        <div className={styles["header-title"]}>
-                                            <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
-                                        </div>
-
-                                        <UpdateRuleToGroup
-                                            allCheck={allCheck}
-                                            rules={selectList}
-                                            filters={filters}
-                                            callback={handleRefreshGroup}
+                                    <div className={styles["header-extra"]}>
+                                        <YakitInput.Search
+                                            size='large'
+                                            allowClear={true}
+                                            placeholder='请输入关键词搜索'
+                                            onSearch={handleSearch}
                                         />
+                                        <div className={styles["divider-style"]}></div>
+
+                                        <div className={styles["btns-group"]}>
+                                            <YakitButton
+                                                type='outline1'
+                                                colors='danger'
+                                                icon={<OutlineTrashIcon />}
+                                                loading={delLoading}
+                                                onClick={handleBatchDelRule}
+                                            />
+
+                                            <YakitButton
+                                                type='outline2'
+                                                icon={<OutlineExportIcon />}
+                                                onClick={() =>
+                                                    handleOpenExportHint({title: "导出规则", type: "export"})
+                                                }
+                                            >
+                                                导出
+                                            </YakitButton>
+
+                                            <YakitButton
+                                                type='outline2'
+                                                icon={<OutlineImportIcon />}
+                                                onClick={() =>
+                                                    handleOpenExportHint({title: "导入规则", type: "import"})
+                                                }
+                                            >
+                                                导入
+                                            </YakitButton>
+
+                                            <YakitButton
+                                                icon={<OutlinePlusIcon />}
+                                                onClick={() => {
+                                                    handleOpenEditHint()
+                                                }}
+                                            >
+                                                新建
+                                            </YakitButton>
+                                        </div>
                                     </div>
                                 </div>
-                            }
-                            rowSelection={{
-                                isAll: allCheck,
-                                type: "checkbox",
-                                selectedRowKeys: selectKeys,
-                                onSelectAll: handleAllCheck,
-                                onChangeCheckboxSingle: handleCheckboxChange
-                            }}
-                            isRefresh={isRefresh}
-                            pagination={{
-                                total: data.Total,
-                                limit: data.Pagination.Limit,
-                                page: data.Pagination.Page,
-                                onChange: fetchList
-                            }}
-                            containerClassName={styles["table-body"]}
-                            loading={loading}
-                            renderKey='RuleName'
-                            data={data.Rule}
-                            columns={columns}
-                            query={filters}
-                            onChange={onTableFilterChange}
-                        />
-                    </div>
 
-                    <RuleImportExportModal
-                        getContainer={wrapperRef.current || undefined}
-                        extra={exportExtra}
-                        onCallback={handleCallbackExportHint}
-                        filterData={{
-                            ...filters,
-                            RuleNames: selectKeys,
-                            allCheck
+                                <div className={styles["header-body"]}>
+                                    <div className={styles["header-title"]}>
+                                        <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
+                                    </div>
+
+                                    <UpdateRuleToGroup
+                                        allCheck={allCheck}
+                                        rules={selectList}
+                                        filters={filters}
+                                        callback={handleRefreshGroup}
+                                    />
+                                </div>
+                            </div>
+                        }
+                        rowSelection={{
+                            isAll: allCheck,
+                            type: "checkbox",
+                            selectedRowKeys: selectKeys,
+                            onSelectAll: handleAllCheck,
+                            onChangeCheckboxSingle: handleCheckboxChange
                         }}
-                    />
-
-                    <EditRuleDrawer
-                        getContainer={wrapperRef.current || undefined}
-                        info={editInfo.current}
-                        visible={editHint}
-                        onCallback={handleCallbackEditHint}
+                        isRefresh={isRefresh}
+                        pagination={{
+                            total: data.Total,
+                            limit: data.Pagination.Limit,
+                            page: data.Pagination.Page,
+                            onChange: fetchList
+                        }}
+                        containerClassName={styles["table-body"]}
+                        loading={loading}
+                        renderKey='RuleName'
+                        data={data.Rule}
+                        columns={columns}
+                        query={filters}
+                        onChange={onTableFilterChange}
                     />
                 </div>
-            </YakitSpin>
-        </WaterMark>
+
+                <RuleImportExportModal
+                    getContainer={wrapperRef.current || undefined}
+                    extra={exportExtra}
+                    onCallback={handleCallbackExportHint}
+                    filterData={{
+                        ...filters,
+                        RuleNames: selectKeys,
+                        allCheck
+                    }}
+                />
+
+                <EditRuleDrawer
+                    getContainer={wrapperRef.current || undefined}
+                    info={editInfo.current}
+                    visible={editHint}
+                    onCallback={handleCallbackEditHint}
+                />
+            </div>
+        </YakitSpin>
     )
 })

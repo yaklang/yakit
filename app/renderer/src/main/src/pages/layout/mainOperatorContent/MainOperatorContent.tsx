@@ -28,7 +28,13 @@ import {
     defaultFixedTabs,
     LogOutCloseRoutes
 } from "@/routes/newRoute"
-import {isEnpriTraceAgent, isBreachTrace, isEnterpriseOrSimpleEdition, isEnterpriseEdition} from "@/utils/envfile"
+import {
+    isEnpriTraceAgent,
+    isBreachTrace,
+    isEnterpriseOrSimpleEdition,
+    isEnterpriseEdition,
+    isSastScan
+} from "@/utils/envfile"
 import {
     useCreation,
     useDebounceFn,
@@ -281,6 +287,19 @@ export const getInitPageCache: () => PageCache[] = () => {
         ]
     }
 
+    if (isSastScan()) {
+        return [
+            {
+                routeKey: routeConvertKey(YakitRoute.NewHome, ""),
+                verbose: "首页",
+                menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                route: YakitRoute.NewHome,
+                singleNode: true,
+                multipleNode: []
+            }
+        ]
+    }
+
     return [
         {
             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -354,19 +373,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
-    const {setPagesData, setSelectGroupId, addPagesDataCache, pages, clearAllData, getCurrentSelectPageId, setCurrentPageTabRouteKey} =
-        usePageInfo(
-            (s) => ({
-                setPagesData: s.setPagesData,
-                setSelectGroupId: s.setSelectGroupId,
-                addPagesDataCache: s.addPagesDataCache,
-                pages: s.pages,
-                clearAllData: s.clearAllData,
-                getCurrentSelectPageId: s.getCurrentSelectPageId,
-                setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
-            }),
-            shallow
-        )
+    const {
+        setPagesData,
+        setSelectGroupId,
+        addPagesDataCache,
+        pages,
+        clearAllData,
+        getCurrentSelectPageId,
+        setCurrentPageTabRouteKey
+    } = usePageInfo(
+        (s) => ({
+            setPagesData: s.setPagesData,
+            setSelectGroupId: s.setSelectGroupId,
+            addPagesDataCache: s.addPagesDataCache,
+            pages: s.pages,
+            clearAllData: s.clearAllData,
+            getCurrentSelectPageId: s.getCurrentSelectPageId,
+            setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey
+        }),
+        shallow
+    )
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
@@ -507,12 +533,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Code_Scan:
                 addYakRunnerCodeScanPage(params)
                 break
+            case YakitRoute.YakRunner_Audit_Hole:
+                addYakRunnerAuditHolePage(params)
+                break
             case YakitRoute.Modify_Notepad:
                 addModifyNotepad(params)
+                break
+            case YakitRoute.Rule_Management:
+                addRuleManagement()
                 break
             default:
                 break
         }
+    })
+
+    const addRuleManagement = useMemoizedFn(() => {
+        openMenuPage(
+            {route: YakitRoute.Rule_Management},
+        )
     })
 
     const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {
@@ -526,7 +564,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         )
     })
 
-    const addYakRunnerAuditCodePage = useMemoizedFn((data: AuditCodePageInfoProps) => {
+    const addYakRunnerAuditCodePage = useMemoizedFn((data?: AuditCodePageInfoProps) => {
         const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Code).length
         if (isExist && data) {
             emiter.emit("onAuditCodePageInfo", JSON.stringify(data))
@@ -554,7 +592,47 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {route: YakitRoute.YakRunner_Audit_Code},
             {
                 pageParams: {
-                    auditCodePageInfo: {
+                    auditCodePageInfo: data
+                        ? {
+                              ...data
+                          }
+                        : undefined
+                }
+            }
+        )
+    })
+
+    const addYakRunnerAuditHolePage = useMemoizedFn((data: RiskPageInfoProps) => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Audit_Hole).length
+        if (isExist) {
+            if (data.SeverityList) {
+                emiter.emit("auditHoleVulnerabilityLevel", JSON.stringify(data.SeverityList))
+            }
+        }
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.YakRunner_Audit_Hole,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.YakRunner_Audit_Hole,
+                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]?.label || "",
+                    pageParamsInfo: {
+                        riskPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.YakRunner_Audit_Hole,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.YakRunner_Audit_Hole, pageNodeInfo)
+        openMenuPage(
+            {route: YakitRoute.YakRunner_Audit_Hole},
+            {
+                pageParams: {
+                    riskPageInfoProps: {
                         ...data
                     }
                 }
@@ -821,6 +899,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             if (type === YakitRoute.YakRunner_Audit_Code) {
                 openMenuPage({route: YakitRoute.YakRunner_Audit_Code})
+            }
+            if (type === YakitRoute.YakRunner_Audit_Hole) {
+                openMenuPage({route: YakitRoute.YakRunner_Audit_Hole})
             }
             console.info("send to tab: ", type)
         })
@@ -1655,12 +1736,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        unFuzzerCacheData.current = usePageInfo.subscribe(
-            (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
-            (selectedState, previousSelectedState) => {
-                saveFuzzerCache(selectedState as PageProps)
-            }
-        )
+        if (!isSastScan()) {
+            unFuzzerCacheData.current = usePageInfo.subscribe(
+                (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
+                (selectedState, previousSelectedState) => {
+                    saveFuzzerCache(selectedState as PageProps)
+                }
+            )
+        }
 
         return () => {
             // 注销fuzzer-tab页内数据的订阅事件

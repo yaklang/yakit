@@ -22,6 +22,9 @@
 .yakit-hint-modal-top {
     z-index: 999 !important;
 }
+.yakit-hint-modal-resize {
+    overflow: hidden;
+}
 .yakit-hint-modal-hidden {
     display: none;
 }
@@ -34,8 +37,16 @@
     right: 0;
     margin: auto;
 }
+.yakit-hint-modal-resize-wrapper {
+    position: absolute;
+    top: 35vh;
+    left: calc(50% - 200px);
+}
 .yakit-hint-modal-container-box-shadow {
     box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+}
+.container-wrapper-padding {
+    padding: 24px;
 }
 .yakit-hint-modal-container {
     box-sizing: border-box;
@@ -46,7 +57,6 @@
 
     .container-wrapper {
         width: 100%;
-        padding: 24px;
         display: flex;
         gap: 16px;
         position: relative;
@@ -114,4 +124,10 @@
             }
         }
     }
+    .container-wrapper-resize {
+        height: 100%;
+    }
+}
+.yakit-hint-modal-container-resize {
+    height: 100%;
 }

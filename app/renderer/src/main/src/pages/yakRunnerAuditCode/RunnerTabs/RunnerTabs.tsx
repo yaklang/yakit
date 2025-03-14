@@ -1150,19 +1150,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
-    // 当前展示项
-    const nowShowRef = useRef<FileDetailInfo>()
     // 代码扫描编辑器提示
     const editerMenuFun = (editor: YakitIMonacoEditor) => {
-        if (!editorInfo?.highLightRange || !nowShowRef.current?.highLightRange?.source) return
         // 编辑器选中弹窗的唯一Id
         const rangeId: string = `monaco.range.code.scan.widget`
 
         // 动态计算Widget显示位置 尽可能显示齐全
         const editorContainer = editor.getDomNode()
         // 获取特定行和列的坐标
-        let lineNumber: number = nowShowRef.current?.highLightRange?.endLineNumber || 0
-        let column: number = nowShowRef.current?.highLightRange?.endColumn || 0
+        let lineNumber: number = editorInfo?.highLightRange?.endLineNumber || 0
+        let column: number = editorInfo?.highLightRange?.endColumn || 0
         const position = {lineNumber, column}
         const visiblePosition = editor.getScrolledVisiblePosition(position)
         // 位置信息
@@ -1196,8 +1193,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }
 
         if (direction.x === "right" || direction.y === "bottom") {
-            lineNumber = nowShowRef.current?.highLightRange?.startLineNumber || 0
-            column = nowShowRef.current?.highLightRange?.startColumn || 0
+            lineNumber = editorInfo?.highLightRange?.startLineNumber || 0
+            column = editorInfo?.highLightRange?.startColumn || 0
         }
 
         // 编辑器选中显示的内容
@@ -1215,7 +1212,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 domNode.onwheel = (e) => e.stopPropagation()
                 createRoot(domNode).render(
                     <CodeScanMonacoWidget
-                        source={nowShowRef.current?.highLightRange?.source}
+                        source={editorInfo?.highLightRange?.source}
                         closeFizzRangeWidget={closeFizzRangeWidget}
                     />
                 )
@@ -1251,6 +1248,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
         // 编辑器更新 关闭之前展示
         closeFizzRangeWidget()
+        // 当文件切换时没有必要数据时则无需打开
+        if (!editorInfo?.highLightRange || !editorInfo?.highLightRange?.source) return
         openFizzRangeWidget()
         editor?.getModel()?.pushEOL(newEditor.EndOfLineSequence.CRLF)
     }
@@ -1267,11 +1266,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                 JSON.stringify(highLightRange.source.auditRightParams) === JSON.stringify(source.auditRightParams)
             )
                 return
-
+            // 判断当前是否为激活项目（排除分栏导致的多处显示）
+            if (activeFile?.path !== editorInfo.path) return
             if (highLightRange) {
-                nowShowRef.current = {...editorInfo, highLightRange: {...highLightRange, source}}
+                const newAreaInfo = updateAreaFileInfo(
+                    areaInfo,
+                    {highLightRange: {...highLightRange, source}},
+                    activeFile.path
+                )
+                setAreaInfo && setAreaInfo(newAreaInfo)
             }
-            editor && editerMenuFun(editor)
         } catch (error) {}
     })
 
@@ -1293,7 +1297,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
 
     useEffect(() => {
         if (!editor) return
-        nowShowRef.current = editorInfo
         setTimeout(() => {
             // 此处定时器作用为多文件切换时 需等待其内容渲染完毕，否则会导致位置信息错误
             editerMenuFun(editor)
@@ -1368,7 +1371,10 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
                 </div>
                 <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>
-            <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {}}>
+            <div
+                className={styles["operate-box"]}
+                style={size && size.width < 600 ? {padding: "0px 20px"} : {padding: "0px 145px"}}
+            >
                 <div className={styles["operate"]}>
                     <div className={styles["title-style"]}>快捷创建</div>
                     <div className={styles["operate-btn-group"]}>

@@ -54,11 +54,15 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
-import {isCommunityEdition} from "@/utils/envfile"
+import {isCommunityEdition, isSastScan} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
+
+export const getEnvTypeByProjects = () => {
+    return isSastScan() ? "ssa_project":"project"
+}
 
 export interface ProjectManageProp {
     engineMode: YaklangEngineMode
@@ -81,6 +85,7 @@ interface ProjectParamsProp extends QueryGeneralRequest {
     Type: string
     FolderId?: number
     ChildFolderId?: number
+    FrontendType?: "project" | "ssa_project"
 }
 /** 单条项目数据 */
 export interface ProjectDescription {
@@ -287,7 +292,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         <div
                             className={classNames(styles["project-table-body-wrapper"], styles["project-name-wrapper"])}
                         >
-                            {!data.Type || data.Type === "project" ? (
+                            {!data.Type || data.Type === getEnvTypeByProjects() ? (
                                 <ProjectDocumentTextSvgIcon className={styles["opt-project-icon"]} />
                             ) : (
                                 <ProjectFolderOpenSvgIcon className={styles["opt-floder-icon"]} />
@@ -361,7 +366,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 name: "大小",
                 width: "10%",
                 render: (data) => {
-                    return <>{!data.Type || data.Type === "project" ? data.FileSize : "-"}</>
+                    return <>{!data.Type || data.Type === getEnvTypeByProjects()? data.FileSize : "-"}</>
                 }
             },
             {
@@ -528,7 +533,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getProjectInfo = async () => {
         try {
             await delTemporaryProject()
-            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProject")
+            const res2: ProjectDescription = await ipcRenderer.invoke("GetCurrentProjectEx",{
+                Type: getEnvTypeByProjects()
+            })
             setLatestProject(res2 || undefined)
         } catch (error) {
             yakitFailed(error + "")
@@ -555,7 +562,8 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
         // @ts-ignore
         if (param.Type === "all") delete param.Type
-        if (param.ProjectName) param.Type = "project"
+        if (param.ProjectName) param.Type = getEnvTypeByProjects()
+        if (isSastScan()) param.FrontendType = "ssa_project"
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
@@ -596,7 +604,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
 
         setLoading(true)
         ipcRenderer
-            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel})
+            .invoke("DeleteProject", {Id: +delId.Id, IsDeleteLocal: isDel,Type: getEnvTypeByProjects()})
             .then((e) => {
                 setStopUpdate(true)
                 info("删除成功")
@@ -607,7 +615,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setData(newData)
                 ipcRenderer
-                    .invoke("GetCurrentProject")
+                    .invoke("GetCurrentProject",{
+                        Type: getEnvTypeByProjects()
+                    })
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
             })
             .catch((e) => {
@@ -675,7 +685,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                 }
                 setLoading(true)
                 ipcRenderer
-                    .invoke("SetCurrentProject", {Id: data.Id})
+                    .invoke("SetCurrentProject", {Id: data.Id,Type: getEnvTypeByProjects()})
                     .then((e) => {
                         info("已切换数据库")
                         onFinish()
@@ -734,7 +744,9 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const getTemporaryProjectId = async () => {
         let id = ""
         try {
-            const res = await ipcRenderer.invoke("GetTemporaryProject")
+            const res = await ipcRenderer.invoke("GetTemporaryProjectEx",{
+                Type: getEnvTypeByProjects()
+            })
             if (res) {
                 id = res.Id
             }
@@ -748,12 +760,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     const creatTemporaryProject = useMemoizedFn(async () => {
         try {
             const res = await ipcRenderer.invoke("NewProject", {
-                Type: "project",
+                Type: getEnvTypeByProjects(),
                 ProjectName: "[temporary]"
             })
             const newTemporaryId = res.Id + ""
             setTemporaryProjectId(newTemporaryId)
-            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId})
+            await ipcRenderer.invoke("SetCurrentProject", {Id: newTemporaryId,Type: getEnvTypeByProjects()})
             info("切换临时项目成功")
             onFinish()
         } catch (error) {
@@ -775,7 +787,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         Description: projectInfo.Description || "",
                         FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
                         ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
-                        Type: "project"
+                        Type: getEnvTypeByProjects()
                     }
                     if (projectInfo.Id) {
                         newProject.Id = +projectInfo.Id
@@ -1385,7 +1397,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                                 operateShow >= 0 && operateShow === +i.data.Id
                                                         })}
                                                         onClick={(e) => {
-                                                            if (!i.data.Type || i.data.Type === "project") {
+                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
                                                                 operateFunc("setCurrent", i.data)
                                                             }
                                                             if (i.data.Type === "file") {
@@ -1393,7 +1405,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                                                             }
                                                         }}
                                                         onContextMenu={() => {
-                                                            if (!i.data.Type || i.data.Type === "project") {
+                                                            if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
                                                                 projectContextMenu(i.data)
                                                             }
                                                         }}
@@ -1489,7 +1501,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     setLoading(true)
                     setInquireIntoProjectVisible(false)
                     ipcRenderer
-                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id})
+                        .invoke("SetCurrentProject", {Id: newProjectInfo?.Id,Type: getEnvTypeByProjects()})
                         .then((e) => {
                             info("已切换数据库")
                             setNewProjectInfo({Id: "", ProjectName: ""})
@@ -1598,6 +1610,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             .invoke("GetProjects", {
                 FolderId: +targetOption.Id,
                 Type: "file",
+                FrontendType: isSastScan() ? "ssa_project" : "project",
                 Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
             })
             .then((rsp: ProjectsResponse) => {
@@ -1621,7 +1634,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             Type: "file",
             Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
         }
-
+        if (isSastScan()) param.FrontendType = "ssa_project"
         ipcRenderer
             .invoke("GetProjects", param)
             .then((rsp: ProjectsResponse) => {
@@ -1844,7 +1857,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 Description: "",
                 FolderId: importInfo.FolderId ? +importInfo.FolderId : 0,
                 ChildFolderId: importInfo.ChildFolderId ? +importInfo.ChildFolderId : 0,
-                Type: "project"
+                Type: getEnvTypeByProjects()
             }
 
             if (importInfo.LocalProjectName) {
@@ -2308,7 +2321,8 @@ export const TransferProject: React.FC<TransferProjectProps> = memo((props) => {
                     ProjectFilePath: importData.ProjectFilePath,
                     Password: importData?.Password || "",
                     FolderId: importData.FolderId || 0,
-                    ChildFolderId: importData.ChildFolderId || 0
+                    ChildFolderId: importData.ChildFolderId || 0,
+                    Type: getEnvTypeByProjects()
                 },
                 token
             )

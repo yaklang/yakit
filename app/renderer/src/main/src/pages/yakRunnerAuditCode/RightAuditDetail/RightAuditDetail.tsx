@@ -26,6 +26,7 @@ import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetails
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
+import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export interface JumpSourceDataProps {
     title: string
@@ -616,7 +617,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const [nodeId, setNodeId] = useState<string>()
     const [refresh, setRefresh] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string | string[]>()
-
+    const [loading,setLoading] = useState<boolean>(false)
     useEffect(() => {
         if (isShowAuditDetail && auditRightParams) {
             initData(auditRightParams)
@@ -625,6 +626,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
 
     const initData = useMemoizedFn(async (params: AuditEmiterYakUrlProps) => {
         try {
+            setLoading(true)
             clearMapGraphInfoDetail()
             const {Body, ...auditYakUrl} = params
             const body = Body ? StringToUint8Array(Body) : undefined
@@ -666,11 +668,15 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                     }
                 })
                 setRefresh(!refresh)
+                setLoading(false)
             }
-        } catch (error) {}
+        } catch (error) {
+            setLoading(false)
+        }
     })
 
     return (
+        <YakitSpin spinning={loading}>
         <div className={classNames(styles["right-audit-detail"])}>
             <div className={styles["header"]}>
                 <div className={styles["relative-box"]}>
@@ -726,5 +732,6 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
                 />
             </div>
         </div>
+        </YakitSpin>
     )
 }
