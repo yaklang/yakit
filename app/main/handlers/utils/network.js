@@ -336,6 +336,60 @@ const getYakitEEDownloadUrl = async (version) => {
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
+
+/** Sast CE 版本下载地址 */
+const getSastCommunityDownloadUrl = async (version) => {
+    const domain = await getAvailableOSSDomain()
+    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
+    switch (process.platform) {
+        case "darwin":
+            if (process.arch === "arm64") {
+                return `https://${domain}/sast/${version}/SastScan-${version}-darwin${suffix}-arm64.dmg`
+            } else {
+                return `https://${domain}/sast/${version}/SastScan-${version}-darwin${suffix}-x64.dmg`
+            }
+        case "win32":
+            return `https://${domain}/sast/${version}/SastScan-${version}-windows${suffix}-amd64.exe`
+        case "linux":
+            if (process.arch === "arm64") {
+                return `https://${domain}/sast/${version}/SastScan-${version}-linux${suffix}-arm64.AppImage`
+            } else {
+                return `https://${domain}/sast/${version}/SastScan-${version}-linux${suffix}-amd64.AppImage`
+            }
+    }
+    throw new Error(`Unsupported platform: ${process.platform}`)
+}
+
+/** Sast EE 版本下载地址 */
+const getSastEEDownloadUrl = async (version) => {
+    const domain = await getAvailableOSSDomain()
+    let system_mode = ""
+    try {
+        system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
+    } catch (error) {
+        console.log("error", error)
+    }
+    const suffix = system_mode === "legacy" ? "-legacy" : ""
+
+    switch (process.platform) {
+        case "darwin":
+            if (process.arch === "arm64") {
+                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-darwin${suffix}-arm64.dmg`
+            } else {
+                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-darwin${suffix}-x64.dmg`
+            }
+        case "win32":
+            return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-windows${suffix}-amd64.exe`
+        case "linux":
+            if (process.arch === "arm64") {
+                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-linux${suffix}-arm64.AppImage`
+            } else {
+                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-linux${suffix}-amd64.AppImage`
+            }
+    }
+    throw new Error(`Unsupported platform: ${process.platform}`)
+}
+
 /** 下载引擎进度 */
 const downloadYakEngine = async (version, destination, progressHandler, onFinished, onError) => {
     const downloadUrl = await getYakEngineDownloadUrl(version)
@@ -351,9 +405,8 @@ const downloadYakEngine = async (version, destination, progressHandler, onFinish
     )
 }
 /** 下载 Yakit CE 进度 */
-const downloadYakitCommunity = async (version, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getYakitCommunityDownloadUrl(version)
-
+const downloadYakitCommunity = async (version, isSastScan, destination, progressHandler, onFinished, onError) => {
+    const downloadUrl = isSastScan ? await getSastCommunityDownloadUrl() : await getYakitCommunityDownloadUrl(version)
     console.info(`start to download yakit community: ${downloadUrl}`)
     requestWithProgress(
         downloadUrl,
@@ -367,8 +420,8 @@ const downloadYakitCommunity = async (version, destination, progressHandler, onF
     )
 }
 /** 下载 Yakit EE 进度 */
-const downloadYakitEE = async (version, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = await getYakitEEDownloadUrl(version)
+const downloadYakitEE = async (version, isSastScan, destination, progressHandler, onFinished, onError) => {
+    const downloadUrl = isSastScan ? await getSastEEDownloadUrl(version) : await getYakitEEDownloadUrl(version)
     requestWithProgress(
         downloadUrl,
         destination,
@@ -395,5 +448,7 @@ module.exports = {
     getYakitCommunityDownloadUrl,
     getYakEngineDownloadUrl,
     getYakitEEDownloadUrl,
-    getAvailableOSSDomain
+    getAvailableOSSDomain,
+    getSastCommunityDownloadUrl,
+    getSastEEDownloadUrl
 }

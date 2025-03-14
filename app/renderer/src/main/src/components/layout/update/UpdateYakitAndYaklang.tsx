@@ -102,7 +102,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
         let version = latest.startsWith("v") ? latest.substring(1) : latest
         setStatus("install")
         ipcRenderer
-            .invoke("download-latest-yakit", version, isEnterpriseEdition())
+            .invoke("download-latest-yakit", version, {
+                isEnterprise:isEnterpriseEdition(),
+                isSastScan:isSastScan()
+            })
             .then(() => {
                 success("下载完毕")
                 setYakitProgress((old) => {

@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect} from "react"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace} from "@/utils/envfile"
+import {isCommunityEdition, isEnterpriseEdition, getReleaseEditionName, isEnpriTrace, isSastScan} from "@/utils/envfile"
 import {success, failed} from "@/utils/notification"
 import {YakitSystem, DownloadingState} from "@/yakitGVDefine"
 import Draggable from "react-draggable"
@@ -63,7 +63,10 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                         if (version.startsWith("v")) version = version.slice(1)
 
                         ipcRenderer
-                            .invoke("download-latest-yakit", version, isEnterpriseEdition())
+                            .invoke("download-latest-yakit", version, {
+                                isEnterprise:isEnterpriseEdition(),
+                                isSastScan:isSastScan()
+                            })
                             .then(() => {
                                 if (!isBreakRef.current) return
                                 success("下载完毕")

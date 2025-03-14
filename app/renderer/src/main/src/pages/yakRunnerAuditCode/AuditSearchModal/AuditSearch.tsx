@@ -57,7 +57,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     // 当前页数
     const [cureentPage, setCureentPage] = useState<number>(1)
     const resultIdRef = useRef<number>()
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState<boolean>(false)
 
     useEffect(()=>{
         setActivbeInfo(undefined)
