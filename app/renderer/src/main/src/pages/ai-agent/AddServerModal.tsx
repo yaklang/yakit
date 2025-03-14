@@ -45,6 +45,7 @@ export const AddServerModal: React.FC<AddServerModalProps> = (props) => {
 
         // 没有兼容编辑功能，所以不需要判断是否存在 info
         const data: RenderMCPClientInfo = {
+            isDefault: false,
             id: token.current,
             type: value.type,
             status: false

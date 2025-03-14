@@ -148,6 +148,7 @@ import {YakRunnerProjectManager} from "@/pages/YakRunnerProjectManager/YakRunner
 import {RuleManagement} from "@/pages/ruleManagement/RuleManagement"
 import {YakRunnerAuditHole} from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
 import {Misstatement} from "@/pages/misstatement/Misstatement"
+import { AIAgent } from "@/pages/ai-agent/AIAgent"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
@@ -441,7 +442,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <Home />
+            // return <Home />
+            return <AIAgent/>
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

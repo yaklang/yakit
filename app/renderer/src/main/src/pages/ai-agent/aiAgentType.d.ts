@@ -31,6 +31,8 @@ export interface RenderTools {
 
 /** 客户端配置信息 */
 export interface RenderMCPClientInfo extends MCPClientInfo {
+    /** 是否是默认服务器 */
+    isDefault: boolean
     /** 连接状态 */
     status: boolean
 

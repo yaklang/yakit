@@ -1,22 +1,71 @@
-import React, {useRef, useState} from "react"
+import React, {memo, useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {RenderMCPClientInfo, ServerSettingProps} from "./aiAgentType"
 import {formatMCPResourceTemplates, formatMCPTools} from "./utils"
-import {grpcCloseMCPClient, grpcConnectMCPClient, grpcDeleteMCPClient} from "./grpc"
+import {
+    grpcCancelYakMcp,
+    grpcCloseMCPClient,
+    grpcConnectMCPClient,
+    grpcCreateMCPClient,
+    grpcDeleteMCPClient,
+    grpcMCPClientCallTool,
+    grpcStartYakMcp
+} from "./grpc"
 import {MCPTransportTypeList} from "./defaultConstant"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AddServerModal} from "./AddServerModal"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {ServerInfoModal} from "./ServerInfoModal"
+import {randomString} from "@/utils/randomUtil"
+import {yakitNotify} from "@/utils/notification"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
-// const {ipcRenderer} = window.require("electron")
+const {ipcRenderer} = window.require("electron")
 
-export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
+export const ServerSetting: React.FC<ServerSettingProps> = memo((props) => {
+    const initDefaultServer = useRef<boolean>(false)
     const [servers, setServers] = useState<RenderMCPClientInfo[]>([])
+
+    // 初始默认MCP服务器
+    useEffect(() => {
+        console.log("initDefaultServer", initDefaultServer.current)
+        ipcRenderer.on("yak-mcp-server-send", async (e, res: {URL: string}) => {
+            initDefaultServer.current = true
+            console.log("res", res)
+            if (res && res.URL) {
+                try {
+                    const data: RenderMCPClientInfo = {
+                        isDefault: true,
+                        id: randomString(16),
+                        type: "sse",
+                        url: res.URL,
+                        status: false
+                    }
+                    await grpcCreateMCPClient(data)
+                    setServers((old) => {
+                        const newList = [...old.filter((item) => !item.isDefault), data]
+                        return newList
+                    })
+
+                    setTimeout(() => {
+                        handleConnectServer(data.id)
+                    }, 2000)
+                } catch (error) {
+                    yakitNotify("error", "获取默认MCP服务器失败: " + error)
+                }
+            }
+        })
+        grpcStartYakMcp().catch(() => {})
+
+        return () => {
+            initDefaultServer.current = false
+            ipcRenderer.removeAllListeners("yak-mcp-server-send")
+            grpcCancelYakMcp().catch(() => {})
+        }
+    }, [])
 
     const [addShow, setAddShow] = useState(false)
     const handleOpenAddServer = useMemoizedFn(() => {
@@ -40,7 +89,7 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
         grpcConnectMCPClient(id)
             .then((res) => {
                 const {tools, resourceTemplates} = res
-                console.log("res", JSON.stringify(res),resourceTemplates)
+                console.log("res", JSON.stringify(res), resourceTemplates)
                 setServers((old) => {
                     const newList = [...old]
                     const index = newList.findIndex((el) => el.id === id)
@@ -49,7 +98,10 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
                         newList[index].originalData = res
                         newList[index].tools = formatMCPTools(tools)
                         newList[index].resourceTemplates = formatMCPResourceTemplates(resourceTemplates)
-                        console.log("newList[index].resourceTemplates", JSON.stringify(newList[index].resourceTemplates))
+                        console.log(
+                            "newList[index].resourceTemplates",
+                            JSON.stringify(newList[index].resourceTemplates)
+                        )
                     }
                     return [...newList]
                 })
@@ -146,7 +198,7 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
 
                 <div className={styles["list-body"]}>
                     {servers.map((item) => {
-                        const {id, type, status} = item
+                        const {id, type, status, isDefault} = item
                         const find = MCPTransportTypeList.find((el) => el.value === type)
                         const connect = connectLoading.includes(id)
                         const close = closeLoading.includes(id)
@@ -213,12 +265,20 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
                                 </div>
 
                                 <div className={styles["server-footer"]}>
-                                    <YakitButton loading={close} type='outline2' onClick={() => handleDeleteServer(id)}>
-                                        删除
-                                    </YakitButton>
+                                    {isDefault ? (
+                                        <div></div>
+                                    ) : (
+                                        <YakitButton
+                                            loading={close}
+                                            type='outline2'
+                                            onClick={() => handleDeleteServer(id)}
+                                        >
+                                            删除
+                                        </YakitButton>
+                                    )}
 
                                     <div className={styles["btn-group"]}>
-                                        {status && (
+                                        {status && !isDefault && (
                                             <YakitButton
                                                 loading={close}
                                                 type='outline2'
@@ -227,13 +287,24 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
                                                 断开
                                             </YakitButton>
                                         )}
-                                        {status ? (
+                                        {isDefault && !status ? (
+                                            <YakitButton loading={true}>连接中</YakitButton>
+                                        ) : status ? (
                                             <YakitButton onClick={() => handleViewServer(item)}>查看</YakitButton>
                                         ) : (
                                             <YakitButton loading={connect} onClick={() => handleConnectServer(id)}>
-                                                连接
+                                                连接 
                                             </YakitButton>
                                         )}
+                                        <YakitButton
+                                            onClick={() => {
+                                                grpcMCPClientCallTool(id)
+                                                    .then(() => {})
+                                                    .catch(() => {})
+                                            }}
+                                        >
+                                            123
+                                        </YakitButton>
                                     </div>
                                 </div>
                             </div>
@@ -249,4 +320,4 @@ export const ServerSetting: React.FC<ServerSettingProps> = (props) => {
             )}
         </div>
     )
-}
+})

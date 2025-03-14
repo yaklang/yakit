@@ -174,6 +174,39 @@ const deleteClient = (token) => {
     })
 }
 
+// call-tool
+const haneleCallTool = (token, request) => {
+    return new Promise(async (resolve, reject) => {
+        if (!clients.has(token)) {
+            return reject("client no exist")
+        }
+
+        const {client, link} = clients.get(token)
+
+        if (!link) {
+            return reject("Client is not connected")
+        }
+
+        try {
+            // const ans = await
+            console.log("request", request)
+            client
+                .callTool(request, undefined, {
+                    onprogress: (progress) => {
+                        console.log("onprogress", progress)
+                    }
+                })
+                .then((res) => {
+                    console.log("ans", res)
+                    resolve(res)
+                })
+                .catch(reject)
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 module.exports = (win, getClient) => {
     ipcMain.handle("create-mcp-client", async (e, params) => {
         return await createClient(params)
@@ -186,5 +219,45 @@ module.exports = (win, getClient) => {
     })
     ipcMain.handle("delete-mcp-client", async (e, token) => {
         return await deleteClient(token)
+    })
+
+    ipcMain.handle("callTool-mcp-client", async (e, token, request) => {
+        return await haneleCallTool(token, request)
+    })
+
+    let yakMCPStream = null
+    ipcMain.handle("cancel-yak-mcp-server", async () => {
+        if (yakMCPStream) {
+            yakMCPStream.cancel()
+            yakMCPStream = null
+        }
+    })
+    ipcMain.handle("start-yak-mcp-server", async (e) => {
+        if (yakMCPStream) {
+            return Promise.reject("stream already exist")
+        }
+        yakMCPStream = getClient().StartSSEMCP({Tools: [], Resources: [], DisableTools: [], DisableResources: []})
+        yakMCPStream.on("data", (e) => {
+            if (!win) {
+                return
+            }
+            win.webContents.send("yak-mcp-server-send", e)
+        })
+        yakMCPStream.on("error", (e) => {
+            // if (!win) {
+            //     return
+            // }
+            // win.webContents.send("yak-mcp-server-error", e)
+        })
+        yakMCPStream.on("end", () => {
+            if (yakMCPStream) {
+                yakMCPStream.cancel()
+                yakMCPStream = null
+            }
+            // if (!win) {
+            //     return
+            // }
+            // win.webContents.send("yak-mcp-server-end")
+        })
     })
 }
