@@ -23,6 +23,7 @@ import {API} from "@/services/swagger/resposeType"
 import {
     globalUserLogin,
     isCommunityEdition,
+    isCommunitySastScan,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnterpriseOrSimpleEdition,
@@ -436,16 +437,21 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         return openWatermark ? eeWatermarkStr : " "
     }
     const waterMarkStr = () => {
-        // 社区版无水印
-        if (isCommunityEdition()) {
+        // Yakit社区版无水印
+        if (isCommunityEdition() && !isCommunitySastScan()) {
             return ""
-        } else if (userInfo.isLogin) {
+        }
+        // Sast社区版有水印
+        else if (isCommunitySastScan()){
+            return "Sast技术浏览版仅供技术交流使用"
+        }
+        else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark(isSastScan() ? "SastScan-试用版" : "EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(isSastScan() ? "Sast技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
