@@ -32,7 +32,17 @@ const ProjectLogo = (showMini: boolean) => {
     if (isIRify()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
     } else if (isEnpriTrace()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
+        return (
+            <img
+                style={
+                    showMini
+                        ? {height: 35, width: 35, objectFit: "scale-down"}
+                        : {height: "100%", width: "100%", objectFit: "cover"}
+                }
+                src={showMini ? yakitEEMiniProject : yakitEEProject}
+                alt='暂无图片'
+            />
+        )
     } else if (isEnpriTraceAgent()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
     } else {
@@ -101,7 +111,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
             window.removeEventListener("resize", wrapperResize)
         }
     }, [])
-    
+
     return (
         <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
