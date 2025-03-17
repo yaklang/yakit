@@ -4932,11 +4932,11 @@ message QueryAnalyzedHTTPFlowRuleResponse{
   int64 Total = 3;
 }
 
-// 规则数据
 message HTTPFlowRuleData{
-  int64 HTTPFlowId =1;
-  string RuleVerboseName = 2;
-  string Rule =3;
+  int64 Id = 1;
+  int64 HTTPFlowId =2;
+  string RuleVerboseName = 3;
+  string Rule =4;
 }
 
 
