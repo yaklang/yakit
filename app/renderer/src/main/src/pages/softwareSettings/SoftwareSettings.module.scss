@@ -26,6 +26,11 @@
                     height: 32px;
                 }
             }
+            .navbar-logo-aspect{
+                img {
+                   aspect-ratio: 1 / 1; 
+                }
+            }
 
             .navbar-list-wrapper {
                 width: 100%;
