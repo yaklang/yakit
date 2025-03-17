@@ -4902,6 +4902,7 @@ message QueryHTTPFlowRequest {
   repeated string ProcessName = 43;
   repeated string ExcludeKeywords = 44;
   string KeywordType = 45; // <empty> = all/response/request
+  repeated int64 AnalyzedIds = 46;
 }
 
 message HTTPFlowsToOnlineRequest {
@@ -4911,6 +4912,7 @@ message HTTPFlowsToOnlineRequest {
 }
 
 message AnalyzeHTTPFlowRequest{
+  string HotPatchCode = 1;
 }
 
 message AnalyzeHTTPFlowResponse{
@@ -4920,6 +4922,8 @@ message AnalyzeHTTPFlowResponse{
 message  QueryAnalyzedHTTPFlowRuleRequest{
   repeated  string AnalyzeIds = 1;
   Paging Pagination = 2;
+  int64  BeforeId =3;
+  int64  AfterId = 4;
 }
 
 message QueryAnalyzedHTTPFlowRuleResponse{
@@ -4930,7 +4934,7 @@ message QueryAnalyzedHTTPFlowRuleResponse{
 
 // 规则数据
 message HTTPFlowRuleData{
-  repeated int64 HTTPFlowIds =1;
+  int64 HTTPFlowId =1;
   string RuleVerboseName = 2;
   string Rule =3;
 }
