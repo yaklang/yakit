@@ -1,8 +1,9 @@
 name: Build Multi-Sast-Platform Prod
 
 on:
-    workflow_dispatch:
-
+    push:
+      tags:
+        - 'v*-sast'
 jobs:
     build_yakit:
         runs-on: macos-13
@@ -150,49 +151,49 @@ jobs:
                   if-no-files-found: error
                   retention-days: 1
 
-    publish_software_to_oss:
-        needs:
-            - build_yakit
-        strategy:
-            matrix:
-                artifact: [SastScan, SastScanEnterprise] # 需要发布的软件名前缀
-        runs-on: ubuntu-latest
-        steps:
-            - name: Echo Package Version To Env
-              run: |
-                  ENV_TAG=${{ github.ref_name }}
-                  ENV_TAG=${ENV_TAG#v}
-                  ENV_TAG=${ENV_TAG%-sast}
-                  echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
+    # publish_software_to_oss:
+    #     needs:
+    #         - build_yakit
+    #     strategy:
+    #         matrix:
+    #             artifact: [SastScan, SastScanEnterprise] # 需要发布的软件名前缀
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #         - name: Echo Package Version To Env
+    #           run: |
+    #               ENV_TAG=${{ github.ref_name }}
+    #               ENV_TAG=${ENV_TAG#v}
+    #               ENV_TAG=${ENV_TAG%-sast}
+    #               echo "ENV_TAG=$ENV_TAG" >> $GITHUB_ENV
 
-            - name: Download SastScan And Legacy SastScan
-              uses: actions/download-artifact@v4
-              with:
-                  name: ${{ matrix.artifact }}-artifacts
-                  merge-multiple: true
+    #         - name: Download SastScan And Legacy SastScan
+    #           uses: actions/download-artifact@v4
+    #           with:
+    #               name: ${{ matrix.artifact }}-artifacts
+    #               merge-multiple: true
 
-            - run: ls
-              name: Ls Published Artifacts...
+    #         - run: ls
+    #           name: Ls Published Artifacts...
 
-            - name: Generate OSS File Path
-              run: |
-                  if [ "${{ matrix.artifact }}" = "SastScan" ]; then
-                    echo "FILE_PATH=sast" >> $GITHUB_ENV
-                  elif [ "${{ matrix.artifact }}" = "SastScanEnterprise" ]; then
-                    echo "FILE_PATH=svip" >> $GITHUB_ENV
-                  else
-                    echo "No corresponding file path" >&2
-                    exit 1
-                  fi
-            - name: Show ENV.FILE_PATH
-              run: echo "FILE_PATH： $FILE_PATH"
+    #         - name: Generate OSS File Path
+    #           run: |
+    #               if [ "${{ matrix.artifact }}" = "SastScan" ]; then
+    #                 echo "FILE_PATH=sast" >> $GITHUB_ENV
+    #               elif [ "${{ matrix.artifact }}" = "SastScanEnterprise" ]; then
+    #                 echo "FILE_PATH=svip" >> $GITHUB_ENV
+    #               else
+    #                 echo "No corresponding file path" >&2
+    #                 exit 1
+    #               fi
+    #         - name: Show ENV.FILE_PATH
+    #           run: echo "FILE_PATH： $FILE_PATH"
 
-            - name: Upload SastScan To OSS
-              uses: tvrcgo/upload-to-oss@master
-              with:
-                  key-id: ${{ secrets.OSS_KEY_ID }}
-                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
-                  region: oss-accelerate
-                  bucket: yaklang
-                  assets: |
-                      *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
+    #         - name: Upload SastScan To OSS
+    #           uses: tvrcgo/upload-to-oss@master
+    #           with:
+    #               key-id: ${{ secrets.OSS_KEY_ID }}
+    #               key-secret: ${{ secrets.OSS_KEY_SECRET }}
+    #               region: oss-accelerate
+    #               bucket: yaklang
+    #               assets: |
+    #                   *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
