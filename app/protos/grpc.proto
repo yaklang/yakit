@@ -4920,10 +4920,12 @@ message AnalyzeHTTPFlowResponse{
 }
 
 message  QueryAnalyzedHTTPFlowRuleRequest{
-  repeated  string AnalyzeIds = 1;
-  Paging Pagination = 2;
-  int64  BeforeId =3;
-  int64  AfterId = 4;
+  Paging Pagination = 1;
+  AnalyzedHTTPFlowFilter Filter =2;
+}
+
+message AnalyzedHTTPFlowFilter{
+  repeated string AnalyzeIds = 1;
 }
 
 message QueryAnalyzedHTTPFlowRuleResponse{
