@@ -442,4 +442,34 @@ module.exports = (win, getClient) => {
     ipcMain.handle("HTTPFlowsToOnline", async (e, params) => {
         return await asyncHTTPFlowsToOnline(params)
     })
+
+    const asyncAnalyzeHTTPFlow = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AnalyzeHTTPFlow(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AnalyzeHTTPFlow", async (e, params) => {
+        return await asyncAnalyzeHTTPFlow(params)
+    })
+
+    const asyncQueryAnalyzedHTTPFlowRule = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAnalyzedHTTPFlowRule(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAnalyzedHTTPFlowRule", async (e, params) => {
+        return await asyncQueryAnalyzedHTTPFlowRule(params)
+    })
 }

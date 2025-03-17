@@ -824,12 +824,14 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                                 <span className={styles["switch-text"]}>全部禁用</span>
                                 <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
                             </div>
-                            <Divider type='vertical' style={{margin: "0 16px"}} />
                             {ruleUse === "mitm" && (
-                                <div className={styles["table-switch"]}>
-                                    <span className={styles["switch-text"]}>全部不替换</span>
-                                    <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
-                                </div>
+                                <>
+                                    <Divider type='vertical' style={{margin: "0 16px"}} />
+                                    <div className={styles["table-switch"]}>
+                                        <span className={styles["switch-text"]}>全部不替换</span>
+                                        <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
+                                    </div>
+                                </>
                             )}
                             <YakitPopover
                                 placement={"bottom"}
