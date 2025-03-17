@@ -30,6 +30,7 @@ import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResi
 import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
 import styles from "./HTTPHistoryAnalysis.module.scss"
+import {Paging} from "@/utils/yakQueryHTTPFlow"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -39,6 +40,11 @@ interface TabsItem {
     key: tabKeys
     label: ReactElement | string
     contShow: boolean
+}
+
+interface AnalyzeHTTPFlowRequest {}
+interface AnalyzeHTTPFlowResponse {
+    AnalyzeId: string
 }
 
 interface HTTPHistoryAnalysisProps {}
@@ -207,7 +213,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     // #endregion
 
     // #region 执行
-    const execParamsRef = useRef<any>()
+    const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
+    const [analyzeId, setAnalyzeId] = useState<string>("")
     const [execStatus, setExecStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const onExec = useMemoizedFn(() => {
         handleTabClick({
@@ -224,6 +231,9 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
             hotPatch: curHotPatch,
             rules: [...curRules]
         }
+        ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current).then((res: AnalyzeHTTPFlowResponse) => {
+            setAnalyzeId(res.AnalyzeId)
+        })
         setExecStatus("process")
     })
     const stopExec = useMemoizedFn(() => {
@@ -386,7 +396,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 )}
                 lineStyle={{display: fullScreenFirstNode ? "none" : ""}}
                 firstMinSize={openTabsFlag ? "600px" : "24px"}
-                secondMinSize={400}
+                secondMinSize={500}
                 secondNode={
                     <div className={styles["HTTPHistoryAnalysis-right"]}>
                         {execStatus === "default" ? (
@@ -442,7 +452,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                         <PluginTabs activeKey={activeKey} onChange={onTabChange}>
                                             <TabPane key={"ruleData"} tab={"规则数据"}>
                                                 <div className={styles["rule-data"]}>
-                                                    <HttpRule />
+                                                    <HttpRule analyzeId={analyzeId} />
                                                 </div>
                                             </TabPane>
                                             <TabPane key={"historyData"} tab={"流量数据"}>
@@ -453,6 +463,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                         showProtocolType={false}
                                                         showBatchActions={false}
                                                         showDelAll={false}
+                                                        params={{AnalyzeId: analyzeId}}
                                                     />
                                                 </div>
                                             </TabPane>
@@ -473,8 +484,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     )
 }
 
-interface HttpRuleProps {}
+interface HttpRuleProps {
+    analyzeId: string
+}
 const HttpRule: React.FC<HttpRuleProps> = (props) => {
+    const {analyzeId} = props
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
@@ -517,7 +531,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             isVer={true}
             firstNode={() => (
                 <div className={styles["HttpRule-first"]}>
-                    <HttpRuleTable />
+                    <HttpRuleTable analyzeId={analyzeId} />
                 </div>
             )}
             secondNode={
@@ -551,13 +565,31 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     )
 }
 
-interface HttpRuleTableProps {}
+interface QueryAnalyzedHTTPFlowRuleRequest {
+    AnalyzeIds: string[]
+    Pagination: Paging
+}
+interface HTTPFlowRuleData {
+    HTTPFlowIds: number[]
+    RuleVerboseName: string
+    Rule: string
+}
+interface QueryAnalyzedHTTPFlowRuleResponse {
+    Pagination: Paging
+    Data: HTTPFlowRuleData[]
+    Total: number
+}
+interface HttpRuleTableProps {
+    analyzeId: string
+}
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
+    const {analyzeId} = props
+
     const ruleColumns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         return [
             {
                 title: "数据包ID",
-                dataKey: "id",
+                dataKey: "HTTPFlowIds",
                 fixed: "left",
                 ellipsis: false,
                 width: 96,
@@ -565,7 +597,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             },
             {
                 title: "规则名",
-                dataKey: "RuleName",
+                dataKey: "RuleVerboseName",
                 filterProps: {
                     filterKey: "title",
                     filtersType: "input",
@@ -574,7 +606,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             },
             {
                 title: "规则数据",
-                dataKey: "Data",
+                dataKey: "Rule",
                 filterProps: {
                     filterKey: "title",
                     filtersType: "input",
@@ -586,7 +618,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
 
     return (
         <TableVirtualResize
-            renderKey='id'
+            renderKey='HTTPFlowIds'
             columns={ruleColumns}
             loading={false}
             query={{}}
