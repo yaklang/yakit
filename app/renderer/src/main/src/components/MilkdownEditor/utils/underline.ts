@@ -1,8 +1,6 @@
 import {$markSchema, $command} from "@milkdown/utils"
 import {toggleMark} from "@milkdown/prose/commands"
-import {$inputRule, $markAttr, $nodeAttr, $nodeSchema, $remark} from "@milkdown/kit/utils"
-import directive from "remark-directive"
-import {remarkStringifyOptionsCtx} from "@milkdown/kit/core"
+import {$inputRule, $markAttr} from "@milkdown/kit/utils"
 import {markRule} from "@milkdown/kit/prose"
 
 const underlineId = "underline"
@@ -49,7 +47,7 @@ const underlineSchema = $markSchema(underlineId, (ctx) => ({
 }))
 //  /(<u>(.*?)<\/u>|:u\[(.+?)\])/   /<u>(.*?)<\/u>/
 const underlineInputRule = $inputRule((ctx) => {
-    return markRule(/:u\[(.+?)\]/, underlineSchema.type(ctx))
+    return markRule(/(?:\:u\[)([^*_]+)(?:\](?:\s|$))/, underlineSchema.type(ctx))
 })
 
 export const underlineCommand = $command("toggleUnderlineCommand", (ctx) => () => toggleMark(underlineSchema.type(ctx)))
