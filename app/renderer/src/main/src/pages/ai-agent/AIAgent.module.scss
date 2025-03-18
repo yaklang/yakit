@@ -163,6 +163,20 @@
             display: none;
         }
 
+        .tools-wrapper {
+            display: flex;
+            flex-direction: column;
+            overflow-y: hidden;
+            .tools-body {
+                margin-top: 12px;
+                flex: 1;
+                overflow: hidden auto;
+            }
+        }
+        .hidden-content.tools-wrapper {
+            display: none;
+        }
+
         .tools-item {
             .name {
                 .icon-style {

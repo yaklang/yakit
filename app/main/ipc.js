@@ -280,6 +280,10 @@ module.exports = {
         require("./errorCollection")(win, getClient)
 
         // mcp client
-        require("./handlers/mcpServere")(win, getClient)
+        try {
+            require("./handlers/mcpServere")(win, getClient)
+        } catch (error) {
+            console.log("mcpServere.js-error", error)
+        }
     }
 }
