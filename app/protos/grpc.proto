@@ -4913,12 +4913,12 @@ message HTTPFlowsToOnlineRequest {
 
 message AnalyzeHTTPFlowRequest{
   string HotPatchCode = 1;
+  repeated MITMContentReplacer Replacers = 2;
 }
 
 message AnalyzeHTTPFlowResponse{
   string AnalyzeId = 1;
   ExecResult ExecResult = 2;
-  repeated HTTPFlowRuleData Data = 3;
 }
 
 message  QueryAnalyzedHTTPFlowRuleRequest{
@@ -4927,7 +4927,7 @@ message  QueryAnalyzedHTTPFlowRuleRequest{
 }
 
 message AnalyzedHTTPFlowFilter{
-  repeated string AnalyzeIds = 1;
+  repeated string ResultIds = 1;
 }
 
 message QueryAnalyzedHTTPFlowRuleResponse{
