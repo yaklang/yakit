@@ -443,19 +443,11 @@ module.exports = (win, getClient) => {
         return await asyncHTTPFlowsToOnline(params)
     })
 
-    const asyncAnalyzeHTTPFlow = (params) => {
-        return new Promise((resolve, reject) => {
-            getClient().AnalyzeHTTPFlow(params, (err, data) => {
-                if (err) {
-                    reject(err)
-                    return
-                }
-                resolve(data)
-            })
-        })
-    }
-    ipcMain.handle("AnalyzeHTTPFlow", async (e, params) => {
-        return await asyncAnalyzeHTTPFlow(params)
+    const streamAnalyzeHTTPFlowMap = new Map();
+    ipcMain.handle("cancel-AnalyzeHTTPFlow", handlerHelper.cancelHandler(streamAnalyzeHTTPFlowMap));
+    ipcMain.handle("AnalyzeHTTPFlow", (e, params, token) => {
+        let stream = getClient().AnalyzeHTTPFlow(params);
+        handlerHelper.registerHandler(win, stream, streamAnalyzeHTTPFlowMap, token)
     })
 
     const asyncQueryAnalyzedHTTPFlowRule = (params) => {

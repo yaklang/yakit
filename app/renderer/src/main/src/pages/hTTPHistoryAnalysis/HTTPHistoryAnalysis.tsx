@@ -29,14 +29,17 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
-import styles from "./HTTPHistoryAnalysis.module.scss"
 import {HistoryHighLightText, HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
 import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/components/HTTPFlowExtractedDataTable"
-import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
+import {genDefaultPagination} from "../invoker/schema"
 import ReactResizeDetector from "react-resize-detector"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
-import {DataResponseProps, FilterProps, VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import {DataResponseProps, VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import {randomString} from "@/utils/randomUtil"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
+import emiter from "@/utils/eventBus/eventBus"
+import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -50,9 +53,7 @@ interface TabsItem {
 
 interface AnalyzeHTTPFlowRequest {
     HotPatchCode: string
-}
-interface AnalyzeHTTPFlowResponse {
-    AnalyzeId: string
+    Replacers: MITMContentReplacerRule[]
 }
 
 interface HTTPHistoryAnalysisProps {}
@@ -222,9 +223,26 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 
     // #region 执行
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
+    const tokenRef = useRef<string>(randomString(40))
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [analyzeId, setAnalyzeId] = useState<string>("")
-    const [execStatus, setExecStatus] = useState<ExpandAndRetractExcessiveState>("default")
-    const onExec = useMemoizedFn(() => {
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "AnalyzeHTTPFlow",
+        apiKey: "AnalyzeHTTPFlow",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => {
+                setExecuteStatus("finished")
+            }, 300)
+        },
+        setRuntimeId: (aId: string) => {
+            yakitNotify("info", `分析任务启动成功，运行时 ID: ${aId}`)
+            setAnalyzeId(aId)
+        }
+    })
+
+    const onStartExecute = useMemoizedFn(() => {
         handleTabClick({
             key: curTabKey,
             label: "",
@@ -236,16 +254,18 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
         execParamsRef.current = {
-            HotPatchCode: curHotPatch
-            // rules: [...curRules]
+            HotPatchCode: curHotPatch,
+            Replacers: [...curRules]
         }
-        ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current).then((res: AnalyzeHTTPFlowResponse) => {
-            setAnalyzeId(res.AnalyzeId)
+
+        ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current, tokenRef.current).then(() => {
+            debugPluginStreamEvent.start()
+            setExecuteStatus("process")
         })
-        setExecStatus("process")
     })
     const stopExec = useMemoizedFn(() => {
-        setExecStatus("finished")
+        debugPluginStreamEvent.stop()
+        setExecuteStatus("finished")
     })
     // #endregion
 
@@ -264,7 +284,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 
         if (openTabsFlag) {
             p.firstRatio = "70%"
-            if (execStatus !== "default") {
+            if (executeStatus !== "default") {
                 p.firstRatio = "50%"
                 p.secondRatio = "50%"
             }
@@ -277,7 +297,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
             p.firstRatio = "100%"
         }
         return p
-    }, [fullScreenFirstNode, openTabsFlag, execStatus])
+    }, [fullScreenFirstNode, openTabsFlag, executeStatus])
 
     return (
         <div className={styles["HTTPHistoryAnalysis"]}>
@@ -407,14 +427,19 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 secondMinSize={500}
                 secondNode={
                     <div className={styles["HTTPHistoryAnalysis-right"]}>
-                        {execStatus === "default" ? (
+                        {executeStatus === "default" ? (
                             <div className={styles["HTTPHistoryAnalysis-right-default"]}>
                                 <div className={styles["HTTPHistoryAnalysis-right-default-title"]}>
                                     <span className={styles["title"]}>执行结果</span>{" "}
                                     设置好热加载或规则后，即可点击执行进行处理
                                 </div>
                                 <div className={styles["exec-btn"]}>
-                                    <YakitButton size='large' type='primary' style={{width: 100}} onClick={onExec}>
+                                    <YakitButton
+                                        size='large'
+                                        type='primary'
+                                        style={{width: 100}}
+                                        onClick={onStartExecute}
+                                    >
                                         执行
                                     </YakitButton>
                                 </div>
@@ -425,9 +450,18 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                 <div className={styles["HTTPHistoryAnalysis-header"]}>
                                     <div className={styles["HTTPHistoryAnalysis-header-text"]}>执行结果</div>
                                     <div className={styles["HTTPHistoryAnalysis-execStatus-wrapper"]}>
-                                        <PluginExecuteProgress percent={0} name={"main"} />
-                                        {execStatus === "finished" && <YakitButton onClick={onExec}>执行</YakitButton>}
-                                        {execStatus === "process" && (
+                                        {streamInfo.progressState.length === 1 && (
+                                            <div className={styles["crash-log-progress"]}>
+                                                <PluginExecuteProgress
+                                                    percent={streamInfo.progressState[0].progress}
+                                                    name={streamInfo.progressState[0].id}
+                                                />
+                                            </div>
+                                        )}
+                                        {executeStatus === "finished" && (
+                                            <YakitButton onClick={onStartExecute}>执行</YakitButton>
+                                        )}
+                                        {executeStatus === "process" && (
                                             <YakitButton type='primary' danger onClick={stopExec}>
                                                 停止
                                             </YakitButton>
@@ -536,6 +570,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             .invoke("GetHTTPFlowById", {Id: hTTPFlowId})
             .then((i: HTTPFlow) => {
                 if (i.Id == lasetIdRef.current) {
+                    console.log(i)
                     setFlow(i)
                 }
             })
@@ -577,20 +612,22 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             isVer={true}
             firstNode={() => (
                 <div className={styles["HttpRule-first"]}>
-                    <HttpRuleTable
-                        analyzeId={analyzeId}
-                        currentSelectItem={currentSelectItem}
-                        onSelect={(i) => {
-                            if (!i) {
-                                setCurrentSelectItem(undefined)
-                                return
-                            }
-                            setCurrentSelectItem(i)
-                            getHTTPFlowById(i.HTTPFlowId)
-                        }}
-                        onSetTableData={setTableData}
-                        scrollToIndex={scrollToIndex}
-                    />
+                    {analyzeId && (
+                        <HttpRuleTable
+                            analyzeId={analyzeId}
+                            currentSelectItem={currentSelectItem}
+                            onSelect={(i) => {
+                                if (!i) {
+                                    setCurrentSelectItem(undefined)
+                                    return
+                                }
+                                setCurrentSelectItem(i)
+                                getHTTPFlowById(i.HTTPFlowId)
+                            }}
+                            onSetTableData={setTableData}
+                            scrollToIndex={scrollToIndex}
+                        />
+                    )}
                 </div>
             )}
             secondNode={
@@ -629,7 +666,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
 }
 
 interface QueryAnalyzedHTTPFlowRuleFilter {
-    AnalyzeIds?: string[]
+    ResultIds?: string[]
     RuleVerboseName?: string
     Rule?: string
 }
@@ -652,7 +689,6 @@ interface HttpRuleTableProps {
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     const {analyzeId, currentSelectItem, onSelect, onSetTableData, scrollToIndex} = props
-
     const tableBoxRef = useRef<HTMLDivElement>(null)
     const tableRef = useRef<any>(null)
     const boxHeightRef = useRef<number>()
@@ -676,6 +712,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
         query: QueryAnalyzedHTTPFlowRuleRequest
     ) => Promise<DataResponseProps<HTTPFlowRuleData>> = (query) => {
         return new Promise((resolve, reject) => {
+            console.log(query)
             ipcRenderer
                 .invoke("QueryAnalyzedHTTPFlowRule", query)
                 .then(resolve)
@@ -697,14 +734,34 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             tableRef,
             boxHeightRef,
             defaultParams: {
-                Pagination: {...genDefaultPagination(20), OrderBy: "Rule", Order: "desc"},
+                Pagination: {...genDefaultPagination(20), OrderBy: "Id", Order: "desc"},
                 Filter: {
-                    AnalyzeIds: [analyzeId]
+                    ResultIds: [analyzeId]
                 }
             },
             grpcFun: apiQueryAnalyzedHTTPFlowRule,
             onFirst
         })
+
+    // 开启实时数据刷新
+    const onStartInterval = useMemoizedFn((data) => {
+        try {
+            const updateData = JSON.parse(data)
+            if (typeof updateData !== "string" && updateData.task_id === analyzeId) {
+                if (updateData.action === "create") {
+                    console.log("开启实时数据刷新")
+                    debugVirtualTableEvent.startT()
+                }
+            }
+        } catch (error) {}
+    })
+    useEffect(() => {
+        emiter.on("onRefreshQueryAnalyzedHTTPFlowRule", onStartInterval)
+        return () => {
+            emiter.off("onRefreshQueryAnalyzedHTTPFlowRule", onStartInterval)
+        }
+    }, [])
+
     useEffect(() => {
         onSetTableData(tableData)
     }, [tableData])
@@ -713,7 +770,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
         let sort = {...newSort}
         if (sort.order === "none") {
             sort.order = "desc"
-            sort.orderBy = "Rule"
+            sort.orderBy = "Id"
         }
         const finalParams = {
             Pagination: {
