@@ -334,7 +334,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         content: markdownContent
                     }
                     apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({notepadHash: hash, title})
+                        toEditNotepad({pageInfo: {notepadHash: hash, title}})
                         onCloseCurrentPage()
                         s.destroy()
                     })

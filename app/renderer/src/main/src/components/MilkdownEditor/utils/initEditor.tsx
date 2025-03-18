@@ -71,13 +71,19 @@ export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
 interface MilkdownEditorDiffProps {
     onDiff: (ctx: Ctx) => void
 }
+export interface LocalProps {
+    local: boolean
+    upload: (path: string) => void
+}
 interface InitEditorHooksProps
     extends Omit<CustomMilkdownProps, "collabProps" | "setEditor" | "onSaveContentBeforeDestroy"> {
     collabProps?: InitEditorHooksCollabProps
     diffProps?: MilkdownEditorDiffProps
+    localProps?: LocalProps
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
-    const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps} = props
+    const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps, localProps} = props
+
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
@@ -110,7 +116,13 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 (ctx: Ctx) => () => {
                     ctx.set(block.key, {
                         view: pluginViewFactory({
-                            component: () => <BlockView type={type} notepadHash={collabParams?.milkdownHash} />
+                            component: () => (
+                                <BlockView
+                                    localProps={localProps}
+                                    type={type}
+                                    notepadHash={collabParams?.milkdownHash}
+                                />
+                            )
                         })
                     })
                 },
@@ -312,7 +324,6 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly
                         })
-                        console.log("defaultValue", defaultValue)
                         ctx.set(defaultValueCtx, defaultValue || "")
                         collabParams.onCollab(ctx)
                         diffProps?.onDiff(ctx)
@@ -381,6 +392,10 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
     )
 
     const uploadImg = async (image) => {
+        if (localProps?.local) {
+            // 目前本地编辑器不支持上次图片
+            return ""
+        }
         if (image.size > ImgMaxSize) {
             yakitNotify("error", "图片大小不能超过1M")
             return ""

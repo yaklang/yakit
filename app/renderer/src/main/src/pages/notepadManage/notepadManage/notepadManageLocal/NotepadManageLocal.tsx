@@ -433,7 +433,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
         setEditLoading(true)
         grpcQueryNoteById(record.Id)
             .then((res) => {
-                toEditNotepad({notepadHash: `${res.Id}`, title: res.Title, notepadPageList})
+                toEditNotepad({pageInfo: {notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
             })
             .finally(() => {
                 setTimeout(() => {

@@ -33,6 +33,7 @@ import {getMarkdown} from "@milkdown/kit/utils"
 import {yakitNotify} from "@/utils/notification"
 import {NotepadExport} from "../../notepadManage/notepadManageLocal/NotepadImportAndExport"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
@@ -60,6 +61,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [editor, setEditor] = useState<EditorMilkdownProps>()
 
+    const [keyWord, setKeyWord] = useState<string>("") // 搜索关键词
     const [tabName, setTabName] = useState<string>(initTabName())
 
     const [note, setNote] = useState<Note>({
@@ -131,6 +133,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }, 200)
                 )
         }
+        setKeyWord(pageInfo.keyWord || "")
     }, [])
 
     /**更新该页面最新的数据 */
@@ -171,6 +174,18 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
             Content: markdownContent || ""
         }
         grpcUpdateNote(params)
+    })
+    /** 编辑器内容的变化，更新数据 */
+    const onMarkdownUpdated = useDebounceFn(
+        (value) => {
+            notepadContentRef.current = value
+            const time = moment().unix()
+            setNote((v) => ({...v, UpdateAt: time}))
+        },
+        {wait: 200, leading: true}
+    ).run
+    const onSave = useMemoizedFn(() => {
+        onSaveNewContent(notepadContentRef.current)
     })
     //#endregion
 
@@ -214,19 +229,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         {wait: 500}
     ).run
     //#endregion
-
-    /** 编辑器内容的变化，更新数据 */
-    const onMarkdownUpdated = useDebounceFn(
-        (value) => {
-            notepadContentRef.current = value
-            const time = moment().unix()
-            setNote((v) => ({...v, UpdateAt: time}))
-        },
-        {wait: 200, leading: true}
-    ).run
-    const onSave = useMemoizedFn(() => {
-        onSaveNewContent(notepadContentRef.current)
-    })
 
     const onExport = useMemoizedFn(() => {
         setExportVisible(true)
@@ -310,7 +312,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         </div>
                     </div>
                     <div className={styles["notepad-editor"]}>
-                        <MilkdownEditor
+                        <MilkdownEditorLocal
                             type='notepad'
                             defaultValue={note.Content}
                             customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current.getCatalogue(v))}

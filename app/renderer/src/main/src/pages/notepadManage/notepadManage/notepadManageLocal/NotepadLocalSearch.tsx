@@ -104,7 +104,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
         setSpinning(true)
         grpcQueryNoteById(data.Note.Id)
             .then((res) => {
-                toEditNotepad({notepadHash: `${res.Id}`, title: res.Title, notepadPageList})
+                toEditNotepad({pageInfo: {keyWord, notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
             })
             .finally(() => {
                 setTimeout(() => {

@@ -8,11 +8,12 @@ import {useMemoizedFn} from "ahooks"
 import {apiDeleteNotepadDetail, apiGetNotepadDetail, onBaseNotepadDown} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
-import {PageNodeItemProps} from "@/store/pageInfo"
+import {ModifyNotepadPageInfoProps, PageNodeItemProps} from "@/store/pageInfo"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {isCommunityEdition} from "@/utils/envfile"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
+import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 const NotepadManageOnline = React.lazy(() => import("./notepadManageOnline/NotepadManageOnline"))
@@ -27,8 +28,13 @@ export const timeMap = {
  * @param notepadHash
  * @param notepadPageList
  */
-export const toEditNotepad = (params?: {notepadHash: string; title: string; notepadPageList?: PageNodeItemProps[]}) => {
-    const {notepadHash = "", title = "", notepadPageList = []} = params || {notepadHash: ""}
+export const toEditNotepad = (params?: {
+    pageInfo: ModifyNotepadPageInfoProps
+    notepadPageList?: PageNodeItemProps[]
+}) => {
+    const modifyNotepadPageInfo = params?.pageInfo || defaultModifyNotepadPageInfo
+    const {notepadHash = "", title = ""} = modifyNotepadPageInfo
+    const {notepadPageList = []} = params || {}
     const current =
         notepadHash &&
         notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
@@ -39,6 +45,7 @@ export const toEditNotepad = (params?: {notepadHash: string; title: string; note
         const info = {
             route: YakitRoute.Modify_Notepad,
             params: {
+                ...modifyNotepadPageInfo,
                 notepadHash,
                 title
             }
@@ -131,7 +138,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
         setEditLoading(true)
         apiGetNotepadDetail(record.hash)
             .then((res) => {
-                toEditNotepad({notepadHash: res.hash, title: res.title, notepadPageList})
+                toEditNotepad({pageInfo: {notepadHash: res.hash, title: res.title}, notepadPageList})
             })
             .finally(() => {
                 setTimeout(() => {
