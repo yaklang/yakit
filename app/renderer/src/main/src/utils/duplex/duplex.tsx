@@ -57,6 +57,9 @@ export const startupDuplexConn = () => {
     ipcRenderer.on(`${id}-data`, (e, data: DuplexConnectionProps) => {
         try {
             const obj = JSON.parse(Uint8ArrayToString(data.Data))
+            if (data.MessageType === "analyzed_http_flow") {
+                console.log(obj)
+            }
             switch (data.MessageType) {
                 // 当前引擎支持推送数据库更新(如若不支持则依然使用轮询请求)
                 case "global":

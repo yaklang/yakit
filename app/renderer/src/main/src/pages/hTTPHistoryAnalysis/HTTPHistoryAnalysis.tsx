@@ -223,9 +223,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 
     // #region 执行
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
+    const [analyzeId, setAnalyzeId] = useState<string>("") // 分析任务id
+    const [analyzedIds, setAnalyzedIds] = useState<number[]>([]) // 规则表的id，传到history查流量数据
     const tokenRef = useRef<string>(randomString(40))
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
-    const [analyzeId, setAnalyzeId] = useState<string>("")
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "AnalyzeHTTPFlow",
         apiKey: "AnalyzeHTTPFlow",
@@ -280,6 +281,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 
         debugPluginStreamEvent.reset()
         setAnalyzeId("")
+        setAnalyzedIds([])
 
         execParamsRef.current = {
             HotPatchCode: curHotPatch,
@@ -299,7 +301,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 setExecuteStatus("finished")
             })
             .catch((e: any) => {
-                yakitNotify("error", "取消本地插件执行出错:" + e)
+                yakitNotify("error", "取消流量分析出错:" + e)
             })
     }
     // #endregion
@@ -511,19 +513,28 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                             <PluginTabs activeKey={activeKey} onChange={onTabChange}>
                                                 <TabPane key={"ruleData"} tab={"规则数据"}>
                                                     <div className={styles["rule-data"]}>
-                                                        <HttpRule analyzeId={analyzeId} />
+                                                        <HttpRule
+                                                            analyzeId={analyzeId}
+                                                            onSetAnalyzedIds={setAnalyzedIds}
+                                                        />
                                                     </div>
                                                 </TabPane>
-                                                <TabPane key={"historyData"} tab={"流量数据"}>
+                                                <TabPane
+                                                    key={"historyData"}
+                                                    tab={"流量数据"}
+                                                    disabled={executeStatus === "process"}
+                                                >
                                                     <div className={styles["history-data"]}>
-                                                        <HTTPHistory
-                                                            pageType='History_Analysis_HistoryData'
-                                                            showAdvancedConfig={false}
-                                                            showProtocolType={false}
-                                                            showBatchActions={false}
-                                                            showDelAll={false}
-                                                            params={{AnalyzedIds: [analyzeId]}}
-                                                        />
+                                                        {executeStatus !== "process" && analyzedIds.length && (
+                                                            <HTTPHistory
+                                                                pageType='History_Analysis_HistoryData'
+                                                                showAdvancedConfig={false}
+                                                                showProtocolType={false}
+                                                                showBatchActions={false}
+                                                                showDelAll={false}
+                                                                params={{AnalyzedIds: analyzedIds}}
+                                                            />
+                                                        )}
                                                     </div>
                                                 </TabPane>
                                             </PluginTabs>
@@ -546,9 +557,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 
 interface HttpRuleProps {
     analyzeId: string
+    onSetAnalyzedIds: (analyzeIds: number[]) => void
 }
 const HttpRule: React.FC<HttpRuleProps> = (props) => {
-    const {analyzeId} = props
+    const {analyzeId, onSetAnalyzedIds} = props
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
@@ -632,6 +644,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                 <div className={styles["HttpRule-first"]}>
                     <HttpRuleTable
                         analyzeId={analyzeId}
+                        onSetAnalyzedIds={onSetAnalyzedIds}
                         currentSelectItem={currentSelectItem}
                         onSelect={(i) => {
                             if (!i) {
@@ -639,6 +652,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                                 return
                             }
                             setCurrentSelectItem(i)
+                            lasetIdRef.current = i.HTTPFlowId
                             getHTTPFlowById(i.HTTPFlowId)
                         }}
                         onSetTableData={setTableData}
@@ -696,15 +710,20 @@ interface HTTPFlowRuleData {
     RuleVerboseName: string
     Rule: string
 }
+
+interface QueryAnalyzedIdResponse {
+    AnalyzedIds: number[]
+}
 interface HttpRuleTableProps {
     analyzeId: string
+    onSetAnalyzedIds: (analyzeIds: number[]) => void
     currentSelectItem?: HTTPFlowRuleData
     onSelect: (c?: HTTPFlowRuleData) => void
     onSetTableData: (d: HTTPFlowRuleData[]) => void
     scrollToIndex?: string
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
-    const {analyzeId, currentSelectItem, onSelect, onSetTableData, scrollToIndex} = props
+    const {analyzeId, onSetAnalyzedIds, currentSelectItem, onSelect, onSetTableData, scrollToIndex} = props
     const tableBoxRef = useRef<HTMLDivElement>(null)
     const tableRef = useRef<any>(null)
     const boxHeightRef = useRef<number>()
@@ -727,6 +746,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     const apiQueryAnalyzedHTTPFlowRule: (
         query: QueryAnalyzedHTTPFlowRuleRequest
     ) => Promise<DataResponseProps<HTTPFlowRuleData>> = (query) => {
+        apiQueryAnalyzedId(query.Filter)
         return new Promise((resolve, reject) => {
             console.log(query)
             ipcRenderer
@@ -738,6 +758,17 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 })
         })
     }
+
+    const apiQueryAnalyzedId = useMemoizedFn((Filter: QueryAnalyzedHTTPFlowRuleFilter) => {
+        ipcRenderer
+            .invoke("QueryAnalyzedId", {ResultIds: Filter.ResultIds})
+            .then((res: QueryAnalyzedIdResponse) => {
+                onSetAnalyzedIds(res.AnalyzedIds)
+            })
+            .catch((e) => {
+                yakitNotify("error", `分析ID查询失败: ${e}`)
+            })
+    })
 
     const onFirst = useMemoizedFn(() => {
         setIsRefresh(!isRefresh)
@@ -764,7 +795,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
         try {
             const updateData = JSON.parse(data)
             if (typeof updateData !== "string" && updateData.task_id === analyzeId) {
-                if (updateData.action === "create") {
+                if (["create", "save"].includes(updateData.action)) {
                     console.log("开启实时数据刷新")
                     debugVirtualTableEvent.startT()
                 }

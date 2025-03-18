@@ -464,4 +464,19 @@ module.exports = (win, getClient) => {
     ipcMain.handle("QueryAnalyzedHTTPFlowRule", async (e, params) => {
         return await asyncQueryAnalyzedHTTPFlowRule(params)
     })
+
+    const asyncQueryAnalyzedId = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().QueryAnalyzedId(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("QueryAnalyzedId", async (e, params) => {
+        return await asyncQueryAnalyzedId(params)
+    })
 }
