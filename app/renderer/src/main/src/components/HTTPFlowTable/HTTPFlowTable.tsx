@@ -1196,6 +1196,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         updateQueryParams(realQuery)
+        console.log('history', realQuery);
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {

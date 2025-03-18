@@ -230,19 +230,44 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         taskName: "AnalyzeHTTPFlow",
         apiKey: "AnalyzeHTTPFlow",
         token: tokenRef.current,
-        onEnd: () => {
-            debugPluginStreamEvent.stop()
-            setTimeout(() => {
-                setExecuteStatus("finished")
-            }, 300)
-        },
         setRuntimeId: (aId: string) => {
             yakitNotify("info", `分析任务启动成功，运行时 ID: ${aId}`)
+            console.log(aId)
             setAnalyzeId(aId)
+        },
+        onEnd: (getStreamInfo) => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => {
+                if (getStreamInfo) {
+                    const errorLog = getStreamInfo.logState.find((item) => item.level === "error")
+                    if (errorLog) {
+                        setExecuteStatus("error")
+                    } else {
+                        setExecuteStatus("finished")
+                    }
+                }
+            }, 300)
+        },
+        onError: () => {
+            setExecuteStatus("error")
         }
     })
 
-    const onStartExecute = useMemoizedFn(() => {
+    const onOperateClick = useMemoizedFn(() => {
+        switch (executeStatus) {
+            case "finished":
+            case "error":
+                onStartExecute()
+                break
+            case "process":
+                onStopExecute()
+                break
+            default:
+                break
+        }
+    })
+
+    const onStartExecute = () => {
         handleTabClick({
             key: curTabKey,
             label: "",
@@ -253,28 +278,36 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         onSaveHotCode(false)
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
+        debugPluginStreamEvent.reset()
+        setAnalyzeId("")
+
         execParamsRef.current = {
             HotPatchCode: curHotPatch,
             Replacers: [...curRules]
         }
-
         ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current, tokenRef.current).then(() => {
             debugPluginStreamEvent.start()
             setExecuteStatus("process")
         })
-    })
-    const stopExec = useMemoizedFn(() => {
-        debugPluginStreamEvent.stop()
-        setExecuteStatus("finished")
-    })
+    }
+
+    const onStopExecute = () => {
+        ipcRenderer
+            .invoke(`cancel-AnalyzeHTTPFlow`, tokenRef.current)
+            .then(() => {
+                debugPluginStreamEvent.stop()
+                setExecuteStatus("finished")
+            })
+            .catch((e: any) => {
+                yakitNotify("error", "取消本地插件执行出错:" + e)
+            })
+    }
     // #endregion
 
-    // #region 执行结果
     const [activeKey, setActiveKey] = useState<string>("ruleData")
     const onTabChange = useMemoizedFn((key: string) => {
         setActiveKey(key)
     })
-    // #endregion
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -458,58 +491,43 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                 />
                                             </div>
                                         )}
-                                        {executeStatus === "finished" && (
-                                            <YakitButton onClick={onStartExecute}>执行</YakitButton>
-                                        )}
-                                        {executeStatus === "process" && (
-                                            <YakitButton type='primary' danger onClick={stopExec}>
-                                                停止
-                                            </YakitButton>
-                                        )}
+                                        <YakitButton onClick={onOperateClick} danger={executeStatus === "process"}>
+                                            {["finished", "error"].includes(executeStatus)
+                                                ? "执行"
+                                                : executeStatus === "process"
+                                                ? "停止"
+                                                : executeStatus === "paused"
+                                                ? "继续"
+                                                : "退出"}
+                                        </YakitButton>
                                     </div>
                                 </div>
                                 <div className={styles["HTTPHistoryAnalysis-result"]}>
-                                    <HorizontalScrollCard
-                                        title='Data Card'
-                                        data={[
-                                            {
-                                                info: [
-                                                    {Id: "已处理数/总数", Data: "123", Timestamp: Math.random() * 10}
-                                                ],
-                                                tag: "已处理数/总数"
-                                            },
-                                            {
-                                                info: [
-                                                    {Id: "符合条件流量", Data: "2222", Timestamp: Math.random() * 10}
-                                                ],
-                                                tag: "符合条件流量"
-                                            },
-                                            {
-                                                info: [{Id: "提取数据", Data: "3333", Timestamp: Math.random() * 10}],
-                                                tag: "提取数据"
-                                            }
-                                        ]}
-                                    />
+                                    {streamInfo.cardState.length > 0 && (
+                                        <HorizontalScrollCard title='Data Card' data={streamInfo.cardState} />
+                                    )}
                                     <div className={styles["HTTPHistoryAnalysis-result-tab"]}>
-                                        <PluginTabs activeKey={activeKey} onChange={onTabChange}>
-                                            <TabPane key={"ruleData"} tab={"规则数据"}>
-                                                <div className={styles["rule-data"]}>
-                                                    <HttpRule analyzeId={analyzeId} />
-                                                </div>
-                                            </TabPane>
-                                            <TabPane key={"historyData"} tab={"流量数据"}>
-                                                <div className={styles["history-data"]}>
-                                                    <HTTPHistory
-                                                        pageType='History_Analysis_HistoryData'
-                                                        showAdvancedConfig={false}
-                                                        showProtocolType={false}
-                                                        showBatchActions={false}
-                                                        showDelAll={false}
-                                                        params={{AnalyzedIds: [+analyzeId]}}
-                                                    />
-                                                </div>
-                                            </TabPane>
-                                        </PluginTabs>
+                                        {analyzeId && (
+                                            <PluginTabs activeKey={activeKey} onChange={onTabChange}>
+                                                <TabPane key={"ruleData"} tab={"规则数据"}>
+                                                    <div className={styles["rule-data"]}>
+                                                        <HttpRule analyzeId={analyzeId} />
+                                                    </div>
+                                                </TabPane>
+                                                <TabPane key={"historyData"} tab={"流量数据"}>
+                                                    <div className={styles["history-data"]}>
+                                                        <HTTPHistory
+                                                            pageType='History_Analysis_HistoryData'
+                                                            showAdvancedConfig={false}
+                                                            showProtocolType={false}
+                                                            showBatchActions={false}
+                                                            showDelAll={false}
+                                                            params={{AnalyzedIds: [analyzeId]}}
+                                                        />
+                                                    </div>
+                                                </TabPane>
+                                            </PluginTabs>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -612,22 +630,20 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             isVer={true}
             firstNode={() => (
                 <div className={styles["HttpRule-first"]}>
-                    {analyzeId && (
-                        <HttpRuleTable
-                            analyzeId={analyzeId}
-                            currentSelectItem={currentSelectItem}
-                            onSelect={(i) => {
-                                if (!i) {
-                                    setCurrentSelectItem(undefined)
-                                    return
-                                }
-                                setCurrentSelectItem(i)
-                                getHTTPFlowById(i.HTTPFlowId)
-                            }}
-                            onSetTableData={setTableData}
-                            scrollToIndex={scrollToIndex}
-                        />
-                    )}
+                    <HttpRuleTable
+                        analyzeId={analyzeId}
+                        currentSelectItem={currentSelectItem}
+                        onSelect={(i) => {
+                            if (!i) {
+                                setCurrentSelectItem(undefined)
+                                return
+                            }
+                            setCurrentSelectItem(i)
+                            getHTTPFlowById(i.HTTPFlowId)
+                        }}
+                        onSetTableData={setTableData}
+                        scrollToIndex={scrollToIndex}
+                    />
                 </div>
             )}
             secondNode={
@@ -849,7 +865,6 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 ref={tableRef}
                 renderKey='Id'
                 columns={ruleColumns}
-                loading={tableLoading}
                 query={tableParams.Filter}
                 isRefresh={isRefresh}
                 titleHeight={42}
