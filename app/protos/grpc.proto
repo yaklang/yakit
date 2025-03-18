@@ -221,6 +221,7 @@ service Yak {
   rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream ExecResult);
   // 查询分析后规则数据
   rpc QueryAnalyzedHTTPFlowRule(QueryAnalyzedHTTPFlowRuleRequest) returns (QueryAnalyzedHTTPFlowRuleResponse);
+  rpc QueryAnalyzedId(QueryAnalyzedIdRequest) returns (QueryAnalyzedIdResponse);
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
 
@@ -4938,6 +4939,13 @@ message HTTPFlowRuleData{
   string Rule =4;
 }
 
+message  QueryAnalyzedIdRequest{
+  AnalyzedHTTPFlowFilter Filter =1;
+}
+
+message QueryAnalyzedIdResponse{
+  repeated int64 AnalyzedIds = 1;
+}
 
 message ExportHTTPFlowsRequest {
   QueryHTTPFlowRequest ExportWhere = 1;
