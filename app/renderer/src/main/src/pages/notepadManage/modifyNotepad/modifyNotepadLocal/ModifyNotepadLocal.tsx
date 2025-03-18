@@ -34,6 +34,8 @@ import {yakitNotify} from "@/utils/notification"
 import {NotepadExport} from "../../notepadManage/notepadManageLocal/NotepadImportAndExport"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
+import {APIFunc} from "@/apiUtils/type"
+import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
@@ -161,19 +163,23 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }
     }, [inViewport])
     /**保存最新的文档内容 */
-    const onSaveNewContent = useMemoizedFn((markdownContent) => {
-        if (!note.Id) {
-            yakitNotify("error", "笔记本Id不存在")
-            return
-        }
-        const params: UpdateNoteRequest = {
-            Filter: filterRef.current,
-            UpdateTitle: true,
-            Title: perTabName.current,
-            UpdateContent: true,
-            Content: markdownContent || ""
-        }
-        grpcUpdateNote(params)
+    const onSaveNewContent: APIFunc<string, DbOperateMessage> = useMemoizedFn((markdownContent) => {
+        return new Promise(async (resolve, reject) => {
+            if (!note.Id) {
+                const message = "笔记本Id不存在"
+                yakitNotify("error", message)
+                reject(message)
+                return
+            }
+            const params: UpdateNoteRequest = {
+                Filter: filterRef.current,
+                UpdateTitle: true,
+                Title: perTabName.current,
+                UpdateContent: true,
+                Content: markdownContent || ""
+            }
+            grpcUpdateNote(params).then(resolve).catch(reject)
+        })
     })
     /** 编辑器内容的变化，更新数据 */
     const onMarkdownUpdated = useDebounceFn(
@@ -231,7 +237,16 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     //#endregion
 
     const onExport = useMemoizedFn(() => {
-        setExportVisible(true)
+        setNotepadLoading(true)
+        onSaveNewContent(notepadContentRef.current)
+            .then(() => {
+                setExportVisible(true)
+            })
+            .finally(() =>
+                setTimeout(() => {
+                    setNotepadLoading(false)
+                }, 200)
+            )
     })
 
     // 删除文档
