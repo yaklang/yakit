@@ -380,15 +380,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(customPlugin || [])
             )
         },
-        [
-            readonly,
-            defaultValue,
-            type,
-            collabParams.enableCollab,
-            collabParams.milkdownHash,
-            collabParams.onCollab,
-            collabParams.onSaveHistory
-        ]
+        [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash]
     )
 
     const uploadImg = async (image) => {

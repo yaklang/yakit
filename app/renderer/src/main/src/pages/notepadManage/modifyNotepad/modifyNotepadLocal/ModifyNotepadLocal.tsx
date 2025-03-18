@@ -330,7 +330,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         <MilkdownEditorLocal
                             type='notepad'
                             defaultValue={note.Content}
-                            customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current.getCatalogue(v))}
+                            customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current?.getCatalogue(v))}
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}
                             onSaveContentBeforeDestroy={onSaveNewContent}
