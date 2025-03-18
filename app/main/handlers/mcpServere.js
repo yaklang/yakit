@@ -1,6 +1,7 @@
 const {ipcMain} = require("electron")
 const {Client} = require("@modelcontextprotocol/sdk/client/index.js")
 const {StdioClientTransport} = require("@modelcontextprotocol/sdk/client/stdio.js")
+const {handleIPCError} = require("../handleIPC")
 // 动态 import
 async function newSSE(url) {
     const {SSEClientTransport} = await import("@modelcontextprotocol/sdk/client/sse.js")
@@ -9,60 +10,10 @@ async function newSSE(url) {
     return transport
 }
 
-// Verify Transport Parameter
-const verifyTransport = (value) => {
-    if (typeof value !== "object" || !value || !value.type) {
-        return "invalid transport"
-    }
-    if (value.type === "sse") {
-        if (!value.url || typeof value.url !== "string") {
-            return "url must be a string"
-        }
-    }
-
-    if (value.type === "stdio") {
-        if (!value.command || typeof value.command !== "string") {
-            return "command must be a string"
-        }
-        if ("args" in value && value.args) {
-            if (!Array.isArray(value.args) || !value.args.every((item) => typeof item === "string")) {
-                return "args must be an array of strings"
-            }
-        }
-        if ("env" in value && value.env) {
-            if (
-                typeof value.env !== "object" ||
-                Array.isArray(value.env) ||
-                value.env === null ||
-                !Object.values(value.env).every((v) => typeof v === "string")
-            ) {
-                return "env must be an object of strings"
-            }
-        }
-        if ("cwd" in value && value.env && typeof value.cwd !== "string") {
-            return "cwd must be a string"
-        }
-    }
-
-    return ""
-}
-
-/**
- * @typedef {Object} ClientSetting
- * @property {string} id - 客户端唯一标识
- * @property {"sse" | "stdio"} type - 传输类型，"sse"或"stdio"
- * @property {string} [url] - SSE服务的URL地址（SSE传输类型时使用）
- * @property {string} [command] - 子进程执行命令（stdio传输类型时使用）
- * @property {string[]} [args] - 子进程命令行参数（stdio传输类型时使用）
- * @property {Record<string, string>} [env] - 子进程环境变量（stdio传输类型时使用）
- * @property {string} [cwd] - 子进程工作目录路径（stdio传输类型时使用）
- */
 /**
  * @typedef {Object} ClientConfig
- * @property {Transport} transport - MCP传输层实例，负责底层通信协议的处理
  * @property {MCPClient} client - MCP客户端实例，提供与消息通信协议服务端的交互能力
  * @property {Boolean} link - 连接状态标识，true表示已建立有效连接
- * @property {ClientSetting} setting - 客户端配置信息，根据传输类型不同使用不同配置参数
  */
 /**
  * @name client pool
@@ -70,63 +21,98 @@ const verifyTransport = (value) => {
  */
 const clients = new Map()
 
-// create a new mcp client
-const createClient = (params, s) => {
-    const {id, ...rest} = params
-    return new Promise(async (resolve, reject) => {
-        const result = verifyTransport(rest)
-        if (result) {
-            return reject(result)
+/**
+ * @typedef {Object} ErrorCount
+ * @property {NodeJS.Timeout} timer - 取消错误计数的定时器
+ * @property {Number} count - 报错次数
+ */
+/**
+ * @name Client-Error-Count
+ * @type {Map<string, ErrorCount>}
+ * @description 连续报错5次后，默认关闭客户端，报错间隔时间为10秒，10秒重置报错次数
+ */
+const errorCount = new Map()
+// client error handling
+const handleClientError = (win, token, error) => {
+    const info = errorCount.get(token)
+    if (info) {
+        const {timer, count} = info
+        if (count >= 5) {
+            clearTimeout(timer)
+            deleteClient(token)
+            closeClient(token)
+            if (win) win.webContents.send("mcp-client-error", token, handleIPCError(error))
+        } else {
+            clearTimeout(timer)
+            errorCount.set(token, {
+                timer: setTimeout(() => errorCount.delete(token), 10000),
+                count: count + 1
+            })
         }
-        if (clients.has(id)) {
-            return reject("client already exist")
-        }
-
-        try {
-            const client = new Client(
-                {
-                    name: "mcp-client",
-                    version: "1.0.0"
-                },
-                {
-                    capabilities: {
-                        prompts: {},
-                        resources: {},
-                        tools: {}
-                    }
-                }
-            )
-            clients.set(id, {transport: null, client, link: false, setting: params})
-            resolve("")
-        } catch (error) {
-            return reject(error)
-        }
-    })
+    } else {
+        errorCount.set(token, {
+            timer: setTimeout(() => errorCount.delete(token), 10000),
+            count: 1
+        })
+    }
 }
 
 // connect mcp client
-const connectClient = (token) => {
+const connectClient = (win, setting) => {
     return new Promise(async (resolve, reject) => {
-        if (!clients.has(token)) {
-            return reject("client no exist")
-        }
-
-        const {client, link, setting} = clients.get(token)
-
-        if (link) {
-            return reject("client already connected")
+        const info = clients.get(setting.id) || {}
+        if (info && info.link) {
+            try {
+                const version = await info.client.getServerVersion()
+                if (version && version.name) {
+                    // tools
+                    const {tools} = (await client.listTools()) || {}
+                    // resourcesTemplates
+                    const {resourceTemplates} = (await client.listResourceTemplates()) || {}
+                    resolve({tools: tools, resourceTemplates: resourceTemplates})
+                    return
+                }
+            } catch (error) {}
         }
 
         try {
             const {url, id, type, ...rest} = setting
             const transport = setting.type === "sse" ? await newSSE(url) : new StdioClientTransport({...rest})
+            let client = info.client
+            if (!client) {
+                client = new Client(
+                    {
+                        name: "mcp-client",
+                        version: "1.0.0"
+                    },
+                    {
+                        capabilities: {
+                            prompts: {},
+                            resources: {},
+                            tools: {}
+                        }
+                    }
+                )
+            }
             await client.connect(transport)
+
+            client.onerror = (error) => {
+                handleClientError(win, id, error)
+                console.log("client error", error)
+            }
+            client.onclose = () => {
+                // 客户端被关闭后，更新连接状态
+                if (clients.has(id)) {
+                    clients.set(id, {...clients.get(id), link: false})
+                }
+            }
+
             // tools
             const {tools} = (await client.listTools()) || {}
             // resourcesTemplates
             const {resourceTemplates} = (await client.listResourceTemplates()) || {}
 
-            clients.set(token, {...clients.get(token), transport: transport, link: true})
+            clients.set(id, {client: client, link: true})
             resolve({tools: tools, resourceTemplates: resourceTemplates})
         } catch (error) {
             reject(error)
@@ -148,7 +134,6 @@ const closeClient = (token) => {
 
         try {
             await client.close()
-            clients.set(token, {...clients.get(token), link: false})
             resolve("")
         } catch (error) {
             reject(error)
@@ -174,17 +159,117 @@ const deleteClient = (token) => {
     })
 }
 
-module.exports = (win, getClient) => {
-    ipcMain.handle("create-mcp-client", async (e, params) => {
-        return await createClient(params)
+/**
+ * @name comm pool, 通信通道池
+ * @type {Map<string, AbortController>}
+ */
+const commPools = new Map()
+// 生成信号控制器
+const newAbortController = (token) => {
+    const controller = new AbortController()
+    commPools.set(token, controller)
+    return controller
+}
+
+// call-tool
+const handleCallTool = (win, token, request) => {
+    return new Promise(async (resolve, reject) => {
+        const server = clients.get(token)
+        if (!server) {
+            return reject("client no exist")
+        }
+        if (commPools.has(token)) {
+            return reject("client is busy")
+        }
+        if (!server.link) {
+            return reject("Client is not connected")
+        }
+
+        try {
+            const signal = newAbortController(token).signal
+            console.log("request", request)
+            server.client
+                .callTool(request, undefined, {
+                    onprogress: (progress) => {
+                        if (win && progress) {
+                            win.webContents.send(`mcp-${token}-progress`, progress)
+                        }
+                        console.log("onprogress", progress)
+                    },
+                    signal: signal
+                })
+                .then((res) => {
+                    if (win && res) {
+                        win.webContents.send(`mcp-${token}-end`, res)
+                    }
+                    console.log("ans", res)
+                })
+                .catch((err) => {
+                    if (win && err) {
+                        win.webContents.send(`mcp-${token}-error`, handleIPCError(err))
+                    }
+                })
+                .finally(() => {
+                    commPools.has(token) && commPools.delete(token)
+                })
+            resolve("")
+        } catch (error) {
+            reject(error)
+        }
     })
-    ipcMain.handle("connect-mcp-client", async (e, token) => {
-        return await connectClient(token)
+}
+// cancel call-tool
+const handleCancelCallTool = (token) => {
+    return new Promise(async (resolve, reject) => {
+        const comm = commPools.get(token)
+        if (!comm) {
+            return reject("comm no exist")
+        }
+        comm.abort()
+        resolve("")
+    })
+}
+
+module.exports = (win, getClient) => {
+    ipcMain.handle("connect-mcp-client", async (e, param) => {
+        return await connectClient(win, param)
     })
     ipcMain.handle("close-mcp-client", async (e, token) => {
         return await closeClient(token)
     })
     ipcMain.handle("delete-mcp-client", async (e, token) => {
         return await deleteClient(token)
+    })
+
+    ipcMain.handle("callTool-mcp-client", async (e, token, request) => {
+        return await handleCallTool(win, token, request)
+    })
+    ipcMain.handle("cancel-callTool-mcp-client", async (e, token) => {
+        return await handleCancelCallTool(token)
+    })
+
+    let yakMCPStream = null
+    ipcMain.handle("cancel-yak-mcp-server", async () => {
+        if (yakMCPStream) {
+            yakMCPStream.cancel()
+            yakMCPStream = null
+        }
+    })
+    ipcMain.handle("start-yak-mcp-server", async (e) => {
+        if (yakMCPStream) {
+            return Promise.reject("stream already exist")
+        }
+        yakMCPStream = getClient().StartSSEMCP({Tools: [], Resources: [], DisableTools: [], DisableResources: []})
+        yakMCPStream.on("data", (e) => {
+            if (win) {
+                win.webContents.send("yak-mcp-server-send", e)
+            }
+        })
+        yakMCPStream.on("end", () => {
+            if (yakMCPStream) {
+                yakMCPStream.cancel()
+                yakMCPStream = null
+            }
+        })
     })
 }

@@ -9,7 +9,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
 import {isValidURL} from "@/utils/tool"
-import {grpcCreateMCPClient} from "./grpc"
 
 // import classNames from "classnames"
 // import styles from "./AIAgent.module.scss"
@@ -37,14 +36,19 @@ export const AddServerModal: React.FC<AddServerModalProps> = (props) => {
 
     // 格式化数据
     const formatData = useMemoizedFn((value) => {
-        if (!token.current) token.current = randomString(16)
+        if (!value || typeof value !== "object" || !value.type) {
+            yakitNotify("error", "数据异常，请关闭后重试")
+            return null
+        }
         if (!["stdio", "sse"].includes(value.type)) {
             yakitNotify("error", "协议类型异常，请关闭后重试")
             return null
         }
+        if (!token.current) token.current = randomString(16)
 
         // 没有兼容编辑功能，所以不需要判断是否存在 info
         const data: RenderMCPClientInfo = {
+            isDefault: false,
             id: token.current,
             type: value.type,
             status: false
@@ -88,12 +92,7 @@ export const AddServerModal: React.FC<AddServerModalProps> = (props) => {
         form.validateFields()
             .then(async (values) => {
                 const obj = formatData(values)
-                if (obj) {
-                    try {
-                        await grpcCreateMCPClient(obj)
-                        onCallback(true, obj)
-                    } catch (error) {}
-                }
+                obj && onCallback(true, obj)
             })
             .catch(() => {})
             .finally(() => {

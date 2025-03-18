@@ -152,7 +152,10 @@ export const formatMCPTools = (data: any[]): RenderTools[] => {
     return tools
 }
 
-/** 将多维 tools 转换成一维 tools */
+/**
+ * @name 将多维 tools 转换成一维 tools
+ * @description 只转换上面两层数据，后面数据全部变为 JSON 放入 children 里
+ */
 export const convertMCPTools = (key: string, data: RenderToolsParam[], newData: RenderToolsParam[]): void => {
     for (let item of data) {
         const node = cloneDeep(item)

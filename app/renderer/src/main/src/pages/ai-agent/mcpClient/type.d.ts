@@ -37,3 +37,15 @@ export interface MCPClientResource {
     tools: any[]
     resourceTemplates: any[]
 }
+
+/** MCP-progress */
+export interface MCPDataProgress {
+    /** 进度 */
+    progress: number
+    /** 总量 */
+    total: string
+}
+/** MCP-Data */
+export interface MCPData {
+    content: {type: string; text: string}[]
+}
