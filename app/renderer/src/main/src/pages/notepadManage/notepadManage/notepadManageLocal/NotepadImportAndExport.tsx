@@ -176,6 +176,7 @@ export const NotepadExport: React.FC<NotepadExportProps> = React.memo((props) =>
                         yakitNotify("error", `导出失败:${e}`)
                     })
             } else {
+                successRef.current = false
                 onEnd()
             }
         })
