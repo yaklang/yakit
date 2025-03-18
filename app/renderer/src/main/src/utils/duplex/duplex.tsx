@@ -101,6 +101,10 @@ export const startupDuplexConn = () => {
                     handleConcurrentLoadData("cps", obj)
                     emiter.emit("onRefreshCps")
                     break
+                // 通知QueryAnalyzedHTTPFlowRule轮询更新
+                case "analyzed_http_flow":
+                    emiter.emit("onRefreshQueryAnalyzedHTTPFlowRule", JSON.stringify(obj))
+                    break
             }
         } catch (error) {}
     })

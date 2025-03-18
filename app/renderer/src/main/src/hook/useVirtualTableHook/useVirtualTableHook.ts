@@ -19,7 +19,7 @@ const OFFSET_STEP = 100
 
 const defSort: SortProps = {
     order: "desc",
-    orderBy: "id"
+    orderBy: "Id"
 }
 
 // 倒序时需要额外处理传给后端顺序
@@ -112,7 +112,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
 
         grpcFun(finalParams)
             .then((rsp: DataResponseProps<DataT>) => {
-                // console.log("rsp---", rsp)
+                console.log("rsp---", rsp)
 
                 let newData: DataT[] = verifyResult.isReverse ? rsp.Data.reverse() : rsp.Data
                 if (initResDataFun) {
@@ -209,7 +209,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
             Page: 1,
             Limit: pagination.Limit,
             Order: sortRef.current.order,
-            OrderBy: sortRef.current.orderBy || "id"
+            OrderBy: sortRef.current.orderBy || "Id"
         }
 
         const query: ParamsTProps = {
@@ -231,7 +231,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
             Page: 1,
             Limit: pagination.Limit,
             Order: sortRef.current.order,
-            OrderBy: sortRef.current.orderBy || "id"
+            OrderBy: sortRef.current.orderBy || "Id"
         }
 
         const query: ParamsTProps = {
@@ -261,7 +261,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
                 Page: 1,
                 Limit: limitCount,
                 Order: sortRef.current.order,
-                OrderBy: sortRef.current.orderBy || "id"
+                OrderBy: sortRef.current.orderBy || "Id"
             }
             const query = {
                 ...params,
@@ -279,7 +279,7 @@ export default function useVirtualTableHook<T extends ParamsTProps, DataT extend
             Page: 1,
             Limit: OFFSET_STEP,
             Order: "desc",
-            OrderBy: "id"
+            OrderBy: "Id"
         }
         const query = {
             ...params,

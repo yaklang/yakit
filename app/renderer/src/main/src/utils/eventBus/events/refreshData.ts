@@ -20,4 +20,6 @@ export type RefreshDataEventProps = {
     onRefreshCurRps: number
     // 通知cps
     onRefreshCps?: string
+    // 通知QueryAnalyzedHTTPFlowRule轮询更新
+    onRefreshQueryAnalyzedHTTPFlowRule: string
 }

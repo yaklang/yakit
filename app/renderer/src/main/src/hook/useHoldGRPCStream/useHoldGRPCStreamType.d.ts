@@ -74,6 +74,7 @@ export declare namespace StreamResult {
         Id?: number
         Progress: number
         RuntimeID?: string
+        AnalyzeId?: string
     }
 
     /** @name 数据流结果(进度条) */
