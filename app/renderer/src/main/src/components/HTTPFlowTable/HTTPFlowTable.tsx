@@ -721,7 +721,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         FromPlugin: "",
         Full: false,
         Tags: [],
-        AnalyzeId: props.params?.AnalyzeId
+        AnalyzedIds: props.params?.AnalyzedIds
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
@@ -1135,10 +1135,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 方法请求
     const getDataByGrpc = useMemoizedFn(async (query, type: "top" | "bottom" | "update" | "offset") => {
         // 插件执行、WebFuzzer中流量数据必有runTimeId
-        // 流量分析必有AnalyzeId
+        // 流量分析必有AnalyzedIds
         if (
             (["Plugin", "Webfuzzer"].includes(pageType || "") && !runTimeId) ||
-            (pageType === "History_Analysis_HistoryData" && !props.params?.AnalyzeId)
+            (pageType === "History_Analysis_HistoryData" && !props.params?.AnalyzedIds?.length)
         ) {
             setTimeout(() => {
                 setLoading(false)
@@ -3412,7 +3412,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
             Full: false,
-            AnalyzeId: props.params?.AnalyzeId,
+            AnalyzedIds: props.params?.AnalyzedIds,
             // 屏蔽条件和高级配置里面的参数需要保留
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,

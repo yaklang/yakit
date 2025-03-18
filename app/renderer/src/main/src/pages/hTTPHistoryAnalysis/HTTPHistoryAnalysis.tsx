@@ -26,11 +26,17 @@ import {HorizontalScrollCard} from "../plugins/operator/horizontalScrollCard/Hor
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {HTTPHistory} from "@/components/HTTPHistory"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
+import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
 import styles from "./HTTPHistoryAnalysis.module.scss"
-import {Paging} from "@/utils/yakQueryHTTPFlow"
+import {HistoryHighLightText, HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
+import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/components/HTTPFlowExtractedDataTable"
+import {genDefaultPagination, QueryGeneralResponse} from "../invoker/schema"
+import ReactResizeDetector from "react-resize-detector"
+import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
+import {DataResponseProps, FilterProps, VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -42,7 +48,9 @@ interface TabsItem {
     contShow: boolean
 }
 
-interface AnalyzeHTTPFlowRequest {}
+interface AnalyzeHTTPFlowRequest {
+    HotPatchCode: string
+}
 interface AnalyzeHTTPFlowResponse {
     AnalyzeId: string
 }
@@ -228,8 +236,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
         execParamsRef.current = {
-            hotPatch: curHotPatch,
-            rules: [...curRules]
+            HotPatchCode: curHotPatch
+            // rules: [...curRules]
         }
         ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current).then((res: AnalyzeHTTPFlowResponse) => {
             setAnalyzeId(res.AnalyzeId)
@@ -463,7 +471,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                         showProtocolType={false}
                                                         showBatchActions={false}
                                                         showDelAll={false}
-                                                        params={{AnalyzeId: analyzeId}}
+                                                        params={{AnalyzedIds: [+analyzeId]}}
                                                     />
                                                 </div>
                                             </TabPane>
@@ -492,7 +500,9 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
-    const [currentSelectItem, setCurrentSelectItem] = useState<any>({id: 1})
+    const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
+    const [tableData, setTableData] = useState<HTTPFlowRuleData[]>([])
+    const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
     // #region mitm页面配置代理用于发送webFuzzer带过去
     const [downstreamProxy, setDownstreamProxy] = useState<string>("")
@@ -514,12 +524,48 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     }, [inViewport])
     // #endregion
 
+    // #region 通过HTTPFlowId去拿去数据包详细数据
+    const lasetIdRef = useRef<number>()
+    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
+    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
+    const [flow, setFlow] = useState<HTTPFlow>()
+    const getHTTPFlowById = useMemoizedFn((hTTPFlowId: number) => {
+        setFlowRequestLoad(true)
+        setFlowResponseLoad(true)
+        ipcRenderer
+            .invoke("GetHTTPFlowById", {Id: hTTPFlowId})
+            .then((i: HTTPFlow) => {
+                if (i.Id == lasetIdRef.current) {
+                    setFlow(i)
+                }
+            })
+            .catch((e: any) => {
+                yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setFlowRequestLoad(false)
+                    setFlowResponseLoad(false)
+                }, 200)
+            })
+    })
+    // #endregion
+
+    // #region 定位数据包id
+    const [scrollToIndex, setScrollToIndex] = useState<string>()
+    const scrollTo = useMemoizedFn((id) => {
+        const index = tableData.findIndex((item: HTTPFlowRuleData) => item.Id === id)
+        // 加随机值触发更新渲染执行表格跳转方法
+        if (index !== -1) setScrollToIndex(index + "_" + Math.random())
+    })
+    // #endregion
+
     const ResizeBoxProps = useCreation(() => {
         let p = {
             firstRatio: "50%",
             secondRatio: "50%"
         }
-        if (!currentSelectItem?.id) {
+        if (!currentSelectItem?.HTTPFlowId) {
             p.secondRatio = "0%"
             p.firstRatio = "100%"
         }
@@ -531,69 +577,186 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             isVer={true}
             firstNode={() => (
                 <div className={styles["HttpRule-first"]}>
-                    <HttpRuleTable analyzeId={analyzeId} />
+                    <HttpRuleTable
+                        analyzeId={analyzeId}
+                        currentSelectItem={currentSelectItem}
+                        onSelect={(i) => {
+                            if (!i) {
+                                setCurrentSelectItem(undefined)
+                                return
+                            }
+                            setCurrentSelectItem(i)
+                            getHTTPFlowById(i.HTTPFlowId)
+                        }}
+                        onSetTableData={setTableData}
+                        scrollToIndex={scrollToIndex}
+                    />
                 </div>
             )}
             secondNode={
                 <div className={styles["HttpRule-second"]} ref={httpRuleSecondRef}>
-                    {/* <HTTPFlowDetailRequestAndResponse
-                        pageType='History_Analysis_ruleData'
-                        historyId={historyId}
-                        noHeader={true}
-                        sendToWebFuzzer={true}
-                        downstreamProxyStr={downstreamProxy}
-                        // id={1 || 0}
-                        // defaultHttps={true}
-                        // Tags={""}
-                        // flow={undefined}
-                        // flowRequestLoad={false}
-                        // flowResponseLoad={false}
-                        // highLightItem={undefined}
-                    /> */}
+                    {currentSelectItem?.HTTPFlowId && flow && (
+                        <HTTPFlowDetailRequestAndResponse
+                            pageType='History_Analysis_ruleData'
+                            historyId={historyId}
+                            noHeader={true}
+                            sendToWebFuzzer={true}
+                            downstreamProxyStr={downstreamProxy}
+                            id={currentSelectItem?.HTTPFlowId || 0}
+                            defaultHttps={flow?.IsHTTPS}
+                            Tags={flow?.Tags}
+                            flow={flow}
+                            flowRequestLoad={flowRequestLoad}
+                            flowResponseLoad={flowResponseLoad}
+                            scrollTo={scrollTo}
+                            scrollID={currentSelectItem.Id}
+                            // highLightItem={undefined}
+                        />
+                    )}
                 </div>
             }
             firstMinSize={160}
             secondMinSize={200}
             secondNodeStyle={{
-                display: !currentSelectItem?.id ? "none" : "",
-                padding: !currentSelectItem?.id ? 0 : undefined
+                display: currentSelectItem?.HTTPFlowId === undefined ? "none" : "",
+                padding: currentSelectItem?.HTTPFlowId === undefined ? 0 : undefined
             }}
-            lineStyle={{display: !!currentSelectItem?.id ? "" : "none"}}
+            lineStyle={{display: currentSelectItem?.HTTPFlowId === undefined ? "none" : ""}}
             lineDirection='top'
             {...ResizeBoxProps}
         />
     )
 }
 
+interface QueryAnalyzedHTTPFlowRuleFilter {
+    AnalyzeIds?: string[]
+    RuleVerboseName?: string
+    Rule?: string
+}
 interface QueryAnalyzedHTTPFlowRuleRequest {
-    AnalyzeIds: string[]
-    Pagination: Paging
+    Pagination: VirtualPaging
+    Filter: QueryAnalyzedHTTPFlowRuleFilter
 }
 interface HTTPFlowRuleData {
-    HTTPFlowIds: number[]
+    Id: number
+    HTTPFlowId: number
     RuleVerboseName: string
     Rule: string
 }
-interface QueryAnalyzedHTTPFlowRuleResponse {
-    Pagination: Paging
-    Data: HTTPFlowRuleData[]
-    Total: number
-}
 interface HttpRuleTableProps {
     analyzeId: string
+    currentSelectItem?: HTTPFlowRuleData
+    onSelect: (c?: HTTPFlowRuleData) => void
+    onSetTableData: (d: HTTPFlowRuleData[]) => void
+    scrollToIndex?: string
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
-    const {analyzeId} = props
+    const {analyzeId, currentSelectItem, onSelect, onSetTableData, scrollToIndex} = props
+
+    const tableBoxRef = useRef<HTMLDivElement>(null)
+    const tableRef = useRef<any>(null)
+    const boxHeightRef = useRef<number>()
+    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+
+    // table所在的div大小发生变化
+    const onTableResize = useMemoizedFn((width, height) => {
+        if (!width || !height) {
+            return
+        }
+        if (!currentSelectItem?.HTTPFlowId) {
+            if (boxHeightRef.current && boxHeightRef.current < height) {
+                boxHeightRef.current = height
+            } else {
+                boxHeightRef.current = height
+            }
+        }
+    })
+
+    const apiQueryAnalyzedHTTPFlowRule: (
+        query: QueryAnalyzedHTTPFlowRuleRequest
+    ) => Promise<DataResponseProps<HTTPFlowRuleData>> = (query) => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("QueryAnalyzedHTTPFlowRule", query)
+                .then(resolve)
+                .catch((e) => {
+                    yakitNotify("error", `查询失败: ${e}`)
+                    reject(e)
+                })
+        })
+    }
+
+    const onFirst = useMemoizedFn(() => {
+        setIsRefresh(!isRefresh)
+        onSelect(undefined)
+    })
+
+    const [tableParams, tableData, tableTotal, pagination, tableLoading, offsetData, debugVirtualTableEvent] =
+        useVirtualTableHook<QueryAnalyzedHTTPFlowRuleRequest, HTTPFlowRuleData>({
+            tableBoxRef,
+            tableRef,
+            boxHeightRef,
+            defaultParams: {
+                Pagination: {...genDefaultPagination(20), OrderBy: "Rule", Order: "desc"},
+                Filter: {
+                    AnalyzeIds: [analyzeId]
+                }
+            },
+            grpcFun: apiQueryAnalyzedHTTPFlowRule,
+            onFirst
+        })
+    useEffect(() => {
+        onSetTableData(tableData)
+    }, [tableData])
+
+    const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
+        let sort = {...newSort}
+        if (sort.order === "none") {
+            sort.order = "desc"
+            sort.orderBy = "Rule"
+        }
+        const finalParams = {
+            Pagination: {
+                ...tableParams.Pagination,
+                Order: sort.order,
+                OrderBy: sort.orderBy
+            },
+            Filter: {
+                ...tableParams.Filter,
+                ...filter
+            }
+        }
+        debugVirtualTableEvent.setP(finalParams)
+    })
+
+    const onSetCurrentRow = useMemoizedFn((val?: HTTPFlowRuleData) => {
+        if (!val) {
+            onSelect(undefined)
+            return
+        }
+        if (val?.Id !== currentSelectItem?.Id) {
+            onSelect(val)
+        }
+    })
 
     const ruleColumns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         return [
             {
-                title: "数据包ID",
-                dataKey: "HTTPFlowIds",
+                title: "序号",
+                dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
                 width: 96,
-                enableDrag: false
+                enableDrag: false,
+                sorterProps: {
+                    sorter: true,
+                    sorterKey: "Id"
+                }
+            },
+            {
+                title: "数据包ID",
+                dataKey: "HTTPFlowId",
+                width: 96
             },
             {
                 title: "规则名",
@@ -617,22 +780,41 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     }, [])
 
     return (
-        <TableVirtualResize
-            renderKey='HTTPFlowIds'
-            columns={ruleColumns}
-            loading={false}
-            query={{}}
-            isRefresh={true}
-            titleHeight={42}
-            isShowTotal={true}
-            extra={
-                <>
-                    <YakitButton type='primary'>导出</YakitButton>
-                </>
-            }
-            data={[]}
-            useUpAndDown
-            onChange={() => {}}
-        ></TableVirtualResize>
+        <div className={styles["HttpRule-table-wrapper"]} ref={tableBoxRef}>
+            <ReactResizeDetector
+                onResize={onTableResize}
+                handleWidth={true}
+                handleHeight={true}
+                refreshMode={"debounce"}
+                refreshRate={50}
+            />
+            <TableVirtualResize<HTTPFlowRuleData>
+                ref={tableRef}
+                renderKey='Id'
+                columns={ruleColumns}
+                loading={tableLoading}
+                query={tableParams.Filter}
+                isRefresh={isRefresh}
+                titleHeight={42}
+                isShowTotal={true}
+                extra={
+                    <>
+                        <YakitButton type='primary'>导出</YakitButton>
+                    </>
+                }
+                data={tableData}
+                useUpAndDown
+                onChange={onTableChange}
+                pagination={{
+                    total: tableTotal,
+                    limit: pagination.Limit,
+                    page: pagination.Page,
+                    onChange: () => {}
+                }}
+                enableDrag={true}
+                onSetCurrentRow={onSetCurrentRow}
+                scrollToIndex={scrollToIndex}
+            ></TableVirtualResize>
+        </div>
     )
 }
