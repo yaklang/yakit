@@ -34,7 +34,7 @@ import {yakitNotify} from "@/utils/notification"
 import {getLocalFileLinkInfo} from "../CustomFile/utils"
 import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
 import {useStore} from "@/store"
-import {LocalProps} from "../utils/initEditor"
+import {InitEditorHooksLocalProps} from "../utils/initEditor"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,7 +45,7 @@ const FileMaxSize = 1024 * 1024 * 1024
 interface BlockViewProps {
     type: HttpUploadImgBaseRequest["type"]
     notepadHash?: string
-    localProps?: LocalProps
+    localProps?: InitEditorHooksLocalProps
 }
 export const BlockView: React.FC<BlockViewProps> = (props) => {
     const {notepadHash, type, localProps} = props

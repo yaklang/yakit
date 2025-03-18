@@ -166,6 +166,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1}}
+                isInit={false}
             >
                 <YakitInput.Search
                     value={keyWord}

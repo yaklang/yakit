@@ -68,18 +68,18 @@ export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
     onSaveHistory: (newValue: string) => void
 }
-interface MilkdownEditorDiffProps {
+interface InitEditorHooksDiffProps {
     onDiff: (ctx: Ctx) => void
 }
-export interface LocalProps {
+export interface InitEditorHooksLocalProps {
     local: boolean
     upload: (path: string) => void
 }
 interface InitEditorHooksProps
     extends Omit<CustomMilkdownProps, "collabProps" | "setEditor" | "onSaveContentBeforeDestroy"> {
     collabProps?: InitEditorHooksCollabProps
-    diffProps?: MilkdownEditorDiffProps
-    localProps?: LocalProps
+    diffProps?: InitEditorHooksDiffProps
+    localProps?: InitEditorHooksLocalProps
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
     const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps, localProps} = props
