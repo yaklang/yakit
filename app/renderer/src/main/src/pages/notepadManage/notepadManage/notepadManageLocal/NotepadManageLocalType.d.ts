@@ -11,8 +11,6 @@ export interface NotepadLocalActionProps {
     onSingleRemoveAfter: () => void
 }
 export interface NotepadImportProps {
-    /**@name 导出查询条件 */
-    filter: NoteFilter
     /**@name 导入成功的事件回调 */
     onImportSuccessAfter: () => void
     /**@name 关闭事件回调 */

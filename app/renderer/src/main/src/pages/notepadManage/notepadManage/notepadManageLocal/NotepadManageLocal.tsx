@@ -136,6 +136,25 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
         fetchInitTotal()
     }, [inViewPort, refresh])
 
+    const getFilter = useCreation(() => {
+        return {
+            ...query.Filter,
+            Keyword: [keyWord]
+        }
+    }, [keyWord])
+    const actionFilter = useCreation(() => {
+        const filter = allCheck ? getFilter : cloneDeep(defaultNoteFilter)
+        return allCheck
+            ? {
+                  ...filter,
+                  Id: []
+              }
+            : {
+                  ...filter,
+                  Id: selectedRowKeys.map((ele) => +ele)
+              }
+    }, [getFilter, allCheck, selectedRowKeys])
+
     const columns: VirtualListColumns<Note>[] = useCreation(() => {
         return [
             {
@@ -237,17 +256,12 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
             })
             .catch(() => {})
     })
-    const getFilter = useMemoizedFn(() => {
-        return {
-            ...query.Filter,
-            Keyword: [keyWord]
-        }
-    })
+
     const getList = useDebounceFn(
         useMemoizedFn(async (page?: number) => {
             setListLoading(true)
             const newQuery: QueryNoteRequest = {
-                Filter: getFilter(),
+                Filter: getFilter,
                 Pagination: {
                     ...query.Pagination,
                     OrderBy: sorterKey,
@@ -291,17 +305,8 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
     ).run
 
     const onBatchRemove = useMemoizedFn(() => {
-        const filter = allCheck ? getFilter() : cloneDeep(defaultNoteFilter)
         let removeParams: DeleteNoteRequest = {
-            Filter: allCheck
-                ? {
-                      ...filter,
-                      Id: []
-                  }
-                : {
-                      ...filter,
-                      Id: selectedRowKeys.map((ele) => +ele)
-                  }
+            Filter: actionFilter
         }
 
         setPageLoading(true)
@@ -406,10 +411,9 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     />
                 )}
             </div>
-            {exportVisible && <NotepadExport filter={query.Filter} onClose={() => setExportVisible(false)} />}
+            {exportVisible && <NotepadExport filter={actionFilter} onClose={() => setExportVisible(false)} />}
             {importVisible && (
                 <NotepadImport
-                    filter={query.Filter}
                     onClose={() => setImportVisible(false)}
                     onImportSuccessAfter={() => setRefresh(!refresh)}
                 />
