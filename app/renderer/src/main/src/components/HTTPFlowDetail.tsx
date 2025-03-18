@@ -1105,6 +1105,8 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     pageType?: HTTPHistorySourcePageType
     highLightText?: HistoryHighLightText[]
     highLightItem?: HistoryHighLightText
+    scrollTo?: (id: number | string) => void
+    scrollID?: number | string
 }
 
 interface HTTPFlowBareProps {
@@ -1127,7 +1129,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flowResponseLoad,
         historyId,
         pageType,
-        downstreamProxyStr
+        downstreamProxyStr,
+        scrollTo,
+        scrollID,
     } = props
 
     // 编辑器发送到对比器
@@ -1307,6 +1311,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .finally(() => {})
     })
     const onScrollTo = useMemoizedFn(() => {
+        if (scrollTo && scrollID) {
+            scrollTo(scrollID)
+            return
+        }
         if (historyId) {
             emiter.emit("onScrollToByClick", JSON.stringify({historyId, id}))
         }
@@ -1504,7 +1512,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     onClick={onScrollTo}
                                     key='reqId'
                                 >
-                                    id：{id}
+                                    id：{scrollID || id}
                                 </YakitTag>
                             )
                             // history页面

@@ -40,7 +40,7 @@ export interface YakQueryHTTPFlowRequest {
     Full?: boolean
     ProcessName?: string[]
     ExcludeKeywords?: string[]
-    AnalyzeId?: string
+    AnalyzedIds?: number[]
 }
 
 export interface Paging {

@@ -143,10 +143,13 @@
                         height: 100%;
                         .HttpRule-first {
                             height: 100%;
-                            .filter-icon {
-                                svg {
-                                    width: 16px;
-                                    height: 16px;
+                            .HttpRule-table-wrapper {
+                                height: 100%;
+                                .filter-icon {
+                                    svg {
+                                        width: 16px;
+                                        height: 16px;
+                                    }
                                 }
                             }
                         }
