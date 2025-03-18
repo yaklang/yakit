@@ -191,7 +191,9 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         {wait: 200, leading: true}
     ).run
     const onSave = useMemoizedFn(() => {
-        onSaveNewContent(notepadContentRef.current)
+        onSaveNewContent(notepadContentRef.current).then(() => {
+            yakitNotify("success", "保存成功")
+        })
     })
     //#endregion
 
