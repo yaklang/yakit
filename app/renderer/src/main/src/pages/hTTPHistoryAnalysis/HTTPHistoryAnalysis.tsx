@@ -1,6 +1,6 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
@@ -593,27 +593,29 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
-    const getHTTPFlowById = useMemoizedFn((hTTPFlowId: number) => {
-        setFlowRequestLoad(true)
-        setFlowResponseLoad(true)
-        ipcRenderer
-            .invoke("GetHTTPFlowById", {Id: hTTPFlowId})
-            .then((i: HTTPFlow) => {
-                if (i.Id == lasetIdRef.current) {
-                    console.log(i)
-                    setFlow(i)
-                }
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setFlowRequestLoad(false)
-                    setFlowResponseLoad(false)
-                }, 200)
-            })
-    })
+    const getHTTPFlowById = useDebounceFn(
+        useMemoizedFn((hTTPFlowId: number) => {
+            setFlowRequestLoad(true)
+            setFlowResponseLoad(true)
+            ipcRenderer
+                .invoke("GetHTTPFlowById", {Id: hTTPFlowId})
+                .then((i: HTTPFlow) => {
+                    if (i.Id == lasetIdRef.current) {
+                        setFlow(i)
+                    }
+                })
+                .catch((e: any) => {
+                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
+                    }, 200)
+                })
+        }),
+        {wait: 300}
+    ).run
     // #endregion
 
     // #region 定位数据包id
@@ -646,12 +648,14 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                         analyzeId={analyzeId}
                         onSetAnalyzedIds={onSetAnalyzedIds}
                         currentSelectItem={currentSelectItem}
+                        onSetCurrentSelectItem={setCurrentSelectItem}
                         onSelect={(i) => {
                             if (!i) {
                                 setCurrentSelectItem(undefined)
                                 return
                             }
                             setCurrentSelectItem(i)
+
                             lasetIdRef.current = i.HTTPFlowId
                             getHTTPFlowById(i.HTTPFlowId)
                         }}
@@ -718,12 +722,21 @@ interface HttpRuleTableProps {
     analyzeId: string
     onSetAnalyzedIds: (analyzeIds: number[]) => void
     currentSelectItem?: HTTPFlowRuleData
+    onSetCurrentSelectItem: (c?: HTTPFlowRuleData) => void
     onSelect: (c?: HTTPFlowRuleData) => void
     onSetTableData: (d: HTTPFlowRuleData[]) => void
     scrollToIndex?: string
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
-    const {analyzeId, onSetAnalyzedIds, currentSelectItem, onSelect, onSetTableData, scrollToIndex} = props
+    const {
+        analyzeId,
+        onSetAnalyzedIds,
+        currentSelectItem,
+        onSetCurrentSelectItem,
+        onSelect,
+        onSetTableData,
+        scrollToIndex
+    } = props
     const tableBoxRef = useRef<HTMLDivElement>(null)
     const tableRef = useRef<any>(null)
     const boxHeightRef = useRef<number>()
@@ -830,6 +843,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 ...filter
             }
         }
+        onSetCurrentSelectItem(undefined)
         debugVirtualTableEvent.setP(finalParams)
     })
 
