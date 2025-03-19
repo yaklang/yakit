@@ -115,7 +115,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatchExecutor"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
-import { getRemoteHttpSettingGV } from "@/utils/envfile"
+import {getRemoteHttpSettingGV} from "@/utils/envfile"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -480,7 +480,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
         let resultAll: string = ""
         objects.map((item, index) => {
-            const {id = ''} = item
+            const {id = ""} = item
             const {role = "", content = ""} = item.choices[0].delta
             resultAll += content
             if (answer && objects.length === index + 1) {

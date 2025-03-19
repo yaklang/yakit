@@ -48,6 +48,7 @@ export interface HTTPFlowExtractedData {
 export interface ExtractedDataFilter {
     TraceID: string[]
     RuleVerbose: string[]
+    AnalyzedIds?: number[]
 }
 export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
     Filter: ExtractedDataFilter
