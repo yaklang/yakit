@@ -6,6 +6,7 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {PluginListPageMeta, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
+import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {Paging} from "@/utils/yakQueryHTTPFlow"
@@ -270,7 +271,16 @@ export const grpcUpdateNote: APIFunc<UpdateNoteRequest, DbOperateMessage> = (par
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("UpdateNote", params)
-            .then(resolve)
+            .then((res: DbOperateMessage) => {
+                if (res.EffectRows === "0") {
+                    // 等于0，更新失败(数据被删除)
+                    const message = res.ExtraMessage || "更新失败/数据不存在"
+                    emiter.emit("localDataError", message)
+                    reject(message)
+                } else {
+                    resolve(res)
+                }
+            })
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "UpdateNote fail:" + e)
                 reject(e)
@@ -350,7 +360,7 @@ export const grpcQueryNoteById: APIFunc<number, Note> = (id, hiddenError) => {
                     resolve(res.Data[0])
                 } else {
                     const message = "No data found"
-                    yakitNotify("error", "QueryNote fail:" + message)
+                    emiter.emit("localDataError", message)
                     reject(message)
                 }
             })

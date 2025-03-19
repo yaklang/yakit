@@ -16,7 +16,6 @@ import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/stor
 import {shallow} from "zustand/shallow"
 import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {OutlineDotshorizontalIcon, OutlineTrashIcon, OutlineStoreIcon, OutlineExportIcon} from "@/assets/icon/outline"
-import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -36,6 +35,9 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 import {APIFunc} from "@/apiUtils/type"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {toAddNotepad, toEditNotepad} from "../../notepadManage/NotepadManage"
+import {defaultNote} from "@/defaultConstants/Note"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
@@ -66,13 +68,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const [keyWord, setKeyWord] = useState<string>("") // 搜索关键词
     const [tabName, setTabName] = useState<string>(initTabName())
 
-    const [note, setNote] = useState<Note>({
-        Id: 0,
-        Title: "",
-        Content: "",
-        CreateAt: moment().unix(),
-        UpdateAt: moment().unix()
-    })
+    const [note, setNote] = useState<Note>(cloneDeep(defaultNote))
     const [notepadLoading, setNotepadLoading] = useState<boolean>(true)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
@@ -136,7 +132,55 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 )
         }
         setKeyWord(pageInfo.keyWord || "")
+    }, [inViewport])
+
+    useEffect(() => {
+        emiter.on("localDataError", onShowErrorModal)
+        return () => {
+            emiter.off("localDataError", onShowErrorModal)
+        }
     }, [])
+
+    const onShowErrorModal = useMemoizedFn((message) => {
+        setNote((v) => ({...v, Id: 0}))
+        // 关闭/保存按钮
+        const s = showYakitModal({
+            title: "数据异常/文档不存在/已经被删除",
+            content: <span>错误原因:{message}</span>,
+            maskClosable: false,
+            closable: false,
+            showConfirmLoading: true,
+            onOkText: "保存当前文档",
+            onCancelText: "不保存",
+            onOk: () => {
+                const markdownContent = editor?.action(getMarkdown()) || ""
+                // 有内容才保存，没有内容新建
+                if (markdownContent) {
+                    const params: CreateNoteRequest = {
+                        Title: tabName,
+                        Content: markdownContent
+                    }
+                    grpcCreateNote(params).then((res) => {
+                        onCloseCurrentPage()
+                        toEditNotepad({pageInfo: {notepadHash: res.NoteId, title: tabName}})
+                        s.destroy()
+                    })
+                } else {
+                    onCloseCurrentPage()
+                    toAddNotepad()
+                    s.destroy()
+                }
+            },
+            onCancel: () => {
+                onCloseCurrentPage()
+                s.destroy()
+            },
+            bodyStyle: {padding: 24}
+        })
+    })
+    const onCloseCurrentPage = useMemoizedFn(() => {
+        emiter.emit("onCloseCurrentPage", pageId)
+    })
 
     /**更新该页面最新的数据 */
     const onUpdatePageInfo = useMemoizedFn((value: ModifyNotepadPageInfoProps) => {
@@ -166,9 +210,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const onSaveNewContent: APIFunc<string, DbOperateMessage> = useMemoizedFn((markdownContent) => {
         return new Promise(async (resolve, reject) => {
             if (!note.Id) {
-                const message = "笔记本Id不存在"
-                yakitNotify("error", message)
-                reject(message)
+                reject("NoteId不存在")
                 return
             }
             const params: UpdateNoteRequest = {

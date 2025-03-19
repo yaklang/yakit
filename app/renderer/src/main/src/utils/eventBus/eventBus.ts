@@ -14,9 +14,10 @@ import {UpdateYakitYaklangEventProps} from "./events/updateYakitYaklang"
 import {GlobalEventProps} from "./events/global"
 import {PluginBatchExecutorProps} from "./events/pluginBatchExecutor"
 import {YakitRiskProps} from "./events/yakitRisk"
-import {YakRunnerEventProps} from "./events/yakRunner";
+import {YakRunnerEventProps} from "./events/yakRunner"
 import {YakRunnerAuditEventProps} from "./events/yakRunnerAudit"
-import {YakRunnerCodeScanEventProps} from "./events/yakRunnerCodeScan";
+import {YakRunnerCodeScanEventProps} from "./events/yakRunnerCodeScan"
+import {NotepadEventProps} from "./events/notepad"
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -60,7 +61,8 @@ type Events = [
     YakitRiskProps,
     YakRunnerEventProps,
     YakRunnerAuditEventProps,
-    YakRunnerCodeScanEventProps
+    YakRunnerCodeScanEventProps,
+    NotepadEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>
