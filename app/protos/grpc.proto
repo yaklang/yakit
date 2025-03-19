@@ -218,10 +218,9 @@ service Yak {
   rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
 
   // 流量分析器
-  rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream ExecResult);
+  rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
   // 查询分析后规则数据
   rpc QueryAnalyzedHTTPFlowRule(QueryAnalyzedHTTPFlowRuleRequest) returns (QueryAnalyzedHTTPFlowRuleResponse);
-  rpc QueryAnalyzedId(QueryAnalyzedIdRequest) returns (QueryAnalyzedIdResponse);
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
 
@@ -1764,6 +1763,7 @@ message QueryMITMRuleExtractedDataRequest {
 message ExtractedDataFilter {
   repeated string TraceID = 1;
   repeated string RuleVerbose = 2;
+  repeated int64 AnalyzedIds = 3;
 }
 
 message ExportMITMRuleExtractedDataRequest {
@@ -4917,6 +4917,11 @@ message AnalyzeHTTPFlowRequest{
   repeated MITMContentReplacer Replacers = 2;
 }
 
+message AnalyzeHTTPFlowResponse{
+  ExecResult ExecResult = 1;
+  HTTPFlowRuleData RuleData = 2;
+}
+
 message  QueryAnalyzedHTTPFlowRuleRequest{
   Paging Pagination = 1;
   AnalyzedHTTPFlowFilter Filter =2;
@@ -4924,6 +4929,8 @@ message  QueryAnalyzedHTTPFlowRuleRequest{
 
 message AnalyzedHTTPFlowFilter{
   repeated string ResultIds = 1;
+  repeated string RuleVerboseNames = 2;
+  repeated string Rule = 3;
 }
 
 message QueryAnalyzedHTTPFlowRuleResponse{
@@ -4937,14 +4944,6 @@ message HTTPFlowRuleData{
   int64 HTTPFlowId =2;
   string RuleVerboseName = 3;
   string Rule =4;
-}
-
-message  QueryAnalyzedIdRequest{
-  AnalyzedHTTPFlowFilter Filter =1;
-}
-
-message QueryAnalyzedIdResponse{
-  repeated int64 AnalyzedIds = 1;
 }
 
 message ExportHTTPFlowsRequest {
