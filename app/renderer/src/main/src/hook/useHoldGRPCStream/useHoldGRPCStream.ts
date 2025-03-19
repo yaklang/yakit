@@ -78,13 +78,14 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         isLimitLogs = true
     } = params
 
-    const [streamInfo, setStreamInfo,getStreamInfo] = useGetState<HoldGRPCStreamInfo>({
+    const [streamInfo, setStreamInfo, getStreamInfo] = useGetState<HoldGRPCStreamInfo>({
         progressState: [],
         cardState: [],
         tabsState: [],
         tabsInfoState: {},
         riskState: [],
-        logState: []
+        logState: [],
+        rulesState: []
     })
 
     // 启动数据流处理定时器
@@ -116,6 +117,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     let riskMessages = useRef<StreamResult.Risk[]>([])
     // logs
     let messages = useRef<StreamResult.Message[]>([])
+    // ruleData
+    let ruleData = useRef<StreamResult.RuleData[]>([])
 
     /** 自定义tab页放前面还是后面 */
     const placeTab = useMemoizedFn((isHead: boolean, info: HoldGRPCStreamProps.InfoTab) => {
@@ -148,10 +151,17 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (!!data?.RuntimeID) {
                 runTimeId.current.cache = data.RuntimeID
             }
-
-            if (data.IsMessage) {
+            
+            // 规则数据
+            if (data.RuleData) {
+                ruleData.current.unshift({...data.RuleData})
+            }
+            
+            const isMessage = data.IsMessage || data.ExecResult?.IsMessage
+            if (isMessage) {
                 try {
-                    let obj: StreamResult.Message = JSON.parse(Buffer.from(data.Message).toString())
+                    const messageArr = data.Message || data.ExecResult?.Message
+                    let obj: StreamResult.Message = JSON.parse(Buffer.from(messageArr).toString())
                     // progress 进度条
                     if (obj.type === "progress") {
                         const processData = obj.content as StreamResult.Progress
@@ -381,13 +391,17 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             .map((i) => i.content as StreamResult.Log)
             .filter((i) => i.data !== "null")
 
+        // rules
+        const rules: StreamResult.RuleData[] = [...ruleData.current]
+
         setStreamInfo({
             progressState: cacheProgress,
             cardState: cacheCard,
             tabsState: tabs,
             tabsInfoState: tabsInfo,
             riskState: risks,
-            logState: logs
+            logState: logs,
+            rulesState: rules
         })
     })
 
@@ -426,7 +440,8 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             tabsState: [],
             tabsInfoState: {},
             riskState: [],
-            logState: []
+            logState: [],
+            rulesState: []
         })
 
         runTimeId.current = {cache: "", sent: ""}
@@ -439,6 +454,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         tabsText.current = new Map<string, string>()
         riskMessages.current = []
         messages.current = []
+        ruleData.current = []
     })
 
     return [streamInfo, {start, stop, cancel, reset}] as const

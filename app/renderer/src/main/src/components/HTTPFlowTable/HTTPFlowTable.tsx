@@ -1196,7 +1196,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
 
         updateQueryParams(realQuery)
-        console.log('history', realQuery);
+        console.log("history", realQuery)
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -3659,6 +3659,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setBatchVisible(false)
     })
+
+    useEffect(() => {
+        if (props.params?.AnalyzedIds !== undefined) {
+            const newParams = {...params, AnalyzedIds: props.params?.AnalyzedIds}
+            setParams(newParams)
+            setTimeout(() => {
+                updateData()
+            }, 10)
+        }
+    }, [props.params?.AnalyzedIds])
 
     useEffect(() => {
         if (props.params?.SourceType !== undefined) {
