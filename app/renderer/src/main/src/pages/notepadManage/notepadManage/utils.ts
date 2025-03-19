@@ -275,7 +275,7 @@ export const grpcUpdateNote: APIFunc<UpdateNoteRequest, DbOperateMessage> = (par
                 if (res.EffectRows === "0") {
                     // 等于0，更新失败(数据被删除)
                     const message = res.ExtraMessage || "更新失败/数据不存在"
-                    emiter.emit("localDataError", message)
+                    emiter.emit("localDataError", JSON.stringify({message, noteId: params?.Filter?.Id[0]}))
                     reject(message)
                 } else {
                     resolve(res)
@@ -360,7 +360,7 @@ export const grpcQueryNoteById: APIFunc<number, Note> = (id, hiddenError) => {
                     resolve(res.Data[0])
                 } else {
                     const message = "No data found"
-                    emiter.emit("localDataError", message)
+                    emiter.emit("localDataError", JSON.stringify({message, noteId: id}))
                     reject(message)
                 }
             })

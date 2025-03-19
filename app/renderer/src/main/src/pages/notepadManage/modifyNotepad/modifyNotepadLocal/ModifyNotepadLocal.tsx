@@ -84,6 +84,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const [inViewport = true] = useInViewport(notepadRef)
 
     useEffect(() => {
+        if (!inViewport) return
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
@@ -135,11 +136,20 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     }, [inViewport])
 
     useEffect(() => {
-        emiter.on("localDataError", onShowErrorModal)
+        emiter.on("localDataError", onLocalDataError)
         return () => {
-            emiter.off("localDataError", onShowErrorModal)
+            emiter.off("localDataError", onLocalDataError)
         }
     }, [])
+
+    const onLocalDataError = useMemoizedFn((value: string) => {
+        try {
+            const data: {message: string; noteId: number} = JSON.parse(value)
+            if (+data.noteId === +note.Id) {
+                onShowErrorModal(data.message)
+            }
+        } catch (error) {}
+    })
 
     const onShowErrorModal = useMemoizedFn((message) => {
         setNote((v) => ({...v, Id: 0}))
