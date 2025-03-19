@@ -218,7 +218,7 @@ service Yak {
   rpc QueryHTTPFlowsProcessNames(QueryHTTPFlowRequest) returns (QueryHTTPFlowsProcessNamesResponse);
 
   // 流量分析器
-  rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
+  rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream ExecResult);
   // 查询分析后规则数据
   rpc QueryAnalyzedHTTPFlowRule(QueryAnalyzedHTTPFlowRuleRequest) returns (QueryAnalyzedHTTPFlowRuleResponse);
   // 从一个 FuzzerRequest 中提取 Url
@@ -4917,10 +4917,6 @@ message AnalyzeHTTPFlowRequest{
   repeated MITMContentReplacer Replacers = 2;
 }
 
-message AnalyzeHTTPFlowResponse{
-  ExecResult ExecResult = 1;
-  HTTPFlowRuleData RuleData = 2;
-}
 
 message  QueryAnalyzedHTTPFlowRuleRequest{
   Paging Pagination = 1;
