@@ -361,6 +361,7 @@ export const grpcQueryNoteById: APIFunc<number, Note> = (id, hiddenError) => {
                 } else {
                     const message = "No data found"
                     emiter.emit("localDataError", JSON.stringify({message, noteId: id}))
+                    if (!hiddenError) yakitNotify("error", message)
                     reject(message)
                 }
             })
