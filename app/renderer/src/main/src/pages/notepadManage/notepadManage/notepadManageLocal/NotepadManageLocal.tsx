@@ -393,7 +393,6 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     )
                 ) : (
                     <YakitVirtualList<Note>
-                        refresh={refresh}
                         loading={listLoading}
                         hasMore={hasMore}
                         columns={columns}

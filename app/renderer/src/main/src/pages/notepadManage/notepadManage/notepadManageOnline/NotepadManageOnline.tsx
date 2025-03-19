@@ -384,7 +384,6 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                     )
                 ) : (
                     <YakitVirtualList<API.GetNotepadList>
-                        refresh={refresh}
                         loading={listLoading}
                         hasMore={hasMore}
                         columns={columns}
