@@ -762,7 +762,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     /**
      * @description 高级配置得内容展示切换
-     * 规则和配置之前得type切换
+     * 规则和配置之前得type切换，与序列无关
      * */
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
         if (!inViewport) return

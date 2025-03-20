@@ -876,7 +876,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 const text = model.getValue()
                 let match
 
-                // 匹配 Content-Type: 后面的值（非贪婪匹配，避免匹配多余空格）
+                // 匹配 Content-Type: 后面的值
                 const regex = /Content-Type:\s*([^\r\n]*)/gi
 
                 while ((match = regex.exec(text)) !== null) {
