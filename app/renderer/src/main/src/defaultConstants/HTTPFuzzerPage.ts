@@ -21,8 +21,8 @@ export const DefFuzzerTableMaxData = 2000
 export const DefFuzzerConcurrent = 20
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
-    config: true,
-    rule: true
+    config: false,
+    rule: false
 }
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {

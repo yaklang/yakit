@@ -1258,6 +1258,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 disabled={responseMap.size === 0 || loading}
                                 responseInfo={currentSelectResponse}
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
+                                setAdvancedConfigValue={(configValue) => {
+                                    setCurrentSelectRequest({
+                                        ...currentSelectRequest,
+                                        advancedConfigValue: configValue
+                                    } as WebFuzzerPageInfoProps)
+                                }}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
                                     if (judgeMoreFuzzerTableMaxData()) {
@@ -1639,6 +1645,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         onShowAll,
         currentSequenceItemName,
         currentSequenceItemPageName,
+        setAdvancedConfigValue,
         getHttpParams,
         onPluginDebugger
     } = props
@@ -1695,6 +1702,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 <FuzzerExtraShow
                     droppedCount={droppedCount}
                     advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue}
+                    setAdvancedConfigValue={setAdvancedConfigValue}
                     onlyOneResponse={onlyOneResponse}
                     httpResponse={httpResponse}
                 />

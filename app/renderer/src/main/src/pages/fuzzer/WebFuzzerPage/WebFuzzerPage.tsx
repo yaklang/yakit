@@ -62,8 +62,8 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
     const [type, setType] = useState<WebFuzzerType>(props.defaultType || "config")
     // 高级配置的隐藏/显示
     const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
-        config: true,
-        rule: true
+        config: false,
+        rule: false
     })
 
     useEffect(() => {
@@ -110,18 +110,18 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         switch (key) {
             case "sequence":
                 onSetSequence()
-                // 发送到HTTPFuzzerPage组件中 选中type
-                emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
+                // 当前页面不在fuzzer页面
+                emiter.emit("onCurrentFuzzerPage", false)
                 break
             default:
                 // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
                 emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: key}))
-                // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
+                // 发送到HTTPFuzzerPage组件中 选中【配置】/【规则】 type
                 emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
-                if (type === key) {
-                    // 设置【规则】/【规则】的高级配置的隐藏或显示
-                    emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
-                }
+                // 设置【配置】/【规则】的高级配置的隐藏或显示
+                emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
+                // 当前页面在fuzzer页面
+                emiter.emit("onCurrentFuzzerPage", true)
                 // 设置【配置】/【规则】选中
                 setType(key)
                 break
@@ -134,7 +134,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 const value = JSON.parse(data)
                 const key = value.type as WebFuzzerType
                 if (key === "sequence") return
-                const c = !advancedConfigShow[key]
+                const c = value.checked
                 const newValue = {
                     ...advancedConfigShow,
                     [key]: c

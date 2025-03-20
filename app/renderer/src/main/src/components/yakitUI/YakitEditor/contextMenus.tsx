@@ -368,7 +368,9 @@ const execCodec = async (
                 })
             }
         })
-        .catch((e: any) => {})
+        .catch((e: any) => {
+            failed(`CODEC[${typeStr}] 执行失败：${e}`)
+        })
 }
 
 /** @name HTTP数据包变形模块处理函数 */

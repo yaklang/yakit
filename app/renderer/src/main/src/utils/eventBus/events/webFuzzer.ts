@@ -14,6 +14,8 @@ export type WebFuzzerEventProps = {
     onSetAdvancedConfigShow: string
     /** 发送到HTTPFuzzerPage 切换【配置】/【规则】tab 得选中type */
     onSwitchTypeWebFuzzerPage: string
+    /** 当前是否是fuzzer页面不是序列页面 */
+    onCurrentFuzzerPage: boolean
     /**
      * 1.发送到WebFuzzerPage
      * 2.序列包裹层点击tab切换到【配置】/【规则】

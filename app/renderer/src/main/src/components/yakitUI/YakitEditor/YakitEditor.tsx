@@ -869,7 +869,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     }
                 })()
             }
-            
+
             ;(() => {
                 const targetValue = fixContentTypeFun()
                 if (!targetValue) return
@@ -877,11 +877,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 let match
 
                 // 匹配 Content-Type: 后面的值（非贪婪匹配，避免匹配多余空格）
-                const regex = /Content-Type:\s*(.+?)(?=\s|$)/gi
+                const regex = /Content-Type:\s*([^\r\n]*)/gi
 
                 while ((match = regex.exec(text)) !== null) {
                     const contentTypeValue = match[1].trim() // 获取 Content-Type 后的值并去除多余空格
-
                     if (contentTypeValue === targetValue) {
                         // 计算 Content-Type: 后具体值的起始位置，避免空格问题
                         const textBeforeMatch = text.substring(match.index, regex.lastIndex) // 获取匹配到的完整文本
@@ -898,13 +897,18 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 className: "unicode-decode",
                                 hoverMessage: {value: fixContentTypeHoverMessageFun()},
                                 afterContentClassName: "unicode-decode",
-                                after: {content: originalContentTypeFun(), inlineClassName: "unicode-decode-after"}
+                                after: {
+                                    content:
+                                        originalContentTypeFun() === ""
+                                            ? "原Content-Type为空，该Content-type为自动探测"
+                                            : originalContentTypeFun(),
+                                    inlineClassName: "unicode-decode-after"
+                                }
                             }
                         } as IModelDecoration)
                     }
                 }
             })()
-
             ;(() => {
                 // all
                 const keywordRegExp = /\r?\n/g

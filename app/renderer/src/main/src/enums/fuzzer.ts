@@ -13,7 +13,7 @@ export enum FuzzerRemoteGV {
     /** @name WebFuzzer编辑器美化&渲染 */
     WebFuzzerOneResEditorBeautifyRender = "webFuzzer_one_res_editor_beautify_render",
     /**@name WebFuzzer高级配置内容的显/隐 */
-    WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show",
+    WebFuzzerAdvancedConfigShow = "web_fuzzer_advanced_config_show_new",
     /**@name WebFuzzer最大前端渲染数量 */
     FuzzerResMaxNumLimit = "new_fuzzer_res_max_limit",
     FuzzerNoSystemProxy = "Fuzzer_NoSystemProxy",

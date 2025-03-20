@@ -623,8 +623,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
 
     // 切换【配置】/【规则】高级内容显示 type
-    const [advancedConfigShowType, setAdvancedConfigShowType, getAdvancedConfigShowType] =
-        useGetSetState<WebFuzzerType>("config")
+    const [advancedConfigShowType, setAdvancedConfigShowType] = useState<WebFuzzerType>("config")
+    const [currentFuzzerPage, setCurrentFuzzerPage, getCurrentFuzzerPage] = useGetSetState<boolean>(true)
     const [redirectedResponse, setRedirectedResponse] = useState<FuzzerResponse>()
     const [affixSearch, setAffixSearch] = useState("")
     const [defaultResponseSearch, setDefaultResponseSearch] = useState("")
@@ -720,10 +720,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             onRefWebFuzzerValue()
             emiter.on("onRefWebFuzzer", onRefWebFuzzerValue)
             emiter.on("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
+            emiter.on("onCurrentFuzzerPage", onCurrentFuzzerPage)
         }
         return () => {
             emiter.off("onRefWebFuzzer", onRefWebFuzzerValue)
             emiter.off("onSwitchTypeWebFuzzerPage", onFuzzerAdvancedConfigShowType)
+            emiter.off("onCurrentFuzzerPage", onCurrentFuzzerPage)
         }
     }, [inViewport])
     /**高级配置显示/隐藏 【序列】tab没有下列操作*/
@@ -733,14 +735,18 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const value = JSON.parse(data)
             const {type} = value
             if (type === "sequence") return
-            const c = !advancedConfigShow[type]
-            const newValue = {
-                ...advancedConfigShow,
-                [type]: c
+            let newValue = {
+                ...advancedConfigShow
             }
+            if (type === advancedConfigShowType) {
+                const c = !advancedConfigShow[type]
+                newValue[type] = c
+            } else {
+                newValue[type] = true
+            }
+            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: type, checked: newValue[type]}))
             setAdvancedConfigShow(newValue)
             setRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow, JSON.stringify(newValue))
-            emiter.emit("onGetFuzzerAdvancedConfigShow", JSON.stringify({type: advancedConfigShowType, checked: c}))
         } catch (error) {}
     })
     const onRefWebFuzzerValue = useMemoizedFn(() => {
@@ -756,7 +762,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     })
     /**
      * @description 高级配置得内容展示切换
-     * 规则和配置之前得type切换，与序列无关
+     * 规则和配置之前得type切换
      * */
     const onFuzzerAdvancedConfigShowType = useMemoizedFn((data) => {
         if (!inViewport) return
@@ -764,6 +770,11 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             const value = JSON.parse(data)
             setAdvancedConfigShowType(value.type)
         } catch (error) {}
+    })
+    /* 当前是否是fuzzer页面不是序列页面 */
+    const onCurrentFuzzerPage = useMemoizedFn((data) => {
+        if (!inViewport) return
+        setCurrentFuzzerPage(data)
     })
     /**更新热加载代码 */
     const onUpdatePatchCode = useMemoizedFn(() => {
@@ -1139,7 +1150,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             setFailedFuzzer([...failedBuffer])
             setFailedCount(failedCount)
             setSuccessCount(successCount)
-            if (inViewportRef.current && getAdvancedConfigShowType() !== "sequence") {
+            if (inViewportRef.current && getCurrentFuzzerPage()) {
                 setFuzzerResChartData(JSON.stringify(fuzzerResChartDataBuffer))
             }
         }
@@ -1972,6 +1983,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                             <FuzzerExtraShow
                                 droppedCount={droppedCount}
                                 advancedConfigValue={advancedConfigValue}
+                                setAdvancedConfigValue={setAdvancedConfigValue}
                                 onlyOneResponse={onlyOneResponse}
                                 httpResponse={httpResponse}
                             />
@@ -2237,11 +2249,12 @@ export const ContextMenuExecutor: React.FC<ContextMenuProp> = (props) => {
 interface FuzzerExtraShowProps {
     droppedCount: number
     advancedConfigValue: AdvancedConfigValueProps
+    setAdvancedConfigValue: (configValue: AdvancedConfigValueProps) => void
     onlyOneResponse: boolean
     httpResponse: FuzzerResponse
 }
 export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props) => {
-    const {droppedCount, advancedConfigValue, onlyOneResponse, httpResponse} = props
+    const {droppedCount, advancedConfigValue, setAdvancedConfigValue, onlyOneResponse, httpResponse} = props
     const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
     const divRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(divRef)
@@ -2269,8 +2282,25 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
             {droppedCount > 0 && <YakitTag color='danger'>已丢弃[{droppedCount}]个响应</YakitTag>}
             {advancedConfigValue.proxy.length > 0 && (
                 <Tooltip title={advancedConfigValue.proxy}>
-                    <YakitTag className={classNames(styles["proxy-text"], "content-ellipsis")}>
-                        代理：{advancedConfigValue.proxy.join(",")}
+                    <YakitTag
+                        className={classNames(styles["proxy-text"], "content-ellipsis")}
+                        closable={true}
+                        onClose={() => {
+                            setAdvancedConfigValue({
+                                ...advancedConfigValue,
+                                proxy: []
+                            })
+                        }}
+                    >
+                        代理：
+                        {(() => {
+                            const maxDisplay = 3 // 最多显示3条
+                            const {proxy} = advancedConfigValue
+                            const displayData = proxy.slice(0, maxDisplay).join(", ") // 取前3个
+                            const remainingCount = proxy.length - maxDisplay // 剩余数量
+
+                            return remainingCount > 0 ? `${displayData} +${remainingCount}...` : displayData
+                        })()}
                     </YakitTag>
                 </Tooltip>
             )}
@@ -2983,7 +3013,7 @@ export const SecondNodeTitle: React.FC<SecondNodeTitleProps> = React.memo((props
         setShowSuccess,
         size = "small",
         showConcurrentAndLoad,
-        selectionByteCount,
+        selectionByteCount
     } = props
 
     if (onlyOneResponse) {
@@ -3403,7 +3433,11 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             }}
                             fixContentType={fuzzerResponse.FixContentType}
                             originalContentType={fuzzerResponse.OriginalContentType}
-                            fixContentTypeHoverMessage={fuzzerResponse.IsSetContentTypeOptions === true ? "返回包中设置了X-Content-Type-Options字段，content-type是否应该被修复请关注此字段" : ""}
+                            fixContentTypeHoverMessage={
+                                fuzzerResponse.IsSetContentTypeOptions === true
+                                    ? "返回包中设置了X-Content-Type-Options字段，content-type是否应该被修复请关注此字段"
+                                    : ""
+                            }
                             {...otherEditorProps}
                         />
                     }
