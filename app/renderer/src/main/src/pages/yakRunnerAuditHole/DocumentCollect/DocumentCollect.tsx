@@ -131,11 +131,11 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
         })
     })
 
-    const onInitTreeFun = useMemoizedFn(async (rootPath: string) => {
+    const onInitTreeFun = useMemoizedFn(async (rootPath: string, search: string = "") => {
         try {
             if (treeLoading) return
             setTreeLoading(true)
-            const result = await grpcFetchHoleTree(rootPath, searchValue)
+            const result = await grpcFetchHoleTree(rootPath, search)
             const newNodes: HoleTreeNode[] = initHoleTreeData(result)
 
             setHoleTreeData(newNodes)
@@ -200,7 +200,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
         setSelectedKeys([])
         setSelectedNodes([])
         setSearchValue(value)
-        onInitTreeFun(`/`)
+        onInitTreeFun(`/`, value)
     })
 
     // 刷新树
@@ -210,9 +210,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
             setQuery({...query, ...cacheQueryRef.current})
         }
         reset()
-        setTimeout(() => {
-            onInitTreeFun(`/`)
-        }, 30)
+        onInitTreeFun(`/`)
     })
 
     return (
