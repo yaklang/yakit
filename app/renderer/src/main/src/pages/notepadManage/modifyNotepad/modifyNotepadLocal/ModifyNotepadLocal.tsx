@@ -14,8 +14,15 @@ import {
 } from "../../notepadManage/utils"
 import {ModifyNotepadPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {OutlineDotshorizontalIcon, OutlineTrashIcon, OutlineStoreIcon, OutlineExportIcon} from "@/assets/icon/outline"
+import {useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    OutlineDotshorizontalIcon,
+    OutlineTrashIcon,
+    OutlineStoreIcon,
+    OutlineExportIcon,
+    OutlineArrownarrowdownIcon,
+    OutlineArrowupIcon
+} from "@/assets/icon/outline"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -38,6 +45,8 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {toAddNotepad, toEditNotepad} from "../../notepadManage/NotepadManage"
 import {defaultNote} from "@/defaultConstants/Note"
+import Mark from "mark.js"
+import {Divider} from "antd"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
@@ -65,7 +74,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [editor, setEditor] = useState<EditorMilkdownProps>()
 
-    const [keyWord, setKeyWord] = useState<string>("") // 搜索关键词
+    const [keyWord, setKeyWord] = useState<string>(initPageInfo().keyWord || "") // 搜索关键词
     const [tabName, setTabName] = useState<string>(initTabName())
 
     const [note, setNote] = useState<Note>(cloneDeep(defaultNote))
@@ -73,18 +82,23 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
 
+    const [totalMatches, setTotalMatches] = useState<number>(0) //匹配总数
+    const [currentMatchesIndex, setCurrentMatchesIndex] = useState<number>(0) // 匹配第几个
     const modifyNotepadContentRef = useRef<ModifyNotepadContentRefProps>({
         getCatalogue: () => {}
     })
     const notepadContentRef = useRef<string>("")
-    const notepadRef = useRef<HTMLDivElement>(null)
+    const notepadEditorRef = useRef<HTMLDivElement>(null)
+    const markInstanceRef = useRef<Mark>()
+    const resultsIdsRef = useRef<string[]>([])
+    const perTargetIdRef = useRef<string>("")
+
     const perTabName = useRef<string>(initTabName())
     const filterRef = useRef<NoteFilter>(cloneDeep(defaultNoteFilter))
 
-    const [inViewport = true] = useInViewport(notepadRef)
+    const [inViewport = true] = useInViewport(notepadEditorRef)
 
     useEffect(() => {
-        if (!inViewport) return
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
             // 查询该笔记本详情
@@ -99,11 +113,11 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }
                     setNote(res)
                 })
-                .finally(() =>
+                .finally(() => {
                     setTimeout(() => {
                         setNotepadLoading(false)
                     }, 200)
-                )
+                })
         } else {
             // 新建笔记本并保存
             const params: CreateNoteRequest = {
@@ -132,10 +146,39 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }, 200)
                 )
         }
-        setKeyWord(pageInfo.keyWord || "")
-    }, [inViewport])
+    }, [])
 
+    /**更新该页面最新的数据 */
+    const onUpdatePageInfo = useMemoizedFn((value: ModifyNotepadPageInfoProps) => {
+        if (!pageId) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
+        if (!currentItem) return
+        const newCurrentItem: PageNodeItemProps = {
+            ...currentItem,
+            pageParamsInfo: {
+                modifyNotepadPageInfo: {
+                    ...defaultModifyNotepadPageInfo,
+                    ...value
+                }
+            }
+        }
+        updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
+    })
+    //#region 数据错误处理
+    useUpdateEffect(() => {
+        if (!inViewport) {
+            return
+        }
+        const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
+        if (pageInfo.notepadHash) {
+            // 初次进来不会进入这个查询
+            // 只查询是否存在，不存在会发信号弹窗
+            grpcQueryNoteById(+pageInfo.notepadHash)
+        }
+    }, [inViewport])
     useEffect(() => {
+        markInstanceRef.current = new Mark(notepadEditorRef.current!)
+
         emiter.on("localDataError", onLocalDataError)
         return () => {
             emiter.off("localDataError", onLocalDataError)
@@ -191,24 +234,72 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const onCloseCurrentPage = useMemoizedFn(() => {
         emiter.emit("onCloseCurrentPage", pageId)
     })
+    //#endregion
+    //#region 搜索高亮
+    useDebounceEffect(
+        () => {
+            onSearchHighlight(keyWord)
+        },
+        [keyWord],
+        {wait: 200}
+    )
 
-    /**更新该页面最新的数据 */
-    const onUpdatePageInfo = useMemoizedFn((value: ModifyNotepadPageInfoProps) => {
-        if (!pageId) return
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
-        if (!currentItem) return
-        const newCurrentItem: PageNodeItemProps = {
-            ...currentItem,
-            pageParamsInfo: {
-                modifyNotepadPageInfo: {
-                    ...defaultModifyNotepadPageInfo,
-                    ...value
+    const onSearchHighlight = useMemoizedFn((value: string) => {
+        // 先清除之前的高亮
+        markInstanceRef.current?.unmark({
+            done: () => {
+                resultsIdsRef.current = []
+                if (value.trim() !== "") {
+                    // 在线js测试该正则表达式是匹配每一行第一个符合条件的；
+                    // 但是在markjs中匹配出了所有满足条件的
+                    const regex = new RegExp(`(?<=^[^${value}]*)${value}`, "gm")
+                    markInstanceRef.current?.markRegExp(regex, {
+                        acrossElements: false,
+                        done: (total) => {
+                            perTargetIdRef.current = ""
+                            setTotalMatches(total)
+                            setTimeout(() => {
+                                const results = Array.from(notepadEditorRef.current?.querySelectorAll("mark") || [])
+                                resultsIdsRef.current = results.map((ele) => ele.id)
+                                jumpToMatch(1, total)
+                            }, 200)
+                        }
+                    })
+                } else {
+                    setTotalMatches(0)
+                    setCurrentMatchesIndex(0)
                 }
             }
-        }
-        updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
+        })
     })
 
+    // 跳转到指定匹配项
+    const jumpToMatch = (index: number, total?: number) => {
+        if (index < 1 || index > (total || totalMatches)) {
+            return
+        }
+
+        let targetId = resultsIdsRef.current[index - 1]
+        if (!targetId) return
+        const target = document.getElementById(targetId)!
+        if (target) {
+            if (perTargetIdRef.current) {
+                const perTarget = document.getElementById(perTargetIdRef.current)!
+                perTarget.classList.remove("highlight-pulse")
+            }
+            // 添加临时视觉反馈
+            setTimeout(() => {
+                target.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                })
+                target.classList.add("highlight-pulse")
+            }, 50)
+        }
+        perTargetIdRef.current = targetId
+        setCurrentMatchesIndex(index)
+    }
+    //#endregion
     //#region 保存最新的文档内容
     useEffect(() => {
         if (!inViewport) {
@@ -248,7 +339,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         })
     })
     //#endregion
-
     //#region 标题
     useEffect(() => {
         if (inViewport) {
@@ -289,7 +379,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         {wait: 500}
     ).run
     //#endregion
-
     const onExport = useMemoizedFn(() => {
         setNotepadLoading(true)
         onSaveNewContent(notepadContentRef.current)
@@ -320,7 +409,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 }, 200)
             )
     })
-
     return (
         <>
             <ModifyNotepadContent
@@ -329,6 +417,37 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 spinning={notepadLoading}
                 titleExtra={
                     <div className={styles["modify-notepad-local-heard-extra"]}>
+                        <YakitInput.Search
+                            value={keyWord}
+                            onChange={(e) => setKeyWord(e.target.value)}
+                            onSearch={onSearchHighlight}
+                            onPressEnter={() => onSearchHighlight(keyWord)}
+                        />
+
+                        <>
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineArrowupIcon />}
+                                onClick={() => {
+                                    jumpToMatch(currentMatchesIndex - 1)
+                                }}
+                                disabled={currentMatchesIndex <= 1}
+                            />
+                            <YakitButton
+                                type='outline2'
+                                icon={<OutlineArrownarrowdownIcon />}
+                                onClick={() => {
+                                    if (currentMatchesIndex + 1 > totalMatches) return
+                                    jumpToMatch(currentMatchesIndex + 1)
+                                }}
+                                disabled={currentMatchesIndex >= totalMatches}
+                            />
+                            <div className={styles["matcher-number"]}>
+                                {currentMatchesIndex}&nbsp;/&nbsp;{totalMatches}
+                            </div>
+                        </>
+
+                        <Divider type='vertical' />
                         <YakitButton type='outline2' icon={<OutlineExportIcon />} size='large' onClick={onExport}>
                             导出
                         </YakitButton>
@@ -363,7 +482,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     </div>
                 }
             >
-                <div className={styles["notepad-content"]} ref={notepadRef}>
+                <div className={styles["notepad-content"]}>
                     <div className={styles["notepad-heard"]}>
                         <YakitInput
                             placeholder='请输入标题'
@@ -380,7 +499,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             <span>最近修改时间:{formatTimestamp(note?.UpdateAt)}</span>
                         </div>
                     </div>
-                    <div className={styles["notepad-editor"]}>
+                    <div className={styles["notepad-editor"]} ref={notepadEditorRef}>
                         <MilkdownEditorLocal
                             type='notepad'
                             defaultValue={note.Content}
