@@ -364,7 +364,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                     <div className={styles["hotPatch-header"]}>
                                         <div className={styles["hotPatch-header-left"]}>
                                             <HotCodeTemplate
-                                                type='history'
+                                                type='httpflow-analyze'
                                                 hotPatchTempLocal={hotPatchTempLocal}
                                                 onSetHotPatchTempLocal={setHotPatchTempLocal}
                                                 onClickHotCode={setCurHotPatch}
@@ -389,7 +389,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                 保存模板
                                             </YakitButton>
                                             <AddHotCodeTemplate
-                                                type='history'
+                                                type='httpflow-analyze'
                                                 hotPatchTempLocal={hotPatchTempLocal}
                                                 hotPatchCode={curHotPatch}
                                                 visible={addHotCodeTemplateVisible}
@@ -596,14 +596,17 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
     const getHTTPFlowById = useDebounceFn(
-        useMemoizedFn((hTTPFlowId: number) => {
+        useMemoizedFn((item: HTTPFlowRuleData) => {
             setFlowRequestLoad(true)
             setFlowResponseLoad(true)
             ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: hTTPFlowId})
+                .invoke("GetHTTPFlowById", {Id: item.HTTPFlowId})
                 .then((i: HTTPFlow) => {
                     if (i.Id == lasetIdRef.current) {
                         setFlow(i)
+                        onSetCurrentSelectItem(item)
+                        setFlowRequestLoad(false)
+                        setFlowResponseLoad(false)
                     }
                 })
                 .catch((e: any) => {
@@ -612,14 +615,8 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                     setHighLightItem(undefined)
                     yakitNotify("error", `Query HTTPFlow failed: ${e}`)
                 })
-                .finally(() => {
-                    setTimeout(() => {
-                        setFlowRequestLoad(false)
-                        setFlowResponseLoad(false)
-                    }, 200)
-                })
         }),
-        {wait: 100}
+        {wait: 300, leading: true}
     ).run
     // #endregion
 
@@ -662,7 +659,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                             onSetCurrentSelectItem(i)
 
                             lasetIdRef.current = i.HTTPFlowId
-                            getHTTPFlowById(i.HTTPFlowId)
+                            getHTTPFlowById(i)
                         }}
                         scrollToIndex={scrollToIndex}
                     />
