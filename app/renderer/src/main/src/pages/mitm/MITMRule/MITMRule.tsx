@@ -523,6 +523,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         if (b) {
             const index = rules.length + 1
             const defRowDate: MITMContentReplacerRule = {
+                EffectiveURL: "",
                 Color: "",
                 EnableForRequest: false,
                 EnableForResponse: true,
