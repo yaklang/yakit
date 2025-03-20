@@ -618,14 +618,19 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                     }
                 })
                 .catch((e: any) => {
-                    setFlow(undefined)
                     onSetCurrentSelectItem(undefined)
-                    setHighLightText([])
                     yakitNotify("error", `Query HTTPFlow failed: ${e}`)
                 })
         }),
         {wait: 300, leading: true}
     ).run
+
+    useEffect(() => {
+        if (currentSelectItem === undefined) {
+            setFlow(undefined)
+            setHighLightText([])
+        }
+    }, [currentSelectItem])
 
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const queryMITMRuleExtractedData = (i: HTTPFlow, ruleData: HTTPFlowRuleData) => {
@@ -771,6 +776,33 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     })
     const [showList, setShowList] = useState<HTTPFlowRuleData[]>([])
     const [sorterTable, setSorterTable, getSorterTable] = useGetSetState<SortProps>()
+    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+    const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+    const onSelectAll = useMemoizedFn(() => {
+        if (isAllSelect) {
+            setIsAllSelect(false)
+            setSelectedRowKeys([])
+        } else {
+            setIsAllSelect(true)
+            setSelectedRowKeys(showList.map((item) => item.Id))
+        }
+    })
+    const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlowRuleData) => {
+        if (c) {
+            setSelectedRowKeys([...selectedRowKeys, rows.Id])
+        } else {
+            setIsAllSelect(false)
+            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== rows.Id)
+            setSelectedRowKeys(newSelectedRowKeys)
+        }
+    })
+
+    const compareShowList = useCampare(showList)
+    useEffect(() => {
+        if (isAllSelect) {
+            setSelectedRowKeys(showList.map((item) => item.Id))
+        }
+    }, [compareShowList, isAllSelect])
 
     const scrollUpdate = useMemoizedFn((dataLength) => {
         const scrollTop = tableRef.current?.containerRef?.scrollTop
@@ -891,7 +923,6 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             {
                 title: "规则数据",
                 dataKey: "Rule",
-                fixed: "right",
                 filterProps: {
                     filterKey: "Rule",
                     filtersType: "input",
@@ -906,7 +937,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             .invoke("ExportMITMRuleExtractedData", {
                 Type: "json",
                 Filter: {
-                    AnalyzedIds: showList.map((item) => item.Id)
+                    AnalyzedIds: selectedRowKeys.length ? selectedRowKeys : showList.map((item) => item.Id)
                 }
             })
             .then((ExportFilePath: string) => {
@@ -927,15 +958,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 query={tableQuery}
                 isRefresh={isRefresh}
                 titleHeight={42}
-                isShowTotal={false}
-                title={
-                    <div className={styles["virtual-table-heard-left"]}>
-                        <div className={styles["virtual-table-heard-left-item"]}>
-                            <span className={styles["virtual-table-heard-left-text"]}>Total</span>
-                            <span className={styles["virtual-table-heard-left-number"]}>{showList.length}</span>
-                        </div>
-                    </div>
-                }
+                isShowTotal={true}
                 extra={
                     <>
                         <YakitButton type='primary' onClick={exportMITMRuleExtractedData}>
@@ -951,6 +974,13 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                     limit: 1,
                     page: 20,
                     onChange: () => {}
+                }}
+                rowSelection={{
+                    isAll: isAllSelect,
+                    type: "checkbox",
+                    selectedRowKeys,
+                    onSelectAll: onSelectAll,
+                    onChangeCheckboxSingle: onSelectChange
                 }}
                 enableDrag={true}
                 onSetCurrentRow={onSetCurrentRow}

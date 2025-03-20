@@ -760,7 +760,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .invoke("QueryMITMRuleExtractedData", {
                 Pagination: {
                     Page: 1,
-                    Limit: 10
+                    Limit: -1
                 },
                 Filter: {
                     TraceID: [i.HiddenIndex]
