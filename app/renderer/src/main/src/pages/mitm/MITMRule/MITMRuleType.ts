@@ -11,6 +11,7 @@ export interface MITMContentReplacerRule {
     RegexpGroups: number[]
     NoReplace: boolean
     Result: string
+    EffectiveURL: string
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan" | ""
     EnableForRequest: boolean
     EnableForResponse: boolean

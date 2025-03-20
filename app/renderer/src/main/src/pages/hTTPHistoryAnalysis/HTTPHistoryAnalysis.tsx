@@ -35,10 +35,11 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import styles from "./HTTPHistoryAnalysis.module.scss"
 import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/components/HTTPFlowExtractedDataTable"
 import {QueryGeneralResponse} from "../invoker/schema"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {isEqual} from "lodash"
+import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -214,8 +215,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                         ...rulesResetFieldsRef.current
                     }))
                     if (
-                        JSON.stringify(oldSaveRules) !==
-                        JSON.stringify(
+                        !isEqual(
+                            oldSaveRules,
                             getCurRules().map((item) => ({...item, Id: item.Index, ...rulesResetFieldsRef.current}))
                         )
                     ) {
@@ -890,6 +891,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             {
                 title: "规则数据",
                 dataKey: "Rule",
+                fixed: "right",
                 filterProps: {
                     filterKey: "Rule",
                     filtersType: "input",
@@ -902,6 +904,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     const exportMITMRuleExtractedData = useMemoizedFn(() => {
         ipcRenderer
             .invoke("ExportMITMRuleExtractedData", {
+                Type: "json",
                 Filter: {
                     AnalyzedIds: showList.map((item) => item.Id)
                 }
