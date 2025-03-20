@@ -219,8 +219,6 @@ service Yak {
 
   // 流量分析器
   rpc AnalyzeHTTPFlow(AnalyzeHTTPFlowRequest) returns (stream AnalyzeHTTPFlowResponse);
-  // 查询分析后规则数据
-  rpc QueryAnalyzedHTTPFlowRule(QueryAnalyzedHTTPFlowRuleRequest) returns (QueryAnalyzedHTTPFlowRuleResponse);
   // 从一个 FuzzerRequest 中提取 Url
   rpc ExtractUrl(FuzzerRequest) returns (ExtractedUrl);
 
@@ -4922,22 +4920,12 @@ message AnalyzeHTTPFlowResponse{
   HTTPFlowRuleData RuleData = 2;
 }
 
-message  QueryAnalyzedHTTPFlowRuleRequest{
-  Paging Pagination = 1;
-  AnalyzedHTTPFlowFilter Filter =2;
-}
-
 message AnalyzedHTTPFlowFilter{
   repeated string ResultIds = 1;
   repeated string RuleVerboseNames = 2;
   repeated string Rule = 3;
 }
 
-message QueryAnalyzedHTTPFlowRuleResponse{
-  Paging Pagination = 1;
-  repeated HTTPFlowRuleData Data = 2;
-  int64 Total = 3;
-}
 
 message HTTPFlowRuleData{
   int64 Id = 1;
