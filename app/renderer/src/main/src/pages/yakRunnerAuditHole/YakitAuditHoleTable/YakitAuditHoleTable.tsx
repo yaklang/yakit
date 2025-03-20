@@ -121,8 +121,6 @@ const initResDataFun = (data: SSARisk[]) => {
 
 export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.memo((props) => {
     const {
-        advancedQuery,
-        setAdvancedQuery,
         setRiskLoading,
         renderTitle,
         riskWrapperClassName = "",
@@ -667,9 +665,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             emiter.emit("onRefRisksRead", JSON.stringify({Id: "", isAllRead: true}))
         })
     })
-    const onExpend = useMemoizedFn(() => {
-        if (setAdvancedQuery) setAdvancedQuery(true)
-    })
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
@@ -738,19 +733,6 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             ) : (
                                 <div className={styles["table-renderTitle"]}>
                                     <div className={styles["table-renderTitle-left"]}>
-                                        {!advancedQuery && !query.RuntimeID && (
-                                            <Tooltip
-                                                title='展开筛选'
-                                                placement='topLeft'
-                                                overlayClassName='plugins-tooltip'
-                                            >
-                                                <YakitButton
-                                                    type='text2'
-                                                    onClick={onExpend}
-                                                    icon={<OutlineOpenIcon onClick={onExpend} />}
-                                                ></YakitButton>
-                                            </Tooltip>
-                                        )}
                                         <div className={styles["table-renderTitle-text"]}>审计漏洞</div>
                                         <YakitRadioButtons
                                             value={type}
