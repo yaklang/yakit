@@ -1767,6 +1767,7 @@ message ExtractedDataFilter {
 message ExportMITMRuleExtractedDataRequest {
   ExtractedDataFilter Filter = 1;
   string ExportFilePath = 2;
+  string Type = 3; // csv/json 默认为csv
 }
 
 message ExportMITMRuleExtractedDataResponse {
