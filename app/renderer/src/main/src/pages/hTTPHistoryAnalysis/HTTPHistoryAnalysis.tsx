@@ -1,6 +1,6 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useThrottleEffect} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
@@ -36,6 +36,9 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import styles from "./HTTPHistoryAnalysis.module.scss"
+import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/components/HTTPFlowExtractedDataTable"
+import {QueryGeneralResponse} from "../invoker/schema"
+import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -144,29 +147,40 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     // #endregion
 
     // #region 热加载
-    const [curHotPatch, setCurHotPatch, getCurHotPatch] = useGetSetState<string>("")
+    const [curHotPatch, setCurHotPatch, getCurHotPatch] = useGetSetState<string>(HotPatchDefaultContent)
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>([])
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     useEffect(() => {
         getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave).then((setting: string) => {
-            if (setting) {
-                setCurHotPatch(setting)
-            } else {
-                setCurHotPatch("")
-            }
+            let code = HotPatchDefaultContent
+            try {
+                const obj = JSON.parse(setting) || {}
+                if (obj.code !== undefined) {
+                    code = obj.code
+                }
+            } catch (error) {}
+            setCurHotPatch(code)
+            setTimeout(() => {
+                onSaveHotCode(false)
+            }, 50)
         })
     }, [])
-    const onSaveHotCode = (notifyFlag: boolean = true) => {
-        setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, curHotPatch)
+    const onSaveHotCode = useMemoizedFn((notifyFlag: boolean = true) => {
+        setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, JSON.stringify({code: getCurHotPatch()}))
         notifyFlag && yakitNotify("success", "保存成功")
-    }
+    })
     const judgmentHotPatchChange = useMemoizedFn(() => {
         return new Promise((resolve) => {
             getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave)
                 .then((res: string) => {
-                    if (res !== getCurHotPatch()) {
-                        resolve(true)
-                    } else {
+                    try {
+                        const obj = JSON.parse(res) || {}
+                        if (obj.code !== getCurHotPatch()) {
+                            resolve(true)
+                        } else {
+                            resolve(false)
+                        }
+                    } catch (error) {
                         resolve(false)
                     }
                 })
@@ -221,7 +235,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
     const tokenRef = useRef<string>(randomString(40))
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
-    const [resetTableKey, setResetTableKey] = useState<string>(randomString(40))
     const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "AnalyzeHTTPFlow",
@@ -271,7 +284,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
         onTabChange("ruleData")
-        setResetTableKey(randomString(40))
         setCurrentSelectItem(undefined)
         debugPluginStreamEvent.reset()
 
@@ -505,8 +517,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                             <TabPane key={"ruleData"} tab={"规则数据"}>
                                                 <div className={styles["rule-data"]}>
                                                     <HttpRule
-                                                        resetTableKey={resetTableKey}
-                                                        onSetResetTableKey={setResetTableKey}
                                                         tableData={streamInfo.rulesState}
                                                         currentSelectItem={currentSelectItem}
                                                         onSetCurrentSelectItem={setCurrentSelectItem}
@@ -556,19 +566,15 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
 }
 
 interface HttpRuleProps {
-    resetTableKey: string
-    onSetResetTableKey: (k: string) => void
     tableData: HTTPFlowRuleData[]
     currentSelectItem?: HTTPFlowRuleData
     onSetCurrentSelectItem: (c?: HTTPFlowRuleData) => void
 }
 const HttpRule: React.FC<HttpRuleProps> = (props) => {
-    const {resetTableKey, onSetResetTableKey, tableData, currentSelectItem, onSetCurrentSelectItem} = props
+    const {tableData, currentSelectItem, onSetCurrentSelectItem} = props
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
-
-    const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
     // #region mitm页面配置代理用于发送webFuzzer带过去
     const [downstreamProxy, setDownstreamProxy] = useState<string>("")
@@ -596,15 +602,16 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [flow, setFlow] = useState<HTTPFlow>()
     const getHTTPFlowById = useDebounceFn(
-        useMemoizedFn((item: HTTPFlowRuleData) => {
+        useMemoizedFn((ruleData: HTTPFlowRuleData) => {
             setFlowRequestLoad(true)
             setFlowResponseLoad(true)
             ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: item.HTTPFlowId})
+                .invoke("GetHTTPFlowById", {Id: ruleData.HTTPFlowId})
                 .then((i: HTTPFlow) => {
                     if (i.Id == lasetIdRef.current) {
                         setFlow(i)
-                        onSetCurrentSelectItem(item)
+                        queryMITMRuleExtractedData(i, ruleData)
+                        onSetCurrentSelectItem(ruleData)
                         setFlowRequestLoad(false)
                         setFlowResponseLoad(false)
                     }
@@ -612,12 +619,48 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                 .catch((e: any) => {
                     setFlow(undefined)
                     onSetCurrentSelectItem(undefined)
-                    setHighLightItem(undefined)
+                    setHighLightText([])
                     yakitNotify("error", `Query HTTPFlow failed: ${e}`)
                 })
         }),
         {wait: 300, leading: true}
     ).run
+
+    const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
+    const queryMITMRuleExtractedData = (i: HTTPFlow, ruleData: HTTPFlowRuleData) => {
+        ipcRenderer
+            .invoke("QueryMITMRuleExtractedData", {
+                Pagination: {
+                    Page: 1,
+                    Limit: -1
+                },
+                Filter: {
+                    TraceID: [i.HiddenIndex],
+                    AnalyzedIds: [ruleData.Id]
+                }
+            } as QueryMITMRuleExtractedDataRequest)
+            .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
+                if (rsp.Total > 0) {
+                    if (i?.InvalidForUTF8Request || i?.InvalidForUTF8Response) {
+                        setHighLightText([])
+                    } else {
+                        setHighLightText(
+                            rsp.Data.map((i) => ({
+                                startOffset: i.Index,
+                                highlightLength: i.Length,
+                                hoverVal: i.RuleName,
+                                IsMatchRequest: i.IsMatchRequest
+                            }))
+                        )
+                    }
+                } else {
+                    setHighLightText([])
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", "获取规则提取数据失败")
+            })
+    }
     // #endregion
 
     // #region 定位数据包id
@@ -647,8 +690,6 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             firstNode={() => (
                 <div className={styles["HttpRule-first"]}>
                     <HttpRuleTable
-                        resetTableKey={resetTableKey}
-                        onSetResetTableKey={onSetResetTableKey}
                         tableData={tableData}
                         currentSelectItem={currentSelectItem}
                         onSelect={(i) => {
@@ -662,6 +703,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                             getHTTPFlowById(i)
                         }}
                         scrollToIndex={scrollToIndex}
+                        onSetScrollToIndex={setScrollToIndex}
                     />
                 </div>
             )}
@@ -682,7 +724,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                             flowResponseLoad={flowResponseLoad}
                             scrollTo={scrollTo}
                             scrollID={currentSelectItem.Id}
-                            // highLightItem={undefined}
+                            highLightText={highLightText}
                         />
                     )}
                 </div>
@@ -711,31 +753,46 @@ export interface HTTPFlowRuleData {
     Rule: string
 }
 interface HttpRuleTableProps {
-    resetTableKey: string
-    onSetResetTableKey: (k: string) => void
     tableData: HTTPFlowRuleData[]
     currentSelectItem?: HTTPFlowRuleData
     onSelect: (c?: HTTPFlowRuleData) => void
     scrollToIndex?: string
+    onSetScrollToIndex: (i?: string) => void
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
-    const {resetTableKey, onSetResetTableKey, tableData, currentSelectItem, onSelect, scrollToIndex} = props
+    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex} = props
+
+    const tableRef = useRef<any>(null)
     const [isRefresh, setIsRefresh] = useState<boolean>(true)
     const [tableQuery, setTableQuery] = useState<QueryAnalyzedHTTPFlowRuleFilter>({
         RuleVerboseName: "",
         Rule: ""
     })
     const [showList, setShowList] = useState<HTTPFlowRuleData[]>([])
-    const compareTableData = useCampare(tableData)
+    const [sorterTable, setSorterTable, getSorterTable] = useGetSetState<SortProps>()
 
+    const scrollUpdate = useMemoizedFn((dataLength) => {
+        const scrollTop = tableRef.current?.containerRef?.scrollTop
+        const clientHeight = tableRef.current?.containerRef?.clientHeight
+        const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+        let scrollBottom: number | undefined = undefined
+        if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
+            scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+            const isScroll: boolean = scrollHeight > clientHeight
+            if (scrollBottom <= 2 && isScroll) {
+                onSetScrollToIndex(dataLength)
+            }
+        }
+    })
     // 前端搜索
     const queryUpdateData = useDebounceFn(
         () => {
             if (tableQuery.RuleVerboseName || tableQuery.Rule) {
-                const l = tableData.length
+                const newDataTable = sorterFunction(tableData, getSorterTable()) || []
+                const l = newDataTable.length
                 const searchList: HTTPFlowRuleData[] = []
                 for (let index = 0; index < l; index++) {
-                    const record = tableData[index]
+                    const record = newDataTable[index]
                     let ruleVerboseNameIsPush = true
                     let ruleIsPush = true
 
@@ -753,13 +810,22 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                         searchList.push(record)
                     }
                 }
-                setShowList(searchList)
+                setShowList(searchList.slice())
+                if (searchList.length) {
+                    scrollUpdate(searchList.length)
+                }
             } else {
-                setShowList(tableData)
+                const newData = sorterFunction(tableData, getSorterTable()) || []
+                setShowList(newData.slice())
+                if (newData.length) {
+                    scrollUpdate(newData.length)
+                }
             }
         },
         {wait: 300}
     ).run
+
+    const compareTableData = useCampare(tableData)
     useDebounceEffect(
         () => {
             queryUpdateData()
@@ -767,9 +833,19 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
         [tableQuery, compareTableData],
         {wait: 100}
     )
+    const compareSorterTable = useCampare(sorterTable)
+    useThrottleEffect(
+        () => {
+            queryUpdateData()
+        },
+        [tableData, compareSorterTable],
+        {wait: 500}
+    )
+
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         const newTableQuery = {...tableQuery, ...filter}
         setTableQuery(newTableQuery)
+        setSorterTable(newSort)
     })
 
     const onSetCurrentRow = useMemoizedFn((val?: HTTPFlowRuleData) => {
@@ -789,12 +865,18 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 dataKey: "Id",
                 fixed: "left",
                 width: 96,
-                enableDrag: false
+                enableDrag: false,
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "数据包ID",
                 dataKey: "HTTPFlowId",
-                width: 96
+                width: 100,
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "规则名",
@@ -836,13 +918,21 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     return (
         <div className={styles["HttpRule-table-wrapper"]}>
             <TableVirtualResize<HTTPFlowRuleData>
-                key={resetTableKey}
+                ref={tableRef}
                 renderKey='Id'
                 columns={ruleColumns}
                 query={tableQuery}
                 isRefresh={isRefresh}
                 titleHeight={42}
-                isShowTotal={true}
+                isShowTotal={false}
+                title={
+                    <div className={styles["virtual-table-heard-left"]}>
+                        <div className={styles["virtual-table-heard-left-item"]}>
+                            <span className={styles["virtual-table-heard-left-text"]}>Total</span>
+                            <span className={styles["virtual-table-heard-left-number"]}>{showList.length}</span>
+                        </div>
+                    </div>
+                }
                 extra={
                     <>
                         <YakitButton type='primary' onClick={exportMITMRuleExtractedData}>

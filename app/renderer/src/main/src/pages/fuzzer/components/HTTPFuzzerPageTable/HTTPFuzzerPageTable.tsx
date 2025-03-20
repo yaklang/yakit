@@ -178,7 +178,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const listTableRef = useRef<FuzzerResponse[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [sorterTable, setSorterTable] = useState<SortProps>()
-        const sorterTableRef = useRef<SortProps>()
 
         const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
         const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
@@ -194,10 +193,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [scrollToIndex, setScrollToIndex] = useState<number>()
         const [alertClose, setAlertClose] = useState<boolean>(false)
         const [alertHeight, setAlertHeight] = useState<number>(0)
-
-        useEffect(() => {
-            sorterTableRef.current = sorterTable
-        }, [sorterTable])
         useEffect(() => {
             listTableRef.current = listTable
         }, [listTable])
