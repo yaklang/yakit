@@ -4,9 +4,7 @@ export interface YakRunnerAuditHoleProps {
 
 export interface HoleQueryProps {
     inViewport: boolean
-    /**是否开启高级查询 */
-    advancedQuery: boolean
-    setAdvancedQuery: (b: boolean) => void
+    onOperateSide: (b: boolean) => void
     query: SSARisksFilter
     setQuery: (v: SSARisksFilter) => void
 }
