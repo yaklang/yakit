@@ -6263,14 +6263,14 @@ message SyntaxflowsProgress {
 message HotPatchTemplate {
   string Name = 1;
   string Content = 2;
-  string Type = 3; // fuzzer/mitm
+  string Type = 3; // fuzzer/mitm/httpflow-analyze
 }
 
 message HotPatchTemplateRequest {
   repeated int64 Id = 1;
   repeated string Name = 2;
   repeated string ContentKeyword = 3;
-  string Type = 4; // fuzzer/mitm
+  string Type = 4; // fuzzer/mitm/httpflow-analyze
 }
 
 message UpdateHotPatchTemplateRequest {
@@ -6301,7 +6301,7 @@ message QueryHotPatchTemplateResponse {
 }
 
 message QueryHotPatchTemplateListRequest {
-  string Type = 1; // fuzzer/mitm
+  string Type = 1; // fuzzer/mitm/httpflow-analyze
 }
 
 message QueryHotPatchTemplateListResponse {
@@ -6322,12 +6322,12 @@ message GroupTableColumnResponse {
 message UploadHotPatchTemplateToOnlineRequest {
   string Token = 1;
   string Name = 2;
-  string Type = 3; // fuzzer/mitm
+  string Type = 3; // fuzzer/mitm/httpflow-analyze
 }
 
 message DownloadHotPatchTemplateRequest {
   string Name = 1;
-  string Type = 2; // fuzzer/mitm
+  string Type = 2;// fuzzer/mitm/httpflow-analyze
 }
 message ExportHTTPFlowStreamRequest {
   QueryHTTPFlowRequest Filter = 1;
