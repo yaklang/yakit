@@ -35,6 +35,13 @@
         font-size: 12px;
         white-space: normal;
     }
+    mark {
+        background-color: var(--yakit-primary-2);
+        padding: 0 2px;
+    }
+    mark.highlight-pulse {
+        background-color: var(--yakit-primary-5);
+    }
     .ProseMirror-selectednode {
         background-color: var(--yakit-primary-2);
         border-radius: 4px;
