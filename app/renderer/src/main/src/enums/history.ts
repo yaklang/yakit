@@ -4,5 +4,5 @@ export enum RemoteHistoryGV {
     /** @name 排除展示列key值 */
     HistroyExcludeColumnsKey = "history-exclude-columns-key",
     HistoryAnalysisLeftTabs = "history-analysis-left-tabs",
-    HistoryAnalysisHotPatchCodeSave = "history-analysis-hotPatch-code-save"
+    HistoryAnalysisHotPatchCodeSave = "history-analysis-hotPatchCode"
 }
