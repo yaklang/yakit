@@ -1,10 +1,8 @@
-import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
+import {useEditor} from "@milkdown/react"
 import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {Ctx} from "@milkdown/kit/ctx"
 import {BlockView} from "../Block/Block"
 import {
-    ProsemirrorAdapterProvider,
-    useNodeViewContext,
     useNodeViewFactory,
     usePluginViewFactory
 } from "@prosemirror-adapter/react"
@@ -19,7 +17,7 @@ import {CustomCodeComponent} from "../CodeBlock/CodeBlock"
 import {ListItem} from "../ListItem/ListItem"
 import {MilkdownHr} from "../MilkdownHr/MilkdownHr"
 import {tooltip, TooltipView} from "../Tooltip/Tooltip"
-import {alterCustomPlugin, alterCustomSchema} from "./alertPlugin"
+import {alterCustomPlugin} from "./alertPlugin"
 import {codeCustomPlugin} from "./codePlugin"
 import {commentCustomPlugin} from "./commentPlugin"
 import {headingCustomPlugin} from "./headingPlugin"
@@ -32,8 +30,8 @@ import {$view} from "@milkdown/kit/utils"
 import {CustomFile} from "../CustomFile/CustomFile"
 import {getBase64} from "../MilkdownEditor"
 import {httpUploadImgBase64} from "@/apiUtils/http"
-import {Node, NodeSpec, NodeType, Schema} from "@milkdown/kit/prose/model"
-import {imageBlockComponent, imageBlockConfig, imageBlockSchema} from "@milkdown/kit/component/image-block"
+import {Node} from "@milkdown/kit/prose/model"
+import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
 import {html} from "atomico"
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
@@ -42,27 +40,23 @@ import {
     codeBlockSchema,
     commonmark,
     hrSchema,
-    listItemAttr,
     listItemSchema,
     syncHeadingIdPlugin
 } from "@milkdown/kit/preset/commonmark"
 import {
     defaultValueCtx,
     Editor,
-    editorViewCtx,
     editorViewOptionsCtx,
-    nodesCtx,
-    rootCtx,
-    schemaCtx
-} from "@milkdown/kit/core"
+    rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 import {cursor} from "@milkdown/kit/plugin/cursor"
 import {trailing} from "@milkdown/kit/plugin/trailing"
-import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
+import {collab} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
+import {markCustomPlugin} from "./markPlugin"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -309,6 +303,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     })
                 )
             ].flat()
+            const markPlugin = [...markCustomPlugin()].flat()
             //#endregion
             return (
                 Editor.make()
@@ -333,7 +328,9 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                             if (collabParams.enableCollab && isSave) {
                                 collabParams.onSaveHistory(nextMarkdown)
                             }
-                            onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                            if (isSave) {
+                                onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                            }
                         })
                     })
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
@@ -375,6 +372,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(commentPlugin)
                     // hrPlugin
                     .use(hrPlugin)
+                    // markPlugin
+                    .use(markPlugin)
                     // trackDeletePlugin
                     .use(trackDeletePlugin())
                     .use(customPlugin || [])
