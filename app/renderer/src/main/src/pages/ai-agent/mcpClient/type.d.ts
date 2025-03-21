@@ -22,16 +22,6 @@ export interface MCPClientInfo {
     cwd?: string
 }
 
-/** MCP客户端池信息 */
-export interface MCPClientPoolInfo {
-    /** 客户端 */
-    client: Client
-    /** 客户端配置 */
-    info: MCPClientInfo
-    /** 连接状态 */
-    connected: boolean
-}
-
 /** MCP客户端资源 */
 export interface MCPClientResource {
     tools: any[]
@@ -48,4 +38,16 @@ export interface MCPDataProgress {
 /** MCP-Data */
 export interface MCPData {
     content: {type: string; text: string}[]
+}
+
+/** MCP-CallTool */
+export interface MCPCallToolRequest {
+    /** 客户端 id */
+    clientID: string
+    /** 对话框 id */
+    commID: string
+    request: {
+        name: string
+        arguments: Record<string, any>
+    }
 }

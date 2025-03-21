@@ -354,7 +354,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       updatePcap(),
                       updateChromePath(),
                       updateMITMCert(),
-                      getCurrentYak()
+                    //   getCurrentYak()
                   ]
                 : [
                       updateSystemProxy(),
@@ -363,7 +363,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                       updatePluginTotal(),
                       updateChromePath(),
                       updateMITMCert(),
-                      getCurrentYak()
+                    //   getCurrentYak()
                   ]
         )
             .then((values) => {

@@ -1,7 +1,7 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
-import {MCPClientResource} from "./mcpClient/type"
+import {MCPCallToolRequest, MCPClientResource} from "./mcpClient/type"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,16 +45,11 @@ export const grpcDeleteMCPClient: APIFunc<string, string> = (token, hiddenError)
 }
 
 /** @name mcp服务器-执行callTool */
-export const grpcMCPClientCallTool: APIFunc<string, string> = (token, hiddenError) => {
+export const grpcMCPClientCallTool: APIFunc<MCPCallToolRequest, string> = (params, hiddenError) => {
     return new Promise(async (resolve, reject) => {
+        const {clientID, commID, request} = params
         ipcRenderer
-            .invoke("callTool-mcp-client", token, {
-                name: "longRunningOperation",
-                arguments: {
-                    duration: 20,
-                    steps: 20
-                }
-            })
+            .invoke("callTool-mcp-client", {clientID, commID}, request)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", " 执行CallTool失败:" + e)

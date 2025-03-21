@@ -2,7 +2,7 @@ import React, {useRef} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentTabList} from "./defaultConstant"
 import {AIAgentProps, AIAgentTab} from "./aiAgentType"
-import {ServerSetting} from "./ServerSetting"
+import {MCPServer} from "./ServerSetting"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -44,7 +44,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                             [styles["hidden-content"]]: active !== "mcp"
                         })}
                     >
-                        <ServerSetting />
+                        <MCPServer />
                     </div>
                 )}
             </div>

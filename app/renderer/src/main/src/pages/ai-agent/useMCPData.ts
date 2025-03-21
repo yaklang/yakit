@@ -11,28 +11,28 @@ function useMCPData() {
 
     const onStart = useMemoizedFn(
         (
-            token: string,
+            commID: string,
             onData: (data: MCPDataProgress) => void,
             onEnd: (data: MCPData) => void,
             onError: (error: any) => void
         ) => {
-            if (pools.current.includes(token)) {
-                yakitNotify("error", "MCP服务器正在执行中")
+            if (pools.current.includes(commID)) {
+                yakitNotify("error", "对话正在执行中")
                 return
             }
-            pools.current.push(token)
-            ipcRenderer.on(`mcp-${token}-progress`, (e, res: MCPDataProgress) => {
+            pools.current.push(commID)
+            ipcRenderer.on(`mcp-${commID}-progress`, (e, res: MCPDataProgress) => {
                 onData(res)
             })
-            ipcRenderer.on(`mcp-${token}-end`, (e, res: MCPData) => {
-                yakitNotify("success", "MCP执行完")
+            ipcRenderer.on(`mcp-${commID}-end`, (e, res: MCPData) => {
+                yakitNotify("success", "对话执行完")
                 onEnd(res)
-                onRemove(token)
+                onRemove(commID)
             })
-            ipcRenderer.on(`mcp-${token}-error`, (e, err: any) => {
-                yakitNotify("error", `MCP执行失败: ${err}`)
+            ipcRenderer.on(`mcp-${commID}-error`, (e, err: any) => {
+                yakitNotify("error", `对话执行失败: ${err}`)
                 onError(err)
-                onRemove(token)
+                onRemove(commID)
             })
         }
     )

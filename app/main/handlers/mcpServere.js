@@ -172,13 +172,14 @@ const newAbortController = (token) => {
 }
 
 // call-tool
-const handleCallTool = (win, token, request) => {
+const handleCallTool = (win, tokens, request) => {
     return new Promise(async (resolve, reject) => {
-        const server = clients.get(token)
+        const {clientID, commID} = tokens
+        const server = clients.get(clientID)
         if (!server) {
             return reject("client no exist")
         }
-        if (commPools.has(token)) {
+        if (commPools.has(commID)) {
             return reject("client is busy")
         }
         if (!server.link) {
@@ -186,31 +187,29 @@ const handleCallTool = (win, token, request) => {
         }
 
         try {
-            const signal = newAbortController(token).signal
+            const signal = newAbortController(commID).signal
             console.log("request", request)
             server.client
                 .callTool(request, undefined, {
                     onprogress: (progress) => {
                         if (win && progress) {
-                            win.webContents.send(`mcp-${token}-progress`, progress)
+                            win.webContents.send(`mcp-${commID}-progress`, progress)
                         }
-                        console.log("onprogress", progress)
                     },
                     signal: signal
                 })
                 .then((res) => {
                     if (win && res) {
-                        win.webContents.send(`mcp-${token}-end`, res)
+                        win.webContents.send(`mcp-${commID}-end`, res)
                     }
-                    console.log("ans", res)
                 })
                 .catch((err) => {
                     if (win && err) {
-                        win.webContents.send(`mcp-${token}-error`, handleIPCError(err))
+                        win.webContents.send(`mcp-${commID}-error`, handleIPCError(err))
                     }
                 })
                 .finally(() => {
-                    commPools.has(token) && commPools.delete(token)
+                    commPools.has(commID) && commPools.delete(commID)
                 })
             resolve("")
         } catch (error) {
