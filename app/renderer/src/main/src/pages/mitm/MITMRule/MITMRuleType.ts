@@ -41,6 +41,7 @@ export interface MITMRuleProp {
     excludeColumnsKey?: string[]
     excludeBatchMenuKey?: string[]
     onSetRules?: (r: MITMContentReplacerRule[]) => void
+    onRefreshCom?: () => void
 }
 
 export interface ButtonTextProps {

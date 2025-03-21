@@ -8,7 +8,8 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineRefreshIcon,
-    OutlineSearchIcon
+    OutlineSearchIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
@@ -39,6 +40,7 @@ import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/compon
 import {QueryGeneralResponse} from "../invoker/schema"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {isEqual} from "lodash"
+import emiter from "@/utils/eventBus/eventBus"
 import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const {TabPane} = PluginTabs
@@ -195,6 +197,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     // #region 规则配置
     const {mitmStatus} = useStore()
     const mitmRuleRef = useRef<MITMRulePropRef>(null)
+    const [mitmRuleKey, setMitmRuleKey] = useState<string>(randomString(40))
     const rulesResetFieldsRef = useRef({
         NoReplace: true,
         Result: "",
@@ -204,6 +207,9 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         ExtraRepeat: false
     })
     const [curRules, setCurRules, getCurRules] = useGetSetState<MITMContentReplacerRule[]>([])
+    const onRefreshCurrentRules = useMemoizedFn(() => {
+        setMitmRuleKey(randomString(40))
+    })
     const judgmentRulesChange = useMemoizedFn(() => {
         return new Promise((resolve) => {
             ipcRenderer
@@ -235,6 +241,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     // #region 执行
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
     const tokenRef = useRef<string>(randomString(40))
+    const [isExit, setIsExit] = useState<boolean>(false)
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -284,6 +291,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         onSaveHotCode(false)
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
+        setIsExit(false)
         onTabChange("ruleData")
         setCurrentSelectItem(undefined)
         debugPluginStreamEvent.reset()
@@ -309,6 +317,20 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 yakitNotify("error", "取消流量分析出错:" + e)
             })
     }
+
+    useEffect(() => {
+        if (isExit) {
+            setExecuteStatus("default")
+        }
+    }, [isExit])
+    useEffect(() => {
+        if (isExit || executeStatus === "default") {
+            emiter.on("onRefreshCurrentRules", onRefreshCurrentRules)
+            return () => {
+                emiter.off("onRefreshCurrentRules", onRefreshCurrentRules)
+            }
+        }
+    }, [isExit, executeStatus])
     // #endregion
 
     const [activeKey, setActiveKey] = useState<"ruleData" | "historyData">("ruleData")
@@ -441,6 +463,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                     style={{display: curTabKey === "rule" ? "block" : "none"}}
                                 >
                                     <MITMRule
+                                        key={mitmRuleKey}
                                         ref={mitmRuleRef}
                                         ruleUse='historyAnalysis'
                                         visible={true}
@@ -456,6 +479,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                 }))
                                             )
                                         }}
+                                        onRefreshCom={onRefreshCurrentRules}
                                     />
                                 </div>
                             </div>
@@ -467,7 +491,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 secondMinSize={500}
                 secondNode={
                     <div className={styles["HTTPHistoryAnalysis-right"]}>
-                        {executeStatus === "default" ? (
+                        {executeStatus === "default" || isExit ? (
                             <div className={styles["HTTPHistoryAnalysis-right-default"]}>
                                 <div className={styles["HTTPHistoryAnalysis-right-default-title"]}>
                                     <span className={styles["title"]}>执行结果</span>{" "}
@@ -477,7 +501,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                     <YakitButton
                                         size='large'
                                         type='primary'
-                                        style={{width: 100}}
+                                        style={{width: 150}}
                                         onClick={onStartExecute}
                                     >
                                         执行
@@ -507,6 +531,17 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                 ? "继续"
                                                 : "退出"}
                                         </YakitButton>
+                                        <YakitButton
+                                            type='text2'
+                                            onClick={() => {
+                                                onStopExecute()
+                                                setTimeout(() => {
+                                                    setIsExit(true)
+                                                    onRefreshCurrentRules()
+                                                }, 300)
+                                            }}
+                                            icon={<OutlineXIcon />}
+                                        ></YakitButton>
                                     </div>
                                 </div>
                                 <div className={styles["HTTPHistoryAnalysis-result"]}>
@@ -897,7 +932,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 title: "序号",
                 dataKey: "Id",
                 fixed: "left",
-                width: 96,
+                width: 100,
                 enableDrag: false,
                 sorterProps: {
                     sorter: true
@@ -914,6 +949,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
             {
                 title: "规则名",
                 dataKey: "RuleVerboseName",
+                width: 300,
                 filterProps: {
                     filterKey: "RuleVerboseName",
                     filtersType: "input",

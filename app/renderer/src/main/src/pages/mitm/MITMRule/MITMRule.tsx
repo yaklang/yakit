@@ -14,6 +14,7 @@ import {
     PencilAltIcon,
     PlusIcon,
     QuestionMarkCircleIcon,
+    RefreshIcon,
     RemoveIcon,
     SaveIcon,
     TrashIcon
@@ -140,7 +141,8 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         status,
         excludeColumnsKey = [],
         excludeBatchMenuKey = [],
-        onSetRules
+        onSetRules,
+        onRefreshCom
     } = props
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
@@ -573,6 +575,11 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         }
         onOpenOrCloseModal(false)
     })
+    const onRefreshCurrentRules = () => {
+        if (ruleUse === "mitm") {
+            emiter.emit("onRefreshCurrentRules")
+        }
+    }
     const onSaveToDataBase = useMemoizedFn((saveOk?: () => void) => {
         const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
         if (status === "idle") {
@@ -586,6 +593,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     } else {
                         success("保存成功")
                     }
+                    onRefreshCurrentRules()
                 })
                 .catch((e) => {
                     failed(`保存失败: ${e}`)
@@ -630,6 +638,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                                 } else {
                                     success("保存成功")
                                 }
+                                onRefreshCurrentRules()
                             })
                             .catch((e) => {
                                 failed(`保存失败: ${e}`)
@@ -649,6 +658,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                         } else {
                             success("保存成功")
                         }
+                        onRefreshCurrentRules()
                     })
                     .catch((e) => {
                         failed(`保存失败: ${e}`)
@@ -863,6 +873,16 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                                     新增规则
                                 </div>
                             </YakitButton>
+                            {ruleUse === "historyAnalysis" && (
+                                <YakitButton
+                                    style={{marginLeft: 8}}
+                                    type='text2'
+                                    icon={<RefreshIcon />}
+                                    onClick={() => {
+                                        onRefreshCom && onRefreshCom()
+                                    }}
+                                />
+                            )}
                         </div>
                     }
                     renderKey='Id'
