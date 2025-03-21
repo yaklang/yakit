@@ -16,4 +16,5 @@ export type MitmEventProps = {
     onMitmSearchInputVal: string
     onMITMLogProcessQuery: string
     onMitmCurProcess: string
+    onRefreshCurrentRules?: string
 }
