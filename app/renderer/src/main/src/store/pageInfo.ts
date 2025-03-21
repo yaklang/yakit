@@ -202,7 +202,7 @@ export interface ModifyNotepadPageInfoProps {
     /**笔记本标题 */
     title?: string
     /**搜索关键词 */
-    keyWord?:string
+    keyWordInfo?: {keyWord: string; position: number}
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
@@ -250,7 +250,7 @@ interface PageInfoStoreProps {
     getPageInfoByRuntimeId: (routeKey: string, pageId: string) => PageNodeItemProps | undefined
     /**展开或者收起所有的组 isExpand:true展开/false收起*/
     updateGroupExpandOrRetract: (routeKey: string, isExpand: boolean) => void
-    
+
     setCurrentPageTabRouteKey: (route: YakitRoute | string) => void
     getCurrentPageTabRouteKey: () => YakitRoute | string
 }
