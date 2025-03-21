@@ -4,7 +4,7 @@ on:
     push:
         tags:
             - "v*-render"
-            - "!v*-sast-render"
+            - "!v*-irify-render"
 
 jobs:
     build_yakit:

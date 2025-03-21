@@ -1,7 +1,7 @@
-appId: "io.yaklang.sastscan"
+appId: "io.yaklang.irifyee"
 extraMetadata:
-    name: sastscan
-productName: "SastScan"
+    name: irifyee
+productName: "IRifyEnterprise"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
@@ -13,8 +13,6 @@ extraFiles:
       to: "bins/flag.txt"
     - from: "bins/engine-version.txt"
       to: "bins/engine-version.txt"
-    - from: "bins/yakit-system-mode.txt"
-      to: "bins/yakit-system-mode.txt"
     - from: "bins/resources"
       to: "bins/resources"
       filter:
@@ -93,7 +91,7 @@ nsis:
     createDesktopShortcut: false
     createStartMenuShortcut: true
 
-beforePack: "buildHooks/legacy_before_pack.js"
+beforePack: "buildHooks/before_pack.js"
 
 releaseInfo:
     releaseName: ${version}

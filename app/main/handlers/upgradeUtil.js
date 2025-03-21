@@ -370,8 +370,8 @@ module.exports = {
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
                 const {isEnterprise, isIRify} = type
-                const SastCE = isIRify && !isEnterprise
-                const SastEE = isIRify && isEnterprise
+                const IRifyCE = isIRify && !isEnterprise
+                const IRifyEE = isIRify && isEnterprise
                 const YakitCE = !isIRify && !isEnterprise
                 const YakitEE = !isIRify && isEnterprise
                 // format version，下载的版本号里不能存在 V
@@ -381,10 +381,10 @@ module.exports = {
 
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
-                if (SastCE) {
-                    downloadUrl = await getSastCommunityDownloadUrl(version)
-                } else if (SastEE) {
-                    downloadUrl = await getSastEEDownloadUrl(version)
+                if (IRifyCE) {
+                    downloadUrl = await getIRifyCommunityDownloadUrl(version)
+                } else if (IRifyEE) {
+                    downloadUrl = await getIRifyEEDownloadUrl(version)
                 } else if (YakitCE) {
                     downloadUrl = await getYakitCommunityDownloadUrl(version)
                 } else {
@@ -399,7 +399,7 @@ module.exports = {
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
                 // 企业版下载
-                if (YakitEE || SastEE) {
+                if (YakitEE || IRifyEE) {
                     await downloadYakitEE(
                         version,
                         isIRify,
