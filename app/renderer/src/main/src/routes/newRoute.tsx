@@ -106,7 +106,7 @@ import {HTTPResponseExtractor} from "@/pages/fuzzer/MatcherAndExtractionCard/Mat
 import {ConfigNetworkPage} from "@/components/configNetwork/ConfigNetworkPage"
 import {PluginManage} from "@/pages/plugins/manage/PluginManage"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
-import {isCommunityEdition, isSastScan} from "@/utils/envfile"
+import {isCommunityEdition, isIRify} from "@/utils/envfile"
 import {NewPayload} from "@/pages/payloadManager/newPayload"
 import {NewCodec} from "@/pages/codec/NewCodec"
 import {DataStatistics} from "@/pages/dataStatistics/DataStatistics"
@@ -152,7 +152,7 @@ import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
-const SastScanHome = React.lazy(() => import("@/pages/home/SastScanHome"))
+const IRifyHome = React.lazy(() => import("@/pages/home/IRifyHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
@@ -445,7 +445,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <>{isSastScan() ? <SastScanHome /> : <Home />}</>
+            return <>{isIRify() ? <IRifyHome /> : <Home />}</>
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -690,7 +690,7 @@ export interface PublicRouteMenuProps {
  * @name public版菜单配置数据
  * @description 注意! 该数据只在折叠菜单时使用，展开菜单的渲染并未使用该数据，如需调整展开菜单，请在组件MenuMode内修改
  */
-export const PublicRouteMenu: PublicRouteMenuProps[] = isSastScan()
+export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
     ? [
           {
               page: undefined,
@@ -1147,7 +1147,7 @@ export const InvalidPageMenuItem = isCommunityEdition()
  * @name private版专家模式菜单配置数据
  * @description 修改只对专家模式有效，别的模式需取对应模式数据进行修改
  */
-export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isSastScan()
+export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
     ? [
           {
               page: undefined,

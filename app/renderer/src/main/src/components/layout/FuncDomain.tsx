@@ -33,8 +33,8 @@ import {
     isCommunityEdition,
     isEnpriTrace,
     isEnpriTraceAgent,
-    isEnterpriseSastScan,
-    isSastScan,
+    isEnpriTraceIRify,
+    isIRify,
     showDevTool
 } from "@/utils/envfile"
 import {invalidCacheAndUserData} from "@/utils/InvalidCacheAndUserData"
@@ -266,7 +266,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["dataStatistics"],
                     UserMenusMap["misstatement"]
                 ].concat(signOutMenu)
-                if (isSastScan()) {
+                if (isIRify()) {
                     cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
                 }
                 setUserMenu(cacheMenus)
@@ -279,8 +279,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["dataStatistics"],
                     UserMenusMap["misstatement"]
                 ].concat(signOutMenu)
-                // sast scan版本时管理员不显示插件管理
-                if (isSastScan()) {
+                // IRify 版本时管理员不显示插件管理
+                if (isIRify()) {
                     cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
                 }
                 setUserMenu(cacheMenus)
@@ -302,8 +302,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     UserMenusMap["pluginAudit"],
                     UserMenusMap["misstatement"]
                 ].concat(signOutMenu)
-                // sast scan版本时管理员不显示插件管理
-                if (isSastScan()) {
+                // IRify 版本时管理员不显示插件管理
+                if (isIRify()) {
                     cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
                 }
                 setUserMenu(cacheMenus)
@@ -340,8 +340,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         UserMenusMap["systemConfig"],
                         ...signOutMenu
                     ]
-                    // 仅在sast scan 企业版本时显示系统配置
-                    if (!isEnterpriseSastScan()) {
+                    // 仅在 IRify 企业版本时显示系统配置
+                    if (!isEnpriTraceIRify()) {
                         cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "system-config")
                     }
                     if (dynamicConnect) {
@@ -353,8 +353,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             (item) => (item as YakitMenuItemProps).key !== "close-dynamic-control"
                         )
                     }
-                    // sast scan版本时管理员不显示插件管理
-                    if (isSastScan()) {
+                    // IRify 版本时管理员不显示插件管理
+                    if (isIRify()) {
                         cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== "plugin-audit")
                     }
                     setUserMenu([...cacheMenus])
@@ -534,8 +534,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     <div className={styles["divider-style"]}></div>
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
-                    {!showProjectManage && !isSastScan() && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {!showProjectManage && isSastScan() && <UIOpSastScanRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && isIRify() && <UIOpSastScanRisk isEngineLink={isEngineLink} />}
                     {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
@@ -1703,7 +1703,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             method: "get",
             url: "yak/versions/info",
             params: {
-                source: isSastScan() ? "sast" : "yakit"
+                source: isIRify() ? "sast" : "yakit"
             }
         })
             .then((res: API.YakVersionsInfoResponse) => {
@@ -1888,7 +1888,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 version: editShow.type === "yakit" ? yakitLastVersion : yaklangLastVersion,
                 content: editInfo || ""
             }),
-            source: isSastScan() ? "sast" : "yakit"
+            source: isIRify() ? "sast" : "yakit"
         }
 
         NetWorkApi<SetUpdateContentProp, API.ActionSucceeded>({

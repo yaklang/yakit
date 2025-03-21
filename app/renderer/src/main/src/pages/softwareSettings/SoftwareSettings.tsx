@@ -9,7 +9,7 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import {isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import {isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitSSProject from "@/assets/yakitFontSS.png"
@@ -29,7 +29,7 @@ interface SettingsMenuProp {
     icon: ReactNode
 }
 const ProjectLogo = (showMini: boolean) => {
-    if (isSastScan()) {
+    if (isIRify()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
     } else if (isEnpriTrace()) {
         return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
