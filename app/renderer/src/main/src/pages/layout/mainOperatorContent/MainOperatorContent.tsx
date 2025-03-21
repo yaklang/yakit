@@ -33,7 +33,7 @@ import {
     isBreachTrace,
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
-    isSastScan
+    isIRify
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -287,7 +287,7 @@ export const getInitPageCache: () => PageCache[] = () => {
         ]
     }
 
-    if (isSastScan()) {
+    if (isIRify()) {
         return [
             {
                 routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -1741,7 +1741,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         if (unFuzzerCacheData.current) {
             unFuzzerCacheData.current()
         }
-        if (!isSastScan()) {
+        if (!isIRify()) {
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {

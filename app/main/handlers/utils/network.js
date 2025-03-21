@@ -225,8 +225,8 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
             }
         })
 }
-/** 获取最新 SAST Scan 版本号 */
-const fetchLatestYakitSastScanVersion = async (requestConfig) => {
+/** 获取最新 IRify Scan 版本号 */
+const fetchLatestYakitIRifyVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/sast/latest/yakit-version.txt`
     return axios
@@ -244,8 +244,8 @@ const fetchLatestYakitSastScanVersion = async (requestConfig) => {
             }
         })
 }
-/** 获取最新 SAST Scan EE版本号 */
-const fetchLatestYakitSastScanEEVersion = async (requestConfig) => {
+/** 获取最新 IRify Scan EE版本号 */
+const fetchLatestYakitIRifyEEVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
     const versionUrl = `https://${domain}/svip/latest/yakit-version.txt`
     return axios
@@ -338,7 +338,7 @@ const getYakitEEDownloadUrl = async (version) => {
 }
 
 /** Sast CE 版本下载地址 */
-const getSastCommunityDownloadUrl = async (version) => {
+const getIRifyCommunityDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
     const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
     switch (process.platform) {
@@ -361,7 +361,7 @@ const getSastCommunityDownloadUrl = async (version) => {
 }
 
 /** Sast EE 版本下载地址 */
-const getSastEEDownloadUrl = async (version) => {
+const getIRifyEEDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
     let system_mode = ""
     try {
@@ -405,8 +405,8 @@ const downloadYakEngine = async (version, destination, progressHandler, onFinish
     )
 }
 /** 下载 Yakit CE 进度 */
-const downloadYakitCommunity = async (version, isSastScan, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = isSastScan ? await getSastCommunityDownloadUrl() : await getYakitCommunityDownloadUrl(version)
+const downloadYakitCommunity = async (version, isIRify, destination, progressHandler, onFinished, onError) => {
+    const downloadUrl = isIRify ? await getIRifyCommunityDownloadUrl() : await getYakitCommunityDownloadUrl(version)
     console.info(`start to download yakit community: ${downloadUrl}`)
     requestWithProgress(
         downloadUrl,
@@ -420,8 +420,8 @@ const downloadYakitCommunity = async (version, isSastScan, destination, progress
     )
 }
 /** 下载 Yakit EE 进度 */
-const downloadYakitEE = async (version, isSastScan, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = isSastScan ? await getSastEEDownloadUrl(version) : await getYakitEEDownloadUrl(version)
+const downloadYakitEE = async (version, isIRify, destination, progressHandler, onFinished, onError) => {
+    const downloadUrl = isIRify ? await getIRifyEEDownloadUrl(version) : await getYakitEEDownloadUrl(version)
     requestWithProgress(
         downloadUrl,
         destination,
@@ -440,8 +440,8 @@ module.exports = {
     fetchLatestYakEngineVersion,
     fetchLatestYakitVersion,
     fetchLatestYakitEEVersion,
-    fetchLatestYakitSastScanVersion,
-    fetchLatestYakitSastScanEEVersion,
+    fetchLatestYakitIRifyVersion,
+    fetchLatestYakitIRifyEEVersion,
     downloadYakitCommunity,
     downloadYakEngine,
     downloadYakitEE,
@@ -449,6 +449,6 @@ module.exports = {
     getYakEngineDownloadUrl,
     getYakitEEDownloadUrl,
     getAvailableOSSDomain,
-    getSastCommunityDownloadUrl,
-    getSastEEDownloadUrl
+    getIRifyCommunityDownloadUrl,
+    getIRifyEEDownloadUrl
 }

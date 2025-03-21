@@ -17,7 +17,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
-import {isSastScan} from "@/utils/envfile"
+import {isIRify} from "@/utils/envfile"
 import {NotepadMenu} from "../HeardMenu/HeardMenu"
 
 const {ipcRenderer} = window.require("electron")
@@ -151,7 +151,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
 
     return (
         <div className={styles["extra-menu-wrapper"]}>
-            {isSastScan() ? (
+            {isIRify() ? (
                 <YakitButton
                     type='secondary2'
                     onClick={() => {

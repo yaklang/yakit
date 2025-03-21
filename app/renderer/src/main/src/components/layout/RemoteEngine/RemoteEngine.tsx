@@ -6,7 +6,7 @@ import {Form} from "antd"
 import {PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo} from "./RemoteEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {YakitThemeSvgIcon} from "../icons"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -127,7 +127,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                     <div className={styles["remote-title"]}>
                         {isCommunityEdition() && (
                             <>
-                                {isSastScan() ? (
+                                {isIRify() ? (
                                     <div className={styles["logo-img"]}>
                                         <img src={yakitSS} alt='暂无图片' />
                                     </div>
@@ -138,7 +138,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         )}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                <img src={isSastScan() ? yakitSS : yakitEE} alt='暂无图片' />
+                                <img src={isIRify() ? yakitSS : yakitEE} alt='暂无图片' />
                             </div>
                         )}
                         {isEnpriTraceAgent() && (

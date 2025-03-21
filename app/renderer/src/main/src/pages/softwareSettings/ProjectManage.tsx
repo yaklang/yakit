@@ -54,14 +54,14 @@ import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import emiter from "@/utils/eventBus/eventBus"
 import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {AutoTextarea} from "../fuzzer/components/AutoTextarea/AutoTextarea"
-import {isCommunityEdition, isSastScan} from "@/utils/envfile"
+import {isCommunityEdition, isIRify} from "@/utils/envfile"
 import {setClipboardText} from "@/utils/clipboard"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 
 export const getEnvTypeByProjects = () => {
-    return isSastScan() ? "ssa_project":"project"
+    return isIRify() ? "ssa_project":"project"
 }
 
 export interface ProjectManageProp {
@@ -563,7 +563,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
         // @ts-ignore
         if (param.Type === "all") delete param.Type
         if (param.ProjectName) param.Type = getEnvTypeByProjects()
-        if (isSastScan()) param.FrontendType = "ssa_project"
+        if (isIRify()) param.FrontendType = "ssa_project"
         setLoading(true)
         ipcRenderer
             .invoke("GetProjects", param)
@@ -1610,7 +1610,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             .invoke("GetProjects", {
                 FolderId: +targetOption.Id,
                 Type: "file",
-                FrontendType: isSastScan() ? "ssa_project" : "project",
+                FrontendType: isIRify() ? "ssa_project" : "project",
                 Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
             })
             .then((rsp: ProjectsResponse) => {
@@ -1634,7 +1634,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             Type: "file",
             Pagination: {Page: 1, Limit: 1000, Order: "desc", OrderBy: "updated_at"}
         }
-        if (isSastScan()) param.FrontendType = "ssa_project"
+        if (isIRify()) param.FrontendType = "ssa_project"
         ipcRenderer
             .invoke("GetProjects", param)
             .then((rsp: ProjectsResponse) => {

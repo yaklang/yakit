@@ -10,10 +10,10 @@ enum PRODUCT_RELEASE_EDITION {
     /**@name 便携版/简易版 */
     EnpriTraceAgent = 2,
     BreachTrace = 3,
-    /**@name SAST扫描(SASTScan独立于企业版社区版之外,其自身拥有企业版) */
-    SastScan = 4,
-    /**@name SAST扫描-企业版 */
-    SastScanEnterprise = 5
+    /**@name IRify扫描(IRify独立于企业版社区版之外,其自身拥有企业版) */
+    IRify = 4,
+    /**@name IRify扫描-企业版 */
+    IRifyEnpriTrace = 5
 }
 
 export const getReleaseEditionName = () => {
@@ -24,9 +24,9 @@ export const getReleaseEditionName = () => {
             return "EnpriTraceAgent"
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
-        case PRODUCT_RELEASE_EDITION.SastScan:
+        case PRODUCT_RELEASE_EDITION.IRify:
             return "IRify"
-        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
+        case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
             return "IRify-EnpriTrace"
         default:
             return "Yakit"
@@ -36,7 +36,7 @@ export const getReleaseEditionName = () => {
 export const isEnpriTrace = () => {
     return (
         GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace ||
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
     )
 }
 /** SE  */
@@ -50,30 +50,29 @@ export const isBreachTrace = () => {
 /** CE */
 export const isCommunityEdition = () => {
     return (
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit ||
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.Yakit || GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify
     )
 }
 /** 非CE */
 export const isEnterpriseEdition = () => {
-    return !isCommunityEdition() && !isCommunitySastScan()
+    return !isCommunityEdition() && !isCommunityIRify()
 }
 
-/** CE SAST Scan  */
-export const isCommunitySastScan = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan
+/** CE IRify Scan  */
+export const isCommunityIRify = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify
 }
 
-/** EE SAST Scan  */
-export const isEnterpriseSastScan = () => {
-    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+/** EE IRify Scan  */
+export const isEnpriTraceIRify = () => {
+    return GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
 }
 
-/** SAST Scan独立于Yakit企业版社区版之外，其自身拥有企业版  */
-export const isSastScan = () => {
+/** IRify 独立于Yakit企业版社区版之外，其自身拥有企业版  */
+export const isIRify = () => {
     return (
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScan ||
-        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.SastScanEnterprise
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRify ||
+        GetReleaseEdition() === PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
     )
 }
 
@@ -81,7 +80,7 @@ export const isEnterpriseOrSimpleEdition = () => {
     switch (GetReleaseEdition()) {
         case PRODUCT_RELEASE_EDITION.EnpriTrace:
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
-        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
+        case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
             return true
         default:
             return false
@@ -97,9 +96,9 @@ export const GetReleaseEdition = () => {
         case "etraceagent":
             return PRODUCT_RELEASE_EDITION.EnpriTraceAgent
         case "sast-scan":
-            return PRODUCT_RELEASE_EDITION.SastScan
+            return PRODUCT_RELEASE_EDITION.IRify
         case "sast-scan-enterprise":
-            return PRODUCT_RELEASE_EDITION.SastScanEnterprise
+            return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
         default:
@@ -155,10 +154,10 @@ export const getRemoteHttpSettingGV = () => {
             return RemotePrivateDomainGV.eeHttpSetting
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return RemotePrivateDomainGV.seHttpSetting
-        case PRODUCT_RELEASE_EDITION.SastScan:
-            return RemotePrivateDomainGV.ceSSHttpSetting
-        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
-            return RemotePrivateDomainGV.eeSSHttpSetting
+        case PRODUCT_RELEASE_EDITION.IRify:
+            return RemotePrivateDomainGV.ceIRifyHttpSetting
+        case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
+            return RemotePrivateDomainGV.eeIRifyHttpSetting
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basHttpSetting
     }
@@ -172,10 +171,10 @@ export const getRemoteConfigBaseUrlGV = () => {
             return RemotePrivateDomainGV.eeConfigBaseUrl
         case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
             return RemotePrivateDomainGV.seConfigBaseUrl
-        case PRODUCT_RELEASE_EDITION.SastScan:
-            return RemotePrivateDomainGV.ceSSConfigBaseUrl
-        case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
-            return RemotePrivateDomainGV.eeSSConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.IRify:
+            return RemotePrivateDomainGV.ceIRifyConfigBaseUrl
+        case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
+            return RemotePrivateDomainGV.eeIRifyConfigBaseUrl
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return RemotePrivateDomainGV.basConfigBaseUrl
     }
