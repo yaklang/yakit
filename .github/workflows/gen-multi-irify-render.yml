@@ -1,11 +1,11 @@
-name: Gen-Multi-Sast-Platform-Render
+name: Gen-Multi-IRify-Platform-Render
 
 on:
     workflow_dispatch:
 
 jobs:
     build_yakit:
-        if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-sast-render') }}
+        if: ${{ startsWith(github.ref_name, 'v') && endsWith(github.ref_name, '-irify-render') }}
         runs-on: ubuntu-latest
         env:
             CI: ""
@@ -23,7 +23,7 @@ jobs:
               run: |
                   echo $GITHUB_REF_NAME
                   tag=${GITHUB_REF_NAME#v}
-                  tag=${tag%-sast-render}
+                  tag=${tag%-irify-render}
                   echo ${tag}
                   echo "TAG_VERSION=$tag" >> $GITHUB_ENV
 
@@ -31,17 +31,17 @@ jobs:
               run: yarn install-render
               working-directory: ./
 
-            - name: "Build SAST Render"
+            - name: "Build IRify Render"
               working-directory: ./
-              run: yarn build-render-sast-scan
-            - name: "zip SAST Render"
-              run: cd ${{ env.RENDER_PATH }} && zip -r sast.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+              run: yarn build-render-irify
+            - name: "zip IRify Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
-            - name: "Build SASTEE Render"
+            - name: "Build IRifyEE Render"
               working-directory: ./
-              run: yarn build-render-sast-scan-enterprise
-            - name: "zip SASTEE Render"
-              run: cd ${{ env.RENDER_PATH }} && zip -r sastee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+              run: yarn build-render-irify-enterprise
+            - name: "zip IRifyEE Render"
+              run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
@@ -52,14 +52,14 @@ jobs:
             - name: Upload Multi-Platform Render Zip
               run: |
                   bucket="yaklang"
-                  array=("sast" "sastee")
+                  array=("irify" "irifyee")
                   for item in "${array[@]}"; do
                     file_name="${item}.zip"
                     echo "Start to upload ${file_name}"
-                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/sast/render/${{ env.TAG_VERSION }}/${file_name}
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/irify/render/${{ env.TAG_VERSION }}/${file_name}
                   done
 
             - name: Update OSS latest file
               run: echo ${{ env.TAG_VERSION }} > ./version.txt
             - name: Update OSS latest file
-              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/sast/render/version.txt'
+              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/irify/render/version.txt'
