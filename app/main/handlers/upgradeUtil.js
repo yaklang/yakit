@@ -382,13 +382,13 @@ module.exports = {
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
                 if (SastCE) {
-                    downloadUrl = getSastCommunityDownloadUrl(version)
+                    downloadUrl = await getSastCommunityDownloadUrl(version)
                 } else if (SastEE) {
-                    downloadUrl = getSastEEDownloadUrl(version)
+                    downloadUrl = await getSastEEDownloadUrl(version)
                 } else if (YakitCE) {
-                    downloadUrl = getYakitCommunityDownloadUrl(version)
+                    downloadUrl = await getYakitCommunityDownloadUrl(version)
                 } else {
-                    downloadUrl = getYakitEEDownloadUrl(version)
+                    downloadUrl = await getYakitEEDownloadUrl(version)
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
