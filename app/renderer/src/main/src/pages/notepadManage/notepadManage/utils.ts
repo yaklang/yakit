@@ -269,6 +269,7 @@ export interface UpdateNoteRequest {
  */
 export const grpcUpdateNote: APIFunc<UpdateNoteRequest, DbOperateMessage> = (params, hiddenError) => {
     return new Promise(async (resolve, reject) => {
+        console.log("UpdateNote", params)
         ipcRenderer
             .invoke("UpdateNote", params)
             .then((res: DbOperateMessage) => {
@@ -376,7 +377,7 @@ export interface NoteContent {
     Id: string
     Note: Note
     Index: number
-    Length: number
+    Line: number
     LineContent: string
 }
 export interface SearchNoteContentRequest {
