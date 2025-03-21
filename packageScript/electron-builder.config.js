@@ -37,7 +37,7 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitselogo.ico"
         nsisUninstallerIcon = "app/assets/yakitselogo.ico"
         break
-    case "sast":
+    case "irify":
         appInfoOption = {
             appId: "io.yaklang.irify",
             extraMetadata: {name: "irify"},
@@ -50,7 +50,7 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitsslogo.ico"
         nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
         break
-    case "sastee":
+    case "irifyee":
         appInfoOption = {
             appId: "io.yaklang.irifyee",
             extraMetadata: {name: "irifyee"},

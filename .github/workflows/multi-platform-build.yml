@@ -172,12 +172,12 @@ jobs:
             - name: "Build SCE Render"
               if: ${{ inputs.version == 'sce' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-sast-scan
+              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify
 
             - name: "Build SEE Render"
               if: ${{ inputs.version == 'see' }}
               working-directory: ./
-              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-sast-scan-enterprise
+              run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify-enterprise
 
             - name: Build Yakit (MultiPlatform)
               if: ${{ inputs.platform == 'mwl' }}
@@ -193,9 +193,9 @@ jobs:
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn electron-publish-se${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "sce" ]; then
-                    yarn electron-publish-sastScan${{ inputs.legacy && '-legacy' || '' }}
+                    yarn electron-publish-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "see" ]; then
-                    yarn electron-publish-sastScan-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn electron-publish-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -214,9 +214,9 @@ jobs:
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-mac-se${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "sce" ]; then
-                    yarn pack-mac-sastScan${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "see" ]; then
-                    yarn pack-mac-sastScan-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -235,9 +235,9 @@ jobs:
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-linux-se${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "sce" ]; then
-                    yarn pack-linux-sastScan${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "see" ]; then
-                    yarn pack-linux-sastScan-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
@@ -256,9 +256,9 @@ jobs:
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-win-se${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "sce" ]; then
-                    yarn pack-win-sastScan${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "see" ]; then
-                    yarn pack-win-sastScan-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1

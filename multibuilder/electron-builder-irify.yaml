@@ -1,7 +1,7 @@
-appId: "io.yaklang.sastscan"
+appId: "io.yaklang.irify"
 extraMetadata:
-    name: sastscan
-productName: "SastScan"
+    name: irify
+productName: "IRify"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:

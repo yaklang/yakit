@@ -228,7 +228,7 @@ const fetchLatestYakitEEVersion = async (requestConfig) => {
 /** 获取最新 IRify Scan 版本号 */
 const fetchLatestYakitIRifyVersion = async (requestConfig) => {
     const domain = await getAvailableOSSDomain()
-    const versionUrl = `https://${domain}/sast/latest/yakit-version.txt`
+    const versionUrl = `https://${domain}/irify/latest/yakit-version.txt`
     return axios
         .get(versionUrl, {
             ...(requestConfig || {}),
@@ -337,30 +337,30 @@ const getYakitEEDownloadUrl = async (version) => {
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
 
-/** Sast CE 版本下载地址 */
+/** IRify CE 版本下载地址 */
 const getIRifyCommunityDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
     const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/sast/${version}/IRify-${version}-darwin${suffix}-arm64.dmg`
+                return `https://${domain}/irify/${version}/IRify-${version}-darwin${suffix}-arm64.dmg`
             } else {
-                return `https://${domain}/sast/${version}/IRify-${version}-darwin${suffix}-x64.dmg`
+                return `https://${domain}/irify/${version}/IRify-${version}-darwin${suffix}-x64.dmg`
             }
         case "win32":
-            return `https://${domain}/sast/${version}/IRify-${version}-windows${suffix}-amd64.exe`
+            return `https://${domain}/irify/${version}/IRify-${version}-windows${suffix}-amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/sast/${version}/IRify-${version}-linux${suffix}-arm64.AppImage`
+                return `https://${domain}/irify/${version}/IRify-${version}-linux${suffix}-arm64.AppImage`
             } else {
-                return `https://${domain}/sast/${version}/IRify-${version}-linux${suffix}-amd64.AppImage`
+                return `https://${domain}/irify/${version}/IRify-${version}-linux${suffix}-amd64.AppImage`
             }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
 }
 
-/** Sast EE 版本下载地址 */
+/** IRify EE 版本下载地址 */
 const getIRifyEEDownloadUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
     let system_mode = ""

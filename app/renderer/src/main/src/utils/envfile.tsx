@@ -95,9 +95,9 @@ export const GetReleaseEdition = () => {
         case "simple-enterprise":
         case "etraceagent":
             return PRODUCT_RELEASE_EDITION.EnpriTraceAgent
-        case "sast-scan":
+        case "irify":
             return PRODUCT_RELEASE_EDITION.IRify
-        case "sast-scan-enterprise":
+        case "irify-enterprise":
             return PRODUCT_RELEASE_EDITION.IRifyEnpriTrace
         case "breachtrace":
             return PRODUCT_RELEASE_EDITION.BreachTrace
