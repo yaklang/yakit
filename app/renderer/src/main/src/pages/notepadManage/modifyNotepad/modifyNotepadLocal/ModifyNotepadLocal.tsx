@@ -74,7 +74,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [editor, setEditor] = useState<EditorMilkdownProps>()
 
-    const [keyWord, setKeyWord] = useState<string>(initPageInfo().keyWord || "") // 搜索关键词
+    const [keyWord, setKeyWord] = useState<string>(initPageInfo().keyWordInfo?.keyWord || "") // 搜索关键词
     const [tabName, setTabName] = useState<string>(initTabName())
 
     const [note, setNote] = useState<Note>(cloneDeep(defaultNote))
@@ -92,6 +92,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const markInstanceRef = useRef<Mark>()
     const resultsIdsRef = useRef<string[]>([])
     const perTargetIdRef = useRef<string>("")
+    const initPosition = useRef<boolean>(true) // 是否是初次定位
 
     const perTabName = useRef<string>(initTabName())
     const filterRef = useRef<NoteFilter>(cloneDeep(defaultNoteFilter))
@@ -157,7 +158,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
             ...currentItem,
             pageParamsInfo: {
                 modifyNotepadPageInfo: {
-                    ...defaultModifyNotepadPageInfo,
+                    ...(currentItem.pageParamsInfo.modifyNotepadPageInfo || defaultModifyNotepadPageInfo),
                     ...value
                 }
             }
@@ -238,13 +239,24 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     //#region 搜索高亮
     useDebounceEffect(
         () => {
-            onSearchHighlight(keyWord)
+            if (initPosition.current) {
+                onSearchHighlight(keyWord, initPageInfo().keyWordInfo?.position)
+                onUpdatePageInfo({
+                    keyWordInfo: {
+                        keyWord: "",
+                        position: 0
+                    }
+                })
+                initPosition.current = false
+            } else {
+                onSearchHighlight(keyWord)
+            }
         },
         [keyWord],
         {wait: 200}
     )
 
-    const onSearchHighlight = useMemoizedFn((value: string) => {
+    const onSearchHighlight = useMemoizedFn((value: string, position?: number) => {
         // 先清除之前的高亮
         markInstanceRef.current?.unmark({
             done: () => {
@@ -261,7 +273,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             setTimeout(() => {
                                 const results = Array.from(notepadEditorRef.current?.querySelectorAll("mark") || [])
                                 resultsIdsRef.current = results.map((ele) => ele.id)
-                                jumpToMatch(1, total)
+                                jumpToMatch(position || 1, total)
                             }, 200)
                         }
                     })
@@ -420,7 +432,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         <YakitInput.Search
                             value={keyWord}
                             onChange={(e) => setKeyWord(e.target.value)}
-                            onSearch={onSearchHighlight}
+                            onSearch={(val) => onSearchHighlight(val)}
                             onPressEnter={() => onSearchHighlight(keyWord)}
                         />
 

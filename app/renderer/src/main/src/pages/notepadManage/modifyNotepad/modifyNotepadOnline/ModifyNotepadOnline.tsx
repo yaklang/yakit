@@ -168,7 +168,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             ...currentItem,
             pageParamsInfo: {
                 modifyNotepadPageInfo: {
-                    ...defaultModifyNotepadPageInfo,
+                    ...(currentItem.pageParamsInfo.modifyNotepadPageInfo || defaultModifyNotepadPageInfo),
                     ...value
                 }
             }
