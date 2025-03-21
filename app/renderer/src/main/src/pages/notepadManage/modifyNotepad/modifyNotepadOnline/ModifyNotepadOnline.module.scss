@@ -1,0 +1,22 @@
+@use "../ModifyNotepad.module.scss";
+
+.modify-notepad-heard-extra {
+    @extend %display-flex-center;
+    justify-content: flex-end;
+    gap: 8px;
+    &-online-user {
+        @extend %display-flex-center;
+        gap: 4px;
+        .online-user-icon {
+            padding: 0;
+            width: 10px;
+            height: 10px;
+            transform: translateX(18px) translateY(-10px);
+        }
+        .online-user-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+    }
+}

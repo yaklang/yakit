@@ -278,5 +278,8 @@ module.exports = {
 
         // (render|print)-error-log
         require("./errorCollection")(win, getClient)
+        
+        // local note
+        require("./handlers/note")(win, getClient)
     }
 }

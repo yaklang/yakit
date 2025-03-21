@@ -176,13 +176,11 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                     <div className={styles["hint-right-title"]}>
                                         {getReleaseEditionName()} 软件下载中...
                                     </div>
-                                    <div className={styles["download-progress"]}>
-                                        <Progress
-                                            strokeColor='#F28B44'
-                                            trailColor='#F0F2F5'
-                                            percent={Math.floor((downloadProgress?.percent || 0) * 100)}
-                                        />
-                                    </div>
+                                    <Progress
+                                        strokeColor='#F28B44'
+                                        trailColor='#F0F2F5'
+                                        percent={Math.floor((downloadProgress?.percent || 0) * 100)}
+                                    />
                                     <div className={styles["download-info-wrapper"]}>
                                         <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
                                         <div className={styles["divider-wrapper"]}>

@@ -141,13 +141,3 @@ $fileDivHeight: 64px;
         }
     }
 }
-
-.download-progress {
-    :global {
-        .ant-progress-text {
-            display: block;
-            margin-left: 0;
-            margin-top: 2px;
-        }
-    }
-}

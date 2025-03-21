@@ -1,0 +1,7 @@
+@use "../ModifyNotepad.module.scss";
+
+.modify-notepad-local-heard-extra {
+    @extend %display-flex-center;
+    justify-content: flex-end;
+    gap: 8px;
+}

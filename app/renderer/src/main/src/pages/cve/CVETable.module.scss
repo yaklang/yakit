@@ -353,13 +353,6 @@
 
 .download-progress {
     margin-bottom: 12px;
-    :global {
-        .ant-progress-text {
-            display: block;
-            margin-left: 0;
-            margin-top: 2px;
-        }
-    }
 }
 
 .cwe-tabs {

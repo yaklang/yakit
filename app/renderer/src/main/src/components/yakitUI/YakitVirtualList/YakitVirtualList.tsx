@@ -75,6 +75,11 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
     useUpdateEffect(() => {
         scrollTo(0)
     }, [refresh])
+    useUpdateEffect(() => {
+        if (+page <= 1) {
+            scrollTo(0)
+        }
+    }, [page])
 
     const onScrollCapture = useThrottleFn(
         () => {

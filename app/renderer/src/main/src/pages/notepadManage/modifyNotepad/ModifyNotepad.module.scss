@@ -31,10 +31,7 @@
         justify-content: space-between;
         padding: 12px 16px;
         border-bottom: 1px solid var(--yakit-border-color);
-        // position: sticky;
-        // top: 0;
         background: #fff;
-        // z-index: 2;
         overflow: hidden;
         &-title {
             color: var(--yakit-header-color);
@@ -48,26 +45,6 @@
             text-overflow: ellipsis;
             overflow: hidden;
             word-break: break-all;
-        }
-        &-extra {
-            @extend %display-flex-center;
-            justify-content: flex-end;
-            gap: 8px;
-            &-online-user {
-                @extend %display-flex-center;
-                gap: 4px;
-                .online-user-icon {
-                    padding: 0;
-                    width: 10px;
-                    height: 10px;
-                    transform: translateX(18px) translateY(-10px);
-                }
-                .online-user-dot {
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                }
-            }
         }
     }
 }
@@ -180,43 +157,41 @@
     position: relative;
     overflow: hidden auto;
     flex: 1;
-
-    .notepad-content {
-        width: 820px;
-        flex-shrink: 0;
-        overflow: hidden;
-        margin: 0 auto;
-        padding: 0 48px 24px 96px;
-        .notepad-heard {
-            @extend %display-column-center;
-            margin-bottom: 20px;
-            gap: 12px;
-            .notepad-input {
-                height: 40px;
-                font-size: 32px;
-                font-weight: 600;
-                padding: 0;
-                &::placeholder {
-                    color: var(--yakit-disable-text-color);
-                }
-            }
-            .notepad-heard-subTitle {
-                @extend %display-flex-center;
-                gap: 4px;
-                color: var(--yakit-header-color);
-
-                font-size: 12px;
-                font-style: normal;
-                font-weight: 400;
-                line-height: 16px; /* 133.333% */
+}
+.notepad-content {
+    width: 820px;
+    flex-shrink: 0;
+    overflow: hidden;
+    margin: 0 auto;
+    padding: 0 48px 24px 96px;
+    .notepad-heard {
+        @extend %display-column-center;
+        margin-bottom: 20px;
+        gap: 12px;
+        .notepad-input {
+            height: 40px;
+            font-size: 32px;
+            font-weight: 600;
+            padding: 0;
+            &::placeholder {
+                color: var(--yakit-disable-text-color);
             }
         }
-        .notepad-editor {
-            flex: 1;
+        .notepad-heard-subTitle {
+            @extend %display-flex-center;
+            gap: 4px;
+            color: var(--yakit-header-color);
+
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 16px; /* 133.333% */
         }
     }
+    .notepad-editor {
+        flex: 1;
+    }
 }
-
 .share-popover {
     :global {
         .ant-popover-inner {

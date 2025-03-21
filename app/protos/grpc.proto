@@ -802,6 +802,15 @@ service Yak {
   // HTTPFlow
   rpc ExportHTTPFlowStream(ExportHTTPFlowStreamRequest) returns(stream ExportHTTPFlowStreamResponse);
   rpc ImportHTTPFlowStream(ImportHTTPFlowStreamRequest) returns(stream ImportHTTPFlowStreamResponse);
+
+  // Note
+  rpc CreateNote(CreateNoteRequest) returns (CreateNoteResponse);
+  rpc UpdateNote(UpdateNoteRequest) returns (DbOperateMessage);
+  rpc DeleteNote(DeleteNoteRequest) returns (DbOperateMessage);
+  rpc QueryNote(QueryNoteRequest) returns (QueryNoteResponse);
+  rpc SearchNoteContent(SearchNoteContentRequest) returns (SearchNoteContentResponse);
+  rpc ImportNote(ImportNoteRequest) returns (stream ImportNoteResponse);
+  rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 }
 
 
@@ -2663,7 +2672,7 @@ message GenerateYakCodeByPacketRequest {
   enum Template {
     Ordinary = 0;
     Batch = 1;
-  }
+}
   Template CodeTemplate = 3;
 }
 
@@ -6309,6 +6318,91 @@ message ImportHTTPFlowStreamRequest {
 }
 
 message ImportHTTPFlowStreamResponse {
-  double Percent = 1;
-  string Verbose = 2;
+    double Percent = 1;
+    string Verbose = 2; 
+}
+
+message Note {
+    uint64 Id = 1;
+    string Title = 2;
+    string Content = 3;
+    int64 CreateAt = 4;
+    int64 UpdateAt = 5;
+}
+  
+message NoteContent {
+    Note Note = 1;
+    uint64 Index = 2;
+    uint64 Line = 3;
+    string LineContent = 4;
+}
+  
+message NoteFilter {
+    repeated uint64 Id = 1;
+    repeated string Title = 2;
+    repeated string Keyword = 3;
+}
+  
+message CreateNoteRequest {
+    string Title = 1;
+    string Content = 2;
+}
+
+message CreateNoteResponse {
+    DbOperateMessage Message = 1;
+    int64 NoteId = 2;
+}
+  
+message UpdateNoteRequest {
+    NoteFilter Filter = 1;
+    bool UpdateTitle = 2;
+    string Title = 3;
+    bool UpdateContent = 4;
+    string Content = 5;
+}
+  
+message DeleteNoteRequest {
+    NoteFilter Filter = 1;
+}
+  
+message QueryNoteRequest {
+    NoteFilter Filter = 1;
+    Paging Pagination = 2;
+}
+  
+message QueryNoteResponse {
+    Paging Pagination = 1;
+    repeated Note Data = 2;
+    int64 Total = 3;
+}
+  
+message SearchNoteContentRequest {
+    string Keyword = 1;
+    Paging Pagination = 2;
+}
+  
+message SearchNoteContentResponse {
+    Paging Pagination = 1;
+    repeated NoteContent Data = 2;
+    int64 Total = 3;
+}
+  
+message ImportNoteRequest {
+    string TargetPath = 1;
+}
+  
+message ImportNoteResponse {
+    double Percent = 1;
+    string Verbose = 2;
+    int64 NoteId = 3;
+}
+  
+message ExportNoteRequest {
+    NoteFilter Filter = 1;
+    string TargetPath = 2;
+}
+  
+message ExportNoteResponse {
+    double Percent = 1;
+    string Verbose = 2;
 }

@@ -380,7 +380,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         pages,
         clearAllData,
         getCurrentSelectPageId,
-        setCurrentPageTabRouteKey
+        setCurrentPageTabRouteKey,
+        clearOtherDataByRoute
     } = usePageInfo(
         (s) => ({
             setPagesData: s.setPagesData,
@@ -389,7 +390,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pages: s.pages,
             clearAllData: s.clearAllData,
             getCurrentSelectPageId: s.getCurrentSelectPageId,
-            setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey
+            setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
+            clearOtherDataByRoute: s.clearOtherDataByRoute
         }),
         shallow
     )
@@ -1720,6 +1722,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             // 不是社区版的时候，每次进来都需要清除页面数据中心数据和FuzzerSequence数据
             clearAllData()
             clearFuzzerSequence()
+        } else {
+            // 社区版需要清除:非wf和FuzzerSequence数据
+            clearOtherDataByRoute(YakitRoute.HTTPFuzzer)
         }
         getRemoteValue(RemoteGV.SelectFirstMenuTabKey)
             .then((cacheTabKey) => {

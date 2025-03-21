@@ -696,7 +696,6 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
                             {!isSastScan() && (
                                 <>
-                                    <NotepadMenu isExpand={isExpand} onRouteMenuSelect={onRouteMenuSelect} />
                                     <Dropdown
                                         overlayClassName={style["customize-drop-menu"]}
                                         overlay={
@@ -1011,7 +1010,7 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
     )
 })
 
-const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
+export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
     const {isExpand, onRouteMenuSelect} = props
     const [notepadVisible, setNotepadVisible] = useState<boolean>(false)
     const onNotepad = useMemoizedFn((item) => {
