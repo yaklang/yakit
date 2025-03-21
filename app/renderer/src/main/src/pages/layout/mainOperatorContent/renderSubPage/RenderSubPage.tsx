@@ -69,7 +69,6 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
     >(new Map<string, boolean>())
     const fuzzerSequenceList = useFuzzerSequence((s) => s.fuzzerSequenceList)
     const selectGroupId = usePageInfo((s) => s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "")
-
     useEffect(() => {
         updateRender(selectGroupId)
     }, [type, selectGroupId])

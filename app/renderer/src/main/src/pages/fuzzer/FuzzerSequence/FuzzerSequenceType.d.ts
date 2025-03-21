@@ -174,6 +174,7 @@ export interface SequenceResponseHeardProps {
     currentSequenceItemName: string
     currentSequenceItemPageName: string
     advancedConfigValue?: AdvancedConfigValueProps
+    setAdvancedConfigValue: (configValue: AdvancedConfigValueProps) => void
     responseInfo?: ResponseProps
     onShowAll: () => void
     getHttpParams: () => FuzzerRequestProps[]

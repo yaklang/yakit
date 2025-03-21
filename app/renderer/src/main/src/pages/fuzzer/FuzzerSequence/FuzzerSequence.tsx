@@ -1034,6 +1034,35 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
         }
     )
+    /**保存代理数据*/
+    const onSaveProxy = useMemoizedFn(
+        () => {
+            if (!currentSelectRequest?.pageId) return
+            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+                YakitRoute.HTTPFuzzer,
+                currentSelectRequest.pageId
+            )
+            if (!currentItem) return
+            if (
+                currentItem.pageParamsInfo.webFuzzerPageInfo &&
+                currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
+            ) {
+                const newCurrentItem: PageNodeItemProps = {
+                    ...currentItem,
+                    pageParamsInfo: {
+                        webFuzzerPageInfo: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                            advancedConfigValue: {
+                                ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
+                                proxy: []
+                            }
+                        }
+                    }
+                }
+                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
+            }
+        }
+    )
     /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
     const defaultHttpResponse: string = useMemo(() => {
         if (currentSelectResponse) {
@@ -1258,6 +1287,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 disabled={responseMap.size === 0 || loading}
                                 responseInfo={currentSelectResponse}
                                 advancedConfigValue={currentSelectRequest?.advancedConfigValue}
+                                setAdvancedConfigValue={(configValue) => {
+                                    setCurrentSelectRequest({
+                                        ...currentSelectRequest,
+                                        advancedConfigValue: configValue
+                                    } as WebFuzzerPageInfoProps)
+                                    onSaveProxy()
+                                }}
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
                                     if (judgeMoreFuzzerTableMaxData()) {
@@ -1639,6 +1675,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
         onShowAll,
         currentSequenceItemName,
         currentSequenceItemPageName,
+        setAdvancedConfigValue,
         getHttpParams,
         onPluginDebugger
     } = props
@@ -1695,6 +1732,7 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
                 <FuzzerExtraShow
                     droppedCount={droppedCount}
                     advancedConfigValue={advancedConfigValue || defaultAdvancedConfigValue}
+                    setAdvancedConfigValue={setAdvancedConfigValue}
                     onlyOneResponse={onlyOneResponse}
                     httpResponse={httpResponse}
                 />
