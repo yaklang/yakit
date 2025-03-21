@@ -25,9 +25,9 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.BreachTrace:
             return "BAS"
         case PRODUCT_RELEASE_EDITION.SastScan:
-            return "SastScan"
+            return "IRify"
         case PRODUCT_RELEASE_EDITION.SastScanEnterprise:
-            return "SS-EnpriTrace"
+            return "IRify-EnpriTrace"
         default:
             return "Yakit"
     }

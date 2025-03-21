@@ -114,15 +114,15 @@ FunctionEnd
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
         ${Else}
-            ${StrStr} $0 $EXEFILE "SastScanEnterprise"
+            ${StrStr} $0 $EXEFILE "IRifyEnterprise"
             ${If} $0 != "" ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
-                StrCpy $EXE_NAME "SastScanEnterprise"
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnterprise_InstallPath"
+                StrCpy $EXE_NAME "IRifyEnterprise"
             ${Else}
-                ${StrStr} $0 $EXEFILE "SastScan"
+                ${StrStr} $0 $EXEFILE "IRify"
                 ${If} $0 != "" ; sce
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
-                    StrCpy $EXE_NAME "SastScan"
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
+                    StrCpy $EXE_NAME "IRify"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -147,13 +147,13 @@ FunctionEnd
             StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
             StrCpy $EXE_NAME "EnpriTrace"
         ${Else}
-            ${If} ${FileExists} `$INSTDIR\SastScanEnterprise.exe` ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
-                StrCpy $EXE_NAME "SastScanEnterprise"
+            ${If} ${FileExists} `$INSTDIR\IRifyEnterprise.exe` ; see
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnterprise_InstallPath"
+                StrCpy $EXE_NAME "IRifyEnterprise"
             ${Else}
-                ${If} ${FileExists} `$INSTDIR\SastScan.exe` ; sce
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
-                    StrCpy $EXE_NAME "SastScan"
+                ${If} ${FileExists} `$INSTDIR\IRify.exe` ; sce
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
+                    StrCpy $EXE_NAME "IRify"
                 ${EndIf}
             ${EndIf}
         ${EndIf}

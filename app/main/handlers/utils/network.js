@@ -344,17 +344,17 @@ const getSastCommunityDownloadUrl = async (version) => {
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/sast/${version}/SastScan-${version}-darwin${suffix}-arm64.dmg`
+                return `https://${domain}/sast/${version}/IRify-${version}-darwin${suffix}-arm64.dmg`
             } else {
-                return `https://${domain}/sast/${version}/SastScan-${version}-darwin${suffix}-x64.dmg`
+                return `https://${domain}/sast/${version}/IRify-${version}-darwin${suffix}-x64.dmg`
             }
         case "win32":
-            return `https://${domain}/sast/${version}/SastScan-${version}-windows${suffix}-amd64.exe`
+            return `https://${domain}/sast/${version}/IRify-${version}-windows${suffix}-amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/sast/${version}/SastScan-${version}-linux${suffix}-arm64.AppImage`
+                return `https://${domain}/sast/${version}/IRify-${version}-linux${suffix}-arm64.AppImage`
             } else {
-                return `https://${domain}/sast/${version}/SastScan-${version}-linux${suffix}-amd64.AppImage`
+                return `https://${domain}/sast/${version}/IRify-${version}-linux${suffix}-amd64.AppImage`
             }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
@@ -374,17 +374,17 @@ const getSastEEDownloadUrl = async (version) => {
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-darwin${suffix}-arm64.dmg`
+                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-darwin${suffix}-arm64.dmg`
             } else {
-                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-darwin${suffix}-x64.dmg`
+                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-darwin${suffix}-x64.dmg`
             }
         case "win32":
-            return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-windows${suffix}-amd64.exe`
+            return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-windows${suffix}-amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-linux${suffix}-arm64.AppImage`
+                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-linux${suffix}-arm64.AppImage`
             } else {
-                return `https://${domain}/svip/${version}/SastScanEnterprise-${version}-linux${suffix}-amd64.AppImage`
+                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-linux${suffix}-amd64.AppImage`
             }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)

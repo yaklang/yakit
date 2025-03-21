@@ -50,8 +50,8 @@ module.exports = (win, getClient) => {
             const versionFetchers = {
                 Yakit: fetchLatestYakitVersion,
                 EnpriTrace: fetchLatestYakitEEVersion,
-                SastScan: fetchLatestYakitSastScanVersion,
-                "SS-EnpriTrace": fetchLatestYakitSastScanEEVersion
+                IRify: fetchLatestYakitSastScanVersion,
+                "IRify-EnpriTrace": fetchLatestYakitSastScanEEVersion
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]

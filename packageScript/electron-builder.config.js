@@ -39,9 +39,9 @@ switch (platform) {
         break
     case "sast":
         appInfoOption = {
-            appId: "io.yaklang.sastscan",
-            extraMetadata: {name: "sastscan"},
-            productName: "SastScan",
+            appId: "io.yaklang.irify",
+            extraMetadata: {name: "irify"},
+            productName: "IRify",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"
@@ -52,9 +52,9 @@ switch (platform) {
         break
     case "sastee":
         appInfoOption = {
-            appId: "io.yaklang.sastscanee",
-            extraMetadata: {name: "sastscanee"},
-            productName: "SastScanEnterprise",
+            appId: "io.yaklang.irifyee",
+            extraMetadata: {name: "irifyee"},
+            productName: "IRifyEnterprise",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"
