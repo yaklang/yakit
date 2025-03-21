@@ -101,10 +101,20 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
         onSearch(e.target.value)
     })
     const onEdit = useMemoizedFn((data: NoteContent) => {
+        const text = data?.Note?.Content || ""
+        const lines = text.split(/\r?\n/).slice(0, +data.Line - 1) || []
+        const position = lines.reduce((acc, line) => acc + (line.match(/犯/g) || []).length, 0)
         setSpinning(true)
         grpcQueryNoteById(data.Note.Id)
             .then((res) => {
-                toEditNotepad({pageInfo: {keyWord, notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
+                toEditNotepad({
+                    pageInfo: {
+                        keyWordInfo: {keyWord, position: position + 1},
+                        notepadHash: `${res.Id}`,
+                        title: res.Title
+                    },
+                    notepadPageList
+                })
             })
             .finally(() => {
                 setTimeout(() => {
