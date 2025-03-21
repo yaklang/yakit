@@ -1131,7 +1131,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         pageType,
         downstreamProxyStr,
         scrollTo,
-        scrollID,
+        scrollID
     } = props
 
     // 编辑器发送到对比器
@@ -1448,6 +1448,31 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         return flowResponseLoad || codeLoading
     }, [flowResponseLoad, codeLoading])
 
+    const realReqHighLightText = useMemo(() => {
+        const highLightTextArr = highLightText?.filter((i) => i.IsMatchRequest)
+        if (isShowBeforeData && beforeResValue.length > 0) {
+            if (resType === "current") {
+                return highLightTextArr
+            } else {
+                return []
+            }
+        } else {
+            return highLightTextArr
+        }
+    }, [isShowBeforeData, beforeResValue, resType, highLightText])
+    const realReqHighLightFind = useMemo(() => {
+        const highLightItemArr = highLightItem?.IsMatchRequest ? [highLightItem] : []
+        if (isShowBeforeData && beforeResValue.length > 0) {
+            if (resType === "current") {
+                return highLightItemArr
+            } else {
+                return []
+            }
+        } else {
+            return highLightItemArr
+        }
+    }, [isShowBeforeData, beforeResValue, resType, highLightItem])
+
     return (
         <YakitResizeBox
             firstNode={() => {
@@ -1578,8 +1603,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
-                        highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
-                        highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
+                        highLightText={realReqHighLightText}
+                        highLightFind={realReqHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
