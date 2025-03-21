@@ -8,8 +8,8 @@ const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
     fetchLatestYakitVersion,
-    fetchLatestYakitSastScanVersion,
-    fetchLatestYakitSastScanEEVersion,
+    fetchLatestYakitIRifyVersion,
+    fetchLatestYakitIRifyEEVersion,
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
@@ -50,8 +50,8 @@ module.exports = (win, getClient) => {
             const versionFetchers = {
                 Yakit: fetchLatestYakitVersion,
                 EnpriTrace: fetchLatestYakitEEVersion,
-                IRify: fetchLatestYakitSastScanVersion,
-                "IRify-EnpriTrace": fetchLatestYakitSastScanEEVersion
+                IRify: fetchLatestYakitIRifyVersion,
+                "IRify-EnpriTrace": fetchLatestYakitIRifyEEVersion
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]

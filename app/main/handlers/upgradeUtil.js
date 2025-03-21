@@ -26,8 +26,8 @@ const {
     getYakitEEDownloadUrl,
     getYakitCommunityDownloadUrl,
     downloadYakEngine,
-    getSastCommunityDownloadUrl,
-    getSastEEDownloadUrl
+    getIRifyCommunityDownloadUrl,
+    getIRifyEEDownloadUrl
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
@@ -369,11 +369,11 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
-                const {isEnterprise, isSastScan} = type
-                const SastCE = isSastScan && !isEnterprise
-                const SastEE = isSastScan && isEnterprise
-                const YakitCE = !isSastScan && !isEnterprise
-                const YakitEE = !isSastScan && isEnterprise
+                const {isEnterprise, isIRify} = type
+                const SastCE = isIRify && !isEnterprise
+                const SastEE = isIRify && isEnterprise
+                const YakitCE = !isIRify && !isEnterprise
+                const YakitEE = !isIRify && isEnterprise
                 // format version，下载的版本号里不能存在 V
                 if (version.startsWith("v")) {
                     version = version.substr(1)
@@ -382,9 +382,9 @@ module.exports = {
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
                 if (SastCE) {
-                    downloadUrl = getSastCommunityDownloadUrl(version)
+                    downloadUrl = getIRifyCommunityDownloadUrl(version)
                 } else if (SastEE) {
-                    downloadUrl = getSastEEDownloadUrl(version)
+                    downloadUrl = getIRifyEEDownloadUrl(version)
                 } else if (YakitCE) {
                     downloadUrl = getYakitCommunityDownloadUrl(version)
                 } else {
@@ -402,7 +402,7 @@ module.exports = {
                 if (YakitEE || SastEE) {
                     await downloadYakitEE(
                         version,
-                        isSastScan,
+                        isIRify,
                         dest,
                         (state) => {
                             if (!!state) {
@@ -416,7 +416,7 @@ module.exports = {
                     // 社区版下载
                     await downloadYakitCommunity(
                         version,
-                        isSastScan,
+                        isIRify,
                         dest,
                         (state) => {
                             if (!!state) {

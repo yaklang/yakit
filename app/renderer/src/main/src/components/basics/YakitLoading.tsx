@@ -2,7 +2,7 @@ import React, {useMemo, useState} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
-import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
@@ -283,7 +283,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {/* 社区版 - 启动Logo */}
                     {isCommunityEdition() && (
                         <>
-                            {isSastScan() ? (
+                            {isIRify() ? (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
                                     <div className={styles["white-icon"]}>
                                         <img src={yakitSS} alt='暂无图片' />
@@ -306,7 +306,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {/* 企业版 - 启动Logo */}
                     {isEnpriTrace() && (
                         <>
-                            {isSastScan() ? (
+                            {isIRify() ? (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
                                     <div className={styles["white-icon"]}>
                                         <img src={yakitSS} alt='暂无图片' />

@@ -1,5 +1,5 @@
 import React, {useMemo, useRef, useState} from "react"
-import styles from "./SastScanHome.module.scss"
+import styles from "./IRifyHome.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlinCompileIcon,
@@ -22,8 +22,8 @@ import {QueryGeneralResponse} from "../invoker/schema"
 import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
-interface SastScanHomeProps {}
-const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
+interface IRifyHomeProps {}
+const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
     const homeRef = useRef(null)
     const [inViewport] = useInViewport(homeRef)
     const [curProjectInfo, setCurProjectInfo] = useState<ProjectDescription>()
@@ -85,7 +85,7 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
     }
 
     return (
-        <div className={styles["sast-scan-home"]} ref={homeRef}>
+        <div className={styles["irify-home"]} ref={homeRef}>
             <div className={styles["main"]}>
                 <div className={styles["header"]}>代码千万行 安全第一行</div>
                 <div className={styles["card-list"]}>
@@ -261,4 +261,4 @@ const SastScanHome: React.FC<SastScanHomeProps> = (props) => {
     )
 }
 
-export default SastScanHome
+export default IRifyHome
