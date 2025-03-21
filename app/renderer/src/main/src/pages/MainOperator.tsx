@@ -441,9 +441,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         if (isCommunityEdition() && !isCommunitySastScan()) {
             return ""
         }
-        // Sast社区版有水印
+        // IRify社区版有水印
         else if (isCommunitySastScan()){
-            return "Sast技术浏览版仅供技术交流使用"
+            return "IRify技术浏览版仅供技术交流使用"
         }
         else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
@@ -451,7 +451,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark(isSastScan() ? "Sast技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(isSastScan() ? "IRify技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }
