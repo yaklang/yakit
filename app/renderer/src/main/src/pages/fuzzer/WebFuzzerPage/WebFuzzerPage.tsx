@@ -118,8 +118,10 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
                 emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: key}))
                 // 发送到HTTPFuzzerPage组件中 选中【配置】/【规则】 type
                 emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
-                // 设置【配置】/【规则】的高级配置的隐藏或显示
-                emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
+                if (type === key) {
+                    // 设置【配置】/【规则】的高级配置的隐藏或显示
+                    emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
+                }
                 // 当前页面在fuzzer页面
                 emiter.emit("onCurrentFuzzerPage", true)
                 // 设置【配置】/【规则】选中
