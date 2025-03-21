@@ -40,7 +40,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
-import {isSastScan} from "@/utils/envfile"
+import {isIRify} from "@/utils/envfile"
 
 interface MenuModeProps {
     mode: string
@@ -406,7 +406,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             )}
             {mode === "数据库" && (
                 <>
-                    {isSastScan() ? (
+                    {isIRify() ? (
                         <div className={styles["multiple-vertical-menu-wrapper"]}>
                             <div
                                 className={styles["vertical-menu-wrapper"]}

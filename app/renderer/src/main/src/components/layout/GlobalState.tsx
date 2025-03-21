@@ -20,7 +20,7 @@ import {showModal} from "@/utils/showModal"
 import {ConfigGlobalReverse} from "@/utils/basic"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {Tooltip, Row, Col} from "antd"
-import {isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
@@ -932,7 +932,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     return (
         <>
-            {!isSastScan() && <YakitPopover
+            {!isIRify() && <YakitPopover
                 overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
                 content={content}
