@@ -46,7 +46,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "ee" ]; then
                     echo "FILE_PATH=vip" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "sce" ]; then
-                    echo "FILE_PATH=sast" >> $GITHUB_ENV
+                    echo "FILE_PATH=irify" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "see" ]; then
                     echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else

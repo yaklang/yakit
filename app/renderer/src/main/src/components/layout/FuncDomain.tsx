@@ -535,7 +535,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 </div>
                 <div className={styles["state-setting-wrapper"]}>
                     {!showProjectManage && !isIRify() && <UIOpRisk isEngineLink={isEngineLink} />}
-                    {!showProjectManage && isIRify() && <UIOpSastScanRisk isEngineLink={isEngineLink} />}
+                    {!showProjectManage && isIRify() && <UIOpIRifyRisk isEngineLink={isEngineLink} />}
                     {!isEnpriTraceAgent() && (
                         <UIOpNotice
                             isEngineLink={isEngineLink}
@@ -2453,7 +2453,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
         </YakitPopover>
     )
 })
-const UIOpSastScanRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
+const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
 
     const [show, setShow] = useState<boolean>(false)
