@@ -13,10 +13,6 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import styles from "./NotepadLocalSearch.module.scss"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {toEditNotepad} from "../NotepadManage"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
 import {yakitNotify} from "@/utils/notification"
 import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {DataNode} from "antd/lib/tree"
@@ -24,14 +20,10 @@ import Highlighter from "react-highlight-words"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {RemoteGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 
 const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props) => {
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
+    const {goEditNotepad} = useGoEditNotepad()
 
     const [vlistHeigth, setVListHeight] = useState<number>(200)
 
@@ -107,14 +99,12 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
         setSpinning(true)
         grpcQueryNoteById(data.Note.Id)
             .then((res) => {
-                toEditNotepad({
-                    pageInfo: {
-                        keyWordInfo: {keyWord, position: position + 1},
-                        notepadHash: `${res.Id}`,
-                        title: res.Title
-                    },
-                    notepadPageList
-                })
+                const pageInfo = {
+                    keyWordInfo: {keyWord, position: position + 1},
+                    notepadHash: `${res.Id}`,
+                    title: res.Title
+                }
+                goEditNotepad(pageInfo)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -122,7 +112,6 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
                 }, 200)
             })
     })
-
     const onTreeSelect = useMemoizedFn((selectedKeys: React.Key[], info: any) => {
         const {node} = info
         if (node?.children) {
