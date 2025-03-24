@@ -8,7 +8,6 @@ export interface NotepadManageProps {}
 
 export interface NotepadActionProps {
     record: API.GetNotepadList
-    notepadPageList?: PageNodeItemProps[]
     userInfo: UserInfoProps
     onSingleDownAfter: (res: SaveDialogResponse) => void
     onShareAfter: () => void

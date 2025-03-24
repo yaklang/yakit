@@ -43,10 +43,10 @@ import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEdit
 import {APIFunc} from "@/apiUtils/type"
 import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {toAddNotepad, toEditNotepad} from "../../notepadManage/NotepadManage"
 import {defaultNote} from "@/defaultConstants/Note"
 import Mark from "mark.js"
 import {Divider} from "antd"
+import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 
 const NotepadLocalList = React.lazy(() => import("./NotepadLocalList/NotepadLocalList"))
 
@@ -59,6 +59,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }),
         shallow
     )
+    const {goEditNotepad, goAddNotepad} = useGoEditNotepad()
     const initTabName = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
         if (currentItem && currentItem.pageName) {
@@ -218,12 +219,12 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     }
                     grpcCreateNote(params).then((res) => {
                         onCloseCurrentPage()
-                        toEditNotepad({pageInfo: {notepadHash: res.NoteId, title: tabName}})
+                        goEditNotepad({notepadHash: res.NoteId, title: tabName})
                         s.destroy()
                     })
                 } else {
                     onCloseCurrentPage()
-                    toAddNotepad()
+                    goAddNotepad()
                     s.destroy()
                 }
             },

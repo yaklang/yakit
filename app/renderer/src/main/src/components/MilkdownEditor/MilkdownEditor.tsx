@@ -33,10 +33,10 @@ import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {tokenOverdue} from "@/services/fetch"
 import {isBoolean} from "lodash"
 import {notepadSaveStatus} from "./WebsocketProvider/constants"
-import {toAddNotepad, toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {API} from "@/services/swagger/resposeType"
 import {apiSaveNotepad} from "@/pages/notepadManage/notepadManage/utils"
 import useInitEditorHooks, {InitEditorHooksCollabProps} from "./utils/initEditor"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 const markdown1 = `
 
 1. 5565
@@ -81,6 +81,9 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const milkdownRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(milkdownRef)
     const collabManagerRef = useRef<CollabManager>() // 协作管理器
+
+    const {goEditNotepad, goAddNotepad} = useGoEditNotepad()
+
     useEffect(() => {
         return () => {
             // 统一
@@ -334,12 +337,15 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
                         content: markdownContent
                     }
                     apiSaveNotepad(params).then((hash) => {
-                        toEditNotepad({pageInfo: {notepadHash: hash, title}})
+                        goEditNotepad({
+                            notepadHash: hash,
+                            title
+                        })
                         onCloseCurrentPage()
                         s.destroy()
                     })
                 } else {
-                    toAddNotepad()
+                    goAddNotepad()
                     onCloseCurrentPage()
                     s.destroy()
                 }
