@@ -6194,6 +6194,7 @@ message SSARisksFilter {
   int64 IsRead = 11; // >0 true  <0 false =0 all
   string Title = 12; // fuzz search
   repeated string Hash = 13;
+  repeated string FunctionName = 14;
 }
 
 message QuerySSARisksRequest {
