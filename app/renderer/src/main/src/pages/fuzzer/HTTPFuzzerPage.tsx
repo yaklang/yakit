@@ -149,6 +149,7 @@ import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
 
 const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -1256,25 +1257,13 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
     }, [])
 
-    /**
-     * @returns bool false没有丢弃的数据，true有丢弃的数据
-     * 已无用方法
-     */
-    const onIsDropped = useMemoizedFn((data) => {
-        if (data.Discard) {
-            // 丢弃不匹配的内容
-            dCountRef.current++
-            setDroppedCount(dCountRef.current)
-            return true
-        }
-        return false
-    })
-
     useEffect(() => {
         // 监听每次发送请求里的丢弃包数量
         const handleSetDroppedCount = (content: string) => {
             try {
-                const data: {fuzzer_tab_index: string; discard_count: number} = JSON.parse(content)
+                const data: WebFuzzerDroppedProps = JSON.parse(content)
+                // data.fuzzer_index 存在代表是序列的丢弃数据
+                if(!!data.fuzzer_index)return
                 if (data.fuzzer_tab_index === props.id) {
                     setDroppedCount(Number(data.discard_count) || 0)
                 }

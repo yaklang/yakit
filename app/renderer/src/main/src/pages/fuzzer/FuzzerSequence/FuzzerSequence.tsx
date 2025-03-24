@@ -8,7 +8,8 @@ import {
     SequenceProps,
     SequenceResponseHeardProps,
     SequenceResponseProps,
-    SequenceResponseRefProps
+    SequenceResponseRefProps,
+    WebFuzzerDroppedProps
 } from "./FuzzerSequenceType"
 import styles from "./FuzzerSequence.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -206,7 +207,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
         string,
         number
-    >(new Map())
+    >(new Map()) // 序列中每个页面丢弃的数量
 
     const [visiblePluginDrawer, setVisiblePluginDrawer] = useState<boolean>(false)
     const [pluginDebugCode, setPluginDebugCode] = useState<string>("")
@@ -222,6 +223,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
     const inViewportRef = useRef<boolean>(inViewport === true)
+    const droppedSequenceIndexMapRef = useRef<Map<string, Map<string, number>>>(new Map())//序列丢弃:中间缓存的数据用于计算最后的丢弃数
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
 
@@ -369,8 +371,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const {Response, Request} = data
             const {FuzzerIndex = ""} = Request
 
-            if (onIsDropped(Response, FuzzerIndex)) return
-
             if (Response.Ok) {
                 // successCount++
                 let currentSuccessCount = successCountRef.current.get(FuzzerIndex)
@@ -497,6 +497,29 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners(endToken)
         }
     }, [])
+
+    useEffect(() => {
+        emiter.on("onGetDiscardPackageCount", handleSetDroppedCount)
+        return () => {
+            emiter.off("onGetDiscardPackageCount", handleSetDroppedCount)
+        }
+    }, [])
+
+    /**监听每次发送请求里的丢弃包数量,后端发送信号时做了防抖处理 */
+    const handleSetDroppedCount = useMemoizedFn((content: string) => {
+        try {
+            const data: WebFuzzerDroppedProps = JSON.parse(content)
+            const isExist = !!sequenceList.find((ele) => ele.id === data.fuzzer_index)
+            if (isExist) {
+                const current:Map<string, number> = droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
+                current.set(data.fuzzer_sequence_index, data.discard_count)
+                const sum = [...current.values()].reduce((sum, value) => sum + value, 0);
+                setDroppedCount(data.fuzzer_index, sum)
+                droppedSequenceIndexMapRef.current.set(data.fuzzer_index, current)
+            }
+        } catch (error) {}
+    })
+
     const getCurrentSequenceRequest = useMemoizedFn((pageId: string) => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
         if (currentItem) {
@@ -656,24 +679,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }),
         {wait: 200}
     ).run
-    /**@returns bool false没有丢弃的数据，true有丢弃的数据 */
-    const onIsDropped = useMemoizedFn((data, fuzzerIndex) => {
-        const currentRequest = getRequest(fuzzerIndex)
-        if (!currentRequest) return
 
-        if (data.Discard) {
-            // 丢弃不匹配的内容
-            let dropCount = getDroppedCount(fuzzerIndex)
-            if (dropCount) {
-                dropCount++
-            } else {
-                dropCount = 1
-            }
-            setDroppedCount(fuzzerIndex, dropCount)
-            return true
-        }
-        return false
-    })
     const getPageNodeInfoByPageIdByRoute = useMemoizedFn(() => {
         const pageChildrenList = getCurrentGroupSequence()
         onSetOriginSequence(pageChildrenList)
@@ -767,7 +773,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     InheritCookies: item.inheritCookies,
                     InheritVariables: item.inheritVariables,
                     FuzzerIndex: item.id,
-                    FuzzerTabIndex: item.pageId
+                    FuzzerTabIndex: item.pageId,
+                    EngineDropPacket: true
                 }
                 setRequest(item.id, webFuzzerPageInfo.advancedConfigValue)
                 httpParams.push(httpParamsItem)
@@ -799,7 +806,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         onClearRef()
         fuzzerTableMaxDataRef.current.clear()
         resetResponse()
+
         resetDroppedCount()
+        droppedSequenceIndexMapRef.current.clear()
+
         setCurrentSelectResponse(undefined)
         const newSequenceList = sequenceList.map((item) => ({...item, disabled: true}))
         setSequenceList([...newSequenceList])
