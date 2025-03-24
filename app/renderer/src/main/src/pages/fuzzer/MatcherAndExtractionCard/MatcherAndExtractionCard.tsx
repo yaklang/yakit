@@ -1218,7 +1218,7 @@ const colors: {color: string; title: string}[] = [
         title: "天蓝色"
     },
     {
-        color: TableCellToColorTag["GRAY"],
+        color: TableCellToColorTag["GREY"],
         title: "灰色"
     }
 ]
@@ -1238,7 +1238,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
         } catch (error) {}
         return colorClassName
     })
-
+console.log('colors',colors)
     return (
         <YakitPopover
             overlayClassName={styles["color-select-popover"]}
