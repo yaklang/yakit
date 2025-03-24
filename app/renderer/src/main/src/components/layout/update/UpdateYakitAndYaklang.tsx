@@ -62,7 +62,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
             method: "get",
             url: "yak/versions/info",
             params: {
-                source: isIRify() ? "sast" : "yakit"
+                source: isIRify() ? "irify" : "yakit"
             }
         })
             .then((res: API.YakVersionsInfoResponse) => {
