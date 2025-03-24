@@ -6,14 +6,11 @@ import {Divider} from "antd"
 import {API} from "@/services/swagger/resposeType"
 import {useMemoizedFn} from "ahooks"
 import {apiDeleteNotepadDetail, apiGetNotepadDetail, onBaseNotepadDown} from "./utils"
-import {YakitRoute} from "@/enums/yakitRoute"
-import emiter from "@/utils/eventBus/eventBus"
-import {ModifyNotepadPageInfoProps, PageNodeItemProps} from "@/store/pageInfo"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {isCommunityEdition} from "@/utils/envfile"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
-import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
+import {useGoEditNotepad} from "../hook/useGoEditNotepad"
 
 const NotepadShareModal = React.lazy(() => import("../NotepadShareModal/NotepadShareModal"))
 const NotepadManageOnline = React.lazy(() => import("./notepadManageOnline/NotepadManageOnline"))
@@ -23,49 +20,7 @@ export const timeMap = {
     created_at: "最近创建时间",
     updated_at: "最近更新时间"
 }
-/**
- * @description 去笔记本编辑页面，存在就切换页面，不存在就新打开页面
- * @param notepadHash
- * @param notepadPageList
- */
-export const toEditNotepad = (params?: {
-    pageInfo: ModifyNotepadPageInfoProps
-    notepadPageList?: PageNodeItemProps[]
-}) => {
-    const modifyNotepadPageInfo = params?.pageInfo || defaultModifyNotepadPageInfo
-    const {notepadHash = "", title = ""} = modifyNotepadPageInfo
-    const {notepadPageList = []} = params || {}
-    const current =
-        notepadHash &&
-        notepadPageList.find((ele) => ele.pageParamsInfo.modifyNotepadPageInfo?.notepadHash === notepadHash)
-    if (current) {
-        emiter.emit("switchSubMenuItem", JSON.stringify({pageId: current.pageId, forceRefresh: true}))
-        emiter.emit("switchMenuItem", JSON.stringify({route: YakitRoute.Modify_Notepad}))
-    } else if (notepadHash) {
-        const info = {
-            route: YakitRoute.Modify_Notepad,
-            params: {
-                ...modifyNotepadPageInfo,
-                notepadHash,
-                title
-            }
-        }
-        emiter.emit("openPage", JSON.stringify(info))
-    }
-}
 
-/**
- * @description 新建笔记本
- */
-export const toAddNotepad = () => {
-    const info = {
-        route: YakitRoute.Modify_Notepad,
-        params: {
-            notepadHash: ""
-        }
-    }
-    emiter.emit("openPage", JSON.stringify(info))
-}
 /**
  * @description 企业版是线上http;社区版是本地grpc
  */
@@ -81,7 +36,9 @@ const NotepadManage: React.FC<NotepadManageProps> = React.memo((props) => {
 export default NotepadManage
 
 export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) => {
-    const {record, notepadPageList, userInfo, onSingleDownAfter, onShareAfter, onSingleRemoveAfter} = props
+    const {record, userInfo, onSingleDownAfter, onShareAfter, onSingleRemoveAfter} = props
+
+    const {goEditNotepad} = useGoEditNotepad()
 
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [downItemLoading, setDownItemLoading] = useState<boolean>(false)
@@ -138,7 +95,7 @@ export const NotepadAction: React.FC<NotepadActionProps> = React.memo((props) =>
         setEditLoading(true)
         apiGetNotepadDetail(record.hash)
             .then((res) => {
-                toEditNotepad({pageInfo: {notepadHash: res.hash, title: res.title}, notepadPageList})
+                goEditNotepad({notepadHash: res.hash, title: res.title})
             })
             .finally(() => {
                 setTimeout(() => {
