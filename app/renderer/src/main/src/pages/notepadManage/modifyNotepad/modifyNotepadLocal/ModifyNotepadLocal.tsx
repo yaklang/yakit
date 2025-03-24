@@ -49,6 +49,8 @@ import {Divider} from "antd"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 
 const NotepadLocalList = React.lazy(() => import("./NotepadLocalList/NotepadLocalList"))
+/**高亮关键字中当前选中的高亮元素样式 */
+const highlightPulseClass = "highlight-pulse"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
@@ -95,13 +97,13 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const markInstanceRef = useRef<Mark>()
     const resultsIdsRef = useRef<string[]>([])
     const perTargetIdRef = useRef<string>("")
-    const initPosition = useRef<boolean>(true) // 是否是初次定位
 
     const perTabName = useRef<string>(initTabName())
     const filterRef = useRef<NoteFilter>(cloneDeep(defaultNoteFilter))
 
     const [inViewport = true] = useInViewport(notepadEditorRef)
-
+    const isInitLoadingRef = useRef<boolean>(true) // 是否初次加载
+    
     useEffect(() => {
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
@@ -168,18 +170,38 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }
         updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
     })
-    //#region 数据错误处理
+  
     useUpdateEffect(() => {
         if (!inViewport) {
+            // 保存最新的文档内容
+            notepadContentRef.current = editor?.action(getMarkdown()) || ""
+            onSaveNewContent(notepadContentRef.current)
             return
         }
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
-        if (pageInfo.notepadHash) {
+
+        if (!isInitLoadingRef.current && pageInfo.notepadHash) {
             // 初次进来不会进入这个查询
             // 只查询是否存在，不存在会发信号弹窗
             grpcQueryNoteById(+pageInfo.notepadHash)
         }
+        isInitLoadingRef.current = false
+
+        // 进入页面时,如果当前搜索关键字和数据中心的不一样，需要更新关键字
+        // 如果一样，还需额外判断跳转位置是否有变化;位置变化也需要更新一下搜索
+        if (pageInfo.keyWordInfo?.keyWord && pageInfo.keyWordInfo?.keyWord !== keyWord) {
+            setKeyWord(pageInfo.keyWordInfo?.keyWord)
+        } else if (pageInfo.keyWordInfo?.position) {
+            onSearchByPageData()
+        }
+
+        // 标题
+        emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
+        return () => {
+            emiter.off("secondMenuTabDataChange", onSecondMenuDataChange)
+        }
     }, [inViewport])
+    //#region 数据错误处理
     useEffect(() => {
         markInstanceRef.current = new Mark(notepadEditorRef.current!)
 
@@ -242,32 +264,46 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     //#region 搜索高亮
     useDebounceEffect(
         () => {
-            if (initPosition.current) {
-                onSearchHighlight(keyWord, initPageInfo().keyWordInfo?.position)
+            const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
+            onSearchHighlight(keyWord, pageInfo.keyWordInfo?.position)
+            if (pageInfo.keyWordInfo?.position) {
                 onUpdatePageInfo({
                     keyWordInfo: {
                         keyWord: "",
                         position: 0
                     }
                 })
-                initPosition.current = false
-            } else {
-                onSearchHighlight(keyWord)
             }
         },
         [keyWord],
         {wait: 200}
     )
 
+    /**
+     * inViewport变化,例如:数据中心的数据变化引起的搜索
+     */
+    const onSearchByPageData = useMemoizedFn(() => {
+        const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
+        if (pageInfo.keyWordInfo?.position) {
+            onSearchHighlight(pageInfo.keyWordInfo.keyWord, pageInfo.keyWordInfo?.position)
+            onUpdatePageInfo({
+                keyWordInfo: {
+                    keyWord: "",
+                    position: 0
+                }
+            })
+        }
+    })
+
     const onSearchHighlight = useMemoizedFn((value: string, position?: number) => {
         // 先清除之前的高亮
         markInstanceRef.current?.unmark({
             done: () => {
                 resultsIdsRef.current = []
+                setCurrentMatchesIndex(0)
                 if (value.trim() !== "") {
-                    // 在线js测试该正则表达式是匹配每一行第一个符合条件的；
-                    // 但是在markjs中匹配出了所有满足条件的
-                    const regex = new RegExp(`(?<=^[^${value}]*)${value}`, "gm")
+                    // const regex = new RegExp(`(?<=^[^${value}]*)${value}`, "gm")
+                    const regex = new RegExp(`${value}`, "gm")
                     markInstanceRef.current?.markRegExp(regex, {
                         acrossElements: false,
                         done: (total) => {
@@ -282,7 +318,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     })
                 } else {
                     setTotalMatches(0)
-                    setCurrentMatchesIndex(0)
                 }
             }
         })
@@ -300,7 +335,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         if (target) {
             if (perTargetIdRef.current) {
                 const perTarget = document.getElementById(perTargetIdRef.current)!
-                perTarget.classList.remove("highlight-pulse")
+                if (perTarget.classList.contains(highlightPulseClass)) perTarget.classList.remove(highlightPulseClass)
             }
             // 添加临时视觉反馈
             setTimeout(() => {
@@ -308,7 +343,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     behavior: "smooth",
                     block: "center"
                 })
-                target.classList.add("highlight-pulse")
+                if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
             }, 50)
         }
         perTargetIdRef.current = targetId
@@ -316,12 +351,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     }
     //#endregion
     //#region 保存最新的文档内容
-    useEffect(() => {
-        if (!inViewport) {
-            notepadContentRef.current = editor?.action(getMarkdown()) || ""
-            onSaveNewContent(notepadContentRef.current)
-        }
-    }, [inViewport])
     /**保存最新的文档内容 */
     const onSaveNewContent: APIFunc<string, DbOperateMessage> = useMemoizedFn((markdownContent) => {
         return new Promise(async (resolve, reject) => {
@@ -355,15 +384,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     })
     //#endregion
     //#region 标题
-    useEffect(() => {
-        if (inViewport) {
-            emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
-            return () => {
-                emiter.off("secondMenuTabDataChange", onSecondMenuDataChange)
-            }
-        }
-    }, [inViewport])
-
     const onSecondMenuDataChange = useMemoizedFn(() => {
         const t = initTabName()
         setNote((v) => ({...v, Title: t}))
