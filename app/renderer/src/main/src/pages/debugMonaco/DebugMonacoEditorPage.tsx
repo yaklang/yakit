@@ -14,6 +14,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {HybridScanDemo} from "@/components/playground/hybrid/HybridScanDemo"
 import {HybridScanTaskTable} from "@/components/playground/hybrid/HybridScanTaskTable"
 import {SpaceEngineOperator} from "@/components/playground/spaceengine/SpaceEngineOperator"
+import {JavaDecompilerOperator} from "@/components/playground/javadecompiler/JavaDecompilerOperator"
 
 export interface DebugMonacoEditorPageProp {}
 
@@ -62,6 +63,7 @@ a=1&b=2 Content-Length: a
                         label={"调试组件"}
                         data={[
                             {value: "space-engine-operator", label: "空间引擎操作台"},
+                            {value: "java-decompiler", label: "Java反编译"},
                             {value: "hybrid-scan-demo", label: "HybridScan 批量"},
                             {value: "hybrid-scan-task", label: "HybridScan 任务列表"},
                             {value: "chaos-maker-rule", label: "流量生成器规则"},
@@ -93,6 +95,8 @@ a=1&b=2 Content-Length: a
                             return <YakURLTree />
                         case "space-engine-operator":
                             return <SpaceEngineOperator />
+                        case "java-decompiler":
+                            return <JavaDecompilerOperator />
                     }
                     return <div>NO PLUGIN DEMO</div>
                 })()}
