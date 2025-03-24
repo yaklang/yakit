@@ -23,11 +23,8 @@ const {
 const {
     downloadYakitEE,
     downloadYakitCommunity,
-    getYakitEEDownloadUrl,
-    getYakitCommunityDownloadUrl,
     downloadYakEngine,
-    getIRifyCommunityDownloadUrl,
-    getIRifyEEDownloadUrl
+    getDownloadUrl
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
@@ -382,13 +379,13 @@ module.exports = {
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
                 if (IRifyCE) {
-                    downloadUrl = await getIRifyCommunityDownloadUrl(version)
+                    downloadUrl = await getDownloadUrl(version,"IRifyCE")
                 } else if (IRifyEE) {
-                    downloadUrl = await getIRifyEEDownloadUrl(version)
+                    downloadUrl = await getDownloadUrl(version,"IRifyEE")
                 } else if (YakitCE) {
-                    downloadUrl = await getYakitCommunityDownloadUrl(version)
+                    downloadUrl = await getDownloadUrl(version,"YakitCE")
                 } else {
-                    downloadUrl = await getYakitEEDownloadUrl(version)
+                    downloadUrl = await getDownloadUrl(version,"YakitEE")
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
