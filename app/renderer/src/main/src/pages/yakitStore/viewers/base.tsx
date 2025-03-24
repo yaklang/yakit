@@ -573,11 +573,12 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         refresh={refresh}
                         noTableTitle={false}
                         showSourceType={false}
-                        showAdvancedConfig={false}
+                        showAdvancedSearch={false}
                         showProtocolType={false}
                         showColorSwatch={pageType === "Webfuzzer"}
                         showBatchActions={showBatchActions}
                         showDelAll={false}
+                        showSetting={false}
                     />
                 }
                 secondNode={

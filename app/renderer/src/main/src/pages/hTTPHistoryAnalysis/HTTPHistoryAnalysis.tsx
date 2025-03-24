@@ -571,10 +571,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                     {executeStatus !== "process" && (
                                                         <HTTPHistory
                                                             pageType='History_Analysis_HistoryData'
-                                                            showAdvancedConfig={false}
+                                                            showAdvancedSearch={false}
                                                             showProtocolType={false}
                                                             showBatchActions={false}
                                                             showDelAll={false}
+                                                            showSetting={false}
                                                             params={{
                                                                 AnalyzedIds: streamInfo.rulesState.map(
                                                                     (item) => item.Id

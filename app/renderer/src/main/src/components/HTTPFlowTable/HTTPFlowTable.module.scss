@@ -632,3 +632,77 @@
 .http-history-search-drop-down-popover {
     @extend .inputSearchModule;
 }
+
+.history-advanced-set-wrapper {
+    .history-advanced-set-cont {
+        .history-advanced-set-item {
+            &-title {
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--yakit-header-color);
+            }
+            &-desc {
+                font-size: 12px;
+                margin-bottom: 5px;
+            }
+            &-cont {
+                margin-bottom: 15px;
+                .backgroundRefresh {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-left: 55px;
+                    .title-style {
+                        font-size: 14px;
+                        line-height: 22px;
+                        color: var(--yakit-header-color);
+                    }
+                    .hint-style {
+                        cursor: pointer;
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: var(--ui-neutral-50);
+                        }
+                    }
+                }
+                .columnSet {
+                    .column-item {
+                        display: flex;
+                        gap: 8px;
+                        align-items: center;
+                        padding: 10px 12px;
+                        margin-bottom: 5px;
+                        border: 1px solid var(--yakit-border-color);
+                        border-radius: 4px;
+                        cursor: grab;
+                        .column-title {
+                            flex: 1;
+                        }
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                            color: var(--yakit-body-text-color);
+                        }
+                        &:hover {
+                            svg {
+                                color: var(--yakit-primary-5);
+                            }
+                            border: 1px solid var(--yakit-primary-5);
+                        }
+                        &:active {
+                            border: 1px solid var(--yakit-primary-5);
+                        }
+                        .ban-icon {
+                            cursor: pointer;
+                        }
+                    }
+                    .column-item-not-allowed {
+                        background-color: var(--yakit-card-background-color);
+                        color: var(--yakit-disable-text-color);
+                    }
+                }
+            }
+        }
+    }
+}

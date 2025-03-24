@@ -37,7 +37,8 @@ import {
     ArrowCircleRightSvgIcon,
     ChromeFrameSvgIcon,
     CheckIcon,
-    CloudDownloadIcon
+    CloudDownloadIcon,
+    DragSortIcon
 } from "@/assets/newIcon"
 import classNames from "classnames"
 import {
@@ -69,7 +70,13 @@ import emiter from "@/utils/eventBus/eventBus"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {HTTPHistorySourcePageType} from "../HTTPHistory"
 import {useHttpFlowStore} from "@/store/httpFlow"
-import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {
+    OutlineBanIcon,
+    OutlineCogIcon,
+    OutlineInformationcircleIcon,
+    OutlineRefreshIcon,
+    OutlineSearchIcon
+} from "@/assets/icon/outline"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
 import {convertKeyboard} from "../yakitUI/YakitEditor/editorUtils"
@@ -92,6 +99,7 @@ import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -335,7 +343,7 @@ export interface HistoryTableTitleShow {
     /** 是否显示类型切换*/
     showSourceType?: boolean
     /** 是否显示高级配置 */
-    showAdvancedConfig?: boolean
+    showAdvancedSearch?: boolean
     /** 是否显示协议切换 */
     showProtocolType?: boolean
     /** 是否显示搜索 */
@@ -346,6 +354,8 @@ export interface HistoryTableTitleShow {
     showBatchActions?: boolean
     /** 是否显示清空 */
     showDelAll?: boolean
+    /** 是否显示设置 */
+    showSetting?: boolean
     /** 是否显示刷新 */
     showRefresh?: boolean
 }
@@ -663,12 +673,6 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 
 const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
-export interface ColumnAllInfoItem {
-    dataKey: string
-    title: string
-    isChecked: boolean
-}
-
 interface ExportHTTPFlowStreamRequest {
     Filter: YakQueryHTTPFlowRequest
     FieldName?: string[]
@@ -685,12 +689,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const {
         noTableTitle = false,
         showSourceType = true,
-        showAdvancedConfig = true,
+        showAdvancedSearch = true,
         showProtocolType = true,
         showHistorySearch = true,
         showColorSwatch = true,
         showBatchActions = true,
         showDelAll = true,
+        showSetting = true,
         showRefresh = true,
         onlyShowFirstNode,
         setOnlyShowFirstNode,
@@ -855,7 +860,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
-        if (pageType === "History" && showAdvancedConfig) {
+        if (pageType === "History" && showAdvancedSearch) {
             // 筛选模式
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
                 if (!!e) {
@@ -902,7 +907,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     useDebounceEffect(
         () => {
-            if (pageType === "History" && showAdvancedConfig) {
+            if (pageType === "History" && showAdvancedSearch) {
                 let newParams = {...params}
                 // 屏蔽
                 if (filterMode === "shield") {
@@ -1194,7 +1199,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 realQuery.Pagination.Order = "asc"
             }
         }
-
         updateQueryParams(realQuery)
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
@@ -1704,14 +1708,53 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const noColumnsKey = pageType === "Webfuzzer" ? [] : ["Payloads"]
     // 排除展示的列
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
+    // 默认所有列展示顺序
+    const defalutColumnsOrderRef = useRef<string[]>([
+        "Method",
+        "StatusCode",
+        "Url",
+        "Payloads",
+        "FromPlugin",
+        "Tags",
+        "IPAddress",
+        "BodyLength",
+        "HtmlTitle",
+        "GetParamsTotal",
+        "ContentType",
+        "DurationMs",
+        "UpdatedAt",
+        "RequestSizeVerbose"
+    ])
+    // 所有列展示顺序
+    const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
+        // 获取不展示列
         getRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey).then((res) => {
             if (res) {
                 const arr = res.split(",")
                 setExcludeColumnsKey([...arr, ...noColumnsKey])
             }
         })
-    }, [])
+        // 获取所有列顺序
+        getRemoteValue(RemoteHistoryGV.HistroyColumnsOrder).then((res) => {
+            try {
+                const arr = JSON.parse(res) || []
+                // 确保顺序缓存里面的key一定在默认所有列中存在
+                const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
+                // 特殊处理 Payloads 在Url后面
+                if (pageType === "Webfuzzer") {
+                    if (realArr.findIndex((key: string) => key === "Payloads") === -1) {
+                        const urlIndex = realArr.findIndex((key: string) => key === "Url")
+                        realArr.splice(urlIndex + 1, 0, "Payloads")
+                    }
+                } else if (pageType === "History") {
+                    // 如果列表有新增列，顺序从新再次缓存
+                    setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
+                }
+                setColumnsOrder(realArr)
+            } catch (error) {}
+        })
+    }, [pageType])
     // 表格可配置列
     const configColumnRef = useRef<ColumnAllInfoItem[]>([])
     // 表格的key值
@@ -2127,18 +2170,43 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         ]
 
-        const arr = columnArr
+        let finalColumns: ColumnsTypeProps[] = []
+        // 排序
+        if (columnsOrder.length) {
+            // 提取 Id 和 action 和 Payloads
+            const idColumn = columnArr.find((col) => col.dataKey === "Id")
+            const actionColumn = columnArr.find((col) => col.dataKey === "action")
+            // 过滤掉 Id 和 action以及不可能出现的列
+            const middleColumns = columnArr.filter((item) => !["Id", "action", ...noColumnsKey].includes(item.dataKey))
+
+            // 先按 columnsOrder 排序
+            const sortedColumns = middleColumns
+                .filter((col) => columnsOrder.includes(col.dataKey))
+                .sort((a, b) => columnsOrder.indexOf(a.dataKey) - columnsOrder.indexOf(b.dataKey))
+
+            // 先加上Id
+            if (idColumn) finalColumns.push(idColumn)
+            sortedColumns.forEach((col) => {
+                // 加入当前 columnsOrder 里的字段
+                finalColumns.push(col)
+            })
+            // 最后加上action
+            if (actionColumn) finalColumns.push(actionColumn)
+        } else {
+            finalColumns = columnArr.slice()
+        }
+
+        const arr = finalColumns
             .filter((item) => !["Id", "action", ...noColumnsKey].includes(item.dataKey))
             .map((item) => ({
                 dataKey: item.dataKey,
                 title: item.title,
-                isChecked: !excludeColumnsKey.includes(item.dataKey)
+                isShow: !excludeColumnsKey.includes(item.dataKey)
             }))
         configColumnRef.current = arr
 
-        const realColumns = columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+        const realColumns = finalColumns.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
         setIdFixed(realColumns.length !== 2)
-
         return realColumns
     }, [
         tags,
@@ -2148,9 +2216,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         downstreamProxyStr,
         pageType,
         queryParams,
+        columnsOrder,
         excludeColumnsKey,
         idFixed
     ])
+
+    // 高级配置
+    const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+    const isAdvancedSet = useMemo(() => {
+        const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !noColumnsKey.includes(key))
+        const orderFlag =
+            columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
+        return excludeColumnsKey.length > noColumnsKey.length || orderFlag || isBackgroundRefresh
+    }, [isBackgroundRefresh, excludeColumnsKey, noColumnsKey, columnsOrder])
 
     // 标注颜色批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
@@ -3885,7 +3963,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         </div>
                                     </div>
                                     <div className={style["http-history-table-right"]}>
-                                        {showAdvancedConfig && (
+                                        {showAdvancedSearch && (
                                             <>
                                                 <YakitButton
                                                     type='text'
@@ -3894,9 +3972,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                     }}
                                                     style={{padding: 0}}
                                                 >
-                                                    高级配置
+                                                    高级筛选
                                                 </YakitButton>
-                                                {(isFilter || excludeColumnsKey.length > noColumnsKey.length) && (
+                                                {isFilter && (
                                                     <YakitTag color={"success"} style={{margin: 0}}>
                                                         已配置
                                                         <CheckedSvgIcon />
@@ -4049,6 +4127,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                                 </YakitButton>
                                             </YakitDropdownMenu>
                                         )}
+                                        {showSetting && (
+                                            <YakitButton
+                                                icon={<OutlineCogIcon />}
+                                                type={isAdvancedSet ? "text" : "text2"}
+                                                onClick={() => {
+                                                    setAdvancedSetVisible(true)
+                                                }}
+                                            >
+                                                {isAdvancedSet && "已配置"}
+                                            </YakitButton>
+                                        )}
                                         {showRefresh && (
                                             <YakitDropdownMenu
                                                 menu={{
@@ -4134,7 +4223,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     responseType={contentType}
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
-                    onSave={(filters, setting, excludeColKeywords) => {
+                    onSave={(filters) => {
                         const {filterMode, hostName, urlPath, fileSuffix, searchContentType, excludeKeywords} = filters
                         setFilterMode(filterMode)
                         setHostName(hostName)
@@ -4143,17 +4232,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         setSearchContentType(searchContentType)
                         setExcludeKeywords(excludeKeywords)
                         setDrawerFormVisible(false)
-
-                        const {backgroundRefresh: newBackgroundRefresh} = setting
-                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
-
-                        const newExcludeColumnsKey = [...noColumnsKey, ...excludeColKeywords]
-                        if (JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey)) {
-                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, excludeColKeywords + "")
-                            setExcludeColumnsKey(newExcludeColumnsKey)
-                            // 表格列宽度需要重新计算
-                            setTableKeyNumber(uuidv4())
-                        }
                     }}
                     filterMode={filterMode}
                     hostName={hostName}
@@ -4161,7 +4239,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     fileSuffix={fileSuffix}
                     searchContentType={searchContentType}
                     excludeKeywords={excludeKeywords}
-                    columnsAll={JSON.stringify(configColumnRef.current)}
                 />
             )}
             <EditTagsModal
@@ -4186,6 +4263,35 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     }}
                 />
+            )}
+            {advancedSetVisible && (
+                <AdvancedSet
+                    columnsAllStr={JSON.stringify(configColumnRef.current)}
+                    onCancel={() => {
+                        setAdvancedSetVisible(false)
+                    }}
+                    onSave={(setting) => {
+                        setAdvancedSetVisible(false)
+                        const {backgroundRefresh: newBackgroundRefresh, configColumnsAll} = setting
+                        // 后台刷新
+                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+                        // 自定义列
+                        const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
+                        const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
+                        const newColOrder = configColumnsAll.map((i) => i.dataKey)
+                        if (
+                            JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
+                            JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
+                        ) {
+                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + "")
+                            setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
+                            setExcludeColumnsKey(newExcludeColumnsKey)
+                            setColumnsOrder(newColOrder)
+                            // 表格列宽度需要重新计算
+                            setTableKeyNumber(uuidv4())
+                        }
+                    }}
+                ></AdvancedSet>
             )}
         </div>
     )
@@ -4902,6 +5008,144 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
                     )}
                     format={(percent) => `${percent}%`}
                 />
+            </div>
+        </YakitModal>
+    )
+})
+
+interface ColumnAllInfoItem {
+    dataKey: string
+    title: string
+    isShow: boolean
+}
+interface AdvancedSetSaveItem {
+    backgroundRefresh: boolean
+    configColumnsAll: ColumnAllInfoItem[]
+}
+interface AdvancedSetProps {
+    columnsAllStr: string
+    onCancel: () => void
+    onSave: (setting: AdvancedSetSaveItem) => void
+}
+const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
+    const {columnsAllStr, onCancel, onSave} = props
+    /** ---------- 后台刷新 Start ---------- */
+    const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+    const oldBackgroundRefresh = useRef<boolean>(false)
+    useEffect(() => {
+        getRemoteValue(RemoteHistoryGV.BackgroundRefresh).then((e) => {
+            oldBackgroundRefresh.current = !!e
+            setBackgroundRefresh(!!e)
+        })
+    }, [])
+    /** ---------- 后台刷新 End ---------- */
+
+    /** ---------- 自定义列 Start ---------- */
+    const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
+    useEffect(() => {
+        try {
+            setCurColumnsAll(JSON.parse(columnsAllStr))
+        } catch (error) {}
+    }, [columnsAllStr])
+    // 处理拖拽结束
+    const handleDragEnd = (result: any) => {
+        if (!result.destination) return // 没有目标位置，直接返回
+        const newItems = [...curColumnsAll]
+        const [movedItem] = newItems.splice(result.source.index, 1) // 移除被拖拽的项
+        newItems.splice(result.destination.index, 0, movedItem) // 插入到新位置
+        setCurColumnsAll(newItems)
+    }
+    /** ---------- 自定义列 End ---------- */
+
+    const handleOk = useMemoizedFn(() => {
+        // 缓存后台刷新状态
+        if (oldBackgroundRefresh.current !== backgroundRefresh) {
+            setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? "true" : "")
+        }
+        onSave({backgroundRefresh, configColumnsAll: curColumnsAll})
+    })
+
+    return (
+        <YakitModal
+            visible={true}
+            title='高级配置'
+            width={800}
+            className={style["history-advanced-set-wrapper"]}
+            onCancel={onCancel}
+            onOk={handleOk}
+        >
+            <div className={style["history-advanced-set-cont"]}>
+                <div className={style["history-advanced-set-item"]}>
+                    <div className={style["history-advanced-set-item-title"]}>刷新配置</div>
+                    <div className={style["history-advanced-set-item-cont"]}>
+                        <div className={style["backgroundRefresh"]}>
+                            <YakitCheckbox
+                                checked={backgroundRefresh}
+                                onChange={(e) => {
+                                    setBackgroundRefresh(e.target.checked)
+                                }}
+                            />
+                            <span className={style["title-style"]}>后台刷新</span>
+                            <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
+                                <OutlineInformationcircleIcon className={style["hint-style"]} />
+                            </Tooltip>
+                        </div>
+                    </div>
+                </div>
+                <div className={style["history-advanced-set-item"]}>
+                    <div className={style["history-advanced-set-item-title"]}>列表展示字段和顺序</div>
+                    <div className={style["history-advanced-set-item-desc"]}>
+                        点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、webfuzzer流量表全部生效
+                    </div>
+                    <div className={style["history-advanced-set-item-cont"]}>
+                        <DragDropContext onDragEnd={handleDragEnd}>
+                            <Droppable droppableId='history-column-list'>
+                                {(provided) => (
+                                    <div
+                                        className={style["columnSet"]}
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                    >
+                                        {curColumnsAll.map((item, index) => (
+                                            <Draggable key={item.dataKey} draggableId={item.dataKey} index={index}>
+                                                {(provided, snapshot) => (
+                                                    <div
+                                                        className={classNames(style["column-item"], {
+                                                            [style["column-item-not-allowed"]]: !item.isShow
+                                                        })}
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                    >
+                                                        <DragSortIcon />
+                                                        <div className={style["column-title"]}>{item.title}</div>
+                                                        <Tooltip title={item.isShow ? "禁用" : "启用"}>
+                                                            <OutlineBanIcon
+                                                                className={classNames(style["ban-icon"])}
+                                                                onClick={() => {
+                                                                    setCurColumnsAll((prev) => {
+                                                                        const arr = prev.slice()
+                                                                        arr.forEach((i) => {
+                                                                            if (i.dataKey === item.dataKey) {
+                                                                                i.isShow = !item.isShow
+                                                                            }
+                                                                        })
+                                                                        return arr
+                                                                    })
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </div>
+                </div>
             </div>
         </YakitModal>
     )

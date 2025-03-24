@@ -97,12 +97,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         params,
         noTableTitle = false,
         showSourceType = true,
-        showAdvancedConfig = true,
+        showAdvancedSearch = true,
         showProtocolType = true,
         showHistorySearch = true,
         showColorSwatch = true,
         showBatchActions = true,
         showDelAll = true,
+        showSetting = true,
         showRefresh = true
     } = props
     // History Id 用于区分每个history控件
@@ -406,12 +407,13 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                 <HTTPFlowTable
                                     noTableTitle={noTableTitle}
                                     showSourceType={showSourceType}
-                                    showAdvancedConfig={showAdvancedConfig}
+                                    showAdvancedSearch={showAdvancedSearch}
                                     showProtocolType={showProtocolType}
                                     showHistorySearch={showHistorySearch}
                                     showColorSwatch={showColorSwatch}
                                     showBatchActions={showBatchActions}
                                     showDelAll={showDelAll}
+                                    showSetting={showSetting}
                                     showRefresh={showRefresh}
                                     params={params}
                                     searchURL={searchURL}

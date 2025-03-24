@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Modal, Tooltip} from "antd"
+import {Form, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {useMemoizedFn} from "ahooks"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
@@ -7,29 +7,23 @@ import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {FiltersItemProps} from "../TableVirtualResize/TableVirtualResizeType"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlineInformationcircleIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {setRemoteValue} from "@/utils/kv"
+import {OutlineXIcon} from "@/assets/icon/outline"
 import {yakitNotify} from "@/utils/notification"
-import {RemoteHistoryGV} from "@/enums/history"
-import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import cloneDeep from "lodash/cloneDeep"
-
-import classNames from "classnames"
 import styles from "./HTTPFlowTableForm.module.scss"
-import {ColumnAllInfoItem} from "./HTTPFlowTable"
 
 export interface HTTPFlowTableFormConfigurationProps {
     visible: boolean
     setVisible: (b: boolean) => void
     responseType: FiltersItemProps[]
-    onSave: (v: HTTPFlowTableFromValue, setting: HTTPFlowSettingValue, excludeColKeywords: string[]) => void
+    onSave: (v: HTTPFlowTableFromValue) => void
     filterMode: "shield" | "show"
     hostName: string[]
     urlPath: string[]
     fileSuffix: string[]
     searchContentType: string
     excludeKeywords: string[]
-    columnsAll: string
 }
 
 export interface HTTPFlowTableFromValue {
@@ -39,9 +33,6 @@ export interface HTTPFlowTableFromValue {
     fileSuffix: string[]
     searchContentType: string
     excludeKeywords: string[]
-}
-export interface HTTPFlowSettingValue {
-    backgroundRefresh: boolean
 }
 
 export enum HTTPFlowTableFormConsts {
@@ -64,8 +55,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         urlPath,
         fileSuffix,
         searchContentType,
-        excludeKeywords,
-        columnsAll
+        excludeKeywords
     } = props
 
     /** ---------- 高级筛选 Start ---------- */
@@ -126,11 +116,6 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
     }
     /** ---------- 高级筛选 End ---------- */
 
-    /** ---------- 配置 Start ---------- */
-    const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
-    const oldBackgroundRefresh = useRef<boolean>(false)
-    /** ---------- 配置 End ---------- */
-
     // 获取默认值
     useEffect(() => {
         if (!visible) return
@@ -151,28 +136,14 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         // 关键字
         oldExcludeKeywords.current = excludeKeywords
         form.setFieldsValue({filterMode, hostName, urlPath, fileSuffix, searchContentType: searchType, excludeKeywords})
-
-        // 后台刷新
-        getRemoteValue(RemoteHistoryGV.BackgroundRefresh).then((e) => {
-            oldBackgroundRefresh.current = !!e
-            setBackgroundRefresh(!!e)
-        })
     }, [visible])
 
     // 保存
     const handleSave = useMemoizedFn(async () => {
         try {
             const advancedFilters = await handleAdvancedFiltersSave()
-
-            // 缓存后台刷新状态
-            if (oldBackgroundRefresh.current !== backgroundRefresh) {
-                setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? "true" : "")
-            }
-
             onSave(
-                cloneDeep(advancedFilters),
-                {backgroundRefresh},
-                curColumnsAll.filter((item) => !item.isChecked).map((item) => item.dataKey)
+                cloneDeep(advancedFilters)
             )
         } catch (error) {
             yakitNotify("error", `${error}`)
@@ -200,8 +171,6 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             }
             isModify = JSON.stringify(oldValue) !== JSON.stringify(newValue)
 
-            isModify = oldBackgroundRefresh.current !== backgroundRefresh
-
             return isModify
         } catch (error) {
             yakitNotify("error", `${error}`)
@@ -217,7 +186,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             Modal.confirm({
                 title: "温馨提示",
                 icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存高级配置并关闭弹框？",
+                content: "请问是否要保存高级筛选并关闭弹框？",
                 okText: "保存",
                 cancelText: "不保存",
                 closable: true,
@@ -242,15 +211,6 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
         }
     })
 
-    // 自定义列
-    const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
-    useEffect(() => {
-        try {
-            setCurColumnsAll(JSON.parse(columnsAll))
-        } catch (error) {
-        }
-    }, [columnsAll])
-
     return (
         <YakitDrawer
             className={styles["http-flow-table-form-configuration"]}
@@ -259,7 +219,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
             onClose={handleClose}
             title={
                 <div className={styles["advanced-configuration-drawer-title"]}>
-                    <div className={styles["advanced-configuration-drawer-title-text"]}>高级配置</div>
+                    <div className={styles["advanced-configuration-drawer-title-text"]}>高级筛选</div>
                     <div className={styles["advanced-configuration-drawer-title-btns"]}>
                         <YakitButton type='outline2' onClick={handleCancel}>
                             取消
@@ -329,71 +289,6 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                             </Form.Item>
                         )}
                     </Form>
-                </div>
-
-                {/* 配置项 */}
-                <div className={styles["config-item-wrapper"]}>
-                    <div className={styles["item-header"]}>
-                        <div className={styles["header-title"]}>其他配置</div>
-                        {/* <YakitButton type='text' onClick={()=>{}}>
-                            重置
-                        </YakitButton> */}
-                    </div>
-
-                    <div className={styles["setting-body"]}>
-                        <div className={classNames(styles["background-refresh"], styles["setting-item"])}>
-                            <div className={styles["setting-item-header"]}>
-                                <YakitCheckbox
-                                    checked={backgroundRefresh}
-                                    onChange={(e) => {
-                                        setBackgroundRefresh(e.target.checked)
-                                    }}
-                                />
-                            </div>
-                            <div className={styles["setting-item-body"]}>
-                                <span className={styles["title-style"]}>后台刷新</span>
-                                <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
-                                    <OutlineInformationcircleIcon className={styles["hint-style"]} />
-                                </Tooltip>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {/* 列表显示字段 */}
-                <div className={styles["config-item-wrapper"]}>
-                    <div className={styles["item-header"]}>
-                        <div className={styles["header-title"]}>列表显示字段</div>
-                        <YakitButton
-                            type='text'
-                            onClick={() => {
-                                const newCurColumnsAll = curColumnsAll.map((item) => ({...item, isChecked: true}))
-                                setCurColumnsAll(newCurColumnsAll)
-                            }}
-                        >
-                            重置
-                        </YakitButton>
-                    </div>
-                    <div>勾选则代表展示，不勾选则不进行展示，该配置对插件执行流量表，webfuzzer流量表全部生效</div>
-                    <div className={styles["columns-cols"]}>
-                        {curColumnsAll.map((item, index) => (
-                            <YakitCheckbox
-                                wrapperClassName={styles["columns-cols-item"]}
-                                key={index}
-                                checked={item.isChecked}
-                                onChange={(e) => {
-                                    const arr = [...curColumnsAll]
-                                    arr.forEach((i) => {
-                                        if (i.dataKey === item.dataKey) {
-                                            i.isChecked = e.target.checked
-                                        }
-                                    })
-                                    setCurColumnsAll(arr)
-                                }}
-                            >
-                                {item.title}
-                            </YakitCheckbox>
-                        ))}
-                    </div>
                 </div>
             </div>
         </YakitDrawer>
