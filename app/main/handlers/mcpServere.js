@@ -98,7 +98,6 @@ const connectClient = (win, setting) => {
 
             client.onerror = (error) => {
                 handleClientError(win, id, error)
-                console.log("client error", error)
             }
             client.onclose = () => {
                 // 客户端被关闭后，更新连接状态
@@ -160,25 +159,26 @@ const deleteClient = (token) => {
 }
 
 /**
- * @name comm pool, 通信通道池
+ * @name task pool, 任务通道池
  * @type {Map<string, AbortController>}
  */
-const commPools = new Map()
+const taskPools = new Map()
 // 生成信号控制器
 const newAbortController = (token) => {
     const controller = new AbortController()
-    commPools.set(token, controller)
+    taskPools.set(token, controller)
     return controller
 }
 
 // call-tool
-const handleCallTool = (win, token, request) => {
+const handleCallTool = (win, tokens, request) => {
     return new Promise(async (resolve, reject) => {
-        const server = clients.get(token)
+        const {clientID, taskID} = tokens
+        const server = clients.get(clientID)
         if (!server) {
             return reject("client no exist")
         }
-        if (commPools.has(token)) {
+        if (taskPools.has(taskID)) {
             return reject("client is busy")
         }
         if (!server.link) {
@@ -186,31 +186,29 @@ const handleCallTool = (win, token, request) => {
         }
 
         try {
-            const signal = newAbortController(token).signal
+            const signal = newAbortController(taskID).signal
             console.log("request", request)
             server.client
                 .callTool(request, undefined, {
                     onprogress: (progress) => {
                         if (win && progress) {
-                            win.webContents.send(`mcp-${token}-progress`, progress)
+                            win.webContents.send(`mcp-${taskID}-progress`, progress)
                         }
-                        console.log("onprogress", progress)
                     },
                     signal: signal
                 })
                 .then((res) => {
                     if (win && res) {
-                        win.webContents.send(`mcp-${token}-end`, res)
+                        win.webContents.send(`mcp-${taskID}-end`, res)
                     }
-                    console.log("ans", res)
                 })
                 .catch((err) => {
                     if (win && err) {
-                        win.webContents.send(`mcp-${token}-error`, handleIPCError(err))
+                        win.webContents.send(`mcp-${taskID}-error`, handleIPCError(err))
                     }
                 })
                 .finally(() => {
-                    commPools.has(token) && commPools.delete(token)
+                    taskPools.has(taskID) && taskPools.delete(taskID)
                 })
             resolve("")
         } catch (error) {
@@ -221,11 +219,11 @@ const handleCallTool = (win, token, request) => {
 // cancel call-tool
 const handleCancelCallTool = (token) => {
     return new Promise(async (resolve, reject) => {
-        const comm = commPools.get(token)
-        if (!comm) {
-            return reject("comm no exist")
+        const task = taskPools.get(token)
+        if (!task) {
+            return reject("task no exist")
         }
-        comm.abort()
+        task.abort()
         resolve("")
     })
 }

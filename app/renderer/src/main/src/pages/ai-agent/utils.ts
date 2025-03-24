@@ -1,6 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
+import moment from "moment"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -185,4 +186,9 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
         yakitNotify("error", "资源模板数据格式化失败")
     }
     return data
+}
+
+/** @name 将时间戳转换为 YYYY-MM-DD HH:mm:ss */
+export const formatTime = (time: number): string => {
+    return moment(time).format("YYYY-MM-DD HH:mm:ss")
 }

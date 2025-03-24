@@ -1,3 +1,4 @@
+import {Dispatch, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./mcpClient/type"
 
 export interface AIAgentProps {}
@@ -44,7 +45,21 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
     resourceTemplates?: RenderResourcesTemplates[]
 }
 
-export interface ServerSettingProps {}
+export interface MCPServerProps {}
+export interface ServerSettingProps {
+    servers: RenderMCPClientInfo[]
+    setServers: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
+}
+export interface ServerChatProps {
+    getContainer?: HTMLElement
+    servers: RenderMCPClientInfo[]
+}
+
+export interface ServerChatInfo {
+    id: string
+    name: string
+    time: number
+}
 
 export interface AddServerModalProps {
     info?: RenderMCPClientInfo
@@ -52,8 +67,19 @@ export interface AddServerModalProps {
     onCallback: (result: boolean, info?: RenderMCPClientInfo) => viod
 }
 
+export interface EditChatNameModalProps {
+    getContainer?: HTMLElement
+    info: ServerChatInfo
+    visible: boolean
+    onCallback: (result: boolean, info?: ServerChatInfo) => viod
+}
+
 export interface ServerInfoModalProps {
     info: RenderMCPClientInfo
     visible: boolean
     onCancel: () => viod
 }
+
+export interface AIAgentEmptyProps {}
+
+export interface AIAgentTaskProps {}
