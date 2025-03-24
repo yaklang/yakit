@@ -34,8 +34,8 @@ jobs:
                     echo "Version starts with 'v': $VERSION_INPUT"
                     # Remove the 'v' prefix and store in SOFTWARE_VERSION
                     SOFTWARE_VERSION="${VERSION_INPUT:1}"
-                    # Remove '-sast' suffix if exists
-                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-sast}"
+                    # Remove '-irify' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-irify}"
                     echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
                   fi
 
