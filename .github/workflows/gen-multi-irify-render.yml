@@ -1,7 +1,10 @@
 name: Gen-Multi-IRify-Platform-Render
 
 on:
-    workflow_dispatch:
+    push:
+        tags:
+            - "v*-irify-render"
+            - "!v*-irify"
 
 jobs:
     build_yakit:

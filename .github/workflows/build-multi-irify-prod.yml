@@ -1,7 +1,10 @@
 name: Build Multi-IRify-Platform Prod
 
 on:
-    workflow_dispatch:
+    push:
+        tags:
+            - "v*-irify"
+            - "!v*-irify-render"
 
 jobs:
     build_yakit:
