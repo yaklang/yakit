@@ -54,7 +54,7 @@ switch (platform) {
         appInfoOption = {
             appId: "io.yaklang.irifyee",
             extraMetadata: {name: "irifyee"},
-            productName: "IRifyEnterprise",
+            productName: "IRifyEnpriTrace",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"

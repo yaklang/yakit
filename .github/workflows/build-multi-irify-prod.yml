@@ -136,17 +136,17 @@ jobs:
                   ls ./release
                   # EnpriTrace       -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
-            - name: Check IRifyEnterprise if the output is correct
-              run: (./packageScript/script/check-build-package.sh IRifyEnterprise) || { exit 1; }
+            - name: Check IRifyEnpriTrace if the output is correct
+              run: (./packageScript/script/check-build-package.sh IRifyEnpriTrace) || { exit 1; }
               shell: bash
             - name: Upload IRify(EE) Artifacts
               uses: actions/upload-artifact@v4
               with:
-                  name: IRifyEnterprise-artifacts
+                  name: IRifyEnpriTrace-artifacts
                   path: |
-                      ./release/IRifyEnterprise-${{ env.ENV_TAG }}-*.exe
-                      ./release/IRifyEnterprise-${{ env.ENV_TAG }}-*.dmg
-                      ./release/IRifyEnterprise-${{ env.ENV_TAG }}-*.AppImage
+                      ./release/IRifyEnpriTrace-${{ env.ENV_TAG }}-*.exe
+                      ./release/IRifyEnpriTrace-${{ env.ENV_TAG }}-*.dmg
+                      ./release/IRifyEnpriTrace-${{ env.ENV_TAG }}-*.AppImage
                   if-no-files-found: error
                   retention-days: 1
 
@@ -155,7 +155,7 @@ jobs:
             - build_yakit
         strategy:
             matrix:
-                artifact: [IRify, IRifyEnterprise] # 需要发布的软件名前缀
+                artifact: [IRify, IRifyEnpriTrace] # 需要发布的软件名前缀
         runs-on: ubuntu-latest
         steps:
             - name: Echo Package Version To Env
@@ -178,7 +178,7 @@ jobs:
               run: |
                   if [ "${{ matrix.artifact }}" = "IRify" ]; then
                     echo "FILE_PATH=irify" >> $GITHUB_ENV
-                  elif [ "${{ matrix.artifact }}" = "IRifyEnterprise" ]; then
+                  elif [ "${{ matrix.artifact }}" = "IRifyEnpriTrace" ]; then
                     echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2

@@ -109,15 +109,15 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${StrStr} $0 $EXEFILE "EnpriTrace"
-        ${If} $0 != "" ; ee
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "EnpriTrace"
+        ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
+        ${If} $0 != "" ; see
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
-            ${StrStr} $0 $EXEFILE "IRifyEnterprise"
-            ${If} $0 != "" ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnterprise_InstallPath"
-                StrCpy $EXE_NAME "IRifyEnterprise"
+            ${StrStr} $0 $EXEFILE "EnpriTrace"
+            ${If} $0 != "" ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+                StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
                 ${StrStr} $0 $EXEFILE "IRify"
                 ${If} $0 != "" ; sce
@@ -143,13 +143,13 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "EnpriTrace"
+        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; see 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
-            ${If} ${FileExists} `$INSTDIR\IRifyEnterprise.exe` ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnterprise_InstallPath"
-                StrCpy $EXE_NAME "IRifyEnterprise"
+            ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+                StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; sce
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"

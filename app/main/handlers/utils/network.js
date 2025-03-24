@@ -285,31 +285,12 @@ const getYakEngineDownloadUrl = async (version) => {
             throw new Error(`Unsupported platform: ${process.platform}`)
     }
 }
-/** Yakit CE 版本下载地址 */
-const getYakitCommunityDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain()
-    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
-    switch (process.platform) {
-        case "darwin":
-            if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/Yakit-${version}-darwin${suffix}-arm64.dmg`
-            } else {
-                return `https://${domain}/yak/${version}/Yakit-${version}-darwin${suffix}-x64.dmg`
-            }
-        case "win32":
-            return `https://${domain}/yak/${version}/Yakit-${version}-windows${suffix}-amd64.exe`
-        case "linux":
-            if (process.arch === "arm64") {
-                return `https://${domain}/yak/${version}/Yakit-${version}-linux${suffix}-arm64.AppImage`
-            } else {
-                return `https://${domain}/yak/${version}/Yakit-${version}-linux${suffix}-amd64.AppImage`
-            }
-    }
-    throw new Error(`Unsupported platform: ${process.platform}`)
+
+const getCESuffix = () => {
+    return process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
 }
-/** Yakit EE 版本下载地址 */
-const getYakitEEDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain()
+
+const getEESuffix = () => {
     let system_mode = ""
     try {
         system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
@@ -317,74 +298,53 @@ const getYakitEEDownloadUrl = async (version) => {
         console.log("error", error)
     }
     const suffix = system_mode === "legacy" ? "-legacy" : ""
-
-    switch (process.platform) {
-        case "darwin":
-            if (process.arch === "arm64") {
-                return `https://${domain}/vip/${version}/EnpriTrace-${version}-darwin${suffix}-arm64.dmg`
-            } else {
-                return `https://${domain}/vip/${version}/EnpriTrace-${version}-darwin${suffix}-x64.dmg`
-            }
-        case "win32":
-            return `https://${domain}/vip/${version}/EnpriTrace-${version}-windows${suffix}-amd64.exe`
-        case "linux":
-            if (process.arch === "arm64") {
-                return `https://${domain}/vip/${version}/EnpriTrace-${version}-linux${suffix}-arm64.AppImage`
-            } else {
-                return `https://${domain}/vip/${version}/EnpriTrace-${version}-linux${suffix}-amd64.AppImage`
-            }
-    }
-    throw new Error(`Unsupported platform: ${process.platform}`)
+    return suffix
 }
 
-/** IRify CE 版本下载地址 */
-const getIRifyCommunityDownloadUrl = async (version) => {
-    const domain = await getAvailableOSSDomain()
-    const suffix = process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
-    switch (process.platform) {
-        case "darwin":
-            if (process.arch === "arm64") {
-                return `https://${domain}/irify/${version}/IRify-${version}-darwin${suffix}-arm64.dmg`
-            } else {
-                return `https://${domain}/irify/${version}/IRify-${version}-darwin${suffix}-x64.dmg`
-            }
-        case "win32":
-            return `https://${domain}/irify/${version}/IRify-${version}-windows${suffix}-amd64.exe`
-        case "linux":
-            if (process.arch === "arm64") {
-                return `https://${domain}/irify/${version}/IRify-${version}-linux${suffix}-arm64.AppImage`
-            } else {
-                return `https://${domain}/irify/${version}/IRify-${version}-linux${suffix}-amd64.AppImage`
-            }
+// 目前存在4个版本 IRifyCE 、 IRifyEE 、 YakitCE 、 YakitEE
+// PS: name为软件名 dir为OSS路径
+const DownloadUrlByType = {
+    YakitCE: {
+        name: "Yakit",
+        dir: "yak",
+        suffix: getCESuffix()
+    },
+    YakitEE: {
+        name: "EnpriTrace",
+        dir: "vip",
+        suffix: getEESuffix()
+    },
+    IRifyCE: {
+        name: "IRify",
+        dir: "irify",
+        suffix: getCESuffix()
+    },
+    IRifyEE: {
+        name: "IRifyEnpriTrace",
+        dir: "svip",
+        suffix: getEESuffix()
     }
-    throw new Error(`Unsupported platform: ${process.platform}`)
 }
 
-/** IRify EE 版本下载地址 */
-const getIRifyEEDownloadUrl = async (version) => {
+/** 获取 Yakit 下载地址 */
+const getDownloadUrl = async (version, type) => {
     const domain = await getAvailableOSSDomain()
-    let system_mode = ""
-    try {
-        system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
-    } catch (error) {
-        console.log("error", error)
-    }
-    const suffix = system_mode === "legacy" ? "-legacy" : ""
-
+    // 如若识别不到默认识别为Yakit社区版
+    const {name, dir, suffix} = DownloadUrlByType[type] || DownloadUrlByType["YakitCE"]
     switch (process.platform) {
         case "darwin":
             if (process.arch === "arm64") {
-                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-darwin${suffix}-arm64.dmg`
+                return `https://${domain}/${dir}/${version}/${name}-${version}-darwin${suffix}-arm64.dmg`
             } else {
-                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-darwin${suffix}-x64.dmg`
+                return `https://${domain}/${dir}/${version}/${name}-${version}-darwin${suffix}-x64.dmg`
             }
         case "win32":
-            return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-windows${suffix}-amd64.exe`
+            return `https://${domain}/${dir}/${version}/${name}-${version}-windows${suffix}-amd64.exe`
         case "linux":
             if (process.arch === "arm64") {
-                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-linux${suffix}-arm64.AppImage`
+                return `https://${domain}/${dir}/${version}/${name}-${version}-linux${suffix}-arm64.AppImage`
             } else {
-                return `https://${domain}/svip/${version}/IRifyEnterprise-${version}-linux${suffix}-amd64.AppImage`
+                return `https://${domain}/${dir}/${version}/${name}-${version}-linux${suffix}-amd64.AppImage`
             }
     }
     throw new Error(`Unsupported platform: ${process.platform}`)
@@ -406,7 +366,7 @@ const downloadYakEngine = async (version, destination, progressHandler, onFinish
 }
 /** 下载 Yakit CE 进度 */
 const downloadYakitCommunity = async (version, isIRify, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = isIRify ? await getIRifyCommunityDownloadUrl() : await getYakitCommunityDownloadUrl(version)
+    const downloadUrl = await getDownloadUrl(version, isIRify ? "IRifyCE" : "YakitCE")
     console.info(`start to download yakit community: ${downloadUrl}`)
     requestWithProgress(
         downloadUrl,
@@ -421,7 +381,7 @@ const downloadYakitCommunity = async (version, isIRify, destination, progressHan
 }
 /** 下载 Yakit EE 进度 */
 const downloadYakitEE = async (version, isIRify, destination, progressHandler, onFinished, onError) => {
-    const downloadUrl = isIRify ? await getIRifyEEDownloadUrl(version) : await getYakitEEDownloadUrl(version)
+    const downloadUrl = await getDownloadUrl(version, isIRify ? "IRifyEE" : "YakitEE")
     requestWithProgress(
         downloadUrl,
         destination,
@@ -445,10 +405,7 @@ module.exports = {
     downloadYakitCommunity,
     downloadYakEngine,
     downloadYakitEE,
-    getYakitCommunityDownloadUrl,
     getYakEngineDownloadUrl,
-    getYakitEEDownloadUrl,
     getAvailableOSSDomain,
-    getIRifyCommunityDownloadUrl,
-    getIRifyEEDownloadUrl
+    getDownloadUrl
 }
