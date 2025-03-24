@@ -271,7 +271,7 @@ jobs:
                   # EnpriTrace         -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # Yakit              -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRify           -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
-                  # IRifyEnterprise -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+                  # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
             - name: Generate software prefix name
               run: |
@@ -284,7 +284,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "sce" ]; then
                     echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "see" ]; then
-                    echo "ENV_Software_Name=IRifyEnterprise" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1
