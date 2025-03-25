@@ -97,7 +97,6 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
         if (node.data === undefined) {
             return
         }
-        console.log(node)
         const resource = node.data as YakURLResource
         setSelectedResource(resource)
 
