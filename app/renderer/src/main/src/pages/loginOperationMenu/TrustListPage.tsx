@@ -477,16 +477,22 @@ const CreateUserForm: React.FC<CreateUserFormProps> = (props) => {
                     allowClear
                     onClear={onClear}
                     onSelect={(_, option: any) => {
-                        form.setFieldsValue({name: option.record.name})
+                        form.setFieldsValue({name: option.record.name + "_" + option.record.appid})
                         appidRef.current = option.record.appid
                     }}
                     onSearch={getUserList}
                     placeholder='请输入完整的用户名'
-                    optionLabelProp='name'
+                    optionLabelProp='lable'
                 >
                     {userList.data.map((item) => {
                         return (
-                            <YakitSelect.Option key={item.appid} value={item.name} title={item.appid} record={item}>
+                            <YakitSelect.Option
+                                key={item.appid}
+                                value={item.name + "_" + item.appid}
+                                title={item.appid}
+                                lable={item.name}
+                                record={item}
+                            >
                                 <OnlineUserItem info={item} />
                             </YakitSelect.Option>
                         )
