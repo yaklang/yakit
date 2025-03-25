@@ -1,6 +1,6 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useThrottleEffect} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
@@ -31,7 +31,7 @@ import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/Table
 import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
 import {HistoryHighLightText, HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
-import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlow, ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
@@ -41,6 +41,8 @@ import {QueryGeneralResponse} from "../invoker/schema"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {isEqual} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
 import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const {TabPane} = PluginTabs
@@ -67,13 +69,13 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     const [curTabKey, setCurTabKey] = useState<tabKeys>("hot-patch")
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
-            key: "hot-patch",
-            label: "热加载",
+            key: "rule",
+            label: "规则",
             contShow: true // 初始为true
         },
         {
-            key: "rule",
-            label: "规则",
+            key: "hot-patch",
+            label: "热加载",
             contShow: false // 初始为false
         }
     ])
@@ -168,6 +170,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
             }, 50)
         })
     }, [])
+
     const onSaveHotCode = useMemoizedFn((notifyFlag: boolean = true) => {
         setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, JSON.stringify({code: getCurHotPatch()}))
         notifyFlag && yakitNotify("success", "保存成功")
@@ -244,6 +247,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     const [isExit, setIsExit] = useState<boolean>(false)
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
     const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
+    const [isRefreshTable, setIsRefreshTable] = useState<boolean>(true)
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "AnalyzeHTTPFlow",
         apiKey: "AnalyzeHTTPFlow",
@@ -292,9 +296,10 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
         mitmRuleRef.current?.onSaveToDataBase(() => {})
 
         setIsExit(false)
+        debugPluginStreamEvent.reset()
         onTabChange("ruleData")
         setCurrentSelectItem(undefined)
-        debugPluginStreamEvent.reset()
+        setIsRefreshTable((prev) => !prev)
 
         execParamsRef.current = {
             HotPatchCode: curHotPatch,
@@ -556,6 +561,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                         tableData={streamInfo.rulesState}
                                                         currentSelectItem={currentSelectItem}
                                                         onSetCurrentSelectItem={setCurrentSelectItem}
+                                                        isRefreshTable={isRefreshTable}
                                                     />
                                                 </div>
                                             </TabPane>
@@ -606,9 +612,10 @@ interface HttpRuleProps {
     tableData: HTTPFlowRuleData[]
     currentSelectItem?: HTTPFlowRuleData
     onSetCurrentSelectItem: (c?: HTTPFlowRuleData) => void
+    isRefreshTable: boolean
 }
-const HttpRule: React.FC<HttpRuleProps> = (props) => {
-    const {tableData, currentSelectItem, onSetCurrentSelectItem} = props
+const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
+    const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable} = props
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
@@ -746,6 +753,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
                         }}
                         scrollToIndex={scrollToIndex}
                         onSetScrollToIndex={setScrollToIndex}
+                        isRefreshTable={isRefreshTable}
                     />
                 </div>
             )}
@@ -782,7 +790,7 @@ const HttpRule: React.FC<HttpRuleProps> = (props) => {
             {...ResizeBoxProps}
         />
     )
-}
+})
 
 interface QueryAnalyzedHTTPFlowRuleFilter {
     RuleVerboseName?: string
@@ -800,12 +808,19 @@ interface HttpRuleTableProps {
     onSelect: (c?: HTTPFlowRuleData) => void
     scrollToIndex?: string
     onSetScrollToIndex: (i?: string) => void
+    isRefreshTable: boolean
 }
-const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
-    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex} = props
+const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
+    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex, isRefreshTable} = props
 
     const tableRef = useRef<any>(null)
-    const [isRefresh, setIsRefresh] = useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(false)
     const [tableQuery, setTableQuery] = useState<QueryAnalyzedHTTPFlowRuleFilter>({
         RuleVerboseName: "",
         Rule: ""
@@ -856,61 +871,94 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
     // 前端搜索
     const queryUpdateData = useDebounceFn(
         () => {
-            if (tableQuery.RuleVerboseName || tableQuery.Rule) {
-                const newDataTable = sorterFunction(tableData, getSorterTable()) || []
-                const l = newDataTable.length
-                const searchList: HTTPFlowRuleData[] = []
-                for (let index = 0; index < l; index++) {
-                    const record = newDataTable[index]
-                    let ruleVerboseNameIsPush = true
-                    let ruleIsPush = true
+            try {
+                if (tableQuery.RuleVerboseName || tableQuery.Rule) {
+                    const newDataTable = sorterFunction(tableData, getSorterTable()) || []
+                    const l = newDataTable.length
+                    const searchList: HTTPFlowRuleData[] = []
+                    for (let index = 0; index < l; index++) {
+                        const record = newDataTable[index]
+                        let ruleVerboseNameIsPush = true
+                        let ruleIsPush = true
 
-                    if (tableQuery.RuleVerboseName) {
-                        ruleVerboseNameIsPush = record.RuleVerboseName.toLocaleLowerCase().includes(
-                            tableQuery.RuleVerboseName.toLocaleLowerCase()
-                        )
+                        if (tableQuery.RuleVerboseName) {
+                            ruleVerboseNameIsPush = record.RuleVerboseName.toLocaleLowerCase().includes(
+                                tableQuery.RuleVerboseName.toLocaleLowerCase()
+                            )
+                        }
+
+                        if (tableQuery.Rule) {
+                            ruleIsPush = record.Rule.toLocaleLowerCase().includes(tableQuery.Rule.toLocaleLowerCase())
+                        }
+
+                        if (ruleVerboseNameIsPush && ruleIsPush) {
+                            searchList.push(record)
+                        }
                     }
-
-                    if (tableQuery.Rule) {
-                        ruleIsPush = record.Rule.toLocaleLowerCase().includes(tableQuery.Rule.toLocaleLowerCase())
+                    setShowList([...searchList])
+                    if (searchList.length) {
+                        scrollUpdate(searchList.length)
+                    } else {
+                        onSetScrollToIndex("0")
                     }
-
-                    if (ruleVerboseNameIsPush && ruleIsPush) {
-                        searchList.push(record)
+                } else {
+                    const newData = sorterFunction(tableData, getSorterTable()) || []
+                    setShowList([...newData])
+                    if (newData.length) {
+                        scrollUpdate(newData.length)
+                    } else {
+                        onSetScrollToIndex("0")
                     }
                 }
-                setShowList(searchList.slice())
-                if (searchList.length) {
-                    scrollUpdate(searchList.length)
-                }
-            } else {
-                const newData = sorterFunction(tableData, getSorterTable()) || []
-                setShowList(newData.slice())
-                if (newData.length) {
-                    scrollUpdate(newData.length)
-                }
+            } catch (error) {
+                yakitNotify("error", "搜索失败:" + error)
             }
         },
         {wait: 300}
     ).run
 
-    const compareTableData = useCampare(tableData)
-    useDebounceEffect(
+    const update = useDebounceFn(
         () => {
-            queryUpdateData()
+            setLoading(true)
+            new Promise((resolve, reject) => {
+                try {
+                    queryUpdateData()
+                    resolve(true)
+                } catch (error) {
+                    reject(error)
+                }
+            })
+                .catch((e) => {
+                    yakitNotify("error", "搜索失败:" + e)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 300)
+                })
         },
-        [tableQuery, compareTableData],
-        {wait: 100}
-    )
+        {
+            wait: 200
+        }
+    ).run
+
+    useEffect(() => {
+        update()
+    }, [isRefreshTable])
+
+    const compareTableData = useCampare(tableData)
     const compareSorterTable = useCampare(sorterTable)
+    const compareQuery = useCampare(tableQuery)
     useThrottleEffect(
         () => {
             queryUpdateData()
         },
-        [tableData, compareSorterTable],
+        [compareTableData, compareSorterTable],
         {wait: 500}
     )
-
+    useUpdateEffect(() => {
+        update()
+    }, [compareQuery])
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         const newTableQuery = {...tableQuery, ...filter}
         setTableQuery(newTableQuery)
@@ -969,20 +1017,29 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
         ]
     }, [])
 
+    const [exportToken, setExportToken] = useState<string>("")
+    const [exportPercentVisible, setExportPercentVisible] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
     const exportMITMRuleExtractedData = useMemoizedFn(() => {
+        const token = randomString(40)
+        setExportToken(token)
         ipcRenderer
-            .invoke("ExportMITMRuleExtractedData", {
-                Type: "json",
-                Filter: {
-                    AnalyzedIds: selectedRowKeys.length ? selectedRowKeys : showList.map((item) => item.Id)
-                }
+            .invoke(
+                "ExportMITMRuleExtractedDataStream",
+                {
+                    Type: "json",
+                    Filter: {
+                        AnalyzedIds: selectedRowKeys.length ? selectedRowKeys : showList.map((item) => item.Id)
+                    }
+                },
+                token
+            )
+            .then(() => {
+                percentContainerRef.current = currentPageTabRouteKey
+                setExportPercentVisible(true)
             })
-            .then((ExportFilePath: string) => {
-                openABSFileLocated(ExportFilePath)
-                yakitNotify("success", "导出成功")
-            })
-            .catch((err) => {
-                yakitNotify("error", "导出失败：" + err)
+            .catch((error) => {
+                yakitNotify("error", `[ExportMITMRuleExtractedData] error: ${error}`)
             })
     })
 
@@ -993,7 +1050,8 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                 renderKey='Id'
                 columns={ruleColumns}
                 query={tableQuery}
-                isRefresh={isRefresh}
+                isRefresh={isRefreshTable || loading}
+                loading={loading}
                 titleHeight={42}
                 isShowTotal={true}
                 extra={
@@ -1004,7 +1062,6 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                     </>
                 }
                 data={showList}
-                useUpAndDown
                 onChange={onTableChange}
                 pagination={{
                     total: showList.length,
@@ -1020,9 +1077,34 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = (props) => {
                     onChangeCheckboxSingle: onSelectChange
                 }}
                 enableDrag={true}
+                currentSelectItem={currentSelectItem}
                 onSetCurrentRow={onSetCurrentRow}
+                useUpAndDown
                 scrollToIndex={scrollToIndex}
             ></TableVirtualResize>
+            {exportPercentVisible && (
+                <ImportExportProgress
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
+                    visible={exportPercentVisible}
+                    title='导出规则数据'
+                    token={exportToken}
+                    apiKey='ExportMITMRuleExtractedDataStream'
+                    onClose={(finish, streamData) => {
+                        setExportPercentVisible(false)
+                        if (finish) {
+                            const path = streamData[streamData.length - 1]?.ExportFilePath
+                            if (path) {
+                                openABSFileLocated(path)
+                                yakitNotify("success", "导出成功")
+                            } else {
+                                yakitNotify("error", "导出失败，路径找不到")
+                            }
+                        }
+                    }}
+                />
+            )}
         </div>
     )
-}
+})

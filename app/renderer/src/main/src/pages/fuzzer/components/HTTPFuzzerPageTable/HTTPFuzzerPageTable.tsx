@@ -175,7 +175,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
             fuzzerTableMaxData = DefFuzzerTableMaxData
         } = props
         const [listTable, setListTable] = useState<FuzzerResponse[]>([])
-        const listTableRef = useRef<FuzzerResponse[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [sorterTable, setSorterTable] = useState<SortProps>()
 
@@ -193,9 +192,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
         const [scrollToIndex, setScrollToIndex] = useState<number>()
         const [alertClose, setAlertClose] = useState<boolean>(false)
         const [alertHeight, setAlertHeight] = useState<number>(0)
-        useEffect(() => {
-            listTableRef.current = listTable
-        }, [listTable])
 
         // useThrottleEffect(
         //     () => {
@@ -938,6 +934,9 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 }
             } catch (e) {}
         }, [editor])
+
+        console.log(111, scrollToIndex);
+        
 
         return (
             <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>

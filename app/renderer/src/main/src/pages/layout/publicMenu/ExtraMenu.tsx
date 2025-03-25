@@ -14,7 +14,7 @@ import {Form} from "antd"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
-import {ImportExportHttpFlowProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
 import {isSastScan} from "@/utils/envfile"
@@ -218,7 +218,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                         sendPluginLocal={true}
                     />
                     {percentVisible && (
-                        <ImportExportHttpFlowProgress
+                        <ImportExportProgress
                             visible={percentVisible}
                             title='导入HAR流量数据'
                             token={importHistoryharToken}

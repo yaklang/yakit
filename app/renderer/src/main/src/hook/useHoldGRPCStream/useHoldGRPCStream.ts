@@ -154,7 +154,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             
             // 规则数据
             if (data.RuleData) {
-                ruleData.current.unshift({...data.RuleData})
+                ruleData.current.push({...data.RuleData})
             }
             
             const isMessage = data.IsMessage || data.ExecResult?.IsMessage

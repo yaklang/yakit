@@ -680,7 +680,8 @@ interface ExportHTTPFlowStreamRequest {
     TargetPath: string
 }
 
-interface ImportExportHTTPFlowStreamResponse {
+interface ImportExportStreamResponse {
+    ExportFilePath?: string
     Percent: number
     Verbose: string
 }
@@ -4248,7 +4249,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onOk={editTagsSuccess}
             ></EditTagsModal>
             {percentVisible && (
-                <ImportExportHttpFlowProgress
+                <ImportExportProgress
                     getContainer={
                         document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
                     }
@@ -4928,21 +4929,19 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
 })
 
 declare type getContainerFunc = () => HTMLElement
-interface ImportExportHttpFlowProgressProps {
+interface ImportExportProgressProps {
     visible: boolean
-    onClose: (finish: boolean) => void
+    onClose: (finish: boolean, streamData: ImportExportStreamResponse[]) => void
     getContainer?: string | HTMLElement | getContainerFunc | false
     title: string
     token: string
     apiKey: string
 }
-export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgressProps> = React.memo((props) => {
+export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((props) => {
     const {visible, onClose, getContainer, title, token, apiKey} = props
     const timeRef = useRef<any>(null)
-    const [importExportHTTPFlowStream, setImportExportHTTPFlowStream] = useState<ImportExportHTTPFlowStreamResponse[]>(
-        []
-    )
-    const importExportHTTPFlowStreamRef = useRef<ImportExportHTTPFlowStreamResponse[]>([])
+    const [importExportStream, setImportExportStream] = useState<ImportExportStreamResponse[]>([])
+    const importExportStreamRef = useRef<ImportExportStreamResponse[]>([])
 
     const cancelImportExportHTTPFlowStream = () => {
         ipcRenderer.invoke(`cancel-${apiKey}`, token)
@@ -4953,11 +4952,11 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
     }
     useEffect(() => {
         const updateImportExportHTTPFlowStream = () => {
-            setImportExportHTTPFlowStream(importExportHTTPFlowStreamRef.current.slice())
+            setImportExportStream(importExportStreamRef.current.slice())
         }
         timeRef.current = setInterval(updateImportExportHTTPFlowStream, 300)
-        ipcRenderer.on(`${token}-data`, async (e, data: ImportExportHTTPFlowStreamResponse) => {
-            importExportHTTPFlowStreamRef.current.push(data)
+        ipcRenderer.on(`${token}-data`, async (e, data: ImportExportStreamResponse) => {
+            importExportStreamRef.current.push(data)
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
             yakitNotify("error", `error: ${error}`)
@@ -4969,16 +4968,16 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
     }, [token])
 
     const closeModal = useMemoizedFn(() => {
-        onClose(importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1)
+        onClose(importExportStream[importExportStream.length - 1]?.Percent === 1, importExportStream)
         cancelImportExportHTTPFlowStream()
     })
     useEffect(() => {
-        if (importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1) {
+        if (importExportStream[importExportStream.length - 1]?.Percent === 1) {
             setTimeout(() => {
                 closeModal()
             }, 500)
         }
-    }, [JSON.stringify(importExportHTTPFlowStream)])
+    }, [JSON.stringify(importExportStream)])
 
     return (
         <YakitModal
@@ -4995,7 +4994,7 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
             footerStyle={{justifyContent: "flex-end"}}
             footer={
                 <YakitButton type={"outline2"} onClick={closeModal}>
-                    {importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent === 1 ? "完成" : "取消"}
+                    {importExportStream[importExportStream.length - 1]?.Percent === 1 ? "完成" : "取消"}
                 </YakitButton>
             }
         >
@@ -5003,9 +5002,7 @@ export const ImportExportHttpFlowProgress: React.FC<ImportExportHttpFlowProgress
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
-                    percent={Math.trunc(
-                        importExportHTTPFlowStream[importExportHTTPFlowStream.length - 1]?.Percent * 100
-                    )}
+                    percent={Math.trunc(importExportStream[importExportStream.length - 1]?.Percent * 100)}
                     format={(percent) => `${percent}%`}
                 />
             </div>
