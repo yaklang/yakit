@@ -1,0 +1,281 @@
+.java-decompiler-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.file-explorer-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--yakit-border-color);
+}
+
+.file-explorer-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+
+.file-explorer-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+    overflow-y: auto;
+}
+
+.upload-section {
+    width: 100%;
+}
+
+.yakit-dragger {
+    border: 2px dashed var(--yakit-primary-5) !important;
+    border-radius: 8px;
+    background-color: var(--yakit-card-background-color) !important;
+    transition: all 0.3s;
+}
+
+.upload-content {
+    padding: 32px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upload-icon {
+    font-size: 36px;
+    color: var(--yakit-primary-5);
+}
+
+.upload-text {
+    margin-top: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--yakit-header-color);
+}
+
+.upload-subtext {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+}
+
+.recent-jars-card {
+    width: 100%;
+    :global {
+        .ant-card-head {
+            padding: 0 8px;
+        }
+    }
+}
+
+.recent-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.recent-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: var(--yakit-background-color);
+    }
+}
+
+.recent-icon {
+    color: var(--yakit-primary-5);
+}
+
+.recent-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-browser {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.file-actions {
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+
+.file-search {
+    width: 150px;
+}
+
+.file-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.jar-info {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+
+.jar-path {
+    font-size: 12px;
+    color: var(--yakit-helper-text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.loading-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tree-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 4px;
+}
+
+.code-viewer-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.code-viewer-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--yakit-border-color);
+}
+
+.file-info-area {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selected-file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-icon {
+    color: var(--yakit-primary-5);
+}
+
+.file-name {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.no-file {
+    font-size: 14px;
+    color: var(--yakit-helper-text-color);
+}
+
+.code-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editor-wrapper {
+    flex: 1;
+    overflow: hidden;
+}
+
+.tabs-container {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    :global {
+        .ant-tabs {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ant-tabs-content {
+            flex: 1;
+            height: 100%;
+        }
+
+        .ant-tabs-tabpane {
+            height: 100%;
+        }
+    }
+}
+
+.tab-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 200px;
+}
+
+.tab-title {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
