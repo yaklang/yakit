@@ -201,7 +201,6 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                                 </Space>
                                 <DirectoryTree<TreeNode>
                                     loadData={(node) => {
-                                        console.log("loadData", node)
                                         const originData = node.data
                                         return new Promise((resolve, reject) => {
                                             if (originData === undefined) {
