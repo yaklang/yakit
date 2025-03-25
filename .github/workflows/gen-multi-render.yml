@@ -1,10 +1,16 @@
 name: Gen-Multi-Platform-Render
 
 on:
-    push:
-        tags:
-            - "v*-render"
-            - "!v*-sast-render"
+    workflow_dispatch:
+        inputs:
+            version:
+                description: "Select version type"
+                required: true
+                type: choice
+                default: ce&ee
+                options:
+                    - ce&ee
+                    - sce&see
 
 jobs:
     build_yakit:
@@ -17,6 +23,8 @@ jobs:
             RETURN_PATH: ../../
 
         steps:
+            - name: Display incoming configuration parameters
+              run: echo $GITHUB_REF_NAME ${{ inputs.version }}
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
               with:
@@ -35,16 +43,34 @@ jobs:
               working-directory: ./
 
             - name: "Build CE Render"
+              if: ${{ inputs.version }} == 'ce&ee'
               working-directory: ./
               run: yarn build-render
             - name: "zip CE Render"
+              if: ${{ inputs.version }} == 'ce&ee'
               run: cd ${{ env.RENDER_PATH }} && zip -r ce.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
-
             - name: "Build EE Render"
+              if: ${{ inputs.version }} == 'ce&ee'
               working-directory: ./
               run: yarn build-render-enterprise
             - name: "zip EE Render"
+              if: ${{ inputs.version }} == 'ce&ee'
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+
+            - name: "Build SAST Render"
+              if: ${{ inputs.version }} == 'sce&see'
+              working-directory: ./
+              run: yarn build-render-sast-scan
+            - name: "zip SAST Render"
+              if: ${{ inputs.version }} == 'sce&see'
+              run: cd ${{ env.RENDER_PATH }} && zip -r sast.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+            - name: "Build SASTEE Render"
+              if: ${{ inputs.version }} == 'sce&see'
+              working-directory: ./
+              run: yarn build-render-sast-scan-enterprise
+            - name: "zip SASTEE Render"
+              if: ${{ inputs.version }} == 'sce&see'
+              run: cd ${{ env.RENDER_PATH }} && zip -r sastee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
@@ -52,17 +78,37 @@ jobs:
             - name: Download CI Needed Yak Linux(amd64) Version to operator
               run: wget -q -O './yak' https://oss-qn.yaklang.com/yak/ci/yak_linux_amd64 && chmod +x ./yak
 
+            - name: Generate OSS File Path
+              run: |
+                  if [ "${{ inputs.version }}" = "ce&&ee" ]; then
+                    echo "FILE_PATH=yak" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
+                    echo "FILE_PATH=sast" >> $GITHUB_ENV
+                  else
+                    echo "No corresponding file path" >&2
+                    exit 1
+                  fi
+
             - name: Upload Multi-Platform Render Zip
               run: |
                   bucket="yaklang"
-                  array=("ce" "ee")
+
+                  if [ "${{ inputs.version }}" = "ce&&ee" ]; then
+                    array=("ce" "ee")
+                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
+                    array=("sast" "sastee")
+                  else
+                    echo "No corresponding version" >&2
+                    exit 1
+                  fi
+
                   for item in "${array[@]}"; do
                     file_name="${item}.zip"
                     echo "Start to upload ${file_name}"
-                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/yak/render/${{ env.TAG_VERSION }}/${file_name}
+                    ./yak upload-oss -b $bucket --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f ${{ env.RENDER_PATH }}/${file_name}:/${{ env.FILE_PATH }}/render/${{ env.TAG_VERSION }}/${file_name}
                   done
 
-            - name: Update OSS latest file
-              run: echo ${{ env.TAG_VERSION }} > ./version.txt
-            - name: Update OSS latest file
-              run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/yak/render/version.txt'
+            # - name: Update OSS latest file
+            #   run: echo ${{ env.TAG_VERSION }} > ./version.txt
+            # - name: Update OSS latest file
+            #   run: ./yak upload-oss -b "yaklang" --ak ${{ secrets.OSS_KEY_ID }} --sk ${{ secrets.OSS_KEY_SECRET }} -t 5 -f 'version.txt:/${{ env.FILE_PATH }}/render/version.txt'
