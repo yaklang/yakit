@@ -201,3 +201,14 @@ export interface ResponseAllDataCardProps {
     setShowAllDataRes: () => void
     runtimeId: string
 }
+
+export interface WebFuzzerDroppedProps {
+    /**序列丢弃数据key */
+    fuzzer_index: string
+    /**序列丢弃数据key下面的每一个任务key */
+    fuzzer_sequence_index: string
+    /**wf丢弃数据key */
+    fuzzer_tab_index: string
+    /**丢弃个数 */
+    discard_count: number
+}
