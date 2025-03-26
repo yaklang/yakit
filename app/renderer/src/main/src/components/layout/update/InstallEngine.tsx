@@ -335,7 +335,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
 
                             <div className={styles["hint-right-wrapper"]}>
                                 {install ? (
-                                    <div className={styles["hint-right-download"]}>
+                                    <div
+                                        className={classNames(styles["hint-right-download"], "yakit-progress-wrapper")}
+                                    >
                                         <div className={styles["hint-right-title"]}>引擎安装中...</div>
                                         <Progress
                                             strokeColor='#F28B44'

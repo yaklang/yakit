@@ -20,6 +20,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {setClipboardText} from "@/utils/clipboard"
 import {grpcFetchLatestOSSDomain} from "@/apiUtils/grpc"
+import classNames from "classnames"
 export interface VulinboxManagerProp {}
 
 const {ipcRenderer} = window.require("electron")
@@ -607,7 +608,7 @@ export const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props
 
     return (
         <Space direction={"vertical"}>
-            <div className={styles["download-progress"]}>
+            <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'

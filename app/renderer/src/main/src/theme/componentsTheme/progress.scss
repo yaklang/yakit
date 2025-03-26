@@ -10,10 +10,17 @@
     background-color: var(--yakit-success-5);
 }
 .ant-progress-text {
-    display: block;
-    margin-left: 0;
-    margin-top: 2px;
     color: var(--yakit-header-color);
+}
+.yakit-progress-wrapper,
+.yakit-hint-progress-wrapper,
+.yakit-modal-wrapper-progress {
+    .ant-progress-text {
+        display: block;
+        margin-left: 0;
+        margin-top: 2px;
+        color: var(--yakit-header-color);
+    }
 }
 
 .ant-progress-status-exception .ant-progress-text {
