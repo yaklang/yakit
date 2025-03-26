@@ -136,8 +136,7 @@
         "eject": "react-app-rewired eject",
         "analyzer": "env-cmd -e analyzer -f cross-env react-app-rewired build",
         "postinstall": "patch-package",
-        "release-render": "node scripts/release-render.js",
-        "release-irify": "yarn version --patch --no-git-tag-version && VERSION=$(node -p \"require('./package.json').version\") && git commit -am \"Render Version To v${VERSION}\" && git tag v${VERSION}-irify-render"
+        "release-render": "node scripts/release-render.js"
     },
     "eslintConfig": {
         "extends": [
