@@ -1797,7 +1797,7 @@ message ImportProjectRequest {
   string Password = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -1837,10 +1837,10 @@ message GetProjectsRequest {
   Paging Pagination = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(sast)
+  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6; 
   // this type effect response.ProjectTotal, this type mark kind of frontend 
-  // "project"(yakit) | "ssa_project"(sast)
+  // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
 }
 
@@ -1875,22 +1875,22 @@ message SetCurrentProjectRequest {
   // ProjectName
   string ProjectName = 1;
   int64 Id = 2;
-  string Type = 3; // "project"(yakit) | "ssa_project"(sast) 
+  string Type = 3; // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message GetCurrentProjectExRequest {
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
-  string Type = 3;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message GetDefaultProjectExRequest {
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message QueryProjectDetailRequest {
@@ -1899,7 +1899,7 @@ message QueryProjectDetailRequest {
 
 
 message GetTemporaryProjectExRequest{
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
@@ -2694,7 +2694,7 @@ message GenerateYakCodeByPacketResponse {
 message QueryReportRequest {
   int64 Id = 1;
   string Hash = 2;
-  string Type = 3;  // "project"(yakit) | "ssa_project"(sast) 
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message DeleteReportRequest {
@@ -2703,7 +2703,7 @@ message DeleteReportRequest {
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
   bool DeleteAll = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message QueryReportsResponse {
@@ -2718,7 +2718,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast) 
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message Report {
