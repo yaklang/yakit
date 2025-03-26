@@ -10,7 +10,7 @@ on:
                 default: ce&ee
                 options:
                     - ce&ee
-                    - sce&see
+                    - irify&irifyee
 
 jobs:
     build_yakit:
@@ -58,18 +58,18 @@ jobs:
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: "Build IRify Render"
-              if: ${{ inputs.version == 'sce&see' }}
+              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
               run: yarn build-render-irify
             - name: "zip IRify Render"
-              if: ${{ inputs.version == 'sce&see' }}
+              if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
             - name: "Build IRifyEE Render"
-              if: ${{ inputs.version == 'sce&see' }}
+              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
               run: yarn build-render-irify-enterprise
             - name: "zip IRifyEE Render"
-              if: ${{ inputs.version == 'sce&see' }}
+              if: ${{ inputs.version == 'irify&irifyee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
@@ -82,7 +82,7 @@ jobs:
               run: |
                   if [ "${{ inputs.version }}" = "ce&ee" ]; then
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
+                  elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
                     echo "FILE_PATH=irify" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
@@ -95,7 +95,7 @@ jobs:
 
                   if [ "${{ inputs.version }}" = "ce&ee" ]; then
                     array=("ce" "ee")
-                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
+                  elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
                     array=("irify" "irifyee")
                   else
                     echo "No corresponding version" >&2

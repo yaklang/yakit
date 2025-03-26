@@ -26,8 +26,8 @@ on:
                     - ce
                     - ee
                     - se
-                    - sce
-                    - see
+                    - irify
+                    - irifyee
             engine:
                 description: "Is there a built-in engine"
                 required: false
@@ -169,13 +169,13 @@ jobs:
               working-directory: ./
               run: yarn build-render${{ inputs.devTool && '-test' || '' }}-simple-enterprise
 
-            - name: "Build SCE Render"
-              if: ${{ inputs.version == 'sce' }}
+            - name: "Build IRify Render"
+              if: ${{ inputs.version == 'irify' }}
               working-directory: ./
               run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify
 
-            - name: "Build SEE Render"
-              if: ${{ inputs.version == 'see' }}
+            - name: "Build IRifyEE Render"
+              if: ${{ inputs.version == 'irifyee' }}
               working-directory: ./
               run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify-enterprise
 
@@ -192,9 +192,9 @@ jobs:
                     yarn electron-publish-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn electron-publish-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     yarn electron-publish-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn electron-publish-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
@@ -213,9 +213,9 @@ jobs:
                     yarn pack-mac-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-mac-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
@@ -234,9 +234,9 @@ jobs:
                     yarn pack-linux-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-linux-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
@@ -255,9 +255,9 @@ jobs:
                     yarn pack-win-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     yarn pack-win-se${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
@@ -281,9 +281,9 @@ jobs:
                     echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2

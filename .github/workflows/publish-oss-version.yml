@@ -11,8 +11,8 @@ on:
                 options:
                     - ce
                     - ee
-                    - sce
-                    - see
+                    - irify
+                    - irifyee
 
 jobs:
     build_yakit:
@@ -45,9 +45,9 @@ jobs:
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
                     echo "FILE_PATH=vip" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
                     echo "FILE_PATH=irify" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
