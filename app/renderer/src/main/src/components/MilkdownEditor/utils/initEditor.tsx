@@ -2,10 +2,7 @@ import {useEditor} from "@milkdown/react"
 import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {Ctx} from "@milkdown/kit/ctx"
 import {BlockView} from "../Block/Block"
-import {
-    useNodeViewFactory,
-    usePluginViewFactory
-} from "@prosemirror-adapter/react"
+import {useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
 import {CustomMilkdownProps, MilkdownCollabProps} from "../MilkdownEditorType"
 import {placeholderConfig, placeholderPlugin} from "../Placeholder"
 import {fileCustomSchema, uploadCustomPlugin} from "./uploadPlugin"
@@ -43,11 +40,7 @@ import {
     listItemSchema,
     syncHeadingIdPlugin
 } from "@milkdown/kit/preset/commonmark"
-import {
-    defaultValueCtx,
-    Editor,
-    editorViewOptionsCtx,
-    rootCtx} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
@@ -57,7 +50,10 @@ import {trailing} from "@milkdown/kit/plugin/trailing"
 import {collab} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
 import {markCustomPlugin} from "./markPlugin"
-
+import {jumpToLinePlugin, jumpToLinePluginKey} from "./jumpLine"
+import {editorViewCtx} from "@milkdown/core"
+import {TextSelection} from "@milkdown/kit/prose/state"
+import type {EditorView} from "@milkdown/prose/view"
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
     onSaveHistory: (newValue: string) => void
@@ -319,6 +315,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly
                         })
+                        console.log("defaultValue", defaultValue)
                         ctx.set(defaultValueCtx, defaultValue || "")
                         collabParams.onCollab(ctx)
                         diffProps?.onDiff(ctx)
@@ -376,6 +373,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(markPlugin)
                     // trackDeletePlugin
                     .use(trackDeletePlugin())
+                    // .use(jumpToLinePlugin(0))
                     .use(customPlugin || [])
             )
         },
@@ -408,5 +406,60 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         }
     }
 
-    return {get, loading} as const
+    // 调用跳转到第五行
+    const jumpToFifthLine = (line: number) => {
+        if (!line) return
+        get()?.action((ctx) => {
+            const view = ctx.get(editorViewCtx)
+            jumpToLine(view, +line)
+        })
+    }
+    // 跳转到指定行的逻辑
+    const jumpToLine = (view: EditorView, lineNumber: number) => {
+        if (!lineNumber) return
+        const doc = view.state.doc
+        let currentLine = 1 // 当前行号（从 1 开始）
+        let targetPos = 0 // 目标行的起始位置
+        debugger
+        let isBreak = false
+        // 遍历文档节点，计算行号
+        doc.descendants((node, pos) => {
+            if (currentLine > lineNumber || isBreak) return false // 提前终止遍历
+            if (node.isText) {
+                const text = node.text || ""
+                const lines = text.split("\n")
+                for (let i = 0; i < lines.length; i++) {
+                    if (currentLine === lineNumber) {
+                        targetPos = pos + lines.slice(0, i).join("\n").length
+                        if (i > 0) targetPos += 1 // 跳过换行符
+                        isBreak = true
+                        break // 找到目标行，终止遍历
+                    }
+                    currentLine++
+                }
+            } else if (node.isBlock) {
+                // 块级节点（如段落、标题）默认占一行
+                if (currentLine === lineNumber) {
+                    targetPos = pos + 1 // 跳过节点开始位置
+                    isBreak = true
+                    return false
+                }
+                currentLine++
+            }
+            return true // 继续遍历子节点
+        })
+
+        // 设置光标位置
+        if (targetPos > 0 && targetPos <= doc.content.size) {
+            const tr = view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(targetPos)))
+            tr.scrollIntoView()
+            view.dispatch(tr)
+            view.focus()
+
+            // // 获取目标位置的 DOM 节点
+            // const domPos = view.domAtPos(targetPos)
+            // const targetNode = domPos.node
+        }
+    }
+    return {get, loading, jumpToFifthLine} as const
 }

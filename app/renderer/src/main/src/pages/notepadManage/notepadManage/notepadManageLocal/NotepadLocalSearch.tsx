@@ -41,7 +41,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
     const searchKeywordsRef = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
-    const notepadLocalSearchRef = useRef<HTMLElement>()
+    const notepadLocalSearchRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(notepadLocalSearchRef)
 
     useUpdateEffect(() => {
@@ -94,15 +94,13 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
     })
     const onEdit = useMemoizedFn((data: NoteContent) => {
         const text = data?.Note?.Content || ""
-        const regex = new RegExp(`${keyWord}`, "g")
         const lines = text.split(/\r?\n/).slice(0, +data.Line - 1) || []
-        const position = lines.reduce((acc, line) => acc + (line.match(regex) || []).length, 0)
-
+        const position = lines.reduce((acc, line) => acc + (line.split(keyWord).length - 1), 0)
         setSpinning(true)
         grpcQueryNoteById(data.Note.Id)
             .then((res) => {
                 const pageInfo = {
-                    keyWordInfo: {keyWord, position: position + 1},
+                    keyWordInfo: {keyWord, position: position + 1, line: data.Line},
                     notepadHash: `${res.Id}`,
                     title: res.Title
                 }
@@ -159,7 +157,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
     }, [keyWord, response.Data])
 
     return (
-        <div className={styles["note-local-search"]}>
+        <div className={styles["note-local-search"]} ref={notepadLocalSearchRef}>
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
