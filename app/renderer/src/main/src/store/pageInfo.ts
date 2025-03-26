@@ -220,7 +220,7 @@ export interface ModifyNotepadPageInfoProps {
     /**笔记本标题 */
     title?: string
     /**搜索关键词 */
-    keyWordInfo?: {keyWord: string; position: number}
+    keyWordInfo?: {keyWord: string; position: number; line?: number}
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
