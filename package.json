@@ -66,7 +66,7 @@
         "electron-publish-irify-ee-legacy": "electron-builder --publish always -mwl --config ./multibuilder/electron-builder-irify-ee-legacy.yaml",
         "release-enpritrace": "electron-builder --publish always -mwl --config ./multibuilder/enpritrace.yml",
         "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml",
-        "release-render": "cd app/renderer/src/main && yarn release"
+        "release-render": "cd app/renderer/src/main && yarn release-render"
     },
     "keywords": [],
     "author": "",
