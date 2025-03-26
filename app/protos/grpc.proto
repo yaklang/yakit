@@ -739,6 +739,8 @@ service Yak {
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (UpdateSyntaxFlowRuleResponse);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc QuerySFBuildInRuleUpdate(QuerySFBuildInRuleUpdateRequest) returns (QuerySFBuildInRuleUpdateResponse);
+  rpc UpdateSFBuildInRule(UpdateSFBuildInRuleRequest) returns (stream UpdateSFBuildInRuleResponse);
   // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
   rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
@@ -5784,13 +5786,14 @@ message SyntaxFlowRuleFilter {
   repeated string Tag = 6;
   string Keyword = 7;
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-  bool includeLibraryRule = 8; // default false
+  bool includeLibraryRule = 8; // default false // 废弃
   // for infinite list
   int64 FromId = 9; // 废弃
   int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
+  TriState LibRuleFilter = 14; // 是否允许包含其他规则
 }
 
 
@@ -5885,6 +5888,19 @@ message QuerySyntaxFlowRuleResponse{
 
 message DeleteSyntaxFlowRuleRequest{
   SyntaxFlowRuleFilter Filter = 1;
+}
+
+message QuerySFBuildInRuleUpdateRequest{}
+
+message  QuerySFBuildInRuleUpdateResponse{
+  bool NeedUpdate = 1;
+}
+
+message UpdateSFBuildInRuleRequest{}
+
+message UpdateSFBuildInRuleResponse{
+  double Percent = 1;
+  string Message = 2;
 }
 
 message SyntaxFlowRuleGroupFilter {
@@ -6436,4 +6452,11 @@ message ExportNoteRequest {
 message ExportNoteResponse {
     double Percent = 1;
     string Verbose = 2;
+}
+
+// 通用三元状态枚举
+enum TriState {
+  TS_ALL = 0;
+  TS_TRUE = 1;
+  TS_FALSE = 2;
 }
