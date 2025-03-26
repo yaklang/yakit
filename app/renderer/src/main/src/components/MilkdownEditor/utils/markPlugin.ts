@@ -1,5 +1,5 @@
-import {randomString} from "@/utils/randomUtil"
-import {$markAttr, $markSchema} from "@milkdown/kit/utils"
+import {$markAttr, $markSchema, $nodeSchema, $nodeAttr} from "@milkdown/kit/utils"
+import {v4 as uuidv4} from "uuid"
 
 const markId = "mark-height-text"
 const markMarkAttr = $markAttr(markId)
@@ -9,14 +9,16 @@ const markSchema = $markSchema(markId, (ctx) => ({
         {
             tag: `mark[data-markjs=true]`,
             getAttrs: (dom) => {
+                const id = uuidv4()
+                const attr = {
+                    id: dom.getAttribute("id") || id,
+                    class: dom.getAttribute("class")
+                }
                 return dom.nodeName === "MARK"
                     ? {
-                          class: dom.getAttribute("class"),
-                          id: randomString(4)
+                          ...attr
                       }
-                    : {
-                          id: randomString(4)
-                      }
+                    : {}
             }
         }
     ],
@@ -26,7 +28,17 @@ const markSchema = $markSchema(markId, (ctx) => ({
         id: {default: ""}
     },
     toDOM: (mark) => {
-        return ["mark", {...ctx.get(markMarkAttr.key)(mark), ...mark.attrs}]
+        let attrs = {
+            ...mark.attrs
+        }
+        const target = document.getElementById(mark.attrs.id!)!
+        if (target) {
+            attrs = {
+                ...attrs,
+                class: target.getAttribute("class")
+            }
+        }
+        return ["mark", {...ctx.get(markMarkAttr.key)(mark), ...attrs}]
     },
     parseMarkdown: {
         match: (node) => {

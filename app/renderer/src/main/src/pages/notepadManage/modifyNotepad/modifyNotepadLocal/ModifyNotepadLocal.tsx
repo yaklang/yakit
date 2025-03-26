@@ -47,6 +47,9 @@ import {defaultNote} from "@/defaultConstants/Note"
 import Mark from "mark.js"
 import {Divider} from "antd"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
+import {v4 as uuidv4} from "uuid"
+import {editorViewCtx} from "@milkdown/core"
+import {Decoration, DecorationSet} from "prosemirror-view"
 
 /**高亮关键字中当前选中的高亮元素样式 */
 const highlightPulseClass = "highlight-pulse"
@@ -102,7 +105,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [inViewport = true] = useInViewport(notepadEditorRef)
     const isInitLoadingRef = useRef<boolean>(true) // 是否初次加载
-    
+
     useEffect(() => {
         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
         if (pageInfo.notepadHash) {
@@ -169,8 +172,9 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }
         updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
     })
-  
-    useUpdateEffect(() => {
+    const [jumpLine, setJumpLine] = useState(initPageInfo().keyWordInfo?.line || 0)
+
+    useEffect(() => {
         if (!inViewport) {
             // 保存最新的文档内容
             notepadContentRef.current = editor?.action(getMarkdown()) || ""
@@ -188,11 +192,13 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
         // 进入页面时,如果当前搜索关键字和数据中心的不一样，需要更新关键字
         // 如果一样，还需额外判断跳转位置是否有变化;位置变化也需要更新一下搜索
-        if (pageInfo.keyWordInfo?.keyWord && pageInfo.keyWordInfo?.keyWord !== keyWord) {
-            setKeyWord(pageInfo.keyWordInfo?.keyWord)
-        } else if (pageInfo.keyWordInfo?.position) {
-            onSearchByPageData()
-        }
+        // if (pageInfo.keyWordInfo?.keyWord && pageInfo.keyWordInfo?.keyWord !== keyWord) {
+        //     setKeyWord(pageInfo.keyWordInfo?.keyWord)
+        // } else if (pageInfo.keyWordInfo?.position) {
+        //     onSearchByPageData()
+        // }
+        console.log("pageInfo.keyWordInfo?.line", pageInfo.keyWordInfo?.line)
+        setJumpLine(pageInfo.keyWordInfo?.line || 0)
 
         // 标题
         emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
@@ -261,22 +267,22 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     })
     //#endregion
     //#region 搜索高亮
-    useDebounceEffect(
-        () => {
-            const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
-            onSearchHighlight(keyWord, pageInfo.keyWordInfo?.position)
-            if (pageInfo.keyWordInfo?.position) {
-                onUpdatePageInfo({
-                    keyWordInfo: {
-                        keyWord: "",
-                        position: 0
-                    }
-                })
-            }
-        },
-        [keyWord],
-        {wait: 200}
-    )
+    // useDebounceEffect(
+    //     () => {
+    //         const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
+    //         onSearchHighlight(keyWord, pageInfo.keyWordInfo?.position)
+    //         if (pageInfo.keyWordInfo?.position) {
+    //             onUpdatePageInfo({
+    //                 keyWordInfo: {
+    //                     keyWord: "",
+    //                     position: 0
+    //                 }
+    //             })
+    //         }
+    //     },
+    //     [keyWord],
+    //     {wait: 200}
+    // )
 
     /**
      * inViewport变化,例如:数据中心的数据变化引起的搜索
@@ -301,18 +307,25 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 resultsIdsRef.current = []
                 setCurrentMatchesIndex(0)
                 if (value.trim() !== "") {
-                    // const regex = new RegExp(`(?<=^[^${value}]*)${value}`, "gm")
-                    const regex = new RegExp(`${value}`, "gm")
-                    markInstanceRef.current?.markRegExp(regex, {
-                        acrossElements: false,
+                    markInstanceRef.current?.mark(value, {
+                        separateWordSearch: false,
                         done: (total) => {
                             perTargetIdRef.current = ""
                             setTotalMatches(total)
                             setTimeout(() => {
-                                const results = Array.from(notepadEditorRef.current?.querySelectorAll("mark") || [])
-                                resultsIdsRef.current = results.map((ele) => ele.id)
+                                // const results = Array.from(notepadEditorRef.current?.querySelectorAll("mark") || [])
+                                // resultsIdsRef.current = results.map((ele) => ele.id)
+                                // console.log("resultsIdsRef.current", resultsIdsRef.current)
+                                // jumpToMatch(position || 1, total)
                                 jumpToMatch(position || 1, total)
                             }, 200)
+                        },
+                        exclude: [".milkdown-code"],
+                        each: (ele) => {
+                            console.log("ele", ele)
+                            const id = uuidv4()
+                            ele.setAttribute("id", id)
+                            resultsIdsRef.current.push(id)
                         }
                     })
                 } else {
@@ -332,20 +345,29 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         if (!targetId) return
         const target = document.getElementById(targetId)!
         if (target) {
+            console.log("target", target, target.classList, target.getAttribute("id"))
+            console.log("perTargetIdRef.current", perTargetIdRef.current)
             if (perTargetIdRef.current) {
                 const perTarget = document.getElementById(perTargetIdRef.current)!
                 if (perTarget.classList.contains(highlightPulseClass)) perTarget.classList.remove(highlightPulseClass)
             }
+            // setTimeout(() => {
+            //     // 添加临时视觉反馈
+            //     target.scrollIntoView({
+            //         behavior: "smooth",
+            //         block: "center"
+            //     })
+            //     if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
+            //     perTargetIdRef.current = targetId
+            // }, 200)
             // 添加临时视觉反馈
-            setTimeout(() => {
-                target.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
-                })
-                if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
-            }, 50)
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            })
+            if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
+            perTargetIdRef.current = targetId
         }
-        perTargetIdRef.current = targetId
         setCurrentMatchesIndex(index)
     }
     //#endregion
@@ -451,7 +473,8 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 spinning={notepadLoading}
                 titleExtra={
                     <div className={styles["modify-notepad-local-heard-extra"]}>
-                        <YakitInput.Search
+                        {/* TODO - 需要优化后再上线(代码块搜索没有效果；排除代码块的搜索也无效) */}
+                        {/* <YakitInput.Search
                             value={keyWord}
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={(val) => onSearchHighlight(val)}
@@ -481,7 +504,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             </div>
                         </>
 
-                        <Divider type='vertical' />
+                        <Divider type='vertical' /> */}
                         <YakitButton type='outline2' icon={<OutlineExportIcon />} size='large' onClick={onExport}>
                             导出
                         </YakitButton>
@@ -536,6 +559,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                     <div className={styles["notepad-editor"]} ref={notepadEditorRef}>
                         <MilkdownEditorLocal
                             type='notepad'
+                            line={jumpLine}
                             defaultValue={note.Content}
                             customPlugin={cataloguePlugin((v) => modifyNotepadContentRef.current?.getCatalogue(v))}
                             onMarkdownUpdated={onMarkdownUpdated}
