@@ -110,7 +110,7 @@ FunctionEnd
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
         ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
-        ${If} $0 != "" ; see
+        ${If} $0 != "" ; irifyee
             StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
             StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
@@ -120,7 +120,7 @@ FunctionEnd
                 StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
                 ${StrStr} $0 $EXEFILE "IRify"
-                ${If} $0 != "" ; sce
+                ${If} $0 != "" ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
                 ${EndIf}
@@ -143,7 +143,7 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; see 
+        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; irifyee 
             StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
             StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
@@ -151,7 +151,7 @@ FunctionEnd
                 StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
                 StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
-                ${If} ${FileExists} `$INSTDIR\IRify.exe` ; sce
+                ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
                 ${EndIf}
