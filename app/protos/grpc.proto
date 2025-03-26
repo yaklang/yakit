@@ -5894,7 +5894,7 @@ message QuerySFBuildInRuleUpdateRequest{}
 
 message  QuerySFBuildInRuleUpdateResponse{
   bool NeedUpdate = 1;
-  string Message = 2;
+  UpdateSFRuleState State =2 ;
 }
 
 message UpdateSFBuildInRuleRequest{}
@@ -6460,4 +6460,9 @@ enum TriState {
   TS_ALL = 0;
   TS_TRUE = 1;
   TS_FALSE = 2;
+}
+
+enum UpdateSFRuleState{
+  Rule_Empty = 0; // 规则为空
+  Rule_To_Update = 1; // 规则需要更新
 }
