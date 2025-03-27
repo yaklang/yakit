@@ -78,7 +78,8 @@ export declare namespace StreamResult {
         RuntimeID?: string
         AnalyzeId?: string
         ExecResult?: BaseProsp
-        RuleData?: HTTPFlowRuleData
+        RuleData?: HTTPFlowRuleData // 后端返回的ExtractedContent其实不在这个字段里面，只是前端表格展示需要塞到这个字段
+        ExtractedContent?: string
     }
 
     /** @name 数据流结果(进度条) */

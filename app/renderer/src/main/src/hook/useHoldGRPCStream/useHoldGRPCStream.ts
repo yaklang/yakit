@@ -151,10 +151,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
             if (!!data?.RuntimeID) {
                 runTimeId.current.cache = data.RuntimeID
             }
-            
             // 规则数据
-            if (data.RuleData) {
-                ruleData.current.push({...data.RuleData})
+            if (data.RuleData && data.ExtractedContent !== undefined) {
+                ruleData.current.push({...data.RuleData, ExtractedContent: data.ExtractedContent})
             }
             
             const isMessage = data.IsMessage || data.ExecResult?.IsMessage

@@ -711,13 +711,14 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
 
 interface QueryAnalyzedHTTPFlowRuleFilter {
     RuleVerboseName?: string
-    Rule?: string
+    ExtractedContent?: string
 }
 export interface HTTPFlowRuleData {
     Id: number
     HTTPFlowId: number
     RuleVerboseName: string
     Rule: string
+    ExtractedContent: string
 }
 interface HttpRuleTableProps {
     tableData: HTTPFlowRuleData[]
@@ -740,7 +741,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [tableQuery, setTableQuery] = useState<QueryAnalyzedHTTPFlowRuleFilter>({
         RuleVerboseName: "",
-        Rule: ""
+        ExtractedContent: ""
     })
     const [showList, setShowList] = useState<HTTPFlowRuleData[]>([])
     const [sorterTable, setSorterTable, getSorterTable] = useGetSetState<SortProps>()
@@ -789,14 +790,14 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const queryUpdateData = useDebounceFn(
         () => {
             try {
-                if (tableQuery.RuleVerboseName || tableQuery.Rule) {
+                if (tableQuery.RuleVerboseName || tableQuery.ExtractedContent) {
                     const newDataTable = sorterFunction(tableData, getSorterTable()) || []
                     const l = newDataTable.length
                     const searchList: HTTPFlowRuleData[] = []
                     for (let index = 0; index < l; index++) {
                         const record = newDataTable[index]
                         let ruleVerboseNameIsPush = true
-                        let ruleIsPush = true
+                        let extractedContentIsPush = true
 
                         if (tableQuery.RuleVerboseName) {
                             ruleVerboseNameIsPush = record.RuleVerboseName.toLocaleLowerCase().includes(
@@ -804,11 +805,13 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                             )
                         }
 
-                        if (tableQuery.Rule) {
-                            ruleIsPush = record.Rule.toLocaleLowerCase().includes(tableQuery.Rule.toLocaleLowerCase())
+                        if (tableQuery.ExtractedContent) {
+                            extractedContentIsPush = record.ExtractedContent.toLocaleLowerCase().includes(
+                                tableQuery.ExtractedContent.toLocaleLowerCase()
+                            )
                         }
 
-                        if (ruleVerboseNameIsPush && ruleIsPush) {
+                        if (ruleVerboseNameIsPush && extractedContentIsPush) {
                             searchList.push(record)
                         }
                     }
@@ -921,9 +924,9 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
             },
             {
                 title: "规则数据",
-                dataKey: "Rule",
+                dataKey: "ExtractedContent",
                 filterProps: {
-                    filterKey: "Rule",
+                    filterKey: "ExtractedContent",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
                 }
