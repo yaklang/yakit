@@ -32,6 +32,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const DefaultPaging: Paging = {Page: 1, Limit: 20, OrderBy: "updated_at", Order: "desc"}
 
@@ -44,13 +45,21 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     /** ---------- 搜索/获取表格数据 Start ---------- */
     const initLoading = useRef<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
-    const [filters, setFilters] = useState<SyntaxFlowRuleFilter>({})
+    const [filters, setFilters] = useState<SyntaxFlowRuleFilter>({
+        LibRuleFilter: "TS_ALL"
+    })
     const [data, setData] = useState<QuerySyntaxFlowRuleResponse>({
         Rule: [],
         Pagination: {...genDefaultPagination(20)},
         Total: 0
     })
     const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
+
+    const handleCheckLib = useMemoizedFn((isChecked) => {
+        setFilters((filters) => {
+            return {...filters, LibRuleFilter: isChecked ? "TS_ALL" : "TS_FALSE"}
+        })
+    })
 
     const handleSearch = useMemoizedFn((val: string) => {
         setFilters((filters) => {
@@ -130,17 +139,17 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
         fetchList()
     }, [filters])
 
-    const onRefreshRuleManagementFun = useMemoizedFn(()=>{
+    const onRefreshRuleManagementFun = useMemoizedFn(() => {
         setGroupRefresh((v) => !v)
         fetchList()
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         emiter.on("onRefreshRuleManagement", onRefreshRuleManagementFun)
         return () => {
             emiter.off("onRefreshRuleManagement", onRefreshRuleManagementFun)
         }
-    },[])
+    }, [])
 
     /** ---------- 搜索/获取表格数据 End ---------- */
 
@@ -496,13 +505,20 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                     <div className={styles["header-title"]}>
                                         <TableTotalAndSelectNumber total={data.Total} selectNum={selectNum} />
                                     </div>
-
-                                    <UpdateRuleToGroup
-                                        allCheck={allCheck}
-                                        rules={selectList}
-                                        filters={filters}
-                                        callback={handleRefreshGroup}
-                                    />
+                                    <div className={styles["header-extra"]}>
+                                        <UpdateRuleToGroup
+                                            allCheck={allCheck}
+                                            rules={selectList}
+                                            filters={filters}
+                                            callback={handleRefreshGroup}
+                                        />
+                                        <YakitCheckbox
+                                            checked={filters.LibRuleFilter === "TS_ALL"}
+                                            onChange={(e) => handleCheckLib(e.target.checked)}
+                                        >
+                                            显示Lib规则
+                                        </YakitCheckbox>
+                                    </div>
                                 </div>
                             </div>
                         }
