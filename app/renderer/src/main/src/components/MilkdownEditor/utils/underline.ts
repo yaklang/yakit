@@ -1,6 +1,5 @@
-import {$markSchema, $command} from "@milkdown/utils"
 import {toggleMark} from "@milkdown/prose/commands"
-import {$inputRule, $markAttr} from "@milkdown/kit/utils"
+import {$inputRule, $markAttr, $markSchema, $command} from "@milkdown/kit/utils"
 import {markRule} from "@milkdown/kit/prose"
 
 const underlineId = "underline"

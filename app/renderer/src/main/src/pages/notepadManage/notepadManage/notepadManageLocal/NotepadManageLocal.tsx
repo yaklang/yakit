@@ -31,7 +31,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
 import {Divider} from "antd"
-import {timeMap, toAddNotepad, toEditNotepad} from "../NotepadManage"
+import {timeMap} from "../NotepadManage"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
@@ -45,6 +45,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
@@ -97,13 +98,7 @@ const timeShow = {
     updated_at: "UpdateAt"
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
-
+    const {goAddNotepad} = useGoEditNotepad()
     const [pageLoading, setPageLoading] = useState<boolean>(false)
 
     const [refresh, setRefresh] = useState<boolean>(true)
@@ -206,7 +201,6 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                     <>
                         <NotepadLocalAction
                             record={record}
-                            notepadPageList={notepadPageList}
                             onSingleRemoveAfter={() => {
                                 setResponse((prev) => ({
                                     ...prev,
@@ -219,7 +213,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 )
             }
         ]
-    }, [sorterKey, timeSortVisible, notepadPageList])
+    }, [sorterKey, timeSortVisible])
 
     const selectNumber = useCreation(() => {
         if (allCheck) {
@@ -376,7 +370,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                             导入
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
-                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={toAddNotepad}>
+                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
                             新建
                         </YakitButton>
                     </div>
@@ -422,11 +416,11 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
 }
 
 const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props) => {
-    const {record, notepadPageList, onSingleRemoveAfter} = props
+    const {record, onSingleRemoveAfter} = props
     const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
     const [editLoading, setEditLoading] = useState<boolean>(false)
     const [exportVisible, setExportVisible] = useState<boolean>(false)
-
+    const {goEditNotepad} = useGoEditNotepad()
     const filterRef = useRef<NoteFilter>({
         ...cloneDeep(defaultNoteFilter),
         Id: [record.Id]
@@ -436,7 +430,7 @@ const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props)
         setEditLoading(true)
         grpcQueryNoteById(record.Id)
             .then((res) => {
-                toEditNotepad({pageInfo: {notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
+                goEditNotepad({notepadHash: `${res.Id}`, title: res.Title})
             })
             .finally(() => {
                 setTimeout(() => {
