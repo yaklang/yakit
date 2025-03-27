@@ -12,7 +12,7 @@ import {YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngine
 import {useRunNodeStore} from "@/store/runNode"
 import emiter from "@/utils/eventBus/eventBus"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
-import {isEnpriTraceAgent} from "@/utils/envfile"
+import {getReleaseEditionName, isEnpriTraceAgent} from "@/utils/envfile"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
 import {YakitPopconfirm} from "../yakitUI/YakitPopconfirm/YakitPopconfirm"
 import classNames from "classnames"
@@ -337,7 +337,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                                     <>
                                                         确定关闭将会强制关闭进程,
                                                         <br />
-                                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                                        如为当前连接引擎,未关闭{getReleaseEditionName()}再次连接引擎,
                                                         <br />
                                                         则需在加载页点击"其他连接模式-手动启动引擎"
                                                     </>
@@ -375,7 +375,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                                     <div style={{width: 330}}>
                                         确定关闭将会强制关闭进程,
                                         <br />
-                                        如为当前连接引擎,未关闭Yakit再次连接引擎,
+                                        如为当前连接引擎,未关闭{getReleaseEditionName()}再次连接引擎,
                                         <br />
                                         则需在加载页点击"其他连接模式-手动启动引擎"
                                     </div>

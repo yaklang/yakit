@@ -8,6 +8,7 @@ import {TemporaryProjectPop} from "./WinUIOp"
 import {yakitFailed} from "@/utils/notification"
 import classNames from "classnames"
 import styles from "./uiOperate.module.scss"
+import { getReleaseEditionName } from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -137,7 +138,7 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                 <YakitHint
                     visible={closeRunNodeItemVerifyVisible}
                     title='是否确认关闭节点'
-                    content='关闭Yakit会默认关掉所有启用的节点'
+                    content={`关闭${getReleaseEditionName()}会默认关掉所有启用的节点`}
                     onOk={async () => {
                         await handleKillAllRunNode()
                         setCloseRunNodeItemVerifyVisible(false)
@@ -151,8 +152,8 @@ export const MacUIOp: React.FC<MacUIOpProp> = React.memo((props) => {
                 {/* 退出临时项目确认弹框 */}
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
-                        title='关闭Yakit'
-                        content='关闭Yakit会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据'
+                        title={`关闭${getReleaseEditionName()}`}
+                        content={`关闭${getReleaseEditionName()}会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据`}
                         onOk={async () => {
                             setCloseTemporaryProjectVisible(false)
                             operate("close")
