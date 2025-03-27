@@ -585,15 +585,14 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                     flow && (!isOnlyTable || showDetail) ? (
                         <HTTPFlowDetailRequestAndResponse
                             id={flow.Id}
-                            defaultHttps={flow?.IsHTTPS}
                             flow={flow}
-                            Tags={flow.Tags}
                             noHeader={true}
                             search={highlightSearch}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             sendToWebFuzzer={true}
                             historyId={historyId}
+                            pageType={pageType}
                         />
                     ) : null
                 }

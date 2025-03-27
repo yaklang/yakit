@@ -137,6 +137,11 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 setPagination(r.Pagination)
                 setTotal(r.Total)
             })
+            .catch(() => {
+                setCurrId(undefined)
+                props.onSetHighLightItem(undefined)
+                props.onSetHighLightText([])
+            })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 

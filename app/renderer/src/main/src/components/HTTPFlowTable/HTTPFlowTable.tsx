@@ -759,7 +759,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     // 接口是否正在请求
     const isGrpcRef = useRef<boolean>(false)
     const [tags, setTags] = useState<FiltersItemProps[]>([])
-    // const [statusCode, setStatusCode] = useState<FiltersItemProps[]>([])
     const [currentIndex, setCurrentIndex] = useState<number>()
     const [scrollToIndex, setScrollToIndex] = useState<number | string>()
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
@@ -861,7 +860,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 初次进入页面 获取默认高级筛选项
     useEffect(() => {
-        if (pageType === "History" && showAdvancedSearch) {
+        if (showAdvancedSearch) {
             // 筛选模式
             getRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode).then((e) => {
                 if (!!e) {
@@ -3492,10 +3491,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
             Full: false,
             AnalyzedIds: props.params?.AnalyzedIds,
-            // 屏蔽条件和高级配置里面的参数需要保留
+            // 屏蔽条件和高级筛选里面的参数需要保留
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
-            // 高级配置里面的参数，非History类型和没有放开高级配置按钮的一开始就不会获取下面的值，传进去也没有关系
+            // 高级筛选里面的参数，没有放开高级筛选按钮的一开始就不会获取下面的值，传进去也没有关系
             SearchContentType: params.SearchContentType,
             ExcludeContentType: params.ExcludeContentType,
             IncludeInUrl: params.IncludeInUrl,
@@ -3744,7 +3743,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams(newParams)
             setTimeout(() => {
                 updateData()
-            }, 10)
+            }, 20)
         }
     }, [props.params?.AnalyzedIds])
 
@@ -3755,7 +3754,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setParams(newParams)
             setTimeout(() => {
                 updateData()
-            }, 10)
+            }, 20)
         }
     }, [props.params?.SourceType])
 

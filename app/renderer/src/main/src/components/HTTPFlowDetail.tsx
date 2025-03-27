@@ -56,7 +56,6 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
-    Tags?: string
 
     // 查看前/后一个请求内容
     isFront?: boolean
@@ -741,7 +740,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (+i.Id == lastIdRef.current) {
-                        console.log(222222);
                         setFlow(i)
                         queryMITMRuleExtractedData(i)
                     }
@@ -894,8 +892,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             flowResponseLoad={flowResponseLoad}
                             highLightText={highLightText}
                             highLightItem={highLightItem}
-                            defaultHttps={flow.IsHTTPS}
-                            Tags={flow.Tags}
                             {...props}
                         />
                     )
@@ -1126,10 +1122,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flow,
         sendToWebFuzzer,
         defaultHeight,
-        defaultHttps,
         search,
         id,
-        Tags,
         highLightText,
         highLightItem,
         flowRequestLoad,
@@ -1250,7 +1244,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         // 编辑器滚轮回到顶部
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
-        const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+        const existedTags = flow?.Tags ? flow?.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]") || existedTags.includes("[响应被丢弃]")) {
             setShowBeforeData(true)
             handleGetHTTPFlowBare("request")
@@ -1576,7 +1570,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         downstreamProxyStr={downstreamProxyStr}
                         defaultHeight={defaultHeight}
                         loading={flowRequestLoad}
-                        defaultHttps={defaultHttps}
+                        defaultHttps={flow.IsHTTPS}
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
@@ -1742,7 +1736,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
-                        defaultHttps={defaultHttps}
+                        defaultHttps={flow.IsHTTPS}
                         webFuzzerValue={flow?.RequestString || ""}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         extraEditorProps={{
