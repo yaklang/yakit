@@ -1035,7 +1035,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         </div>
                                         <div className={styles["subtitle-style"]}>
                                             {ruleUpdate.State === "Rule_Empty"
-                                                ? "检测到本地规则库为空，请点击下载规则"
+                                                ? "检测到本地规则库为空，请点击确定重置规则"
                                                 : "检测到需更新本地规则库，请点击更新规则"}
                                         </div>
                                     </div>
@@ -1046,7 +1046,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={downloadRuleUpdate}
                                     >
-                                        {ruleUpdate.State === "Rule_Empty" ? "一键下载" : "一键更新"}
+                                        {ruleUpdate.State === "Rule_Empty" ? "一键重置" : "一键更新"}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -1142,7 +1142,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             <YakitHint
                 visible={openFristRuleUpdateModal}
                 title='暂无本地规则'
-                content='检测到本地规则库为空，请点击下载规则'
+                content='检测到本地规则库为空，请点击确定重置规则'
                 onOk={() => {
                     setFristRuleUpdateModal(false)
                     downloadRuleUpdate()
