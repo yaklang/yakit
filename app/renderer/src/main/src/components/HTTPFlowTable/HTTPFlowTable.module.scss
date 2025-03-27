@@ -634,9 +634,26 @@
 }
 
 .history-advanced-set-wrapper {
+    .advanced-configuration-drawer-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .advanced-configuration-drawer-title-text {
+            font-weight: 600;
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--yakit-header-color);
+        }
+        .advanced-configuration-drawer-title-btns {
+            display: flex;
+            gap: 8px;
+        }
+    }
     .history-advanced-set-cont {
         .history-advanced-set-item {
             &-title {
+                display: flex;
+                justify-content: space-between;
                 font-weight: 600;
                 font-size: 14px;
                 color: var(--yakit-header-color);

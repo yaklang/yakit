@@ -100,6 +100,7 @@ import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
+import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -4291,6 +4292,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             setTableKeyNumber(uuidv4())
                         }
                     }}
+                    defalutColumnsOrder={defalutColumnsOrderRef.current}
                 ></AdvancedSet>
             )}
         </div>
@@ -5022,9 +5024,10 @@ interface AdvancedSetProps {
     columnsAllStr: string
     onCancel: () => void
     onSave: (setting: AdvancedSetSaveItem) => void
+    defalutColumnsOrder: string[]
 }
 const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-    const {columnsAllStr, onCancel, onSave} = props
+    const {columnsAllStr, onCancel, onSave, defalutColumnsOrder} = props
     /** ---------- 后台刷新 Start ---------- */
     const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
     const oldBackgroundRefresh = useRef<boolean>(false)
@@ -5051,6 +5054,18 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
         newItems.splice(result.destination.index, 0, movedItem) // 插入到新位置
         setCurColumnsAll(newItems)
     }
+    const handleResetColumn = useMemoizedFn(() => {
+        const newItems = [...curColumnsAll]
+        newItems.forEach((item) => {
+            item.isShow = true
+        })
+        const sortedArr = newItems.sort((x, y) => {
+            const keyX = x.dataKey || x.dataKey
+            const keyY = y.dataKey || y.dataKey
+            return defalutColumnsOrder.indexOf(keyX) - defalutColumnsOrder.indexOf(keyY)
+        })
+        setCurColumnsAll(sortedArr)
+    })
     /** ---------- 自定义列 End ---------- */
 
     const handleOk = useMemoizedFn(() => {
@@ -5062,13 +5077,25 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     })
 
     return (
-        <YakitModal
+        <YakitDrawer
             visible={true}
-            title='高级配置'
-            width={800}
+            width='40%'
             className={style["history-advanced-set-wrapper"]}
-            onCancel={onCancel}
-            onOk={handleOk}
+            onClose={onCancel}
+            title={
+                <div className={style["advanced-configuration-drawer-title"]}>
+                    <div className={style["advanced-configuration-drawer-title-text"]}>高级配置</div>
+                    <div className={style["advanced-configuration-drawer-title-btns"]}>
+                        <YakitButton type='outline2' onClick={onCancel}>
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={handleOk}>
+                            保存
+                        </YakitButton>
+                    </div>
+                </div>
+            }
+            maskClosable={false}
         >
             <div className={style["history-advanced-set-cont"]}>
                 <div className={style["history-advanced-set-item"]}>
@@ -5089,7 +5116,12 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                     </div>
                 </div>
                 <div className={style["history-advanced-set-item"]}>
-                    <div className={style["history-advanced-set-item-title"]}>列表展示字段和顺序</div>
+                    <div className={style["history-advanced-set-item-title"]}>
+                        列表展示字段和顺序
+                        <YakitButton type='primary' size='small' onClick={handleResetColumn}>
+                            重置
+                        </YakitButton>
+                    </div>
                     <div className={style["history-advanced-set-item-desc"]}>
                         点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、webfuzzer流量表全部生效
                     </div>
@@ -5143,6 +5175,6 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                     </div>
                 </div>
             </div>
-        </YakitModal>
+        </YakitDrawer>
     )
 })
