@@ -64,11 +64,14 @@ interface PageParamsInfoProps {
     pluginHubPageInfo?: PluginHubPageInfoProps
     /**新建漏洞与风险统计页面 */
     riskPageInfo?: RiskPageInfoProps
+    /** hTTPHacker v1 */
     hTTPHackerPageInfo?: HTTPHackerPageInfoProps
     auditCodePageInfo?: AuditCodePageInfoProps
     codeScanPageInfo?: CodeScanPageInfoProps
     /**记事本编辑页面 */
     modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
+    /** hTTPHacker v2 新版 */
+    mitmHackerPageInfo?: MITMHackerPageInfoProps
 }
 
 export interface AddYakitScriptPageInfoProps {
@@ -176,6 +179,10 @@ export interface HTTPHackerPageInfoProps {
     immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
+export interface MITMHackerPageInfoProps {
+    immediatelyLaunchedInfo: ImmediatelyLaunchedInfo
+}
+
 export interface AuditCodePageInfoProps {
     Schema: string
     // 基础路径 / 由Path、Variable、Value组成完整路径信息
@@ -202,7 +209,7 @@ export interface ModifyNotepadPageInfoProps {
     /**笔记本标题 */
     title?: string
     /**搜索关键词 */
-    keyWord?:string
+    keyWord?: string
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>
@@ -250,7 +257,7 @@ interface PageInfoStoreProps {
     getPageInfoByRuntimeId: (routeKey: string, pageId: string) => PageNodeItemProps | undefined
     /**展开或者收起所有的组 isExpand:true展开/false收起*/
     updateGroupExpandOrRetract: (routeKey: string, isExpand: boolean) => void
-    
+
     setCurrentPageTabRouteKey: (route: YakitRoute | string) => void
     getCurrentPageTabRouteKey: () => YakitRoute | string
 }

@@ -5,6 +5,9 @@ import {HTTPHistory} from "../../components/HTTPHistory"
 import {showDrawer} from "../../utils/showModal"
 import {HackerPlugin} from "./HackerPlugin"
 import ReactDOM from "react-dom"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 export interface HTTPHackerProp {}
 
@@ -37,6 +40,26 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     }, [])
     return (
         <div style={{margin: 0, height: "100%"}}>
+            <YakitButton
+                style={{position: "absolute", top: 24, right: 24, zIndex: 9}}
+                onClick={() => {
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.MITMHacker,
+                            params: {
+                                immediatelyLaunchedInfo: {
+                                    host: "11",
+                                    port: "22",
+                                    enableInitialPlugin: true
+                                }
+                            }
+                        })
+                    )
+                }}
+            >
+                MITM 劫持 v2
+            </YakitButton>
             <MITMPage />
         </div>
     )
