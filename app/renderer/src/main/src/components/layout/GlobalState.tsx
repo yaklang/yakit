@@ -22,7 +22,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {Tooltip, Row, Col} from "antd"
 import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {IRifyApplySyntaxFlowRuleUpdate, YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 
 import classNames from "classnames"
@@ -34,7 +34,12 @@ import emiter from "@/utils/eventBus/eventBus"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import {grpcFetchBuildInYakVersion, grpcFetchLocalYakVersion, grpcFetchLocalYakVersionHash, grpcFetchSpecifiedYakVersionHash} from "@/apiUtils/grpc"
+import {
+    grpcFetchBuildInYakVersion,
+    grpcFetchLocalYakVersion,
+    grpcFetchLocalYakVersionHash,
+    grpcFetchSpecifiedYakVersionHash
+} from "@/apiUtils/grpc"
 import {OutlineShieldcheckIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
@@ -57,6 +62,11 @@ const ShowColorClass: Record<string, string> = {
 export interface GlobalReverseStateProp {
     isEngineLink: boolean
     system: YakitSystem
+}
+
+export interface CheckSyntaxFlowRuleUpdateResponse {
+    NeedUpdate: boolean
+    State: "Rule_Empty" | "Rule_To_Update"
 }
 
 /** 全局反连服务器配置参数 */
@@ -154,6 +164,29 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
                 .catch((e) => {
                     reject(`error-plugin-total ${e}`)
+                })
+        })
+    })
+
+    // 规则管理是否更新
+    const [ruleUpdate, setRuleUpdate] = useState<CheckSyntaxFlowRuleUpdateResponse>()
+    // IRify在初次进入页面时如若没有规则则弹窗提示
+    const isShowRuleUpdateModal = useRef<boolean>(true)
+    const [openFristRuleUpdateModal, setFristRuleUpdateModal] = useState<boolean>(false)
+    const onRuleUpdate = useMemoizedFn(() => {
+        return new Promise((resolve, reject) => {
+            ipcRenderer
+                .invoke("CheckSyntaxFlowRuleUpdate")
+                .then((result: CheckSyntaxFlowRuleUpdateResponse) => {
+                    if (result.NeedUpdate && result.State === "Rule_Empty" && isShowRuleUpdateModal.current) {
+                        setFristRuleUpdateModal(true)
+                    }
+                    isShowRuleUpdateModal.current = false
+                    setRuleUpdate(result)
+                    resolve("rule-Update")
+                })
+                .catch((e) => {
+                    reject(`error-rule-Update ${e}`)
                 })
         })
     })
@@ -340,35 +373,50 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         setState(status)
         setStateNum(count)
     })
+
+    const updateIRifyState = useMemoizedFn(() => {
+        let status = "success"
+        let count = 0
+        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "Rule_To_Update") {
+            status = "warning"
+            count = count + 1
+        }
+        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "Rule_Empty") {
+            status = "error"
+            count = count + 1
+        }
+        if (showCheckEngine) {
+            status = "error"
+            count = count + 1
+        }
+
+        setState(status)
+        setStateNum(count)
+    })
+
     // 定时器内的逻辑是否在执行
     const isRunRef = useRef<boolean>(false)
     const updateAllInfo = useMemoizedFn(() => {
         if (isRunRef.current) return
-
         isRunRef.current = true
-        Promise.allSettled(
-            serverPushStatus
-                ? [
-                      updateSystemProxy(),
-                      updateGlobalReverse(),
-                      updatePcap(),
-                      updateChromePath(),
-                      updateMITMCert(),
-                      getCurrentYak()
-                  ]
-                : [
-                      updateSystemProxy(),
-                      updateGlobalReverse(),
-                      updatePcap(),
-                      updatePluginTotal(),
-                      updateChromePath(),
-                      updateMITMCert(),
-                      getCurrentYak()
-                  ]
-        )
+        let settledArr = [
+            updateSystemProxy(),
+            updateGlobalReverse(),
+            updatePcap(),
+            updateChromePath(),
+            updateMITMCert(),
+            getCurrentYak()
+        ]
+        if (serverPushStatus) {
+            settledArr.push(updatePluginTotal())
+        }
+        if (isIRify()) {
+            settledArr = [onRuleUpdate(), getCurrentYak()]
+        }
+        Promise.allSettled(settledArr)
             .then((values) => {
                 isRunRef.current = false
-                setTimeout(() => updateState(), 100)
+                setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
             })
             .catch(() => {})
     })
@@ -389,6 +437,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 setRemoteValue(RemoteGV.GlobalStateTimeInterval, `${getTimeInterval()}`)
             }, 20000)
             updatePluginTotal()
+            isIRify() && onRuleUpdate()
             emiter.on("onRefreshQueryYakScript", updatePluginTotal)
         } else {
             // init
@@ -458,6 +507,13 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         if (pluginShow) return
         setShow(false)
         setPluginShow(true)
+    })
+
+    const [ruleUpdateShow, setRuleUpdateShow] = useState<boolean>(false)
+    const downloadRuleUpdate = useMemoizedFn(() => {
+        if (ruleUpdateShow) return
+        setShow(false)
+        setRuleUpdateShow(true)
     })
 
     // 是否已经设置过Chrome启动路径
@@ -930,12 +986,101 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         Array.from(runNodeList).length
     ])
 
+    const irifyContent = useMemo(() => {
+        return (
+            <div className={styles["global-state-content-wrapper"]}>
+                <div className={styles["body-header"]}>
+                    <div className={styles["header-title"]}>系统检测</div>
+                    <div className={styles["header-hint"]}>
+                        <span className={styles["hint-title"]}>
+                            {stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
+                        </span>
+                        {ShowIcon[state]}
+                    </div>
+                </div>
+                {stateNum !== 0 && (
+                    <div className={styles["body-wrapper"]}>
+                        {/* 引擎是否是官方发布版本 */}
+                        {showCheckEngine && (
+                            <div className={styles["body-info"]}>
+                                <div className={styles["info-left"]}>
+                                    <ErrorIcon />
+                                    <div className={styles["left-body"]}>
+                                        <div className={styles["title-style"]}>引擎不是官方发布版本</div>
+                                        <div className={styles["subtitle-style"]}>可能会造成本地使用出现问题</div>
+                                    </div>
+                                </div>
+                                <div className={styles["info-right"]}>
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={() => {
+                                            setShow(false)
+                                            onUseOfficialEngine()
+                                        }}
+                                    >
+                                        使用官方引擎
+                                    </YakitButton>
+                                </div>
+                            </div>
+                        )}
+                        {/* 规则管理提示更新 */}
+                        {ruleUpdate?.NeedUpdate && (
+                            <div className={styles["body-info"]}>
+                                <div className={styles["info-left"]}>
+                                    <ErrorIcon />
+                                    <div className={styles["left-body"]}>
+                                        <div className={styles["title-style"]}>
+                                            {ruleUpdate.State === "Rule_Empty" ? "暂无本地规则" : "本地规则库需要更新"}
+                                        </div>
+                                        <div className={styles["subtitle-style"]}>
+                                            {ruleUpdate.State === "Rule_Empty"
+                                                ? "检测到本地规则库为空，请点击下载规则"
+                                                : "检测到需更新本地规则库，请点击更新规则"}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className={styles["info-right"]}>
+                                    <YakitButton
+                                        type='text'
+                                        className={styles["btn-style"]}
+                                        onClick={downloadRuleUpdate}
+                                    >
+                                        {ruleUpdate.State === "Rule_Empty" ? "一键下载" : "一键更新"}
+                                    </YakitButton>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+                <div className={styles["body-setting"]}>
+                    状态刷新间隔时间
+                    <YakitInputNumber
+                        size='small'
+                        type='horizontal'
+                        wrapperClassName={styles["yakit-input-number"]}
+                        min={1}
+                        formatter={(value) => `${value}s`}
+                        parser={(value) => value!.replace("s", "")}
+                        value={timeInterval}
+                        onChange={(value) => {
+                            if (!value) setTimeInterval(1)
+                            else {
+                                if (+value !== timeInterval) setTimeInterval(+value || 5)
+                            }
+                        }}
+                    />
+                </div>
+            </div>
+        )
+    }, [timeInterval, state, stateNum, showCheckEngine, ruleUpdate])
+
     return (
         <>
-            {!isIRify() && <YakitPopover
+            <YakitPopover
                 overlayClassName={classNames(styles["global-state-popover"], ShowColorClass[state])}
                 placement={system === "Darwin" ? "bottomRight" : "bottomLeft"}
-                content={content}
+                content={isIRify() ? irifyContent : content}
                 visible={show}
                 trigger='click'
                 onVisibleChange={(visible) => setShow(visible)}
@@ -943,7 +1088,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 <div className={classNames(styles["global-state-wrapper"], ShowColorClass[state])}>
                     <div className={classNames(styles["state-body"])}>{ShowIcon[state]}</div>
                 </div>
-            </YakitPopover>}
+            </YakitPopover>
             <YakitHint
                 visible={pcapHintShow}
                 heardIcon={pcapResult ? <AllShieldCheckIcon /> : undefined}
@@ -987,10 +1132,29 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     setPluginShow(v)
                 }}
             />
+            <IRifyApplySyntaxFlowRuleUpdate
+                visible={ruleUpdateShow}
+                setVisible={(v) => {
+                    setRuleUpdateShow(v)
+                }}
+            />
+            {/* 规则更新确认弹框 */}
+            <YakitHint
+                visible={openFristRuleUpdateModal}
+                title='暂无本地规则'
+                content='检测到本地规则库为空，请点击下载规则'
+                onOk={() => {
+                    setFristRuleUpdateModal(false)
+                    downloadRuleUpdate()
+                }}
+                onCancel={() => {
+                    setFristRuleUpdateModal(false)
+                }}
+            />
             {/* 关闭运行节点确认弹框 */}
             <YakitHint
                 visible={closeRunNodeItemVerifyVisible}
-                title='是否确认关闭节点'
+                title=''
                 content='确认后节点将会关闭，运行在节点上的任务也会停止'
                 footerExtra={
                     <YakitCheckbox value={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>

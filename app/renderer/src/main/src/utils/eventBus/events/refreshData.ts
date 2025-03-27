@@ -20,4 +20,6 @@ export type RefreshDataEventProps = {
     onRefreshCurRps: number
     // 通知cps
     onRefreshCps?: string
+    // 通知本地规则管理
+    onRefreshRuleManagement?: string
 }

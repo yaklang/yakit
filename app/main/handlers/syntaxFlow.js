@@ -328,4 +328,28 @@ module.exports = (win, getClient) => {
     ipcMain.handle("GenerateProjectsFilePath", async (e, fileName) => {
         return path.join(yakProjects, fileName)
     })
+
+    const asyncCheckSyntaxFlowRuleUpdate = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().CheckSyntaxFlowRuleUpdate(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    // 获取规则是否需要更新
+    ipcMain.handle("CheckSyntaxFlowRuleUpdate", async (e, params) => {
+        return await asyncCheckSyntaxFlowRuleUpdate(params)
+    })
+
+    // 更新/获取规则
+    const streamApplySyntaxFlowRuleUpdate = new Map()
+    ipcMain.handle("cancel-streamApplySyntaxFlowRuleUpdate", handlerHelper.cancelHandler(streamApplySyntaxFlowRuleUpdate))
+    ipcMain.handle("ApplySyntaxFlowRuleUpdate", async (e, token) => {
+        let stream = getClient().ApplySyntaxFlowRuleUpdate()
+        handlerHelper.registerHandler(win, stream, streamApplySyntaxFlowRuleUpdate, token)
+    })
 }

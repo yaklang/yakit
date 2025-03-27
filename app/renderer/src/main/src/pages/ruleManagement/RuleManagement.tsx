@@ -31,6 +31,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
+import emiter from "@/utils/eventBus/eventBus"
 
 const DefaultPaging: Paging = {Page: 1, Limit: 20, OrderBy: "updated_at", Order: "desc"}
 
@@ -128,6 +129,18 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     useEffect(() => {
         fetchList()
     }, [filters])
+
+    const onRefreshRuleManagementFun = useMemoizedFn(()=>{
+        setGroupRefresh((v) => !v)
+        fetchList()
+    })
+
+    useEffect(()=>{
+        emiter.on("onRefreshRuleManagement", onRefreshRuleManagementFun)
+        return () => {
+            emiter.off("onRefreshRuleManagement", onRefreshRuleManagementFun)
+        }
+    },[])
 
     /** ---------- 搜索/获取表格数据 End ---------- */
 
