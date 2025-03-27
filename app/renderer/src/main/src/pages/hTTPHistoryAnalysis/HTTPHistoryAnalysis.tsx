@@ -692,6 +692,7 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
                             pageType={"History_Analysis_ruleData"}
                             scrollTo={scrollTo}
                             scrollID={currentSelectItem.Id}
+                            analyzedIds={[currentSelectItem.Id]}
                         />
                     )}
                 </div>

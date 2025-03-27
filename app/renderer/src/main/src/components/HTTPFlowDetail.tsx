@@ -73,6 +73,7 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     scrollTo?: (id: number | string) => void
     scrollID?: number | string
+    analyzedIds?: number[]
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -653,7 +654,7 @@ export interface HistoryHighLightText extends HighLightText {
 }
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh} = props
+    const {id, selectedFlow, refresh, analyzedIds} = props
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
     const [flow, setFlow] = useState<HTTPFlow>()
@@ -765,7 +766,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     Limit: -1
                 },
                 Filter: {
-                    TraceID: [i.HiddenIndex]
+                    TraceID: [i.HiddenIndex],
+                    AnalyzedIds: analyzedIds
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
@@ -990,6 +992,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     <HTTPFlowExtractedDataTable
                                         ref={httpFlowTableRef}
                                         hiddenIndex={flow?.HiddenIndex || ""}
+                                        analyzedIds={analyzedIds}
                                         invalidForUTF8Request={!!flow?.InvalidForUTF8Request}
                                         InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
                                         onSetExportMITMRuleFilter={setExportMITMRuleFilter}

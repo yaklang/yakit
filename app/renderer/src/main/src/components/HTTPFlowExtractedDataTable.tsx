@@ -22,6 +22,7 @@ export interface HTTPFlowExtractedDataTableProp {
     invalidForUTF8Request: boolean
     InvalidForUTF8Response: boolean
     hiddenIndex: string
+    analyzedIds?: number[]
     onSetHighLightText: (highLightText: HistoryHighLightText[]) => void
     onSetExportMITMRuleFilter: (filter: ExtractedDataFilter) => void
     onSetHighLightItem: (highLightItem?: HistoryHighLightText) => void
@@ -65,7 +66,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const [params, setParams] = useState<QueryMITMRuleExtractedDataRequest>({
         Filter: {
             TraceID: [props.hiddenIndex],
-            RuleVerbose: []
+            RuleVerbose: [],
+            AnalyzedIds: props.analyzedIds
         },
         Pagination: genDefaultPagination()
     })
@@ -157,7 +159,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             ...params,
             Filter: {
                 TraceID: [props.hiddenIndex],
-                RuleVerbose: []
+                RuleVerbose: [],
+                AnalyzedIds: props.analyzedIds
             }
         }
         setParams(newParams)
@@ -169,7 +172,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         const newParams = {
             Filter: {
                 TraceID: [props.hiddenIndex],
-                RuleVerbose: []
+                RuleVerbose: [],
+                AnalyzedIds: props.analyzedIds
             },
             Page: 1,
             Limit: 10,
@@ -261,6 +265,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                                         ...params,
                                         Filter: {
                                             TraceID: [props.hiddenIndex],
+                                            AnalyzedIds: props.analyzedIds,
                                             RuleVerbose: v
                                         }
                                     }
