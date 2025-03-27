@@ -46,9 +46,13 @@ export const YakitHint: React.FC<YakitHintProps> = memo((props) => {
     return ReactDOM.createPortal(
         <div
             style={{backgroundColor: mask && maskColor ? maskColor : ""}}
-            className={classNames(visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"], {
-                [styles["yakit-hint-mask-wrapper"]]: mask
-            })}
+            className={classNames(
+                visible ? styles["yakit-hint-wrapper"] : styles["yakit-hint-hidden-wrapper"],
+                "yakit-hint-progress-wrapper",
+                {
+                    [styles["yakit-hint-mask-wrapper"]]: mask
+                }
+            )}
         >
             <div className={styles["yakit-hint-body"]}>
                 <YakitHintModal

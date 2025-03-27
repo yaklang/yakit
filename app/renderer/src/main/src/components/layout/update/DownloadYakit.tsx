@@ -172,7 +172,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                             </div>
 
                             <div className={styles["hint-right-wrapper"]}>
-                                <div className={styles["hint-right-download"]}>
+                                <div className={classNames(styles["hint-right-download"], "yakit-progress-wrapper")}>
                                     <div className={styles["hint-right-title"]}>
                                         {getReleaseEditionName()} 软件下载中...
                                     </div>

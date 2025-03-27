@@ -264,7 +264,7 @@ const PluginAutoTest: React.FC<PluginAutoTestProps> = React.memo((props) => {
     })
     return (
         <>
-            <div className={styles["plugin-progress"]}>
+            <div className={classNames(styles["plugin-progress"], "yakit-progress-wrapper")}>
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
@@ -389,7 +389,7 @@ export const PluginUpload: React.FC<PluginUploadProps> = React.memo((props) => {
     })
     return (
         <>
-            <div className={styles["plugin-progress"]}>
+            <div className={classNames(styles["plugin-progress"], "yakit-progress-wrapper")}>
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'
