@@ -690,7 +690,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                         maskClosable: false,
                                                         footer: null,
                                                         content: (
-                                                            <div style={{margin: 24}}>
+                                                            <div style={{margin: 24, marginRight: 45}}>
                                                                 <NewThirdPartyApplicationConfig
                                                                     formValues={{
                                                                         Type: i.Type,
@@ -743,7 +743,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 closable: true,
                                                 maskClosable: false,
                                                 content: (
-                                                    <div style={{margin: 24}}>
+                                                    <div style={{margin: 24, marginRight: 45}}>
                                                         <NewThirdPartyApplicationConfig
                                                             onAdd={(data) => {
                                                                 let existed = false

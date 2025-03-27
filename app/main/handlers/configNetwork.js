@@ -1,4 +1,4 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 
 module.exports = (win, getClient) => {
     // asyncGetGlobalNetworkConfig wrapper
@@ -94,5 +94,20 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("CheckHahValidAiConfig", async (e) => {
         return await asyncCheckHahValidAiConfig()
+    })
+
+    const asyncListAiModel = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().ListAiModel(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("ListAiModel", async (e, params) => {
+        return await asyncListAiModel(params)
     })
 }
