@@ -452,8 +452,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             noHeader={true}
                                             search={highlightSearch}
                                             id={selected?.Id || 0}
-                                            defaultHttps={selected?.IsHTTPS}
-                                            Tags={selected?.Tags}
                                             sendToWebFuzzer={true}
                                             selectedFlow={selected}
                                             refresh={refresh}

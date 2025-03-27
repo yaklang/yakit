@@ -30,14 +30,12 @@ import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualRe
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
-import {HistoryHighLightText, HTTPFlowDetailRequestAndResponse} from "@/components/HTTPFlowDetail"
-import {HTTPFlow, ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
+import {HTTPFlowDetailMini} from "@/components/HTTPFlowDetail"
+import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openABSFileLocated} from "@/utils/openWebsite"
-import {HTTPFlowExtractedData, QueryMITMRuleExtractedDataRequest} from "@/components/HTTPFlowExtractedDataTable"
-import {QueryGeneralResponse} from "../invoker/schema"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {isEqual} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
@@ -640,78 +638,6 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
     }, [inViewport])
     // #endregion
 
-    // #region 通过HTTPFlowId去拿去数据包详细数据
-    const lasetIdRef = useRef<number>()
-    const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
-    const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
-    const [flow, setFlow] = useState<HTTPFlow>()
-    const getHTTPFlowById = useDebounceFn(
-        useMemoizedFn((ruleData: HTTPFlowRuleData) => {
-            setFlowRequestLoad(true)
-            setFlowResponseLoad(true)
-            ipcRenderer
-                .invoke("GetHTTPFlowById", {Id: ruleData.HTTPFlowId})
-                .then((i: HTTPFlow) => {
-                    if (i.Id == lasetIdRef.current) {
-                        setFlow(i)
-                        queryMITMRuleExtractedData(i, ruleData)
-                        onSetCurrentSelectItem(ruleData)
-                        setFlowRequestLoad(false)
-                        setFlowResponseLoad(false)
-                    }
-                })
-                .catch((e: any) => {
-                    onSetCurrentSelectItem(undefined)
-                    yakitNotify("error", `Query HTTPFlow failed: ${e}`)
-                })
-        }),
-        {wait: 300, leading: true}
-    ).run
-
-    useEffect(() => {
-        if (currentSelectItem === undefined) {
-            setFlow(undefined)
-            setHighLightText([])
-        }
-    }, [currentSelectItem])
-
-    const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
-    const queryMITMRuleExtractedData = (i: HTTPFlow, ruleData: HTTPFlowRuleData) => {
-        ipcRenderer
-            .invoke("QueryMITMRuleExtractedData", {
-                Pagination: {
-                    Page: 1,
-                    Limit: -1
-                },
-                Filter: {
-                    TraceID: [i.HiddenIndex],
-                    AnalyzedIds: [ruleData.Id]
-                }
-            } as QueryMITMRuleExtractedDataRequest)
-            .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                if (rsp.Total > 0) {
-                    if (i?.InvalidForUTF8Request || i?.InvalidForUTF8Response) {
-                        setHighLightText([])
-                    } else {
-                        setHighLightText(
-                            rsp.Data.map((i) => ({
-                                startOffset: i.Index,
-                                highlightLength: i.Length,
-                                hoverVal: i.RuleName,
-                                IsMatchRequest: i.IsMatchRequest
-                            }))
-                        )
-                    }
-                } else {
-                    setHighLightText([])
-                }
-            })
-            .catch((e) => {
-                yakitNotify("error", "获取规则提取数据失败")
-            })
-    }
-    // #endregion
-
     // #region 定位数据包id
     const [scrollToIndex, setScrollToIndex] = useState<string>()
     const scrollTo = useMemoizedFn((id) => {
@@ -747,9 +673,6 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
                                 return
                             }
                             onSetCurrentSelectItem(i)
-
-                            lasetIdRef.current = i.HTTPFlowId
-                            getHTTPFlowById(i)
                         }}
                         scrollToIndex={scrollToIndex}
                         onSetScrollToIndex={setScrollToIndex}
@@ -759,22 +682,16 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
             )}
             secondNode={
                 <div className={styles["HttpRule-second"]} ref={httpRuleSecondRef}>
-                    {currentSelectItem?.HTTPFlowId && flow && (
-                        <HTTPFlowDetailRequestAndResponse
-                            pageType='History_Analysis_ruleData'
-                            historyId={historyId}
+                    {currentSelectItem?.HTTPFlowId && (
+                        <HTTPFlowDetailMini
                             noHeader={true}
-                            sendToWebFuzzer={true}
-                            downstreamProxyStr={downstreamProxy}
                             id={currentSelectItem?.HTTPFlowId || 0}
-                            defaultHttps={flow?.IsHTTPS}
-                            Tags={flow?.Tags}
-                            flow={flow}
-                            flowRequestLoad={flowRequestLoad}
-                            flowResponseLoad={flowResponseLoad}
+                            sendToWebFuzzer={true}
+                            historyId={historyId}
+                            downstreamProxyStr={downstreamProxy}
+                            pageType={"History_Analysis_ruleData"}
                             scrollTo={scrollTo}
                             scrollID={currentSelectItem.Id}
-                            highLightText={highLightText}
                         />
                     )}
                 </div>
@@ -990,10 +907,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
             {
                 title: "数据包ID",
                 dataKey: "HTTPFlowId",
-                width: 100,
-                sorterProps: {
-                    sorter: true
-                }
+                width: 100
             },
             {
                 title: "规则名",

@@ -71,6 +71,9 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     downstreamProxyStr?: string
     loading?: boolean
     pageType?: HTTPHistorySourcePageType
+
+    scrollTo?: (id: number | string) => void
+    scrollID?: number | string
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -738,6 +741,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 .invoke("GetHTTPFlowById", {Id: id})
                 .then((i: HTTPFlow) => {
                     if (+i.Id == lastIdRef.current) {
+                        console.log(222222);
                         setFlow(i)
                         queryMITMRuleExtractedData(i)
                     }
@@ -767,8 +771,11 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                setHighLightItem(undefined)
-                setCurrId(undefined)
+                // 当侧边栏为关闭的时候，定位高亮需要关掉
+                if (isFold) {
+                    setHighLightItem(undefined)
+                    setCurrId(undefined)
+                }
 
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
@@ -887,6 +894,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                             flowResponseLoad={flowResponseLoad}
                             highLightText={highLightText}
                             highLightItem={highLightItem}
+                            defaultHttps={flow.IsHTTPS}
+                            Tags={flow.Tags}
                             {...props}
                         />
                     )
@@ -1105,8 +1114,6 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
     pageType?: HTTPHistorySourcePageType
     highLightText?: HistoryHighLightText[]
     highLightItem?: HistoryHighLightText
-    scrollTo?: (id: number | string) => void
-    scrollID?: number | string
 }
 
 interface HTTPFlowBareProps {
@@ -1735,7 +1742,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
-                        defaultHttps={props.defaultHttps}
+                        defaultHttps={defaultHttps}
                         webFuzzerValue={flow?.RequestString || ""}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         extraEditorProps={{
