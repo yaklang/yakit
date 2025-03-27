@@ -444,7 +444,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         })
         ipcRenderer.on(`${taskToken}-error`, (_, e) => {
             onRefLocalRuleList()
-            yakitNotify("error", "下载失败:" + e)
+            yakitNotify("error", "更新失败:" + e)
         })
         return () => {
             ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -458,24 +458,24 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
                 .invoke("ApplySyntaxFlowRuleUpdate", taskToken)
                 .then(() => {})
                 .catch((e) => {
-                    failed(`下载失败:${e}`)
+                    failed(`更新失败:${e}`)
                 })
         }
     }, [visible])
     const StopAllRule = () => {
         ipcRenderer.invoke("cancel-streamApplySyntaxFlowRuleUpdate", taskToken).catch((e) => {
-            failed(`停止下载:${e}`)
+            failed(`停止更新:${e}`)
             onRefLocalRuleList()
         })
     }
-    /** 下载后需要刷新本地规则管理 */
+    /** 更新后需要刷新本地规则管理 */
     const onRefLocalRuleList = useMemoizedFn(() => {
         emiter.emit("onRefreshRuleManagement")
     })
     return (
         <YakitHint
             visible={visible}
-            title={`${getReleaseEditionName()} 规则下载中...`}
+            title={`${getReleaseEditionName()} 规则更新中...`}
             heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
             onCancel={() => {
                 StopAllRule()
@@ -489,7 +489,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
                 strokeColor='#F28B44'
                 trailColor='#F0F2F5'
                 percent={percent}
-                format={(percent) => `已下载 ${percent}%`}
+                format={(percent) => `已更新 ${percent}%`}
             />
         </YakitHint>
     )
