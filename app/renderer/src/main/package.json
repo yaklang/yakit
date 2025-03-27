@@ -42,7 +42,6 @@
         "bizcharts": "^4.1.12",
         "classnames": "^2.3.2",
         "codemirror": "^5.65.2",
-        "cross-env": "7.0.3",
         "customize-cra": "^1.0.0",
         "diff": "^7.0.0",
         "echarts": "^5.4.2",
@@ -113,12 +112,12 @@
         "zustand": "^4.4.1"
     },
     "scripts": {
+        "render-cli": "node ./scripts/cli.js",
         "electron-render": "env-cmd -e noBrouser,devTool -f ./.env-cmdrc react-app-rewired start",
         "electron-render-enterprise": "env-cmd -e noBrouser,devTool,enterprise -f ./.env-cmdrc react-app-rewired start",
         "electron-render-simple-enterprise": "env-cmd -e noBrouser,devTool,simpleEE -f ./.env-cmdrc react-app-rewired start",
         "electron-render-irify": "env-cmd -e noBrouser,devTool,irify -f ./.env-cmdrc react-app-rewired start",
         "electron-render-irify-enterprise": "env-cmd -e noBrouser,devTool,irifyEnterprise -f ./.env-cmdrc react-app-rewired start",
-        "start": "react-app-rewired start",
         "build": "cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-test": "env-cmd -e devTool -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
         "build-enterprise": "env-cmd -e enterprise -f ./.env-cmdrc cross-env GENERATE_SOURCEMAP=false react-app-rewired build",
@@ -158,6 +157,7 @@
     "devDependencies": {
         "@xterm/xterm": "5.5.0",
         "babel-plugin-import": "^1.13.8",
+        "cross-env": "7.0.3",
         "env-cmd": "^10.1.0",
         "mini-css-extract-plugin": "^2.7.6",
         "node-polyfill-webpack-plugin": "^3.0.0",
@@ -167,7 +167,8 @@
         "sass": "^1.54.8",
         "sass-loader": "^12.6.0",
         "source-map-loader": "^4.0.2",
-        "webpack-bundle-analyzer": "^4.10.1"
+        "webpack-bundle-analyzer": "^4.10.1",
+        "yargs": "^17.7.2"
     },
     "resolutions": {
         "//": "See https://github.com/facebook/create-react-app/issues/11773",
