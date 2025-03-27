@@ -38,6 +38,7 @@ import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/d
 import NewThirdPartyApplicationConfig, {GetThirdPartyAppConfigTemplateResponse} from "./NewThirdPartyApplicationConfig"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface ConfigNetworkPageProp {}
 
@@ -295,6 +296,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         // 更新 自动性能采样
         onSetPprofFileAutoAnalyze()
 
+        // 更新 二级页签数量
+        onSetSecondaryTabsNum()
+
         if (format === 1) {
             // if (!(Array.isArray(certificateParams)&&certificateParams.length>0)) {
             //     warn("请添加证书")
@@ -508,6 +512,23 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     const onResetPprofFileAutoAnalyze = () => {
         setPprofFileAutoAnalyze(false)
         setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, false + "")
+    }
+
+    const [secondaryTabsNum, setSecondaryTabsNum] = useState<number | string>(100)
+    useEffect(() => {
+        getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
+            if (set) {
+                setSecondaryTabsNum(set)
+            }
+        })
+    }, [])
+    const onSetSecondaryTabsNum = () => {
+        setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, secondaryTabsNum + "")
+        emiter.emit("onUpdateSecondaryTabsNum", Number(secondaryTabsNum))
+    }
+    const onResetSecondaryTabsNum = () => {
+        setSecondaryTabsNum(100)
+        setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, 100 + "")
     }
 
     return (
@@ -942,6 +963,35 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         }
                                     />
                                 </Form.Item>
+                                <Form.Item label={"二级页签数量"} labelCol={{span: 5}} wrapperCol={{span: 2}}>
+                                    <YakitInput
+                                        size='small'
+                                        value={secondaryTabsNum}
+                                        onChange={(e) => {
+                                            let value = e.target.value.replace(/\D/g, "")
+                                            if (value.length > 1 && value.startsWith("0")) {
+                                                value = value.replace(/^0+/, "")
+                                            }
+                                            setSecondaryTabsNum(value)
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                let value = parseInt(secondaryTabsNum + "" || "0", 10)
+                                                if (!value || value === 0) {
+                                                    value = 100
+                                                }
+                                                setSecondaryTabsNum(value)
+                                            }
+                                        }}
+                                        onBlur={() => {
+                                            let value = parseInt(secondaryTabsNum + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 100
+                                            }
+                                            setSecondaryTabsNum(value)
+                                        }}
+                                    />
+                                </Form.Item>
                                 <Divider orientation={"left"} style={{marginTop: "0px"}}>
                                     SYN 扫描网卡配置
                                 </Divider>
@@ -978,6 +1028,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                                 onResetDelPrivatePlugin()
                                                 onResetChromePath()
                                                 onResetPprofFileAutoAnalyze()
+                                                onResetSecondaryTabsNum()
                                                 ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
                                                     update()
                                                     yakitInfo("重置配置成功")
