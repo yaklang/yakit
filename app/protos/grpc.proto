@@ -4919,6 +4919,7 @@ message AnalyzeHTTPFlowRequest{
 message AnalyzeHTTPFlowResponse{
   ExecResult ExecResult = 1;
   HTTPFlowRuleData RuleData = 2;
+  string ExtractedContent = 3;
 }
 
 message AnalyzedHTTPFlowFilter{
