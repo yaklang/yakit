@@ -1,6 +1,8 @@
 import {ReactNode} from "react"
 export interface YakitSideTabProps {
     yakitTabs: YakitTabsProps[]
+    setYakitTabs?: (v: YakitTabsProps[]) => void
+
     /**TODO 点击展示的tab状态 缓存的key */
     cacheKey?: string
     activeKey: string
@@ -11,7 +13,8 @@ export interface YakitSideTabProps {
 }
 
 export interface YakitTabsProps {
-    icon: ReactNode
+    icon?: ReactNode
     label: ReactNode
     value: string
+    show?: boolean
 }
