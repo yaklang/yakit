@@ -1,4 +1,4 @@
-import React, {Profiler, ReactElement, useEffect, useRef, useState} from "react"
+import React, {Profiler, ReactElement, useContext, useEffect, useRef, useState} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -42,6 +42,7 @@ import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import classNames from "classnames"
 import {useStore} from "@/store/mitmState"
+import MITMContext from "./Context/MITMContext"
 const {ipcRenderer} = window.require("electron")
 
 type idleTabKeys = "plugin"
@@ -105,6 +106,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
 
+    const mitmStore = useContext(MITMContext)
     useEffect(() => {
         statusRef.current = status
         setMitmStatus(status)

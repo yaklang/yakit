@@ -111,7 +111,9 @@ export enum RemoteGV {
     /**@name 专项漏洞左侧tabs */
     YakPocTabs = "yakpoc-tabs",
     /**@name 笔记本本地全文搜索:缓存搜索的关键词列表 */
-    NotepadLocalSearch = "notepad-local-search"
+    NotepadLocalSearch = "notepad-local-search",
+    /**@name mitm中启用插件,需要缓存noParamsCheckList的插件数据 */
+    CheckCacheListData = "CHECK_CACHE_LIST_DATA"
 }
 
 /** 项目逻辑全局变量 */

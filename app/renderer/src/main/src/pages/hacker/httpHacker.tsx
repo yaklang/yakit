@@ -1,41 +1,18 @@
-import React, {useState, useEffect} from "react"
-import {Tabs} from "antd"
+import React from "react"
 import {MITMPage} from "../mitm/MITMPage"
-import {HTTPHistory} from "../../components/HTTPHistory"
-import {showDrawer} from "../../utils/showModal"
-import {HackerPlugin} from "./HackerPlugin"
-import ReactDOM from "react-dom"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
+import MITMContext, {MITMContextStore} from "../mitm/Context/MITMContext"
+import {useCreation} from "ahooks"
 
 export interface HTTPHackerProp {}
 
-const {ipcRenderer} = window.require("electron")
-
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
-    const [activeTab, setActiveTag] = useState("mitm")
-
-    useEffect(() => {
-        ipcRenderer.on("fetch-send-to-packet-hack", (e, res: any) => {
-            const {request, ishttps, response} = res || {}
-            if (request && ishttps !== undefined) {
-                let m = showDrawer({
-                    width: "80%",
-                    content: <HackerPlugin request={request} isHTTPS={ishttps} response={response}></HackerPlugin>
-                })
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-send-to-packet-hack")
-        }
-    }, [])
-    useEffect(() => {
-        ipcRenderer.on("fetch-positioning-http-history", (e, res) => {
-            if (res.activeTab) setActiveTag(res.activeTab)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-positioning-http-history")
+    const mitmStore: MITMContextStore = useCreation(() => {
+        return {
+            version: "", // v1版本就算空字符
+            route: YakitRoute.HTTPHacker
         }
     }, [])
     return (
@@ -60,7 +37,9 @@ const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
             >
                 MITM 劫持 v2
             </YakitButton>
-            <MITMPage />
+            <MITMContext.Provider value={{mitmStore}}>
+                <MITMPage />
+            </MITMContext.Provider>
         </div>
     )
 }
