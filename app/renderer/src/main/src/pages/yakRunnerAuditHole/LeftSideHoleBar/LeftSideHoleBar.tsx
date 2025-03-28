@@ -1,11 +1,6 @@
-import React, {useEffect, useRef, useState} from "react"
-import {} from "antd"
-import {} from "@ant-design/icons"
-import {useGetState, useMemoizedFn} from "ahooks"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
+import React, {useRef} from "react"
+import {useMemoizedFn} from "ahooks"
 import styles from "./LeftSideHoleBar.module.scss"
-import {failed, success, warn, info} from "@/utils/notification"
 import classNames from "classnames"
 import {LeftSideHoleBarProps, LeftSideHoleType} from "./LeftSideHoleBarType"
 
