@@ -1,7 +1,12 @@
-#!/usr/bin/env node
+const {Command, Option} = require("commander")
 const {execSync} = require("child_process")
-const yargs = require("yargs/yargs")
-const {hideBin} = require("yargs/helpers")
+
+/**
+ * 参考 api 文件
+ * url: https://github.com/tj/commander.js/blob/master/typings/index.d.ts
+ */
+
+const program = new Command("render-cli")
 
 const ENV_FILE = "./.env-cmdrc"
 
@@ -28,34 +33,8 @@ const versionEnvMaps = {
     se: {desc: "简易版", value: ["simpleEE"]}
 }
 
-// 详细说明
-const epilogue = `
-环境配置说明：
-互斥环境（必须且只能选其一）:
-${Object.keys(versionEnvMaps)
-    .map((k) => `  ${k.padEnd(10)} → ${versionEnvMaps[k].desc || "无"}`)
-    .join(`\n`)}
-
-可组合环境:
-${Object.keys(commandMap)
-    .map((k) => {
-        const envs = commandMap[k].extraEnvMaps
-        if (Object.keys(envs).length === 0) return ""
-        let content = `  ${k}: \n`
-        Object.keys(envs).map((el) => {
-            content += `    ${el.padEnd(10)} → ${envs[el].desc || "无"}\n`
-            return ""
-        })
-        return content
-    })
-    .filter(Boolean)
-    .join(`\n`)}
-更多信息请参考项目 cli.js 文件配置项
-`
-
 function buildCommand(op, env) {
     let baseCommand = `react-app-rewired ${op}`
-
     if (env && env.length > 0) {
         baseCommand = `env-cmd -e ${env.join(",")} -f ${ENV_FILE} ${baseCommand}`
     }
@@ -74,77 +53,112 @@ function runBuild(op, env) {
     }
 }
 
-const cli = Object.entries(commandMap).reduce(
-    (sum, [cmd, config]) => {
-        return sum.command(
-            cmd,
-            config.desc,
-            (yargs) => {
-                return yargs.option("env", {
-                    alias: "e",
-                    type: "string",
-                    choices: Object.keys({...versionEnvMaps, ...config.extraEnvMaps}).filter((e) => {
-                        return cmd === "start" ? e !== "devTool" : true
-                    }),
-                    describe: "选择环境配置(可多选，用逗号分隔)",
-                    default: DefaultEnv,
-                    coerce: (value) => {
-                        if (!value) return []
-                        const parts = value
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                            .filter((v, i, arr) => arr.indexOf(v) === i)
-                        const allEnv = {...versionEnvMaps, ...config.extraEnvMaps}
+Object.entries(commandMap).forEach(([cmd, config]) => {
+    const cmdObj = program.command(cmd).description(config.desc).allowUnknownOption(false)
 
-                        // 验证值的有效性
-                        const validKeys = Object.keys(allEnv)
-                        const invalid = parts.find((p) => !validKeys.includes(p))
-                        if (invalid) {
-                            throw new Error(`无效环境参数: ${invalid}，可用值：${validKeys.join(", ")}`)
-                        }
+    const envAll = {...versionEnvMaps, ...config.extraEnvMaps}
+    const envsKey = Object.keys(envAll)
 
-                        // 验证是否有互斥的环境变量
-                        const MUTUALLY_EXCLUSIVE = Object.keys(versionEnvMaps)
-                        const exclusiveParams = parts.filter((p) => MUTUALLY_EXCLUSIVE.includes(p))
-                        if (exclusiveParams.length > 1) {
-                            throw new Error(
-                                `互斥参数错误：不能同时指定 [${exclusiveParams.join(", ")}]，` +
-                                    `只能选择 ${MUTUALLY_EXCLUSIVE.join(" / ")} 中的一个`
-                            )
-                        }
+    const option = new Option("-e, --env [envs...]", `可选环境参数(逗号分隔)：${envsKey.join(" | ")}`)
+        // .choices(envsKey) // 单值选项(自带校验), 不适合多值选项，检验需要自定义
+        .argParser((value) => {
+            try {
+                const val = value.trim()
+                if (!val) return []
+                const parts = val
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                    .filter((v, i, arr) => arr.indexOf(v) === i)
+                const allEnv = {...versionEnvMaps, ...config.extraEnvMaps}
 
-                        return parts
-                    }
-                })
-            },
-            (argv) => {
-                // 合并环境变量
-                const baseEnvs = config.envs
-                const extraEnvs = argv.env.flatMap((e) => ({...versionEnvMaps, ...config.extraEnvMaps})[e].value)
-                runBuild(cmd, [...baseEnvs, ...extraEnvs])
+                // 验证值的有效性
+                const validKeys = Object.keys(allEnv)
+                const invalid = parts.find((p) => !validKeys.includes(p))
+                if (invalid) {
+                    throw new Error(`无效环境参数: ${invalid}，可用值：${validKeys.join(", ")}`)
+                }
+
+                // 验证是否有互斥的环境变量
+                const MUTUALLY_EXCLUSIVE = Object.keys(versionEnvMaps)
+                const exclusiveParams = parts.filter((p) => MUTUALLY_EXCLUSIVE.includes(p))
+                if (exclusiveParams.length > 1) {
+                    throw new Error(
+                        `互斥参数错误：不能同时指定 [${exclusiveParams.join(", ")}]，` +
+                            `只能选择 ${MUTUALLY_EXCLUSIVE.join(" / ")} 中的一个`
+                    )
+                }
+
+                return parts
+            } catch (error) {
+                console.error("❌ 错误:", error.message)
+                process.exit(1)
             }
-        )
+        })
+        .default([DefaultEnv])
+    option.defaultValueDescription = DefaultEnv
+
+    // 添加环境选项（多选）
+    cmdObj
+        .addOption(option)
+        .configureHelp({showGlobalOptions: true})
+        .addHelpOption(new Option("-h, --help", "显示帮助信息"))
+
+    // 动态生成帮助信息
+    cmdObj.addHelpText("after", () => {
+        const extraHelp = []
+
+        if (envsKey.length > 0) {
+            extraHelp.push("\n额外环境参数说明:")
+            Object.entries(envAll).forEach(([key, {desc}]) => {
+                extraHelp.push(`  ${key.padEnd(15)} ${desc}`)
+            })
+        }
+
+        return extraHelp.join("\n")
+    })
+
+    // 执行逻辑
+    cmdObj.action((options) => {
+        const {env} = options
+        let envs = env === true ? ["ce"] : env
+        const baseEnvs = config.envs
+        const envCMD = envs.flatMap((e) => envAll[e].value)
+        runBuild(cmd, [...baseEnvs, ...envCMD])
+    })
+})
+
+const example = [
+    {
+        cmd: "yarn render-cli start -e ce",
+        desc: "启动 ce版本 渲染端项目"
     },
-    yargs(hideBin(process.argv))
+    {
+        cmd: "yarn render-cli build -e analyzer",
+        desc: "构建渲染端包大小分析"
+    },
+    {
+        cmd: "yarn render-cli build -e ee,devTool",
+        desc: "构建 ee版本 渲染端项目, 同时展示开发者工具"
+    }
+]
+const exampleCMDMaxLength = Math.max(...example.map((e) => e.cmd.length))
+// 全局帮助定制
+program.addHelpText(
+    "afterAll",
+    `
+使用示例:
+${example
+    .map((item) => {
+        return `  ${item.cmd.padEnd(exampleCMDMaxLength)} → ${item.desc}`
+    })
+    .join("\n")}
+`
 )
 
-cli.scriptName("render-cli")
-    .usage("$0 <operate> [env]")
-    .demandCommand(1, "A valid command must be specified")
-    .strictCommands()
-    .recommendCommands()
-    .option("help", {
-        alias: "h",
-        description: "显示帮助信息"
-    })
-    .example([
-        ["$0 start", "启动 ce版本 渲染端"],
-        ["$0 start -e ee", "启动 ee版本 渲染端"],
-        ["$0 build -e ee,devTool", "构建 ee版本 加显示开发者工具的渲染端"]
-    ])
-    .epilogue(epilogue)
-    .help()
-    .alias("h", "help")
-    .version(false)
-    .parse()
+// 自定义 help 命令
+program
+    .addHelpCommand(new Command("help").description("显示帮助信息"))
+    .addHelpOption(new Option("-h, --help", "显示帮助信息"))
+
+program.parse(process.argv)
