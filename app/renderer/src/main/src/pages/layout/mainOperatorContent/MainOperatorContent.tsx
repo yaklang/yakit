@@ -155,6 +155,7 @@ import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
+import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -559,9 +560,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
 
     const addRuleManagement = useMemoizedFn(() => {
-        openMenuPage(
-            {route: YakitRoute.Rule_Management},
-        )
+        openMenuPage({route: YakitRoute.Rule_Management})
     })
 
     const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {
@@ -2913,6 +2912,18 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const scrollLeftIconRef = useRef<any>()
         const scrollRightIconRef = useRef<any>()
 
+        const secondaryTabsNumRef = useRef<number>(100) // 二级标签页数量限制 默认100
+        const getSecondaryTabsNum = () => {
+            getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
+                if (set) {
+                    secondaryTabsNumRef.current = Number(set)
+                }
+            })
+        }
+        const onUpdateSecondaryTabsNum = (num: number) => {
+            secondaryTabsNumRef.current = num
+        }
+
         const {
             setPagesData,
             setSelectGroupId,
@@ -2977,12 +2988,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             []
         )
         useEffect(() => {
+            getSecondaryTabsNum()
             getIsCloseGroupTip()
             emiter.on("onCloseCurrentPage", onCloseCurrentPage)
             emiter.on("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
+            emiter.on("onUpdateSecondaryTabsNum", onUpdateSecondaryTabsNum)
             return () => {
                 emiter.off("onCloseCurrentPage", onCloseCurrentPage)
                 emiter.off("onUpdateSubMenuNameFormPage", onUpdateSubMenuNameFormPage)
+                emiter.off("onUpdateSecondaryTabsNum", onUpdateSecondaryTabsNum)
             }
         }, [])
 
@@ -3488,7 +3502,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             } catch (error) {}
         })
         const onAddSubPage = useMemoizedFn(() => {
-            if (getSubPageTotal(subPage) >= 100) {
+            if (getSubPageTotal(subPage) >= secondaryTabsNumRef.current) {
                 yakitNotify("error", "超过标签页数量限制")
                 return
             }
@@ -4221,9 +4235,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     // 关闭时, 选中的item在该组内时,将选中的item变为后面可以选中的item
                     const {index} = getPageItemById(subPage, newItem.id)
                     const sLength = subPage.length
-                    const initIndex = total >= 100 ? index - 1 : index + 1
-                    // 因为限制100个，如果该组为最后一个，就选中上一个可选item
-                    for (let i = initIndex; total >= 100 ? i > 0 : i < sLength + 1; total >= 100 ? i-- : i++) {
+                    const initIndex = total >= secondaryTabsNumRef.current ? index - 1 : index + 1
+                    // 因为限制secondaryTabsNumRef.current个，如果该组为最后一个，就选中上一个可选item
+                    for (
+                        let i = initIndex;
+                        total >= secondaryTabsNumRef.current ? i > 0 : i < sLength + 1;
+                        total >= secondaryTabsNumRef.current ? i-- : i++
+                    ) {
                         const element: MultipleNodeInfo | undefined = subPage[i]
                         if (!element) {
                             // element不存在时,新建一个tab选中

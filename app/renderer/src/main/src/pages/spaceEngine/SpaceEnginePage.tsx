@@ -276,7 +276,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
             content: (
                 <>
                     <div className={styles["ai-describe"]}>请配置空间引擎APIKey后再进行使用</div>
-                    <div style={{margin: 24}}>
+                    <div style={{margin: 24, marginRight: 45}}>
                         <NewThirdPartyApplicationConfig
                             formValues={{
                                 Type: initData.Type,

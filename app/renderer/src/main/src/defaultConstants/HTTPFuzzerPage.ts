@@ -357,6 +357,11 @@ export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
 // 注：此处顺序为倒序（新增DefaultDescription记得带-fixed，此处为标识固定项）
 export const defaultLabel: LabelDataProps[] = [
     {
+        DefaultDescription: "调用codec模块保存的codec flow-fixed",
+        Description: "调用codec模块保存的codec flow",
+        Label: "{{codecflow(name|abc)}}"
+    },
+    {
         DefaultDescription: "反向正则（单个）-fixed",
         Description: "反向正则（单个）",
         Label: "{{regen:one([0-9a-f]{3})}}"

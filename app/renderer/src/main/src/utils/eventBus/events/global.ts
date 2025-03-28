@@ -35,4 +35,6 @@ export type GlobalEventProps = {
      * @param {string} pageId 修改的页面id
      */
     onUpdateSubMenuNameFormPage: string
+    /**二级标签页数量限制 */
+    onUpdateSecondaryTabsNum: number
 }
