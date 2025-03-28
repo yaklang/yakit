@@ -55,7 +55,7 @@ module.exports = (win, getClient) => {
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]
-                : fetchLatestYakitEEVersion
+                : fetchLatestYakitVersion
             fetchPromise(config)
                 .then((version) => {
                     resolve(version)
