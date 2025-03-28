@@ -5167,7 +5167,7 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                 <div className={style["history-advanced-set-item"]}>
                     <div className={style["history-advanced-set-item-title"]}>
                         列表展示字段和顺序
-                        <YakitButton type='primary' size='small' onClick={handleResetColumn}>
+                        <YakitButton type='text' size='small' onClick={handleResetColumn}>
                             重置
                         </YakitButton>
                     </div>
