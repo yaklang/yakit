@@ -160,13 +160,13 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
             if (filter) {
                 try {
                     const newParams = JSON.parse(filter)
+                    setQuery({...query, ...cacheQueryRef.current, ...newParams})
                     // 缓存选中前所更改的参数内容 将其置为空用于还原
                     let cache: SSARisksFilter = {}
                     Object.keys(newParams).forEach((key) => {
                         cache[key] = []
                     })
                     cacheQueryRef.current = cache
-                    setQuery({...query, ...newParams})
                 } catch (_) {
                     setQuery({...query, ...cacheQueryRef.current})
                     cacheQueryRef.current = {}
@@ -215,7 +215,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
 
     return (
         <div className={styles["document-collect"]}>
-            <div className={styles["tree-top-wrap"]}>
+            {/* <div className={styles["tree-top-wrap"]}>
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={"请输入文件名或函数进行搜索"}
@@ -225,7 +225,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                     value={searchValue}
                 />
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTreeFun} style={{marginBottom: 15}} />
-            </div>
+            </div> */}
             <div className={styles["tree-wrap"]}>
                 {treeLoading ? (
                     <YakitSpin style={{alignItems: "center"}} />
