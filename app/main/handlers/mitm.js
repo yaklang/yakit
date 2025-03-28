@@ -1,7 +1,7 @@
 const { ipcMain } = require("electron");
 const DNS = require("dns");
 
-
+/**@deprecated */
 // module.exports = (win, originGetClient) => {
 module.exports = (win, getClient) => {
     let stream;
