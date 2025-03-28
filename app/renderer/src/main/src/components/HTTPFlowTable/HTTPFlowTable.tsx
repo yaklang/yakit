@@ -1,5 +1,5 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
-import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress} from "antd"
+import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress, Modal} from "antd"
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
@@ -75,7 +75,8 @@ import {
     OutlineCogIcon,
     OutlineInformationcircleIcon,
     OutlineRefreshIcon,
-    OutlineSearchIcon
+    OutlineSearchIcon,
+    OutlineXIcon
 } from "@/assets/icon/outline"
 import {YakitEditorKeyCode} from "../yakitUI/YakitEditor/YakitEditorType"
 import {YakitSystem} from "@/yakitGVDefine"
@@ -101,6 +102,7 @@ import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
+import {ExclamationCircleOutlined} from "@ant-design/icons"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -5060,8 +5062,8 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             item.isShow = true
         })
         const sortedArr = newItems.sort((x, y) => {
-            const keyX = x.dataKey || x.dataKey
-            const keyY = y.dataKey || y.dataKey
+            const keyX = x.dataKey
+            const keyY = y.dataKey
             return defalutColumnsOrder.indexOf(keyX) - defalutColumnsOrder.indexOf(keyY)
         })
         setCurColumnsAll(sortedArr)
@@ -5076,12 +5078,59 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
         onSave({backgroundRefresh, configColumnsAll: curColumnsAll})
     })
 
+    // 判断是否有修改
+    const handleJudgeModify = useMemoizedFn(async () => {
+        try {
+            // 是否有修改
+            let isModify: boolean = false
+            if (oldBackgroundRefresh.current !== backgroundRefresh || columnsAllStr !== JSON.stringify(curColumnsAll)) {
+                isModify = true
+            }
+            return isModify
+        } catch (error) {
+            yakitNotify("error", `${error}`)
+            return null
+        }
+    })
+    const handleClose = useMemoizedFn(async () => {
+        const result = await handleJudgeModify()
+        if (result == null) return
+
+        if (result) {
+            Modal.confirm({
+                title: "温馨提示",
+                icon: <ExclamationCircleOutlined />,
+                content: "请问是否要保存高级配置并关闭弹框？",
+                okText: "保存",
+                cancelText: "不保存",
+                closable: true,
+                closeIcon: (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            Modal.destroyAll()
+                        }}
+                        className='modal-remove-icon'
+                    >
+                        <OutlineXIcon />
+                    </div>
+                ),
+                onOk: handleOk,
+                onCancel: onCancel,
+                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                okButtonProps: {size: "small", className: "modal-ok-button"}
+            })
+        } else {
+            onCancel()
+        }
+    })
+
     return (
         <YakitDrawer
             visible={true}
             width='40%'
             className={style["history-advanced-set-wrapper"]}
-            onClose={onCancel}
+            onClose={handleClose}
             title={
                 <div className={style["advanced-configuration-drawer-title"]}>
                     <div className={style["advanced-configuration-drawer-title-text"]}>高级配置</div>
