@@ -5,7 +5,6 @@ on:
         tags:
             - "v*-*"
             - "!v*-render"
-            - "!v*-irify-render"
             - "!v*-irify"
 
 jobs:
