@@ -1157,7 +1157,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             {/* 关闭运行节点确认弹框 */}
             <YakitHint
                 visible={closeRunNodeItemVerifyVisible}
-                title=''
+                title='是否确认关闭节点'
                 content='确认后节点将会关闭，运行在节点上的任务也会停止'
                 footerExtra={
                     <YakitCheckbox value={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
