@@ -5793,7 +5793,7 @@ message SyntaxFlowRuleFilter {
   int64 AfterId = 11;
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
-  TriState LibRuleFilter = 14; // 是否允许包含其他规则
+  string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
 }
 
 
@@ -5895,7 +5895,7 @@ message CheckSyntaxFlowRuleUpdateRequest{}
 
 message CheckSyntaxFlowRuleUpdateResponse {
   bool NeedUpdate = 1;  // 是否需要更新
-  UpdateSyntaxFlowRuleState State = 2;  // 更新状态
+  string State = 2;  // 更新状态，没有规则"empty",规则需要更新"to_update"
 }
 message ApplySyntaxFlowRuleUpdateRequest {}
 
@@ -6453,16 +6453,4 @@ message ExportNoteRequest {
 message ExportNoteResponse {
     double Percent = 1;
     string Verbose = 2;
-}
-
-// 通用三元状态枚举
-enum TriState {
-  TS_ALL = 0;
-  TS_TRUE = 1;
-  TS_FALSE = 2;
-}
-
-enum UpdateSyntaxFlowRuleState{
-  Rule_Empty = 0; // 规则为空
-  Rule_To_Update = 1; // 规则需要更新
 }
