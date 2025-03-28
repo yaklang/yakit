@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 const {execSync} = require("child_process")
 
-// 示例 yarn qqqq 1.0.0-0329
+// 示例 yarn release-irify-render 1.0.0-0329
 const version = process.argv.slice(2)
-console.log(111,version)
-
 
 try {
     // 生成时间版本号
