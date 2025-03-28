@@ -120,7 +120,7 @@ export interface SyntaxFlowRuleFilter {
     BeforeId?: number
 
     FilterRuleKind?: "buildIn" | "unBuildIn" // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
-    LibRuleFilter?: "TS_ALL" | "TS_TRUE" | "TS_FALSE" // 是否显示Lib规则
+    FilterLibRuleKind?: "lib" | "noLib" | "" // 是否显示Lib规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter

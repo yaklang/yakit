@@ -22,7 +22,10 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {Tooltip, Row, Col} from "antd"
 import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {QueryYakScriptsResponse} from "@/pages/invoker/schema"
-import {IRifyApplySyntaxFlowRuleUpdate, YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {
+    IRifyApplySyntaxFlowRuleUpdate,
+    YakitGetOnlinePlugin
+} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
 import {YakitInputNumber} from "../yakitUI/YakitInputNumber/YakitInputNumber"
 
 import classNames from "classnames"
@@ -66,7 +69,7 @@ export interface GlobalReverseStateProp {
 
 export interface CheckSyntaxFlowRuleUpdateResponse {
     NeedUpdate: boolean
-    State: "Rule_Empty" | "Rule_To_Update"
+    State: "empty" | "to_update"
 }
 
 /** 全局反连服务器配置参数 */
@@ -178,7 +181,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             ipcRenderer
                 .invoke("CheckSyntaxFlowRuleUpdate")
                 .then((result: CheckSyntaxFlowRuleUpdateResponse) => {
-                    if (result.NeedUpdate && result.State === "Rule_Empty" && isShowRuleUpdateModal.current) {
+                    if (result.NeedUpdate && result.State === "empty" && isShowRuleUpdateModal.current) {
                         setFristRuleUpdateModal(true)
                     }
                     isShowRuleUpdateModal.current = false
@@ -377,11 +380,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const updateIRifyState = useMemoizedFn(() => {
         let status = "success"
         let count = 0
-        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "Rule_To_Update") {
+        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "to_update") {
             status = "warning"
             count = count + 1
         }
-        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "Rule_Empty") {
+        if (ruleUpdate?.NeedUpdate && ruleUpdate.State === "empty") {
             status = "error"
             count = count + 1
         }
@@ -1031,10 +1034,10 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <ErrorIcon />
                                     <div className={styles["left-body"]}>
                                         <div className={styles["title-style"]}>
-                                            {ruleUpdate.State === "Rule_Empty" ? "暂无本地规则" : "本地规则库需要更新"}
+                                            {ruleUpdate.State === "empty" ? "暂无本地规则" : "本地规则库需要更新"}
                                         </div>
                                         <div className={styles["subtitle-style"]}>
-                                            {ruleUpdate.State === "Rule_Empty"
+                                            {ruleUpdate.State === "empty"
                                                 ? "检测到本地规则库为空，请点击确定重置规则"
                                                 : "检测到需更新本地规则库，请点击更新规则"}
                                         </div>
@@ -1046,7 +1049,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={downloadRuleUpdate}
                                     >
-                                        {ruleUpdate.State === "Rule_Empty" ? "一键重置" : "一键更新"}
+                                        {ruleUpdate.State === "empty" ? "一键重置" : "一键更新"}
                                     </YakitButton>
                                 </div>
                             </div>

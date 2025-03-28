@@ -46,7 +46,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const initLoading = useRef<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
     const [filters, setFilters] = useState<SyntaxFlowRuleFilter>({
-        LibRuleFilter: "TS_ALL"
+        FilterLibRuleKind: ""
     })
     const [data, setData] = useState<QuerySyntaxFlowRuleResponse>({
         Rule: [],
@@ -57,7 +57,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     const handleCheckLib = useMemoizedFn((isChecked) => {
         setFilters((filters) => {
-            return {...filters, LibRuleFilter: isChecked ? "TS_ALL" : "TS_FALSE"}
+            return {...filters, FilterLibRuleKind: isChecked ? "" : "noLib"}
         })
     })
 
@@ -513,7 +513,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                             callback={handleRefreshGroup}
                                         />
                                         <YakitCheckbox
-                                            checked={filters.LibRuleFilter === "TS_ALL"}
+                                            checked={filters.FilterLibRuleKind !== "noLib"}
                                             onChange={(e) => handleCheckLib(e.target.checked)}
                                         >
                                             显示Lib规则
