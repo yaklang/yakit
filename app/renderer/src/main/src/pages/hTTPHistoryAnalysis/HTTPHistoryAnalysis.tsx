@@ -560,6 +560,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                         currentSelectItem={currentSelectItem}
                                                         onSetCurrentSelectItem={setCurrentSelectItem}
                                                         isRefreshTable={isRefreshTable}
+                                                        executeStatus={executeStatus}
                                                     />
                                                 </div>
                                             </TabPane>
@@ -611,9 +612,10 @@ interface HttpRuleProps {
     currentSelectItem?: HTTPFlowRuleData
     onSetCurrentSelectItem: (c?: HTTPFlowRuleData) => void
     isRefreshTable: boolean
+    executeStatus: ExpandAndRetractExcessiveState
 }
 const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
-    const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable} = props
+    const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable, executeStatus} = props
     const [historyId, setHistoryId] = useState<string>(uuidv4())
     const httpRuleSecondRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(httpRuleSecondRef)
@@ -677,6 +679,7 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
                         scrollToIndex={scrollToIndex}
                         onSetScrollToIndex={setScrollToIndex}
                         isRefreshTable={isRefreshTable}
+                        executeStatus={executeStatus}
                     />
                 </div>
             )}
@@ -728,6 +731,7 @@ interface HttpRuleTableProps {
     scrollToIndex?: string
     onSetScrollToIndex: (i?: string) => void
     isRefreshTable: boolean
+    executeStatus: ExpandAndRetractExcessiveState
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const {currentPageTabRouteKey} = usePageInfo(
@@ -736,7 +740,8 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         }),
         shallow
     )
-    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex, isRefreshTable} = props
+    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex, isRefreshTable, executeStatus} =
+        props
 
     const tableRef = useRef<any>(null)
     const [loading, setLoading] = useState<boolean>(false)
@@ -974,7 +979,11 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 isShowTotal={true}
                 extra={
                     <>
-                        <YakitButton type='primary' onClick={exportMITMRuleExtractedData}>
+                        <YakitButton
+                            type='primary'
+                            onClick={exportMITMRuleExtractedData}
+                            disabled={executeStatus === "process"}
+                        >
                             导出
                         </YakitButton>
                     </>
@@ -1007,7 +1016,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                     }
                     visible={exportPercentVisible}
                     title='导出规则数据'
-                    subTitle="查询数据库中"
+                    subTitle='查询数据库中'
                     token={exportToken}
                     apiKey='ExportMITMRuleExtractedDataStream'
                     onClose={(finish, streamData) => {
