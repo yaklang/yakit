@@ -382,10 +382,10 @@ module.exports = {
                     downloadUrl = await getDownloadUrl(version,"IRifyCE")
                 } else if (IRifyEE) {
                     downloadUrl = await getDownloadUrl(version,"IRifyEE")
-                } else if (YakitCE) {
-                    downloadUrl = await getDownloadUrl(version,"YakitCE")
-                } else {
+                } else if (YakitEE) {
                     downloadUrl = await getDownloadUrl(version,"YakitEE")
+                } else {
+                    downloadUrl = await getDownloadUrl(version,"YakitCE")
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
