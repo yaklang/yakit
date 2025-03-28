@@ -34,7 +34,7 @@ import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
 import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
 import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import { DocumentCollect } from "./DocumentCollect/DocumentCollect"
+import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -81,25 +81,24 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     // 获取筛选展示状态
     useEffect(() => {
         getRemoteValue(RemoteGV.AuditHoleShow).then((value: string) => {
-            if(value === "true"){
+            if (value === "true") {
                 setUnShow(false)
             }
         })
     }, [])
 
     // 操作side开启与关闭
-    const onOperateSide = useMemoizedFn((val:boolean) => {
-        if(val){
+    const onOperateSide = useMemoizedFn((val: boolean) => {
+        if (val) {
             setUnShow(false)
-        }
-        else{
+        } else {
             setUnShow(true)
         }
     })
 
-    useUpdateEffect(()=>{
+    useUpdateEffect(() => {
         setRemoteValue(RemoteGV.AuditHoleShow, `${!isUnShow}`)
-    },[isUnShow])
+    }, [isUnShow])
 
     return (
         <YakitSpin spinning={riskLoading}>
@@ -135,11 +134,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
                         isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
                     }
                     secondNode={
-                        <YakitAuditHoleTable
-                            setRiskLoading={setRiskLoading}
-                            query={query}
-                            setQuery={setQuery}
-                        />
+                        <YakitAuditHoleTable setRiskLoading={setRiskLoading} query={query} setQuery={setQuery} />
                     }
                 />
             </div>
@@ -302,11 +297,11 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
         pieRef.current.onReset()
     })
     const levelRef = useRef<HTMLDivElement>(null)
-    const size = useSize(levelRef);
-    useEffect(()=>{
-        pieRef.current.onResize&&pieRef.current.onResize()
-    },[size?.width])
-    
+    const size = useSize(levelRef)
+    useEffect(() => {
+        pieRef.current.onResize && pieRef.current.onResize()
+    }, [size?.width])
+
     return (
         <div className={styles["vulnerability-level"]} ref={levelRef}>
             <div className={styles["vulnerability-level-heard"]}>
@@ -334,10 +329,10 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         pieRef.current.onReset()
     })
     const typeRef = useRef<HTMLDivElement>(null)
-    const size = useSize(typeRef);
-    useEffect(()=>{
-        pieRef.current.onResize&&pieRef.current.onResize()
-    },[size?.width])
+    const size = useSize(typeRef)
+    useEffect(() => {
+        pieRef.current.onResize && pieRef.current.onResize()
+    }, [size?.width])
 
     return (
         <div className={styles["vulnerability-type"]} ref={typeRef}>
