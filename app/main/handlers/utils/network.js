@@ -9,6 +9,7 @@ const fs = require("fs")
 const path = require("path")
 const {loadExtraFilePath} = require("../../filePath")
 const {HttpsProxyAgent} = require("hpagent")
+const electronIsDev = require("electron-is-dev")
 
 const add_proxy = process.env.https_proxy || process.env.HTTPS_PROXY
 
@@ -286,12 +287,10 @@ const getYakEngineDownloadUrl = async (version) => {
     }
 }
 
-const getCESuffix = () => {
-    return process.env["SYSTEM_MODE"] === "legacy" ? "-legacy" : ""
-}
-
-const getEESuffix = () => {
+const getSuffix = () => {
     let system_mode = ""
+    // 开发环境是不添加-legacy
+    if(electronIsDev) return ""
     try {
         system_mode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-system-mode.txt"))).toString("utf8")
     } catch (error) {
@@ -307,22 +306,22 @@ const DownloadUrlByType = {
     YakitCE: {
         name: "Yakit",
         dir: "yak",
-        suffix: getCESuffix()
+        suffix: getSuffix()
     },
     YakitEE: {
         name: "EnpriTrace",
         dir: "vip",
-        suffix: getEESuffix()
+        suffix: getSuffix()
     },
     IRifyCE: {
         name: "IRify",
         dir: "irify",
-        suffix: getCESuffix()
+        suffix: getSuffix()
     },
     IRifyEE: {
         name: "IRifyEnpriTrace",
         dir: "svip",
-        suffix: getEESuffix()
+        suffix: getSuffix()
     }
 }
 
