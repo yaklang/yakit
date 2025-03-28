@@ -11,6 +11,7 @@ import {yakitNotify} from "@/utils/notification"
 import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
+import { useCampare } from "@/hook/useCompare/useCompare"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -22,6 +23,7 @@ export interface HTTPFlowExtractedDataTableProp {
     invalidForUTF8Request: boolean
     InvalidForUTF8Response: boolean
     hiddenIndex: string
+    analyzedIds?: number[]
     onSetHighLightText: (highLightText: HistoryHighLightText[]) => void
     onSetExportMITMRuleFilter: (filter: ExtractedDataFilter) => void
     onSetHighLightItem: (highLightItem?: HistoryHighLightText) => void
@@ -48,6 +50,7 @@ export interface HTTPFlowExtractedData {
 export interface ExtractedDataFilter {
     TraceID: string[]
     RuleVerbose: string[]
+    AnalyzedIds?: number[]
 }
 export interface QueryMITMRuleExtractedDataRequest extends QueryGeneralRequest {
     Filter: ExtractedDataFilter
@@ -64,7 +67,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
     const [params, setParams] = useState<QueryMITMRuleExtractedDataRequest>({
         Filter: {
             TraceID: [props.hiddenIndex],
-            RuleVerbose: []
+            RuleVerbose: [],
+            AnalyzedIds: props.analyzedIds
         },
         Pagination: genDefaultPagination()
     })
@@ -136,22 +140,29 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                 setPagination(r.Pagination)
                 setTotal(r.Total)
             })
+            .catch(() => {
+                setCurrId(undefined)
+                props.onSetHighLightItem(undefined)
+                props.onSetHighLightText([])
+            })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    useEffect(() => {
+    const compareAnalyzedIds = useCampare(props.analyzedIds)
+    useDebounceEffect(() => {
         if (!props.hiddenIndex) {
             return
         }
         resetUpdate()
-    }, [props.hiddenIndex])
+    }, [props.hiddenIndex, compareAnalyzedIds], {wait: 100})
 
     const resetUpdate = useMemoizedFn(() => {
         const newParams = {
             ...params,
             Filter: {
                 TraceID: [props.hiddenIndex],
-                RuleVerbose: []
+                RuleVerbose: [],
+                AnalyzedIds: props.analyzedIds
             }
         }
         setParams(newParams)
@@ -163,7 +174,8 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
         const newParams = {
             Filter: {
                 TraceID: [props.hiddenIndex],
-                RuleVerbose: []
+                RuleVerbose: [],
+                AnalyzedIds: props.analyzedIds
             },
             Page: 1,
             Limit: 10,
@@ -255,6 +267,7 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                                         ...params,
                                         Filter: {
                                             TraceID: [props.hiddenIndex],
+                                            AnalyzedIds: props.analyzedIds,
                                             RuleVerbose: v
                                         }
                                     }

@@ -13,7 +13,7 @@ import {HTTPFlowForWebsocketViewer, WebSocketEditor} from "@/pages/websocket/HTT
 import {WebsocketFrameHistory} from "@/pages/websocket/WebsocketFrameHistory"
 
 import styles from "./hTTPFlowDetail.module.scss"
-import {useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     ExtractedDataFilter,
     HTTPFlowExtractedData,
@@ -45,6 +45,8 @@ import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {asynSettingState} from "@/utils/optimizeRender"
 import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import {getSelectionEditorByteCount} from "./yakitUI/YakitEditor/editorUtils"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {useCampare} from "@/hook/useCompare/useCompare"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -56,7 +58,6 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     noHeader?: boolean
     onClose?: () => any
     defaultHeight?: number
-    Tags?: string
 
     // 查看前/后一个请求内容
     isFront?: boolean
@@ -66,12 +67,15 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     selectedFlow?: HTTPFlow
 
     refresh?: boolean
-    defaultFold?: boolean
 
     historyId?: string
     downstreamProxyStr?: string
     loading?: boolean
     pageType?: HTTPHistorySourcePageType
+
+    scrollTo?: (id: number | string) => void
+    scrollID?: number | string
+    analyzedIds?: number[]
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -652,22 +656,38 @@ export interface HistoryHighLightText extends HighLightText {
 }
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, defaultFold = true} = props
-    const [flow, setFlow] = useState<HTTPFlow>()
+    const {id, selectedFlow, refresh, analyzedIds} = props
+    const ref = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(ref)
+    const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
     const [infoType, setInfoType] = useState<HTTPFlowInfoType>()
     const [infoTypeLoading, setInfoTypeLoading] = useState(false)
     const [existedInfoType, setExistedInfoType] = useState<HTTPFlowInfoType[]>([])
-    const [isFold, setFold] = useState<boolean>(defaultFold)
+    const [isFold, setFold] = useState<boolean>(true)
     const lastIdRef = useRef<number>()
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
-    useEffect(() => {
-        update()
-    }, [id])
+    const compareAnalyzedIds = useCampare(analyzedIds)
+    useDebounceEffect(
+        () => {
+            if (getFlow()?.Id !== id) {
+                update()
+            } else if (analyzedIds) {
+                const obj = getFlow()
+                if (obj) {
+                    queryMITMRuleExtractedData(obj)
+                }
+            } else {
+                update()
+            }
+        },
+        [id, compareAnalyzedIds],
+        {wait: 100}
+    )
 
     useUpdateEffect(() => {
         update(true)
@@ -680,6 +700,20 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             setCurrId(undefined)
         }
     }, [isFold])
+
+    useEffect(() => {
+        if (inViewport) {
+            getRemoteValue("HISTORY_FOLD").then((result: string) => {
+                if (!result) setFold(true)
+                try {
+                    const foldResult: boolean = JSON.parse(result)
+                    setFold(foldResult)
+                } catch (e) {
+                    setFold(true)
+                }
+            })
+        }
+    }, [inViewport])
 
     const update = useMemoizedFn((isSkip: boolean = false) => {
         if (!id) {
@@ -745,15 +779,19 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             .invoke("QueryMITMRuleExtractedData", {
                 Pagination: {
                     Page: 1,
-                    Limit: 10
+                    Limit: -1
                 },
                 Filter: {
-                    TraceID: [i.HiddenIndex]
+                    TraceID: [i.HiddenIndex],
+                    AnalyzedIds: analyzedIds
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                setHighLightItem(undefined)
-                setCurrId(undefined)
+                // 当侧边栏为关闭的时候，定位高亮需要关掉
+                if (isFold) {
+                    setHighLightItem(undefined)
+                    setCurrId(undefined)
+                }
 
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
@@ -859,7 +897,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     }, [flow, currId, extractedData])
 
     return isSelect ? (
-        <div className={styles["http-history-box"]}>
+        <div className={styles["http-history-box"]} ref={ref}>
             <YakitResizeBox
                 key={isFold + "" + flow?.Id + flow?.HiddenIndex}
                 freeze={!isFold}
@@ -970,6 +1008,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                     <HTTPFlowExtractedDataTable
                                         ref={httpFlowTableRef}
                                         hiddenIndex={flow?.HiddenIndex || ""}
+                                        analyzedIds={analyzedIds}
                                         invalidForUTF8Request={!!flow?.InvalidForUTF8Request}
                                         InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
                                         onSetExportMITMRuleFilter={setExportMITMRuleFilter}
@@ -1102,17 +1141,17 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         flow,
         sendToWebFuzzer,
         defaultHeight,
-        defaultHttps,
         search,
         id,
-        Tags,
         highLightText,
         highLightItem,
         flowRequestLoad,
         flowResponseLoad,
         historyId,
         pageType,
-        downstreamProxyStr
+        downstreamProxyStr,
+        scrollTo,
+        scrollID
     } = props
 
     // 编辑器发送到对比器
@@ -1224,7 +1263,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         // 编辑器滚轮回到顶部
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
-        const existedTags = Tags ? Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+        const existedTags = flow?.Tags ? flow?.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
         if (existedTags.includes("[手动修改]") || existedTags.includes("[响应被丢弃]")) {
             setShowBeforeData(true)
             handleGetHTTPFlowBare("request")
@@ -1292,6 +1331,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             .finally(() => {})
     })
     const onScrollTo = useMemoizedFn(() => {
+        if (scrollTo && scrollID) {
+            scrollTo(scrollID)
+            return
+        }
         if (historyId) {
             emiter.emit("onScrollToByClick", JSON.stringify({historyId, id}))
         }
@@ -1425,6 +1468,31 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         return flowResponseLoad || codeLoading
     }, [flowResponseLoad, codeLoading])
 
+    const realReqHighLightText = useMemo(() => {
+        const highLightTextArr = highLightText?.filter((i) => i.IsMatchRequest)
+        if (isShowBeforeData && beforeResValue.length > 0) {
+            if (resType === "current") {
+                return highLightTextArr
+            } else {
+                return []
+            }
+        } else {
+            return highLightTextArr
+        }
+    }, [isShowBeforeData, beforeResValue, resType, highLightText])
+    const realReqHighLightFind = useMemo(() => {
+        const highLightItemArr = highLightItem?.IsMatchRequest ? [highLightItem] : []
+        if (isShowBeforeData && beforeResValue.length > 0) {
+            if (resType === "current") {
+                return highLightItemArr
+            } else {
+                return []
+            }
+        } else {
+            return highLightItemArr
+        }
+    }, [isShowBeforeData, beforeResValue, resType, highLightItem])
+
     return (
         <YakitResizeBox
             firstNode={() => {
@@ -1489,11 +1557,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                     onClick={onScrollTo}
                                     key='reqId'
                                 >
-                                    id：{id}
+                                    id：{scrollID || id}
                                 </YakitTag>
                             )
                             // history页面
-                            if (pageType === "History") {
+                            if (["History"].includes(pageType || "")) {
                                 titleEle.push(
                                     <OutlineLog2Icon
                                         className={styles["jump-web-tree"]}
@@ -1505,7 +1573,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             if (reqSelectionByteCount > 0) {
                                 titleEle.push(
                                     <YakitTag
-                                        style={{marginLeft: pageType === "MITM" ? 0 : 8}}
+                                        style={{marginLeft: pageType === "History" ? 8 : 0}}
                                         key='reqSelectionByteCount'
                                     >
                                         {reqSelectionByteCount} bytes
@@ -1521,7 +1589,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         downstreamProxyStr={downstreamProxyStr}
                         defaultHeight={defaultHeight}
                         loading={flowRequestLoad}
-                        defaultHttps={defaultHttps}
+                        defaultHttps={flow.IsHTTPS}
                         hideSearch={true}
                         noHex={true}
                         noMinimap={true}
@@ -1555,8 +1623,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                             }
                         }}
-                        highLightText={highLightText?.filter((i) => i.IsMatchRequest)}
-                        highLightFind={highLightItem?.IsMatchRequest ? [highLightItem] : []}
+                        highLightText={realReqHighLightText}
+                        highLightFind={realReqHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
@@ -1655,14 +1723,16 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={secondNodeResExtraBtn()}
                         AfterBeautifyRenderBtn={
                             <>
-                                <YakitButton
-                                    size='small'
-                                    onClick={() => {
-                                        emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
-                                    }}
-                                >
-                                    编辑tag
-                                </YakitButton>
+                                {pageType !== "History_Analysis_ruleData" && (
+                                    <YakitButton
+                                        size='small'
+                                        onClick={() => {
+                                            emiter.emit("onEditTag", JSON.stringify({id: flow.Id, historyId}))
+                                        }}
+                                    >
+                                        编辑tag
+                                    </YakitButton>
+                                )}
                                 <CodingPopover
                                     key='coding'
                                     originValue={flow.Response}
@@ -1685,7 +1755,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHeight={props.defaultHeight}
                         hideSearch={true}
                         defaultSearchKeyword={props.search}
-                        defaultHttps={props.defaultHttps}
+                        defaultHttps={flow.IsHTTPS}
                         webFuzzerValue={flow?.RequestString || ""}
                         editorOperationRecord='HTTP_FLOW_DETAIL_REQUEST_AND_RESPONSE'
                         extraEditorProps={{

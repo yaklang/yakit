@@ -1,0 +1,174 @@
+.HTTPHistoryAnalysis {
+    height: 100%;
+    &-left {
+        height: 100%;
+        .tab-wrap {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            .tab {
+                width: 24px;
+                height: 100%;
+                border-right: 1px solid var(--yakit-border-color);
+                background: #f0f1f3;
+                &-item {
+                    padding: 12px 4px;
+                    cursor: pointer;
+                    transform: rotate(180deg);
+                    border-top: 1px solid #ffffff;
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px;
+
+                    text-orientation: sideways-right;
+                    writing-mode: vertical-rl;
+                    &:hover {
+                        background: rgba(204, 210, 222, 0.5);
+                    }
+                    &-active {
+                        color: #ffffff;
+                        background-color: var(--yakit-primary-5);
+                        &:hover {
+                            background-color: var(--yakit-primary-4);
+                        }
+                    }
+                    &-unshowCont {
+                        background-color: var(--yakit-primary-3);
+                    }
+                }
+            }
+            .tab-cont-item {
+                overflow: auto;
+                width: 100%;
+                height: 100%;
+                .expand-icon {
+                    display: inline-flex;
+                    align-items: center;
+                    margin-left: 8px;
+                    cursor: pointer;
+                    color: var(--yakit-body-text-color);
+                    svg {
+                        width: 16px;
+                        height: 16px;
+                    }
+                    &:hover {
+                        color: var(--yakit-primary-4);
+                    }
+                    &:active {
+                        color: var(--yakit-primary-6);
+                    }
+                }
+            }
+        }
+        .hotPatch-wrapper {
+            height: 100%;
+            padding: 0 16px;
+            .hotPatch-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 36px;
+                &-left {
+                    display: flex;
+                    align-items: center;
+
+                    gap: 8px;
+                }
+                &-right {
+                    display: flex;
+                    align-items: center;
+                    padding-right: 8px;
+
+                    gap: 8px;
+                }
+            }
+            .hotPatch-editor {
+                height: calc(100% - 36px);
+            }
+        }
+        .rule-wrapper {
+            height: 100%;
+            padding: 16px 0;
+        }
+    }
+    &-right {
+        height: 100%;
+        padding: 0 8px;
+        &-default {
+            padding-top: 16px;
+            &-title {
+                display: flex;
+                align-items: center;
+
+                gap: 8px;
+                span.title {
+                    color: #31343f;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+            }
+            .exec-btn {
+                margin-top: 15px;
+                text-align: center;
+            }
+        }
+        &-noDefault {
+            height: 100%;
+            .HTTPHistoryAnalysis-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                height: 49px;
+                border-bottom: 1px solid #eaecf3;
+                &-text {
+                    color: #31343f;
+                    font-size: 16px;
+                    font-weight: 600;
+                }
+                .HTTPHistoryAnalysis-execStatus-wrapper {
+                    display: flex;
+                    align-items: center;
+
+                    gap: 8px;
+                }
+            }
+            .HTTPHistoryAnalysis-result {
+                height: calc(100% - 49px);
+                padding: 12px 0;
+                &-tab {
+                    height: calc(100% - 92px);
+                    margin-top: 12px;
+                    .rule-data {
+                        padding: 8px 8px 8px 0;
+                        height: 100%;
+                        .HttpRule-first {
+                            height: 100%;
+                            .HttpRule-table-wrapper {
+                                height: 100%;
+                                .filter-icon {
+                                    svg {
+                                        width: 16px;
+                                        height: 16px;
+                                    }
+                                }
+                            }
+                        }
+                        .HttpRule-second {
+                            height: 100%;
+                            .HttpRuleEditor-first {
+                                height: 100%;
+                            }
+                            .HttpRuleEditor-second {
+                                height: 100%;
+                            }
+                        }
+                    }
+                    .history-data {
+                        padding: 8px 8px 8px 0;
+                        height: 100%;
+                    }
+                }
+            }
+        }
+    }
+}

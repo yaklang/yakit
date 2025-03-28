@@ -1,5 +1,6 @@
 import {HybridScanActiveTask} from "@/models/HybridScan"
 import {Risk as RiskProps} from "@/pages/risks/schema"
+import {HTTPFlowRuleData} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
 
 /** @name hooks逻辑数据 */
 export declare namespace HoldGRPCStreamProps {
@@ -60,6 +61,7 @@ export interface HoldGRPCStreamInfo {
     }
     riskState: StreamResult.Risk[]
     logState: StreamResult.Log[]
+    rulesState: StreamResult.RuleData[]
 }
 
 /** @name 数据流结果 */
@@ -74,6 +76,10 @@ export declare namespace StreamResult {
         Id?: number
         Progress: number
         RuntimeID?: string
+        AnalyzeId?: string
+        ExecResult?: BaseProsp
+        RuleData?: HTTPFlowRuleData // 后端返回的ExtractedContent其实不在这个字段里面，只是前端表格展示需要塞到这个字段
+        ExtractedContent?: string
     }
 
     /** @name 数据流结果(进度条) */
@@ -145,4 +151,6 @@ export declare namespace StreamResult {
         /**第一次接受到该id得时间,前端记录 */
         startTime: number
     }
+
+    export interface RuleData extends HTTPFlowRuleData {}
 }

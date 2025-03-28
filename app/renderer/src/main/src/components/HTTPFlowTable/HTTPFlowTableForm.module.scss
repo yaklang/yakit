@@ -71,33 +71,5 @@
                 align-items: center;
             }
         }
-
-        .background-refresh {
-            .title-style {
-                font-size: 14px;
-                line-height: 22px;
-                color: var(--yakit-header-color);
-            }
-            .hint-style {
-                cursor: pointer;
-                svg {
-                    width: 16px;
-                    height: 16px;
-                    color: var(--ui-neutral-50);
-                }
-            }
-        }
-    }
-
-    .columns-cols {
-        display: flex;
-        flex-wrap: wrap;
-        .columns-cols-item {
-            width: 25%;
-            margin-bottom: 8px;
-            overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-        }
     }
 }

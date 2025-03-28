@@ -330,6 +330,14 @@ module.exports = (win, getClient) => {
     })
 
 
+    const handlerHelper = require("./handleStreamWithContext");
+    const streamExportMITMRuleExtractedData = new Map()
+    ipcMain.handle("cancel-ExportMITMRuleExtractedDataStream", handlerHelper.cancelHandler(streamExportMITMRuleExtractedData))
+    ipcMain.handle("ExportMITMRuleExtractedDataStream", (e, params, token) => {
+        let stream = getClient().ExportMITMRuleExtractedData(params)
+        handlerHelper.registerHandler(win, stream, streamExportMITMRuleExtractedData, token)
+    })
+
     // asyncExportMITMRuleExtractedData wrapper
     const asyncExportMITMRuleExtractedData = (params) => {
         return new Promise((resolve, reject) => {
@@ -413,7 +421,6 @@ module.exports = (win, getClient) => {
         return await asyncExportHTTPFlows(params)
     })
 
-    const handlerHelper = require("./handleStreamWithContext");
     const streamExportHTTPFlowMap = new Map()
     ipcMain.handle("cancel-ExportHTTPFlowStream", handlerHelper.cancelHandler(streamExportHTTPFlowMap))
     ipcMain.handle("ExportHTTPFlowStream", (e, params, token) => {
@@ -441,5 +448,12 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("HTTPFlowsToOnline", async (e, params) => {
         return await asyncHTTPFlowsToOnline(params)
+    })
+
+    const streamAnalyzeHTTPFlowMap = new Map();
+    ipcMain.handle("cancel-AnalyzeHTTPFlow", handlerHelper.cancelHandler(streamAnalyzeHTTPFlowMap));
+    ipcMain.handle("AnalyzeHTTPFlow", (e, params, token) => {
+        let stream = getClient().AnalyzeHTTPFlow(params);
+        handlerHelper.registerHandler(win, stream, streamAnalyzeHTTPFlowMap, token)
     })
 }

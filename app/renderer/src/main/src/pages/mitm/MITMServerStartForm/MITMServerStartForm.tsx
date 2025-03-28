@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {Form, Space, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
-import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse} from "@/pages/mitm/MITMPage"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse, MitmStatus} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
@@ -49,7 +49,7 @@ export interface MITMServerStartFormProp {
     setVisible: (b: boolean) => void
     enableInitialPlugin: boolean
     setEnableInitialPlugin: (b: boolean) => void
-    status: "idle" | "hijacked" | "hijacking"
+    status: MitmStatus
 }
 
 const {Item} = Form

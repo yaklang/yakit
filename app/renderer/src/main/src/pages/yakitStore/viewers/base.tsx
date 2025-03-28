@@ -327,6 +327,7 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                 {!!props.runtimeId && (
                     <TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
                         <CurrentHttpFlow
+                            pageType='Plugin'
                             runtimeId={props.runtimeId}
                             isOnlyTable={onlyShowFirstNode}
                             onIsOnlyTable={setOnlyShowFirstNode}
@@ -448,7 +449,6 @@ interface CurrentHttpFlowProp {
     onIsOnlyTable: (value: boolean) => any
     /** 是否展示详情 */
     showDetail?: boolean
-    /** 表格的应用类型(history|MITM) */
     pageType?: HTTPHistorySourcePageType
 
     /**
@@ -458,7 +458,6 @@ interface CurrentHttpFlowProp {
     onQueryParams?: (queryParams: string, execFlag?: boolean) => void
     refresh?: boolean // 是否刷新表格
 
-    toWebFuzzer?: boolean // 是否是在webFuzzer使用
     showBatchActions?: boolean
 }
 
@@ -475,7 +474,6 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
         pageType,
         onQueryParams,
         refresh = true,
-        toWebFuzzer = false,
         showBatchActions = false
     } = props
     const [highlightSearch, setHighlightSearch] = useState("")
@@ -547,9 +545,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                 secondNodeStyle={{display: isOnlyTable ? "none" : ""}}
                 firstNode={
                     <HTTPFlowTable
-                        toPlugin={true}
                         runTimeId={runtimeId}
-                        noDeleteAll={true}
                         params={{SourceType: "scan"}}
                         searchURL={searchURL}
                         includeInUrl={includeInUrl}
@@ -562,35 +558,41 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         onlyShowFirstNode={isOnlyTable}
                         setOnlyShowFirstNode={onIsOnlyTable}
                         httpHistoryTableTitleStyle={{
-                            borderLeft: "1px solid var(--yakit-border-color)",
-                            borderRight: "1px solid var(--yakit-border-color)",
+                            borderLeft: pageType === "Webfuzzer" ? "1px solid var(--yakit-border-color)" : undefined,
+                            borderRight: pageType === "Webfuzzer" ? "1px solid var(--yakit-border-color)" : undefined,
                             paddingTop: 12,
+                            paddingLeft: 8,
+                            paddingRight: 8,
                             ...(httpHistoryTableTitleStyle || {})
                         }}
-                        onlyShowSearch={true}
-                        showBatchActions={showBatchActions}
                         historyId={historyId}
                         titleHeight={47}
                         containerClassName={containerClassName}
                         pageType={pageType}
                         onQueryParams={onQueryParams}
                         refresh={refresh}
-                        toWebFuzzer={toWebFuzzer}
+                        noTableTitle={false}
+                        showSourceType={false}
+                        showAdvancedSearch={false}
+                        showProtocolType={false}
+                        showColorSwatch={pageType === "Webfuzzer"}
+                        showBatchActions={showBatchActions}
+                        showDelAll={false}
+                        showSetting={false}
                     />
                 }
                 secondNode={
                     flow && (!isOnlyTable || showDetail) ? (
                         <HTTPFlowDetailRequestAndResponse
                             id={flow.Id}
-                            defaultHttps={flow?.IsHTTPS}
                             flow={flow}
-                            Tags={flow.Tags}
                             noHeader={true}
                             search={highlightSearch}
                             flowRequestLoad={flowRequestLoad}
                             flowResponseLoad={flowResponseLoad}
                             sendToWebFuzzer={true}
                             historyId={historyId}
+                            pageType={pageType}
                         />
                     ) : null
                 }

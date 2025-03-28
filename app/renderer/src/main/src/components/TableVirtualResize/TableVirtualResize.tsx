@@ -490,7 +490,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             total = 0
         }
         let w = (width - columnsAllWidth) / (cLength - total || 1)
-        const cw = w - scrollBarWidth / (cLength - total || 1) + 32
+        const cw = w - scrollBarWidth / (cLength - total || 1)
 
         const newColumns = getColumns().map((ele, index) => {
             if (ele.isDefWidth) {

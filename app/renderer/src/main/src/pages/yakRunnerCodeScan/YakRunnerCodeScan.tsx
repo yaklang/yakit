@@ -1376,7 +1376,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                             tabsState: getTabsState,
                             logState: streamInfo.logState,
                             tabsInfoState: {},
-                            riskState: []
+                            riskState: [],
+                            rulesState: []
                         }}
                         runtimeId={runtimeId}
                         loading={isExecuting}

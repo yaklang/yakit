@@ -25,6 +25,7 @@ export enum YakitRoute {
     ShellReceiver = "shellReceiver",
     /** 数据库 */
     DB_HTTPHistory = "db-http-request",
+    DB_HTTPHistoryAnalysis = "db-http-request-analysis",
     DB_Report = "db-reports-results",
     DB_Risk = "db-risks",
     Misstatement = "misstatement",

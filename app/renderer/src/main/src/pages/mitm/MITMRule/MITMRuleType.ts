@@ -1,6 +1,7 @@
-import { YakitInputProps } from "@/components/yakitUI/YakitInput/YakitInputType"
-import { ReactNode } from "react"
-import { HTTPCookieSetting, HTTPHeader } from "../MITMContentReplacerHeaderOperator"
+import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
+import {ForwardedRef, ReactNode} from "react"
+import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
+import {MitmStatus} from "../MITMPage"
 
 export interface MITMContentReplacerRule {
     // 文本字符串，正则/Re2/字符串硬匹配
@@ -10,6 +11,7 @@ export interface MITMContentReplacerRule {
     RegexpGroups: number[]
     NoReplace: boolean
     Result: string
+    EffectiveURL: string
     Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan" | ""
     EnableForRequest: boolean
     EnableForResponse: boolean
@@ -26,12 +28,20 @@ export interface MITMContentReplacerRule {
     ExtraHeaders: HTTPHeader[]
     ExtraCookies: HTTPCookieSetting[]
 }
-
+export interface MITMRulePropRef {
+    onSaveToDataBase: (saveOk?: () => void) => void
+}
 export interface MITMRuleProp {
-    status: "idle" | "hijacked" | "hijacking"
+    ref?: ForwardedRef<MITMRulePropRef>
+    ruleUse?: "mitm" | "historyAnalysis"
+    status: MitmStatus
     visible: boolean
     setVisible: (b: boolean) => void
     getContainer?: HTMLElement | (() => HTMLElement) | false
+    excludeColumnsKey?: string[]
+    excludeBatchMenuKey?: string[]
+    onSetRules?: (r: MITMContentReplacerRule[]) => void
+    onRefreshCom?: () => void
 }
 
 export interface ButtonTextProps {
@@ -41,6 +51,7 @@ export interface ButtonTextProps {
 }
 
 export interface MITMRuleFromModalProps {
+    ruleUse: "mitm" | "historyAnalysis"
     defaultIndex?: number
     isEdit: boolean
     modalVisible: boolean
@@ -53,7 +64,7 @@ export interface MITMRuleFromModalProps {
 export interface ExtractRegularProps {
     onSave: (s: string) => void
     /**@name 提取规则的默认code */
-    defaultCode?:string
+    defaultCode?: string
 }
 
 export interface ExtraHTTPSelectProps {
@@ -107,7 +118,7 @@ export interface CloseTipModalProps {
 export interface RuleContentProps {
     ref?: any
     /**@name 提取规则的默认code */
-    defaultCode?:string
+    defaultCode?: string
     getRule: (s: string) => void
     inputProps?: YakitInputProps
     /**@name  不要传复杂的节点,最好只传一个icon,目前正则Modal触发条件只有:icon和组件默认的共两种情况 */
