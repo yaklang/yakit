@@ -411,6 +411,90 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     )
 })
 
+interface ApplySyntaxFlowRuleUpdateResponse {
+    Percent: number
+    Message: string
+}
+
+export interface IRifyApplySyntaxFlowRuleUpdateProps {
+    visible: boolean
+    setVisible: (b: boolean) => void
+}
+/**
+ * IRify一键更新规则
+ */
+export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
+    const {visible,setVisible} = props
+    const taskToken = useMemo(() => randomString(40), [])
+    const [percent, setPercent] = useState<number>(0)
+    useEffect(() => {
+        if (!taskToken) {
+            return
+        }
+        ipcRenderer.on(`${taskToken}-data`, (_, data: ApplySyntaxFlowRuleUpdateResponse) => {
+            const p = Math.floor(data.Percent * 100)
+            setPercent(p)
+        })
+        ipcRenderer.on(`${taskToken}-end`, () => {
+            setTimeout(() => {
+                setPercent(0)
+                setVisible(false)
+                onRefLocalRuleList()
+            }, 200)
+        })
+        ipcRenderer.on(`${taskToken}-error`, (_, e) => {
+            onRefLocalRuleList()
+            yakitNotify("error", "更新失败:" + e)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`${taskToken}-data`)
+            ipcRenderer.removeAllListeners(`${taskToken}-error`)
+            ipcRenderer.removeAllListeners(`${taskToken}-end`)
+        }
+    }, [taskToken])
+    useEffect(() => {
+        if (visible) {
+            ipcRenderer
+                .invoke("ApplySyntaxFlowRuleUpdate", taskToken)
+                .then(() => {})
+                .catch((e) => {
+                    failed(`更新失败:${e}`)
+                })
+        }
+    }, [visible])
+    const StopAllRule = () => {
+        ipcRenderer.invoke("cancel-streamApplySyntaxFlowRuleUpdate", taskToken).catch((e) => {
+            failed(`停止更新:${e}`)
+            onRefLocalRuleList()
+        })
+    }
+    /** 更新后需要刷新本地规则管理 */
+    const onRefLocalRuleList = useMemoizedFn(() => {
+        emiter.emit("onRefreshRuleManagement")
+    })
+    return (
+        <YakitHint
+            visible={visible}
+            title={`${getReleaseEditionName()} 规则更新中...`}
+            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--yakit-warning-5)"}} />}
+            onCancel={() => {
+                StopAllRule()
+                setVisible(false)
+            }}
+            okButtonProps={{style: {display: "none"}}}
+            isDrag={true}
+            mask={false}
+        >
+            <Progress
+                strokeColor='#F28B44'
+                trailColor='#F0F2F5'
+                percent={percent}
+                format={(percent) => `已更新 ${percent}%`}
+            />
+        </YakitHint>
+    )
+})
+
 interface YakModuleListHeardProps {
     isSelectAll: boolean
     onSelectAll: (e: boolean) => void

@@ -8,7 +8,7 @@ import {API} from "./services/swagger/resposeType"
 import {useEeSystemConfig, useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
 import {aboutLoginUpload, loginHTTPFlowsToOnline, refreshToken} from "./utils/login"
 import UILayout from "./components/layout/UILayout"
-import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace} from "@/utils/envfile"
+import {getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isEnpriTrace, isIRify} from "@/utils/envfile"
 import {RemoteGV} from "./yakitGV"
 import {YakitModal} from "./components/yakitUI/YakitModal/YakitModal"
 import styles from "./app.module.scss"
@@ -266,9 +266,9 @@ function NewApp() {
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
                 await remoteOperation(false, dynamicStatus)
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox,isIRify:isIRify()})
             } else {
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox,isIRify:isIRify()})
             }
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {

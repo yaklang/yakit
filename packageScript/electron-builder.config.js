@@ -37,11 +37,11 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitselogo.ico"
         nsisUninstallerIcon = "app/assets/yakitselogo.ico"
         break
-    case "sast":
+    case "irify":
         appInfoOption = {
-            appId: "io.yaklang.sastscan",
-            extraMetadata: {name: "sastscan"},
-            productName: "SastScan",
+            appId: "io.yaklang.irify",
+            extraMetadata: {name: "irify"},
+            productName: "IRify",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"
@@ -50,11 +50,11 @@ switch (platform) {
         nsisInstallerIcon = "app/assets/yakitsslogo.ico"
         nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
         break
-    case "sastee":
+    case "irifyee":
         appInfoOption = {
-            appId: "io.yaklang.sastscanee",
-            extraMetadata: {name: "sastscanee"},
-            productName: "SastScanEnterprise",
+            appId: "io.yaklang.irifyee",
+            extraMetadata: {name: "irifyee"},
+            productName: "IRifyEnpriTrace",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakitsslogo.icns"

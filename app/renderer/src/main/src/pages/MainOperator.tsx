@@ -23,11 +23,11 @@ import {API} from "@/services/swagger/resposeType"
 import {
     globalUserLogin,
     isCommunityEdition,
-    isCommunitySastScan,
+    isCommunityIRify,
     isEnpriTrace,
     isEnpriTraceAgent,
     isEnterpriseOrSimpleEdition,
-    isSastScan
+    isIRify
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
 import {CodeGV, RemoteGV} from "@/yakitGV"
@@ -438,12 +438,12 @@ const Main: React.FC<MainProp> = React.memo((props) => {
     }
     const waterMarkStr = () => {
         // Yakit社区版无水印
-        if (isCommunityEdition() && !isCommunitySastScan()) {
+        if (isCommunityEdition() && !isCommunityIRify()) {
             return ""
         }
-        // Sast社区版有水印
-        else if (isCommunitySastScan()){
-            return "Sast技术浏览版仅供技术交流使用"
+        // IRify社区版有水印
+        else if (isCommunityIRify()){
+            return "IRify技术浏览版仅供技术交流使用"
         }
         else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
@@ -451,7 +451,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark(isSastScan() ? "Sast技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(isIRify() ? "IRify技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
         } else if (isEnpriTraceAgent()) {
             return "EnpriTraceAgent-试用版"
         }

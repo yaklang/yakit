@@ -715,6 +715,7 @@ service Yak {
 
   // AI相关
   rpc CheckHahValidAiConfig(Empty) returns (GeneralResponse);
+  rpc ListAiModel(ListAiModelRequest) returns (ListAiModelResponse);
 
   // 指纹库
   rpc GetFingerprint(GetFingerprintRequest) returns (GetFingerprintResponse);
@@ -739,6 +740,8 @@ service Yak {
   rpc UpdateSyntaxFlowRule(UpdateSyntaxFlowRuleRequest) returns (DbOperateMessage);
   rpc UpdateSyntaxFlowRuleEx(UpdateSyntaxFlowRuleRequest) returns (UpdateSyntaxFlowRuleResponse);
   rpc DeleteSyntaxFlowRule(DeleteSyntaxFlowRuleRequest) returns (DbOperateMessage);
+  rpc CheckSyntaxFlowRuleUpdate(CheckSyntaxFlowRuleUpdateRequest) returns (CheckSyntaxFlowRuleUpdateResponse);
+  rpc ApplySyntaxFlowRuleUpdate(ApplySyntaxFlowRuleUpdateRequest) returns (stream ApplySyntaxFlowRuleUpdateResponse);
   // SyntaxFlow Group
   rpc QuerySyntaxFlowRuleGroup(QuerySyntaxFlowRuleGroupRequest)returns (QuerySyntaxFlowRuleGroupResponse);
   rpc DeleteSyntaxFlowRuleGroup(DeleteSyntaxFlowRuleGroupRequest) returns (DbOperateMessage);
@@ -813,6 +816,44 @@ service Yak {
   rpc SearchNoteContent(SearchNoteContentRequest) returns (SearchNoteContentResponse);
   rpc ImportNote(ImportNoteRequest) returns (stream ImportNoteResponse);
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
+
+  rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+}
+
+message AIOutputEvent {
+  string CoordinatorId = 1;
+  string Type = 2;
+  string NodeId = 3;
+  bool IsSystem = 4;
+  bool IsStream = 5;
+  bool IsReason = 6;
+  bytes StreamDelta = 7;
+  bool IsJson = 8;
+  bytes Content = 9;
+}
+
+message AIInputEvent {
+  bool IsStart = 1;
+  AIStartParams Params = 2;
+
+  bool IsInteractiveMessage = 3;
+  string InteractiveId = 4;
+  string InteractiveJSONInput = 5;
+}
+
+message McpConfig {
+  string Type = 1;
+  string Key = 2;
+  string Url = 3;
+}
+
+message AIStartParams {
+  repeated McpConfig McpServers = 1;
+
+  string UserQuery = 2;
+  // allow ai to use the fs
+  bool EnableSystemFileSystemOperator = 3;
+  bool UseDefaultAIConfig = 4;
 }
 
 
@@ -1799,7 +1840,7 @@ message ImportProjectRequest {
   string Password = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message IsPrivilegedForNetRawResponse {
@@ -1839,10 +1880,10 @@ message GetProjectsRequest {
   Paging Pagination = 3;
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
-  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(sast)
+  // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
   // this type effect response.ProjectTotal, this type mark kind of frontend
-  // "project"(yakit) | "ssa_project"(sast)
+  // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
 }
 
@@ -1877,22 +1918,22 @@ message SetCurrentProjectRequest {
   // ProjectName
   string ProjectName = 1;
   int64 Id = 2;
-  string Type = 3; // "project"(yakit) | "ssa_project"(sast)
+  string Type = 3; // "project"(yakit) | "ssa_project"(irify)
 }
 
 message GetCurrentProjectExRequest {
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
 message DeleteProjectRequest {
   int64 Id = 1;
   bool IsDeleteLocal = 2;
-  string Type = 3;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message GetDefaultProjectExRequest {
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message QueryProjectDetailRequest {
@@ -1901,7 +1942,7 @@ message QueryProjectDetailRequest {
 
 
 message GetTemporaryProjectExRequest{
-  string Type = 1;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 1;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 
@@ -2676,7 +2717,7 @@ message GenerateYakCodeByPacketRequest {
   enum Template {
     Ordinary = 0;
     Batch = 1;
-}
+  }
   Template CodeTemplate = 3;
 }
 
@@ -2696,7 +2737,7 @@ message GenerateYakCodeByPacketResponse {
 message QueryReportRequest {
   int64 Id = 1;
   string Hash = 2;
-  string Type = 3;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 3;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message DeleteReportRequest {
@@ -2705,7 +2746,7 @@ message DeleteReportRequest {
   QueryReportsRequest Filter = 3;
   repeated int64 IDs = 4;
   bool DeleteAll = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message QueryReportsResponse {
@@ -2720,7 +2761,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(sast)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message Report {
@@ -4642,8 +4683,9 @@ message FuzzerRequest {
   // 需要配合前端的 Index
   // 这两个 Index 如果有的话，后端在执行 HTTP Fuzzer Sequence 的时候，就可以只传递这两个了
   // 如果没有的话，直接把整个 Request 传回去
-  string FuzzerIndex = 41;
-  string FuzzerTabIndex = 42;
+  string FuzzerIndex = 41; // fuzzer grpc index, every HTTPFuzzer will have one index
+  string FuzzerTabIndex = 42; // use witch fuzzer tab, has some config info
+  string FuzzerSequenceIndex = 62; // fuzzer sequence index , for sequence fuzzer, front end not set, just use for server push
 
   // BatchTarget
   // 继承透传给 HTTPPOOL 的参数，可以使用批量目标来发送
@@ -4922,6 +4964,7 @@ message AnalyzeHTTPFlowResponse{
   string ExtractedContent = 3;
 }
 
+
 message AnalyzedHTTPFlowFilter{
   repeated string ResultIds = 1;
   repeated string RuleVerboseNames = 2;
@@ -4929,6 +4972,7 @@ message AnalyzedHTTPFlowFilter{
 }
 
 
+// 规则数据
 message HTTPFlowRuleData{
   int64 Id = 1;
   int64 HTTPFlowId =2;
@@ -5034,6 +5078,7 @@ message HTTPFlow {
   repeated string RootDomains = 41;
   repeated string JsonObjects = 42;
 
+  bool IsReadTooSlowResponse = 51;
   bool IsTooLargeResponse = 43;
   string TooLargeResponseHeaderFile = 44;
   string TooLargeResponseBodyFile = 45;
@@ -5226,6 +5271,7 @@ message MITMRequest {
 
   // max content-length
   int64 maxContentLength = 55;
+  int64 MaxReadWaitTime = 67;
 
   // 提前为此次flow设置tags
   repeated string Tags = 56;
@@ -5784,13 +5830,14 @@ message SyntaxFlowRuleFilter {
   repeated string Tag = 6;
   string Keyword = 7;
   // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-  bool includeLibraryRule = 8; // default false
+  bool includeLibraryRule = 8; // default false // 废弃
   // for infinite list
   int64 FromId = 9; // 废弃
   int64  UntilId = 10;  // 废弃
   int64 AfterId = 11;
   int64 BeforeId = 12;
   string FilterRuleKind = 13; // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
+  string FilterLibRuleKind = 14; // "lib"library规则，"noLib"非library规则，空为所有规则
 }
 
 
@@ -5885,6 +5932,19 @@ message QuerySyntaxFlowRuleResponse{
 
 message DeleteSyntaxFlowRuleRequest{
   SyntaxFlowRuleFilter Filter = 1;
+}
+
+message CheckSyntaxFlowRuleUpdateRequest{}
+
+message CheckSyntaxFlowRuleUpdateResponse {
+  bool NeedUpdate = 1;  // 是否需要更新
+  string State = 2;  // 更新状态，没有规则"empty",规则需要更新"to_update"
+}
+message ApplySyntaxFlowRuleUpdateRequest {}
+
+message ApplySyntaxFlowRuleUpdateResponse {
+  double Percent = 1;  // 更新进度百分比
+  string Message = 2;  // 更新状态信息
 }
 
 message SyntaxFlowRuleGroupFilter {
@@ -6194,6 +6254,7 @@ message SSARisksFilter {
   int64 IsRead = 11; // >0 true  <0 false =0 all
   string Title = 12; // fuzz search
   repeated string Hash = 13;
+  repeated string FunctionName = 14;
 }
 
 message QuerySSARisksRequest {
@@ -6329,7 +6390,7 @@ message UploadHotPatchTemplateToOnlineRequest {
 
 message DownloadHotPatchTemplateRequest {
   string Name = 1;
-  string Type = 2;// fuzzer/mitm/httpflow-analyze
+  string Type = 2; // fuzzer/mitm/httpflow-analyze
 }
 message ExportHTTPFlowStreamRequest {
   QueryHTTPFlowRequest Filter = 1;
@@ -6348,91 +6409,102 @@ message ImportHTTPFlowStreamRequest {
 }
 
 message ImportHTTPFlowStreamResponse {
-    double Percent = 1;
-    string Verbose = 2; 
+  double Percent = 1;
+  string Verbose = 2;
 }
 
 message Note {
-    uint64 Id = 1;
-    string Title = 2;
-    string Content = 3;
-    int64 CreateAt = 4;
-    int64 UpdateAt = 5;
+  uint64 Id = 1;
+  string Title = 2;
+  string Content = 3;
+  int64 CreateAt = 4;
+  int64 UpdateAt = 5;
 }
-  
+
 message NoteContent {
-    Note Note = 1;
-    uint64 Index = 2;
-    uint64 Line = 3;
-    string LineContent = 4;
+  Note Note = 1;
+  uint64 Index = 2;
+  uint64 Line = 3;
+  string LineContent = 4;
 }
-  
+
 message NoteFilter {
-    repeated uint64 Id = 1;
-    repeated string Title = 2;
-    repeated string Keyword = 3;
+  repeated uint64 Id = 1;
+  repeated string Title = 2;
+  repeated string Keyword = 3;
 }
-  
+
 message CreateNoteRequest {
-    string Title = 1;
-    string Content = 2;
+  string Title = 1;
+  string Content = 2;
 }
 
 message CreateNoteResponse {
-    DbOperateMessage Message = 1;
-    int64 NoteId = 2;
+  DbOperateMessage Message = 1;
+  int64 NoteId = 2;
 }
-  
+
 message UpdateNoteRequest {
-    NoteFilter Filter = 1;
-    bool UpdateTitle = 2;
-    string Title = 3;
-    bool UpdateContent = 4;
-    string Content = 5;
+  NoteFilter Filter = 1;
+  bool UpdateTitle = 2;
+  string Title = 3;
+  bool UpdateContent = 4;
+  string Content = 5;
 }
-  
+
 message DeleteNoteRequest {
-    NoteFilter Filter = 1;
+  NoteFilter Filter = 1;
 }
-  
+
 message QueryNoteRequest {
-    NoteFilter Filter = 1;
-    Paging Pagination = 2;
+  NoteFilter Filter = 1;
+  Paging Pagination = 2;
 }
-  
+
 message QueryNoteResponse {
-    Paging Pagination = 1;
-    repeated Note Data = 2;
-    int64 Total = 3;
+  Paging Pagination = 1;
+  repeated Note Data = 2;
+  int64 Total = 3;
 }
-  
+
 message SearchNoteContentRequest {
-    string Keyword = 1;
-    Paging Pagination = 2;
+  string Keyword = 1;
+  Paging Pagination = 2;
 }
-  
+
 message SearchNoteContentResponse {
-    Paging Pagination = 1;
-    repeated NoteContent Data = 2;
-    int64 Total = 3;
+  Paging Pagination = 1;
+  repeated NoteContent Data = 2;
+  int64 Total = 3;
 }
-  
+
 message ImportNoteRequest {
-    string TargetPath = 1;
+  string TargetPath = 1;
 }
-  
+
 message ImportNoteResponse {
-    double Percent = 1;
-    string Verbose = 2;
-    int64 NoteId = 3;
+  double Percent = 1;
+  string Verbose = 2;
+  int64 NoteId = 3;
 }
-  
+
 message ExportNoteRequest {
-    NoteFilter Filter = 1;
-    string TargetPath = 2;
+  NoteFilter Filter = 1;
+  string TargetPath = 2;
 }
-  
+
 message ExportNoteResponse {
-    double Percent = 1;
-    string Verbose = 2;
+  double Percent = 1;
+  string Verbose = 2;
 }
+
+
+
+message ListAiModelRequest{
+  string Config = 1;
+}
+
+message ListAiModelResponse{
+  repeated string ModelName =1;
+}
+

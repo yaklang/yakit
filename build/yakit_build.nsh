@@ -109,20 +109,20 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${StrStr} $0 $EXEFILE "EnpriTrace"
-        ${If} $0 != "" ; ee
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "EnpriTrace"
+        ${StrStr} $0 $EXEFILE "IRifyEnpriTrace"
+        ${If} $0 != "" ; irifyee
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
-            ${StrStr} $0 $EXEFILE "SastScanEnterprise"
-            ${If} $0 != "" ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
-                StrCpy $EXE_NAME "SastScanEnterprise"
+            ${StrStr} $0 $EXEFILE "EnpriTrace"
+            ${If} $0 != "" ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+                StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
-                ${StrStr} $0 $EXEFILE "SastScan"
-                ${If} $0 != "" ; sce
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
-                    StrCpy $EXE_NAME "SastScan"
+                ${StrStr} $0 $EXEFILE "IRify"
+                ${If} $0 != "" ; irify
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
+                    StrCpy $EXE_NAME "IRify"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -143,17 +143,17 @@ FunctionEnd
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
     ${Else}
-        ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee 
-            StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
-            StrCpy $EXE_NAME "EnpriTrace"
+        ${If} ${FileExists} `$INSTDIR\IRifyEnpriTrace.exe` ; irifyee 
+            StrCpy $INSTALL_PATH_REG_KEY_NAME "IRifyEnpriTrace_InstallPath"
+            StrCpy $EXE_NAME "IRifyEnpriTrace"
         ${Else}
-            ${If} ${FileExists} `$INSTDIR\SastScanEnterprise.exe` ; see
-                StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScanEnterprise_InstallPath"
-                StrCpy $EXE_NAME "SastScanEnterprise"
+            ${If} ${FileExists} `$INSTDIR\EnpriTrace.exe` ; ee
+                StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTrace_InstallPath"
+                StrCpy $EXE_NAME "EnpriTrace"
             ${Else}
-                ${If} ${FileExists} `$INSTDIR\SastScan.exe` ; sce
-                    StrCpy $INSTALL_PATH_REG_KEY_NAME "SastScan_InstallPath"
-                    StrCpy $EXE_NAME "SastScan"
+                ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
+                    StrCpy $EXE_NAME "IRify"
                 ${EndIf}
             ${EndIf}
         ${EndIf}

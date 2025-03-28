@@ -11,8 +11,8 @@ on:
                 options:
                     - ce
                     - ee
-                    - sce
-                    - see
+                    - irify
+                    - irifyee
 
 jobs:
     build_yakit:
@@ -34,8 +34,8 @@ jobs:
                     echo "Version starts with 'v': $VERSION_INPUT"
                     # Remove the 'v' prefix and store in SOFTWARE_VERSION
                     SOFTWARE_VERSION="${VERSION_INPUT:1}"
-                    # Remove '-sast' suffix if exists
-                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-sast}"
+                    # Remove '-irify' suffix if exists
+                    SOFTWARE_VERSION="${SOFTWARE_VERSION%-irify}"
                     echo "SOFTWARE_VERSION=$SOFTWARE_VERSION" >> $GITHUB_ENV
                   fi
 
@@ -45,9 +45,9 @@ jobs:
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
                     echo "FILE_PATH=vip" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "sce" ]; then
-                    echo "FILE_PATH=sast" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "see" ]; then
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
+                    echo "FILE_PATH=irify" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "FILE_PATH=svip" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2

@@ -154,12 +154,12 @@ module.exports = (win, callback, getClient, newClient) => {
     const asyncStartLocalYakEngineServer = (win, params) => {
         engineCount += 1
 
-        const {port, isEnpriTraceAgent, isSastScan} = params
+        const {port, isEnpriTraceAgent, isIRify} = params
         return new Promise((resolve, reject) => {
             try {
                 toLog("已启动本地引擎进程")
-                if (isSastScan) {
-                    dbFile = ["--profile-db", "sast-profile-rule.db", "--project-db", "default-sast.db"]
+                if (isIRify) {
+                    dbFile = ["--profile-db", "irify-profile-rule.db", "--project-db", "default-irify.db"]
                 }
                 const log = out ? out : "ignore"
 

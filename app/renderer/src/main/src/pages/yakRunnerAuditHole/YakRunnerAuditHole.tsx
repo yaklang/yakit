@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn, useSize, useUpdateEffect} from "ahooks"
 import styles from "./YakRunnerAuditHole.module.scss"
 import {
     HoleQueryProps,
@@ -28,9 +28,13 @@ import {YakitAuditHoleTable} from "./YakitAuditHoleTable/YakitAuditHoleTable"
 import {SSARisksFilter} from "./YakitAuditHoleTable/YakitAuditHoleTableType"
 import {apiGetSSARiskFieldGroup} from "./YakitAuditHoleTable/utils"
 import {shallow} from "zustand/shallow"
-import { PageNodeItemProps, usePageInfo } from "@/store/pageInfo"
-import { YakitRoute } from "@/enums/yakitRoute"
-import { defaultRiskPageInfo } from "@/defaultConstants/RiskPage"
+import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {defaultRiskPageInfo} from "@/defaultConstants/RiskPage"
+import {LeftSideHoleType} from "./LeftSideHoleBar/LeftSideHoleBarType"
+import {LeftSideHoleBar} from "./LeftSideHoleBar/LeftSideHoleBar"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 
 export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => {
     const {queryPagesDataById} = usePageInfo(
@@ -41,7 +45,10 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     )
 
     const initPageInfo = useMemoizedFn(() => {
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.YakRunner_Audit_Hole, YakitRoute.YakRunner_Audit_Hole)
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.YakRunner_Audit_Hole,
+            YakitRoute.YakRunner_Audit_Hole
+        )
         if (currentItem && currentItem.pageParamsInfo.riskPageInfo) {
             return currentItem.pageParamsInfo.riskPageInfo
         } else {
@@ -62,7 +69,6 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
         }
     }, [])
 
-    const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [riskLoading, setRiskLoading] = useState<boolean>(false)
     const [query, setQuery] = useState<SSARisksFilter>({
         Severity: initPageInfo().SeverityList || []
@@ -70,40 +76,74 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
     const riskBodyRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(riskBodyRef)
 
+    const [isUnShow, setUnShow] = useState<boolean>(true)
+    const [active, setActive] = useState<LeftSideHoleType>("statistic")
     // 获取筛选展示状态
     useEffect(() => {
         getRemoteValue(RemoteGV.AuditHoleShow).then((value: string) => {
-            setAdvancedQuery(value !== "false")
+            if (value === "true") {
+                setUnShow(false)
+            }
         })
     }, [])
-    const onSetQueryShow = useMemoizedFn((val) => {
-        setAdvancedQuery(val)
-        setRemoteValue(RemoteGV.AuditHoleShow, `${val}`)
+
+    // 操作side开启与关闭
+    const onOperateSide = useMemoizedFn((val: boolean) => {
+        if (val) {
+            setUnShow(false)
+        } else {
+            setUnShow(true)
+        }
     })
+
+    useUpdateEffect(() => {
+        setRemoteValue(RemoteGV.AuditHoleShow, `${!isUnShow}`)
+    }, [isUnShow])
+
     return (
-            <YakitSpin spinning={riskLoading}>
-                <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
-                    <HoleQuery
-                        inViewport={inViewport}
-                        advancedQuery={advancedQuery}
-                        setAdvancedQuery={onSetQueryShow}
-                        query={query}
-                        setQuery={setQuery}
-                    />
-                    <YakitAuditHoleTable
-                        advancedQuery={advancedQuery}
-                        setAdvancedQuery={onSetQueryShow}
-                        setRiskLoading={setRiskLoading}
-                        query={query}
-                        setQuery={setQuery}
-                    />
-                </div>
-            </YakitSpin>
+        <YakitSpin spinning={riskLoading}>
+            <div className={styles["audit-hole-page"]} ref={riskBodyRef}>
+                <YakitResizeBox
+                    freeze={!isUnShow}
+                    firstRatio={isUnShow ? "25px" : "325px"}
+                    firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
+                    lineDirection='right'
+                    firstMinSize={isUnShow ? 25 : 250}
+                    lineStyle={{width: 4}}
+                    secondMinSize={480}
+                    firstNode={
+                        <LeftSideHoleBar
+                            isUnShow={isUnShow}
+                            setUnShow={setUnShow}
+                            active={active}
+                            setActive={setActive}
+                            statisticNode={
+                                <HoleQuery
+                                    inViewport={inViewport}
+                                    onOperateSide={onOperateSide}
+                                    query={query}
+                                    setQuery={setQuery}
+                                />
+                            }
+                            documentCollectDom={
+                                <DocumentCollect query={query} setQuery={setQuery}/>
+                            }
+                        />
+                    }
+                    secondNodeStyle={
+                        isUnShow ? {padding: 0, minWidth: "calc(100% - 25px)"} : {overflow: "unset", padding: 0}
+                    }
+                    secondNode={
+                        <YakitAuditHoleTable setRiskLoading={setRiskLoading} query={query} setQuery={setQuery} />
+                    }
+                />
+            </div>
+        </YakitSpin>
     )
 }
 
 const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
-    const {inViewport, advancedQuery, setAdvancedQuery, query, setQuery} = props
+    const {inViewport, onOperateSide, query, setQuery} = props
     const [programList, setProgramList] = useState<FieldGroup[]>([])
     const [levelList, setLevelList] = useState<FieldName[]>([])
     const [typeList, setTypeList] = useState<FieldName[]>([])
@@ -125,7 +165,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
             setLevelList(SeverityField)
             setTypeList(RiskTypeField)
             if (FileField.length === 0 && SeverityField.length === 0 && RiskTypeField.length === 0) {
-                setAdvancedQuery(false)
+                onOperateSide(false)
             }
         })
     })
@@ -156,21 +196,14 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
         })
     })
 
-    const onClose = useMemoizedFn(() => {
-        setAdvancedQuery(false)
-    })
-
     const selectProgramList = useCreation(() => {
         return query.CodeSourceUrl || []
     }, [query.CodeSourceUrl])
 
     return (
-        <div className={classNames(styles["hole-query"], {[styles["hole-query-hidden"]]: !advancedQuery})}>
+        <div className={classNames(styles["hole-query"])}>
             <div className={styles["hole-query-heard"]}>
                 <span>高级查询</span>
-                <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
-                    <YakitButton type='text2' onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
-                </Tooltip>
             </div>
             <div className={styles["hole-query-body"]}>
                 <ProgramList
@@ -263,8 +296,14 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
         e.stopPropagation()
         pieRef.current.onReset()
     })
+    const levelRef = useRef<HTMLDivElement>(null)
+    const size = useSize(levelRef)
+    useEffect(() => {
+        pieRef.current.onResize && pieRef.current.onResize()
+    }, [size?.width])
+
     return (
-        <div className={styles["vulnerability-level"]}>
+        <div className={styles["vulnerability-level"]} ref={levelRef}>
             <div className={styles["vulnerability-level-heard"]}>
                 <div className={styles["vulnerability-level-heard-title"]}>漏洞等级</div>
                 <YakitButton
@@ -289,8 +328,14 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         e.stopPropagation()
         pieRef.current.onReset()
     })
+    const typeRef = useRef<HTMLDivElement>(null)
+    const size = useSize(typeRef)
+    useEffect(() => {
+        pieRef.current.onResize && pieRef.current.onResize()
+    }, [size?.width])
+
     return (
-        <div className={styles["vulnerability-type"]}>
+        <div className={styles["vulnerability-type"]} ref={typeRef}>
             <div className={styles["vulnerability-type-heard"]}>
                 <div className={styles["vulnerability-type-heard-title"]}>
                     漏洞类型 Top 10

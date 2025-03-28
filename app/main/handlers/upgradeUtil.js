@@ -23,11 +23,8 @@ const {
 const {
     downloadYakitEE,
     downloadYakitCommunity,
-    getYakitEEDownloadUrl,
-    getYakitCommunityDownloadUrl,
     downloadYakEngine,
-    getSastCommunityDownloadUrl,
-    getSastEEDownloadUrl
+    getDownloadUrl
 } = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
@@ -369,11 +366,11 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
-                const {isEnterprise, isSastScan} = type
-                const SastCE = isSastScan && !isEnterprise
-                const SastEE = isSastScan && isEnterprise
-                const YakitCE = !isSastScan && !isEnterprise
-                const YakitEE = !isSastScan && isEnterprise
+                const {isEnterprise, isIRify} = type
+                const IRifyCE = isIRify && !isEnterprise
+                const IRifyEE = isIRify && isEnterprise
+                const YakitCE = !isIRify && !isEnterprise
+                const YakitEE = !isIRify && isEnterprise
                 // format version，下载的版本号里不能存在 V
                 if (version.startsWith("v")) {
                     version = version.substr(1)
@@ -381,14 +378,14 @@ module.exports = {
 
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
-                if (SastCE) {
-                    downloadUrl = await getSastCommunityDownloadUrl(version)
-                } else if (SastEE) {
-                    downloadUrl = await getSastEEDownloadUrl(version)
-                } else if (YakitCE) {
-                    downloadUrl = await getYakitCommunityDownloadUrl(version)
+                if (IRifyCE) {
+                    downloadUrl = await getDownloadUrl(version,"IRifyCE")
+                } else if (IRifyEE) {
+                    downloadUrl = await getDownloadUrl(version,"IRifyEE")
+                } else if (YakitEE) {
+                    downloadUrl = await getDownloadUrl(version,"YakitEE")
                 } else {
-                    downloadUrl = await getYakitEEDownloadUrl(version)
+                    downloadUrl = await getDownloadUrl(version,"YakitCE")
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
@@ -399,10 +396,10 @@ module.exports = {
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
                 // 企业版下载
-                if (YakitEE || SastEE) {
+                if (YakitEE || IRifyEE) {
                     await downloadYakitEE(
                         version,
-                        isSastScan,
+                        isIRify,
                         dest,
                         (state) => {
                             if (!!state) {
@@ -416,7 +413,7 @@ module.exports = {
                     // 社区版下载
                     await downloadYakitCommunity(
                         version,
-                        isSastScan,
+                        isIRify,
                         dest,
                         (state) => {
                             if (!!state) {

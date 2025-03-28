@@ -5,8 +5,7 @@ on:
         tags:
             - "v*-*"
             - "!v*-render"
-            - "!v*-sast-render"
-            - "!v*-sast"
+            - "!v*-irify"
 
 jobs:
     build_yakit:

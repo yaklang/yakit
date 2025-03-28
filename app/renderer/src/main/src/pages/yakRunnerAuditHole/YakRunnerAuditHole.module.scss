@@ -48,10 +48,10 @@
 }
 .hole-query {
     @extend %flex-column;
-    width: 300px;
+    // width: 300px;
     flex-shrink: 0;
-    max-width: 300px;
-    border-right: 1px solid var(--yakit-border-color);
+    // max-width: 300px;
+    // border-right: 1px solid var(--yakit-border-color);
     overflow: hidden;
     height: 100%;
     opacity: 1;
@@ -81,11 +81,6 @@
         flex: 1;
         overflow-y: auto;
     }
-}
-
-.hole-query-hidden {
-    width: 0;
-    opacity: 0;
 }
 
 .program-list-body {

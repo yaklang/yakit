@@ -8,8 +8,8 @@ const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
     fetchLatestYakitVersion,
-    fetchLatestYakitSastScanVersion,
-    fetchLatestYakitSastScanEEVersion,
+    fetchLatestYakitIRifyVersion,
+    fetchLatestYakitIRifyEEVersion,
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
@@ -50,12 +50,12 @@ module.exports = (win, getClient) => {
             const versionFetchers = {
                 Yakit: fetchLatestYakitVersion,
                 EnpriTrace: fetchLatestYakitEEVersion,
-                SastScan: fetchLatestYakitSastScanVersion,
-                "SS-EnpriTrace": fetchLatestYakitSastScanEEVersion
+                IRify: fetchLatestYakitIRifyVersion,
+                "IRify-EnpriTrace": fetchLatestYakitIRifyEEVersion
             }
             const fetchPromise = versionFetchers[releaseEditionName]
                 ? versionFetchers[releaseEditionName]
-                : fetchLatestYakitEEVersion
+                : fetchLatestYakitVersion
             fetchPromise(config)
                 .then((version) => {
                     resolve(version)

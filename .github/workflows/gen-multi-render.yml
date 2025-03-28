@@ -10,7 +10,7 @@ on:
                 default: ce&ee
                 options:
                     - ce&ee
-                    - sce&see
+                    - irify&irifyee
 
 jobs:
     build_yakit:
@@ -57,20 +57,20 @@ jobs:
               if: ${{ inputs.version == 'ce&ee' }}
               run: cd ${{ env.RENDER_PATH }} && zip -r ee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
-            - name: "Build SAST Render"
-              if: ${{ inputs.version == 'sce&see' }}
+            - name: "Build IRify Render"
+              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
-              run: yarn build-render-sast-scan
-            - name: "zip SAST Render"
-              if: ${{ inputs.version == 'sce&see' }}
-              run: cd ${{ env.RENDER_PATH }} && zip -r sast.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
-            - name: "Build SASTEE Render"
-              if: ${{ inputs.version == 'sce&see' }}
+              run: yarn build-render-irify
+            - name: "zip IRify Render"
+              if: ${{ inputs.version == 'irify&irifyee' }}
+              run: cd ${{ env.RENDER_PATH }} && zip -r irify.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+            - name: "Build IRifyEE Render"
+              if: ${{ inputs.version == 'irify&irifyee' }}
               working-directory: ./
-              run: yarn build-render-sast-scan-enterprise
-            - name: "zip SASTEE Render"
-              if: ${{ inputs.version == 'sce&see' }}
-              run: cd ${{ env.RENDER_PATH }} && zip -r sastee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
+              run: yarn build-render-irify-enterprise
+            - name: "zip IRifyEE Render"
+              if: ${{ inputs.version == 'irify&irifyee' }}
+              run: cd ${{ env.RENDER_PATH }} && zip -r irifyee.zip ./pages && rm -rf ./pages && cd ${{ env.RETURN_PATH }}
 
             - name: View Published Content
               run: ls ${{ env.RENDER_PATH }}
@@ -82,8 +82,8 @@ jobs:
               run: |
                   if [ "${{ inputs.version }}" = "ce&ee" ]; then
                     echo "FILE_PATH=yak" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
-                    echo "FILE_PATH=sast" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
+                    echo "FILE_PATH=irify" >> $GITHUB_ENV
                   else
                     echo "No corresponding file path" >&2
                     exit 1
@@ -95,8 +95,8 @@ jobs:
 
                   if [ "${{ inputs.version }}" = "ce&ee" ]; then
                     array=("ce" "ee")
-                  elif [ "${{ inputs.version }}" = "sce&see" ]; then
-                    array=("sast" "sastee")
+                  elif [ "${{ inputs.version }}" = "irify&irifyee" ]; then
+                    array=("irify" "irifyee")
                   else
                     echo "No corresponding version" >&2
                     exit 1

@@ -36,7 +36,7 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isEnpriTraceAgent, isSastScan} from "@/utils/envfile"
+import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
@@ -149,8 +149,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             setMenuId(currentMenuList[0]?.label)
             return
         } else {
-            // 当为SastScan版本时 只有专家模式
-            if (isSastScan()) return
+            // 当为IRify版本时 只有专家模式
+            if (isIRify()) return
             // 获取软件内菜单模式
             getRemoteValue(RemoteGV.PatternMenu).then((patternMenu) => {
                 const menuMode = patternMenu || "expert"
@@ -694,7 +694,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                     {!isEnpriTraceAgent() ? (
                         <>
                             <ExtraMenu onMenuSelect={onRouteMenuSelect} />
-                            {!isSastScan() && (
+                            {!isIRify() && (
                                 <>
                                     <Dropdown
                                         overlayClassName={style["customize-drop-menu"]}

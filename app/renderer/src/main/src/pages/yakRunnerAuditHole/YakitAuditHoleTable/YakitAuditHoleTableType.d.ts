@@ -51,9 +51,6 @@ export interface SSARisk {
 
 export interface YakitAuditHoleTableProps {
     setRiskLoading?: (b: boolean) => void
-    /**是否开启高级查询 */
-    advancedQuery?: boolean
-    setAdvancedQuery?: (b: boolean) => void
     renderTitle?: ReactNode
     riskWrapperClassName?: string
     tableVirtualResizeProps?: TableVirtualResizeProps
