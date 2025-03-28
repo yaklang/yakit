@@ -4937,11 +4937,12 @@ interface ImportExportProgressProps {
     onClose: (finish: boolean, streamData: ImportExportStreamResponse[]) => void
     getContainer?: string | HTMLElement | getContainerFunc | false
     title: string
+    subTitle?: string
     token: string
     apiKey: string
 }
 export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((props) => {
-    const {visible, onClose, getContainer, title, token, apiKey} = props
+    const {visible, onClose, getContainer, title, subTitle, token, apiKey} = props
     const timeRef = useRef<any>(null)
     const [importExportStream, setImportExportStream] = useState<ImportExportStreamResponse[]>([])
     const importExportStreamRef = useRef<ImportExportStreamResponse[]>([])
@@ -5001,7 +5002,8 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
                 </YakitButton>
             }
         >
-            <div style={{padding: 15}}>
+            <div style={{padding: 15}} className="yakit-progress-wrapper">
+                {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
                 <Progress
                     strokeColor='#F28B44'
                     trailColor='#F0F2F5'

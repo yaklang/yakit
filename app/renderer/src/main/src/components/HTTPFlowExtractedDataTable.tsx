@@ -11,6 +11,7 @@ import {yakitNotify} from "@/utils/notification"
 import {FiltersItemProps} from "./TableVirtualResize/TableVirtualResizeType"
 import {HistoryHighLightText} from "./HTTPFlowDetail"
 import {ColumnsType} from "antd/lib/table"
+import { useCampare } from "@/hook/useCompare/useCompare"
 const {Text} = Typography
 
 export interface HTTPFlowExtractedDataTableRefProps {
@@ -147,12 +148,13 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
 
-    useEffect(() => {
+    const compareAnalyzedIds = useCampare(props.analyzedIds)
+    useDebounceEffect(() => {
         if (!props.hiddenIndex) {
             return
         }
         resetUpdate()
-    }, [props.hiddenIndex])
+    }, [props.hiddenIndex, compareAnalyzedIds], {wait: 100})
 
     const resetUpdate = useMemoizedFn(() => {
         const newParams = {

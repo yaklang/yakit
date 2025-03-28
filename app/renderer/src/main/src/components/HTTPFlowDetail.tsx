@@ -45,6 +45,8 @@ import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {asynSettingState} from "@/utils/optimizeRender"
 import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import {getSelectionEditorByteCount} from "./yakitUI/YakitEditor/editorUtils"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {useCampare} from "@/hook/useCompare/useCompare"
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
@@ -657,7 +659,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const {id, selectedFlow, refresh, analyzedIds} = props
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
-    const [flow, setFlow] = useState<HTTPFlow>()
+    const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
     const [flowRequestLoad, setFlowRequestLoad] = useState<boolean>(false)
     const [flowResponseLoad, setFlowResponseLoad] = useState<boolean>(false)
     const [isSelect, setIsSelect] = useState<boolean>(false)
@@ -669,9 +671,23 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     const [highLightText, setHighLightText] = useState<HistoryHighLightText[]>([])
     const [highLightItem, setHighLightItem] = useState<HistoryHighLightText>()
 
-    useEffect(() => {
-        update()
-    }, [id])
+    const compareAnalyzedIds = useCampare(analyzedIds)
+    useDebounceEffect(
+        () => {
+            if (getFlow()?.Id !== id) {
+                update()
+            } else if (analyzedIds) {
+                const obj = getFlow()
+                if (obj) {
+                    queryMITMRuleExtractedData(obj)
+                }
+            } else {
+                update()
+            }
+        },
+        [id, compareAnalyzedIds],
+        {wait: 100}
+    )
 
     useUpdateEffect(() => {
         update(true)

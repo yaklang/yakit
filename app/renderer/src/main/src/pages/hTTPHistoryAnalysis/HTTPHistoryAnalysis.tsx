@@ -1007,6 +1007,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                     }
                     visible={exportPercentVisible}
                     title='导出规则数据'
+                    subTitle="查询数据库中"
                     token={exportToken}
                     apiKey='ExportMITMRuleExtractedDataStream'
                     onClose={(finish, streamData) => {
