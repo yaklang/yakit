@@ -6577,7 +6577,6 @@ message MITMV2Request{
   MITMFilterData HijackFilterData = 26;
   bool UpdateHijackFilter = 27;
 
-
   // set content replacers
   bool SetContentReplacers = 28;
   repeated MITMContentReplacer Replacers = 29;
