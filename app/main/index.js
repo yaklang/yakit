@@ -168,11 +168,11 @@ app.whenReady().then(() => {
 
     // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
-        const showCloseMessageBox = params.showCloseMessageBox
+        const {showCloseMessageBox,isIRify} = params
         if (closeFlag && showCloseMessageBox) {
             dialog
                 .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, "../assets/yakitlogo.pic.jpg")),
+                    icon: nativeImage.createFromPath(path.join(__dirname, isIRify?"../renderer/src/main/src/assets/yakitSS.png":"../assets/yakitlogo.pic.jpg")),
                     type: "none",
                     title: "提示",
                     defaultId: 0,
