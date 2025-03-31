@@ -13,9 +13,9 @@ const platform = process.env.PLATFORM
 switch (platform) {
     case "ee":
         appInfoOption = {
-            appId: "io.yaklang.enpritrace",
-            extraMetadata: {name: "enpritrace"},
-            productName: "EnpriTrace",
+            appId: "io.yaklang.网络资产信息探测工具",
+            extraMetadata: {name: "网络资产信息探测工具"},
+            productName: "网络资产信息探测工具",
             copyright: "Copyright © 2021 v1ll4n"
         }
         macIcon = "app/assets/yakiteelogo.icns"
