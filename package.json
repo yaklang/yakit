@@ -6,6 +6,8 @@
     "scripts": {
         "start-electron": "electron .",
         "install-render": "cd app/renderer/src/main && yarn install",
+        "render-yarn": "cd app/renderer/src/main && yarn",
+        "render-cli": "cd app/renderer/src/main && yarn render-cli",
         "start-render": "cd app/renderer/src/main && yarn electron-render",
         "start-render-enterprise": "cd app/renderer/src/main && yarn electron-render-enterprise",
         "start-render-simple-enterprise": "cd app/renderer/src/main && yarn electron-render-simple-enterprise",
