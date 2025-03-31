@@ -128,6 +128,9 @@ FunctionEnd
                     ${If} $0 != ""
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "网络资产信息探测工具_InstallPath"
+                        StrCpy $EXE_NAME "网络资产信息探测工具"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -164,6 +167,9 @@ FunctionEnd
                     ${If} ${FileExists} `$INSTDIR\Memfit AI.exe` ; memfit
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "网络资产信息探测工具_InstallPath"
+                        StrCpy $EXE_NAME "网络资产信息探测工具"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
