@@ -278,7 +278,7 @@ jobs:
                   if [ "${{ inputs.version }}" = "ce" ]; then
                     echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=Asset Scan" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irify" ]; then
@@ -298,7 +298,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
+                  path: ./release/网络资产信息探测工具-${{env.SOFTWARE_VERSION}}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe
                   if-no-files-found: error
                   retention-days: 7
 
@@ -307,7 +307,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
+                  path: ./release/网络资产信息探测工具-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-x64.dmg
                   if-no-files-found: error
                   retention-days: 7
 
@@ -316,7 +316,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
+                  path: ./release/网络资产信息探测工具-${{env.SOFTWARE_VERSION}}-darwin${{ inputs.legacy && '-legacy' || '' }}-arm64.dmg
                   if-no-files-found: error
                   retention-days: 7
 
@@ -325,7 +325,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
+                  path: ./release/网络资产信息探测工具-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.AppImage
                   if-no-files-found: error
                   retention-days: 7
 
@@ -334,6 +334,6 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
+                  path: ./release/网络资产信息探测工具-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
                   if-no-files-found: error
                   retention-days: 7
