@@ -809,7 +809,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: "noLib"
                 }
             }
             apiSyntaxFlowScan(params, token).then(() => {
@@ -1101,7 +1102,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: "noLib"
                 }
             }
             apiSyntaxFlowScan(params, token).then(() => {
@@ -1138,7 +1140,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: "noLib"
                 },
                 ResumeTaskId: runtimeId
             }
@@ -1164,7 +1167,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         Severity: [],
                         Purpose: [],
                         Tag: [],
-                        Keyword: ""
+                        Keyword: "",
+                        FilterLibRuleKind: "noLib"
                     },
                     ResumeTaskId: runtimeId
                 }
