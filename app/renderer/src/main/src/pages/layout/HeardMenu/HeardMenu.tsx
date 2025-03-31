@@ -65,6 +65,7 @@ import {ExtraMenu} from "../publicMenu/ExtraMenu"
 import {SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import {defMenuDataString} from "@/defaultConstants/Menu"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -173,95 +174,104 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     }, [])
 
     /**
-     * @name 初始化菜单
+     * @name 初始化菜单 网络资产信息探测工具 固定
      * @description 获取模式菜单 如果获取的菜单数据为空，则新增默认菜单数据
      */
     const init = useMemoizedFn((menuMode: string) => {
         setLoading(true)
+        const {menus: menusArr, isError} = jsonDataConvertMenus(defMenuDataString as DatabaseMenuItemProps[])
+        
+        function handleInitMenuData(menusData: DatabaseFirstMenuProps[]) {
+            const database = databaseConvertData(menusData || [])
 
-        ipcRenderer
-            .invoke("GetAllNavigationItem", {Mode: menuMode})
-            .then((res: {Data: DatabaseFirstMenuProps[]}) => {
-                const database = databaseConvertData(res.Data || [])
+            // 过滤掉代码中无效菜单项后的用户数据
+            const caches: DatabaseMenuItemProps[] = []
+            for (let item of database) {
+                // 过滤代码中无效的一级菜单项
+                if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
 
-                // 过滤掉代码中无效菜单项后的用户数据
-                const caches: DatabaseMenuItemProps[] = []
-                for (let item of database) {
-                    // 过滤代码中无效的一级菜单项
-                    if (InvalidFirstMenuItem.indexOf(item.menuName) > -1) continue
-
-                    const menus: DatabaseMenuItemProps = {...item}
-                    if (item.children && item.children.length > 0) {
-                        menus.children = item.children.filter(
-                            // 过滤代码中无效的二级菜单项
-                            (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
-                        )
-                    }
-                    caches.push(menus)
+                const menus: DatabaseMenuItemProps = {...item}
+                if (item.children && item.children.length > 0) {
+                    menus.children = item.children.filter(
+                        // 过滤代码中无效的二级菜单项
+                        (item) => InvalidPageMenuItem.indexOf(item.menuName) === -1
+                    )
                 }
+                caches.push(menus)
+            }
 
-                let filterLocal: EnhancedPrivateRouteMenuProps[] = []
-                getRemoteValue(RemoteGV.UserDeleteMenu)
-                    .then((val) => {
-                        if (val !== "{}") {
-                            let filters: string[] = []
-                            try {
-                                filters = (JSON.parse(val) || {})[menuMode] || []
-                            } catch (error) {}
-                            for (let item of DefaultMenu) {
-                                if (filters.includes(item.menuName)) continue
-                                const menu: EnhancedPrivateRouteMenuProps = {...item, children: []}
-                                if (item.children && item.children.length > 0) {
-                                    for (let subitem of item.children) {
-                                        if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
-                                            menu.children?.push({...subitem})
-                                        }
+            let filterLocal: EnhancedPrivateRouteMenuProps[] = []
+            getRemoteValue(RemoteGV.UserDeleteMenu)
+                .then((val) => {
+                    if (val !== "{}") {
+                        let filters: string[] = []
+                        try {
+                            filters = (JSON.parse(val) || {})[menuMode] || []
+                        } catch (error) {}
+                        for (let item of DefaultMenu) {
+                            if (filters.includes(item.menuName)) continue
+                            const menu: EnhancedPrivateRouteMenuProps = {...item, children: []}
+                            if (item.children && item.children.length > 0) {
+                                for (let subitem of item.children) {
+                                    if (!filters.includes(`${item.menuName}-${subitem.menuName}`)) {
+                                        menu.children?.push({...subitem})
                                     }
                                 }
-                                filterLocal.push(menu)
                             }
-                        } else {
-                            filterLocal = [...DefaultMenu]
+                            filterLocal.push(menu)
                         }
-                    })
-                    .catch(() => {
+                    } else {
                         filterLocal = [...DefaultMenu]
-                    })
-                    .finally(async () => {
-                        let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
-                        try {
-                            allowModify = JSON.parse(allowModify) || {}
-                        } catch (error) {
-                            allowModify = {}
-                        }
-                        if (!!allowModify[menuMode]) filterLocal = []
+                    }
+                })
+                .catch(() => {
+                    filterLocal = [...DefaultMenu]
+                })
+                .finally(async () => {
+                    let allowModify = await getRemoteValue(RemoteGV.IsImportJSONMenu)
+                    try {
+                        allowModify = JSON.parse(allowModify) || {}
+                    } catch (error) {
+                        allowModify = {}
+                    }
+                    if (!!allowModify[menuMode]) filterLocal = []
 
-                        // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
-                        const {menus, isUpdate, pluginName} = privateUnionMenus(filterLocal, caches)
+                    // menus-前端渲染使用的数据;isUpdate-是否需要更新数据库;pluginName-需要下载的插件名
+                    const {menus, isUpdate, pluginName} = privateUnionMenus([], caches)
 
-                        if (isInitRef.current) {
-                            isInitRef.current = false
-                            if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
-                            else {
-                                setRouteMenu(menus)
-                                setSubMenuData(menus[0]?.children || [])
-                                setMenuId(menus[0]?.label || "")
-                                setTimeout(() => setLoading(false), 300)
-                            }
-                            if (isUpdate) updateMenus(menus)
-                        } else {
-                            if (isUpdate) updateMenus(menus)
-                            else setTimeout(() => setLoading(false), 300)
+                    if (isInitRef.current) {
+                        isInitRef.current = false
+                        if (pluginName.length > 0) batchDownloadPlugin(menus, pluginName)
+                        else {
                             setRouteMenu(menus)
                             setSubMenuData(menus[0]?.children || [])
                             setMenuId(menus[0]?.label || "")
+                            setTimeout(() => setLoading(false), 300)
                         }
-                    })
-            })
-            .catch((err) => {
-                failed("获取菜单失败：" + err)
-                setTimeout(() => setLoading(false), 300)
-            })
+                        if (isUpdate) updateMenus(menus)
+                    } else {
+                        if (isUpdate) updateMenus(menus)
+                        else setTimeout(() => setLoading(false), 300)
+                        setRouteMenu(menus)
+                        setSubMenuData(menus[0]?.children || [])
+                        setMenuId(menus[0]?.label || "")
+                    }
+                })
+        }
+        if (isError) {
+            ipcRenderer
+                .invoke("GetAllNavigationItem", {Mode: menuMode})
+                .then((res: {Data: DatabaseFirstMenuProps[]}) => {
+                    handleInitMenuData(res.Data || [])
+                })
+                .catch((err) => {
+                    failed("获取菜单失败：" + err)
+                    setTimeout(() => setLoading(false), 300)
+                })
+        } else {
+            const menuLists = privateConvertDatabase(menusArr, patternMenu)
+            handleInitMenuData(menuLists as DatabaseFirstMenuProps[])
+        }
     })
     /**
      * @name 批量下载插件
