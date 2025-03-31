@@ -1,7 +1,7 @@
-appId: "io.yaklang.enpritrace"
+appId: "io.yaklang.四川公安专用版"
 extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
+    name: 四川公安专用版
+productName: "四川公安专用版"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:

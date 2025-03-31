@@ -35,7 +35,7 @@ const layout = {
 interface ConfigPrivateDomainProps {
     onClose?: () => void
     onSuccee?: () => void
-    // 是否为企业登录
+    // 是否为四川公安专用版
     enterpriseLogin?: boolean | undefined
     // 是否展示跳过
     skipShow?: boolean
@@ -69,7 +69,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             await loginOut(userInfo)
         } catch (error) {}
     }
-    // 企业登录
+    // 四川公安专用版
     const {setEeSystemConfig} = useEeSystemConfig()
     const loginUser = useMemoizedFn(() => {
         const {user_name, pwd} = getFormValue()
@@ -100,7 +100,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     }
                     setStoreUserInfo(user)
                     if (data?.next) {
-                        success("企业登录成功")
+                        success("四川公安专用版成功")
                         onClose && onClose()
                         onSuccee && onSuccee()
                         if (isEnpriTrace()) {
@@ -140,7 +140,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             })
             .catch((err) => {
                 setTimeout(() => setLoading(false), 300)
-                failed("企业登录失败：" + err)
+                failed("四川公安专用版失败：" + err)
             })
             .finally(() => {})
     })
@@ -283,7 +283,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
                     <div className='icon-box'>
                         <img src={yakitImg} className='type-icon-img' />
                     </div>
-                    <div className='title-box'>企业登录</div>
+                    <div className='title-box'>四川公安专用版</div>
                 </div>
             )}
             <Form {...layout} form={form} name='control-hooks' onFinish={(v) => onFinish(v)} size='small'>
