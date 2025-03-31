@@ -4,7 +4,7 @@ import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {useMemoizedFn, useThrottleEffect} from "ahooks"
+import {useMemoizedFn} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
@@ -36,7 +36,11 @@ import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrap
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Resizable} from "re-resizable"
-import { MitmStatus } from "./MITMPage"
+import {MitmStatus} from "./MITMPage"
+import {AuthorImg} from "../plugins/funcTemplate"
+import YakitLogo from "@/assets/yakitLogo.png"
+import UnLogin from "@/assets/unLogin.png"
+import {pluginTypeToName} from "../plugins/builtInData"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -269,6 +273,26 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         )
     }, [i, p])
 
+    const authorImgNode = useMemo(() => {
+        const {IsCorePlugin, Type, HeadImg, OnlineOfficial} = i
+        if (IsCorePlugin) {
+            return (
+                <AuthorImg
+                    src={YakitLogo}
+                    icon={pluginTypeToName[Type].icon}
+                    wrapperClassName={style["plugin-local-headImg"]}
+                />
+            )
+        }
+        return (
+            <AuthorImg
+                src={HeadImg || UnLogin}
+                builtInIcon={!!OnlineOfficial ? "official" : undefined}
+                wrapperClassName={style["plugin-local-headImg"]}
+            />
+        )
+    }, [i])
+
     return (
         <div className={style["mitm-plugin-local-item"]}>
             <div className={style["mitm-plugin-local-left"]}>
@@ -288,9 +312,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                                     : "calc(100% - 12px)"
                         }}
                     >
-                        {i.HeadImg && (
-                            <img alt='' src={i.HeadImg} className={classNames(style["plugin-local-headImg"])} />
-                        )}
+                        {authorImgNode}
                         <span className={classNames(style["plugin-local-scriptName"])}>{i.ScriptName}</span>
                     </div>
                     <div className={style["mitm-plugin-local-info-right"]}>
