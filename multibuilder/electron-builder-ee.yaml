@@ -1,7 +1,7 @@
-appId: "io.yaklang.enpritrace"
+appId: "io.yaklang.网络资产信息探测工具"
 extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
+    name: 网络资产信息探测工具
+productName: "网络资产信息探测工具"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
