@@ -67,7 +67,7 @@
         "release-enpritrace": "electron-builder --publish always -mwl --config ./multibuilder/enpritrace.yml",
         "release-breachtrace": "electron-builder --publish always -mwl --config ./multibuilder/breachtrace.yaml",
         "release-render": "cd app/renderer/src/main && yarn release-render",
-        "release-irify-render": "node scripts/release-irify-render.js"
+        "release-irify": "node scripts/release-irify-render.js"
     },
     "keywords": [],
     "author": "",
