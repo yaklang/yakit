@@ -29,6 +29,7 @@ import {
   PrivateOutlineAuditHoleIcon,
   PrivateOutlineBasicCrawlerIcon,
   PrivateOutlineBatchPluginIcon,
+  PrivateOutlineBetaWebshellManagerIcon,
   PrivateOutlineBruteIcon,
   PrivateOutlineCVEIcon,
   PrivateOutlineCodeScanIcon,
@@ -62,6 +63,7 @@ import {
   PrivateSolidAuditHoleIcon,
   PrivateSolidBasicCrawlerIcon,
   PrivateSolidBatchPluginIcon,
+  PrivateSolidBetaWebshellManagerIcon,
   PrivateSolidBruteIcon,
   PrivateSolidCVEIcon,
   PrivateSolidCodeScanIcon,
@@ -2040,6 +2042,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
   //     hoverIcon: <PrivateSolidAIAgentIcon />,
   //     ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
   // }
+  [YakitRoute.Beta_WebShellManager]: {
+    page: YakitRoute.Beta_WebShellManager,
+    icon: <PrivateOutlineBetaWebshellManagerIcon />,
+    hoverIcon: <PrivateSolidBetaWebshellManagerIcon />,
+    ...YakitRouteToPageInfo[YakitRoute.Beta_WebShellManager]
+  }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
 const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRouteMenuProps[] = (route) => {
