@@ -28,11 +28,7 @@ export const ListItem: React.FC = () => {
                 )
             }
 
-            return (
-                <div className={styles["label-dot-wrapper"]}>
-                    <div className={styles["label"]}>{label}</div>
-                </div>
-            )
+            return <div className={classNames(styles["label-dot-wrapper"],'li-label')}>{label}</div>
         }
 
         return (

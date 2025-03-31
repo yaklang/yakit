@@ -376,7 +376,7 @@ export interface NoteContent {
     Id: string
     Note: Note
     Index: number
-    Length: number
+    Line: number
     LineContent: string
 }
 export interface SearchNoteContentRequest {
