@@ -23,3 +23,8 @@ export default createContext<MITMContext>({
     //     setVersion:()=>{}
     // }
 })
+
+export enum MITMVersion {
+    V1 = "", // v1版本就是空字符
+    V2 = "V2"
+}

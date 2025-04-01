@@ -1,5 +1,5 @@
 import {Divider, Modal, Tooltip} from "antd"
-import React, {ReactNode, useEffect, useImperativeHandle, useMemo, useState} from "react"
+import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useState} from "react"
 import {
     MITMContentReplacerRule,
     MITMRuleProp,
@@ -45,6 +45,12 @@ import emiter from "@/utils/eventBus/eventBus"
 import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
 import {WebsiteGV} from "@/enums/website"
+import {
+    grpcClientMITMContentReplacerUpdate,
+    grpcMITMContentReplacers,
+    MITMContentReplacersRequest
+} from "../MITMHacker/utils"
+import MITMContext from "../Context/MITMContext"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -144,6 +150,11 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         onSetRules,
         onRefreshCom
     } = props
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     // 内容替代模块
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
     const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
@@ -185,14 +196,15 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         onGetCurrentRules()
     }, [visible])
     useEffect(() => {
-        ipcRenderer.on("client-mitm-content-replacer-update", (e, data: MITMResponse) => {
-            const newRules = (data?.replacers || []).map((ele) => ({...ele, Id: ele.Index}))
-            setRules(newRules)
-            setBanAndNoReplace(newRules)
-            return
-        })
+        grpcClientMITMContentReplacerUpdate(mitmVersion)
+            .on()
+            .then((replacers) => {
+                const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
+                setRules(newRules)
+                setBanAndNoReplace(newRules)
+            })
         return () => {
-            ipcRenderer.removeAllListeners("client-mitm-content-replacer-update")
+            grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
         }
     }, [])
     const onGetCurrentRules = useMemoizedFn(() => {
@@ -626,12 +638,13 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     cancelButtonProps: {size: "small", className: "modal-cancel-button"},
                     okButtonProps: {size: "small", className: "modal-ok-button"},
                     onOk: () => {
-                        ipcRenderer
-                            .invoke("mitm-content-replacers", {
-                                replacers: newRules
-                            })
+                        const value: MITMContentReplacersRequest = {
+                            replacers: newRules,
+                            version: mitmVersion
+                        }
+                        grpcMITMContentReplacers(value)
                             .then((val) => {
-                                emiter.emit("onRefreshRuleEvent")
+                                emiter.emit("onRefreshRuleEvent", mitmVersion)
                                 setVisible(false)
                                 if (saveOk) {
                                     saveOk()
@@ -646,12 +659,13 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     }
                 })
             } else {
-                ipcRenderer
-                    .invoke("mitm-content-replacers", {
-                        replacers: newRules
-                    })
+                const value: MITMContentReplacersRequest = {
+                    replacers: newRules,
+                    version: mitmVersion
+                }
+                grpcMITMContentReplacers(value)
                     .then((val) => {
-                        emiter.emit("onRefreshRuleEvent")
+                        emiter.emit("onRefreshRuleEvent", mitmVersion)
                         setVisible(false)
                         if (saveOk) {
                             saveOk()

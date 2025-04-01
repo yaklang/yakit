@@ -15,6 +15,7 @@ import {TraceInfo} from "../MITMPage"
 import {useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import {grpcMITMDropRequestById, grpcMITMDropResponseById} from "../MITMHacker/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -398,9 +399,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
 })
 
 export const dropRequest = (id: number) => {
-    return ipcRenderer.invoke("mitm-drop-request", id)
+    return grpcMITMDropRequestById(id, true)
 }
 
 export const dropResponse = (id: number) => {
-    return ipcRenderer.invoke("mitm-drop-response", id)
+    return grpcMITMDropResponseById(id, true)
 }

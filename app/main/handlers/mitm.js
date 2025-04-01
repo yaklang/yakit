@@ -1,45 +1,44 @@
-const { ipcMain } = require("electron");
-const DNS = require("dns");
+const {ipcMain} = require("electron")
+const DNS = require("dns")
 
 /**@deprecated */
 // module.exports = (win, originGetClient) => {
 module.exports = (win, getClient) => {
-    let stream;
-    let currentPort;
-    let currentHost;
-    let currentDownstreamProxy;
+    let stream
+    let currentPort
+    let currentHost
+    let currentDownstreamProxy
     // 用于恢复正在劫持的 MITM 状态
-    ipcMain.handle("mitm-have-current-stream", e => {
+    ipcMain.handle("mitm-have-current-stream", (e) => {
         return {
             haveStream: !!stream,
             host: currentHost,
             port: currentPort,
-            downstreamProxy: currentDownstreamProxy,
-        };
+            downstreamProxy: currentDownstreamProxy
+        }
     })
 
     // 发送恢复会话信息，让服务器把上下文发回来
-    ipcMain.handle("mitm-recover", e => {
+    ipcMain.handle("mitm-recover", (e) => {
         if (stream) {
             stream.write({
-                recover: true,
+                recover: true
             })
         }
-    });
+    })
 
     // 发送恢复会话信息，让服务器把上下文发回来
-    ipcMain.handle("mitm-reset-filter", e => {
+    ipcMain.handle("mitm-reset-filter", (e) => {
         if (stream) {
             stream.write({
-                setResetFilter: true,
+                setResetFilter: true
             })
         }
-    });
+    })
 
-    //
     ipcMain.handle("mitm-auto-forward", (e, value) => {
         if (stream) {
-            stream.write({ setAutoForward: true, autoForwardValue: value })
+            stream.write({setAutoForward: true, autoForwardValue: value})
         }
     })
 
@@ -48,7 +47,7 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 id,
-                drop: true,
+                drop: true
             })
         }
     })
@@ -58,27 +57,25 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 responseId: id,
-                drop: true,
+                drop: true
             })
         }
     })
-
     // 原封不动转发
     ipcMain.handle("mitm-forward-response", (e, id) => {
         if (stream) {
             stream.write({
                 responseId: id,
-                forward: true,
+                forward: true
             })
         }
     })
-
     // 原封不动转发请求
     ipcMain.handle("mitm-forward-request", (e, id) => {
         if (stream) {
             stream.write({
                 id: id,
-                forward: true,
+                forward: true
             })
         }
     })
@@ -89,38 +86,29 @@ module.exports = (win, getClient) => {
             if (should) {
                 stream.write({
                     id: id,
-                    hijackResponse: true,
+                    hijackResponse: true
                 })
             } else {
                 stream.write({
                     id: id,
-                    cancelhijackResponse: true,
+                    cancelhijackResponse: true
                 })
             }
         }
     })
-
-
     ipcMain.handle("mitm-enable-plugin-mode", (e, initPluginNames) => {
         if (stream) {
             stream.write({
                 setPluginMode: true,
-                initPluginNames,
+                initPluginNames
             })
         }
     })
 
-    // 用来关闭 MITM 劫持的信息流
-    ipcMain.handle("mitm-close-stream", e => {
-        if (stream) {
-            stream.cancel()
-            stream = null;
-        }
-    })
-
     // MITM 转发
-    ipcMain.handle("mitm-forward-modified-request", (e, request, id, tags, autoForwardValue) => {
+    ipcMain.handle("mitm-forward-modified-request", (e, params) => {
         if (stream) {
+            const {request, id, tags, autoForwardValue} = params
             stream.write({
                 id,
                 request: Buffer.from(request),
@@ -131,11 +119,12 @@ module.exports = (win, getClient) => {
         }
     })
     // MITM 转发 - HTTP 响应
-    ipcMain.handle("mitm-forward-modified-response", (e, response, id) => {
+    ipcMain.handle("mitm-forward-modified-response", (e, params) => {
         if (stream) {
+            const {response, id} = params
             stream.write({
                 responseId: id,
-                response: response,
+                response: response
             })
         }
     })
@@ -145,27 +134,28 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 setYakScript: true,
-                yakScriptContent: content,
+                yakScriptContent: content
             })
         }
     })
 
     // MITM 启用插件，通过插件 ID
-    ipcMain.handle("mitm-exec-script-by-id", (e, id, params) => {
+    ipcMain.handle("mitm-exec-script-by-id", (e, data) => {
         if (stream) {
+            const {id, params} = data
             stream.write({
                 setYakScript: true,
                 yakScriptID: `${id}`,
-                yakScriptParams: params,
+                yakScriptParams: params
             })
         }
     })
 
     // MITM 获取当前已经启用的插件
-    ipcMain.handle("mitm-get-current-hook", (e, id, params) => {
+    ipcMain.handle("mitm-get-current-hook", (e, data) => {
         if (stream) {
             stream.write({
-                getCurrentHook: true,
+                getCurrentHook: true
             })
         }
     })
@@ -175,7 +165,7 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 removeHook: true,
-                removeHookParams: params,
+                removeHookParams: params
             })
         }
     })
@@ -188,9 +178,9 @@ module.exports = (win, getClient) => {
     })
 
     // 设置正则替换
-    ipcMain.handle("mitm-content-replacers", (e, filter) => {
+    ipcMain.handle("mitm-content-replacers", (e, replacers) => {
         if (stream) {
-            stream.write({ ...filter, setContentReplacers: true })
+            stream.write({replacers, setContentReplacers: true})
         }
     })
 
@@ -198,7 +188,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitm-clear-plugin-cache", () => {
         if (stream) {
             stream.write({
-                setClearMITMPluginContext: true,
+                setClearMITMPluginContext: true
             })
         }
     })
@@ -224,18 +214,20 @@ module.exports = (win, getClient) => {
     })
 
     // host port
-    ipcMain.handle("mitm-host-port", (e, host, port) => {
+    ipcMain.handle("mitm-host-port", (e, data) => {
         if (stream) {
+            const {host, port} = data
             stream.write({
                 host,
-                port,
+                port
             })
         }
     })
 
     // 开始调用 MITM，设置 stream
     let isFirstData = true
-    ipcMain.handle("mitm-start-call", (e, host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certificates, extra) => {
+    ipcMain.handle("mitm-start-call", (e, params) => {
+        const {host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certificates, extra} = params
         if (stream) {
             if (win) {
                 win.webContents.send("client-mitm-start-success")
@@ -243,20 +235,20 @@ module.exports = (win, getClient) => {
             return
         }
 
-        isFirstData = true;
-        stream = getClient().MITM();
+        isFirstData = true
+        stream = getClient().MITM()
         // 设置服务器发回的消息的回调函数
-        stream.on("data", data => {
+        stream.on("data", (data) => {
             // 处理第一个消息
             // 第一个消息应该更新状态，第一个消息应该是同步 Filter 的信息。。。
             if (win && isFirstData) {
-                isFirstData = false;
+                isFirstData = false
                 win.webContents.send("client-mitm-start-success")
             }
 
             // mitm 服务端控制客户端加载状态
             if (win && data["haveLoadingSetter"]) {
-                win.webContents.send("client-mitm-loading", !!(data["loadingFlag"]))
+                win.webContents.send("client-mitm-loading", !!data["loadingFlag"])
             }
 
             // mitm 服务端给客户端发送提示信息
@@ -266,17 +258,17 @@ module.exports = (win, getClient) => {
 
             // 检查替代规则的问题，如果返回了有内容，说明没 BUG
             if (win && (data?.replacers || []).length > 0) {
-                win.webContents.send("client-mitm-content-replacer-update", data)
+                win.webContents.send("client-mitm-content-replacer-update", data.replacers)
             }
 
             // 如果是强制更新的话，一般通过这里触发
             if (win && data?.justContentReplacer) {
-                win.webContents.send("client-mitm-content-replacer-update", data)
+                win.webContents.send("client-mitm-content-replacer-update", data.replacers)
             }
 
             // 检查如果是 exec result 的话，对应字段应该是
             if (win && data["haveMessage"]) {
-                win.webContents.send("client-mitm-message", data["message"]);
+                win.webContents.send("client-mitm-message", data["message"])
                 return
             }
 
@@ -286,20 +278,14 @@ module.exports = (win, getClient) => {
                 return
             }
 
-            // 自动更新 HTTP Flow 的表格
-            if (win && data.refresh) {
-                win.webContents.send("client-mitm-history-update", data)
-                return
-            }
-
             // 把劫持到的信息发送回前端
             if (win) {
                 if (data.justFilter) {
-                    win.webContents.send("client-mitm-filter", { ...data })
+                    win.webContents.send("client-mitm-filter", data.FilterData)
                     return
                 }
                 if (data.id == "0" && data.responseId == "0") return
-                win.webContents.send("client-mitm-hijacked", { ...data })
+                win.webContents.send("client-mitm-hijacked", {...data})
             }
         })
         stream.on("error", (err) => {
@@ -308,10 +294,10 @@ module.exports = (win, getClient) => {
                 switch (err.code) {
                     case 1:
                         win.webContents.send("client-mitm-error", "")
-                        return;
+                        return
                     default:
                         win.webContents.send("client-mitm-error", err.details || `${err}`)
-                        return;
+                        return
                 }
             }
         })
@@ -325,20 +311,26 @@ module.exports = (win, getClient) => {
         currentPort = port
         currentDownstreamProxy = downstreamProxy
         if (stream) {
-            stream.write({
-                host, port, downstreamProxy,
-                enableHttp2, ForceDisableKeepAlive, certificates,
+            const value = {
+                host,
+                port,
+                downstreamProxy,
+                enableHttp2,
+                ForceDisableKeepAlive,
+                certificates,
                 ...extra,
                 DisableCACertPage: extra.disableCACertPage,
                 DisableWebsocketCompression: !extra.DisableWebsocketCompression
-            })
+            }
+            // console.log("mitm-v1", value)
+            stream.write(value)
         }
     })
     ipcMain.handle("mitm-stop-call", () => {
         if (stream) {
             stream.cancel()
-            stream = null;
-            mitmClient = null;
+            stream = null
+            mitmClient = null
         }
     })
 
@@ -470,7 +462,7 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("mitm-set-filter", async (e, params) => {
         if (stream) {
-            stream.write({ ...params, updateFilter: true })
+            stream.write({...params, updateFilter: true})
         }
         return await asyncSetMITMFilter(params)
     })
@@ -506,7 +498,7 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("mitm-hijack-set-filter", async (e, params) => {
         if (stream) {
-            stream.write({ HijackFilterData: params.FilterData, updateHijackFilter: true })
+            stream.write({HijackFilterData: params.FilterData, updateHijackFilter: true})
         }
         return await asyncSetMITMHijackFilter(params)
     })

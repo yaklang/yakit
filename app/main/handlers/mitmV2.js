@@ -10,10 +10,10 @@ module.exports = (win, getClient) => {
     // 用于恢复正在劫持的 MITM 状态
     ipcMain.handle("mitmV2-have-current-stream", (e) => {
         return {
-            HaveStream: !!stream,
-            Host: currentHost,
-            Port: currentPort,
-            DownstreamProxy: currentDownstreamProxy
+            haveStream: !!stream,
+            host: currentHost,
+            port: currentPort,
+            downstreamProxy: currentDownstreamProxy
         }
     })
 
@@ -113,22 +113,13 @@ module.exports = (win, getClient) => {
         }
     })
 
-    // 用来关闭 MITM 劫持的信息流
-    ipcMain.handle("mitmV2-close-stream", (e) => {
-        if (stream) {
-            stream.cancel()
-            stream = null
-        }
-    })
-
     // MITM 转发
     ipcMain.handle("mitmV2-forward-modified-request", (e, params) => {
         //TODO -
-        
     })
     // MITM 转发 - HTTP 响应
-    ipcMain.handle("mitmV2-forward-modified-response", (e, response, id) => {
-         //TODO -
+    ipcMain.handle("mitmV2-forward-modified-response", (e, params) => {
+        //TODO -
     })
 
     // MITM 启用插件
@@ -142,8 +133,9 @@ module.exports = (win, getClient) => {
     })
 
     // MITM 启用插件，通过插件 ID
-    ipcMain.handle("mitmV2-exec-script-by-id", (e, id, params) => {
+    ipcMain.handle("mitmV2-exec-script-by-id", (e, data) => {
         if (stream) {
+            const {id, params} = data
             stream.write({
                 SetYakScript: true,
                 YakScriptID: `${id}`,
@@ -153,7 +145,7 @@ module.exports = (win, getClient) => {
     })
 
     // MITM 获取当前已经启用的插件
-    ipcMain.handle("mitmV2-get-current-hook", (e, id, params) => {
+    ipcMain.handle("mitmV2-get-current-hook", (e, data) => {
         if (stream) {
             stream.write({
                 GetCurrentHook: true
@@ -179,9 +171,9 @@ module.exports = (win, getClient) => {
     })
 
     // 设置正则替换
-    ipcMain.handle("mitmV2-content-replacers", (e, filter) => {
+    ipcMain.handle("mitmV2-content-replacers", (e, Replacers) => {
         if (stream) {
-            stream.write({...filter, SetContentReplacers: true})
+            stream.write({Replacers, SetContentReplacers: true})
         }
     })
 
@@ -198,7 +190,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitmV2-filter-websocket", (e, filterWebsocket) => {
         if (stream) {
             stream.write({
-                FilterWebsocket,
+                FilterWebsocket: filterWebsocket,
                 UpdateFilterWebsocket: true
             })
         }
@@ -209,18 +201,18 @@ module.exports = (win, getClient) => {
         if (stream) {
             stream.write({
                 SetDownstreamProxy: true,
-                DownstreamProxy
+                DownstreamProxy: downstreamProxy
             })
         }
     })
 
     // host port
     ipcMain.handle("mitmV2-host-port", (e, params) => {
-        const {Host, Port} = params
         if (stream) {
+            const {host, port} = params
             stream.write({
-                Host,
-                Port
+                Host: host,
+                Port: port
             })
         }
     })
@@ -228,7 +220,7 @@ module.exports = (win, getClient) => {
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitmV2-start-call", (e, params) => {
-        const {Host, Port, DownstreamProxy} = params
+        const {Host, Port, DownstreamProxy, extra} = params
         if (stream) {
             if (win) {
                 win.webContents.send("client-mitmV2-start-success")
@@ -248,49 +240,44 @@ module.exports = (win, getClient) => {
             }
 
             // mitm 服务端控制客户端加载状态
-            if (win && data["haveLoadingSetter"]) {
+            if (win && data["HaveLoadingSetter"]) {
                 win.webContents.send("client-mitmV2-loading", !!data["LoadingFlag"])
             }
 
             // mitm 服务端给客户端发送提示信息
-            if (win && data["haveNotification"]) {
+            if (win && data["HaveNotification"]) {
                 win.webContents.send("client-mitmV2-notification", data["NotificationContent"])
             }
 
             // 检查替代规则的问题，如果返回了有内容，说明没 BUG
-            if (win && (data?.replacers || []).length > 0) {
-                win.webContents.send("client-mitmV2-content-replacer-update", data)
+            if (win && (data?.Replacers || []).length > 0) {
+                win.webContents.send("client-mitmV2-content-replacer-update", data.Replacers)
             }
 
             // 如果是强制更新的话，一般通过这里触发
-            if (win && data?.justContentReplacer) {
-                win.webContents.send("client-mitmV2-content-replacer-update", data)
+            if (win && data?.JustContentReplacer) {
+                win.webContents.send("client-mitmV2-content-replacer-update", data.Replacers)
             }
 
             // 检查如果是 exec result 的话，对应字段应该是
-            if (win && data["haveMessage"]) {
-                win.webContents.send("client-mitmV2-message", data["message"])
+            if (win && data["HaveMessage"]) {
+                win.webContents.send("client-mitmV2-message", data["Message"])
                 return
             }
 
             // 看看当前系统的 hooks 有哪些
-            if (win && data["getCurrentHook"]) {
+            if (win && data["GetCurrentHook"]) {
                 win.webContents.send("client-mitmV2-hooks", data["Hooks"])
-                return
-            }
-
-            // 自动更新 HTTP Flow 的表格
-            if (win && data.refresh) {
-                win.webContents.send("client-mitmV2-history-update", data)
                 return
             }
 
             // 把劫持到的信息发送回前端
             if (win) {
-                if (data.justFilter) {
-                    win.webContents.send("client-mitmV2-filter", {...data})
+                if (data.JustFilter) {
+                    win.webContents.send("client-mitmV2-filter", data.FilterData)
                     return
                 }
+                // TODO 需要新的逻辑处理 更换成 ManualHijackList
                 if (data.id == "0" && data.responseId == "0") return
                 win.webContents.send("client-mitmV2-hijacked", {...data})
             }
@@ -318,18 +305,15 @@ module.exports = (win, getClient) => {
         currentPort = Port
         currentDownstreamProxy = DownstreamProxy
         if (stream) {
-            stream.write({
-                ...params
-                // host,
-                // port,
-                // downstreamProxy,
-                // enableHttp2,
-                // ForceDisableKeepAlive,
-                // certificates,
-                // ...extra,
-                // DisableCACertPage: extra.disableCACertPage,
-                // DisableWebsocketCompression: !extra.DisableWebsocketCompression
-            })
+            if (params.hasOwnProperty("extra")) {
+                delete params.extra
+            }
+            const value = {
+                ...params,
+                ...extra
+            }
+            // console.log("mitm-v2", value)
+            stream.write(value)
         }
     })
     ipcMain.handle("mitmV2-stop-call", () => {

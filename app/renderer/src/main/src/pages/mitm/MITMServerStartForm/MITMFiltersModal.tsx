@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {info, yakitFailed, warn, yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Tooltip} from "antd"
@@ -26,6 +26,18 @@ import {MITMFilterUIProps, convertLocalMITMFilterRequest, convertMITMFilterUI} f
 import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {RemoteMitmGV} from "@/enums/mitm"
+import {
+    MITMHijackSetFilterRequest,
+    MITMSetFilterRequest,
+    grpcClientMITMfilter,
+    grpcMITMGetFilter,
+    grpcMITMHijackGetFilter,
+    grpcMITMHijackSetFilter,
+    grpcMITMResetFilter,
+    grpcMITMSetFilter,
+    grpcResetMITMFilter
+} from "../MITMHacker/utils"
+import MITMContext from "../Context/MITMContext"
 
 const MITMAdvancedFilters = React.lazy(() => import("./MITMFilters"))
 const {ipcRenderer} = window.require("electron")
@@ -71,34 +83,40 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
 
     const [filterData, setFilterData] = useState<MITMAdvancedFilter[]>([cloneDeep(defaultMITMAdvancedFilter)])
 
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     const onResetFilters = useMemoizedFn(() => {
         function resetFilterOk() {
             info("MITM 过滤器重置命令已发送")
-            emiter.emit("onRefFilterWhiteListEvent")
+            emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
             setVisible(false)
         }
         if (isStartMITM) {
-            ipcRenderer.invoke("mitm-reset-filter").then(() => {
+            grpcMITMResetFilter(mitmVersion).then(() => {
                 resetFilterOk()
             })
         } else {
-            ipcRenderer.invoke("ResetMITMFilter").then(() => {
+            grpcResetMITMFilter().then(() => {
                 resetFilterOk()
             })
         }
     })
     useEffect(() => {
-        ipcRenderer.on("client-mitm-filter", (e, msg) => {
-            const filter = msg.FilterData
-            const value = convertMITMFilterUI(filter)
-            setMITMFilter({
-                ...value.baseFilter
+        grpcClientMITMfilter(mitmVersion)
+            .on()
+            .then((filter) => {
+                const value = convertMITMFilterUI(filter)
+                setMITMFilter({
+                    ...value.baseFilter
+                })
+                setFilterData([...value.advancedFilters])
+                info("更新 MITM 过滤器状态")
             })
-            setFilterData([...value.advancedFilters])
-            info("更新 MITM 过滤器状态")
-        })
         return () => {
-            ipcRenderer.removeAllListeners("client-mitm-filter")
+            grpcClientMITMfilter(mitmVersion).remove()
         }
     }, [])
     useEffect(() => {
@@ -110,12 +128,13 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
         if (filterType === "filter") {
-            ipcRenderer
-                .invoke("mitm-set-filter", {
-                    FilterData: filter
-                })
+            const value: MITMSetFilterRequest = {
+                FilterData: filter,
+                version: mitmVersion
+            }
+            grpcMITMSetFilter(value)
                 .then(() => {
-                    emiter.emit("onRefFilterWhiteListEvent")
+                    emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
                     setVisible(false)
                     info("更新 MITM 过滤器状态")
                 })
@@ -123,10 +142,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     yakitFailed("更新 MITM 过滤器失败：" + err)
                 })
         } else {
-            ipcRenderer
-                .invoke("mitm-hijack-set-filter", {
-                    FilterData: filter
-                })
+            const value: MITMHijackSetFilterRequest = {
+                FilterData: filter,
+                version: mitmVersion
+            }
+            grpcMITMHijackSetFilter(value)
                 .then(() => {
                     // 是否配置过 劫持 过滤器
                     if (onSetHijackFilterFlag) {
@@ -142,8 +162,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     })
     const getMITMFilter = useMemoizedFn(() => {
         if (filterType === "filter") {
-            ipcRenderer
-                .invoke("mitm-get-filter")
+            grpcMITMGetFilter()
                 .then((val: MITMFilterSchema) => {
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)
@@ -153,8 +172,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     yakitFailed("获取 MITM 过滤器失败：" + err)
                 })
         } else {
-            ipcRenderer
-                .invoke("mitm-hijack-get-filter")
+            grpcMITMHijackGetFilter()
                 .then((val: MITMFilterSchema) => {
                     const newValue = convertMITMFilterUI(val.FilterData || cloneDeep(defaultMITMFilterData))
                     setMITMFilter(newValue.baseFilter)

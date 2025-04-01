@@ -3,7 +3,7 @@ import {MITMPage} from "../mitm/MITMPage"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
-import MITMContext, {MITMContextStore} from "../mitm/Context/MITMContext"
+import MITMContext, {MITMContextStore, MITMVersion} from "../mitm/Context/MITMContext"
 import {useCreation} from "ahooks"
 
 export interface HTTPHackerProp {}
@@ -11,7 +11,7 @@ export interface HTTPHackerProp {}
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
     const mitmStore: MITMContextStore = useCreation(() => {
         return {
-            version: "", // v1版本就算空字符
+            version: MITMVersion.V1,
             route: YakitRoute.HTTPHacker
         }
     }, [])

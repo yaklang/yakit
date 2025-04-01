@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState,useContext} from "react"
 import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress, Modal} from "antd"
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {showDrawer} from "../../utils/showModal"
@@ -103,6 +103,7 @@ import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import MITMContext from "@/pages/mitm/Context/MITMContext"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -723,6 +724,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }),
         shallow
     )
+
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     const [data, setData, getData] = useGetState<HTTPFlow[]>([])
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -967,7 +974,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     useEffect(() => {
         if (pageType === "MITM") {
-            emiter.emit("onGetMITMShieldDataEvent", JSON.stringify(shieldData))
+            emiter.emit("onGetMITMShieldDataEvent", JSON.stringify({shieldData, version: mitmVersion}))
         }
         // 判断是否第一次加载页面
         if (isOneceLoading.current) {
@@ -1622,17 +1629,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setShieldData(newObj)
     })
     // 取消所有屏蔽筛选
-    const cancleAllFilter = useMemoizedFn(() => {
+    const cancleAllFilter = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
         const newObj = {...shieldData, data: []}
         setShieldData(newObj)
     })
 
     const cancleMitmFilter = useMemoizedFn((str: string) => {
-        const value = JSON.parse(str)
-        cancleFilter(value)
+        try {
+            const data = JSON.parse(str)
+            const {version, value} = data
+            if (version !== mitmVersion) return
+            cancleFilter(value)
+        } catch (error) {}
     })
 
-    const cleanLogTableData = useMemoizedFn(() => {
+    const cleanLogTableData = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
         setOnlyShowFirstNode && setOnlyShowFirstNode(true)
         setData([])
         setParams({...params, AfterUpdatedAt: undefined, BeforeUpdatedAt: undefined})
@@ -1909,7 +1922,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                     if (Array.isArray(v)) {
                                         setTagsFilter(v)
                                         if (pageType === "MITM") {
-                                            emiter.emit("onHistoryTagToMitm", v.join(","))
+                                            emiter.emit(
+                                                "onHistoryTagToMitm",
+                                                JSON.stringify({
+                                                    tags: v.join(","),
+                                                    version: mitmVersion
+                                                })
+                                            )
                                         }
                                     }
                                 }}
@@ -3765,33 +3784,48 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [props.params?.SourceType])
 
-    const onHasParamsJumpHistory = useMemoizedFn((mitmHasParamsNames: string) => {
-        const mitmHasParamsNamesArr = mitmHasParamsNames.split(",").filter((item) => item)
-        let selectTypeList = (params.SourceType?.split(",") || []).filter((item) => item)
-        if (mitmHasParamsNamesArr.length) {
-            selectTypeList = ["mitm", "scan"]
-        } else {
-            selectTypeList = selectTypeList.filter((item) => item !== "scan")
-            if (!selectTypeList.length) {
-                selectTypeList = ["mitm"]
+    /**订阅的时候已经判断 pageType === "MITM" */
+    const onHasParamsJumpHistory = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            const {version = "", mitmHasParamsNames = ""} = value
+            if (version !== mitmVersion) return
+            const mitmHasParamsNamesArr = mitmHasParamsNames.split(",").filter((item) => item)
+            let selectTypeList = (params.SourceType?.split(",") || []).filter((item) => item)
+            if (mitmHasParamsNamesArr.length) {
+                selectTypeList = ["mitm", "scan"]
+            } else {
+                selectTypeList = selectTypeList.filter((item) => item !== "scan")
+                if (!selectTypeList.length) {
+                    selectTypeList = ["mitm"]
+                }
             }
-        }
-        const newParams = {...params, SourceType: selectTypeList.join(","), FromPlugin: mitmHasParamsNames}
-        setParams(newParams)
-        setTimeout(() => {
-            updateData()
-            emiter.emit("onHistorySourceTypeToMitm", newParams.SourceType)
-        }, 20)
+            const newParams = {...params, SourceType: selectTypeList.join(","), FromPlugin: mitmHasParamsNames}
+            setParams(newParams)
+            setTimeout(() => {
+                updateData()
+                emiter.emit(
+                    "onHistorySourceTypeToMitm",
+                    JSON.stringify({
+                        sourceType: newParams.SourceType,
+                        version
+                    })
+                )
+            }, 20)
+        } catch (error) {}
     })
 
-    const onMitmClearFromPlugin = useMemoizedFn(() => {
+    const onMitmClearFromPlugin = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
         const newParams = {...params, FromPlugin: ""}
         setParams(newParams)
     })
 
     const onMitmSearchInputVal = useMemoizedFn((searchJson: string) => {
         try {
-            const searchObj = JSON.parse(searchJson) || {}
+            const value = JSON.parse(searchJson) || {}
+            const {version, ...searchObj} = value
+            if (version !== mitmVersion) return
             setParams({
                 ...params,
                 ...searchObj
@@ -3802,14 +3836,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         } catch (error) {}
     })
 
-    const onMitmCurProcess = useMemoizedFn((ProcessName: string) => {
-        setParams({
-            ...params,
-            ProcessName: ProcessName ? ProcessName.split(",") : []
-        })
-        setTimeout(() => {
-            updateData()
-        }, 20)
+    const onMitmCurProcess = useMemoizedFn((data: string) => {
+        try {
+            const value = JSON.parse(data) || {}
+            const {curProcess,version}=value
+            if (version !== mitmVersion) return
+            // TODO 需要验证一下
+            setParams({
+                ...params,
+                ProcessName:curProcess
+            })
+            setTimeout(() => {
+                updateData()
+            }, 20)
+        } catch (error) {
+            
+        }
+       
     })
 
     // mitm页面发送事件跳转过来

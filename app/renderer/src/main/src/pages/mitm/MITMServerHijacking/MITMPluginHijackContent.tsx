@@ -10,7 +10,7 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useInViewport, useMap, useMemoizedFn} from "ahooks"
-import React, {ReactElement, useEffect, useRef, useState} from "react"
+import React, {ReactElement, useEffect, useRef, useState, useContext} from "react"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
@@ -33,6 +33,16 @@ import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import MITMContext from "../Context/MITMContext"
+import {
+    grpcClientMITMHooks,
+    grpcClientMITMLoading,
+    grpcMITMExecScriptContent,
+    grpcMITMGetCurrentHook,
+    grpcMITMRemoveHook,
+    MITMExecScriptContentRequest,
+    MITMRemoveHookRequest
+} from "../MITMHacker/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -125,6 +135,12 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         setTempShowPluginHistory
     } = props
 
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
+
     const [curTabKey, setCurTabKey] = useState<tabKeys>("all")
     const [mitmTabs, setMitmTabs] = useState<Array<TabsItem>>([
         {
@@ -165,7 +181,10 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
     useEffect(() => {
         if (hasParamsCheckList.includes(tempShowPluginHistory)) {
             setShowPluginHistoryList([tempShowPluginHistory])
-            emiter.emit("onHasParamsJumpHistory", [tempShowPluginHistory].join(","))
+            emiter.emit(
+                "onHasParamsJumpHistory",
+                JSON.stringify({version: mitmVersion, mitmHasParamsNames: [tempShowPluginHistory].join(",")})
+            )
         }
     }, [compareHasParamsCheckList])
 
@@ -182,9 +201,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     useEffect(() => {
         // 加载状态(从服务端加载)
-        ipcRenderer.on("client-mitm-loading", (_, flag: boolean) => {
-            setLoading(flag)
-        })
+        grpcClientMITMLoading(mitmVersion)
+            .on()
+            .then((flag: boolean) => {
+                setLoading(flag)
+            })
         const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
         getRemoteValue(CHECK_CACHE_LIST_DATA)
             .then((data: string) => {
@@ -205,56 +226,59 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         let noParamsCheckArr: string[] = []
         let hasParamsCheckArr: string[] = []
         // 用于 MITM 的 查看当前 Hooks
-        ipcRenderer.on("client-mitm-hooks", (e, data: YakScriptHooks[]) => {
-            if (isDefaultCheck.current) {
-                const tmp = new Map<string, boolean>()
-                const tmpID = new Map<string, boolean>()
-                cacheTmp = []
-                data.forEach((i) => {
-                    i.Hooks.forEach((hook) => {
-                        // 存的id其实没有用到
-                        // console.log(hook)
-                        if (hook.YakScriptName && hook.YakScriptName !== "@HotPatchCode") {
-                            tmp.set(hook.YakScriptName, true)
-                            tmpID.set(hook.YakScriptId + "", true)
-                            cacheTmp = [...cacheTmp, hook.YakScriptName]
-                        }
-                    })
-                })
-                handlers.setAll(tmp)
-                handlersID.setAll(tmpID)
-
-                const allCheckList = [...new Set(cacheTmp)]
-                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
-                onSetLoadedPluginLen(allCheckList.length)
-                // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
-                let promises_1: (() => Promise<any>)[] = []
-                allCheckList.forEach((scriptName) => {
-                    promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
-                })
-                Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
-                    noParamsCheckArr = []
-                    hasParamsCheckArr = []
-                    res.forEach((item, index) => {
-                        if (item.status === "fulfilled") {
-                            if (!item.value) {
-                                noParamsCheckArr.push(allCheckList[index])
-                            } else {
-                                hasParamsCheckArr.push(allCheckList[index])
+        grpcClientMITMHooks(mitmVersion)
+            .on()
+            .then((data: YakScriptHooks[]) => {
+                if (isDefaultCheck.current) {
+                    const tmp = new Map<string, boolean>()
+                    const tmpID = new Map<string, boolean>()
+                    cacheTmp = []
+                    data.forEach((i) => {
+                        i.Hooks.forEach((hook) => {
+                            // 存的id其实没有用到
+                            // console.log(hook)
+                            if (hook.YakScriptName && hook.YakScriptName !== "@HotPatchCode") {
+                                tmp.set(hook.YakScriptName, true)
+                                tmpID.set(hook.YakScriptId + "", true)
+                                cacheTmp = [...cacheTmp, hook.YakScriptName]
                             }
-                        }
+                        })
                     })
-                    setHasParamsCheckList([...hasParamsCheckArr])
-                    setNoParamsCheckList([...noParamsCheckArr])
-                })
-            }
-        })
+                    handlers.setAll(tmp)
+                    handlersID.setAll(tmpID)
+
+                    const allCheckList = [...new Set(cacheTmp)]
+                    setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
+                    onSetLoadedPluginLen(allCheckList.length)
+                    // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
+                    let promises_1: (() => Promise<any>)[] = []
+                    allCheckList.forEach((scriptName) => {
+                        promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
+                    })
+                    Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
+                        noParamsCheckArr = []
+                        hasParamsCheckArr = []
+                        res.forEach((item, index) => {
+                            if (item.status === "fulfilled") {
+                                if (!item.value) {
+                                    noParamsCheckArr.push(allCheckList[index])
+                                } else {
+                                    hasParamsCheckArr.push(allCheckList[index])
+                                }
+                            }
+                        })
+                        setHasParamsCheckList([...hasParamsCheckArr])
+                        setNoParamsCheckList([...noParamsCheckArr])
+                    })
+                }
+            })
+
         updateHooks()
         return () => {
             // 组件销毁时进行本地缓存 用于后续页面进入默认选项（只缓存普通插件，不缓存带参插件）
             setRemoteValue(CHECK_CACHE_LIST_DATA, JSON.stringify(noParamsCheckArr))
-            ipcRenderer.removeAllListeners("client-mitm-hooks")
-            ipcRenderer.removeAllListeners("client-mitm-loading")
+            grpcClientMITMHooks(mitmVersion).remove()
+            grpcClientMITMLoading(mitmVersion).remove()
         }
     }, [])
     const hooksItem: YakScript[] = useCreation(() => {
@@ -290,12 +314,15 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
      * @param checkList
      */
     const multipleMitm = (checkList: string[]) => {
-        enableMITMPluginMode(checkList).then(() => {
+        enableMITMPluginMode({
+            initPluginNames: checkList,
+            version: mitmVersion
+        }).then(() => {
             info("启动 MITM 插件成功")
         })
     }
     const updateHooks = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-get-current-hook").catch((e) => {
+        grpcMITMGetCurrentHook(mitmVersion).catch((e) => {
             yakitFailed(`更新 MITM 插件状态失败: ${e}`)
         })
     })
@@ -384,15 +411,15 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     colors='danger'
                                     icon={<SolidStopIcon />}
                                     onClick={() => {
-                                        ipcRenderer
-                                            .invoke("mitm-remove-hook", {
-                                                HookName: [],
-                                                RemoveHookID: ["@HotPatchCode"]
-                                            } as any)
-                                            .then(() => {
-                                                setHotStatus("end")
-                                                info("停止成功")
-                                            })
+                                        const value: MITMRemoveHookRequest = {
+                                            HookName: [],
+                                            RemoveHookID: ["@HotPatchCode"],
+                                            version: mitmVersion
+                                        }
+                                        grpcMITMRemoveHook(value).then(() => {
+                                            setHotStatus("end")
+                                            info("停止成功")
+                                        })
                                     }}
                                 >
                                     停止
@@ -402,8 +429,11 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                                     type='outline1'
                                     icon={<SolidPlayIcon />}
                                     onClick={() => {
-                                        ipcRenderer
-                                            .invoke("mitm-exec-script-content", script.Content)
+                                        const value: MITMExecScriptContentRequest = {
+                                            YakScriptContent: script.Content,
+                                            version: mitmVersion
+                                        }
+                                        grpcMITMExecScriptContent(value)
                                             .then(() => {
                                                 setHotStatus("success")
                                                 info("加载成功")
