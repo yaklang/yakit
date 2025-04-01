@@ -1,7 +1,7 @@
-appId: "io.yaklang.enpritrace"
+appId: "io.yaklang.web中间件漏洞突破工具"
 extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
+    name: web中间件漏洞突破工具
+productName: "web中间件漏洞突破工具"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:
