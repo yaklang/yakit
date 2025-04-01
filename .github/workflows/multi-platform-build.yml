@@ -278,7 +278,7 @@ jobs:
                   if [ "${{ inputs.version }}" = "ce" ]; then
                     echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name="Vulnerability Exploit" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=Vulnerability Exploit" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irify" ]; then
