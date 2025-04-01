@@ -127,6 +127,9 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
+  // 握手 用于检查前端是否可以连接当前引擎 
+  rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
+
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
 
   // 中间人劫持
@@ -2761,7 +2764,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
 }
 
 message Report {
@@ -5477,6 +5480,15 @@ message EchoRequest {
 
 message EchoResposne {
   string result = 1;
+}
+
+// handshake 
+message HandshakeRequest {
+  string Name = 1; 
+}
+
+message HandshakeResponse {
+  bool Success = 1; 
 }
 
 // 开启一个端口，对接 GRPC 服务器
