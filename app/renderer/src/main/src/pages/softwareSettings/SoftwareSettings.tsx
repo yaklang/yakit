@@ -9,7 +9,7 @@ import { ProjectManageProp } from './ProjectManage'
 
 import classNames from 'classnames'
 import styles from './SoftwareSettings.module.scss'
-import { isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit } from '@/utils/envfile'
+import { getReleaseEditionName, isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit } from '@/utils/envfile'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import yakitEEProject from '@/assets/yakitFontEE.png'
 import yakitSEProject from '@/assets/yakitFontSE.png'
@@ -37,7 +37,7 @@ const ProjectLogo = (showMini: boolean) => {
   if (isIRify()) {
     return showMini ? <SolidIrifyMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidIrifyFontLogoIcon />
   } else if (isEnpriTrace()) {
-    return <img style={{ height: '100%' }} src={showMini ? yakitEEMiniProject : yakitEEProject} alt="暂无图片" />
+    return <img style={{ height: '100%' }} src={showMini ? yakitEEMiniProject : yakitEEMiniProject} alt="暂无图片" />
   } else if (isEnpriTraceAgent()) {
     return <img style={{ height: '100%' }} src={showMini ? yakitSEMiniProject : yakitSEProject} alt="暂无图片" />
   } else if (isMemfit() || isCommunityMemfit()) {
@@ -111,16 +111,19 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
     }
   }, [])
 
-  return (
-    <div className={styles['software-settings-wrapper']}>
-      <div className={styles['software-settings-container']}>
-        <div
-          className={classNames(styles['left-wrapper'], {
-            [styles['left-body']]: !showMini,
-            [styles['left-mini-body']]: showMini,
-          })}
-        >
-          <div className={styles['navbar-logo']}>{ProjectLogo(showMini)}</div>
+    return (
+        <div className={styles["software-settings-wrapper"]}>
+            <div className={styles["software-settings-container"]}>
+                <div
+                    className={classNames(styles["left-wrapper"], {
+                        [styles["left-body"]]: !showMini,
+                        [styles["left-mini-body"]]: showMini
+                    })}
+                >
+                    <div className={styles["navbar-logo"]}>
+                        {ProjectLogo(showMini)}
+                        {!showMini && <span style={{fontWeight: 600}}>{getReleaseEditionName()}</span>}
+                    </div>
 
           <div className={styles['navbar-list-wrapper']}>
             <div className={styles['list-body']}>
