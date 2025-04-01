@@ -64,7 +64,8 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const cancleFilter = useMemoizedFn((value) => {
         emiter.emit("cancleMitmFilterEvent", JSON.stringify({value, version: mitmVersion}))
     })
-    const cancleAllFilter = useMemoizedFn(() => {
+    const cancleAllFilter = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
         emiter.emit("cancleMitmAllFilterEvent", mitmVersion)
     })
 

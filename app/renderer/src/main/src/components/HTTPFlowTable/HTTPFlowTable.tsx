@@ -3839,20 +3839,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onMitmCurProcess = useMemoizedFn((data: string) => {
         try {
             const value = JSON.parse(data) || {}
-            const {curProcess,version}=value
+            const {curProcess, version} = value
             if (version !== mitmVersion) return
             // TODO 需要验证一下
             setParams({
                 ...params,
-                ProcessName:curProcess
+                ProcessName: curProcess
             })
             setTimeout(() => {
                 updateData()
             }, 20)
-        } catch (error) {
-            
-        }
-       
+        } catch (error) {}
     })
 
     // mitm页面发送事件跳转过来
@@ -4356,11 +4353,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 interface HTTPFlowShieldProps {
     shieldData: ShieldData
     cancleFilter: (s: string | number) => void
-    cancleAllFilter: () => void
+    cancleAllFilter: (mitmVersion:string) => void
 }
 
 export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {
     const {shieldData, cancleFilter, cancleAllFilter} = props
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     return (
         <>
             {shieldData?.data.length > 0 && (
@@ -4385,7 +4387,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                             <YakitButton
                                 type='text'
                                 className={style["shield-reset"]}
-                                onClick={() => cancleAllFilter()}
+                                onClick={() => cancleAllFilter(mitmVersion)}
                             >
                                 重置
                             </YakitButton>
