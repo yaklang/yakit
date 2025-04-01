@@ -1328,7 +1328,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const hotPatchTrigger = useMemoizedFn(() => {
         let m = showYakitModal({
             title: null,
-            width: "80%",
+            width: "90%",
             footer: null,
             maskClosable: false,
             closable: false,

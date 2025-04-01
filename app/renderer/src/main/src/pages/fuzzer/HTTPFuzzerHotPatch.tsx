@@ -91,6 +91,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const [hotPatchCodeOpen, setHotPatchCodeOpen] = useState<boolean>(false)
     const initHotPatchCodeOpen = useRef<boolean>(false)
+    const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
 
     useEffect(() => {
         getRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO).then((e) => {
@@ -289,14 +290,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                         >
                             <YakitButton icon={<FullscreenOutlined />} type='text' />
                         </YakitPopover>
-                        <HotCodeTemplate
-                            type='fuzzer'
-                            hotPatchTempLocal={hotPatchTempLocal}
-                            onSetHotPatchTempLocal={setHotPatchTempLocal}
-                            onClickHotCode={(temp) => {
-                                setParams({...getParams(), HotPatchCode: temp})
-                            }}
-                        ></HotCodeTemplate>
                         <div className={styles["hotPatchCodeOpen"]}>
                             <span style={{fontSize: 12}}>共用热加载代码</span>
                             <Tooltip title='打开以后webfuzzer标签将共用当前热加载代码，但只对新建标签页生效'>
@@ -319,6 +312,9 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                             hotPatchCode={params.HotPatchCode}
                             visible={addHotCodeTemplateVisible}
                             onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                            onSaveHotCodeOk={() => {
+                                setRefreshHotCodeList((prev) => !prev)
+                            }}
                         ></AddHotCodeTemplate>
                         <YakitButton
                             type={"primary"}
@@ -338,12 +334,24 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     </Space>
                 </div>
                 <Form.Item>
-                    <div style={{height: hotPatchEditorHeight}}>
-                        <YakitEditor
-                            type='yak'
-                            value={params.HotPatchCode}
-                            setValue={(HotPatchCode) => setParams({...getParams(), HotPatchCode})}
-                        ></YakitEditor>
+                    <div className={styles["hotCode-editor-wrapper"]} style={{height: hotPatchEditorHeight}}>
+                        <HotCodeTemplate
+                            type='fuzzer'
+                            hotPatchTempLocal={hotPatchTempLocal}
+                            onSetHotPatchTempLocal={setHotPatchTempLocal}
+                            onClickHotCode={(temp) => {
+                                setParams({...getParams(), HotPatchCode: temp})
+                            }}
+                            dropdown={false}
+                            refreshList={refreshHotCodeList}
+                        ></HotCodeTemplate>
+                        <div className={styles["hotCode-editor"]}>
+                            <YakitEditor
+                                type='yak'
+                                value={params.HotPatchCode}
+                                setValue={(HotPatchCode) => setParams({...getParams(), HotPatchCode})}
+                            ></YakitEditor>
+                        </div>
                     </div>
                 </Form.Item>
                 <Form.Item help={"调试须知: 调试执行将会仅最多执行20秒 或 渲染 Payload 最多 300 条"}>
@@ -366,8 +374,7 @@ export const getHotPatchCodeInfo = async () => {
                 hotPatchCode = obj.hotPatchCode
             }
         }
-    } catch (error) {
-    }
+    } catch (error) {}
     return hotPatchCode
 }
 
@@ -405,9 +412,11 @@ interface HotCodeTemplateProps {
     hotPatchTempLocal: HotPatchTempItem[]
     onSetHotPatchTempLocal: (hotPatchTempLocal: HotPatchTempItem[]) => void
     onClickHotCode: (temp: string) => void
+    dropdown?: boolean
+    refreshList?: boolean
 }
 export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props) => {
-    const {type, hotPatchTempLocal, onSetHotPatchTempLocal, onClickHotCode} = props
+    const {type, hotPatchTempLocal, onSetHotPatchTempLocal, onClickHotCode, dropdown = true, refreshList} = props
     const [hotCodeTempVisible, setHotCodeTempVisible] = useState<boolean>(false)
     const [tab, setTab] = useState<"local" | "online">("local")
     const [viewCurHotCode, setViewCurrHotCode] = useState<string>("")
@@ -422,7 +431,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     }, [hotPatchTempLocal])
 
     useEffect(() => {
-        if (hotCodeTempVisible) {
+        if (hotCodeTempVisible || dropdown === false) {
             if (tab === "local") {
                 ipcRenderer
                     .invoke("QueryHotPatchTemplateList", {
@@ -467,7 +476,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     })
             }
         }
-    }, [hotCodeTempVisible, tab])
+    }, [hotCodeTempVisible, tab, dropdown, refreshList])
 
     const onClickHotCodeName = (item: HotPatchTempItem, click?: boolean) => {
         if (item.isDefault) {
@@ -647,120 +656,132 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
         return []
     }, [tab, hotPatchTempLocal, hotPatchTempOnline])
 
+    const overlayCont = useMemo(() => {
+        return (
+            <div
+                className={styles["hotCode-list"]}
+                style={{
+                    maxHeight: dropdown ? 380 : undefined,
+                    padding: dropdown ? "4px 6px" : undefined,
+                    height: dropdown ? undefined : "100%"
+                }}
+            >
+                {isEnpriTrace() && (
+                    <YakitRadioButtons
+                        wrapClassName={styles["hotCode-tab-btns"]}
+                        value={tab}
+                        buttonStyle='solid'
+                        options={[
+                            {
+                                value: "local",
+                                label: "本地模板"
+                            },
+                            {
+                                value: "online",
+                                label: "线上模板"
+                            }
+                        ]}
+                        onChange={(e) => {
+                            setTab(e.target.value)
+                        }}
+                    />
+                )}
+                {renderHotPatchTemp.length ? (
+                    <>
+                        {renderHotPatchTemp.map((item) => (
+                            <div className={styles["hotCode-item"]} key={item.name}>
+                                <YakitPopover
+                                    trigger='hover'
+                                    placement='right'
+                                    overlayClassName={styles["hotCode-popover"]}
+                                    content={<YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />}
+                                    onVisibleChange={(v) => {
+                                        if (v) {
+                                            onClickHotCodeName(item)
+                                        }
+                                    }}
+                                    zIndex={9999}
+                                >
+                                    <div
+                                        className={classNames(styles["hotCode-item-cont"])}
+                                        onClick={() => {
+                                            onClickHotCodeName(item, true)
+                                        }}
+                                    >
+                                        <div
+                                            className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
+                                            title={item.name}
+                                        >
+                                            {item.name}
+                                        </div>
+                                        <div className={styles["extra-opt-btns"]}>
+                                            {/* 本地上传 */}
+                                            {tab === "local" && !item.isDefault && hasPermissions && (
+                                                <YakitButton
+                                                    icon={<OutlineClouduploadIcon />}
+                                                    type='text2'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        uploadHotPatchTemplateToOnline(item)
+                                                    }}
+                                                ></YakitButton>
+                                            )}
+                                            {/* 线上下载 */}
+                                            {tab === "online" && (
+                                                <YakitButton
+                                                    icon={<OutlineClouddownloadIcon />}
+                                                    type='text2'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        downloadHotPatchTemplate(item)
+                                                    }}
+                                                ></YakitButton>
+                                            )}
+                                            {/* 删除 */}
+                                            {(tab === "local" && !item.isDefault) ||
+                                            (tab === "online" && hasPermissions) ? (
+                                                <YakitButton
+                                                    icon={<OutlineTrashIcon />}
+                                                    type='text'
+                                                    colors='danger'
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        deleteHotPatchTemplate(item)
+                                                    }}
+                                                ></YakitButton>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </YakitPopover>
+                            </div>
+                        ))}
+                    </>
+                ) : (
+                    <YakitEmpty></YakitEmpty>
+                )}
+            </div>
+        )
+    }, [tab, renderHotPatchTemp, viewCurHotCode, hasPermissions, dropdown])
+
     return (
         <>
-            <Dropdown
-                overlayStyle={{borderRadius: 4, width: 250}}
-                visible={hotCodeTempVisible}
-                onVisibleChange={(v) => {
-                    setHotCodeTempVisible(v)
-                }}
-                trigger={["click"]}
-                overlay={
-                    <div className={styles["hotCode-list"]}>
-                        {isEnpriTrace() && (
-                            <YakitRadioButtons
-                                wrapClassName={styles["hotCode-tab-btns"]}
-                                value={tab}
-                                buttonStyle='solid'
-                                options={[
-                                    {
-                                        value: "local",
-                                        label: "本地模板"
-                                    },
-                                    {
-                                        value: "online",
-                                        label: "线上模板"
-                                    }
-                                ]}
-                                onChange={(e) => {
-                                    setTab(e.target.value)
-                                }}
-                            />
-                        )}
-                        {renderHotPatchTemp.length ? (
-                            <>
-                                {renderHotPatchTemp.map((item) => (
-                                    <div className={styles["hotCode-item"]} key={item.name}>
-                                        <YakitPopover
-                                            trigger='hover'
-                                            placement='right'
-                                            overlayClassName={styles["hotCode-popover"]}
-                                            content={
-                                                <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
-                                            }
-                                            onVisibleChange={(v) => {
-                                                if (v) {
-                                                    onClickHotCodeName(item)
-                                                }
-                                            }}
-                                            zIndex={9999}
-                                        >
-                                            <div
-                                                className={classNames(styles["hotCode-item-cont"])}
-                                                onClick={() => {
-                                                    onClickHotCodeName(item, true)
-                                                }}
-                                            >
-                                                <div
-                                                    className={classNames(
-                                                        styles["hotCode-item-name"],
-                                                        "content-ellipsis"
-                                                    )}
-                                                    title={item.name}
-                                                >
-                                                    {item.name}
-                                                </div>
-                                                <div className={styles["extra-opt-btns"]}>
-                                                    {/* 本地上传 */}
-                                                    {tab === "local" && !item.isDefault && hasPermissions && (
-                                                        <YakitButton
-                                                            icon={<OutlineClouduploadIcon />}
-                                                            type='text2'
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                uploadHotPatchTemplateToOnline(item)
-                                                            }}
-                                                        ></YakitButton>
-                                                    )}
-                                                    {/* 线上下载 */}
-                                                    {tab === "online" && (
-                                                        <YakitButton
-                                                            icon={<OutlineClouddownloadIcon />}
-                                                            type='text2'
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                downloadHotPatchTemplate(item)
-                                                            }}
-                                                        ></YakitButton>
-                                                    )}
-                                                    {/* 删除 */}
-                                                    {(tab === "local" && !item.isDefault) ||
-                                                    (tab === "online" && hasPermissions) ? (
-                                                        <YakitButton
-                                                            icon={<OutlineTrashIcon />}
-                                                            type='text'
-                                                            colors='danger'
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                deleteHotPatchTemplate(item)
-                                                            }}
-                                                        ></YakitButton>
-                                                    ) : null}
-                                                </div>
-                                            </div>
-                                        </YakitPopover>
-                                    </div>
-                                ))}
-                            </>
-                        ) : (
-                            <YakitEmpty></YakitEmpty>
-                        )}
-                    </div>
-                }
-            >
-                <YakitButton type='text'>代码模板</YakitButton>
-            </Dropdown>
+            {dropdown ? (
+                <Dropdown
+                    overlayStyle={{borderRadius: 4, width: 250}}
+                    visible={hotCodeTempVisible}
+                    onVisibleChange={(v) => {
+                        setHotCodeTempVisible(v)
+                    }}
+                    trigger={["click"]}
+                    overlay={overlayCont}
+                >
+                    <YakitButton type='text'>代码模板</YakitButton>
+                </Dropdown>
+            ) : (
+                <div style={{width: 250}}>
+                    {overlayCont}
+                </div>
+            )}
             <YakitHint
                 visible={sameNameHint}
                 title={sameNameHintInfoRef.current.title}
@@ -789,9 +810,10 @@ interface AddHotCodeTemplateProps {
     hotPatchCode: string
     visible: boolean
     onSetAddHotCodeTemplateVisible: (visible: boolean) => void
+    onSaveHotCodeOk?: () => void
 }
 export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo((props) => {
-    const {type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible} = props
+    const {type, hotPatchTempLocal, hotPatchCode, visible, onSetAddHotCodeTemplateVisible, onSaveHotCodeOk} = props
     const addHotPatchTempNameRef = useRef<string>("")
 
     const onCancel = useMemoizedFn(() => {
@@ -822,6 +844,7 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
                 yakitNotify("success", "保存成功")
                 addHotPatchTempNameRef.current = ""
                 onSetAddHotCodeTemplateVisible(false)
+                onSaveHotCodeOk && onSaveHotCodeOk()
             })
             .catch((error) => {
                 yakitNotify("error", error + "")

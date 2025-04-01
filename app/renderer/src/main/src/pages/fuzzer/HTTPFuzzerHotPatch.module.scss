@@ -22,7 +22,7 @@
             font-size: 12px;
         }
     }
-    .http-fuzzer-hotPatch-form{
+    .http-fuzzer-hotPatch-form {
         padding: 24px;
         overflow-y: auto;
         max-height: 80vh;
@@ -41,6 +41,14 @@
                         color: var(--yakit-helper-text-color);
                     }
                 }
+            }
+        }
+        .hotCode-editor-wrapper {
+            display: flex;
+            gap: 8px;
+            .hotCode-editor {
+                height: 100%;
+                width: calc(100% - 258px);
             }
         }
     }
@@ -84,9 +92,7 @@
 }
 
 .hotCode-list {
-    padding: 4px 6px;
     border-radius: 4px;
-    max-height: 380px;
     overflow-y: auto;
     .hotCode-tab-btns {
         :global {
