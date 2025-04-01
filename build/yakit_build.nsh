@@ -128,6 +128,9 @@ FunctionEnd
                     ${If} $0 != ""
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "Webshell远程隐蔽控制工具_InstallPath"
+                        StrCpy $EXE_NAME "Webshell远程隐蔽控制工具"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -165,6 +168,9 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                     ${EndIf}
+                    ${Else}
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "Webshell远程隐蔽控制工具_InstallPath"
+                        StrCpy $EXE_NAME "Webshell远程隐蔽控制工具"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
