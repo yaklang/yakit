@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {MacUIOp} from "./MacUIOp"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain} from "./FuncDomain"
@@ -157,6 +157,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false)
     /** ---------- 软件状态相关属性 End ---------- */
 
+    const {userInfo} = useStore()
+
     // 引擎状态断开时清空yakrunner
     useUpdateEffect(() => {
         if (getMapAllTerminalKey().length > 0 && !engineLink) {
@@ -167,22 +169,31 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 获取企业版配置信息
     const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
-    useEffect(() => {
-        let collectData = false
-        eeSystemConfig.forEach((item) => {
-            if (item.configName === "collectData") {
-                collectData = item.isOpen
+    useDebounceEffect(
+        () => {
+            let collectData = false
+            eeSystemConfig.forEach((item) => {
+                if (item.configName === "collectData") {
+                    collectData = item.isOpen
+                }
+            })
+            let timer
+            if (collectData && userInfo.isLogin) {
+                const token = userInfo.token
+                visitorsStatisticsFun(token)
+                timer = setInterval(() => {
+                    visitorsStatisticsFun(token)
+                }, 60000)
+            } else {
+                timer && clearInterval(timer)
             }
-        })
-        let timer
-        if (collectData) {
-            visitorsStatisticsFun(userInfo.token)
-            timer = setInterval(() => visitorsStatisticsFun(userInfo.token), 60000)
-        }
-        return () => {
-            timer && clearInterval(timer)
-        }
-    }, [eeSystemConfig])
+            return () => {
+                timer && clearInterval(timer)
+            }
+        },
+        [eeSystemConfig, userInfo],
+        {wait: 300}
+    )
     useEffect(() => {
         if (engineLink && isEnpriTrace()) {
             NetWorkApi<any, API.SystemConfigResponse>({
@@ -906,7 +917,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- 远程控制(控制端) Start ---------- */
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
-    const {userInfo} = useStore()
 
     useEffect(() => {
         // 监听退出远程控制
@@ -967,7 +977,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- EE版-license Start ---------- */
     // 企业版-连接引擎后验证license=>展示企业登录
-    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
+    // const [isJudgeLicense, setJudgeLicense] = useState<boolean>(isEnterpriseEdition())
+    const [isJudgeLicense, setJudgeLicense] = useState<boolean>(false)
     useEffect(() => {
         // 用户退出 - 验证license=>展示企业登录
         ipcRenderer.on("again-judge-license-login", () => {
@@ -1016,12 +1027,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
         setShowProjectManage(false)
-        ipcRenderer.invoke("GetCurrentProjectEx",{
-            Type: getEnvTypeByProjects()
-        }).then((rsp: ProjectDescription) => {
-            setCurrentProject(rsp || undefined)
-            setNowProjectDescription(rsp || undefined)
-        })
+        ipcRenderer
+            .invoke("GetCurrentProjectEx", {
+                Type: getEnvTypeByProjects()
+            })
+            .then((rsp: ProjectDescription) => {
+                setCurrentProject(rsp || undefined)
+                setNowProjectDescription(rsp || undefined)
+            })
     })
 
     // 当前使用的项目
@@ -1392,11 +1405,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
             // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
             if (SystemInfo.isDev) {
-                const res = await ipcRenderer.invoke("GetDefaultProjectEx",{
+                const res = await ipcRenderer.invoke("GetDefaultProjectEx", {
                     Type: getEnvTypeByProjects()
                 })
                 if (res) {
-                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id,Type: getEnvTypeByProjects()})
+                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id, Type: getEnvTypeByProjects()})
                     setCurrentProject(res)
                     setNowProjectDescription(res)
                     setShowProjectManage(false)
