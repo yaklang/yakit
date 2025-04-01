@@ -1,7 +1,7 @@
-appId: "io.yaklang.enpritrace"
+appId: "io.yaklang.Webshell远程隐蔽控制工具"
 extraMetadata:
-    name: enpritrace
-productName: "EnpriTrace"
+    name: Webshell远程隐蔽控制工具
+productName: "Webshell远程隐蔽控制工具"
 copyright: Copyright © 2021 v1ll4n
 
 extraFiles:

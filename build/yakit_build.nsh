@@ -123,6 +123,9 @@ FunctionEnd
                 ${If} $0 != "" ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "Webshell远程隐蔽控制工具_InstallPath"
+                    StrCpy $EXE_NAME "Webshell远程隐蔽控制工具"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -154,6 +157,9 @@ FunctionEnd
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "Webshell远程隐蔽控制工具_InstallPath"
+                    StrCpy $EXE_NAME "Webshell远程隐蔽控制工具"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
