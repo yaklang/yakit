@@ -9,7 +9,7 @@ import {ProjectManageProp} from "./ProjectManage"
 
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
-import {isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {getReleaseEditionName, isEnpriTrace, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitSSProject from "@/assets/yakitFontSS.png"
@@ -32,7 +32,7 @@ const ProjectLogo = (showMini: boolean) => {
     if (isIRify()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSSMiniProject : yakitSSProject} alt='暂无图片' />
     } else if (isEnpriTrace()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
+        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEMiniProject} alt='暂无图片' />
     } else if (isEnpriTraceAgent()) {
         return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
     } else {
@@ -111,7 +111,10 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         [styles["left-mini-body"]]: showMini
                     })}
                 >
-                    <div className={styles["navbar-logo"]}>{ProjectLogo(showMini)}</div>
+                    <div className={styles["navbar-logo"]}>
+                        {ProjectLogo(showMini)}
+                        {!showMini && <span style={{fontWeight: 600}}>{getReleaseEditionName()}</span>}
+                    </div>
 
                     <div className={styles["navbar-list-wrapper"]}>
                         <div className={styles["list-body"]}>
