@@ -105,16 +105,14 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         }
     })
     useEffect(() => {
-        grpcClientMITMfilter(mitmVersion)
-            .on()
-            .then((filter) => {
-                const value = convertMITMFilterUI(filter)
-                setMITMFilter({
-                    ...value.baseFilter
-                })
-                setFilterData([...value.advancedFilters])
-                info("更新 MITM 过滤器状态")
+        grpcClientMITMfilter(mitmVersion).on((filter) => {
+            const value = convertMITMFilterUI(filter)
+            setMITMFilter({
+                ...value.baseFilter
             })
+            setFilterData([...value.advancedFilters])
+            info("更新 MITM 过滤器状态")
+        })
         return () => {
             grpcClientMITMfilter(mitmVersion).remove()
         }

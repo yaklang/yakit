@@ -21,11 +21,9 @@ interface MITMBaseData {
 export const grpcClientMITMStartSuccess = (version: string) => {
     const url = `client-mitm${version}-start-success`
     return {
-        on: () => {
-            return new Promise<null>((resolve, reject) => {
-                ipcRenderer.on(url, (_,data) => {
-                    resolve(null)
-                })
+        on: (callback: () => void) => {
+            return ipcRenderer.on(url, () => {
+                callback()
             })
         },
         remove: () => {
@@ -51,11 +49,9 @@ export const grpcMITMStopCall: APIFunc<string, null> = (version, hiddenError) =>
 export const grpcClientMITMNotification = (version: string) => {
     const url = `client-mitm${version}-notification`
     return {
-        on: () => {
-            return new Promise<Uint8Array>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i: Uint8Array) => {
-                    resolve(i)
-                })
+        on: (callback: (i: Uint8Array) => void) => {
+            return ipcRenderer.on(url, (_, i: Uint8Array) => {
+                callback(i)
             })
         },
         remove: () => {
@@ -89,11 +85,9 @@ export const grpcMITMHaveCurrentStream: APIFunc<string, MITMHaveCurrentStreamRes
 export const grpcClientMITMMessage = (version: string) => {
     const url = `client-mitm${version}-message`
     return {
-        on: () => {
-            return new Promise<ExecResult>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i: ExecResult) => {
-                    resolve(i)
-                })
+        on: (callback: (i: ExecResult) => void) => {
+            return ipcRenderer.on(url, (_, i: ExecResult) => {
+                callback(i)
             })
         },
         remove: () => {
@@ -105,11 +99,9 @@ export const grpcClientMITMMessage = (version: string) => {
 export const grpcClientMITMError = (version: string) => {
     const url = `client-mitm${version}-error`
     return {
-        on: () => {
-            return new Promise<string>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i: string) => {
-                    resolve(i)
-                })
+        on: (callback: (i: string) => void) => {
+            return ipcRenderer.on(url, (_, i: string) => {
+                callback(i)
             })
         },
         remove: () => {
@@ -188,6 +180,8 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
         extra: isEmpty(value.extra)
             ? undefined
             : {
+                  EnableGMTLS: value.extra.enableGMTLS,
+                  RandomJA3: value.extra.RandomJA3,
                   EnableProxyAuth: value.extra.enableProxyAuth,
                   OnlyEnableGMTLS: value.extra.onlyEnableGMTLS,
                   PreferGMTLS: value.extra.preferGMTLS,
@@ -319,11 +313,9 @@ export const grpcResetMITMFilter: APINoRequestFunc<null> = (hiddenError) => {
 export const grpcClientMITMfilter = (version: string) => {
     const url = `client-mitm${version}-filter`
     return {
-        on: () => {
-            return new Promise<MITMFilterData>((resolve, reject) => {
-                ipcRenderer.on(url, (_, filterData:MITMFilterData) => {
-                    resolve(filterData)
-                })
+        on: (callback: (i: MITMFilterData) => void) => {
+            return ipcRenderer.on(url, (_, filterData: MITMFilterData) => {
+                callback(filterData)
             })
         },
         remove: () => {
@@ -465,11 +457,9 @@ export const isMITMResponse = (value: ClientMITMHijackedResponse): value is MITM
 export const grpcClientMITMHijacked = (version: string) => {
     const url = `client-mitm${version}-hijacked`
     return {
-        on: () => {
-            return new Promise<ClientMITMHijackedResponse>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i) => {
-                    resolve(i)
-                })
+        on: (callback: (i: ClientMITMHijackedResponse) => void) => {
+            return ipcRenderer.on(url, (_, i: ClientMITMHijackedResponse) => {
+                callback(i)
             })
         },
         remove: () => {
@@ -738,11 +728,9 @@ export const grpcMITMHotPort: APIFunc<MITMHotPortRequest, null> = (params, hidde
 export const grpcClientMITMLoading = (version: string) => {
     const url = `client-mitm${version}-loading`
     return {
-        on: () => {
-            return new Promise<boolean>((resolve, reject) => {
-                ipcRenderer.on(url, (_, f) => {
-                    resolve(f)
-                })
+        on: (callback: (i: boolean) => void) => {
+            return ipcRenderer.on(url, (_, f: boolean) => {
+                callback(f)
             })
         },
         remove: () => {
@@ -755,11 +743,9 @@ export const grpcClientMITMLoading = (version: string) => {
 export const grpcClientMITMContentReplacerUpdate = (version: string) => {
     const url = `client-mitm${version}-content-replacer-update`
     return {
-        on: () => {
-            return new Promise<MITMContentReplacerRule[]>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i) => {
-                    resolve(i)
-                })
+        on: (callback: (i: MITMContentReplacerRule[]) => void) => {
+            return ipcRenderer.on(url, (_, i: MITMContentReplacerRule[]) => {
+                callback(i)
             })
         },
         remove: () => {
@@ -771,11 +757,9 @@ export const grpcClientMITMContentReplacerUpdate = (version: string) => {
 export const grpcClientMITMHooks = (version: string) => {
     const url = `client-mitm${version}-hooks`
     return {
-        on: () => {
-            return new Promise<YakScriptHooks[]>((resolve, reject) => {
-                ipcRenderer.on(url, (_, i) => {
-                    resolve(i)
-                })
+        on: (callback: (i: YakScriptHooks[]) => void) => {
+            return ipcRenderer.on(url, (_, i: YakScriptHooks[]) => {
+                callback(i)
             })
         },
         remove: () => {

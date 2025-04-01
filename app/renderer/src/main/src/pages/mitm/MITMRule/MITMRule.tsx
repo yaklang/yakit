@@ -196,13 +196,11 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         onGetCurrentRules()
     }, [visible])
     useEffect(() => {
-        grpcClientMITMContentReplacerUpdate(mitmVersion)
-            .on()
-            .then((replacers) => {
-                const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
-                setRules(newRules)
-                setBanAndNoReplace(newRules)
-            })
+        grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
+            const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
+            setRules(newRules)
+            setBanAndNoReplace(newRules)
+        })
         return () => {
             grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
         }

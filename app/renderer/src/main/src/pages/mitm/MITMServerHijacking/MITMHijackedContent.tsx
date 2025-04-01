@@ -411,7 +411,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     // 自动转发劫持，进行的操作
     useEffect(() => {
-        grpcClientMITMHijacked(mitmVersion).on().then(onClientMITMHijacked)
+        grpcClientMITMHijacked(mitmVersion).on(onClientMITMHijacked)
         return () => {
             grpcClientMITMHijacked(mitmVersion).remove()
         }

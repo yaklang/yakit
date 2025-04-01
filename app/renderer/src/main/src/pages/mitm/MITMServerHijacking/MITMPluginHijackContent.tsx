@@ -201,11 +201,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
 
     useEffect(() => {
         // 加载状态(从服务端加载)
-        grpcClientMITMLoading(mitmVersion)
-            .on()
-            .then((flag: boolean) => {
-                setLoading(flag)
-            })
+        grpcClientMITMLoading(mitmVersion).on((flag: boolean) => {
+            setLoading(flag)
+        })
         const CHECK_CACHE_LIST_DATA = "CHECK_CACHE_LIST_DATA"
         getRemoteValue(CHECK_CACHE_LIST_DATA)
             .then((data: string) => {
@@ -226,52 +224,50 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
         let noParamsCheckArr: string[] = []
         let hasParamsCheckArr: string[] = []
         // 用于 MITM 的 查看当前 Hooks
-        grpcClientMITMHooks(mitmVersion)
-            .on()
-            .then((data: YakScriptHooks[]) => {
-                if (isDefaultCheck.current) {
-                    const tmp = new Map<string, boolean>()
-                    const tmpID = new Map<string, boolean>()
-                    cacheTmp = []
-                    data.forEach((i) => {
-                        i.Hooks.forEach((hook) => {
-                            // 存的id其实没有用到
-                            // console.log(hook)
-                            if (hook.YakScriptName && hook.YakScriptName !== "@HotPatchCode") {
-                                tmp.set(hook.YakScriptName, true)
-                                tmpID.set(hook.YakScriptId + "", true)
-                                cacheTmp = [...cacheTmp, hook.YakScriptName]
-                            }
-                        })
+        grpcClientMITMHooks(mitmVersion).on((data: YakScriptHooks[]) => {
+            if (isDefaultCheck.current) {
+                const tmp = new Map<string, boolean>()
+                const tmpID = new Map<string, boolean>()
+                cacheTmp = []
+                data.forEach((i) => {
+                    i.Hooks.forEach((hook) => {
+                        // 存的id其实没有用到
+                        // console.log(hook)
+                        if (hook.YakScriptName && hook.YakScriptName !== "@HotPatchCode") {
+                            tmp.set(hook.YakScriptName, true)
+                            tmpID.set(hook.YakScriptId + "", true)
+                            cacheTmp = [...cacheTmp, hook.YakScriptName]
+                        }
                     })
-                    handlers.setAll(tmp)
-                    handlersID.setAll(tmpID)
+                })
+                handlers.setAll(tmp)
+                handlersID.setAll(tmpID)
 
-                    const allCheckList = [...new Set(cacheTmp)]
-                    setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
-                    onSetLoadedPluginLen(allCheckList.length)
-                    // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
-                    let promises_1: (() => Promise<any>)[] = []
-                    allCheckList.forEach((scriptName) => {
-                        promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
-                    })
-                    Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
-                        noParamsCheckArr = []
-                        hasParamsCheckArr = []
-                        res.forEach((item, index) => {
-                            if (item.status === "fulfilled") {
-                                if (!item.value) {
-                                    noParamsCheckArr.push(allCheckList[index])
-                                } else {
-                                    hasParamsCheckArr.push(allCheckList[index])
-                                }
+                const allCheckList = [...new Set(cacheTmp)]
+                setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, allCheckList.length ? "true" : "")
+                onSetLoadedPluginLen(allCheckList.length)
+                // 返回的hooks里面是真正加载成功的插件，既有带参插件又有不带参插件，通过本地缓存中带参数的插件参数值是否存在，存在则表示有参数的勾选插件，否则表示无参数的勾选插件
+                let promises_1: (() => Promise<any>)[] = []
+                allCheckList.forEach((scriptName) => {
+                    promises_1.push(() => getRemoteValue("mitm_has_params_" + scriptName))
+                })
+                Promise.allSettled(promises_1.map((promiseFunc) => promiseFunc())).then((res) => {
+                    noParamsCheckArr = []
+                    hasParamsCheckArr = []
+                    res.forEach((item, index) => {
+                        if (item.status === "fulfilled") {
+                            if (!item.value) {
+                                noParamsCheckArr.push(allCheckList[index])
+                            } else {
+                                hasParamsCheckArr.push(allCheckList[index])
                             }
-                        })
-                        setHasParamsCheckList([...hasParamsCheckArr])
-                        setNoParamsCheckList([...noParamsCheckArr])
+                        }
                     })
-                }
-            })
+                    setHasParamsCheckList([...hasParamsCheckArr])
+                    setNoParamsCheckList([...noParamsCheckArr])
+                })
+            }
+        })
 
         updateHooks()
         return () => {

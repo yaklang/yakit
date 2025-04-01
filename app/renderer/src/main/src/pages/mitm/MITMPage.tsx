@@ -145,18 +145,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
 
-        grpcClientMITMStartSuccess(mitmVersion)
-            .on()
-            .then(() => {
-                setStatus("hijacking")
-            })
-        grpcClientMITMNotification(mitmVersion)
-            .on()
-            .then((i: Uint8Array) => {
-                try {
-                    info(Uint8ArrayToString(i))
-                } catch (e) {}
-            })
+        grpcClientMITMStartSuccess(mitmVersion).on(() => {
+            setStatus("hijacking")
+        })
+        grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
+            try {
+                info(Uint8ArrayToString(i))
+            } catch (e) {}
+        })
 
         return () => {
             grpcMITMStopCall(mitmVersion)
@@ -184,36 +180,33 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         let messages: ExecResultLog[] = []
         const statusMap = new Map<string, StatusCardProps>()
         let lastStatusHash = ""
-        grpcClientMITMMessage(mitmVersion)
-            .on()
-            .then((data: ExecResult) => {
-                let msg = ExtractExecResultMessage(data)
-                if (msg !== undefined) {
-                    const currentLog = msg as ExecResultLog
-                    if (currentLog.level === "feature-status-card-data") {
-                        lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
+        grpcClientMITMMessage(mitmVersion).on((data: ExecResult) => {
+            let msg = ExtractExecResultMessage(data)
+            if (msg !== undefined) {
+                const currentLog = msg as ExecResultLog
+                if (currentLog.level === "feature-status-card-data") {
+                    lastStatusHash = `${currentLog.timestamp}-${currentLog.data}`
 
-                        try {
-                            // 解析 Object
-                            const obj = JSON.parse(currentLog.data)
-                            const {id, data} = obj
-                            if (!data) {
-                                statusMap.delete(`${id}`)
-                            } else {
-                                statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
-                            }
-                        } catch (e) {}
-                        return
-                    }
-                    messages.push(currentLog)
-                    if (messages.length > 25) {
-                        messages.shift()
-                    }
+                    try {
+                        // 解析 Object
+                        const obj = JSON.parse(currentLog.data)
+                        const {id, data} = obj
+                        if (!data) {
+                            statusMap.delete(`${id}`)
+                        } else {
+                            statusMap.set(`${id}`, {Data: data, Id: id, Timestamp: currentLog.timestamp})
+                        }
+                    } catch (e) {}
+                    return
                 }
-            })
+                messages.push(currentLog)
+                if (messages.length > 25) {
+                    messages.shift()
+                }
+            }
+        })
         grpcClientMITMError(mitmVersion)
-            .on()
-            .then((msg) => {
+            .on((msg) => {
                 if (!msg) {
                     info("MITM 劫持服务器已关闭")
                 } else {
