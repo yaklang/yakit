@@ -1,9 +1,7 @@
 const {ipcMain, app} = require("electron")
-const path = require("path")
 const fs = require("fs")
 const https = require("https")
-const process = require("process")
-const {getLocalYaklangEngine, loadExtraFilePath} = require("../filePath")
+const {getLocalYaklangEngine} = require("../filePath")
 const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
@@ -13,7 +11,8 @@ const {
     getAvailableOSSDomain,
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
-const {getCheckTextUrl} = require("../handlers/utils/network")
+const childProcess = require("child_process")
+const {testEngineAvaiableVersion} = require("../ipc")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("get-available-oss-domain", async () => {
@@ -101,5 +100,42 @@ module.exports = (win, getClient) => {
     /** 校验Yaklang来源是否正确 */
     ipcMain.handle("fetch-check-yaklang-source", async (e, version, requestConfig) => {
         return await fetchSpecifiedYakVersionHash(version, requestConfig)
+    })
+
+    // 获取有效的引擎启动端口
+    const asyncGetAvaiablePort = (params) => {
+        return new Promise((resolve, reject) => {
+            childProcess.execFile(
+                getLocalYaklangEngine(),
+                ["get-random-port", "-type", "tcp", "-json"],
+                (err, stdout, stderr) => {
+                    if (err) {
+                        reject(err)
+                        return
+                    }
+                    if (stderr) {
+                        reject(stderr)
+                        return
+                    }
+
+                    try {
+                        // 处理干扰符号：去除前后空格/换行
+                        const cleanedOutput = stdout.trim()
+                        const result = JSON.parse(cleanedOutput)
+                        resolve(result.port)
+                    } catch (parseError) {
+                        reject(parseError)
+                    }
+                }
+            )
+        })
+    }
+    ipcMain.handle("get-avaiable-port", async (e, params) => {
+        return await asyncGetAvaiablePort(params)
+    })
+
+    // 获取运行引擎的适配版本
+    ipcMain.handle("determine-adapted-version-engine", async (e, params) => {
+        return await testEngineAvaiableVersion(params)
     })
 }

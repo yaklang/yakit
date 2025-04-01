@@ -152,6 +152,7 @@ module.exports = (win, callback, getClient, newClient) => {
      * @param {Boolean} params.isEnpriTraceAgent 本地缓存数据里的引擎启动端口号
      */
     const asyncStartLocalYakEngineServer = (win, params) => {
+        const {version} = params
         engineCount += 1
 
         const {port, isEnpriTraceAgent, isIRify} = params
@@ -163,7 +164,7 @@ module.exports = (win, callback, getClient, newClient) => {
                 }
                 const log = out ? out : "ignore"
 
-                const grpcPort = ["grpc", "--port", `${port}`]
+                const grpcPort = ["grpc", "--port", `${port}`, "--frontend", `${version || "yakit"}`]
                 const extraParams = dbFile ? [...grpcPort, ...dbFile] : grpcPort
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 

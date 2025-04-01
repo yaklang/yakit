@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react"
+import React, {useMemo} from "react"
 import {YakitLoadingSvgIcon, YakitThemeLoadingSvgIcon} from "./icon"
 import {EngineOtherOperation, YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
@@ -6,14 +6,14 @@ import {getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAge
 import {DynamicStatusProps} from "@/store"
 import {Divider, Dropdown, Form, Tooltip} from "antd"
 import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
+import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
+import {setLocalValue} from "@/utils/kv"
+import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 
 import yakitSE from "@/assets/yakitSE.png"
 import yakitEE from "@/assets/yakitEE.png"
 import yakitSS from "@/assets/yakitSS.png"
 import styles from "./yakitLoading.module.scss"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {setLocalValue} from "@/utils/kv"
-import {LocalGV} from "@/yakitGV"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -118,7 +118,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                 loading={restartLoading}
                                 onClick={() => {
                                     form.validateFields().then((res) => {
-                                        setLocalValue(LocalGV.YaklangEnginePort, res.newLinkport)
+                                        setLocalValue(getEnginePortCacheKey(), res.newLinkport)
                                         btnClickCallback("changePort")
                                     })
                                 }}

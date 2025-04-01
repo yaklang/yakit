@@ -1,6 +1,6 @@
 import {yakitNotify} from "@/utils/notification"
 import {APIFunc, APINoRequestFunc, APIOptionalFunc} from "./type"
-import {getReleaseEditionName} from "@/utils/envfile"
+import {fetchEnv, getReleaseEditionName} from "@/utils/envfile"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -151,6 +151,38 @@ export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenE
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "获取本地引擎 hash 失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 获取本地启动引擎可用的端口号 */
+export const grpcFetchAvaiableProt: APINoRequestFunc<number> = (hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("get-avaiable-port")
+            .then(resolve)
+            .catch((e) => {
+                try {
+                    const {message} = e
+                    const error = message.split("'get-avaiable-port':").pop()
+                    if (!hiddenError) yakitNotify("error", "获取可用端口失败:" + error)
+                    reject(error)
+                } catch (error) {
+                    reject(e)
+                }
+            })
+    })
+}
+
+/** @name 判断已运行的引擎适配版本 */
+export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port, hiddenError) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("determine-adapted-version-engine", {port: port, version: fetchEnv() || "yakit"})
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "判断已运行引擎的适配版本失败:" + e)
                 reject(e)
             })
     })
