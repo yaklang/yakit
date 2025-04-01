@@ -177,7 +177,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         let timer
         if (collectData) {
             visitorsStatisticsFun(userInfo.token)
-            timer = setInterval(visitorsStatisticsFun, 60000)
+            timer = setInterval(() => visitorsStatisticsFun(userInfo.token), 60000)
         }
         return () => {
             timer && clearInterval(timer)
