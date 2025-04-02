@@ -12,6 +12,7 @@ export interface AdvancedConfigValueProps {
     fuzzTagSyncIndex: boolean
     isHttps: boolean
     isGmTLS: boolean
+    randomJA3: boolean
     /**@name 不修复长度 */
     noFixContentLength: boolean
     noSystemProxy: boolean

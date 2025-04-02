@@ -201,6 +201,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
         if (newValue.isGmTLS) {
             newValue.isHttps = true
         }
+        if (newValue.randomJA3) {
+            newValue.isHttps = true
+        }
         onValuesChange({
             ...newValue
         })
@@ -433,6 +436,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                                 <YakitSwitch />
                             </Form.Item>
                             <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
+                                <YakitSwitch />
+                            </Form.Item>
+                            <Form.Item label='随机TLS' name='randomJA3' valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
                             <Form.Item

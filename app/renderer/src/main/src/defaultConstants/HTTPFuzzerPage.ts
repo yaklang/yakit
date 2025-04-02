@@ -31,6 +31,7 @@ export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
     fuzzTagSyncIndex: false,
     isHttps: false,
     isGmTLS: false,
+    randomJA3: false,
     noFixContentLength: false,
     noSystemProxy: false,
     disableUseConnPool: false,

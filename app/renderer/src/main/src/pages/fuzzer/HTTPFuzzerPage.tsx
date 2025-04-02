@@ -322,6 +322,7 @@ export interface FuzzerRequestProps {
     Matchers: HTTPResponseMatcher[]
     MatchersCondition?: string
     IsGmTLS: boolean
+    RandomJA3: boolean
 
     HitColor?: string
     InheritVariables?: boolean
@@ -406,6 +407,7 @@ export const advancedConfigValueToFuzzerRequests = (value: AdvancedConfigValuePr
         FuzzTagSyncIndex: value.fuzzTagSyncIndex,
         IsHTTPS: value.isHttps,
         IsGmTLS: value.isGmTLS,
+        RandomJA3: value.randomJA3,
         MaxBodySize: value.maxBodySize * 1024 * 1024,
         Concurrent: value.concurrent,
         PerRequestTimeoutSeconds: value.timeout,
@@ -1875,15 +1877,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     }
                                 />
                             </div>
-                            {/*<div className={styles["fuzzer-heard-force"]}>*/}
-                            {/*    <span className={styles["fuzzer-heard-https"]}>国密TLS</span>*/}
-                            {/*    <YakitCheckbox*/}
-                            {/*        checked={advancedConfigValue.isGmTLS}*/}
-                            {/*        onChange={(e) =>*/}
-                            {/*            setAdvancedConfigValue({...advancedConfigValue, isGmTLS: e.target.checked})*/}
-                            {/*        }*/}
-                            {/*    />*/}
-                            {/*</div>*/}
                             <Divider type='vertical' style={{margin: 0, top: 1}} />
                             <div className={styles["display-flex"]}>
                                 <Popover
