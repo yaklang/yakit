@@ -7,7 +7,7 @@ import {failed} from "@/utils/notification"
 import {setRemoteValue} from "@/utils/kv"
 import {useStore, yakitDynamicStatus} from "@/store"
 import {remoteOperation} from "@/pages/dynamicControl/DynamicControl"
-import {getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {fetchEnv, getRemoteHttpSettingGV, isEnpriTraceAgent, isIRify} from "@/utils/envfile"
 import emiter from "@/utils/eventBus/eventBus"
 
 export interface YaklangEngineWatchDogCredential {
@@ -82,10 +82,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         setDynamicStatus({...dynamicStatus, isDynamicStatus: true})
                         remoteOperation(true, dynamicStatus, userInfo)
                         if (dynamicStatus.baseUrl && dynamicStatus.baseUrl.length > 0) {
-                            setRemoteValue(
-                                getRemoteHttpSettingGV(),
-                                JSON.stringify({BaseUrl: dynamicStatus.baseUrl})
-                            )
+                            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({BaseUrl: dynamicStatus.baseUrl}))
                         }
                     }
                 })
@@ -165,6 +162,7 @@ export const YaklangEngineWatchDog: React.FC<YaklangEngineWatchDogProps> = React
                         ipcRenderer
                             .invoke("start-local-yaklang-engine", {
                                 port: props.credential.Port,
+                                version: fetchEnv(),
                                 isEnpriTraceAgent: isEnpriTraceAgent(),
                                 isIRify: isIRify()
                             })

@@ -3,7 +3,6 @@ import {LocalEngineProps} from "./LocalEngineType"
 import {LocalGVS} from "@/enums/localGlobal"
 import {getLocalValue} from "@/utils/kv"
 import {useMemoizedFn} from "ahooks"
-import {getRandomLocalEnginePort} from "../WelcomeConsoleUtil"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {failed, info} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
@@ -11,6 +10,8 @@ import {UpdateYakHint, UpdateYakitHint} from "../update/UpdateYakitAndYaklang"
 import emiter from "@/utils/eventBus/eventBus"
 import {SystemInfo} from "@/constants/hardware"
 import {
+    grpcDetermineAdaptedVersionEngine,
+    grpcFetchAvaiableProt,
     grpcFetchBuildInYakVersion,
     grpcFetchLatestYakitVersion,
     grpcFetchLocalYakitVersion,
@@ -18,6 +19,7 @@ import {
     grpcFetchLocalYakVersionHash,
     grpcFetchSpecifiedYakVersionHash
 } from "@/apiUtils/grpc"
+import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -53,38 +55,55 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         // 本地引擎连接端口
         const localPort = useRef<number>(0)
         /** 获取上次本地连接引擎的端口缓存 */
-        const handleLinkEnginePort = useMemoizedFn((isInit: boolean) => {
-            getLocalValue(LocalGVS.YaklangEnginePort)
-                .then((portRaw) => {
-                    const port = Number(portRaw) || 0
-                    if (!port) {
-                        getRandomLocalEnginePort((p) => {
-                            localPort.current = p
-                            if (isInit) {
-                                handlePreCheckForLinkEngine()
-                            } else {
-                                handleFetchYakLocalVersionToLink()
-                            }
+        const handleLinkEnginePort = useMemoizedFn(async (isInit: boolean) => {
+            let avaPort = 0
+            let err: any
+            try {
+                avaPort = Number(await grpcFetchAvaiableProt(true)) || 0
+            } catch (error) {
+                err = error
+            }
+
+            let continueExe = true
+            try {
+                const cachePort = Number(await getLocalValue(getEnginePortCacheKey())) || 0
+                // 缓存端口和可用端口都不存在
+                if (!cachePort && !avaPort) {
+                    continueExe = false
+                    setLog([`获取可用端口失败: ${err}`])
+                    setYakitStatus("break")
+                }
+                // 缓存端口存在
+                if (!!cachePort) {
+                    await grpcDetermineAdaptedVersionEngine(cachePort, true)
+                        .then((res) => {
+                            localPort.current = res ? cachePort : avaPort
                         })
+                        .catch(() => {
+                            localPort.current = cachePort
+                        })
+                }
+                // 缓存端口不存在，可用端口存在
+                if (!cachePort && !!avaPort) {
+                    localPort.current = avaPort
+                }
+            } catch (error) {
+                if (avaPort) {
+                    localPort.current = avaPort
+                } else {
+                    continueExe = false
+                    setLog([`获取可用端口失败: ${err}`])
+                    setYakitStatus("break")
+                }
+            } finally {
+                if (continueExe) {
+                    if (isInit) {
+                        handlePreCheckForLinkEngine()
                     } else {
-                        localPort.current = port
-                        if (isInit) {
-                            handlePreCheckForLinkEngine()
-                        } else {
-                            handleFetchYakLocalVersionToLink()
-                        }
+                        handleFetchYakLocalVersionToLink()
                     }
-                })
-                .catch(() => {
-                    getRandomLocalEnginePort((p) => {
-                        localPort.current = p
-                        if (isInit) {
-                            handlePreCheckForLinkEngine()
-                        } else {
-                            handleFetchYakLocalVersionToLink()
-                        }
-                    })
-                })
+                }
+            }
         })
 
         /**
@@ -127,7 +146,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                             )
                             const [res1, res2] = await Promise.allSettled([
                                 grpcFetchLocalYakitVersion(true),
-                                Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise]),
+                                Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise])
                                 // grpcFetchLatestYakitVersion({timeout: 2000}, true)
                             ])
                             if (res1.status === "fulfilled") {
