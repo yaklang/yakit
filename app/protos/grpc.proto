@@ -6576,7 +6576,7 @@ message MITMV2Request{
   // condition hijack filter
   MITMFilterData HijackFilterData = 26;
   bool UpdateHijackFilter = 27;
-  ;
+
 
   // set content replacers
   bool SetContentReplacers = 28;
@@ -6624,13 +6624,9 @@ message MITMV2Response {
   bool JustContentReplacer = 3;
   repeated MITMContentReplacer Replacers = 4;
 
-  // refresh history table
-  bool Refresh = 5;
-  HTTPFlow HistoryHTTPFlow = 6;
-
   // exec result
   bool HaveMessage = 7;
-  ExecResult message = 8;
+  ExecResult Message = 8;
 
   bool GetCurrentHook = 9;
   repeated YakScriptHooks Hooks = 10;
@@ -6677,4 +6673,3 @@ message SingleManualHijackInfoMessage{
 
   string Method = 16;
 }
-
