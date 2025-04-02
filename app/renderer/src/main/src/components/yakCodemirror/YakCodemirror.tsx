@@ -41,7 +41,8 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
         language = "javascript",
         theme = "solarized",
         highLight,
-        firstLineNumber = 1
+        firstLineNumber = 1,
+        editorDidMount
     } = props
     const [codemirrorEditor, setCodemirrorEditor] = useState<any>()
 
@@ -166,6 +167,7 @@ export const YakCodemirror: React.FC<YakCodemirrorProps> = (props) => {
                 }}
                 editorDidMount={(editor) => {
                     setCodemirrorEditor(editor)
+                    if (editorDidMount) editorDidMount(editor)
                 }}
             />
         </div>

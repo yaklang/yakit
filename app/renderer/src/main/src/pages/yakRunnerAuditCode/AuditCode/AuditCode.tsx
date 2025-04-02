@@ -310,7 +310,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 })
 
 export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((props) => {
-    const {info, foucsedKey, activeInfo, setActivbeInfo, onJump, onContextMenu} = props
+    const {info, foucsedKey, activeInfo, setActiveInfo, onJump, onContextMenu} = props
 
     // 获取详情
     const getDetail = useMemo(() => {
@@ -323,10 +323,10 @@ export const AuditNodeSearchItem: React.FC<AuditNodeSearchItemProps> = memo((pro
 
     const handleClick = useMemoizedFn(() => {
         if (activeInfo?.id === info.id) {
-            setActivbeInfo(undefined)
+            setActiveInfo(undefined)
             return
         }
-        setActivbeInfo(info)
+        setActiveInfo(info)
     })
 
     const getIconByName = useMemoizedFn((name: string) => {

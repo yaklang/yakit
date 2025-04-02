@@ -59,14 +59,14 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [activeInfo, setActivbeInfo] = useState<AuditDetailItemProps>()
+    const [activeInfo, setActiveInfo,getActiveInfo] = useGetState<AuditDetailItemProps>()
     // 当前页数
     const [cureentPage, setCureentPage] = useState<number>(1)
     const resultIdRef = useRef<number>()
-    const [open, setOpen] = useState<boolean>(false)
+    const [scrollToNumber, setScrollToNumber] = useState<number>()
 
     useEffect(() => {
-        setActivbeInfo(undefined)
+        setActiveInfo(undefined)
         setAuditDetail([])
         setActiveKey("all")
         setKeywords("")
@@ -112,8 +112,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             if (isEnd) {
                 setHasMore(false)
             }
-
-            page === 1 && setIsRefresh(!isRefresh)
+            if (page === 1) {
+                setIsRefresh(!isRefresh)
+                if (newAuditDetail.length > 0) {
+                    setActiveInfo(newAuditDetail[0])
+                }
+            }
             setAuditDetail(newAuditDetail)
             setCureentPage(page)
         }
@@ -139,7 +143,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     )
 
     const onSearch = useMemoizedFn(() => {
-        setActivbeInfo(undefined)
+        setActiveInfo(undefined)
         setAuditDetail([])
         if (keywords.length === 0) {
             return
@@ -186,7 +190,6 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     })
 
     const onPressEnter = useMemoizedFn((e) => {
-        inputRef.current?.blur()
         onSearch()
     })
 
@@ -209,23 +212,63 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         if (visible && extraSettingData.length > 0) {
             const currentIndex = extraSettingData.findIndex((item) => item.value === activeKey)
             const nextIndex = currentIndex === extraSettingData.length - 1 ? 0 : currentIndex + 1
-            setActivbeInfo(undefined)
+            setActiveInfo(undefined)
             setAuditDetail([])
             setActiveKey(extraSettingData[nextIndex].value)
         }
     })
 
-    const handleKeyPress = (event) => {
+    const onPreviousSearchTabFun = useMemoizedFn(() => {
+        if (visible && extraSettingData.length > 0) {
+            const currentIndex = extraSettingData.findIndex((item) => item.value === activeKey)
+            const nextIndex = currentIndex === 0 ? extraSettingData.length - 1 : currentIndex - 1
+            setActiveInfo(undefined)
+            setAuditDetail([])
+            setActiveKey(extraSettingData[nextIndex].value)
+        }
+    })
+
+    const onSetActiveInfo = useMemoizedFn((type: "next" | "last") => {
+        if (activeInfo) {
+            const cureentIndex = auditDetail.findIndex((item) => item.id === activeInfo.id)
+            if (type === "next") {
+                let nextIndex = cureentIndex + 1 > auditDetail.length - 1 ? cureentIndex : cureentIndex + 1
+                setActiveInfo(auditDetail[nextIndex])
+                setScrollToNumber(nextIndex)
+            }
+            if (type === "last") {
+                let lastIndex = cureentIndex - 1 < 0 ? cureentIndex : cureentIndex - 1
+                setActiveInfo(auditDetail[lastIndex])
+                setScrollToNumber(lastIndex)
+            }
+        } else {
+            if (auditDetail.length > 0) {
+                setActiveInfo(auditDetail[0])
+                setScrollToNumber(0)
+            }
+        }
+    })
+
+    const handleKeyPress = useMemoizedFn((event) => {
         const {key} = event
-        if (key === "Tab") {
+        if (key === "Tab" || key === "ArrowRight") {
             if (getExecuting()) {
                 warn("当前已有搜索，请等待完毕后切换")
             } else {
                 onNextSearchTabFun()
             }
             event.preventDefault()
+        } else if (key === "ArrowLeft") {
+            onPreviousSearchTabFun()
+            event.preventDefault()
+        } else if (key === "ArrowUp") {
+            onSetActiveInfo("last")
+            event.preventDefault()
+        } else if (key === "ArrowDown") {
+            onSetActiveInfo("next")
+            event.preventDefault()
         }
-    }
+    })
     const keyDownRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (keyDownRef.current) {
@@ -247,7 +290,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
     const inputRef = useRef<any>(null)
     useEffect(() => {
-        visible && keyDownRef.current?.focus()
+        visible && inputRef.current?.focus()
         if (visible && selectedSearchVal !== keywords && selectedSearchVal.length !== 0) {
             onSelectKeywords(selectedSearchVal)
         }
@@ -333,19 +376,11 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     })
     const onSelectKeywords = useMemoizedFn((value) => {
         setKeywords(value)
-        inputRef.current?.blur()
-        keyDownRef.current?.focus()
+        inputRef.current?.focus()
         setTimeout(() => {
             onSearch()
         }, 200)
     })
-
-    const setOpenFun = useThrottleFn(
-        (v: boolean) => {
-            setOpen(v)
-        },
-        {wait: 200, leading: false}
-    ).run
 
     return (
         <YakitHintWhite
@@ -368,36 +403,17 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                     <div className={styles["title"]}>搜索</div>
                     <div className={styles["header"]}>
                         <div className={styles["filter-box"]}>
-                            {/* <YakitAutoComplete
-                                ref={auditSearchKeywordsRef}
-                                isCacheDefaultValue={false}
-                                cacheHistoryDataKey={RemoteGV.AuditCodeKeywords}
-                                onSelect={onSelectKeywords}
+                            <YakitInput.Search
+                                ref={inputRef}
                                 value={keywords}
-                                isInit={false}
-                                open={open}
-                                onFocus={() => {
-                                    setOpenFun(true)
+                                onChange={(e) => setKeywords(e.target.value)}
+                                placeholder='请输入关键词搜索'
+                                allowClear={false}
+                                onPressEnter={onPressEnter}
+                                onSearch={() => {
+                                    onSearch()
                                 }}
-                                onBlur={() => {
-                                    setOpenFun(false)
-                                }}
-                            > */}
-                                <YakitInput.Search
-                                    ref={inputRef}
-                                    value={keywords}
-                                    onChange={(e) => setKeywords(e.target.value)}
-                                    placeholder='请输入关键词搜索'
-                                    allowClear={false}
-                                    onPressEnter={onPressEnter}
-                                    onSearch={() => {
-                                        setTimeout(() => {
-                                            inputRef.current?.blur()
-                                        }, 1)
-                                        onSearch()
-                                    }}
-                                />
-                            {/* </YakitAutoComplete> */}
+                            />
                         </div>
                         <div className={styles["extra"]}>
                             <YakitCheckbox
@@ -421,7 +437,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                                         warn("当前已有搜索，请等待完毕后切换")
                                         return
                                     }
-                                    setActivbeInfo(undefined)
+                                    setActiveInfo(undefined)
                                     setAuditDetail([])
                                     setActiveKey(v)
                                 }}
@@ -476,14 +492,15 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                                             getData(cureentPage + 1)
                                         }}
                                         loading={loading}
-                                        rowKey='name'
+                                        rowKey='id'
                                         defItemHeight={23}
+                                        numberRoll={scrollToNumber}
                                         renderRow={(record, index: number) => (
                                             <AuditNodeSearchItem
                                                 info={record}
                                                 foucsedKey={activeInfo?.id || ""}
                                                 activeInfo={activeInfo}
-                                                setActivbeInfo={setActivbeInfo}
+                                                setActiveInfo={setActiveInfo}
                                                 onJump={onJump}
                                                 onContextMenu={onContextMenu}
                                             />
@@ -493,7 +510,25 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
                                 {yakURLData && (
                                     <div className={styles["content"]}>
-                                        <YakRiskCodemirror info={yakURLData} />
+                                        <YakRiskCodemirror
+                                            info={yakURLData}
+                                            editorDidMount={(editor) => {
+                                                editor.on("dblclick", (cm, event) => {
+                                                    // cm 是 CodeMirror 实例
+                                                    // event 是原生的双击事件对象
+                                                    const newActiveInfo = getActiveInfo()
+                                                    newActiveInfo && onJump(newActiveInfo)
+
+                                                    // 获取光标位置
+                                                    // const cursor = cm.getCursor();
+                                                    // console.log("光标位置:", cursor);
+
+                                                    // 获取选中的文本
+                                                    // const selectedText = cm.getSelection();
+                                                    // console.log("选中的文本:", selectedText);
+                                                })
+                                            }}
+                                        />
                                     </div>
                                 )}
                             </>

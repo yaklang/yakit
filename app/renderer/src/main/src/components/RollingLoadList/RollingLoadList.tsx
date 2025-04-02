@@ -132,7 +132,7 @@ export const RollingLoadList = <T extends any>(props: RollingLoadListProps<T>) =
         if (isFirstNumberRoll.current) {
             isFirstNumberRoll.current = false
         } else {
-            if (!numberRoll) return
+            if (typeof numberRoll !== "number") return
             // 初次不执行; 必须加上延时,不然元素可能还没有加载
             setTimeout(() => {
                 scrollTo(numberRoll)
