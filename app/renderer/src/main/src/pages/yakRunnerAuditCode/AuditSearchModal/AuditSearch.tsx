@@ -5,7 +5,6 @@ import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
 import {AuditSearchProps, ExtraSettingDataProps, ExtraSettingProps} from "./AuditSearchModalType"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RemoteGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
@@ -59,7 +58,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [activeInfo, setActiveInfo,getActiveInfo] = useGetState<AuditDetailItemProps>()
+    const [activeInfo, setActiveInfo, getActiveInfo] = useGetState<AuditDetailItemProps>()
     // 当前页数
     const [cureentPage, setCureentPage] = useState<number>(1)
     const resultIdRef = useRef<number>()
@@ -142,10 +141,10 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         {wait: 500}
     )
 
-    const onSearch = useMemoizedFn(() => {
+    const onSearch = useMemoizedFn((newKeywords: string = "") => {
         setActiveInfo(undefined)
         setAuditDetail([])
-        if (keywords.length === 0) {
+        if (newKeywords.length === 0 && keywords.length === 0) {
             return
         }
         if (executing) {
@@ -164,7 +163,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                 },
                 {
                     Key: "rule",
-                    Value: keywords
+                    Value: newKeywords || keywords
                 },
                 {
                     Key: "kind",
@@ -180,17 +179,10 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         debugPluginStreamEvent.reset()
         apiDebugPlugin({params: requestParams, token: tokenRef.current, isShowStartInfo: false})
             .then(() => {
-                if (auditSearchKeywordsRef.current) {
-                    auditSearchKeywordsRef.current?.onSetRemoteValues(keywords)
-                }
                 debugPluginStreamEvent.start()
                 setExecuting(true)
             })
             .catch(() => {})
-    })
-
-    const onPressEnter = useMemoizedFn((e) => {
-        onSearch()
     })
 
     // 获取参数
@@ -266,6 +258,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             event.preventDefault()
         } else if (key === "ArrowDown") {
             onSetActiveInfo("next")
+            event.preventDefault()
+        } else if (key === "Escape") {
+            onClose && onClose()
+            event.preventDefault()
+        } else if (key === "Enter") {
+            activeInfo && onJump(activeInfo)
             event.preventDefault()
         }
     })
@@ -371,16 +369,18 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         })
     })
 
-    const auditSearchKeywordsRef = useRef<YakitAutoCompleteRefProps>({
-        ...defYakitAutoCompleteRef
-    })
     const onSelectKeywords = useMemoizedFn((value) => {
-        setKeywords(value)
         inputRef.current?.focus()
-        setTimeout(() => {
-            onSearch()
-        }, 200)
+        setKeywords(value)
+        onSearch(value)
     })
+
+    const onDebounceSearch = useDebounceFn(
+        (value) => {
+            onSearch(value)
+        },
+        {wait: 500}
+    ).run
 
     return (
         <YakitHintWhite
@@ -406,13 +406,16 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                             <YakitInput.Search
                                 ref={inputRef}
                                 value={keywords}
-                                onChange={(e) => setKeywords(e.target.value)}
+                                onChange={(e) => {
+                                    setKeywords(e.target.value)
+                                    onDebounceSearch(e.target.value)
+                                }}
                                 placeholder='请输入关键词搜索'
                                 allowClear={false}
-                                onPressEnter={onPressEnter}
                                 onSearch={() => {
                                     onSearch()
                                 }}
+                                onPressEnter={(e) => e.preventDefault()}
                             />
                         </div>
                         <div className={styles["extra"]}>
