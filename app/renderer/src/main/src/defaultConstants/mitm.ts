@@ -1,16 +1,7 @@
 import {ChromeLauncherParams} from "@/pages/mitm/MITMChromeLauncher"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
-import {MITMHackerPageInfoProps} from "@/store/pageInfo"
 import {v4 as uuidv4} from "uuid"
 
-/**mitm v2 版本页面数据中心默认数据 */
-export const defaultMITMHackerPageInfo: MITMHackerPageInfoProps = {
-    immediatelyLaunchedInfo: {
-        host: "",
-        port: "",
-        enableInitialPlugin: false
-    }
-}
 export const chromeLauncherParamsArr: ChromeLauncherParams[] = [
     {
         id: uuidv4(),

@@ -153,7 +153,7 @@ import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
-import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitm"
+import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -2109,7 +2109,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /**mitm劫持 v2版本 */
     const onMITMHackerPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
-      
         const newPageNode: PageNodeItemProps = {
             id: `${randomString(8)}-${order}`,
             routeKey: YakitRoute.MITMHacker,
