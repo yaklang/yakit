@@ -41,6 +41,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         onNodeSelect,
         resetDecompiler,
         importProject,
+        downloadAsZip,
         importProjectAndCompile
     } = props
 
@@ -82,7 +83,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     }, [jarPath, loading])
 
     // 下载为 ZIP 文件
-    const downloadAsZip = useMemoizedFn(() => {
+    const _downloadAsZip = useMemoizedFn(() => {
         if (!jarPath) return
 
         showYakitModal({
@@ -122,7 +123,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const menuSelect = useMemoizedFn((key: string) => {
         switch (key) {
             case "refresh":
-                loadJarStructure(`javadec:///jar?jar=${jarPath}`)
+                loadJarStructure(`javadec:///jar-aifix?jar=${jarPath}&dir=/`)
                 break
             case "close":
                 resetDecompiler()
@@ -172,7 +173,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                 type='text'
                                 disabled={!jarPath || loading}
                                 icon={<OutlineRefreshIcon />}
-                                onClick={() => loadJarStructure(`javadec:///jar?jar=${jarPath}`)}
+                                onClick={() => loadJarStructure(`javadec:///jar-aifix?jar=${jarPath}&dir=/`)}
                             />
                         </Tooltip>
                         <YakitDropdownMenu
