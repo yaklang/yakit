@@ -216,7 +216,6 @@ export interface fuzzerInfoProp {
     time: string
 
     isHttps?: boolean
-    // isGmTLS?: boolean
     // forceFuzz?: boolean
     // concurrent?: number
     // proxy?: string

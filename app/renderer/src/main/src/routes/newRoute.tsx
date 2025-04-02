@@ -340,7 +340,6 @@ export interface ComponentParams {
     openFlag?: boolean
     // Route.HTTPFuzzer 参数---start
     isHttps?: boolean
-    isGmTLS?: boolean
     request?: string
     system?: string
     advancedConfigValue?: AdvancedConfigValueProps

@@ -941,7 +941,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const addFuzzer = useMemoizedFn(async (res: any) => {
         const {
             isHttps,
-            isGmTLS,
             request,
             advancedConfigValue,
             openFlag = true,
@@ -976,13 +975,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
             let newAdvancedConfigShow = cacheData.advancedConfigShow
             let newIsHttps = !!isHttps
-            let newIsGmTLS = !!isGmTLS
             let newRequest = request || defaultPostTemplate
             // 有分享内容，数据以分享内容为准
             if (res.hasOwnProperty("shareContent")) {
                 const shareContent: ShareValueProps = JSON.parse(res.shareContent)
                 newIsHttps = shareContent.advancedConfiguration.isHttps
-                newIsGmTLS = shareContent.advancedConfiguration.isGmTLS
                 newRequest = shareContent.request || defaultPostTemplate
 
                 newAdvancedConfigValue = shareContent.advancedConfiguration
@@ -1011,8 +1008,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         system: system,
                         advancedConfigValue: {
                             ...newAdvancedConfigValue,
-                            isHttps: newIsHttps,
-                            isGmTLS: newIsGmTLS
+                            isHttps: newIsHttps
                         },
                         advancedConfigShow: newAdvancedConfigShow,
                         hotPatchCode: hotPatchCode
