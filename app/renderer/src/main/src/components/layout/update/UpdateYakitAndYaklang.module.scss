@@ -55,3 +55,16 @@
         }
     }
 }
+
+// ---------- UpdateYakHint ----------
+.version-wrapper {
+    display: flex;
+    align-items: center;
+}
+.version-header {
+    padding-right: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 94px;
+}
