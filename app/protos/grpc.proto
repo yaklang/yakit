@@ -4595,13 +4595,15 @@ message FuzzerRequests {
   int64 Concurrent = 2;
 }
 
-message FuzzerRequest {
+message FuzzerRequest { // last index 63
   string Request = 1;
   bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
   int64 Concurrent = 3;
   bool IsHTTPS = 4;
   bool IsGmTLS = 35;
+  // random JA3 fingerprint
+  bool RandomJA3 = 63;
   bool ForceFuzz = 5;
   string FuzzTagMode = 50; // "close"/"standard"/"legacy"
   bool FuzzTagSyncIndex = 51;
