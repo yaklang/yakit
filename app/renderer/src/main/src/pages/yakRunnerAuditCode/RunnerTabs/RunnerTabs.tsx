@@ -84,6 +84,7 @@ import {getMapAllResultKey, getMapResultDetail} from "../RightAuditDetail/Result
 import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
+import { onSetSelectedSearchVal } from "../AuditSearchModal/AuditSearch"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1054,6 +1055,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             const {startLineNumber, startColumn, endLineNumber, endColumn} = selection
             // console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
             selectionRef.current = {startLineNumber, startColumn, endLineNumber, endColumn}
+            // 获取选中的字符内容 用于搜索代入
+            const selectedText = editor.getModel()?.getValueInRange(selection);
+            onSetSelectedSearchVal(selectedText)
+            
             // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
             // updateBottomEditorDetails()
         })
@@ -1303,6 +1308,19 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }, 50)
     }, [editor, editorInfo])
 
+
+
+    // 双击Shift
+    const [lastShiftTime, setLastShiftTime] = useState<number>(0);
+    const handleDoubleShift = useMemoizedFn(() => {
+        const now = Date.now();
+        if (now - lastShiftTime < 300 && editor) { // 300ms 内连点两次 Shift
+            // 在这里处理连点两次 Shift 的逻辑
+            emiter.emit("onOpenSearchModal")
+        }
+        setLastShiftTime(now);
+    });
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1324,6 +1342,11 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
                         setEditor(editor)
+                    }}
+                    onKeyPress={(e:KeyboardEvent)=>{
+                        if(e.shiftKey){
+                            handleDoubleShift()
+                        }
                     }}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}

@@ -132,12 +132,19 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         } catch (error) {}
     })
 
+    const onOpenSearchModalFun = useMemoizedFn(() => {
+        if (fileTree.length === 0) return
+        setSearchVisible(true)
+    })
+
     useEffect(() => {
         getAduitList()
         // 通知最近编译发生改变
         emiter.on("onCodeAuditRefreshAduitHistory", getAduitList)
+        emiter.on("onOpenSearchModal", onOpenSearchModalFun)
         return () => {
             emiter.off("onCodeAuditRefreshAduitHistory", getAduitList)
+            emiter.off("onOpenSearchModal", onOpenSearchModalFun)
         }
     }, [])
 
@@ -364,8 +371,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
             <AuditSearchModal
                 visible={searchVisible}
-                onClose={() => setSearchVisible(false)}
-                projectName={projectName||""}
+                onClose={() => {
+                    setSearchVisible(false)
+                    const auditCodeElement = document.getElementById("audit-code")
+                    if (auditCodeElement) {
+                        auditCodeElement.focus() // 确保元素获得焦点
+                        auditCodeElement.click() // 模拟点击
+                    }
+                }}
+                projectName={projectName || ""}
             />
         </div>
     )

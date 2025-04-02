@@ -29,6 +29,12 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+
+let selectedSearchVal: string = ""
+export const onSetSelectedSearchVal = (v: string = "") => {
+    selectedSearchVal = v
+}
+
 export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const {visible, projectName, onClose} = props
     const [checked, setChecked] = useState<boolean>(true)
@@ -59,13 +65,13 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const resultIdRef = useRef<number>()
     const [open, setOpen] = useState<boolean>(false)
 
-    useEffect(()=>{
+    useEffect(() => {
         setActivbeInfo(undefined)
         setAuditDetail([])
         setActiveKey("all")
         setKeywords("")
         onStopExecute()
-    },[projectName])
+    }, [projectName])
 
     const getData = useMemoizedFn(async (page: number, pageSize: number = 10) => {
         if (!resultIdRef.current) return
@@ -242,6 +248,9 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     const inputRef = useRef<any>(null)
     useEffect(() => {
         visible && keyDownRef.current?.focus()
+        if (visible && selectedSearchVal !== keywords && selectedSearchVal.length !== 0) {
+            onSelectKeywords(selectedSearchVal)
+        }
     }, [visible])
 
     const yakURLData = useMemo(() => {
@@ -359,7 +368,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                     <div className={styles["title"]}>搜索</div>
                     <div className={styles["header"]}>
                         <div className={styles["filter-box"]}>
-                            <YakitAutoComplete
+                            {/* <YakitAutoComplete
                                 ref={auditSearchKeywordsRef}
                                 isCacheDefaultValue={false}
                                 cacheHistoryDataKey={RemoteGV.AuditCodeKeywords}
@@ -373,7 +382,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                                 onBlur={() => {
                                     setOpenFun(false)
                                 }}
-                            >
+                            > */}
                                 <YakitInput.Search
                                     ref={inputRef}
                                     value={keywords}
@@ -388,7 +397,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                                         onSearch()
                                     }}
                                 />
-                            </YakitAutoComplete>
+                            {/* </YakitAutoComplete> */}
                         </div>
                         <div className={styles["extra"]}>
                             <YakitCheckbox
