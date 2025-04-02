@@ -9,6 +9,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {failed, yakitInfo, yakitNotify} from "@/utils/notification"
+import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
+import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
+import {randomString} from "@/utils/randomUtil"
+import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {
     InboxOutlined,
     FileOutlined,
@@ -72,7 +76,23 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
     // 新增状态 - 标签页管理
     const [activeTabKey, setActiveTabKey] = useState<string>("")
     const [tabs, setTabs] = useState<FileTabInfo[]>([])
-
+    const tokenRef = useRef<string>(randomString(40))
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+        taskName: "debug-plugin",
+        apiKey: "DebugPlugin",
+        token: tokenRef.current,
+        onEnd: () => {
+            debugPluginStreamEvent.stop()
+            setTimeout(() => {
+                // setIsExecuting(false)
+            }, 300)
+        },
+        onError: () => {},
+        setRuntimeId: (rId) => {
+            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            // setRuntimeId(rId)
+        }
+    })
     useEffect(() => {
         // Load recent JARs from storage
         getRemoteValue("java-decompiler-recent-jars").then((val) => {
@@ -103,7 +123,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         }
 
         setLoading(true)
-        const yakURL = `javadec:///jar?jar=${jarPath}`
+        const yakURL = `javadec:///jar-aifix?jar=${jarPath}&dir=/`
         loadJarStructure(yakURL)
 
         // Add to recent JARs
@@ -118,14 +138,30 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
     // 将 YakURLResource 转换为 FileNodeProps
     const convertToFileNodeProps = useMemoizedFn(
         (resources: YakURLResource[], parentPath: string | null, depth: number = 0): FileNodeProps[] => {
-            return resources.map((resource, index) => {
-                const isFolder = resource.HaveChildrenNodes
+            const newResources = resources.filter((resource) => {
+                // 如果存在hide属性，则跳过
+                for (let i = 0; i < resource.Extra.length; i++) {
+                    const key = resource.Extra[i].Key
+                    if (key == "hide" && resource.Extra[i].Value == "true") {
+                        return false
+                    }
+                }
+                return true
+            })
+            return newResources.map((resource, index) => {
+                let isFolder = resource.HaveChildrenNodes
                 const fileSuffix = resource.ResourceName.split(".").pop() || ""
                 let icon = isFolder ? FolderDefault : FileDefault
 
                 // 为文件设置图标
                 if (!isFolder && fileSuffix && FileSuffix[fileSuffix]) {
                     icon = FileSuffix[fileSuffix]
+                }
+                let isLeaf = !isFolder
+
+                if (fileSuffix == "jar") {
+                    isLeaf = false
+                    isFolder = true
                 }
 
                 return {
@@ -135,7 +171,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
                     isFolder,
                     icon,
                     depth,
-                    isLeaf: !isFolder,
+                    isLeaf: isLeaf,
                     data: resource // 存储原始数据
                 }
             })
@@ -179,7 +215,6 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
 
         // 创建新标签
         const newTabKey = uuidv4()
-        const fileType = resource.ResourceName.endsWith(".class") ? "class" : "file"
         const newTab: FileTabInfo = {
             key: newTabKey,
             title: resource.VerboseName,
@@ -196,40 +231,39 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         setActiveTabKey(newTabKey)
 
         // 根据文件类型决定加载方式
-        if (resource.ResourceName.endsWith(".class")) {
-            const classPath = resource.Path
-            const decompileURL = `javadec:///class?class=${classPath}&jar=${jarPath}`
+        const classPath = resource.Path
+        const innerClassList: string[] = []
+        resource.Extra.forEach((kv) => {
+            if (kv.Key === "innerClass") {
+                innerClassList.push(kv.Value)
+            }
+        })
+        console.log(resource.Extra)
+        const decompileURL = `javadec:///class-aifix?class=${classPath}&jar=${jarPath}&innerClasses=${innerClassList.join(
+            ","
+        )}`
 
-            loadFromYakURLRaw(decompileURL, (rsp) => {
-                if (rsp.Resources && rsp.Resources.length > 0) {
-                    // Assuming the decompiled content is stored in the Extra field
-                    const decompiled = rsp.Resources[0].Extra.find((kv) => kv.Key === "content")
-                    if (decompiled) {
-                        try {
-                            const content = Buffer.from(decompiled.Value, "hex")
-                            const contentStr = content.toString("utf8")
+        loadFromYakURLRaw(decompileURL, (rsp) => {
+            if (rsp.Resources && rsp.Resources.length > 0) {
+                // Assuming the decompiled content is stored in the Extra field
+                const decompiled = rsp.Resources[0].Extra.find((kv) => kv.Key === "content")
+                if (decompiled) {
+                    try {
+                        const content = Buffer.from(decompiled.Value, "hex")
+                        const contentStr = content.toString("utf8")
 
-                            // 更新标签页内容
-                            setTabs((prevTabs) =>
-                                prevTabs.map((tab) =>
-                                    tab.key === newTabKey ? {...tab, content: contentStr, isLoading: false} : tab
-                                )
+                        // 更新标签页内容
+                        setTabs((prevTabs) =>
+                            prevTabs.map((tab) =>
+                                tab.key === newTabKey ? {...tab, content: contentStr, isLoading: false} : tab
                             )
-                        } catch (err) {
-                            // 更新标签页内容为错误信息
-                            setTabs((prevTabs) =>
-                                prevTabs.map((tab) =>
-                                    tab.key === newTabKey
-                                        ? {...tab, content: `// 解析 class 内容错误: ${err}`, isLoading: false}
-                                        : tab
-                                )
-                            )
-                        }
-                    } else {
+                        )
+                    } catch (err) {
+                        // 更新标签页内容为错误信息
                         setTabs((prevTabs) =>
                             prevTabs.map((tab) =>
                                 tab.key === newTabKey
-                                    ? {...tab, content: "// 没有可用的反编译内容", isLoading: false}
+                                    ? {...tab, content: `// 解析 class 内容错误: ${err}`, isLoading: false}
                                     : tab
                             )
                         )
@@ -241,69 +275,75 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
                         )
                     )
                 }
-            }).catch((e) => {
-                failed(`反编译 class 失败: ${e}`)
+            } else {
                 setTabs((prevTabs) =>
                     prevTabs.map((tab) =>
-                        tab.key === newTabKey ? {...tab, content: `// 错误: ${e}`, isLoading: false} : tab
+                        tab.key === newTabKey ? {...tab, content: "// 没有可用的反编译内容", isLoading: false} : tab
                     )
                 )
-            })
-        } else {
-            // For non-class files, fetch the raw content
-            const filePath = resource.Path
-            const fileURL = `javadec:///file?jar=${jarPath}&file=${filePath}`
+            }
+        }).catch((e) => {
+            failed(`反编译 class 失败: ${e}`)
+            setTabs((prevTabs) =>
+                prevTabs.map((tab) =>
+                    tab.key === newTabKey ? {...tab, content: `// 错误: ${e}`, isLoading: false} : tab
+                )
+            )
+        })
+    })
 
-            loadFromYakURLRaw(fileURL, (rsp) => {
+    const downloadAsZip = useMemoizedFn(() => {
+        return new Promise<void>((resolve, reject) => {
+            if (!jarPath) {
+                failed("没有选择 JAR 文件")
+                reject("没有选择 JAR 文件")
+                return
+            }
+
+            setLoading(true)
+            const exportURL = `javadec:///export?jar=${jarPath}`
+
+            loadFromYakURLRaw(exportURL, (rsp) => {
                 if (rsp.Resources && rsp.Resources.length > 0) {
-                    const fileContent = rsp.Resources[0].Extra.find((kv) => kv.Key === "content")
-                    if (fileContent) {
+                    const exportHex = rsp.Resources[0].Extra.find((kv) => kv.Key === "content")
+                    if (exportHex) {
                         try {
-                            const content = Buffer.from(fileContent.Value, "hex")
-                            const contentStr = content.toString("utf8")
+                            const content = Buffer.from(exportHex.Value, "hex")
 
-                            // 更新标签页内容
-                            setTabs((prevTabs) =>
-                                prevTabs.map((tab) =>
-                                    tab.key === newTabKey ? {...tab, content: contentStr, isLoading: false} : tab
-                                )
-                            )
+                            // 创建并下载ZIP文件
+                            const fileName = jarPath.split("/").pop() || "decompiled.zip"
+                            const a = document.createElement("a")
+                            const blob = new Blob([content], {type: "application/zip"})
+                            a.href = URL.createObjectURL(blob)
+                            a.download = `${fileName.replace(/\.(jar|war|ear)$/, "")}_decompiled.zip`
+                            document.body.appendChild(a)
+                            a.click()
+                            document.body.removeChild(a)
+
+                            yakitNotify("success", "已导出反编译ZIP文件")
+                            setLoading(false)
+                            resolve()
                         } catch (err) {
-                            setTabs((prevTabs) =>
-                                prevTabs.map((tab) =>
-                                    tab.key === newTabKey
-                                        ? {...tab, content: `// 解析文件内容错误: ${err}`, isLoading: false}
-                                        : tab
-                                )
-                            )
+                            failed(`导出ZIP文件失败: ${err}`)
+                            setLoading(false)
+                            reject(err)
                         }
                     } else {
-                        setTabs((prevTabs) =>
-                            prevTabs.map((tab) =>
-                                tab.key === newTabKey
-                                    ? {...tab, content: `// 此文件类型没有可用内容`, isLoading: false}
-                                    : tab
-                            )
-                        )
+                        failed("导出内容不可用")
+                        setLoading(false)
+                        reject("导出内容不可用")
                     }
                 } else {
-                    setTabs((prevTabs) =>
-                        prevTabs.map((tab) =>
-                            tab.key === newTabKey
-                                ? {...tab, content: `// 文件 ${resource.ResourceName} 没有可用内容`, isLoading: false}
-                                : tab
-                        )
-                    )
+                    failed("导出内容不可用")
+                    setLoading(false)
+                    reject("导出内容不可用")
                 }
             }).catch((e) => {
-                failed(`加载文件内容失败: ${e}`)
-                setTabs((prevTabs) =>
-                    prevTabs.map((tab) =>
-                        tab.key === newTabKey ? {...tab, content: `// 错误: ${e}`, isLoading: false} : tab
-                    )
-                )
+                failed(`导出反编译JAR失败: ${e}`)
+                setLoading(false)
+                reject(e)
             })
-        }
+        })
     })
 
     // 处理节点加载
@@ -315,7 +355,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
             }
 
             const dirPath = node.path
-            const requestURL = `javadec:///jar?jar=${jarPath}&dir=${dirPath}`
+            const requestURL = `javadec:///jar-aifix?jar=${jarPath}&dir=${dirPath}`
 
             loadFromYakURLRaw(requestURL, (rsp) => {
                 if (rsp.Resources && rsp.Resources.length > 0) {
@@ -365,7 +405,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         return "text"
     })
 
-    const resetDecompiler = () => {
+    const resetDecompiler = useMemoizedFn(() => {
         setJarPath("")
         setTreeData([])
         setSelectedResource(undefined)
@@ -378,17 +418,32 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         // 清空标签页
         setTabs([])
         setActiveTabKey("")
-    }
+    })
 
-    const importProject = () => {
-        console.log("importProject")
-    }
+    const importProject = useMemoizedFn(() => {
+        const requestParams: DebugPluginRequest = {
+            Code: "",
+            PluginType: "yak",
+            Input: "",
+            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
+            ExecParams: [
+                {
+                    Key: "programName",
+                    Value: jarPath
+                }
+            ],
+            PluginName: "SSA 项目重编译"
+        }
+        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
+            debugPluginStreamEvent.start()
+        })
+    })
 
-    const importProjectAndCompile = () => {
+    const importProjectAndCompile = useMemoizedFn(() => {
         console.log("importProjectAndCompile")
-    }
+    })
     // 复制当前活动标签页的内容
-    const copyContent = () => {
+    const copyContent = useMemoizedFn(() => {
         const activeTab = tabs.find((tab) => tab.key === activeTabKey)
         if (!activeTab || !activeTab.content) {
             return
@@ -396,10 +451,10 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
 
         setClipboardText(activeTab.content)
         yakitNotify("success", "内容已复制到剪贴板")
-    }
+    })
 
     // 下载当前活动标签页的内容
-    const downloadDecompiledFile = () => {
+    const downloadDecompiledFile = useMemoizedFn(() => {
         const activeTab = tabs.find((tab) => tab.key === activeTabKey)
         if (!activeTab || !activeTab.content) {
             return
@@ -417,10 +472,10 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
-    }
+    })
 
     // 处理标签页的关闭
-    const handleTabClose = (key: string) => {
+    const handleTabClose = useMemoizedFn((key: string) => {
         const newTabs = tabs.filter((tab) => tab.key !== key)
         setTabs(newTabs)
 
@@ -430,7 +485,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         } else if (newTabs.length === 0) {
             setActiveTabKey("")
         }
-    }
+    })
 
     // 处理文件树节点选择
     const handleNodeSelect = useMemoizedFn(
@@ -438,9 +493,8 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
             if (!e.selected || !e.node) return
 
             const node = e.node
-
             // 如果是文件夹，不加载内容
-            if (node.isFolder) {
+            if (!node.isLeaf) {
                 return
             }
 
@@ -456,7 +510,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
     )
 
     // 渲染标签页内容
-    const renderTabContent = (tab: FileTabInfo) => {
+    const renderTabContent = useMemoizedFn((tab: FileTabInfo) => {
         if (tab.isLoading) {
             return (
                 <div className={styles["loading-area"]}>
@@ -466,7 +520,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         }
 
         return <YakEditor type={tab.language} value={tab.content} readOnly={true} />
-    }
+    })
 
     return (
         <div className={styles["java-decompiler-page"]}>
@@ -538,6 +592,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
                                 setExpandedKeys={setExpandedKeys}
                                 loadJarStructure={loadJarStructure}
                                 onLoadData={onLoadData}
+                                downloadAsZip={downloadAsZip}
                                 onNodeSelect={handleNodeSelect}
                                 resetDecompiler={resetDecompiler}
                                 importProject={importProject}

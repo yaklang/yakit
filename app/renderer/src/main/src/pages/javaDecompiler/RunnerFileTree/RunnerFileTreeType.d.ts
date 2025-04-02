@@ -30,4 +30,6 @@ export interface RunnerFileTreeProps {
     importProject: () => void
     // 导入项目并编译
     importProjectAndCompile: () => void
+    // 下载为 ZIP
+    downloadAsZip: () => void
 }
