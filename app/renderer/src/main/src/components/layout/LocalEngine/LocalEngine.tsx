@@ -218,13 +218,19 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     grpcFetchLocalYakVersionHash()
                 ])
 
-                if (res2.includes(res1)) {
-                    setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
+                if (res1 === "" || !Array.isArray(res2) || res2.length === 0) {
+                    setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {
-                    setLog((old) => old.concat(["引擎非官方来源，启动提示框"]))
-                    setVersionAbnormalVisible(true)
+                    if (res2.includes(res1)) {
+                        setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
+                        handleLinkLocalEnging()
+                    } else {
+                        setLog((old) => old.concat(["引擎非官方来源，启动提示框"]))
+                        setVersionAbnormalVisible(true)
+                    }
                 }
+                
             } catch (error) {
                 setLog((old) => old.concat(["异常情况，无法检测来源，准备连接引擎"]))
                 handleLinkLocalEnging()
