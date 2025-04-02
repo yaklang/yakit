@@ -3,7 +3,12 @@ import {DbOperateMessage} from "@/pages/layout/mainOperatorContent/utils"
 import {ExecResult, YakScript, GroupCount} from "@/pages/invoker/schema"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {CodeScanPageInfoProps} from "@/store/pageInfo"
-import {SyntaxFlowGroup, SyntaxFlowRule, SyntaxFlowRuleFilter, SyntaxFlowRuleInput} from "../ruleManagement/RuleManagementType"
+import {
+    SyntaxFlowGroup,
+    SyntaxFlowRule,
+    SyntaxFlowRuleFilter,
+    SyntaxFlowRuleInput
+} from "../ruleManagement/RuleManagementType"
 
 export interface YakRunnerCodeScanProps {
     pageId: string
@@ -37,6 +42,7 @@ export interface CodeScanByGroupProps {
     hidden: boolean
     setTotal: (v: number) => void
     selectGroupList: string[]
+    filterLibRuleKind: "" | "noLib"
 }
 
 export interface CodeScanExecuteContentRefProps {
@@ -57,6 +63,7 @@ export interface CodeScaMainExecuteContentProps {
     executeStatus: SyntaxFlowScanExecuteState
     setExecuteStatus: (value: SyntaxFlowScanExecuteState) => void
     selectGroupList: string[]
+    filterLibRuleKind: "" | "noLib"
     /**进度条信息 */
     setProgressShow: (s?: {type: "new" | "old"; progress: number; name?: string}) => void
     // 项目名称列表
