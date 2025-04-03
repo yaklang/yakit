@@ -408,6 +408,15 @@
     border: 1px solid #ffe58f;
     padding: 8px 15px;
     border-radius: 2px;
+    .circle-icon {
+        position: relative;
+        top: 1px;
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
 }
 
 .filter-popover {

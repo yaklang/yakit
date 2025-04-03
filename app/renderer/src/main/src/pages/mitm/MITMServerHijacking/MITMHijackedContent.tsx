@@ -1,5 +1,5 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {info, yakitFailed} from "@/utils/notification"
+import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useMemoizedFn} from "ahooks"
 import React, {useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
@@ -15,12 +15,17 @@ import {useStore} from "@/store/mitmState"
 import {HTTPHistory} from "@/components/HTTPHistory"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
-import {MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
+import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineConfiguredIcon, OutlineUnConfiguredIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlineConfiguredIcon,
+    OutlineInformationcircleIcon,
+    OutlineUnConfiguredIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {prettifyPacketCode} from "@/utils/prettifyPacket"
-import {convertMITMFilterUI} from "../MITMServerStartForm/utils"
+import {convertLocalMITMFilterRequest, convertMITMFilterUI} from "../MITMServerStartForm/utils"
 import cloneDeep from "lodash/cloneDeep"
 import {defaultMITMFilterData} from "@/defaultConstants/mitm"
 import MITMFiltersModal, {getAdvancedFlag, getMitmHijackFilter} from "../MITMServerStartForm/MITMFiltersModal"
@@ -39,6 +44,8 @@ interface MITMHijackedContentProps {
     onSelectAll: (e: boolean) => void
     setShowPluginHistoryList: (l: string[]) => void
     setTempShowPluginHistory?: (s: string) => void
+    onSetRuleVisible: (v: boolean) => void
+    onSetFilterVisible: (v: boolean) => void
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
@@ -51,7 +58,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         loadedPluginLen,
         onSelectAll,
         setShowPluginHistoryList,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        onSetRuleVisible,
+        onSetFilterVisible
     } = props
     // 自动转发 与 劫持响应的自动设置
     const [autoForward, setAutoForward] = useState<"manual" | "log" | "passive">("log")
@@ -105,7 +114,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     /** 黄色提示 start */
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
+    const [whiteFilter, setWhiteFilter] = useState<{
+        baseFilter: MITMFilterSchema
+        advancedFilters: MITMAdvancedFilter[]
+    }>()
     const [openRepRuleFlag, setOpenRepRuleFlag] = useState<boolean>(false) // 是否开启过替换规则
+    const [curRules, setCurRules] = useState<MITMContentReplacerRule[]>([])
     const [alertVisible, setAlertVisible] = useState<boolean>(false)
     const getMITMFilter = useMemoizedFn(() => {
         ipcRenderer
@@ -113,6 +127,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             .then((res: MITMFilterSchema) => {
                 const data = convertMITMFilterUI(res.FilterData || cloneDeep(defaultMITMFilterData))
                 const val = data.baseFilter
+                setWhiteFilter({
+                    baseFilter: val,
+                    advancedFilters: data.advancedFilters
+                })
                 const includeHostnameFlag = val?.includeHostname ? !!val?.includeHostname.length : false
                 const includeUriFlag = val?.includeUri ? !!val?.includeUri.length : false
                 const includeSuffixFlag = val?.includeSuffix ? !!val?.includeSuffix.length : false
@@ -127,18 +145,53 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 yakitFailed("获取 MITM 过滤器失败:" + err)
             })
     })
-    const onSetFilterWhiteListEvent = useMemoizedFn((flag: string) => {
-        const val = flag === "true"
-        setWhiteListFlag(val)
-        if (val) {
-            setAlertVisible(true)
+    const setFilters = useMemoizedFn(() => {
+        if (whiteFilter) {
+            const filter: MITMFilterData = {
+                ...convertLocalMITMFilterRequest(whiteFilter),
+                IncludeHostnames: [],
+                IncludeSuffix: [],
+                IncludeUri: []
+            }
+            ipcRenderer
+                .invoke("mitm-set-filter", {
+                    FilterData: filter
+                })
+                .then(() => {
+                    getMITMFilter()
+                })
+                .catch((err) => {
+                    yakitFailed("删除过滤器中包含项的所有内容失败：" + err)
+                })
         }
+    })
+    const setRules = useMemoizedFn(() => {
+        const newRules: MITMContentReplacerRule[] = []
+        curRules.forEach((item) => {
+            if (item.Disabled) {
+                newRules.push(item)
+            } else {
+                newRules.push({...item, NoReplace: true})
+            }
+        })
+        ipcRenderer
+            .invoke("mitm-content-replacers", {
+                replacers: newRules
+            })
+            .then((val) => {
+                getRules()
+                yakitNotify("success", "已成功开启规则“全部不替换”按钮")
+            })
+            .catch((e) => {
+                yakitNotify("error", "关闭失败")
+            })
     })
     const getRules = useMemoizedFn(() => {
         ipcRenderer
             .invoke("GetCurrentRules", {})
             .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setCurRules([...newRules])
                 const findOpenRepRule = newRules.find(
                     (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
                 )
@@ -150,21 +203,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             })
             .catch((e) => yakitFailed("获取规则列表失败:" + e))
     })
-    const onOpenRepRuleEvent = useMemoizedFn((flag: string) => {
-        const val = flag === "true"
-        setOpenRepRuleFlag(val)
-        if (val) {
-            setAlertVisible(true)
-        }
-    })
     useEffect(() => {
         getMITMFilter()
         getRules()
-        emiter.on("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
-        emiter.on("onOpenRepRuleEvent", onOpenRepRuleEvent)
+        emiter.on("onRefFilterWhiteListEvent", getMITMFilter)
+        emiter.on("onRefreshRuleEvent", getRules)
         return () => {
-            emiter.off("onSetFilterWhiteListEvent", onSetFilterWhiteListEvent)
-            emiter.off("onOpenRepRuleEvent", onOpenRepRuleEvent)
+            emiter.off("onRefFilterWhiteListEvent", getMITMFilter)
+            emiter.off("onRefreshRuleEvent", getRules)
         }
     }, [])
     useEffect(() => {
@@ -177,11 +223,57 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             </YakitButton>
         )
     }
+    const openReplaceRule = () => {
+        return (
+            <YakitButton type='text' onClick={() => onSetRuleVisible(true)} style={{padding: 0}}>
+                替换规则
+            </YakitButton>
+        )
+    }
+    const openWhiteFilter = () => {
+        return (
+            <YakitButton type='text' onClick={() => onSetFilterVisible(true)} style={{padding: 0}}>
+                过滤器
+            </YakitButton>
+        )
+    }
+    const closeDisposition = (key: "rule" | "filter" | "all") => {
+        return (
+            <YakitButton
+                type='text'
+                colors='danger'
+                onClick={() => {
+                    switch (key) {
+                        case "filter":
+                            setFilters()
+                            break
+                        case "rule":
+                            setRules()
+                            break
+                        case "all":
+                            setFilters()
+                            setRules()
+                            break
+                        default:
+                            break
+                    }
+                }}
+                style={{padding: 0}}
+            >
+                关闭
+            </YakitButton>
+        )
+    }
     const alertMsg = useMemo(() => {
         if (whiteListFlag && openRepRuleFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。检测到加载
+                    检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
+                    {closeDisposition("all")}
+                    <Tooltip title='关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                    。检测到加载
                     {loadedPluginLen}个插件，如抓包有问题可点击
                     {clearLoadedPlugins()}
                     取消加载插件。
@@ -189,12 +281,24 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             )
         }
         if (whiteListFlag && openRepRuleFlag) {
-            return "检测到配置替换规则和过滤器白名单，如抓包有问题可先将配置关闭。"
+            return (
+                <>
+                    检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
+                    {closeDisposition("all")}
+                    <Tooltip title='关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                </>
+            )
         }
         if (whiteListFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭。检测到加载
+                    检测到配置{openWhiteFilter()}白名单，如抓包有问题可先将白名单设置{closeDisposition("filter")}
+                    <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                    。检测到加载
                     {loadedPluginLen}个插件，如抓包有问题可点击{clearLoadedPlugins()}
                     取消加载插件。
                 </>
@@ -203,7 +307,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (openRepRuleFlag && loadedPluginLen) {
             return (
                 <>
-                    检测到配置替换规则，如抓包有问题可先将替换关闭。检测到加载
+                    检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition("rule")}
+                    <Tooltip title='关闭则会开启“全部不替换”按钮'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                    。检测到加载
                     {loadedPluginLen}
                     个插件，如抓包有问题可点击
                     {clearLoadedPlugins()}
@@ -211,8 +319,24 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </>
             )
         }
-        if (whiteListFlag) return "检测到配置过滤器白名单，如抓包有问题可先将白名单设置关闭"
-        if (openRepRuleFlag) return "检测到配置替换规则，如抓包有问题可先将替换关闭"
+        if (whiteListFlag)
+            return (
+                <>
+                    检测到配置{openReplaceRule()}，如抓包有问题可先将白名单设置{closeDisposition("filter")}
+                    <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                </>
+            )
+        if (openRepRuleFlag)
+            return (
+                <>
+                    检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition("rule")}
+                    <Tooltip title='关闭则会开启“全部不替换”按钮'>
+                        <OutlineInformationcircleIcon className={styles["circle-icon"]} />
+                    </Tooltip>
+                </>
+            )
         if (loadedPluginLen)
             return (
                 <>

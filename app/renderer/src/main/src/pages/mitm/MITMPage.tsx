@@ -41,7 +41,7 @@ import {MITMConsts} from "./MITMConsts"
 import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import classNames from "classnames"
-import { useStore } from "@/store/mitmState"
+import {useStore} from "@/store/mitmState"
 const {ipcRenderer} = window.require("electron")
 
 type idleTabKeys = "plugin"
@@ -469,7 +469,7 @@ interface MITMServerProps {
         extra?: ExtraMITMServerProps
     ) => any
     visible?: boolean
-    setVisible?: (b: boolean) => void
+    setVisible: (b: boolean) => void
     status: MitmStatus
     // 开启劫持后
     setStatus: (status: MITMStatus) => any
@@ -482,6 +482,7 @@ interface MITMServerProps {
     setShowPluginHistoryList: (l: string[]) => void
     tempShowPluginHistory?: string
     setTempShowPluginHistory?: (t: string) => void
+    setFiltersVisible?: (v: boolean) => void
 }
 export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     const {
@@ -497,7 +498,8 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         showPluginHistoryList,
         tempShowPluginHistory,
         setShowPluginHistoryList,
-        setTempShowPluginHistory
+        setTempShowPluginHistory,
+        setFiltersVisible
     } = props
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
@@ -922,9 +924,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         status={status}
                         onStartMITMServer={onStartMITMServer}
                         visible={visible || false}
-                        setVisible={(v) => {
-                            if (setVisible) setVisible(v)
-                        }}
+                        setVisible={setVisible}
                         enableInitialPlugin={enableInitialPlugin}
                         setEnableInitialPlugin={(checked) => {
                             if (!checked) {
@@ -947,6 +947,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                         onSelectAll={onSelectAll}
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         setTempShowPluginHistory={setTempShowPluginHistory}
+                        onSetRuleVisible={setVisible}
+                        onSetFilterVisible={(v) => {
+                            if (setFiltersVisible) {
+                                setFiltersVisible(v)
+                            }
+                        }}
                     />
                 )
         }
