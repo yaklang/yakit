@@ -5,53 +5,65 @@
     display: flex;
     overflow: hidden;
 }
-
-.ai-agent-bar-list {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    border-right: 1px solid #eaecf3;
-    border-left: 1px solid #eaecf3;
-    background: #f0f1f3;
-
-    .side-bar-list-item {
-        padding: 12px 4px;
-        cursor: pointer;
-        border-bottom: 1px solid #ffffff;
-        position: relative;
-        user-select: none;
-        color: #31343f;
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 16px;
-        writing-mode: vertical-rl;
-        text-orientation: sideways-right;
-        transform: rotate(180deg);
-    }
-
-    .side-bar-list-item:hover {
-        background-color: rgba(204, 210, 222, 0.5);
-    }
-    .side-bar-list-item-active {
-        background-color: var(--yakit-primary-5);
-        border-bottom-color: var(--yakit-primary-5);
-        color: #ffffff;
-    }
-    .side-bar-list-item-active:hover {
-        background-color: var(--yakit-primary-4);
-        border-bottom-color: var(--yakit-primary-4);
-    }
+.ai-agent-chat {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
 }
 
-.ai-agent-body {
-    flex: 1;
-    overflow: hidden;
-    .active-content {
-        width: 100%;
-        height: 100%;
+/* ---------- AIAgentSideList ----------*/
+.ai-agent-side-list {
+    height: 100%;
+    display: flex;
+    border-right: 1px solid #eaecf3;
+
+    .side-list-bar {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-right: 1px solid #eaecf3;
+        border-left: 1px solid #eaecf3;
+        background: #f0f1f3;
+
+        .side-bar-list-item {
+            padding: 12px 4px;
+            cursor: pointer;
+            border-bottom: 1px solid #ffffff;
+            position: relative;
+            user-select: none;
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            writing-mode: vertical-rl;
+            text-orientation: sideways-right;
+            transform: rotate(180deg);
+        }
+
+        .side-bar-list-item:hover {
+            background-color: rgba(204, 210, 222, 0.5);
+        }
+        .side-bar-list-item-active {
+            background-color: var(--yakit-primary-5);
+            border-bottom-color: var(--yakit-primary-5);
+            color: #ffffff;
+        }
+        .side-bar-list-item-active:hover {
+            background-color: var(--yakit-primary-4);
+            border-bottom-color: var(--yakit-primary-4);
+        }
     }
-    .hidden-content {
-        display: none;
+
+    .side-list-body {
+        width: 340px;
+        overflow: hidden;
+        .active-content {
+            width: 100%;
+            height: 100%;
+        }
+        .hidden-content {
+            display: none;
+        }
     }
 }
 
@@ -69,11 +81,10 @@
 
 /* ---------- ServerSetting ----------*/
 .server-setting {
-    width: 360px;
+    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #eaecf3;
 
     .setting-header {
         padding: 12px 16px;

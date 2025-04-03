@@ -1,53 +1,66 @@
-import React, {useRef} from "react"
-import {useMemoizedFn} from "ahooks"
-import {AIAgentTabList} from "./defaultConstant"
-import {AIAgentProps, AIAgentTab} from "./aiAgentType"
-import {MCPServer} from "./ServerSetting"
+import React, {useEffect, useMemo, useRef, useState} from "react"
+import {AIAgentProps, AIAgentSetting, RenderMCPClientInfo} from "./aiAgentType"
+import {AIAgentSideList} from "./AIAgentSideList"
+import AIAgentContext, {AIAgentContextDispatcher, AIAgentContextStore} from "./useContext/AIAgentContext"
+import {DefaultAIAgentSetting} from "./defaultConstant"
+import {getRemoteValue} from "@/utils/kv"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
+import {ServerChat} from "./ServerChat"
 
-import classNames from "classnames"
+// import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
-    // 控制各个列表的初始渲染变量，存在列表对应类型，则代表列表UI已经被渲染
-    const rendered = useRef<Set<string>>(new Set(["mcp"]))
-    const [active, setActive] = React.useState<AIAgentTab>("mcp")
-    const handleSetActive = useMemoizedFn((value: AIAgentTab) => {
-        setActive(value)
-        if (!rendered.current.has(value)) {
-            rendered.current.add(value)
+    const wrapper = useRef<HTMLDivElement>(null)
+
+    // ai-agent-chat 全局配置
+    const [setting, setSetting] = useState<AIAgentSetting>(DefaultAIAgentSetting)
+    // mcp 服务器列表
+    const [servers, setServers] = useState<RenderMCPClientInfo[]>([])
+
+    const store: AIAgentContextStore = useMemo(() => {
+        return {
+            mcpServers: servers,
+            setting: setting
         }
-    })
+    }, [servers, setting])
+    const dispatcher: AIAgentContextDispatcher = useMemo(() => {
+        return {
+            setMCPServers: setServers,
+            setSetting: setSetting
+        }
+    }, [])
+
+    useEffect(() => {
+        getRemoteValue(RemoteAIAgentGV.AIAgentChatSetting)
+            .then((res) => {
+                if (!res) return
+                try {
+                    const cache = JSON.parse(res) as AIAgentSetting
+                    setSetting(cache)
+                } catch (error) {}
+            })
+            .catch((err) => {})
+        getRemoteValue(RemoteAIAgentGV.MCPClientList)
+            .then((res) => {
+                if (!res) return
+                try {
+                    const cache = JSON.parse(res) as RenderMCPClientInfo[]
+                    setServers(cache)
+                } catch (error) {}
+            })
+            .catch((err) => {})
+    }, [])
 
     return (
-        <div className={styles["ai-agent"]}>
-            <div className={styles["ai-agent-bar-list"]}>
-                {AIAgentTabList.map((item) => {
-                    const isActive = item.key === active
-                    return (
-                        <div
-                            key={item.key}
-                            className={classNames(styles["side-bar-list-item"], {
-                                [styles["side-bar-list-item-active"]]: isActive
-                            })}
-                            onClick={() => handleSetActive(item.key)}
-                        >
-                            {item.title}
-                        </div>
-                    )
-                })}
-            </div>
+        <AIAgentContext.Provider value={{store, dispatcher}}>
+            <div ref={wrapper} className={styles["ai-agent"]}>
+                <AIAgentSideList />
 
-            <div className={styles["ai-agent-body"]}>
-                {rendered.current.has("mcp") && (
-                    <div
-                        className={classNames(styles["active-content"], {
-                            [styles["hidden-content"]]: active !== "mcp"
-                        })}
-                    >
-                        <MCPServer />
-                    </div>
-                )}
+                <div className={styles["ai-agent-chat"]}>
+                    <ServerChat getContainer={wrapper.current || undefined} />
+                </div>
             </div>
-        </div>
+        </AIAgentContext.Provider>
     )
 }

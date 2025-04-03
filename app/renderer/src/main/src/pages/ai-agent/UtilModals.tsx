@@ -246,7 +246,7 @@ export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
 
 /** @name 任务栏项(可折叠) */
 export const AIAgentTask: React.FC<AIAgentEmptyProps> = memo((props) => {
-    const {} = props
+    const {strs} = props
 
     const [expand, setExpand] = useState(false)
     const handleExpand = useMemoizedFn(() => {})
@@ -274,7 +274,11 @@ export const AIAgentTask: React.FC<AIAgentEmptyProps> = memo((props) => {
                 </div>
             </div>
 
-            <div></div>
+            <div>
+                {strs.map((item) => {
+                    return <div style={{whiteSpace: "pre-line"}}>{item}</div>
+                })}
+            </div>
         </div>
     )
 })

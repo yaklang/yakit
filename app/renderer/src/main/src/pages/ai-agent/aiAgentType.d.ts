@@ -1,10 +1,22 @@
 import {Dispatch, SetStateAction} from "react"
-import {MCPClientInfo, MCPClientResource} from "./mcpClient/type"
+import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 
 export interface AIAgentProps {}
 
+/** ai-agent-chat 全局配置 */
+export interface AIAgentSetting {
+    /** 是否自动执行AI任务 */
+    autoExecute: boolean
+    /** 是否激活系统文件操作权限 */
+    EnableSystemFileSystemOperator: boolean
+    /** 是否使用默认系统配置AI */
+    UseDefaultAIConfig?: boolean
+}
+
+export interface AIAgentSideListProps {}
+
 /** tab 类型 */
-export type AIAgentTab = "mcp"
+export type AIAgentTab = "mcp" | "setting" | "log"
 
 /** resourcesTemplates */
 export interface RenderResourcesTemplates {
@@ -45,14 +57,12 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
     resourceTemplates?: RenderResourcesTemplates[]
 }
 
-export interface MCPServerProps {}
 export interface ServerSettingProps {
-    servers: RenderMCPClientInfo[]
-    setServers: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
+    servers?: RenderMCPClientInfo[]
+    setServers?: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
 }
 export interface ServerChatProps {
     getContainer?: HTMLElement
-    servers: RenderMCPClientInfo[]
 }
 
 export interface ServerChatInfo {
@@ -80,6 +90,8 @@ export interface ServerInfoModalProps {
     onCancel: () => viod
 }
 
-export interface AIAgentEmptyProps {}
+export interface AIAgentEmptyProps {
+    strs: string[]
+}
 
 export interface AIAgentTaskProps {}
