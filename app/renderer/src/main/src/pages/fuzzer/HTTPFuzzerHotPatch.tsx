@@ -694,7 +694,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                     trigger='hover'
                                     placement='right'
                                     overlayClassName={styles["hotCode-popover"]}
-                                    content={<YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />}
+                                    content={dropdown && <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />}
                                     onVisibleChange={(v) => {
                                         if (v) {
                                             onClickHotCodeName(item)

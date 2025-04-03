@@ -2072,7 +2072,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         const hotPatchTrigger = useMemoizedFn(() => {
             let m = showYakitModal({
                 title: null,
-                width: "90%",
+                width: "80%",
                 footer: null,
                 maskClosable: false,
                 closable: false,
