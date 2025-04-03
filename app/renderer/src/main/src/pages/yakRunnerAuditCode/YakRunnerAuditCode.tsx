@@ -54,6 +54,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
+import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -707,6 +708,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
             emiter.off("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
+            // 页面关闭时重置
+            onSetSelectedSearchVal("")
         }
     }, [])
 
