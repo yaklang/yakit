@@ -169,7 +169,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props
         onGroupChange(select.map((item) => item.GroupName))
     }, [select])
     const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const isExist = select.includes(info)
+        const isExist = select.find((el) => el.GroupName === info.GroupName)
         if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
         else setSelect((arr) => [...arr, info])
     })

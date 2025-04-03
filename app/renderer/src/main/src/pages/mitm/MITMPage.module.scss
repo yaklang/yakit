@@ -65,6 +65,8 @@
             height: 100%;
             padding-left: 15px;
             padding-top: 12px;
+            display: flex;
+            flex-direction: column;
         }
     }
 
@@ -397,7 +399,6 @@
         }
     }
 }
-
 
 .chrome-launcher-status {
     .chrome-launcher-text {
