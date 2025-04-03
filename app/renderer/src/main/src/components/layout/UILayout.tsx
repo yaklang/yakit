@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {MacUIOp} from "./MacUIOp"
 import {PerformanceDisplay, yakProcess} from "./PerformanceDisplay"
 import {FuncDomain} from "./FuncDomain"
@@ -158,6 +158,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const [keepalive, setKeepalive] = useState<boolean>(false)
     /** ---------- 软件状态相关属性 End ---------- */
 
+    const {userInfo} = useStore()
+
     // 引擎状态断开时清空yakrunner
     useUpdateEffect(() => {
         if (getMapAllTerminalKey().length > 0 && !engineLink) {
@@ -168,22 +170,31 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 获取企业版配置信息
     const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
-    useEffect(() => {
-        let collectData = false
-        eeSystemConfig.forEach((item) => {
-            if (item.configName === "collectData") {
-                collectData = item.isOpen
+    useDebounceEffect(
+        () => {
+            let collectData = false
+            eeSystemConfig.forEach((item) => {
+                if (item.configName === "collectData") {
+                    collectData = item.isOpen
+                }
+            })
+            let timer
+            if (collectData && userInfo.isLogin) {
+                const token = userInfo.token
+                visitorsStatisticsFun(token)
+                timer = setInterval(() => {
+                    visitorsStatisticsFun(token)
+                }, 60000)
+            } else {
+                timer && clearInterval(timer)
             }
-        })
-        let timer
-        if (collectData) {
-            visitorsStatisticsFun(userInfo.token)
-            timer = setInterval(visitorsStatisticsFun, 60000)
-        }
-        return () => {
-            timer && clearInterval(timer)
-        }
-    }, [eeSystemConfig])
+            return () => {
+                timer && clearInterval(timer)
+            }
+        },
+        [eeSystemConfig, userInfo],
+        {wait: 300}
+    )
     useEffect(() => {
         if (engineLink && isEnpriTrace()) {
             NetWorkApi<any, API.SystemConfigResponse>({
@@ -907,7 +918,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     /** ---------- 远程控制(控制端) Start ---------- */
     const {dynamicStatus, setDynamicStatus} = yakitDynamicStatus()
-    const {userInfo} = useStore()
 
     useEffect(() => {
         // 监听退出远程控制
