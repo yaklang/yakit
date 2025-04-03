@@ -4,14 +4,14 @@ import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetw
 import {KVPair} from "@/models/kv"
 import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import {DefaultOptionType} from "antd/lib/select"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
-import {useMemoizedFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {yakitNotify} from "@/utils/notification"
+import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 interface ThirdPartyAppConfigItemTemplate {
@@ -84,17 +84,18 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
     } = props
     const [form] = Form.useForm()
     const typeVal = Form.useWatch("Type", form)
-    const [options, setOptions] = useState<DefaultOptionType[] | SelectOptionsProps[]>([])
+    const [options, setOptions] = useState<SelectOptionsProps[]>([])
     const [templates, setTemplates] = useState<GetThirdPartyAppConfigTemplate[]>([])
     const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
-    const [modelNameOptions, setModelNameOptions] = useState<DefaultOptionType[] | SelectOptionsProps[]>([])
+    const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
+    const apiKeyWatch = Form.useWatch("api_key", form)
 
     // 获取类型
     useEffect(() => {
         ipcRenderer.invoke("GetThirdPartyAppConfigTemplate").then((res: GetThirdPartyAppConfigTemplateResponse) => {
             const templates = res.Templates
             setTemplates(templates)
-            let newOptions: DefaultOptionType[] | SelectOptionsProps[] = []
+            let newOptions: SelectOptionsProps[] = []
             if (isOnlyShowAiType) {
                 newOptions = templates
                     .filter((item) => item.Type === "ai")
@@ -106,34 +107,44 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         })
     }, [isOnlyShowAiType])
 
-    const getModelNameOption = useMemoizedFn(() => {
-        setModelOptionLoading(true)
-        form.validateFields()
-            .then((res) => {
-                ipcRenderer
-                    .invoke("ListAiModel", {Config: JSON.stringify(res)})
-                    .then((res) => {
-                        const modalNamelist: DefaultOptionType[] | SelectOptionsProps[] = res.ModelName.map(
-                            (modelName: string) => ({
-                                label: modelName,
-                                value: modelName
-                            })
-                        )
-                        setModelNameOptions(modalNamelist)
-                    })
-                    .catch((error) => {
-                        setModelNameOptions([])
-                        yakitNotify("error", error + "")
-                    })
-                    .finally(() => {
-                        setModelOptionLoading(false)
-                    })
-            })
-            .catch((error) => {
-                setModelNameOptions([])
-                setModelOptionLoading(false)
-            })
-    })
+    useUpdateEffect(() => {
+        if (apiKeyWatch) {
+            getModelNameOption()
+        } else {
+            setModelNameAllOptions([])
+        }
+    }, [apiKeyWatch])
+    const getModelNameOption = useDebounceFn(
+        useMemoizedFn(() => {
+            setModelOptionLoading(true)
+            const v = form.getFieldsValue()
+            ipcRenderer
+                .invoke("ListAiModel", {Config: JSON.stringify(v)})
+                .then((res) => {
+                    const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({
+                        label: modelName,
+                        value: modelName
+                    }))
+
+                    // 确保默认值在选项里
+                    const hasDefault =
+                        v["model"] === "" ? true : modalNamelist.some((item) => item.value === v["model"])
+                    const newOptions = hasDefault
+                        ? modalNamelist
+                        : [{label: v["model"], value: v["model"]}, ...modalNamelist]
+                    setModelNameAllOptions(newOptions)
+                    yakitNotify("success", "获取成功")
+                })
+                .catch((error) => {
+                    yakitNotify("error", error + "")
+                    setModelNameAllOptions([])
+                })
+                .finally(() => {
+                    setModelOptionLoading(false)
+                })
+        }),
+        {wait: 500}
+    ).run
 
     // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
     const renderAllFormItems = useMemoizedFn(() => {
@@ -173,20 +184,37 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                 if (modelType === "ai" && item.Name === "model") {
                     // 模型名称
                     return (
-                        <div style={{position: "relative"}}>
-                            <Form.Item {...formProps}>
-                                <YakitSelect options={modelNameOptions} />
-                            </Form.Item>
-                            <YakitButton
-                                size='small'
-                                type='primary'
-                                style={{position: "absolute", right: -40, top: 5}}
-                                loading={modelOptionLoading}
-                                onClick={getModelNameOption}
-                            >
-                                获取
-                            </YakitButton>
-                        </div>
+                        <Form.Item
+                            {...formProps}
+                            help={
+                                <div style={{height: 30}}>
+                                    如无法自动获取，请
+                                    <YakitButton
+                                        type='text'
+                                        onClick={() => {
+                                            getModelNameOption()
+                                        }}
+                                        style={{padding: 0, fontSize: 14}}
+                                    >
+                                        点击刷新
+                                    </YakitButton>
+                                    重新获取
+                                </div>
+                            }
+                        >
+                            <YakitSelect
+                                showSearch
+                                options={modelNameAllOptions}
+                                onFocus={getModelNameOption}
+                                dropdownRender={(menu) => {
+                                    return (
+                                        <>
+                                            <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
+                                        </>
+                                    )
+                                }}
+                            ></YakitSelect>
+                        </Form.Item>
                     )
                 } else {
                     return (
@@ -236,7 +264,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                 : item.DefaultValue === "true"
                         })
                     })
-                    setModelNameOptions([])
+                    setModelNameAllOptions([])
                 }
             }}
             onSubmitCapture={(e) => {
