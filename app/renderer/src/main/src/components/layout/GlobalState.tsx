@@ -314,10 +314,15 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 // 本地
                 grpcFetchLocalYakVersionHash()
             ])
-            if (res2.includes(res1)) {
+
+            if (res1 === "" || !Array.isArray(res2) || res2.length === 0) {
                 setShowCheckEngine(false)
             } else {
-                setShowCheckEngine(true)
+                if (res2.includes(res1)) {
+                    setShowCheckEngine(false)
+                } else {
+                    setShowCheckEngine(true)
+                }
             }
             resolve()
         } catch (error) {
