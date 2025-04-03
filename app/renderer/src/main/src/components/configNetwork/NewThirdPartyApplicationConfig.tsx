@@ -194,7 +194,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                         onClick={() => {
                                             getModelNameOption()
                                         }}
-                                        style={{padding: 0}}
+                                        style={{padding: 0, fontSize: 14}}
                                     >
                                         点击刷新
                                     </YakitButton>
