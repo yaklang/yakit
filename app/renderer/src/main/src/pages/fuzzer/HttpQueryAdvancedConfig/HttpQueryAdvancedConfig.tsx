@@ -56,6 +56,7 @@ import {
     matchersConditionOptions
 } from "../MatcherAndExtractionCard/constants"
 import {DefFuzzerConcurrent} from "@/defaultConstants/HTTPFuzzerPage"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -136,6 +137,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const [httpResponse, setHttpResponse] = useState<string>(defaultHttpResponse)
 
     const [form] = Form.useForm()
+    const isGmTLS = Form.useWatch("isGmTLS", form)
+    const randomJA3 = Form.useWatch("randomJA3", form)
     const overwriteSNI = Form.useWatch("overwriteSNI", form)
     const queryRef = useRef(null)
     const [inViewport = true] = useInViewport(queryRef)
@@ -199,6 +202,9 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     const onSetValue = useMemoizedFn((allFields: AdvancedConfigValueProps) => {
         let newValue: AdvancedConfigValueProps = {...advancedConfigValue, ...allFields}
         if (newValue.isGmTLS) {
+            newValue.isHttps = true
+        }
+        if (newValue.randomJA3) {
             newValue.isHttps = true
         }
         onValuesChange({
@@ -432,8 +438,37 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                             <Form.Item label='强制 HTTPS' name='isHttps' valuePropName='checked'>
                                 <YakitSwitch />
                             </Form.Item>
-                            <Form.Item label='国密TLS' name='isGmTLS' valuePropName='checked'>
-                                <YakitSwitch />
+                            <Form.Item label='HTTP配置'>
+                                <div style={{display: "flex"}}>
+                                    <Form.Item name='isGmTLS' style={{marginBottom: 0}}>
+                                        <YakitCheckableTag
+                                            checked={isGmTLS}
+                                            onChange={(checked) => {
+                                                const v = form.getFieldsValue()
+                                                onSetValue({
+                                                    ...v,
+                                                    isGmTLS: checked
+                                                })
+                                            }}
+                                        >
+                                            国密TLS
+                                        </YakitCheckableTag>
+                                    </Form.Item>
+                                    <Form.Item name='randomJA3' style={{marginBottom: 0}}>
+                                        <YakitCheckableTag
+                                            checked={randomJA3}
+                                            onChange={(checked) => {
+                                                const v = form.getFieldsValue()
+                                                onSetValue({
+                                                    ...v,
+                                                    randomJA3: checked
+                                                })
+                                            }}
+                                        >
+                                            随机TLS
+                                        </YakitCheckableTag>
+                                    </Form.Item>
+                                </div>
                             </Form.Item>
                             <Form.Item
                                 label={

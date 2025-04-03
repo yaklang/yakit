@@ -37,6 +37,7 @@ const toFuzzerAdvancedConfigValue = (value: FuzzerRequestProps) => {
     const resProps: AdvancedConfigValueProps = {
         isHttps: value.IsHTTPS,
         isGmTLS: value.IsGmTLS,
+        randomJA3: value.RandomJA3,
         actualHost: value.ActualAddr,
         maxBodySize: value.MaxBodySize,
         proxy: value.Proxy ? value.Proxy.split(",") : [],
