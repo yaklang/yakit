@@ -77,6 +77,8 @@ export interface YakitEditorProps {
 
     /** @name 配置项-(存在此项则将字体/换行交由emiter更新) */
     editorId?: string
+/** @name 配置项-监听monaco快捷键 */
+    onKeyPress?: (v:KeyboardEvent) => void
 
     /** @name 配置项-高亮显示配置 */
     highLightText?: HighLightText[] | Selection[]

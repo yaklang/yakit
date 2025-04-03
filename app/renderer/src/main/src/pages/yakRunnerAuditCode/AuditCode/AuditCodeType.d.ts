@@ -108,7 +108,7 @@ export interface AuditNodeSearchItemProps {
     info: AuditDetailItemProps
     foucsedKey: string
     activeInfo?: AuditDetailItemProps
-    setActivbeInfo: (v?: AuditDetailItemProps) => void
+    setActiveInfo: (v?: AuditDetailItemProps) => void
     onJump: (v: AuditDetailItemProps) => void
     onContextMenu: (v: AuditDetailItemProps) => void
 }

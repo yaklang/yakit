@@ -17,4 +17,5 @@ export interface YakCodemirrorProps {
     firstLineNumber?: number
     /** @name 配置项-高亮显示配置 */
     highLight?: HighlightRange
+    editorDidMount?: (editor:any)=>void
 }

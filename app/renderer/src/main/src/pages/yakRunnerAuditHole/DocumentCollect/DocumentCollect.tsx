@@ -14,6 +14,9 @@ import {RequestYakURLResponse} from "@/pages/yakURLTree/data"
 import {SolidFolderIcon, SolidFolderopenIcon} from "@/assets/icon/solid"
 import {SSARisksFilter} from "../YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
+import { RefreshIcon } from "@/assets/newIcon"
+import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     const iconsEle = {
@@ -210,7 +213,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
 
     return (
         <div className={styles["document-collect"]}>
-            {/* <div className={styles["tree-top-wrap"]}>
+            <div className={styles["tree-top-wrap"]}>
                 <YakitInput.Search
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
                     placeholder={"请输入文件名或函数进行搜索"}
@@ -220,7 +223,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                     value={searchValue}
                 />
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTreeFun} style={{marginBottom: 15}} />
-            </div> */}
+            </div>
             <div className={styles["tree-wrap"]}>
                 {treeLoading ? (
                     <YakitSpin style={{alignItems: "center"}} />

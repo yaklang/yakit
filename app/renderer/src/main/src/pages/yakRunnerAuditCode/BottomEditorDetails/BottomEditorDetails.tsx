@@ -70,6 +70,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }, [])
 
     const onAuditRuleSubmit = useMemoizedFn(() => {
+        if(!projectName || ruleEditor.length === 0) return
         setAuditRule && setAuditRule(ruleEditor)
         emiter.emit("onAuditRuleSubmit", ruleEditor)
     })
@@ -139,6 +140,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             ruleEditor={ruleEditor}
                             setRuleEditor={setRuleEditor}
                             disabled={auditExecuting}
+                            onAuditRuleSubmit={onAuditRuleSubmit}
                         />
                     </div>
                 )}

@@ -142,6 +142,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rangeNode,
         overLine = 3,
         editorId,
+        onKeyPress,
         highLightText = [],
         highLightClass,
         highLightFind = [],
@@ -1105,6 +1106,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useKeyPress(
         (e) => true,
         (e) => {
+            onKeyPress && onKeyPress(e)
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
 

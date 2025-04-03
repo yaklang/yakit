@@ -33,6 +33,8 @@ import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {RefreshIcon} from "@/assets/newIcon"
+import {IRifyApplySyntaxFlowRuleUpdate} from "../mitm/MITMServerHijacking/MITMPluginLocalList"
 
 const DefaultPaging: Paging = {Page: 1, Limit: 20, OrderBy: "updated_at", Order: "desc"}
 
@@ -417,6 +419,12 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             })
     })
 
+    const [ruleUpdateShow, setRuleUpdateShow] = useState<boolean>(false)
+    const downloadRuleUpdate = useMemoizedFn(() => {
+        if (ruleUpdateShow) return
+        setRuleUpdateShow(true)
+    })
+
     return (
         <YakitSpin spinning={initLoading.current}>
             <div ref={wrapperRef} className={styles["rule-management-page"]}>
@@ -490,12 +498,22 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                             </YakitButton>
 
                                             <YakitButton
+                                                type='outline2'
                                                 icon={<OutlinePlusIcon />}
                                                 onClick={() => {
                                                     handleOpenEditHint()
                                                 }}
                                             >
                                                 新建
+                                            </YakitButton>
+
+                                            <YakitButton
+                                                icon={<RefreshIcon />}
+                                                onClick={() => {
+                                                    downloadRuleUpdate()
+                                                }}
+                                            >
+                                                重置内置规则
                                             </YakitButton>
                                         </div>
                                     </div>
@@ -562,6 +580,13 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                     info={editInfo.current}
                     visible={editHint}
                     onCallback={handleCallbackEditHint}
+                />
+
+                <IRifyApplySyntaxFlowRuleUpdate
+                    visible={ruleUpdateShow}
+                    setVisible={(v) => {
+                        setRuleUpdateShow(v)
+                    }}
                 />
             </div>
         </YakitSpin>

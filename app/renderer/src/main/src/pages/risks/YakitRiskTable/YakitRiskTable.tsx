@@ -2193,10 +2193,11 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
 
 interface YakRiskCodemirrorProps {
     info: YakURLDataItemProps
+    editorDidMount?: (editor:any)=>void
 }
 
 export const YakRiskCodemirror: React.FC<YakRiskCodemirrorProps> = React.memo((props) => {
-    const {info} = props
+    const {info,editorDidMount} = props
     const filename = info.code_range.url.split("/").pop()
     const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
     return (
@@ -2209,6 +2210,7 @@ export const YakRiskCodemirror: React.FC<YakRiskCodemirrorProps> = React.memo((p
                 from: {line: start_line - source_code_line, ch: start_column}, // 开始位置
                 to: {line: end_line - source_code_line, ch: end_column} // 结束位置
             }}
+            editorDidMount={editorDidMount}
         />
     )
 })

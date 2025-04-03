@@ -349,7 +349,7 @@ const initialLocalState: QuerySyntaxFlowRuleResponse = {
 }
 
 const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
-    const {selectGroupList, setTotal, hidden} = props
+    const {selectGroupList, setTotal, hidden,filterLibRuleKind} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, setResponse] = useState<QuerySyntaxFlowRuleResponse>(initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -357,7 +357,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
 
     useEffect(() => {
         fetchList(true)
-    }, [selectGroupList])
+    }, [selectGroupList,filterLibRuleKind])
 
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
@@ -384,7 +384,8 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: filterLibRuleKind
                 },
                 Pagination: {
                     Limit: params?.Limit || 10,
@@ -394,6 +395,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                 }
             }
             if (query.Filter) query.Filter.GroupNames = selectGroupList
+            
             try {
                 const res = await grpcFetchLocalRuleList(query)
                 if (!res.Rule) res.Rule = []
@@ -569,6 +571,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         getAduitList()
     }, [])
 
+    const [filterLibRuleKind, setFilterLibRuleKind] = useState<"" | "noLib">("noLib")
     return (
         <>
             {isShowFlowRule && (
@@ -588,12 +591,20 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                             <span className={styles["heard-tip"]}>
                                 Total<span className={styles["heard-number"]}>{total}</span>
                             </span>
-                            <YakitButton type='text' danger onClick={onClearAll}>
-                                清空
-                            </YakitButton>
+                            <div className={styles["option"]}>
+                                <YakitCheckbox
+                                    checked={filterLibRuleKind !== "noLib"}
+                                    onChange={(e) => setFilterLibRuleKind(e.target.checked ? "" : "noLib")}
+                                >
+                                    包含Lib规则
+                                </YakitCheckbox>
+                                <YakitButton type='text' danger onClick={onClearAll}>
+                                    清空
+                                </YakitButton>
+                            </div>
                         </div>
                     </div>
-                    <CodeScanByGroup hidden={false} selectGroupList={selectGroupList} setTotal={setTotal} />
+                    <CodeScanByGroup hidden={false} selectGroupList={selectGroupList} filterLibRuleKind={filterLibRuleKind} setTotal={setTotal} />
                 </div>
             )}
             <div className={styles["code-scan-execute-wrapper"]}>
@@ -678,6 +689,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         selectGroupList={selectGroupList}
+                        filterLibRuleKind={filterLibRuleKind}
                         setHidden={setHidden}
                         auditCodeList={auditCodeList}
                         getAduitList={getAduitList}
@@ -713,6 +725,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             setIsExpand,
             setHidden,
             selectGroupList,
+            filterLibRuleKind,
             setProgressShow,
             auditCodeList,
             getAduitList,
@@ -809,7 +822,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: filterLibRuleKind
                 }
             }
             apiSyntaxFlowScan(params, token).then(() => {
@@ -1101,7 +1115,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: filterLibRuleKind
                 }
             }
             apiSyntaxFlowScan(params, token).then(() => {
@@ -1138,7 +1153,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Severity: [],
                     Purpose: [],
                     Tag: [],
-                    Keyword: ""
+                    Keyword: "",
+                    FilterLibRuleKind: filterLibRuleKind
                 },
                 ResumeTaskId: runtimeId
             }
@@ -1164,7 +1180,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         Severity: [],
                         Purpose: [],
                         Tag: [],
-                        Keyword: ""
+                        Keyword: "",
+                        FilterLibRuleKind: filterLibRuleKind
                     },
                     ResumeTaskId: runtimeId
                 }

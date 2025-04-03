@@ -48,4 +48,6 @@ export type YakRunnerAuditEventProps = {
     onExpendRightPath: string
     // 通知再次打开widget
     onWidgetOpenAgain: string
+    // 通知打开审计搜索
+    onOpenSearchModal?: string
 }

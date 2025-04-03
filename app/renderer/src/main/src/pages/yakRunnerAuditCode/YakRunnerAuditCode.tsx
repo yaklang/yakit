@@ -54,6 +54,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {Selection} from "./RunnerTabs/RunnerTabsType"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
+import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -707,6 +708,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         return () => {
             emiter.off("onCodeAuditOpenRightDetail", onOpenAuditRightDetailFun)
             emiter.off("onWidgetOpenRightAudit", onWidgetOpenRightAuditFun)
+            // 页面关闭时重置
+            onSetSelectedSearchVal("")
         }
     }, [])
 
@@ -718,9 +721,39 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         emiter.emit("onCodeAuditRefreshAduitHistory")
     }
 
+    // 双击Shift
+    const [lastShiftTime, setLastShiftTime] = useState<number>(0);
+    const handleDoubleShift = useMemoizedFn(() => {
+        const now = Date.now();
+        if (now - lastShiftTime < 300) { // 300ms 内连点两次 Shift
+            // 在这里处理连点两次 Shift 的逻辑
+            emiter.emit("onOpenSearchModal")
+        }
+        setLastShiftTime(now);
+    });
+    const keyDownRef = useRef<HTMLDivElement>(null)
+    const handleKeyPress = (event) => {
+        const {shiftKey} = event
+        if (shiftKey) {
+            handleDoubleShift()
+            event.preventDefault()
+        }
+    }
+    useEffect(() => {
+        if (keyDownRef.current) {
+            keyDownRef.current.addEventListener("keydown", handleKeyPress)
+        }
+        return () => {
+            // 在组件卸载时移除事件监听器
+            if (keyDownRef.current) {
+                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
+            }
+        }
+    }, [])
+
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["audit-code"]} id='audit-code'>
+            <div className={styles["audit-code"]} id='audit-code' tabIndex={0} ref={keyDownRef}>
                 <div className={styles["audit-code-page"]}>
                     <div className={styles["audit-code-body"]}>
                         <YakitResizeBox

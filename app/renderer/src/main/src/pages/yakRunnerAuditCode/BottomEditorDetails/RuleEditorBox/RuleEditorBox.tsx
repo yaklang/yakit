@@ -5,14 +5,17 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import useStore from "../../hooks/useStore"
 import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
+import {monaco} from "react-monaco-editor"
+import { randomString } from "@/utils/randomUtil"
 const {ipcRenderer} = window.require("electron")
 export interface RuleEditorBoxProps {
     ruleEditor: string
     setRuleEditor: (value: string) => void
     disabled?: boolean
+    onAuditRuleSubmit: () => void
 }
 export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
-    const {ruleEditor, setRuleEditor, disabled} = props
+    const {ruleEditor, setRuleEditor, disabled,onAuditRuleSubmit} = props
     const {projectName, pageInfo} = useStore()
 
     // 获取文本域输入框
@@ -73,6 +76,11 @@ export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
                 setRuleEditor(content)
             }}
             disabled={disabled}
+            editorDidMount={(editor) => {
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                    onAuditRuleSubmit()
+                })
+            }}
         />
     )
 }

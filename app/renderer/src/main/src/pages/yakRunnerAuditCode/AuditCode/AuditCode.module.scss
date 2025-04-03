@@ -147,7 +147,7 @@
     align-content: center;
     gap: 2px;
     cursor: pointer;
-
+    user-select: none;
     .node-switcher {
         width: 16px;
         height: 16px;
