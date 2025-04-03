@@ -122,11 +122,7 @@ import cloneDeep from "lodash/cloneDeep"
 import {onToManageGroup} from "@/pages/securityTool/yakPoC/YakPoC"
 import {apiFetchQueryYakScriptGroupLocal} from "@/pages/plugins/utils"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {
-    DefFuzzerTableMaxData,
-    defaultAdvancedConfigValue,
-    defaultPostTemplate
-} from "@/defaultConstants/HTTPFuzzerPage"
+import {DefFuzzerTableMaxData, defaultAdvancedConfigValue, defaultPostTemplate} from "@/defaultConstants/HTTPFuzzerPage"
 import {
     defPluginBatchExecuteExtraFormValue,
     defaultPluginBatchExecutorPageInfo
@@ -321,7 +317,6 @@ export const getInitPageCache: () => PageCache[] = () => {
         {
             routeKey: routeConvertKey(YakitRoute.DB_HTTPHistoryAnalysis, ""),
             verbose: "流量分析器",
-            routeIcon: <PublicHTTPHistoryIcon />,
             menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
             route: YakitRoute.DB_HTTPHistoryAnalysis,
             singleNode: true,
@@ -329,6 +324,14 @@ export const getInitPageCache: () => PageCache[] = () => {
         }
     ]
 }
+
+// 固定页面需要icon图标的
+const InitPageHasRouteIcon = [
+    {
+        route: YakitRoute.DB_HTTPHistoryAnalysis,
+        routeIcon: <PublicHTTPHistoryIcon />
+    }
+]
 
 // 软件初始化时的默认当前打开页面的key
 export const getInitActiveTabKey = () => {
@@ -2619,6 +2622,11 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
 })
 const TabItem: React.FC<TabItemProps> = React.memo((props) => {
     const {index, item, currentTabKey, onSelect, onRemove, onContextMenu} = props
+
+    const showInitPageIcon = (item: PageCache) => {
+        return InitPageHasRouteIcon.find((i) => i.route === item.route)?.routeIcon
+    }
+
     return (
         <>
             {defaultFixedTabs.includes(item.route) ? (
@@ -2631,11 +2639,11 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
                         onSelect(item, item.routeKey)
                     }}
                 >
-                    {item.routeKey === currentTabKey || !item.routeIcon ? (
+                    {item.routeKey === currentTabKey || !showInitPageIcon(item) ? (
                         <span className='content-ellipsis'>{item.verbose || ""}</span>
                     ) : (
                         <span className={styles["route-icon"]} title={item.verbose || ""}>
-                            {item.routeIcon}
+                            {showInitPageIcon(item)}
                         </span>
                     )}
                 </div>

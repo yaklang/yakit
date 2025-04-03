@@ -53,7 +53,6 @@ export interface MultipleNodeGroup {
 export interface PageCache {
     /**@name 一级页面唯一值 */
     routeKey: string
-    routeIcon?: React.ReactElement 
     verbose: string
     menuName: string
     route: YakitRoute
