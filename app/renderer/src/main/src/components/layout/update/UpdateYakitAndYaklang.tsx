@@ -103,8 +103,8 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
         setStatus("install")
         ipcRenderer
             .invoke("download-latest-yakit", version, {
-                isEnterprise:isEnterpriseEdition(),
-                isIRify:isIRify()
+                isEnterprise: isEnterpriseEdition(),
+                isIRify: isIRify()
             })
             .then(() => {
                 success("下载完毕")
@@ -286,7 +286,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     }, [visible])
 
     const handleCancel = useMemoizedFn(() => {
-        onCallback(false)
+        // onCallback(false)
     })
 
     const [updateLoading, setUpdateLoading] = useState<boolean>(false)
@@ -311,19 +311,29 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     return (
         <YakitHint
             getContainer={document.getElementById("yakit-uilayout-body") || undefined}
-            title={"检测到引擎版本低于内置版本"}
+            title={"引擎提示"}
             content={
                 <div>
-                    当前引擎低于建议版本将会导致软件部分功能使用出现异常!!!
-                    <div>当前版本 : {current}</div>
-                    <div>建议版本 : {buildIn}</div>
+                    当前核心引擎版本低于Yakit内置版本, 将自动切换为内置引擎版本
+                    <div className={styles["version-wrapper"]}>
+                        <div className={styles["version-header"]}>
+                            本地版本 <span>:</span>
+                        </div>
+                        {current}
+                    </div>
+                    <div style={{fontWeight: 500}} className={styles["version-wrapper"]}>
+                        <div className={styles["version-header"]}>
+                            内置版本(新) <span>:</span>
+                        </div>
+                        {buildIn}
+                    </div>
                 </div>
             }
             visible={visible}
-            okButtonText='立即更新'
+            okButtonText='OK'
             okButtonProps={{loading: updateLoading}}
             cancelButtonText='忽略'
-            cancelButtonProps={{style: {display: updateLoading ? "none" : ""}}}
+            cancelButtonProps={{style: {display: "none"}}}
             onOk={yakitUpdate}
             onCancel={handleCancel}
         />

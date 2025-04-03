@@ -3,7 +3,7 @@ import {setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {RemotePrivateDomainGV} from "@/enums/privateDomain"
 
-enum PRODUCT_RELEASE_EDITION {
+export enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
     /**@name 企业版 */
     EnpriTrace = 1,
@@ -106,7 +106,7 @@ export const GetReleaseEdition = () => {
     }
 }
 
-const fetchEnv = () => {
+export const fetchEnv = () => {
     try {
         return process.env["REACT_APP_PLATFORM"]
     } catch (e) {

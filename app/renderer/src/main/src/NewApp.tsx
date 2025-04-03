@@ -1,6 +1,6 @@
 import {useRef, useEffect, useState, Suspense, lazy} from "react"
 // by types
-import {failed, warn, yakitFailed, yakitNotify} from "./utils/notification"
+import {failed, warn, yakitFailed} from "./utils/notification"
 import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "./utils/kv"
 import {useDebounceFn, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
@@ -47,7 +47,7 @@ function NewApp() {
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
         // 解压Google 插件压缩包
-        ipcRenderer.invoke("generate-chrome-plugin").then(res => {
+        ipcRenderer.invoke("generate-chrome-plugin").then((res) => {
             setGoogleChromePluginPath(res)
         })
         // 获取系统信息
@@ -266,9 +266,9 @@ function NewApp() {
             if (dynamicStatus.isDynamicStatus) {
                 warn("远程控制关闭中...")
                 await remoteOperation(false, dynamicStatus)
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox,isIRify:isIRify()})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify()})
             } else {
-                ipcRenderer.invoke("app-exit", {showCloseMessageBox,isIRify:isIRify()})
+                ipcRenderer.invoke("app-exit", {showCloseMessageBox, isIRify: isIRify()})
             }
         })
         ipcRenderer.on("minimize-windows-renderer", async (e, res: any) => {
@@ -321,12 +321,12 @@ function NewApp() {
         }
     }, [])
 
-    useEffect(()=>{
-        const titleElement = document.getElementById('app-html-title')
+    useEffect(() => {
+        const titleElement = document.getElementById("app-html-title")
         if (titleElement) {
             titleElement.textContent = getReleaseEditionName()
         }
-    },[])
+    }, [])
 
     if (!agreed) {
         return (

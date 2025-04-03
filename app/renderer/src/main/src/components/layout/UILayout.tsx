@@ -81,6 +81,7 @@ import {visitorsStatisticsFun} from "@/utils/visitorsStatistics"
 import {setYakitEngineMode} from "@/constants/software"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {handleFetchArchitecture, handleFetchIsDev, SystemInfo} from "@/constants/hardware"
+import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -1016,12 +1017,14 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const softwareSettingFinish = useMemoizedFn(() => {
         setYakitMode("")
         setShowProjectManage(false)
-        ipcRenderer.invoke("GetCurrentProjectEx",{
-            Type: getEnvTypeByProjects()
-        }).then((rsp: ProjectDescription) => {
-            setCurrentProject(rsp || undefined)
-            setNowProjectDescription(rsp || undefined)
-        })
+        ipcRenderer
+            .invoke("GetCurrentProjectEx", {
+                Type: getEnvTypeByProjects()
+            })
+            .then((rsp: ProjectDescription) => {
+                setCurrentProject(rsp || undefined)
+                setNowProjectDescription(rsp || undefined)
+            })
     })
 
     // 当前使用的项目
@@ -1392,11 +1395,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             }
             // INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
             if (SystemInfo.isDev) {
-                const res = await ipcRenderer.invoke("GetDefaultProjectEx",{
+                const res = await ipcRenderer.invoke("GetDefaultProjectEx", {
                     Type: getEnvTypeByProjects()
                 })
                 if (res) {
-                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id,Type: getEnvTypeByProjects()})
+                    ipcRenderer.invoke("SetCurrentProject", {Id: +res.Id, Type: getEnvTypeByProjects()})
                     setCurrentProject(res)
                     setNowProjectDescription(res)
                     setShowProjectManage(false)
@@ -1438,7 +1441,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         switch (getEngineMode()) {
             case "local":
                 if (dynamicStatus.isDynamicStatus) return
-                setLocalValue(LocalGV.YaklangEnginePort, credential.Port)
+                setLocalValue(getEnginePortCacheKey(), credential.Port)
                 return
         }
     })

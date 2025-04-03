@@ -102,8 +102,37 @@ function testRemoteClient(params, callback) {
     yak.Echo({text: "hello yak? are u ok?"}, callback)
 }
 
+/**
+ * @name 测试引擎进程是否适用版本软件
+ * @param {Object} params
+ * @param {String} params.port 端口
+ * @param {String} params.version  版本
+ */
+function testEngineAvaiableVersion(params) {
+    return new Promise((resolve, reject) => {
+        try {
+            const {port, version} = params
+            const yak = new Yak(`127.0.0.1:${port}`, grpc.credentials.createInsecure(), options)
+            yak.Handshake({Name: version}, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                try {
+                    resolve(data.Success)
+                } catch (error) {
+                    reject(error)
+                }
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
 module.exports = {
     testRemoteClient,
+    testEngineAvaiableVersion,
     clearing: () => {
         require("./handlers/yakLocal").clearing()
     },
@@ -278,7 +307,7 @@ module.exports = {
 
         // (render|print)-error-log
         require("./errorCollection")(win, getClient)
-        
+
         // local note
         require("./handlers/note")(win, getClient)
     }
