@@ -563,6 +563,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 handleLinkLocalMode()
                 return
 
+            case "engine-error":
+                setTimeoutLoading(setRestartLoading)
+                if (localEngineRef.current) localEngineRef.current.resetBuiltIn()
+                return
+
             default:
                 return
         }

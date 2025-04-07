@@ -110,7 +110,20 @@ module.exports = (win, getClient) => {
                 ["get-random-port", "-type", "tcp", "-json"],
                 (err, stdout, stderr) => {
                     if (err) {
-                        reject(err)
+                        const arr = stdout
+                            .split("\n")
+                            .map((item) => item.trim())
+                            .map((item) => {
+                                try {
+                                    const match = item.match(/\[\w+:\d+]\s+(.*)/)[1]
+                                    return match
+                                } catch (error) {
+                                    return ""
+                                }
+                            })
+                            .filter(Boolean)
+                        const {name, message} = err
+                        reject(`${name}: ${message}${arr.join("\n")}`)
                         return
                     }
                     if (stderr) {
@@ -119,8 +132,27 @@ module.exports = (win, getClient) => {
                     }
 
                     try {
+                        const arr = stdout
+                            .split("\n")
+                            .map((item) => item.trim())
+                            .map((item) => {
+                                try {
+                                    // 后端定义的封装格式，修改需与后端确认
+                                    const match = item.match(
+                                        /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
+                                    )[1]
+                                    return match
+                                } catch (error) {
+                                    return ""
+                                }
+                            })
+                            .filter(Boolean)
+                        if (arr.length === 0) {
+                            reject("引擎无法获取可用端口号, 请咨询技术支持")
+                            return
+                        }
                         // 处理干扰符号：去除前后空格/换行
-                        const cleanedOutput = stdout.trim()
+                        const cleanedOutput = arr[0].trim()
                         const result = JSON.parse(cleanedOutput)
                         resolve(result.port)
                     } catch (parseError) {

@@ -221,6 +221,32 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 </>
             )
         }
+        if (yakitStatus === "engine-error") {
+            return (
+                <>
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='max'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback("engine-error")}
+                    >
+                        重置引擎版本
+                    </YakitButton>
+
+                    <YakitButton
+                        className={styles["btn-style"]}
+                        size='max'
+                        type='outline2'
+                        loading={restartLoading}
+                        onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
+                    >
+                        切换为{engineMode === "local" ? "远程" : "本地"}模式
+                    </YakitButton>
+
+                    <div>{changePortBtn()}</div>
+                </>
+            )
+        }
 
         if (yakitStatus === "control-remote") {
             return (
@@ -334,7 +360,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <div className={styles["log-wrapper"]}>
                             <div className={styles["log-body"]}>
                                 {checkLog.map((item, index) => {
-                                    return <div key={item}>{item}</div>
+                                    return (
+                                        <div key={item} className={styles["log-item"]}>
+                                            {item}
+                                        </div>
+                                    )
                                 })}
                             </div>
                         </div>

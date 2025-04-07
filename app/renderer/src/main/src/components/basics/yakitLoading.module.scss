@@ -102,6 +102,9 @@
                     width: 500px;
                     max-height: 180px;
                     overflow: hidden auto;
+                    .log-item{
+                        white-space: break-spaces;
+                    }
                 }
             }
         }

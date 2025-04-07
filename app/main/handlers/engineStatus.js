@@ -169,10 +169,9 @@ module.exports = (win, callback, getClient, newClient) => {
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
-                    // stdio: ["ignore", "ignore", "ignore"]
                     detached: false,
                     windowsHide: true,
-                    stdio: ["ignore", log, log],
+                    stdio: ["ignore", "pipe", "pipe"],
                     env: {
                         ...process.env,
                         YAKIT_HOME: YakitProjectPath
@@ -205,6 +204,21 @@ module.exports = (win, callback, getClient, newClient) => {
                             }, 1000)
                         }
                     })
+                })
+
+                subprocess.stdout.on("data", (data) => {
+                    try {
+                        toLog(`${data.toString()}`)
+                        // const match = data.toString().match(/\[\w+:\d+]\s+(.*)/)[1]
+                        if (typeof log !== "string") fs.write(log, data, (err) => {})
+                    } catch (error) {}
+                })
+                subprocess.stderr.on("data", (data) => {
+                    try {
+                        toLog(`${data.toString()}`)
+                        // const match = data.toString().match(/\[\w+:\d+]\s+(.*)/)[1]
+                        if (typeof log !== "string") fs.write(log, data, (err) => {})
+                    } catch (error) {}
                 })
                 resolve()
             } catch (e) {
