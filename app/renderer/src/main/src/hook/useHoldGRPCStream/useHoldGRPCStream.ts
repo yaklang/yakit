@@ -1,5 +1,5 @@
 import {useState, useRef, useEffect} from "react"
-import {failed, info} from "../../utils/notification"
+import {failed, info, yakitFailed} from "../../utils/notification"
 import {useGetState, useMemoizedFn} from "ahooks"
 import {HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult} from "./useHoldGRPCStreamType"
 import {DefaultTabs} from "./constant"
@@ -319,7 +319,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
         })
         // token-error
         ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
-            isShowError && failed(`[Mod] ${taskName} error: ${error}`)
+            yakitFailed(`[Mod] ${taskName} error: ${error}`,true)
             if (onError) {
                 onError(error)
             }
