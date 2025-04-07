@@ -1343,8 +1343,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorDidMount={(editor) => {
                         setEditor(editor)
                     }}
-                    onKeyPress={(e:KeyboardEvent)=>{
-                        if(e.shiftKey){
+                    onKeyPress={(event:KeyboardEvent)=>{
+                        const {key,ctrlKey,altKey,metaKey,repeat} = event
+                        // 如若长按某个键时 后面激发的repeat会变为true
+                        if(key === 'Shift' && !ctrlKey && !altKey && !metaKey && !repeat){
                             handleDoubleShift()
                         }
                     }}

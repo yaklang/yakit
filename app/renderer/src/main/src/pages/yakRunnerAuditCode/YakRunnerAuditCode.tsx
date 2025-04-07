@@ -733,8 +733,9 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     });
     const keyDownRef = useRef<HTMLDivElement>(null)
     const handleKeyPress = (event) => {
-        const {shiftKey} = event
-        if (shiftKey) {
+        const {key,ctrlKey,altKey,metaKey,repeat} = event
+        // 如若长按某个键时 后面激发的repeat会变为true
+        if (key === 'Shift' && !ctrlKey && !altKey && !metaKey && !repeat) {
             handleDoubleShift()
             event.preventDefault()
         }
