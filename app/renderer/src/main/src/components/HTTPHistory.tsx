@@ -89,6 +89,8 @@ export type HTTPHistorySourcePageType =
 export interface HTTPHistoryProp extends HTTPPacketFuzzable, HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     params?: YakQueryHTTPFlowRequest
+    onSetTableTotal?: (t: number) => void
+    onSetTableSelectNum?: (s: number) => void
 }
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const {
@@ -104,7 +106,9 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         showBatchActions = true,
         showDelAll = true,
         showSetting = true,
-        showRefresh = true
+        showRefresh = true,
+        onSetTableTotal,
+        onSetTableSelectNum
     } = props
     // History Id 用于区分每个history控件
     const [historyId, setHistoryId] = useState<string>(uuidv4())
@@ -432,6 +436,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     inViewport={inViewport}
                                     downstreamProxyStr={downstreamProxy}
                                     ProcessName={curProcess}
+                                    onSetTableTotal={onSetTableTotal}
+                                    onSetTableSelectNum={onSetTableSelectNum}
                                 />
                             </div>
                         )}
