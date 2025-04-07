@@ -49,7 +49,7 @@ import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {EnterOutlined} from "@ant-design/icons"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemProps} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {pluginTypeToName} from "../plugins/builtInData"
@@ -896,15 +896,27 @@ export const CodecRunListHistoryStore: React.FC<CodecRunListHistoryStoreProps> =
                                 onSelectItem(item)
                             }}
                         >
-                            <div className={styles["name"]}>{item.FlowName}</div>
-                            <div
-                                className={styles["opt"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    removeItem(item.FlowName)
-                                }}
-                            >
-                                <OutlineTrashIcon />
+                            <div className={styles["name"]} title={item.FlowName}>
+                                {item.FlowName}
+                            </div>
+                            <div className={styles["opt-wrapper"]}>
+                                <div
+                                    className={classNames(styles["opt"], styles["opt-copy"])}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                >
+                                    <CopyComponents copyText={item.FlowName} />
+                                </div>
+                                <div
+                                    className={classNames(styles["opt"], styles["opt-del"])}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        removeItem(item.FlowName)
+                                    }}
+                                >
+                                    <OutlineTrashIcon />
+                                </div>
                             </div>
                         </div>
                     ))}
