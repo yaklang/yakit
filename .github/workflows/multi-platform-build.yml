@@ -84,6 +84,11 @@ jobs:
                   wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
               shell: bash
 
+            - name: "Download CVE(Include CWE) Data (EnpriTrace && EnpriTraceAgent)"
+              run: wget -O bins/database/default-cve.db.gzip https://cve-db.oss-accelerate.aliyuncs.com/default-cve.db.gzip
+            - name: "Download Plugin resource Files (EnpriTrace && EnpriTraceAgent)"
+              run: wget -O bins/resources/local-plugins-se.yakitresource.txt https://yaklang.oss-accelerate.aliyuncs.com/yakit-ee/local-plugins-se.yakitresource.txt
+
             - name: "Fetch Latest EngineVersion"
               if: ${{ inputs.engine && !inputs.engineVersion }}
               run: wget -O bins/engine-version.txt https://oss-qn.yaklang.com/yak/latest/version.txt
