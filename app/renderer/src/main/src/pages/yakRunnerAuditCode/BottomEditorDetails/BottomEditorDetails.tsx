@@ -10,14 +10,15 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PaperAirplaneIcon} from "@/assets/newIcon"
 import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
 import useDispatcher from "../hooks/useDispatcher"
-import {HoleBugDetail} from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { QuerySSARisksResponse, SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import { HoleBugList } from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
-
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-    const {projectName, auditExecuting} = useStore()
+    const {projectName, auditExecuting, activeFile} = useStore()
     const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -25,6 +26,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const [ruleEditor, setRuleEditor] = useState<string>("")
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
+    const [refresh,setRefresh] = useState<boolean>(false)
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -57,6 +59,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
     const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
         setBugHash(hash)
+        setRefresh(!refresh)
     })
 
     useEffect(() => {
@@ -79,6 +82,25 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         emiter.emit("onStopAuditRule")
     })
 
+
+    const [riskList,setRiskList] = useState<SSARisk[]>([])
+    useEffect(()=>{
+        if(projectName && activeFile?.path){
+            ipcRenderer
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    ProgramName:[projectName],
+                    CodeSourceUrl: [activeFile.path]
+                }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                setRiskList(Data)
+            })
+            .catch((err) => {})
+        }
+    },[projectName,activeFile?.path])
+    
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -150,8 +172,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "holeDetail"
                         })}
                     >
-                        {bugHash ? (
-                            <HoleBugDetail bugHash={bugHash} />
+                        {riskList.length !== 0 ? (
+                            <HoleBugList bugHash={bugHash} refresh={refresh} list={riskList}/>
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />

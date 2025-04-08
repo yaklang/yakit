@@ -203,9 +203,9 @@ const showIcon = (severity) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump, loadTreeMore} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore} = props
     const handleSelect = useMemoizedFn(() => {
-        onSelected(true, info, getDetail)
+        onSelected(info, getDetail)
     })
 
     const isExpanded = useMemo(() => {
@@ -235,7 +235,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
     const goBUGDetail = useMemoizedFn((e) => {
         e.stopPropagation()
-        onJump({...info, isBug: true})
+        onSelected({...info, isBug: true})
     })
 
     const dom = useMemo(() => {
@@ -401,7 +401,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
     //     }
     // }, [pageInfo])
 
-    const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
+    const handleSelect = useMemoizedFn((node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
             onJump(node)
             return
@@ -486,7 +486,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             expandedKeys={expandedKeys}
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
-                            onJump={onJump}
                             loadTreeMore={loadTreeMore}
                         />
                     )

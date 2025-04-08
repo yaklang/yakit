@@ -33,10 +33,9 @@ export interface AuditNodeDetailProps {
 export interface AuditTreeNodeProps {
     info: AuditNodeProps
     expandedKeys: string[]
-    onSelected: (selected: boolean, node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
+    onSelected: (node: AuditNodeProps, nodeDetail?: AuditNodeDetailProps) => any
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
-    onJump: (info: AuditNodeProps) => void
     loadTreeMore: (info: AuditNodeProps) => void
 }
 
