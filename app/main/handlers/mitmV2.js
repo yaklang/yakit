@@ -21,7 +21,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitmV2-recover", (e) => {
         if (stream) {
             stream.write({
-                RecoverManualHijack: true
+                // RecoverManualHijack: true
             })
         }
     })
@@ -42,68 +42,6 @@ module.exports = (win, getClient) => {
         }
     })
 
-    // 丢掉该消息
-    ipcMain.handle("mitmV2-drop-request", (e, params) => {
-        //TODO - 丢掉 新版传ManualHijackMessage
-        if (stream) {
-            // stream.write({
-            //     id,
-            //     drop: true
-            // })
-        }
-    })
-
-    // 丢掉该响应
-    ipcMain.handle("mitmV2-drop-response", (e, id) => {
-        if (stream) {
-            //TODO - 丢掉 新版传ManualHijackMessage
-            // stream.write({
-            //     responseId: id,
-            //     drop: true
-            // })
-        }
-    })
-
-    // 原封不动转发
-    ipcMain.handle("mitmV2-forward-response", (e, id) => {
-        if (stream) {
-            //TODO - 转发
-            // stream.write({
-            //     responseId: id,
-            //     forward: true
-            // })
-        }
-    })
-
-    // 原封不动转发请求
-    ipcMain.handle("mitmV2-forward-request", (e, id) => {
-        if (stream) {
-            //TODO - 转发
-            // stream.write({
-            //     id: id,
-            //     forward: true
-            // })
-        }
-    })
-
-    // 发送劫持请当前请求的消息，可以劫持当前响应的请求
-    ipcMain.handle("mitmV2-hijacked-current-response", (e, id, should) => {
-        //TODO - hijacked
-        // if (stream) {
-        //     if (should) {
-        //         stream.write({
-        //             id: id,
-        //             hijackResponse: true
-        //         })
-        //     } else {
-        //         stream.write({
-        //             id: id,
-        //             cancelhijackResponse: true
-        //         })
-        //     }
-        // }
-    })
-
     ipcMain.handle("mitmV2-enable-plugin-mode", (e, InitPluginNames) => {
         if (stream) {
             stream.write({
@@ -111,15 +49,6 @@ module.exports = (win, getClient) => {
                 InitPluginNames
             })
         }
-    })
-
-    // MITM 转发
-    ipcMain.handle("mitmV2-forward-modified-request", (e, params) => {
-        //TODO -
-    })
-    // MITM 转发 - HTTP 响应
-    ipcMain.handle("mitmV2-forward-modified-response", (e, params) => {
-        //TODO -
     })
 
     // MITM 启用插件
@@ -217,6 +146,15 @@ module.exports = (win, getClient) => {
         }
     })
 
+    /** 刷新重置手动劫持列表 */
+    ipcMain.handle("mitmV2-recover-manual-hijack", (e, params) => {
+        if (stream) {
+            stream.write({
+                RecoverManualHijack: true
+            })
+        }
+    })
+
     // 开始调用 MITM，设置 stream
     let isFirstData = true
     ipcMain.handle("mitmV2-start-call", (e, params) => {
@@ -229,7 +167,7 @@ module.exports = (win, getClient) => {
         }
 
         isFirstData = true
-        stream = getClient().MITM()
+        stream = getClient().MITMV2()
         // 设置服务器发回的消息的回调函数
         stream.on("data", (data) => {
             // 处理第一个消息
@@ -277,8 +215,7 @@ module.exports = (win, getClient) => {
                     win.webContents.send("client-mitmV2-filter", data.FilterData)
                     return
                 }
-                // TODO 需要新的逻辑处理 更换成 ManualHijackList
-                if (data.id == "0" && data.responseId == "0") return
+                if (!data.ManualHijackList?.length) return
                 win.webContents.send("client-mitmV2-hijacked", {...data})
             }
         })
@@ -310,9 +247,9 @@ module.exports = (win, getClient) => {
             }
             const value = {
                 ...params,
-                ...extra
+                ...extra,
+                DisableWebsocketCompression: !extra.DisableWebsocketCompression
             }
-            // console.log("mitm-v2", value)
             stream.write(value)
         }
     })
@@ -321,6 +258,16 @@ module.exports = (win, getClient) => {
             stream.cancel()
             stream = null
             mitmClient = null
+        }
+    })
+
+    /**手动劫持 相关操作 */
+    ipcMain.handle("mitmV2-manual-hijack-message", (e, params) => {
+        if (stream) {
+            stream.write({
+                ManualHijackControl: true,
+                ManualHijackMessage: params
+            })
         }
     })
 

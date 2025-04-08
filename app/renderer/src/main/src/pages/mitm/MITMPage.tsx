@@ -205,26 +205,25 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 }
             }
         })
-        grpcClientMITMError(mitmVersion)
-            .on((msg) => {
-                if (!msg) {
-                    info("MITM 劫持服务器已关闭")
-                } else {
-                    failed("MITM 劫持服务器异常或被关闭")
-                    const m = showYakitModal({
-                        title: "启动 MITM 服务器 ERROR!",
-                        type: "white",
-                        cancelButtonProps: {style: {display: "none"}},
-                        content: <div style={{padding: "12px 24px"}}>{msg}</div>,
-                        onOkText: "OK",
-                        onOk: () => {
-                            m.destroy()
-                        }
-                    })
-                }
-                grpcMITMStopCall(mitmVersion)
-                setStatus("idle")
-            })
+        grpcClientMITMError(mitmVersion).on((msg) => {
+            if (!msg) {
+                info("MITM 劫持服务器已关闭")
+            } else {
+                failed("MITM 劫持服务器异常或被关闭")
+                const m = showYakitModal({
+                    title: "启动 MITM 服务器 ERROR!",
+                    type: "white",
+                    cancelButtonProps: {style: {display: "none"}},
+                    content: <div style={{padding: "12px 24px"}}>{msg}</div>,
+                    onOkText: "OK",
+                    onOk: () => {
+                        m.destroy()
+                    }
+                })
+            }
+            grpcMITMStopCall(mitmVersion)
+            setStatus("idle")
+        })
 
         const updateLogs = () => {
             if (statusRef.current === "idle") {

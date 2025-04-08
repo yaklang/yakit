@@ -322,7 +322,6 @@ module.exports = (win, getClient) => {
                 DisableCACertPage: extra.disableCACertPage,
                 DisableWebsocketCompression: !extra.DisableWebsocketCompression
             }
-            // console.log("mitm-v1", value)
             stream.write(value)
         }
     })

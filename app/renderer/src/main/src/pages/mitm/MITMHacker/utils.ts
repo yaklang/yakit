@@ -9,6 +9,7 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import {MITMVersion} from "../Context/MITMContext"
+import {ManualHijackListAction, ManualHijackListStatus} from "@/defaultConstants/mitmV2"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -409,49 +410,52 @@ export const grpcMITMAutoForward: APIFunc<MITMHijackGetFilterRequest, null> = (p
 
 export interface MITMV2Response {
     //filter
-    JustFilter?: boolean
-    FilterData?: MITMFilterData
+    JustFilter: boolean
+    FilterData: MITMFilterData
     //Replacer
-    JustContentReplacer?: boolean
-    Replacers?: MITMContentReplacerRule[]
+    JustContentReplacer: boolean
+    Replacers: MITMContentReplacerRule[]
     //exec result
-    HaveMessage?: boolean
-    Message?: ExecResult
-    GetCurrentHook?: boolean
-    Hooks?: YakScriptHooks[]
+    HaveMessage: boolean
+    Message: ExecResult
+    GetCurrentHook: boolean
+    Hooks: YakScriptHooks[]
     //server notification, just show a dialog
-    HaveNotification?: boolean
-    NotificationContent?: string
+    HaveNotification: boolean
+    NotificationContent: string
     //这两个标志是用来设置 MITM 加载状态的，用于服务端控制用户端的 "加载中"
-    HaveLoadingSetter?: boolean
-    LoadingFlag?: boolean
+    HaveLoadingSetter: boolean
+    LoadingFlag: boolean
     //add\delete\update\reload
-    ManualHijackListAction?: string
+    ManualHijackListAction: ManualHijackListAction
     //top 20 hijack message
-    ManualHijackList?: SingleManualHijackInfoMessage[]
+    ManualHijackList: SingleManualHijackInfoMessage[]
 }
 
+export type ManualHijackListStatusType = `${ManualHijackListStatus}`
 export interface SingleManualHijackInfoMessage {
-    TaskID?: string
-    Request?: string
-    Response?: string
-    //hijack request / hijack response
-    Status?: string
-    HijackResponse?: boolean
-    Tags?: string[]
-    IsHttps?: boolean
-    URL?: string
-    RemoteAddr?: string
+    TaskID: string
+    Request: Uint8Array
+    Response: Uint8Array
+    Status: ManualHijackListStatusType
+    HijackResponse: Uint8Array
+    Tags: string[]
+    IsHttps: boolean
+    URL: string
+    RemoteAddr: string
     //websocket
-    IsWebsocket?: boolean
-    Payload?: string
-    WebsocketEncode?: string[]
-    TraceInfo?: TraceInfo
-    Method?: string
+    IsWebsocket: boolean
+    Payload: Uint8Array
+    WebsocketEncode: string[]
+    TraceInfo: TraceInfo
+    Method: string
 }
 export type ClientMITMHijackedResponse = MITMResponse | MITMV2Response
 export const isMITMResponse = (value: ClientMITMHijackedResponse): value is MITMResponse => {
     return "id" in value // 检查是否存在MITMResponse独有的属性
+}
+export const isMITMV2Response = (value: ClientMITMHijackedResponse): value is MITMV2Response => {
+    return "ManualHijackList" in value // 检查是否存在MITMResponse独有的属性
 }
 /**自动转发劫持，进行的操作 */
 export const grpcClientMITMHijacked = (version: string) => {
@@ -555,7 +559,7 @@ export const grpcMITMEnablePluginMode: APIFunc<MITMEnablePluginModeRequest, null
         const url = `mitm${version}-enable-plugin-mode`
         const value = omit(params, "version")
         ipcRenderer
-            .invoke(url, value)
+            .invoke(url, value.initPluginNames)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMEnablePluginMode 失败:" + e)

@@ -10,7 +10,6 @@ import {MITMPluginLogViewer} from "../MITMPluginLogViewer"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
-import {useHotkeys} from "react-hotkeys-hook"
 import {useStore} from "@/store/mitmState"
 import {HTTPHistory} from "@/components/HTTPHistory"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
@@ -20,6 +19,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineConfiguredIcon,
     OutlineInformationcircleIcon,
+    OutlineRefreshIcon,
     OutlineUnConfiguredIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -36,6 +36,7 @@ import {
     MITMForwardModifiedRequest,
     MITMForwardModifiedResponseRequest,
     MITMHijackGetFilterRequest,
+    MITMV2Response,
     grpcClientMITMHijacked,
     grpcMITMAutoForward,
     grpcMITMCancelHijackedCurrentResponseById,
@@ -47,8 +48,14 @@ import {
     grpcMITMHijackGetFilter,
     grpcMITMHijackedCurrentResponseById,
     grpcMITMSetFilter,
-    isMITMResponse
+    isMITMResponse,
+    isMITMV2Response
 } from "../MITMHacker/utils"
+import {ManualHijackListAction} from "@/defaultConstants/mitmV2"
+import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
+import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
+
+const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
 const {ipcRenderer} = window.require("electron")
 
@@ -87,7 +94,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
     // 自动转发 与 劫持响应的自动设置
-    const [autoForward, setAutoForward] = useState<"manual" | "log" | "passive">("log")
+    const [autoForward, setAutoForward] = useState<ManualHijackTypeProps>("log")
 
     const [hijackResponseType, setHijackResponseType] = useState<"all" | "never">("never") // 劫持类型
 
@@ -178,10 +185,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 IncludeSuffix: [],
                 IncludeUri: []
             }
-                grpcMITMSetFilter({
-                    FilterData: filter,
-                    version: mitmVersion
-                })
+            grpcMITMSetFilter({
+                FilterData: filter,
+                version: mitmVersion
+            })
                 .then(() => {
                     getMITMFilter()
                 })
@@ -416,9 +423,17 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             grpcClientMITMHijacked(mitmVersion).remove()
         }
     }, [autoForward])
+    const [mitmV2Response, setMITMV2Response] = useState<MITMV2Response>()
     const onClientMITMHijacked = useMemoizedFn((data: ClientMITMHijackedResponse) => {
         if (mitmVersion === MITMVersion.V2) {
-            // TODO v2 版本手动借此
+            if (!isMITMV2Response(data)) return
+            if (autoForward !== "manual" && data.ManualHijackList.length > 0) {
+                if (hijackFilterFlag) {
+                    setAutoForward("manual")
+                    info("已触发 条件 劫持")
+                }
+            }
+            setMITMV2Response(data)
         } else {
             if (!isMITMResponse(data)) return
             forwardHandler(data)
@@ -483,7 +498,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 setUrlInfo(msg.url)
                 setStatus("hijacked")
             }
-
             if (!isManual) {
                 if (hijackFilterFlag) {
                     setAutoForward("manual")
@@ -516,14 +530,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         })
     }
 
-    useHotkeys(
-        "ctrl+t",
-        () => {
-            handleAutoForward(isManual ? "manual" : "log")
-        },
-        [autoForward, isManual]
-    )
-    const handleAutoForward = useMemoizedFn((e: "manual" | "log" | "passive") => {
+    const handleAutoForward = useMemoizedFn((e: ManualHijackTypeProps) => {
         try {
             if (!isManual) {
                 setHijackResponseType("never")
@@ -639,28 +646,40 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
     })
 
+    /**刷新手动劫持 */
+    const onRefreshManual = useMemoizedFn(() => {
+        grpcMITMV2RecoverManualHijack().then(() => {
+            yakitNotify("info", "刷新成功")
+        })
+    })
     const onRenderHeardExtra = useMemoizedFn(() => {
         return (
             <>
                 {/* 手动劫持 */}
                 <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
-                    <MITMManualHeardExtra
-                        urlInfo={urlInfo}
-                        ipInfo={ipInfo}
-                        status={status}
-                        currentIsWebsocket={currentIsWebsocket}
-                        currentIsForResponse={currentIsForResponse}
-                        hijackResponseType={hijackResponseType}
-                        traceInfo={traceInfo}
-                        setHijackResponseType={onSetHijackResponseType}
-                        onDiscardRequest={onDiscardRequest}
-                        onSubmitData={forward}
-                        width={width}
-                        calloutColor={calloutColor}
-                        onSetCalloutColor={setCalloutColor}
-                        beautifyTriggerRefresh={beautifyTriggerRefresh}
-                        onSetBeautifyTrigger={onSetBeautifyTrigger}
-                    />
+                    {mitmVersion === MITMVersion.V2 ? (
+                        <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
+                            <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
+                        </div>
+                    ) : (
+                        <MITMManualHeardExtra
+                            urlInfo={urlInfo}
+                            ipInfo={ipInfo}
+                            status={status}
+                            currentIsWebsocket={currentIsWebsocket}
+                            currentIsForResponse={currentIsForResponse}
+                            hijackResponseType={hijackResponseType}
+                            traceInfo={traceInfo}
+                            setHijackResponseType={onSetHijackResponseType}
+                            onDiscardRequest={onDiscardRequest}
+                            onSubmitData={forward}
+                            width={width}
+                            calloutColor={calloutColor}
+                            onSetCalloutColor={setCalloutColor}
+                            beautifyTriggerRefresh={beautifyTriggerRefresh}
+                            onSetBeautifyTrigger={onSetBeautifyTrigger}
+                        />
+                    )}
                 </div>
 
                 {/* 自动放行 */}
@@ -681,47 +700,57 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         return (
             <>
                 {/* 手动劫持 */}
-                {mitmVersion === MITMVersion.V2 ? (
-                    <div>fsdfdsf</div>
-                ) : (
-                    <div
-                        style={{display: autoForward === "manual" ? "block" : "none"}}
-                        className={styles["mitm-hijacked-manual-content"]}
-                    >
-                        {width < 900 && (
-                            <ManualUrlInfo
-                                urlInfo={urlInfo}
-                                ipInfo={ipInfo}
-                                status={status}
-                                currentIsWebsocket={currentIsWebsocket}
-                                currentIsForResponse={currentIsForResponse}
-                                traceInfo={traceInfo}
-                                className={styles["mitm-hijacked-manual-content-url"]}
-                            />
-                        )}
-                        <div className={styles["mitm-hijacked-manual-content-editor"]}>
-                            <MITMManualEditor
-                                urlInfo={urlInfo}
-                                isHttp={isHttp}
-                                currentIsWebsocket={currentIsWebsocket}
-                                currentPacket={currentPacket}
-                                beautifyTriggerRefresh={beautifyTriggerRefresh}
-                                modifiedPacket={modifiedPacket}
-                                setModifiedPacket={setModifiedPacket}
-                                forResponse={forResponse}
-                                currentPacketId={currentPacketId}
-                                handleAutoForward={handleAutoForward}
-                                autoForward={autoForward}
-                                forward={forward}
-                                hijacking={hijacking}
-                                status={status}
-                                onSetHijackResponseType={onSetHijackResponseType}
-                                currentIsForResponse={currentIsForResponse}
-                                requestPacket={requestPacket}
-                            />
-                        </div>
-                    </div>
-                )}
+                <div
+                    style={{display: autoForward === "manual" ? "block" : "none"}}
+                    className={styles["mitm-hijacked-manual-content"]}
+                >
+                    {mitmVersion === MITMVersion.V2 ? (
+                        <MITMManual
+                            downstreamProxyStr={downstreamProxyStr}
+                            manualHijackListAction={
+                                mitmV2Response?.ManualHijackListAction || ManualHijackListAction.Empty
+                            }
+                            manualHijackList={mitmV2Response?.ManualHijackList || []}
+                            autoForward={autoForward}
+                            handleAutoForward={handleAutoForward}
+                        />
+                    ) : (
+                        <>
+                            {width < 900 && (
+                                <ManualUrlInfo
+                                    urlInfo={urlInfo}
+                                    ipInfo={ipInfo}
+                                    status={status}
+                                    currentIsWebsocket={currentIsWebsocket}
+                                    currentIsForResponse={currentIsForResponse}
+                                    traceInfo={traceInfo}
+                                    className={styles["mitm-hijacked-manual-content-url"]}
+                                />
+                            )}
+                            <div className={styles["mitm-hijacked-manual-content-editor"]}>
+                                <MITMManualEditor
+                                    urlInfo={urlInfo}
+                                    isHttp={isHttp}
+                                    currentIsWebsocket={currentIsWebsocket}
+                                    currentPacket={currentPacket}
+                                    beautifyTriggerRefresh={beautifyTriggerRefresh}
+                                    modifiedPacket={modifiedPacket}
+                                    setModifiedPacket={setModifiedPacket}
+                                    forResponse={forResponse}
+                                    currentPacketId={currentPacketId}
+                                    handleAutoForward={handleAutoForward}
+                                    autoForward={autoForward}
+                                    forward={forward}
+                                    hijacking={hijacking}
+                                    status={status}
+                                    onSetHijackResponseType={onSetHijackResponseType}
+                                    currentIsForResponse={currentIsForResponse}
+                                    requestPacket={requestPacket}
+                                />
+                            </div>
+                        </>
+                    )}
+                </div>
                 {/* 自动放行 */}
                 <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
                     <HTTPHistory
