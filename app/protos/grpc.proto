@@ -6612,6 +6612,8 @@ message MITMV2Request{
   bool RecoverManualHijack = 42;
   bool ManualHijackControl = 43;
   SingleManualHijackControlMessage ManualHijackMessage = 44;
+
+  bool RecoverContext = 45; // recover mitm context plugin config...
 }
 
 message MITMV2Response {
@@ -6651,6 +6653,7 @@ message SingleManualHijackControlMessage{
   bool Drop = 6;
   bool Forward = 7;
   repeated string Tags = 8;
+  bytes Payload = 9;
 }
 
 message SingleManualHijackInfoMessage{
