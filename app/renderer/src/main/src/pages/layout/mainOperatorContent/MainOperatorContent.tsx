@@ -157,7 +157,9 @@ import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
+import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 
+const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
 
@@ -179,10 +181,15 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         label: "将标签页移动到组",
         key: "addToGroup",
         children: [
+            // {
+            //     label: "新建组",
+            //     itemIcon: <OutlinePlusIcon />,
+            //     key: "newGroup"
+            // },
             {
-                label: "新建组",
+                label: "批量新建组",
                 itemIcon: <OutlinePlusIcon />,
-                key: "newGroup"
+                key: "batchNewGroup"
             }
         ]
     },
@@ -212,6 +219,74 @@ export const generateGroupId = (gIndex?: number) => {
     const time = (new Date().getTime() + (gIndex || 0)).toString()
     const groupId = `[${randomString(6)}]-${time}-group`
     return groupId
+}
+
+/**
+ * 收集所有的组
+ */
+const collectGroupsWithChildren = (data: MultipleNodeInfo[]) => {
+    const result: MultipleNodeInfo[] = []
+    function traverse(list: MultipleNodeInfo[]) {
+        list.forEach((item: MultipleNodeInfo) => {
+            if (Array.isArray(item.groupChildren) && item.groupChildren.length > 0) {
+                result.push(item)
+                traverse(item.groupChildren)
+            }
+        })
+    }
+    traverse(data)
+    return result
+}
+
+/**
+ * 获取所有tab页对象
+ */
+const collectLeafNodes = (data: MultipleNodeInfo[]) => {
+    const leafNodes: MultipleNodeInfo[] = []
+    function traverse(item: MultipleNodeInfo) {
+        // 如果存在 groupChildren 且不为空，则继续递归
+        if (Array.isArray(item.groupChildren) && item.groupChildren.length > 0) {
+            item.groupChildren.forEach((child) => traverse(child))
+        } else {
+            // 如果没有子节点，则认为是叶子节点
+            leafNodes.push(item)
+        }
+    }
+    data.forEach((item) => traverse(item))
+    return leafNodes
+}
+
+/**
+ * 移除指定id的tab页对象
+ */
+const filterTabByIds = (data: MultipleNodeInfo[], idsToRemove: string[]) => {
+    return data
+        .map((item) => {
+            if (Array.isArray(item.groupChildren)) {
+                item.groupChildren = filterTabByIds(item.groupChildren, idsToRemove)
+            }
+            return item
+        })
+        .filter((item) => {
+            const isGroup = typeof item.id === "string" && item.id.endsWith("-group")
+            const shouldRemoveById = idsToRemove.includes(item.id)
+            const shouldRemoveEmptyGroup = isGroup && item.groupChildren?.length === 0
+            return !shouldRemoveById && !shouldRemoveEmptyGroup
+        })
+}
+
+/**
+ * 判断指定tab页id是否在subPage里面
+ */
+const containsId = (data: MultipleNodeInfo[], targetId: string) => {
+    for (const item of data) {
+        if (item.id === targetId) return true
+        if (Array.isArray(item.groupChildren)) {
+            const foundInChildren = containsId(item.groupChildren, targetId)
+            if (foundInChildren) return true
+        }
+    }
+    return false
 }
 
 /**
@@ -3755,6 +3830,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                             case "removeOtherItems":
                                 onRemoveOther(item)
                                 break
+                            case "batchNewGroup":
+                                openBatchNewGroup(item)
+                                break
                             case "newGroup":
                                 onNewGroup(item)
                                 break
@@ -3879,7 +3957,137 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
         }
 
-        /**将页面添加到新建组 */
+        const openBatchNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
+            const m = showYakitModal({
+                title: "创建新组",
+                footer: null,
+                content: (
+                    <BatchAddNewGroup
+                        initialValues={{
+                            groupName: '',
+                            tabIds: [item.id]
+                        }}
+                        allGroup={collectGroupsWithChildren(cloneDeep(subPage))}
+                        tabs={collectLeafNodes(cloneDeep(subPage))}
+                        onFinish={(v) => {
+                            onBatchNewGroup(item, v, () => {
+                                m.destroy()
+                            })
+                        }}
+                        onCancel={() => {
+                            m.destroy()
+                        }}
+                    ></BatchAddNewGroup>
+                )
+            })
+        })
+        /**将页面添加到新建组 批量*/
+        const onBatchNewGroup = useMemoizedFn(
+            (item: MultipleNodeInfo, batchAddInfo: BatchAddNewGroupFormItem, finish: () => void) => {
+                let newSubPage: MultipleNodeInfo[] = cloneDeep(subPage)
+                const addNewGroupTabsIds = batchAddInfo.tabIds
+                // 判断是将标签加入已经存在的组，往原来的组塞数据
+                if (batchAddInfo.groupId) {
+                    newSubPage = filterTabByIds(cloneDeep(subPage), addNewGroupTabsIds)
+                    const {current} = getPageItemById(cloneDeep(subPage), batchAddInfo.groupId)
+                    const groupChildren = collectLeafNodes(cloneDeep(subPage))
+                        .filter((i) => addNewGroupTabsIds.includes(i.id))
+                        .map((i: MultipleNodeInfo) => ({...i, groupId: batchAddInfo.groupId}))
+                    if (current.groupChildren) {
+                        const mergedMap = new Map()
+                        current.groupChildren.forEach((item) => {
+                            mergedMap.set(item.id, item)
+                        })
+                        groupChildren.forEach((item) => {
+                            mergedMap.set(item.id, item)
+                        })
+                        const mergedArray = Array.from(mergedMap.values())
+
+                        if (newSubPage.length === 0) {
+                            newSubPage.push({
+                                ...current,
+                                groupChildren: mergedArray
+                            })
+                        } else {
+                            const {index} = getPageItemById(newSubPage, batchAddInfo.groupId)
+                            if (index !== -1) {
+                                newSubPage.splice(index, 1, {
+                                    ...current,
+                                    groupChildren: mergedArray
+                                })
+                            } else {
+                                newSubPage.push({
+                                    ...current,
+                                    groupChildren: mergedArray
+                                })
+                            }
+                        }
+                    }
+
+                    if (selectSubMenu.id === item.id) {
+                        setSelectSubMenu({...item, groupId: batchAddInfo.groupId})
+                    }
+
+                    onUpdateSorting(newSubPage, currentTabKey)
+                } else {
+                    const groupId = generateGroupId()
+                    const newGroup: MultipleNodeInfo = {
+                        id: groupId,
+                        groupId: "0",
+                        verbose: batchAddInfo.groupName,
+                        sortFieId: subPage.length,
+                        groupChildren: collectLeafNodes(cloneDeep(subPage))
+                            .filter((i) => addNewGroupTabsIds.includes(i.id))
+                            .map((i: MultipleNodeInfo) => ({...i, groupId})),
+                        expand: true,
+                        color: getColor(subPage)
+                    }
+
+                    if (selectSubMenu.id === item.id) {
+                        setSelectSubMenu({...item, groupId})
+                    }
+
+                    const {subIndex: oldSubIndex} = getPageItemById(subPage, item.id)
+                    if (oldSubIndex === -1) {
+                        newSubPage = filterTabByIds(
+                            cloneDeep(subPage),
+                            addNewGroupTabsIds.filter((id) => id !== item.id)
+                        )
+                    } else {
+                        newSubPage = filterTabByIds(cloneDeep(subPage), addNewGroupTabsIds)
+                    }
+
+                    if (newSubPage.length === 0 || !containsId(newSubPage, item.id)) {
+                        newSubPage.push(newGroup)
+                    } else {
+                        const {index, subIndex} = getPageItemById(newSubPage, item.id)
+                        if (subIndex === -1) {
+                            // 游离页面移动到新建组
+                            newSubPage.splice(index, 1, newGroup)
+                        } else {
+                            newSubPage.push(newGroup)
+                        }
+                    }
+
+                    onAddGroupsAndThenSort(newGroup, newSubPage, currentTabKey)
+                }
+
+                if (currentTabKey === YakitRoute.HTTPFuzzer) {
+                    collectLeafNodes(cloneDeep(subPage))
+                        .filter((i) => addNewGroupTabsIds.includes(i.id))
+                        .forEach((i) => {
+                            if (batchAddInfo.groupId === "" || batchAddInfo.groupId !== i.groupId) {
+                                onUpdateFuzzerSequenceCacheData(i)
+                            }
+                        })
+                }
+
+                onUpdatePageCache([...newSubPage])
+                finish()
+            }
+        )
+
+        /**将页面添加到新建组 单个 */
         const onNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
             const {index, subIndex} = getPageItemById(subPage, item.id)
             const groupLength = getGroupLength(subPage)
@@ -4481,6 +4689,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         setSelectSubMenu={setSelectSubMenu}
                                                         onRemoveSub={onRemoveSubPage}
                                                         onContextMenu={onRightClickOperation}
+                                                        onShowRenameModal={onShowRenameModal}
                                                         onUnfoldAndCollapse={onUnfoldAndCollapse}
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
@@ -4500,6 +4709,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                     setSelectSubMenu={setSelectSubMenu}
                                                     onRemoveSub={onRemoveSubPage}
                                                     onContextMenu={onRightClickOperation}
+                                                    onShowRenameModal={onShowRenameModal}
                                                     combineColor={isCombine ? combineColorRef.current : ""}
                                                     isDragDisabled={isExpand}
                                                     currentTabKey={currentTabKey}
@@ -4576,6 +4786,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
         setSelectSubMenu,
         onRemoveSub,
         onContextMenu,
+        onShowRenameModal,
         combineColor,
         currentTabKey
     } = props
@@ -4617,6 +4828,7 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                             setSelectSubMenu({...subItem})
                         }}
                         onContextMenu={(e) => onContextMenu(e, subItem)}
+                        onDoubleClick={() => onShowRenameModal(subItem)}
                     >
                         {(isActive || snapshot.isDragging) && (
                             <div
@@ -4687,6 +4899,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         setSelectSubMenu,
         onRemoveSub,
         onContextMenu,
+        onShowRenameModal,
         onUnfoldAndCollapse,
         onGroupContextMenu,
         dropType,
@@ -4810,6 +5023,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                                     setSelectSubMenu={setSelectSubMenu}
                                                     onRemoveSub={onRemoveSub}
                                                     onContextMenu={onContextMenu}
+                                                    onShowRenameModal={onShowRenameModal}
                                                     combineColor={color}
                                                     isDragDisabled={isDragDisabled}
                                                     currentTabKey={currentTabKey}
