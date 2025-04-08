@@ -56,6 +56,14 @@ export interface QueryRisksRequest {
 
 export type QueryRisksResponse = QueryGeneralResponse<Risk>
 
+export interface YakitRiskDetailContentProps {
+    info: Risk | SSARisk
+    isShowCollapse: boolean
+    setIsShowCollapse: ((v: boolean) => void)
+    jumpCodeScanPage?: ((v: string) => void)
+    isShowExtra?: boolean
+}
+
 export interface YakitRiskDetailsProps {
     className?: string
     info: Risk
