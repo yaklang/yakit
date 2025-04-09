@@ -97,6 +97,9 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         emiter.emit("onStopAuditRule")
     })
 
+    useUpdateEffect(() => {
+        setBugHash("")
+    }, [activeFile?.path])
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -169,7 +172,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {activeFile?.syntaxCheck && activeFile.syntaxCheck.length !== 0 ? (
-                            <HoleBugList bugHash={bugHash} refresh={refresh} list={activeFile.syntaxCheck} />
+                            <HoleBugList
+                                bugHash={bugHash}
+                                refresh={refresh}
+                                list={activeFile.syntaxCheck}
+                            />
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />
