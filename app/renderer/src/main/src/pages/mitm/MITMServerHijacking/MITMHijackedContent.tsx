@@ -102,6 +102,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [calloutColor, setCalloutColor] = useState<string>("")
 
     const [sourceType, setSourceType] = useState<string>("mitm")
+    const [tableTotal, setTableTotal] = useState<number>(0)
+    const [tableSelectNum, setTableSelectNum] = useState<number>(0)
 
     /** 黄色提示 start */
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
@@ -508,6 +510,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         onSetSourceType={setSourceType}
                         setShowPluginHistoryList={setShowPluginHistoryList}
                         setTempShowPluginHistory={setTempShowPluginHistory}
+                        tableTotal={tableTotal}
+                        tableSelectNum={tableSelectNum}
                     />
                 </div>
             </>
@@ -562,6 +566,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         noTableTitle={true}
                         downstreamProxyStr={downstreamProxyStr}
                         params={{SourceType: sourceType}}
+                        onSetTableTotal={setTableTotal}
+                        onSetTableSelectNum={setTableSelectNum}
                     />
                 </div>
 

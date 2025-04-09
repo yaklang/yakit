@@ -389,6 +389,8 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     /** 进程名 */
     ProcessName?: string[]
+    onSetTableTotal?: (t: number) => void
+    onSetTableSelectNum?: (s: number) => void
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -711,7 +713,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         titleHeight = 38,
         containerClassName = "",
         runTimeId,
-        downstreamProxyStr = ""
+        downstreamProxyStr = "",
+        onSetTableTotal,
+        onSetTableSelectNum
     } = props
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
@@ -3832,6 +3836,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     }, [pageType])
 
+    useEffect(() => {
+        onSetTableTotal && onSetTableTotal(total)
+        onSetTableSelectNum && onSetTableSelectNum(isAllSelect ? total : selectedRowKeys?.length)
+    }, [total, isAllSelect, selectedRowKeys])
+
     const realData = useMemo(() => {
         if (updateCacheData.length) {
             let findFlag = false
@@ -5002,7 +5011,7 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
                 </YakitButton>
             }
         >
-            <div style={{padding: 15}} className="yakit-progress-wrapper">
+            <div style={{padding: 15}} className='yakit-progress-wrapper'>
                 {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
                 <Progress
                     strokeColor='#F28B44'

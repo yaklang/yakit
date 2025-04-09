@@ -15,6 +15,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
 import {SolidCheckIcon} from "@/assets/icon/solid"
+import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -22,9 +23,18 @@ interface MITMLogHeardExtraProps {
     onSetSourceType: (s: string) => void
     setShowPluginHistoryList: (s: string[]) => void
     setTempShowPluginHistory?: (s: string) => void
+    tableTotal: number
+    tableSelectNum: number
 }
 export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((props) => {
-    const {sourceType, onSetSourceType, setShowPluginHistoryList, setTempShowPluginHistory} = props
+    const {
+        sourceType,
+        onSetSourceType,
+        setShowPluginHistoryList,
+        setTempShowPluginHistory,
+        tableTotal,
+        tableSelectNum
+    } = props
     // 屏蔽数据
     const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
@@ -145,28 +155,33 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
 
     return (
         <div ref={headerRef} className={styles["mitm-log-heard"]}>
-            <div style={{whiteSpace: "nowrap"}}>
-                {SourceType.map((tag) => (
-                    <YakitCheckableTag
-                        key={tag.value}
-                        checked={!!sourceType.split(",").includes(tag.value)}
-                        onChange={(checked) => {
-                            emiter.emit("onMitmClearFromPlugin")
-                            setShowPluginHistoryList([])
-                            setTempShowPluginHistory && setTempShowPluginHistory("")
+            <div className={styles["mitm-log-heard-left"]}>
+                <div style={{whiteSpace: "nowrap"}}>
+                    {SourceType.map((tag) => (
+                        <YakitCheckableTag
+                            key={tag.value}
+                            checked={!!sourceType.split(",").includes(tag.value)}
+                            onChange={(checked) => {
+                                emiter.emit("onMitmClearFromPlugin")
+                                setShowPluginHistoryList([])
+                                setTempShowPluginHistory && setTempShowPluginHistory("")
 
-                            if (checked) {
-                                const selectTypeList = [...(sourceType.split(",") || []), tag.value]
-                                onSetSourceType(selectTypeList.join(","))
-                            } else {
-                                const selectTypeList = (sourceType.split(",") || []).filter((ele) => ele !== tag.value)
-                                onSetSourceType(selectTypeList.join(","))
-                            }
-                        }}
-                    >
-                        {tag.text}
-                    </YakitCheckableTag>
-                ))}
+                                if (checked) {
+                                    const selectTypeList = [...(sourceType.split(",") || []), tag.value]
+                                    onSetSourceType(selectTypeList.join(","))
+                                } else {
+                                    const selectTypeList = (sourceType.split(",") || []).filter(
+                                        (ele) => ele !== tag.value
+                                    )
+                                    onSetSourceType(selectTypeList.join(","))
+                                }
+                            }}
+                        >
+                            {tag.text}
+                        </YakitCheckableTag>
+                    ))}
+                </div>
+                <TableTotalAndSelectNumber total={tableTotal} selectNum={tableSelectNum} />
             </div>
             <div className={styles["mitm-log-heard-right"]}>
                 <YakitPopover

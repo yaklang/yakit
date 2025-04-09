@@ -183,6 +183,11 @@
     align-items: center;
     justify-content: space-between;
     flex: 1;
+    &-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
     &-right {
         display: flex;
         align-items: center;
