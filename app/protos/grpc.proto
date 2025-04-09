@@ -6273,6 +6273,8 @@ message SSARisksFilter {
   string Title = 12; // fuzz search
   repeated string Hash = 13;
   repeated string FunctionName = 14;
+  int64 BeforeCreatedAt = 15;
+  int64 AfterCreatedAt = 16;
 }
 
 message QuerySSARisksRequest {
