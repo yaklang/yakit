@@ -18,7 +18,6 @@ import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
-    getDefaultActiveFile,
     grpcFetchAuditTree,
     removeAreaFileInfo,
     setAreaFileActive,
@@ -404,8 +403,8 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     })
 
     const openItem = useMemoizedFn(async (data: FileDetailInfo) => {
-        // 注入语法检测 由于点击项必为激活项默认给true
-        const newActiveFile = {...(await getDefaultActiveFile(data)), isActive: true}
+        // 注入漏洞汇总 由于点击项必为激活项默认给true
+        const newActiveFile = {...data, isActive: true}
         // 更改当前tabs active
         const activeAreaInfo = setAreaFileActive(areaInfo, data.path)
         // 将新的语法检测注入areaInfo

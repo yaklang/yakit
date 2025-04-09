@@ -47,7 +47,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                     }}
                 >
                     <OutlineBugIcon />
-                    漏洞详情
+                    漏洞汇总
                 </div>
             </div>
 
