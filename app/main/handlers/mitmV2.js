@@ -264,10 +264,11 @@ module.exports = (win, getClient) => {
     /**手动劫持 相关操作 */
     ipcMain.handle("mitmV2-manual-hijack-message", (e, params) => {
         if (stream) {
-            stream.write({
+            const value = {
                 ManualHijackControl: true,
                 ManualHijackMessage: params
-            })
+            }
+            stream.write(value)
         }
     })
 

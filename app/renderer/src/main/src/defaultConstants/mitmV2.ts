@@ -14,7 +14,8 @@ export enum ManualHijackListAction {
 export enum ManualHijackListStatus {
     Hijacking_Request = "hijacking request",
     Hijacking_Response = "hijacking response",
-    WaitHijack = "wait hijack"
+    WaitHijack = "wait hijack",
+    Hijack_WS = "hijacking ws"
 }
 
 export enum ManualHijackType {
@@ -31,7 +32,8 @@ export enum ManualHijackType {
 export const ManualHijackListStatusMap: Record<string, string> = {
     "hijacking request": "劫持请求",
     "hijacking response": "劫持响应",
-    "wait hijack": "等待劫持"
+    "wait hijack": "等待劫持",
+    "hijacking ws": "WS 劫持"
 }
 
 /**mitm v2 版本页面数据中心默认数据 */
@@ -51,5 +53,6 @@ export const defaultSingleManualHijack: SingleManualHijackControlMessage = {
     CancelHijackResponse: false,
     Drop: false,
     Forward: false,
-    Tags: []
+    Tags: [],
+    Payload: new Uint8Array()
 }

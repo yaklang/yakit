@@ -25,14 +25,14 @@ import {
     grpcMITMV2Drop,
     grpcMITMV2Forward,
     grpcMITMV2HijackedCurrentResponse,
+    MITMV2SubmitPayloadDataRequest,
     grpcMITMV2SubmitRequestData,
     grpcMITMV2SubmitResponseData,
     MITMSetColorRequest,
-    MITMV2CancelHijackedCurrentResponseRequest,
     MITMV2DropRequest,
-    MITMV2HijackedCurrentResponseV2Request,
     MITMV2SubmitRequestDataRequest,
-    MITMV2SubmitRequestDataResponseRequest
+    MITMV2SubmitRequestDataResponseRequest,
+    grpcMITMV2SubmitPayloadData
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
@@ -41,15 +41,14 @@ import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {isEqual} from "lodash"
-import {useStore} from "@/store/mitmState"
+import {Tooltip} from "antd"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward} = props
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
-    const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>() // request 编辑器中显示的index
+    const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
     const [scrollToIndex, setScrollToIndex] = useState<number>()
     const mitmManualContextmenuRef = useRef([
         {
@@ -129,6 +128,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         const taskID = manualHijackList[0].TaskID
         switch (manualHijackListAction) {
             case ManualHijackListAction.Hijack_List_Add:
+                if (data.length === 0) {
+                    const selectItem: SingleManualHijackInfoMessage = manualHijackList[0]
+                    setCurrentSelectItem(selectItem)
+                    setEditorShowIndexShowIndex(0)
+                }
                 setData((preV) => {
                     const index = preV.findIndex((item) => item.TaskID === taskID)
                     return index === -1 ? [...preV, manualHijackList[0]] : preV
@@ -136,8 +140,23 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 break
             case ManualHijackListAction.Hijack_List_Delete:
                 if (currentSelectItem?.TaskID === taskID) {
-                    setCurrentSelectItem(undefined)
-                    setEditorShowIndexShowIndex(undefined)
+                    let selectItem: SingleManualHijackInfoMessage | undefined = undefined
+                    let selectIndex = editorShowIndex
+                    // 删除后选中下一个数据
+                    if (editorShowIndex === 0) {
+                        selectItem = data[editorShowIndex + 1]
+                    } else if (editorShowIndex === data.length - 1) {
+                        selectIndex = editorShowIndex - 1
+                        selectItem = data[selectIndex]
+                    } else if (editorShowIndex) {
+                        selectItem = data[editorShowIndex + 1]
+                    }
+                    setCurrentSelectItem(selectItem)
+                    if (selectItem) {
+                        setEditorShowIndexShowIndex(selectIndex)
+                    } else {
+                        setEditorShowIndexShowIndex(0)
+                    }
                 }
                 setData((preV) => preV.filter((item) => item.TaskID !== taskID))
                 break
@@ -154,6 +173,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 })
                 break
             case ManualHijackListAction.Hijack_List_Reload:
+                const index = manualHijackList.findIndex((item) => item.TaskID === currentSelectItem?.TaskID)
+                if (index === -1) {
+                    setCurrentSelectItem(undefined)
+                    setEditorShowIndexShowIndex(0)
+                } else {
+                    setCurrentSelectItem(manualHijackList[index])
+                    setEditorShowIndexShowIndex(index)
+                }
                 setData(manualHijackList)
                 break
             default:
@@ -161,6 +188,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         }
     })
     const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+        if (rowData) {
+            onSetCurrentRow(rowData)
+        }
         showByRightContext({
             width: 180,
             data: mitmManualContextmenuRef.current,
@@ -169,11 +199,12 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                     const colorItem = availableColors.find((e) => e.title === key)
                     if (!colorItem) return
                     onSetColor(colorItem.color, rowData)
+                    return
                 }
                 switch (key) {
                     case "hijacking-response":
                         onHijackingResponse(rowData)
-                        manualHijackInfoRef.current.onHijackingForward(rowData)
+                        manualHijackInfoRef.current.onSubmitData(rowData)
                         break
                     case "cancel-hijacking-response":
                         onCancelHijackingResponse(rowData)
@@ -207,11 +238,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             yakitNotify("warning", "当前状态不允许取消劫持")
             return
         }
-        const value: MITMV2CancelHijackedCurrentResponseRequest = {
-            TaskID: rowData.TaskID,
-            CancelHijackResponse: true
-        }
-        grpcMITMV2CancelHijackedCurrentResponse(value)
+        grpcMITMV2CancelHijackedCurrentResponse(rowData.TaskID)
     })
 
     const onDiscardData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -265,11 +292,13 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             {
                 title: "状态",
                 dataKey: "Status",
-                render: (value: string) => ManualHijackListStatusMap[value]
+                render: (value: string) => ManualHijackListStatusMap[value],
+                width: 120
             },
             {
                 title: "方法",
-                dataKey: "Method"
+                dataKey: "Method",
+                width: 80
             },
             {
                 title: "URL",
@@ -278,6 +307,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             {
                 title: "标记颜色",
                 dataKey: "Tags",
+                width: 200,
                 render: (text) => {
                     return text
                         ? `${text}`
@@ -350,11 +380,11 @@ export default MITMManual
 
 const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
     forwardRef((props, ref) => {
-        const {setIsRefreshHistory} = useStore()
         const {info, index, autoForward, handleAutoForward, onDiscardData, onScrollTo} = props
+        // request/ws 修改的值
         const [modifiedRequestPacket, setModifiedRequestPacket] = useState<string>("")
         const [modifiedResponsePacket, setModifiedResponsePacket] = useState<string>("")
-        // request
+        // request/ws
         const [currentRequestPacketInfo, setCurrentRequestPacketInfo] = useState<CurrentPacketInfoProps>({
             requestPacket: "",
             TaskId: "",
@@ -382,9 +412,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
-        const forResponse = useCreation(() => {
-            return info.Status === ManualHijackListStatus.Hijacking_Response
-        }, [info])
         useImperativeHandle(
             ref,
             () => {
@@ -396,7 +423,17 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             []
         )
         useEffect(() => {
-            // Request
+            if (info.IsWebsocket) {
+                // WS Request
+                onSetRequest(info)
+            } else {
+                // Request
+                onSetRequest(info)
+                // Response
+                onSetResponse(info)
+            }
+        }, [info])
+        const onSetRequest = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
             const currentRequestPacket = !!info?.IsWebsocket
                 ? Uint8ArrayToString(info.Payload)
                 : Uint8ArrayToString(info.Request)
@@ -414,7 +451,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                     TotalDurationMs: 0
                 }
             })
-            // Response
+        })
+        const onSetResponse = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
             const currentResponsePacket = !!info?.IsWebsocket
                 ? Uint8ArrayToString(info.Payload)
                 : Uint8ArrayToString(info.Response)
@@ -432,26 +470,31 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                     TotalDurationMs: 0
                 }
             })
-        }, [info])
+        })
         const disabledRequest = useCreation(() => {
-            return info.Status !== ManualHijackListStatus.Hijacking_Request
+            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
         }, [info])
         const disabledResponse = useCreation(() => {
-            return info.Status !== ManualHijackListStatus.Hijacking_Response
+            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
         }, [info])
-        const onDiscardDataWithByte = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
-            onDiscardData({
-                ...info,
-                Request: new Uint8Array(StringToUint8Array(modifiedRequestPacket)),
-                Response: new Uint8Array(StringToUint8Array(modifiedResponsePacket))
-            })
-        })
         /**提交数据 */
         const onSubmitData = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
-            const rowData: SingleManualHijackInfoMessage = {
+            let rowData: SingleManualHijackInfoMessage = {
                 ...value,
                 Request: new Uint8Array(StringToUint8Array(modifiedRequestPacket)),
                 Response: new Uint8Array(StringToUint8Array(modifiedResponsePacket))
+            }
+            if (rowData.IsWebsocket) {
+                rowData = {
+                    ...value,
+                    Payload: new Uint8Array(StringToUint8Array(modifiedRequestPacket))
+                }
+            } else {
+                rowData = {
+                    ...value,
+                    Request: new Uint8Array(StringToUint8Array(modifiedRequestPacket)),
+                    Response: new Uint8Array(StringToUint8Array(modifiedResponsePacket))
+                }
             }
             switch (rowData.Status) {
                 case ManualHijackListStatus.Hijacking_Request:
@@ -459,6 +502,9 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                     break
                 case ManualHijackListStatus.Hijacking_Response:
                     onSubmitResponseData(rowData)
+                    break
+                case ManualHijackListStatus.Hijack_WS:
+                    onSubmitPayloadData(rowData)
                     break
                 default:
                     break
@@ -500,16 +546,31 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
             grpcMITMV2SubmitResponseData(value)
         })
+        const onSubmitPayloadData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+                yakitNotify("warning", "当前状态不允许提交数据")
+                return
+            }
+            if (isEqual(rowData.Payload, info.Payload)) {
+                grpcMITMV2Forward({
+                    TaskID: rowData.TaskID,
+                    Forward: true
+                })
+                return
+            }
+            const value: MITMV2SubmitPayloadDataRequest = {
+                TaskID: rowData.TaskID,
+                Payload: rowData.Payload
+            }
+            grpcMITMV2SubmitPayloadData(value)
+        })
         // 先取消劫持响应再提交数据
         const onHijackingForward = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
             if (value.Status === ManualHijackListStatus.WaitHijack) {
                 yakitNotify("warning", "当前状态不允许 放行该 HTTP Response")
                 return
             }
-            grpcMITMV2CancelHijackedCurrentResponse({
-                TaskID: value.TaskID,
-                CancelHijackResponse: true
-            }).then(() => {
+            grpcMITMV2CancelHijackedCurrentResponse(value.TaskID).then(() => {
                 setTimeout(() => {
                     onSubmitData(value)
                 }, 200)
@@ -528,7 +589,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         }, [currentResponsePacketInfo.currentPacket])
         return (
             <YakitResizeBox
-                firstMinSize={550}
+                firstMinSize={300}
                 firstNode={
                     <div style={{height: "100%"}}>
                         <MITMV2ManualEditor
@@ -538,7 +599,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             setModifiedPacket={setModifiedRequestPacket}
                             isResponse={false}
                             info={info}
-                            onDiscardData={onDiscardDataWithByte}
+                            onDiscardData={onDiscardData}
                             onSubmitData={onSubmitData}
                             currentPacketInfo={currentRequestPacketInfo}
                             disabled={disabledRequest}
@@ -547,7 +608,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                         />
                     </div>
                 }
-                secondMinSize={200}
+                secondMinSize={300}
                 secondNode={
                     <div style={{height: "100%"}}>
                         <MITMV2ManualEditor
@@ -555,7 +616,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             setModifiedPacket={setModifiedResponsePacket}
                             isResponse={true}
                             info={info}
-                            onDiscardData={onDiscardDataWithByte}
+                            onDiscardData={onDiscardData}
+                            onSubmitData={onSubmitData}
                             currentPacketInfo={currentResponsePacketInfo}
                             disabled={disabledResponse}
                             handleAutoForward={handleAutoForward}
@@ -647,7 +709,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 }
             }
         }
-    }, [forResponse])
+    }, [forResponse, info])
 
     const onHijackCurrentResponse = useMemoizedFn(() => {
         if (info.Status === ManualHijackListStatus.WaitHijack) {
@@ -656,13 +718,10 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         }
         onHijackingResponse(info)
         setTimeout(() => {
-            onHijackingForward(info)
+            onSubmitData(info)
         }, 200)
     })
 
-    const hijackResponse = useCreation(() => {
-        return info.HijackResponse
-    }, [info])
     const btnDisable = useCreation(() => {
         return info.Status === ManualHijackListStatus.WaitHijack
     }, [info])
@@ -674,60 +733,54 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             hideSearch={true}
             isShowBeautifyRender={true}
             noPacketModifier={true}
-            bordered={false}
             readOnly={disabled}
             isResponse={isResponse}
+            titleStyle={{overflow: "hidden"}}
             title={
                 isResponse ? (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
-                        <span>Response</span>
+                        <span style={{marginRight: 8}}>Response</span>
                         {info?.TraceInfo?.DurationMs && (
                             <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
-                        )}
-                        {info.IsWebsocket && (
-                            <YakitTag color='danger' size='small'>
-                                Websocket 请求
-                            </YakitTag>
                         )}
                     </div>
                 ) : (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
-                        <span>Request</span>
+                        {info.IsWebsocket ? (
+                            <YakitTag color='danger' size='small'>
+                                Websocket
+                            </YakitTag>
+                        ) : (
+                            <span style={{marginRight: 8}}>Request</span>
+                        )}
+
                         <YakitTag
                             color={"info"}
                             size='small'
                             style={{cursor: "pointer"}}
                             onClick={() => onScrollTo && onScrollTo(index || 0)}
                         >
-                            id:{(index || 0) + 1}
+                            index:{(index || 0) + 1}
                         </YakitTag>
-                        {info.IsWebsocket && (
-                            <YakitTag color='danger' size='small'>
-                                Websocket 请求
-                            </YakitTag>
-                        )}
+                        <Tooltip overlayClassName='plugins-tooltip' title={info.URL} placement='topLeft'>
+                            <span className='content-ellipsis'>{info.URL}</span>
+                        </Tooltip>
                     </div>
                 )
             }
             extra={
-                isResponse ? (
-                    <></>
-                ) : (
+                !disabled && (
                     <div className={styles["mitm-v2-manual-editor-btn"]}>
-                        <span className={styles["mitm-v2-manual-editor-btn-hijack"]}>
-                            劫持响应:
-                            <YakitSwitch
+                        {!isResponse && (
+                            <YakitButton
                                 disabled={btnDisable}
-                                checked={!!hijackResponse}
-                                onChange={(val: boolean) => {
-                                    grpcMITMV2HijackedCurrentResponse({
-                                        TaskID: info.TaskID,
-                                        HijackResponse: val
-                                    })
-                                }}
-                            />
-                        </span>
-
+                                type='outline1'
+                                size='small'
+                                onClick={onHijackCurrentResponse}
+                            >
+                                劫持响应
+                            </YakitButton>
+                        )}
                         <YakitButton
                             disabled={btnDisable}
                             type='outline1'
@@ -779,9 +832,5 @@ const onHijackingResponse = (rowData: SingleManualHijackInfoMessage) => {
         yakitNotify("warning", "当前状态不允许劫持")
         return
     }
-    const value: MITMV2HijackedCurrentResponseV2Request = {
-        TaskID: rowData.TaskID,
-        HijackResponse: true
-    }
-    grpcMITMV2HijackedCurrentResponse(value)
+    grpcMITMV2HijackedCurrentResponse(rowData.TaskID)
 }

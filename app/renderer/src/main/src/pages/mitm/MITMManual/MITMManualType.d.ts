@@ -51,7 +51,7 @@ export interface MITMV2ManualEditorProps {
     /**丢弃数据 */
     onDiscardData: (s: SingleManualHijackInfoMessage) => void
     /**提交数据 */
-    onSubmitData?: (s: SingleManualHijackInfoMessage) => void
+    onSubmitData: (s: SingleManualHijackInfoMessage) => void
     /**当前选中的数据数组下标 */
     index?: number
     /**滚动到数据下标位置 */

@@ -23,7 +23,7 @@
     display: flex;
     align-items: center;
     color: var(--yakit-header-color);
-    gap: 8px;
+    overflow: hidden;
 }
 
 .mitm-v2-manual-editor-btn {
@@ -31,8 +31,4 @@
     align-items: center;
     gap: 8px;
     margin-right: 8px;
-    .mitm-v2-manual-editor-btn-hijack {
-        font-size: 12px;
-        color: var(--yakit-header-color);
-    }
 }
