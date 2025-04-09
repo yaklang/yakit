@@ -58,6 +58,7 @@ export interface YakitRiskDetailContentProps {
     setIsShowCollapse: ((v: boolean) => void)
     jumpCodeScanPage?: ((v: string) => void)
     isShowExtra?: boolean
+    isScroll?: boolean
 }
 
 export interface YakitRiskDetailsProps {

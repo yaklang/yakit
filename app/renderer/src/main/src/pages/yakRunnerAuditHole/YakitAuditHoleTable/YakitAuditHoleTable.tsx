@@ -62,7 +62,7 @@ import {
     IconSolidSeriousIcon
 } from "@/pages/risks/icon"
 import useVirtualTableHook from "@/hook/useVirtualTableHook/useVirtualTableHook"
-import {AuditResultCollapse, AuditResultDescribe} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import {AuditResultCollapse, AuditResultDescribe, SeverityMapTag} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {VirtualPaging} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
 import {getRemoteValue} from "@/utils/kv"
@@ -84,30 +84,6 @@ const batchRefreshMenuData: YakitMenuItemProps[] = [
     {
         key: "resetRefresh",
         label: "重置查询条件刷新"
-    }
-]
-
-/**name字段里面的内容不可随意更改，与查询条件有关 */
-export const SeverityMapTag = [
-    {
-        key: ["info", "fingerprint", "infof", "default"],
-        value: "title-info",
-        name: "信息",
-        tag: "success"
-    },
-    {key: ["low"], value: "title-low", name: "低危", tag: "warning"},
-    {
-        key: ["middle", "warn", "warning", "medium"],
-        value: "title-middle",
-        name: "中危",
-        tag: "info"
-    },
-    {key: ["high"], value: "title-high", name: "高危", tag: "danger"},
-    {
-        key: ["fatal", "critical", "panic"],
-        value: "title-fatal",
-        name: "严重",
-        tag: "serious"
     }
 ]
 

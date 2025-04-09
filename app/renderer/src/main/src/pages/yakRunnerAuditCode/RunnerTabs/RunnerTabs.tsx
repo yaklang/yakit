@@ -76,7 +76,7 @@ import {
     updateAreaFileInfo
 } from "../utils"
 import {editor as newEditor} from "monaco-editor"
-import {YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {YakitIMonacoEditor, YakitITextModel} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {createRoot} from "react-dom/client"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
@@ -85,6 +85,7 @@ import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAud
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
 import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
+import {ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker} from "@/utils/editorMarkers"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -976,7 +977,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             }
             setActiveFile && setActiveFile(newActiveFile)
             const newAreaInfo = updateAreaFileInfo(areaInfo, newActiveFile, newActiveFile.path)
-            console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
+            // console.log("更新当前底部展示信息", newActiveFile, newAreaInfo)
             setAreaInfo && setAreaInfo(newAreaInfo)
         },
         {
@@ -1321,6 +1322,29 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setLastShiftTime(now)
     })
 
+    /** 代码审计 代码错误检查并显示提示标记 */
+    const auditStaticAnalyze = useDebounceFn(
+        useMemoizedFn((model: YakitITextModel) => {
+            if (activeFile?.syntaxCheck) {
+                const markers = activeFile.syntaxCheck
+                    .map(ConvertAuditStaticAnalyzeErrorToMarker)
+                    .filter((item) => item !== null) as IMonacoEditorMarker[]
+                monaco.editor.setModelMarkers(model, "audit", markers)
+            } else {
+                monaco.editor.setModelMarkers(model, "audit", [])
+            }
+        }),
+        {wait: 300}
+    )
+
+    useEffect(() => {
+        if (editorInfo && activeFile?.path !== editorInfo.path && editor) {
+            /** 代码审计 代码错误检查 */
+            const model = editor.getModel()
+            model && auditStaticAnalyze.run(model)
+        }
+    }, [activeFile, editorInfo?.code, editor])
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1358,6 +1382,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
                     highLightFind={highLightFind}
+                    // renderValidationDecorations此项为on时可使只读模式下，显示下划线提示
+                    renderValidationDecorations = "on"
                 />
             )}
         </div>

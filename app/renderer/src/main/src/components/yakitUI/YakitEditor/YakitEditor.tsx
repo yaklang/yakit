@@ -133,6 +133,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         noWordWrap = false,
         noMiniMap = false,
         noLineNumber = false,
+        renderValidationDecorations,
         lineNumbersMinChars = 5,
         fontSize = 12,
         showLineBreaks = false,
@@ -1688,7 +1689,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                             enabled: true,
                             independentColorPoolPerBracketType: true
                         },
-                        fixedOverflowWidgets: true
+                        fixedOverflowWidgets: true,
+                        renderValidationDecorations: renderValidationDecorations
                     }}
                 />
             </div>
