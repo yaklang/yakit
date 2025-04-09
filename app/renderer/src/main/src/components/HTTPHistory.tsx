@@ -86,8 +86,8 @@ export type HTTPHistorySourcePageType =
     | "History"
     | "Plugin"
     | "Webfuzzer"
-    | "History_Analysis_HistoryData"
     | "History_Analysis_ruleData"
+    | "HTTPHistoryFilter"
 export interface HTTPHistoryProp extends HTTPPacketFuzzable, HistoryTableTitleShow {
     pageType?: HTTPHistorySourcePageType
     params?: YakQueryHTTPFlowRequest
@@ -666,9 +666,9 @@ interface HistoryProcessProps {
     refreshProcessFlag: boolean
     curProcess: string[]
     onSetCurProcess: (curProcess: string[]) => void
-    resetTableAndEditorShow: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+    resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
 }
-const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
+export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
     const {queryparamsStr, refreshProcessFlag, curProcess, onSetCurProcess, resetTableAndEditorShow} = props
     const processRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(processRef)
@@ -706,7 +706,7 @@ const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
             if (refreshProcessFlag) {
                 if (searchProcessValRef.current) {
                 } else {
-                    resetTableAndEditorShow(true, false)
+                    resetTableAndEditorShow && resetTableAndEditorShow(true, false)
                     refreshProcess()
                 }
             }

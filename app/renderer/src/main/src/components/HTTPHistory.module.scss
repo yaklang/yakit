@@ -52,51 +52,51 @@
             padding-right: 0;
         }
     }
+}
 
-    .history-process {
-        height: 100%;
-        .history-process-search-wrapper {
+.history-process {
+    height: 100%;
+    .history-process-search-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .process-list-wrapper {
+        overflow-y: overlay;
+        margin-top: 15px;
+        height: calc(100% - 40px);
+        .process-list-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-        .process-list-wrapper {
-            overflow-y: overlay;
-            margin-top: 15px;
-            height: calc(100% - 40px);
-            .process-list-item {
+            width: 100%;
+            padding: 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            .process-item-left-wrapper {
+                width: 100%;
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                width: 100%;
-                padding: 2px;
-                cursor: pointer;
-                border-radius: 4px;
-                .process-item-left-wrapper {
-                    width: 100%;
+
+                gap: 4px;
+                .process-icon {
                     display: flex;
                     align-items: center;
-
-                    gap: 4px;
-                    .process-icon {
-                        display: flex;
-                        align-items: center;
-                        svg {
-                            width: 16px;
-                            height: 16px;
-                        }
-                    }
-                    .process-item-label {
-                        overflow: hidden;
-                        white-space: nowrap;
-                        text-overflow: ellipsis;
-                        font-size: 14px;
+                    svg {
+                        width: 16px;
+                        height: 16px;
                     }
                 }
-                &-active {
-                    .process-item-label {
-                        color: var(--yakit-primary-5);
-                    }
+                .process-item-label {
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    font-size: 14px;
+                }
+            }
+            &-active {
+                .process-item-label {
+                    color: var(--yakit-primary-5);
                 }
             }
         }

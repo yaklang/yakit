@@ -101,7 +101,7 @@ import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
-import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
+import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
 const {ipcRenderer} = window.require("electron")
@@ -740,8 +740,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
         FromPlugin: "",
         Full: false,
-        Tags: [],
-        AnalyzedIds: props.params?.AnalyzedIds
+        Tags: []
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
@@ -1156,8 +1155,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         // 插件执行、WebFuzzer中流量数据必有runTimeId
         // 流量分析必有AnalyzedIds
         if (
-            (["Plugin", "Webfuzzer"].includes(pageType || "") && !runTimeId) ||
-            (pageType === "History_Analysis_HistoryData" && !props.params?.AnalyzedIds?.length)
+            (["Plugin", "Webfuzzer"].includes(pageType || "") && !runTimeId)
         ) {
             setTimeout(() => {
                 setLoading(false)
@@ -2183,7 +2181,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    let m = showDrawer({
+                                    let m = showYakitDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr),
                                         bodyStyle: {paddingTop: 5}
@@ -3516,7 +3514,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
             Full: false,
-            AnalyzedIds: props.params?.AnalyzedIds,
             // 屏蔽条件和高级筛选里面的参数需要保留
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
@@ -3762,16 +3759,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setBatchVisible(false)
     })
-
-    useEffect(() => {
-        if (props.params?.AnalyzedIds !== undefined) {
-            const newParams = {...params, AnalyzedIds: props.params?.AnalyzedIds}
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 20)
-        }
-    }, [props.params?.AnalyzedIds])
 
     useEffect(() => {
         if (props.params?.SourceType !== undefined) {
@@ -4271,6 +4258,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             </div>
             {drawerFormVisible && (
                 <HTTPFlowTableFormConfiguration
+                    pageType={pageType}
                     responseType={contentType}
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
@@ -4413,7 +4401,7 @@ interface ColorSearchProps {
     setIsShowColor: (b: boolean) => void
 }
 
-const ColorSearch = React.memo((props: ColorSearchProps) => {
+export const ColorSearch = React.memo((props: ColorSearchProps) => {
     const {color, setColor, onReset, onSure, setIsShowColor} = props
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
@@ -4453,7 +4441,7 @@ const ColorSearch = React.memo((props: ColorSearchProps) => {
     )
 })
 
-const contentType: FiltersItemProps[] = [
+export const contentType: FiltersItemProps[] = [
     {
         value: "javascript",
         label: "javascript"
@@ -5068,7 +5056,7 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
     )
 })
 
-interface ColumnAllInfoItem {
+export interface ColumnAllInfoItem {
     dataKey: string
     title: string
     isShow: boolean
