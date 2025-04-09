@@ -616,7 +616,7 @@
     .list-item-border {
         border-bottom: 1px solid var(--yakit-border-color);
     }
-    .list-item-border-top{
+    .list-item-border-top {
         border-top: 1px solid var(--yakit-border-color);
     }
     .list {
@@ -650,16 +650,30 @@
                 white-space: nowrap;
                 text-overflow: ellipsis;
             }
-            .opt {
-                cursor: pointer;
-                svg {
-                    height: 16px;
-                    width: 16px;
-                    color: #b4bbca;
-                }
-                &:hover {
+            .opt-wrapper {
+                display: flex;
+                align-items: center;
+                .opt {
+                    cursor: pointer;
                     svg {
-                        color: #f6544a;
+                        height: 16px;
+                        width: 16px;
+                        color: #b4bbca;
+                    }
+                }
+                .opt-del {
+                    &:hover {
+                        svg {
+                            color: #f6544a;
+                        }
+                    }
+                }
+                .opt-copy {
+                    margin-top: 3px;
+                    &:hover {
+                        svg {
+                            color: var(--yakit-primary-5);
+                        }
                     }
                 }
             }
