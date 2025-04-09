@@ -119,7 +119,7 @@
 
 .audit-hole-item {
     @extend %display-flex-center;
-    align-items: flex-start;
+    align-items: center;
     padding: 12px;
     border-bottom: 1px solid var(--yakit-border-color);
     .content-heard-left {
