@@ -81,25 +81,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const onStopAuditRule = useMemoizedFn(() => {
         emiter.emit("onStopAuditRule")
     })
-
-
-    const [riskList,setRiskList] = useState<SSARisk[]>([])
-    useEffect(()=>{
-        if(projectName && activeFile?.path){
-            ipcRenderer
-            .invoke("QuerySSARisks", {
-                Filter: {
-                    ProgramName:[projectName],
-                    CodeSourceUrl: [activeFile.path]
-                }
-            })
-            .then((res: QuerySSARisksResponse) => {
-                const {Data} = res
-                setRiskList(Data)
-            })
-            .catch((err) => {})
-        }
-    },[projectName,activeFile?.path])
     
     return (
         <div className={styles["bottom-editor-details"]}>
@@ -121,7 +102,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                         onClick={() => setShowItem("holeDetail")}
                     >
-                        <div className={styles["title"]}>漏洞详情</div>
+                        <div className={styles["title"]}>漏洞汇总</div>
                     </div>
                 </div>
                 <div className={styles["extra"]}>
@@ -172,8 +153,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             [styles["render-show"]]: showItem === "holeDetail"
                         })}
                     >
-                        {riskList.length !== 0 ? (
-                            <HoleBugList bugHash={bugHash} refresh={refresh} list={riskList}/>
+                        {activeFile?.syntaxCheck && activeFile.syntaxCheck.length !== 0 ? (
+                            <HoleBugList bugHash={bugHash} refresh={refresh} list={activeFile.syntaxCheck}/>
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />

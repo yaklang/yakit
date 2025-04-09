@@ -19,6 +19,7 @@ import {
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
+import { QuerySSARisksResponse, SSARisk } from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -525,21 +526,20 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
 }
 
 /**
- * @name 语法检查
+ * @name 漏洞汇总
  */
-export const onSyntaxCheck = (code: string) => {
+export const onSyntaxRisk = ({ProgramName,CodeSourceUrl}) => {
     return new Promise(async (resolve, reject) => {
-        // StaticAnalyzeError
         ipcRenderer
-            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
-            .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                if (e && e.Result.length > 0) {
-                    const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                    // monaco.editor.setModelMarkers(model, "owner", markers)
-                    resolve(markers)
-                } else {
-                    resolve([])
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    ProgramName,
+                    CodeSourceUrl
                 }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                resolve(Data)
             })
             .catch(() => {
                 resolve([])
@@ -548,16 +548,17 @@ export const onSyntaxCheck = (code: string) => {
 }
 
 /**
- * @name 注入语法检查结果
+ * @name 注入漏洞汇总结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo) => {
+export const getDefaultActiveFile = async (info: FileDetailInfo,ProgramName:string[],CodeSourceUrl:string[]) => {
+    if(info.syntaxCheck){
+        return info
+    }
     let newActiveFile = info
-    // 注入语法检查结果
-    if (newActiveFile.language === "yak") {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
-        if (syntaxCheck) {
-            newActiveFile = {...newActiveFile, syntaxCheck}
-        }
+    // 注入漏洞汇总结果
+    const syntaxCheck = (await onSyntaxRisk({ProgramName,CodeSourceUrl})) as SSARisk[]
+    if (syntaxCheck) {
+        newActiveFile = {...newActiveFile, syntaxCheck}
     }
     return newActiveFile
 }
