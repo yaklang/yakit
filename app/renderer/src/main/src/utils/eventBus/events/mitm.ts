@@ -3,10 +3,10 @@ export type MitmEventProps = {
     cancleMitmFilterEvent: string
     cancleMitmAllFilterEvent?: string
     onGetMITMShieldDataEvent: string
-    /** 是否配置过过滤器白名单文案 */
-    onSetFilterWhiteListEvent: string
-    /** 是否开启替换规则 */
-    onOpenRepRuleEvent: string
+    /** 重新刷新获过检测过滤器白名单文案 */
+    onRefFilterWhiteListEvent?: string
+    /** 重新刷新获取规则检测是否开启替换规则 */
+    onRefreshRuleEvent?: string
     onChangeAddrAndEnableInitialPlugin: string
     onClearMITMHackPlugin?: string
     onHasParamsJumpHistory: string

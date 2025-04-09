@@ -74,7 +74,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     const onResetFilters = useMemoizedFn(() => {
         function resetFilterOk() {
             info("MITM 过滤器重置命令已发送")
-            emiter.emit("onSetFilterWhiteListEvent", false + "")
+            emiter.emit("onRefFilterWhiteListEvent")
             setVisible(false)
         }
         if (isStartMITM) {
@@ -109,20 +109,13 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         const {baseFilter, advancedFilters} = params
         // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
         const filter = convertLocalMITMFilterRequest({...params})
-
         if (filterType === "filter") {
             ipcRenderer
                 .invoke("mitm-set-filter", {
                     FilterData: filter
                 })
                 .then(() => {
-                    // 是否配置过过滤器白名单文案
-                    const flag =
-                        !!baseFilter?.includeHostname?.length ||
-                        !!baseFilter?.includeUri?.length ||
-                        !!baseFilter?.includeSuffix?.length ||
-                        getAdvancedFlag(advancedFilters)
-                    emiter.emit("onSetFilterWhiteListEvent", flag + "")
+                    emiter.emit("onRefFilterWhiteListEvent")
                     setVisible(false)
                     info("更新 MITM 过滤器状态")
                 })

@@ -631,7 +631,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                                 replacers: newRules
                             })
                             .then((val) => {
-                                emiter.emit("onOpenRepRuleEvent", true + "")
+                                emiter.emit("onRefreshRuleEvent")
                                 setVisible(false)
                                 if (saveOk) {
                                     saveOk()
@@ -651,7 +651,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                         replacers: newRules
                     })
                     .then((val) => {
-                        emiter.emit("onOpenRepRuleEvent", false + "")
+                        emiter.emit("onRefreshRuleEvent")
                         setVisible(false)
                         if (saveOk) {
                             saveOk()

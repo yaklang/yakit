@@ -260,6 +260,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     setShowPluginHistoryList={setShowPluginHistoryList}
                     tempShowPluginHistory={tempShowPluginHistory}
                     setTempShowPluginHistory={setTempShowPluginHistory}
+                    setVisible={setVisible}
+                    setFiltersVisible={setFiltersVisible}
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
