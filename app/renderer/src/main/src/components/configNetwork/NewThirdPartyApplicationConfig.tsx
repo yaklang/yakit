@@ -125,13 +125,14 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                         label: modelName,
                         value: modelName
                     }))
-
+                    const name = getModelNameDefaultName()
                     // 确保默认值在选项里
-                    const hasDefault =
-                        v["model"] === "" ? true : modalNamelist.some((item) => item.value === v["model"])
+                    const hasDefault = modalNamelist.some((item) => item.value === name)
                     const newOptions = hasDefault
                         ? modalNamelist
-                        : [{label: v["model"], value: v["model"]}, ...modalNamelist]
+                        : name
+                        ? [{label: name, value: name}, ...modalNamelist]
+                        : modalNamelist
                     setModelNameAllOptions(newOptions)
                     yakitNotify("success", "获取成功")
                 })
@@ -145,13 +146,17 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         }),
         {wait: 500}
     ).run
-    const handleDefaultModalNameOption = () => {
+    const getModelNameDefaultName = () => {
         const templatesobj = templates.find((item) => item.Name === typeVal)
         const formItems = templatesobj?.Items || []
         const modelType = templatesobj?.Type
         const obj = formItems.find((item) => modelType === "ai" && item.Type === "list" && item.Name === "model")
-        if (obj?.DefaultValue) {
-            setModelNameAllOptions([{label: obj?.DefaultValue, value: obj?.DefaultValue}])
+        return obj?.DefaultValue
+    }
+    const handleDefaultModalNameOption = () => {
+        const name = getModelNameDefaultName()
+        if (name) {
+            setModelNameAllOptions([{label: name, value: name}])
         } else {
             setModelNameAllOptions([])
         }
