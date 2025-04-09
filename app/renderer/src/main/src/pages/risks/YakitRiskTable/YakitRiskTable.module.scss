@@ -356,6 +356,8 @@ $keyColor: map-keys($tagColor);
 }
 .content-resize-second {
     @extend %display-column-center;
+}
+.content-resize-overflow {
     overflow-y: auto;
     height: 100%;
 }

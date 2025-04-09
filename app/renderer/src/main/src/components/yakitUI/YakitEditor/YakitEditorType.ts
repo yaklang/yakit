@@ -92,6 +92,7 @@ export interface YakitEditorProps {
     fixContentType?: string
     originalContentType?: string
     fixContentTypeHoverMessage?: string
+    renderValidationDecorations?: "on" | "off" | "editable"
 }
 
 /**

@@ -1776,7 +1776,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 })
 
 export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = React.memo((props) => {
-    const {info,isShowCollapse,setIsShowCollapse,jumpCodeScanPage,isShowExtra} = props
+    const {info, isShowCollapse, setIsShowCollapse, jumpCodeScanPage, isShowExtra,isScroll} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
     const extraResizeBoxProps = useCreation(() => {
@@ -1800,7 +1800,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
 
     useEffect(() => {
         const {ResultID, SyntaxFlowVariable, ProgramName} = info
-        
+
         if (ResultID && SyntaxFlowVariable && ProgramName) {
             const params: AuditEmiterYakUrlProps = {
                 Schema: "syntaxflow",
@@ -1855,24 +1855,26 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
         }
     })
 
-    return <YakitResizeBox
-    {...extraResizeBoxProps}
-    firstNode={
-        <div className={styles["content-resize-collapse"]}>
-            <div className={styles["main-title"]}>相关代码段</div>
-            <YakitSpin spinning={loading}>
-                <AuditResultCollapse
-                    data={yakURLData}
-                    jumpCodeScanPage={jumpCodeScanPage}
-                    isShowExtra={isShowExtra}
-                />
-            </YakitSpin>
-        </div>
-    }
-    secondNode={<AuditResultDescribe info={info} />}
-    firstMinSize={200}
-    secondMinSize={400}
-/>
+    return (
+        <YakitResizeBox
+            {...extraResizeBoxProps}
+            firstNode={
+                <div className={styles["content-resize-collapse"]}>
+                    <div className={styles["main-title"]}>相关代码段</div>
+                    <YakitSpin spinning={loading}>
+                        <AuditResultCollapse
+                            data={yakURLData}
+                            jumpCodeScanPage={jumpCodeScanPage}
+                            isShowExtra={isShowExtra}
+                        />
+                    </YakitSpin>
+                </div>
+            }
+            secondNode={<AuditResultDescribe info={info} isScroll={isScroll}/>}
+            firstMinSize={200}
+            secondMinSize={400}
+        />
+    )
 })
 
 export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> = React.memo((props) => {
@@ -2003,7 +2005,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
                     </div>
                 )}
             </div>
-            <YakitRiskDetailContent info={info} isShowCollapse={isShowCollapse} setIsShowCollapse={setIsShowCollapse}/>
+            <YakitRiskDetailContent info={info} isShowCollapse={isShowCollapse} setIsShowCollapse={setIsShowCollapse} />
         </div>
     )
 })
@@ -2011,10 +2013,11 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
 export interface AuditResultDescribeProps {
     info: Risk | SSARisk
     columnSize?: number
+    isScroll?: boolean
 }
 
 export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.memo((props) => {
-    const {info, columnSize} = props
+    const {info, columnSize, isScroll = true} = props
 
     const column = useCreation(() => {
         if (columnSize) return columnSize
@@ -2026,7 +2029,11 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
         return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
     })
     return (
-        <div className={styles["content-resize-second"]}>
+        <div
+            className={classNames(styles["content-resize-second"], {
+                [styles["content-resize-overflow"]]: isScroll
+            })}
+        >
             <Descriptions bordered size='small' column={column} labelStyle={{width: 120}}>
                 <Descriptions.Item label='类型'>
                     {(info?.RiskTypeVerbose || info.RiskType).replaceAll("NUCLEI-", "")}
