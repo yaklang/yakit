@@ -322,7 +322,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (whiteListFlag)
             return (
                 <>
-                    检测到配置{openReplaceRule()}，如抓包有问题可先将白名单设置{closeDisposition("filter")}
+                    检测到配置{openWhiteFilter()}，如抓包有问题可先将白名单设置{closeDisposition("filter")}
                     <Tooltip title='关闭则会删除过滤器中包含项的所有内容'>
                         <OutlineInformationcircleIcon className={styles["circle-icon"]} />
                     </Tooltip>
