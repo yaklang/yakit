@@ -25,7 +25,6 @@ import {ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetra
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {HorizontalScrollCard} from "../plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
-import {HTTPHistory} from "@/components/HTTPHistory"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {v4 as uuidv4} from "uuid"
@@ -41,10 +40,62 @@ import {isEqual} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import styles from "./HTTPHistoryAnalysis.module.scss"
+import {Form} from "antd"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
+import {NewHTTPPacketEditor} from "@/utils/editors"
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
+
+interface HTTPHistoryAnalysisProps {}
+export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) => {
+    const [isAllHttpFlow, setIsAllHttpFlow] = useState<boolean>(false)
+    const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "45%",
+            secondRatio: "55%"
+        }
+        return p
+    }, [])
+
+    return (
+        <YakitResizeBox
+            isVer={true}
+            firstNode={() => (
+                <div className={styles["HTTPHistoryAnalysis-top"]}>
+                    <div className={styles["HTTPHistoryAnalysis-top-header"]}>
+                        <span className={styles["HTTPHistoryAnalysis-top-title"]}>分析流量</span>
+                        <span className={styles["HTTPHistoryAnalysis-top-desc"]}>
+                            勾选流量进行分析，未勾选默认跑所有流量
+                        </span>
+                    </div>
+                    <HTTPHistoryFilter
+                        onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
+                        onSetIsAllHttpFlow={setIsAllHttpFlow}
+                    />
+                </div>
+            )}
+            secondNode={
+                <div className={styles["HTTPHistoryAnalysis-bottom"]}>
+                    <AnalysisMain selectedHttpFlowIds={isAllHttpFlow ? [] : selectedHttpFlowIds} />
+                </div>
+            }
+            firstMinSize={80}
+            secondMinSize={200}
+            secondNodeStyle={{
+                display: "",
+                padding: undefined
+            }}
+            lineStyle={{display: ""}}
+            {...ResizeBoxProps}
+        />
+    )
+}
 
 type tabKeys = "hot-patch" | "rule"
 interface TabsItem {
@@ -58,8 +109,12 @@ interface AnalyzeHTTPFlowRequest {
     Replacers: MITMContentReplacerRule[]
 }
 
-interface HTTPHistoryAnalysisProps {}
-export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) => {
+interface AnalysisMainProps {
+    selectedHttpFlowIds: string[]
+}
+const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
+    const {selectedHttpFlowIds} = props
+
     const [fullScreenFirstNode, setFullScreenFirstNode] = useState<boolean>(false)
 
     // #region 左侧tab
@@ -239,6 +294,15 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     })
     // #endregion
 
+    // #region 执行表单
+    const [dataType, setDataType] = useState<"history" | "dataPacket">("history")
+    const [reqData, setReqData] = useState<string>("")
+    const [resData, setResData] = useState<string>("")
+    const [concurrent, setConcurrent] = useState<number>(10)
+    const [deduplication, setDeduplication] = useState<boolean>(false)
+
+    // #endregion
+
     // #region 执行
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
     const tokenRef = useRef<string>(randomString(40))
@@ -336,22 +400,22 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     }, [isExit, executeStatus])
     // #endregion
 
-    const [activeKey, setActiveKey] = useState<"ruleData" | "historyData">("ruleData")
+    const [activeKey, setActiveKey] = useState<"ruleData">("ruleData")
     const onTabChange = useMemoizedFn((key) => {
         setActiveKey(key)
     })
 
     const ResizeBoxProps = useCreation(() => {
         let p = {
-            firstRatio: "70%",
-            secondRatio: "30%"
+            firstRatio: "55%",
+            secondRatio: "45%"
         }
 
         if (openTabsFlag) {
-            p.firstRatio = "70%"
+            p.firstRatio = "55%"
             if (executeStatus !== "default") {
-                p.firstRatio = "50%"
-                p.secondRatio = "50%"
+                p.firstRatio = "45%"
+                p.secondRatio = "55%"
             }
         } else {
             p.firstRatio = "24px"
@@ -365,13 +429,13 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
     }, [fullScreenFirstNode, openTabsFlag, executeStatus])
 
     return (
-        <div className={styles["HTTPHistoryAnalysis"]}>
+        <div className={styles["AnalysisMain"]}>
             <YakitResizeBox
                 isVer={false}
                 freeze={openTabsFlag}
                 isRecalculateWH={openTabsFlag}
                 firstNode={() => (
-                    <div className={styles["HTTPHistoryAnalysis-left"]}>
+                    <div className={styles["AnalysisMain-left"]}>
                         <div className={styles["tab-wrap"]}>
                             <div className={styles["tab"]}>
                                 {tabsData.map((item) => (
@@ -493,12 +557,93 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                 firstMinSize={openTabsFlag ? "600px" : "24px"}
                 secondMinSize={500}
                 secondNode={
-                    <div className={styles["HTTPHistoryAnalysis-right"]}>
+                    <div className={styles["AnalysisMain-right"]}>
                         {executeStatus === "default" || isExit ? (
-                            <div className={styles["HTTPHistoryAnalysis-right-default"]}>
-                                <div className={styles["HTTPHistoryAnalysis-right-default-title"]}>
+                            <div className={styles["AnalysisMain-right-default"]}>
+                                <div className={styles["AnalysisMain-right-default-title"]}>
                                     <span className={styles["title"]}>执行结果</span>{" "}
                                     设置好热加载或规则后，即可点击执行进行处理
+                                </div>
+                                <div className={styles["exec-form-item"]} style={{marginBottom: 5}}>
+                                    <span className={styles["exec-form-item-label"]}>数据类型：</span>
+                                    <YakitRadioButtons
+                                        value={dataType}
+                                        onChange={(e) => setDataType(e.target.value)}
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: "history",
+                                                label: "筛选流量"
+                                            },
+                                            {
+                                                value: "dataPacket",
+                                                label: "数据包"
+                                            }
+                                        ]}
+                                        size={"middle"}
+                                    />
+                                </div>
+                                <div
+                                    className={styles["exec-form-item"]}
+                                    style={{height: dataType === "dataPacket" ? 450 : undefined}}
+                                >
+                                    {dataType === "history" ? (
+                                        <>
+                                            <span className={styles["exec-form-item-label"]}></span>
+                                            <span style={{color: "var(--yakit-primary-5)"}}>
+                                                筛选上面流量勾选后进行分析，未勾选默认跑所有流量
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <YakitResizeBox
+                                            firstNode={
+                                                <>
+                                                    <NewHTTPPacketEditor
+                                                        originValue={reqData}
+                                                        isShowBeautifyRender={false}
+                                                        simpleMode={true}
+                                                        noHex={true}
+                                                        noModeTag={true}
+                                                        hideSearch={true}
+                                                        noMinimap={true}
+                                                        onlyBasicMenu={true}
+                                                        onChange={setReqData}
+                                                    />
+                                                </>
+                                            }
+                                            secondNode={
+                                                <>
+                                                    <NewHTTPPacketEditor
+                                                        originValue={resData}
+                                                        isShowBeautifyRender={false}
+                                                        isResponse={true}
+                                                        simpleMode={true}
+                                                        noHex={true}
+                                                        noModeTag={true}
+                                                        hideSearch={true}
+                                                        noMinimap={true}
+                                                        onlyBasicMenu={true}
+                                                        onChange={setResData}
+                                                    />
+                                                </>
+                                            }
+                                            firstMinSize={300}
+                                            secondMinSize={300}
+                                        ></YakitResizeBox>
+                                    )}
+                                </div>
+                                <div className={styles["exec-form-item"]}>
+                                    <span className={styles["exec-form-item-label"]}>并发：</span>
+                                    <YakitInputNumber
+                                        type='horizontal'
+                                        size='small'
+                                        value={concurrent}
+                                        onChange={(v) => setConcurrent(v as number)}
+                                    />
+                                </div>
+                                <div className={styles["exec-form-item"]}>
+                                    <span className={styles["exec-form-item-label"]}>单条记录内数据去重：</span>
+                                    <YakitSwitch checked={deduplication} onChange={setDeduplication} />
                                 </div>
                                 <div className={styles["exec-btn"]}>
                                     <YakitButton
@@ -512,11 +657,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                 </div>
                             </div>
                         ) : (
-                            <div className={styles["HTTPHistoryAnalysis-right-noDefault"]}>
+                            <div className={styles["AnalysisMain-right-noDefault"]}>
                                 {/* 执行结果 */}
-                                <div className={styles["HTTPHistoryAnalysis-header"]}>
-                                    <div className={styles["HTTPHistoryAnalysis-header-text"]}>执行结果</div>
-                                    <div className={styles["HTTPHistoryAnalysis-execStatus-wrapper"]}>
+                                <div className={styles["AnalysisMain-header"]}>
+                                    <div className={styles["AnalysisMain-header-text"]}>执行结果</div>
+                                    <div className={styles["AnalysisMain-execStatus-wrapper"]}>
                                         {streamInfo.progressState.length === 1 && (
                                             <div className={styles["crash-log-progress"]}>
                                                 <PluginExecuteProgress
@@ -547,11 +692,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                         ></YakitButton>
                                     </div>
                                 </div>
-                                <div className={styles["HTTPHistoryAnalysis-result"]}>
+                                <div className={styles["AnalysisMain-result"]}>
                                     {streamInfo.cardState.length > 0 && (
                                         <HorizontalScrollCard title='Data Card' data={streamInfo.cardState} />
                                     )}
-                                    <div className={styles["HTTPHistoryAnalysis-result-tab"]}>
+                                    <div className={styles["AnalysisMain-result-tab"]}>
                                         <PluginTabs activeKey={activeKey} onChange={onTabChange}>
                                             <TabPane key={"ruleData"} tab={"规则数据"}>
                                                 <div className={styles["rule-data"]}>
@@ -562,32 +707,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
                                                         isRefreshTable={isRefreshTable}
                                                         executeStatus={executeStatus}
                                                     />
-                                                </div>
-                                            </TabPane>
-                                            <TabPane
-                                                key={"historyData"}
-                                                tab={"流量数据"}
-                                                disabled={
-                                                    executeStatus === "process" ||
-                                                    streamInfo.rulesState.map((item) => item.Id).length === 0
-                                                }
-                                            >
-                                                <div className={styles["history-data"]}>
-                                                    {executeStatus !== "process" && (
-                                                        <HTTPHistory
-                                                            pageType='History_Analysis_HistoryData'
-                                                            showAdvancedSearch={false}
-                                                            showProtocolType={false}
-                                                            showBatchActions={false}
-                                                            showDelAll={false}
-                                                            showSetting={false}
-                                                            params={{
-                                                                AnalyzedIds: streamInfo.rulesState.map(
-                                                                    (item) => item.Id
-                                                                )
-                                                            }}
-                                                        />
-                                                    )}
                                                 </div>
                                             </TabPane>
                                         </PluginTabs>
@@ -605,8 +724,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
             />
         </div>
     )
-}
-
+})
 interface HttpRuleProps {
     tableData: HTTPFlowRuleData[]
     currentSelectItem?: HTTPFlowRuleData
@@ -700,7 +818,7 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
                     )}
                 </div>
             }
-            firstMinSize={160}
+            firstMinSize={80}
             secondMinSize={200}
             secondNodeStyle={{
                 display: currentSelectItem?.HTTPFlowId === undefined ? "none" : "",
