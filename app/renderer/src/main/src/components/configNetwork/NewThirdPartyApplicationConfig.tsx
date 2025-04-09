@@ -5,7 +5,7 @@ import {KVPair} from "@/models/kv"
 import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
-import {useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
@@ -111,7 +111,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         if (apiKeyWatch) {
             getModelNameOption()
         } else {
-            setModelNameAllOptions([])
+            handleDefaultModalNameOption()
         }
     }, [apiKeyWatch])
     const getModelNameOption = useDebounceFn(
@@ -125,19 +125,20 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                         label: modelName,
                         value: modelName
                     }))
-
+                    const name = getModelNameDefaultName()
                     // 确保默认值在选项里
-                    const hasDefault =
-                        v["model"] === "" ? true : modalNamelist.some((item) => item.value === v["model"])
+                    const hasDefault = modalNamelist.some((item) => item.value === name)
                     const newOptions = hasDefault
                         ? modalNamelist
-                        : [{label: v["model"], value: v["model"]}, ...modalNamelist]
+                        : name
+                        ? [{label: name, value: name}, ...modalNamelist]
+                        : modalNamelist
                     setModelNameAllOptions(newOptions)
                     yakitNotify("success", "获取成功")
                 })
                 .catch((error) => {
                     yakitNotify("error", error + "")
-                    setModelNameAllOptions([])
+                    handleDefaultModalNameOption()
                 })
                 .finally(() => {
                     setModelOptionLoading(false)
@@ -145,6 +146,28 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
         }),
         {wait: 500}
     ).run
+    const getModelNameDefaultName = () => {
+        const templatesobj = templates.find((item) => item.Name === typeVal)
+        const formItems = templatesobj?.Items || []
+        const modelType = templatesobj?.Type
+        const obj = formItems.find((item) => modelType === "ai" && item.Type === "list" && item.Name === "model")
+        return obj?.DefaultValue
+    }
+    const handleDefaultModalNameOption = () => {
+        const name = getModelNameDefaultName()
+        if (name) {
+            setModelNameAllOptions([{label: name, value: name}])
+        } else {
+            setModelNameAllOptions([])
+        }
+    }
+    useDebounceEffect(
+        () => {
+            handleDefaultModalNameOption()
+        },
+        [typeVal],
+        {wait: 300}
+    )
 
     // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
     const renderAllFormItems = useMemoizedFn(() => {
@@ -202,7 +225,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                 </div>
                             }
                         >
-                            <YakitSelect
+                            <YakitAutoComplete
                                 showSearch
                                 options={modelNameAllOptions}
                                 onFocus={getModelNameOption}
@@ -213,7 +236,7 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                         </>
                                     )
                                 }}
-                            ></YakitSelect>
+                            ></YakitAutoComplete>
                         </Form.Item>
                     )
                 } else {
@@ -264,7 +287,6 @@ export const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfi
                                 : item.DefaultValue === "true"
                         })
                     })
-                    setModelNameAllOptions([])
                 }
             }}
             onSubmitCapture={(e) => {
