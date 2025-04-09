@@ -176,6 +176,15 @@ jobs:
             - run: ls
               name: Ls Published Artifacts...
 
+            - name: Create Release and Upload Assets
+              if: ${{ matrix.artifact == 'IRify' }}
+              uses: ncipollo/release-action@v1
+              with:
+                  artifacts: ./*
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  name: Release ${{ github.ref_name }}
+                  tag: ${{ github.ref_name }}
+
             - name: Generate OSS File Path
               run: |
                   if [ "${{ matrix.artifact }}" = "IRify" ]; then
