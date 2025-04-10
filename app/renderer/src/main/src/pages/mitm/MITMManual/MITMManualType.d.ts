@@ -1,6 +1,7 @@
 import {ManualHijackType} from "@/defaultConstants/mitmV2"
 import {ManualHijackListStatusType, SingleManualHijackInfoMessage} from "../MITMHacker/utils"
 import {TraceInfo} from "../MITMPage"
+import {RenderTypeOptionVal} from "@/utils/editors"
 
 export interface MITMManualProps {
     downstreamProxyStr: string
@@ -60,6 +61,10 @@ export interface MITMV2ManualEditorProps {
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**mitm 转发 */
     onHijackingForward: (s: SingleManualHijackInfoMessage) => void
+
+    /**美化&渲染 */
+    typeOptionVal?: RenderTypeOptionVal
+    onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
 }
 
 export interface CurrentPacketInfoProps {

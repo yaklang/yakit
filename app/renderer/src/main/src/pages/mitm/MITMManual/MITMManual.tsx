@@ -36,13 +36,15 @@ import {
 } from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {NewHTTPPacketEditor} from "@/utils/editors"
+import {NewHTTPPacketEditor, RenderTypeOptionVal} from "@/utils/editors"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isEqual} from "lodash"
 import {Tooltip} from "antd"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward} = props
@@ -398,6 +400,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
+        const [requestTypeOptionVal, setRequestTypeOptionVal] = useState<RenderTypeOptionVal>()
         // response
         const [currentResponsePacketInfo, setCurrentResponsePacketInfo] = useState<CurrentPacketInfoProps>({
             requestPacket: "",
@@ -412,6 +415,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
+        const [responseTypeOptionVal, setResponseTypeOptionVal] = useState<RenderTypeOptionVal>()
         useImperativeHandle(
             ref,
             () => {
@@ -423,6 +427,12 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             []
         )
         useEffect(() => {
+            // Request
+            getRequestEditorBeautify()
+            // Response
+            getResponseEditorBeautify()
+        }, [])
+        useEffect(() => {
             if (info.IsWebsocket) {
                 // WS Request
                 onSetRequest(info)
@@ -433,6 +443,22 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 onSetResponse(info)
             }
         }, [info])
+        /**TODO - Request 美化缓存 */
+        const getRequestEditorBeautify = useMemoizedFn(() => {
+            // getRemoteValue(RemoteGV.MITMManualHijackRequestEditorBeautify).then((res) => {
+            //     if (!!res) {
+            //         setRequestTypeOptionVal(res)
+            //     }
+            // })
+        })
+        /**TODO - Response 美化缓存 */
+        const getResponseEditorBeautify = useMemoizedFn(() => {
+            // getRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify).then((res) => {
+            //     if (!!res) {
+            //         setResponseTypeOptionVal(res)
+            //     }
+            // })
+        })
         const onSetRequest = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
             const currentRequestPacket = !!info?.IsWebsocket
                 ? Uint8ArrayToString(info.Payload)
@@ -473,10 +499,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         const disabledRequest = useCreation(() => {
             return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
-        }, [info])
+        }, [info.IsWebsocket, info.Status])
         const disabledResponse = useCreation(() => {
             return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
-        }, [info])
+        }, [info.IsWebsocket, info.Status])
         /**提交数据 */
         const onSubmitData = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
             let rowData: SingleManualHijackInfoMessage = {
@@ -576,6 +602,14 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 }, 200)
             })
         })
+        const onRequestTypeOptionVal = useMemoizedFn((value) => {
+            // setRequestTypeOptionVal(value)
+            // setRemoteValue(RemoteGV.MITMManualHijackRequestEditorBeautify, value ? value : "")
+        })
+        const onResponseTypeOptionVal = useMemoizedFn((value) => {
+            // setResponseTypeOptionVal(value)
+            // setRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify, value ? value : "")
+        })
         const ResizeBoxProps = useCreation(() => {
             let p = {
                 firstRatio: "50%",
@@ -605,6 +639,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             disabled={disabledRequest}
                             handleAutoForward={handleAutoForward}
                             onHijackingForward={onHijackingForward}
+                            typeOptionVal={requestTypeOptionVal}
+                            onTypeOptionVal={onRequestTypeOptionVal}
                         />
                     </div>
                 }
@@ -622,6 +658,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             disabled={disabledResponse}
                             handleAutoForward={handleAutoForward}
                             onHijackingForward={onHijackingForward}
+                            typeOptionVal={responseTypeOptionVal}
+                            onTypeOptionVal={onResponseTypeOptionVal}
                         />
                     </div>
                 }
@@ -644,7 +682,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         isResponse,
         onScrollTo,
         handleAutoForward,
-        onHijackingForward
+        onHijackingForward,
+        typeOptionVal,
+        onTypeOptionVal
     } = props
     const {currentPacket, requestPacket} = currentPacketInfo
     const [modifiedPacket, setModifiedPacket] = useControllableValue<string>(props, {
@@ -736,6 +776,8 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             readOnly={disabled}
             isResponse={isResponse}
             titleStyle={{overflow: "hidden"}}
+            // typeOptionVal={typeOptionVal}
+            // onTypeOptionVal={(v) => onTypeOptionVal && onTypeOptionVal(v)}
             title={
                 isResponse ? (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
