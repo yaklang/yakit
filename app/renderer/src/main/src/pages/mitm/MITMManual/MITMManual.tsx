@@ -8,7 +8,7 @@ import {
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SingleManualHijackInfoMessage} from "../MITMHacker/utils"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCounter, useCreation, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {ManualHijackListAction, ManualHijackListStatus, ManualHijackListStatusMap} from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -52,6 +52,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
     const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
     const [scrollToIndex, setScrollToIndex] = useState<number>()
+
+    const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
+
     const mitmManualContextmenuRef = useRef([
         {
             key: "hijacking-response",
@@ -120,25 +123,35 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         onSubmitData: () => {},
         onHijackingForward: () => {}
     })
-
+    useEffect(() => {
+        if (autoForward !== "manual") {
+            resetOrder()
+        }
+    }, [autoForward])
     useEffect(() => {
         handleManualHijackList()
     }, [manualHijackList, manualHijackListAction])
     /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
     const handleManualHijackList = useMemoizedFn(() => {
         if (manualHijackList.length === 0) return
-        const taskID = manualHijackList[0].TaskID
+        const item = manualHijackList[0]
+        const taskID = item.TaskID
         switch (manualHijackListAction) {
             case ManualHijackListAction.Hijack_List_Add:
                 if (data.length === 0) {
-                    const selectItem: SingleManualHijackInfoMessage = manualHijackList[0]
+                    const selectItem: SingleManualHijackInfoMessage = {
+                        ...item,
+                        arrivalOrder: currentOrder
+                    }
                     setCurrentSelectItem(selectItem)
                     setEditorShowIndexShowIndex(0)
                 }
                 setData((preV) => {
                     const index = preV.findIndex((item) => item.TaskID === taskID)
-                    return index === -1 ? [...preV, manualHijackList[0]] : preV
+                    const addItem = {...item, arrivalOrder: currentOrder}
+                    return index === -1 ? [...preV, {...addItem}] : preV
                 })
+                addOrder()
                 break
             case ManualHijackListAction.Hijack_List_Delete:
                 if (currentSelectItem?.TaskID === taskID) {
@@ -164,26 +177,32 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 break
             case ManualHijackListAction.Hijack_List_Update:
                 if (currentSelectItem?.TaskID === taskID) {
-                    setCurrentSelectItem(manualHijackList[0])
+                    setCurrentSelectItem({
+                        ...item,
+                        arrivalOrder: currentSelectItem.arrivalOrder
+                    })
                 }
                 setData((preV) => {
                     const newV = [...preV]
                     const index = newV.findIndex((item) => item.TaskID === taskID)
                     if (index === -1) return newV
-                    newV.splice(index, 1, manualHijackList[0])
+                    newV.splice(index, 1, {...item, arrivalOrder: newV[index].arrivalOrder})
                     return newV
                 })
                 break
             case ManualHijackListAction.Hijack_List_Reload:
-                const index = manualHijackList.findIndex((item) => item.TaskID === currentSelectItem?.TaskID)
-                if (index === -1) {
-                    setCurrentSelectItem(undefined)
-                    setEditorShowIndexShowIndex(0)
-                } else {
-                    setCurrentSelectItem(manualHijackList[index])
-                    setEditorShowIndexShowIndex(index)
-                }
-                setData(manualHijackList)
+                let order = 0
+                const newData = manualHijackList.map((ele) => {
+                    order += 1
+                    return {
+                        ...ele,
+                        arrivalOrder: order
+                    }
+                })
+                setData(newData)
+                setCurrentSelectItem(undefined)
+                setEditorShowIndexShowIndex(0)
+                setOrder(order + 1)
                 break
             default:
                 break
@@ -291,6 +310,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     })
     const columns: ColumnsTypeProps[] = useCreation(() => {
         return [
+            {
+                title: "到达顺序",
+                dataKey: "arrivalOrder",
+                width: 120
+            },
             {
                 title: "状态",
                 dataKey: "Status",
@@ -802,11 +826,11 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                             style={{cursor: "pointer"}}
                             onClick={() => onScrollTo && onScrollTo(index || 0)}
                         >
-                            index:{(index || 0) + 1}
+                            index:{info.arrivalOrder}
                         </YakitTag>
-                        <Tooltip overlayClassName='plugins-tooltip' title={info.URL} placement='topLeft'>
-                            <span className='content-ellipsis'>{info.URL}</span>
-                        </Tooltip>
+                        <YakitTag color='green' size='small'>
+                            {ManualHijackListStatusMap[info.Status]}
+                        </YakitTag>
                     </div>
                 )
             }

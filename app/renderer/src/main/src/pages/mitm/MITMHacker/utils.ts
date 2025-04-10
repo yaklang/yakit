@@ -434,6 +434,8 @@ export interface MITMV2Response {
 
 export type ManualHijackListStatusType = `${ManualHijackListStatus}`
 export interface SingleManualHijackInfoMessage {
+    /**前端展示使用，到达顺序 */
+    arrivalOrder?: number
     TaskID: string
     Request: Uint8Array
     Response: Uint8Array
