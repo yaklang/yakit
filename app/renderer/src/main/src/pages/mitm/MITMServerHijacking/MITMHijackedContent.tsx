@@ -404,6 +404,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         grpcMITMAutoForward(value).finally(() => {
             console.info(`设置服务端自动转发：${!isManual}`)
         })
+        if (mitmVersion === MITMVersion.V2 && autoForward === "manual") {
+            grpcMITMV2RecoverManualHijack()
+        }
     }, [autoForward])
 
     /** 条件劫持 start */
@@ -436,7 +439,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const onClientMITMHijacked = useMemoizedFn((data: ClientMITMHijackedResponse) => {
         if (mitmVersion === MITMVersion.V2) {
             if (!isMITMV2Response(data)) return
-            if (autoForward !== "manual" && data.ManualHijackList.length > 0) {
+            if (autoForward !== "manual" && data.ManualHijackListAction) {
                 if (hijackFilterFlag) {
                     setAutoForward("manual")
                     info("已触发 条件 劫持")

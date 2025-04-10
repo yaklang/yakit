@@ -133,8 +133,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     }, [manualHijackList, manualHijackListAction])
     /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
     const handleManualHijackList = useMemoizedFn(() => {
-        if (manualHijackList.length === 0) return
-        const item = manualHijackList[0]
+        // 只有manualHijackListAction为ManualHijackListAction.Hijack_List_Reload，manualHijackList才有可能为空,为空就相当于清空数据
+        const item = manualHijackList[0] || {}
         const taskID = item.TaskID
         switch (manualHijackListAction) {
             case ManualHijackListAction.Hijack_List_Add:

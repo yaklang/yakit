@@ -21,7 +21,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitmV2-recover", (e) => {
         if (stream) {
             stream.write({
-                // RecoverManualHijack: true
+                RecoverContext: true
             })
         }
     })
@@ -215,7 +215,7 @@ module.exports = (win, getClient) => {
                     win.webContents.send("client-mitmV2-filter", data.FilterData)
                     return
                 }
-                if (!data.ManualHijackList?.length) return
+                if (!data.ManualHijackListAction) return
                 win.webContents.send("client-mitmV2-hijacked", {...data})
             }
         })
