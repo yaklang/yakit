@@ -38,12 +38,11 @@ function NewApp() {
     const [agreed, setAgreed] = useState(false)
     const {userInfo} = useStore()
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
-    //设置echarts 颜色
-    useEffect(() => {
-        setChartsColorList()
-    }, [])
 
+    // 软件初始化配置
     useEffect(() => {
+        // 设置echarts颜色(替换原始颜色)
+        setChartsColorList()
         // 解压命令执行引擎脚本压缩包
         ipcRenderer.invoke("generate-start-engine")
         // 解压Google 插件压缩包

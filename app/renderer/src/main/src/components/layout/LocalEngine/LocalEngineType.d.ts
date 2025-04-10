@@ -3,7 +3,6 @@ import {YakitStatusType, YakitSystem} from "@/yakitGVDefine"
 
 export interface LocalEngineProps {
     ref?: React.ForwardedRef<LocalEngineLinkFuncProps>
-    system: YakitSystem
     setLog: Dispatch<SetStateAction<string[]>>
     onLinkEngine: (port: number) => any
     setYakitStatus: (v: YakitStatusType) => any

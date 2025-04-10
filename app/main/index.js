@@ -12,6 +12,7 @@ const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
 const {clearFolder} = require("./toolsFunc")
 const {MenuTemplate} = require("./menu")
+const {fetchEngineLogFile, closeEngineLogFile} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -168,11 +169,16 @@ app.whenReady().then(() => {
 
     // 软件退出的逻辑
     ipcMain.handle("app-exit", async (e, params) => {
-        const {showCloseMessageBox,isIRify} = params
+        const {showCloseMessageBox, isIRify} = params
         if (closeFlag && showCloseMessageBox) {
             dialog
                 .showMessageBox(win, {
-                    icon: nativeImage.createFromPath(path.join(__dirname, isIRify?"../renderer/src/main/src/assets/yakitSS.png":"../assets/yakitlogo.pic.jpg")),
+                    icon: nativeImage.createFromPath(
+                        path.join(
+                            __dirname,
+                            isIRify ? "../renderer/src/main/src/assets/yakitSS.png" : "../assets/yakitlogo.pic.jpg"
+                        )
+                    ),
                     type: "none",
                     title: "提示",
                     defaultId: 0,
@@ -192,6 +198,7 @@ app.whenReady().then(() => {
                     } else if (res.response === 1) {
                         win = null
                         clearing()
+                        closeEngineLogFile()
                         app.exit()
                     } else {
                         e.preventDefault()
@@ -203,6 +210,7 @@ app.whenReady().then(() => {
             await asyncKillDynamicControl()
             win = null
             clearing()
+            closeEngineLogFile()
             app.exit()
         }
     })
@@ -217,6 +225,7 @@ app.whenReady().then(() => {
 
     try {
         registerIPC(win)
+        fetchEngineLogFile()
     } catch (e) {}
 
     //

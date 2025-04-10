@@ -159,6 +159,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     >
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
+
+                    <div>
+                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                    </div>
                 </>
             )
         }
@@ -185,7 +191,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
 
-                    <div>{changePortBtn()}</div>
+                    <div>
+                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        {changePortBtn()}
+                    </div>
                 </>
             )
         }
@@ -243,7 +255,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         切换为{engineMode === "local" ? "远程" : "本地"}模式
                     </YakitButton>
 
-                    <div>{changePortBtn()}</div>
+                    <div>
+                        <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                        </YakitButton>
+                        <Divider type='vertical' style={{margin: 0}} />
+                        {changePortBtn()}
+                    </div>
                 </>
             )
         }
@@ -286,7 +304,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             )
         }
 
-        return <></>
+        return (
+            <div>
+                <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
+                    {showEngineLog ? "隐藏日志" : "查看日志"}
+                </YakitButton>
+            </div>
+        )
     }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
 
     /** 加载页随机宣传语 */

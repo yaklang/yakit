@@ -25,7 +25,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
-        const {system, setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
+        const {setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -37,7 +37,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             ipcRenderer
                 .invoke("check-local-database")
                 .then((e) => {
-                    isError = e === "not allow to write" && system !== "Windows_NT"
+                    isError = e === "not allow to write" && SystemInfo.system !== "Windows_NT"
                     if (isError) {
                         setLog((old) => old.concat(["数据库权限错误，开始进行修复操作(非WIN系统检查)"]))
                         setDatabaseErrorVisible(true)
@@ -158,7 +158,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                             const [res1, res2] = await Promise.allSettled([
                                 grpcFetchLocalYakitVersion(true),
                                 Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise])
-                                // grpcFetchLatestYakitVersion({timeout: 2000}, true)
                             ])
                             if (res1.status === "fulfilled") {
                                 currentYakit.current = res1.value || ""
@@ -199,9 +198,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCheckEngineVersion = useMemoizedFn(async () => {
             setLog(["获取引擎版本号并检查更新..."])
             try {
+                const promise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Fetch local engine timeout")), 5100)
+                )
                 const [res1, res2] = await Promise.allSettled([
                     // 本地
-                    grpcFetchLocalYakVersion(true),
+                    Promise.race([grpcFetchLocalYakVersion(true), promise]),
+                    // grpcFetchLocalYakVersion(true),
                     // 内置
                     grpcFetchBuildInYakVersion(true)
                 ])
@@ -210,7 +213,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     buildInYak.current = buildIn.startsWith("v") ? buildIn.substring(1) : buildIn
                 }
                 if (res1.status === "fulfilled") {
-                    currentYak.current = res1.value || ""
+                    currentYak.current = (res1.value as string) || ""
                     setLog((old) =>
                         old.concat([
                             currentYak.current ? `本地引擎版本——${currentYak.current}` : "未获取到本地引擎版本号"
@@ -246,9 +249,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCheckEngineSource = useMemoizedFn(async (version: string) => {
             setLog(["开始校验引擎来源..."])
             try {
+                const promise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Fetch engine online hash request timed out")), 2100)
+                )
                 const [res1, res2] = await Promise.all([
                     // 远端
-                    grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
+                    Promise.race([
+                        grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
+                        promise
+                    ]),
+                    // grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
                     // 本地
                     grpcFetchLocalYakVersionHash()
                 ])
@@ -257,7 +267,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {
-                    if (res2.includes(res1)) {
+                    if (res2.includes(res1 as string)) {
                         setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
                         handleLinkLocalEnging()
                     } else {

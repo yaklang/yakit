@@ -13,6 +13,7 @@ const {
 } = require("../handlers/utils/network")
 const childProcess = require("child_process")
 const {testEngineAvaiableVersion} = require("../ipc")
+const {engineLogOutputFileAndUI} = require("../logFile")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("get-available-oss-domain", async () => {
@@ -105,61 +106,65 @@ module.exports = (win, getClient) => {
     // 获取有效的引擎启动端口
     const asyncGetAvaiablePort = (params) => {
         return new Promise((resolve, reject) => {
-            childProcess.execFile(
-                getLocalYaklangEngine(),
-                ["get-random-port", "-type", "tcp", "-json"],
-                (err, stdout, stderr) => {
-                    if (err) {
-                        const arr = stdout
-                            .split("\n")
-                            .map((item) => item.trim())
-                            .map((item) => {
-                                try {
-                                    const match = item.match(/\[\w+:\d+]\s+(.*)/)[1]
-                                    return match
-                                } catch (error) {
-                                    return ""
-                                }
-                            })
-                            .filter(Boolean)
-                        const {name, message} = err
-                        reject(`${name}: ${message}${arr.join("\n")}`)
-                        return
-                    }
-                    if (stderr) {
-                        reject(stderr)
-                        return
-                    }
-
-                    try {
-                        const arr = stdout
-                            .split("\n")
-                            .map((item) => item.trim())
-                            .map((item) => {
-                                try {
-                                    // 后端定义的封装格式，修改需与后端确认
-                                    const match = item.match(
-                                        /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
-                                    )[1]
-                                    return match
-                                } catch (error) {
-                                    return ""
-                                }
-                            })
-                            .filter(Boolean)
-                        if (arr.length === 0) {
-                            reject("引擎无法获取可用端口号, 请咨询技术支持")
-                            return
-                        }
-                        // 处理干扰符号：去除前后空格/换行
-                        const cleanedOutput = arr[0].trim()
-                        const result = JSON.parse(cleanedOutput)
-                        resolve(result.port)
-                    } catch (parseError) {
-                        reject(parseError)
-                    }
+            const commandParams = ["get-random-port", "-type", "tcp", "-json"]
+            engineLogOutputFileAndUI(win, "----- 获取启动引擎可用端口号 -----")
+            engineLogOutputFileAndUI(win, `执行命令: ${getLocalYaklangEngine()} ${commandParams.join(" ")}`)
+            childProcess.execFile(getLocalYaklangEngine(), commandParams, {timeout: 5000}, (err, stdout, stderr) => {
+                engineLogOutputFileAndUI(win, stdout.toString("utf-8"))
+                if (err) {
+                    engineLogOutputFileAndUI(win, err.toString("utf-8"))
+                    const arr = stdout
+                        .split("\n")
+                        .map((item) => item.trim())
+                        .map((item) => {
+                            try {
+                                const match = item.match(/\[FTAL\]\s*(.*)/)[1]
+                                return match
+                            } catch (error) {
+                                return ""
+                            }
+                        })
+                        .filter(Boolean)
+                    const {name, message} = err
+                    reject(`${name}: ${message}${arr.join("\n")}`)
+                    return
                 }
-            )
+                if (stderr) {
+                    engineLogOutputFileAndUI(win, stderr.toString("utf-8"))
+                    reject(stderr)
+                    return
+                }
+
+                try {
+                    const arr = stdout
+                        .split("\n")
+                        .map((item) => item.trim())
+                        .map((item) => {
+                            try {
+                                // 后端定义的封装格式，修改需与后端确认
+                                const match = item.match(
+                                    /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
+                                )[1]
+                                return match
+                            } catch (error) {
+                                return ""
+                            }
+                        })
+                        .filter(Boolean)
+                    if (arr.length === 0) {
+                        engineLogOutputFileAndUI(win, "引擎无法获取可用端口号, 请重置内置引擎")
+                        reject("引擎无法获取可用端口号, 请重置内置引擎")
+                        return
+                    }
+                    // 处理干扰符号：去除前后空格/换行
+                    const cleanedOutput = arr[0].trim()
+                    const result = JSON.parse(cleanedOutput)
+                    engineLogOutputFileAndUI(win, `----- 获取启动引擎可用端口成功: ${result.port} -----`)
+                    resolve(result.port)
+                } catch (parseError) {
+                    reject(parseError)
+                }
+            })
         })
     }
     ipcMain.handle("get-avaiable-port", async (e, params) => {
