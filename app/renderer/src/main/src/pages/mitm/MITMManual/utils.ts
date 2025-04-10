@@ -13,6 +13,7 @@ export interface SingleManualHijackControlMessage {
     Drop?: boolean
     Forward?: boolean
     Tags?: string[]
+    UpdateTags?: boolean
     Payload?: Uint8Array
 }
 /**手动劫持操作 */
@@ -31,7 +32,10 @@ export interface MITMSetColorRequest {
 /**设置颜色 */
 export const grpcMITMSetColor: APIFunc<MITMSetColorRequest, null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        grpcMITMManualHijackMessage(params)
+        grpcMITMManualHijackMessage({
+            ...params,
+            UpdateTags: true
+        })
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMSetColor 失败:" + e)
