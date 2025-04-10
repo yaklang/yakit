@@ -6652,6 +6652,7 @@ message SingleManualHijackControlMessage{
   bool CancelHijackResponse = 5;
   bool Drop = 6;
   bool Forward = 7;
+  bool UpdateTags = 10;
   repeated string Tags = 8;
   bytes Payload = 9;
 }
