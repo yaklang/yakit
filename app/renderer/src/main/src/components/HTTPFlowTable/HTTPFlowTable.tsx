@@ -3841,7 +3841,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             const value = JSON.parse(data) || {}
             const {curProcess, version} = value
             if (version !== mitmVersion) return
-            // TODO 需要验证一下
             setParams({
                 ...params,
                 ProcessName: curProcess

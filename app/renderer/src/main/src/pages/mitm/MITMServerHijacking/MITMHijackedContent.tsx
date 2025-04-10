@@ -238,16 +238,25 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     useEffect(() => {
         getMITMFilter()
         getRules()
-        emiter.on("onRefFilterWhiteListEvent", getMITMFilter)
-        emiter.on("onRefreshRuleEvent", getRules)
+        emiter.on("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
+        emiter.on("onRefreshRuleEvent", onRefreshRuleEvent)
         return () => {
-            emiter.off("onRefFilterWhiteListEvent", getMITMFilter)
-            emiter.off("onRefreshRuleEvent", getRules)
+            emiter.off("onRefFilterWhiteListEvent", onRefFilterWhiteListEvent)
+            emiter.off("onRefreshRuleEvent", onRefreshRuleEvent)
         }
     }, [])
     useEffect(() => {
         if (loadedPluginLen) setAlertVisible(true)
     }, [loadedPluginLen])
+
+    const onRefFilterWhiteListEvent = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
+        getMITMFilter()
+    })
+    const onRefreshRuleEvent = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
+        getRules()
+    })
     const clearLoadedPlugins = () => {
         return (
             <YakitButton type='text' colors='danger' onClick={() => onSelectAll(false)} style={{padding: 0}}>

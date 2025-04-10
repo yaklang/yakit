@@ -18,5 +18,6 @@ export type MitmEventProps = {
     onMitmSearchInputVal: string
     onMITMLogProcessQuery: string
     onMitmCurProcess: string
+    /**该信号不用传版本号，是mitm页面通知流量分析页面 */
     onRefreshCurrentRules?: string
 }
