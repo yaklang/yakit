@@ -661,6 +661,12 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             yakitNotify("info", "刷新成功")
         })
     })
+    const onSubmitAll = useMemoizedFn(() => {
+        handleAutoForward("log")
+        setTimeout(() => {
+            handleAutoForward("manual")
+        }, 500)
+    })
     const onRenderHeardExtra = useMemoizedFn(() => {
         return (
             <>
@@ -668,6 +674,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
                     {mitmVersion === MITMVersion.V2 ? (
                         <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
+                            <YakitButton onClick={onSubmitAll}>全部提交</YakitButton>
                             <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
                         </div>
                     ) : (
