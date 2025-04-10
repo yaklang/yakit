@@ -181,11 +181,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             ipcRenderer
                 .invoke("CheckSyntaxFlowRuleUpdate")
                 .then((result: CheckSyntaxFlowRuleUpdateResponse) => {
-                    if (result.NeedUpdate && result.State === "empty" && isShowRuleUpdateModal.current) {
+                    setRuleUpdate(result)
+                    if (result.NeedUpdate && isShowRuleUpdateModal.current) {
                         setFristRuleUpdateModal(true)
                     }
                     isShowRuleUpdateModal.current = false
-                    setRuleUpdate(result)
                     resolve("rule-Update")
                 })
                 .catch((e) => {
@@ -1149,8 +1149,12 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             {/* 规则更新确认弹框 */}
             <YakitHint
                 visible={openFristRuleUpdateModal}
-                title='暂无本地规则'
-                content='检测到本地规则库为空，请点击确定重置规则'
+                title={ruleUpdate?.State === "empty" ? "暂无本地规则" : "本地规则库需要更新"}
+                content={
+                    ruleUpdate?.State === "empty"
+                        ? "检测到本地规则库为空，请点击确定重置规则"
+                        : "检测到需更新本地规则库，请点击更新规则"
+                }
                 onOk={() => {
                     setFristRuleUpdateModal(false)
                     downloadRuleUpdate()
