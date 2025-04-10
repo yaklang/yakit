@@ -117,6 +117,9 @@ export interface SSARisksFilter {
     IsRead?: number
 
     Hash?: string[]
+
+    BeforeCreatedAt?: number
+    AfterCreatedAt?: number
 }
 
 export interface DeleteSSARisksRequest {
