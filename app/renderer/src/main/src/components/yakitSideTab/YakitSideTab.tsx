@@ -5,7 +5,7 @@ import {useControllableValue, useMemoizedFn} from "ahooks"
 import styles from "./YakitSideTab.module.scss"
 
 export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
-    const {yakitTabs, cacheKey, activeKey, onActiveKey} = props
+    const {yakitTabs, cacheKey, activeKey, onActiveKey, setYakitTabs} = props
     const [show, setShow] = useControllableValue<boolean>(props, {
         defaultValue: true,
         valuePropName: "show",
@@ -14,6 +14,18 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
     const onChange = useMemoizedFn((item) => {
         if (item.value === activeKey) {
             setShow((v) => !v)
+            setYakitTabs &&
+                setYakitTabs(
+                    yakitTabs.map((ele) => {
+                        if (ele.value === item.value) {
+                            return {
+                                ...ele,
+                                show: !ele.show
+                            }
+                        }
+                        return ele
+                    })
+                )
         }
         onActiveKey(item.value)
     })
@@ -24,7 +36,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props) => {
                     key={item.value}
                     className={classNames(styles["yakit-side-tab-item"], {
                         [styles["yakit-side-tab-item-active"]]: item.value === activeKey,
-                        [styles["yakit-side-tab-item-show"]]: item.value === activeKey && !show
+                        [styles["yakit-side-tab-item-show"]]: item.value === activeKey && (item.show === false || !show)
                     })}
                     onClick={() => onChange(item)}
                 >

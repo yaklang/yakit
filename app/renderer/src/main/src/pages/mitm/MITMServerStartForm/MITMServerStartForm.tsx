@@ -1,8 +1,8 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useContext, useEffect, useRef, useState} from "react"
 import {Form, Space, Modal} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
-import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MITMResponse, MitmStatus} from "@/pages/mitm/MITMPage"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, ExtraMITMServerProps, MitmStatus} from "@/pages/mitm/MITMPage"
 import {MITMConsts} from "@/pages/mitm/MITMConsts"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
@@ -13,13 +13,11 @@ import {yakitFailed} from "@/utils/notification"
 import {CogIcon, RefreshIcon} from "@/assets/newIcon"
 import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {inputHTTPFuzzerHostConfigItem} from "../../fuzzer//HTTPFuzzerHosts"
 import {RemoveIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -29,6 +27,8 @@ import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import MITMContext, {MITMVersion} from "../Context/MITMContext"
+import {toMITMHacker} from "@/pages/hacker/httpHacker"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -99,6 +99,12 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
 
     const [form] = Form.useForm()
     const stateSecretHijacking = useWatch<string>("stateSecretHijacking", form)
+
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
 
     useEffect(() => {
         if (props.status !== "idle") return
@@ -331,7 +337,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                     }
                 >
                     <YakitRadioButtons
-                        wrapClassName={styles['stateSecretHijacking-btns']}
+                        wrapClassName={styles["stateSecretHijacking-btns"]}
                         buttonStyle='solid'
                         options={[
                             {
@@ -401,6 +407,11 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                         <YakitButton type='primary' size='large' htmlType='submit'>
                             劫持启动
                         </YakitButton>
+                        {mitmVersion === MITMVersion.V1 && (
+                            <YakitButton size='large' onClick={() => toMITMHacker()}>
+                                MITM 劫持 v2
+                            </YakitButton>
+                        )}
                         <ChromeLauncherButton
                             host={useWatch("host", form)}
                             port={useWatch("port", form)}

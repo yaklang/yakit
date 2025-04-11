@@ -117,6 +117,7 @@ import {
     BrutePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    MITMHackerPageInfoProps,
     ModifyNotepadPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
@@ -152,6 +153,7 @@ import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
+const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
 const Home = React.lazy(() => import("@/pages/home/Home"))
 const IRifyHome = React.lazy(() => import("@/pages/home/IRifyHome"))
 const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage"))
@@ -168,6 +170,10 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "new-home": {label: "首页"},
     httpHacker: {
         label: "MITM 交互式劫持",
+        describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
+    },
+    "mitm-hijack": {
+        label: "MITM 交互式劫持 v2",
         describe: "安装 SSL/TLS 证书，劫持浏览器所有流量请求、响应数据包，提供手动劫持与被动扫描两种模式"
     },
     httpFuzzer: {
@@ -251,6 +257,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
 export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.NewHome,
     YakitRoute.HTTPHacker,
+    YakitRoute.MITMHacker,
     YakitRoute.Plugin_Hub,
     YakitRoute.DNSLog,
     YakitRoute.ICMPSizeLog,
@@ -295,6 +302,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.DataCompare,
     YakitRoute.YakScript,
     YakitRoute.HTTPHacker,
+    YakitRoute.MITMHacker,
     YakitRoute.Plugin_Hub,
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
@@ -329,7 +337,12 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Audit_Hole
 ]
 /** 无滚动条的页面路由 */
-export const NoScrollRoutes: YakitRoute[] = [YakitRoute.HTTPHacker, YakitRoute.Mod_Brute, YakitRoute.YakScript]
+export const NoScrollRoutes: YakitRoute[] = [
+    YakitRoute.HTTPHacker,
+    YakitRoute.MITMHacker,
+    YakitRoute.Mod_Brute,
+    YakitRoute.YakScript
+]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
@@ -412,7 +425,7 @@ export interface ComponentParams {
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
     /**漏洞与风险统计页面 */
     riskPageInfoProps?: RiskPageInfoProps
-    /**MITM劫持页面 */
+    /**MITM劫持页面 v1 */
     hTTPHackerPageInfoProps?: HTTPHackerPageInfoProps
     /**代码审计页面 */
     auditCodePageInfo?: AuditCodePageInfoProps
@@ -420,6 +433,8 @@ export interface ComponentParams {
     codeScanPageInfo?: CodeScanPageInfoProps
     /**记事本编辑页面 */
     modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
+    /** hTTPHacker v2 新版 */
+    mitmHackerPageInfo?: MITMHackerPageInfoProps
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -453,6 +468,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return (
                 <Suspense fallback={<PageLoading />}>
                     <HTTPHacker />
+                </Suspense>
+            )
+        case YakitRoute.MITMHacker:
+            return (
+                <Suspense fallback={<PageLoading />}>
+                    <MITMHacker />
                 </Suspense>
             )
         case YakitRoute.HTTPFuzzer:

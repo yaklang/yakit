@@ -1,10 +1,10 @@
-import React, {ForwardedRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
+import React, {ForwardedRef, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {Card, Col, Form, Row, Statistic, Tooltip, Space} from "antd"
 import {YakExecutorParam} from "../invoker/YakExecutorParams"
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {YakScript} from "../invoker/schema"
 import {failed} from "../../utils/notification"
-import {useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn, useThrottleEffect} from "ahooks"
 import style from "./MITMYakScriptLoader.module.scss"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {PluginLocalInfoIcon} from "../customizeMenu/CustomizeMenu"
@@ -41,6 +41,8 @@ import {AuthorImg} from "../plugins/funcTemplate"
 import YakitLogo from "@/assets/yakitLogo.png"
 import UnLogin from "@/assets/unLogin.png"
 import {pluginTypeToName} from "../plugins/builtInData"
+import MITMContext from "./Context/MITMContext"
+import {grpcMITMClearPluginCache, grpcMITMRemoveHook, MITMRemoveHookRequest} from "./MITMHacker/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -63,6 +65,11 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         hasParamsCheckList,
         curTabKey
     } = p
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     const [i, setI] = useState(script)
     useEffect(() => {
         setI(script)
@@ -156,28 +163,31 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
      */
     const onLaunchPlugin = useMemoizedFn(() => {
         if (hackingCheck) {
-            ipcRenderer
-                .invoke("mitm-remove-hook", {
-                    HookName: [],
-                    RemoveHookID: [i.ScriptName]
-                } as any)
-                .then(() => {
-                    if (isHasParams) {
-                        if (i.ScriptName === tempShowPluginHistory) {
-                            emiter.emit("onMitmClearFromPlugin")
-                            setShowPluginHistoryList([])
-                            setTempShowPluginHistory && setTempShowPluginHistory("")
-                            emiter.emit("onHasParamsJumpHistory", "")
-                        }
+            const value: MITMRemoveHookRequest = {
+                HookName: [],
+                RemoveHookID: [i.ScriptName],
+                version: mitmVersion
+            }
+            grpcMITMRemoveHook(value).then(() => {
+                if (isHasParams) {
+                    if (i.ScriptName === tempShowPluginHistory) {
+                        emiter.emit("onMitmClearFromPlugin", mitmVersion)
+                        setShowPluginHistoryList([])
+                        setTempShowPluginHistory && setTempShowPluginHistory("")
+                        emiter.emit(
+                            "onHasParamsJumpHistory",
+                            JSON.stringify({version: mitmVersion, mitmHasParamsNames: ""})
+                        )
                     }
-                })
+                }
+            })
             if (onRemoveHook) onRemoveHook(i.ScriptName, i.Id + "")
             return
         } else {
             if (isHasParams) {
                 handleMitmHasParams()
             } else {
-                clearMITMPluginCache()
+                clearMITMPluginCache(mitmVersion)
                 onSubmitYakScriptId(i.Id, [])
             }
         }
@@ -232,17 +242,28 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                         }
 
                         setShowPluginHistoryList(arr)
-                        emiter.emit("onHasParamsJumpHistory", arr.join(","))
+                        emiter.emit(
+                            "onHasParamsJumpHistory",
+                            JSON.stringify({
+                                mitmHasParamsNames: arr.join(","),
+                                version: mitmVersion
+                            })
+                        )
                     }}
                 />
             </Tooltip>
         )
     }, [i, showPluginHistoryList])
 
-    const onHistoryTagToMitm = (tags: string) => {
-        const newSelectTags = tags.split(",")
-        const arr = showPluginHistoryListRef.current.filter((item) => newSelectTags.includes(item))
-        setShowPluginHistoryList(arr)
+    const onHistoryTagToMitm = (data: string) => {
+        try {
+            const value = JSON.parse(data)
+            const {tags, version} = value
+            if (version !== mitmVersion) return
+            const newSelectTags = tags.split(",")
+            const arr = showPluginHistoryListRef.current.filter((item) => newSelectTags.includes(item))
+            setShowPluginHistoryList(arr)
+        } catch (error) {}
     }
 
     useEffect(() => {
@@ -466,8 +487,8 @@ export interface MITMYakScriptLoaderProps {
     curTabKey: string
 }
 
-export function clearMITMPluginCache() {
-    ipcRenderer.invoke("mitm-clear-plugin-cache").catch((e) => {
+export function clearMITMPluginCache(version: string) {
+    grpcMITMClearPluginCache(version).catch((e) => {
         failed(`清除插件缓存失败: ${e}`)
     })
 }
@@ -497,6 +518,11 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
         onSetDrawerWidth,
         onSetMitmParamsDrawer
     } = props
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     const mitmHasParamsPluginFormRef = useRef<MitmHasParamsFormPropsRefProps>()
     const [initWidth, setInitWidth] = useState<number>(drawerWidth)
 
@@ -564,7 +590,7 @@ const MitmHasParamsDrawer = React.memo((props: MitmHasParamsDrawer) => {
                                                 "mitm_has_params_drawerWidth_" + i.ScriptName,
                                                 drawerWidth + ""
                                             )
-                                            clearMITMPluginCache()
+                                            clearMITMPluginCache(mitmVersion)
                                             onSubmitYakScriptId(i.Id, saveParasmArr)
                                             onSetTempShowPluginHistory && onSetTempShowPluginHistory(i.ScriptName)
                                             onSetMitmParamsDrawer(false)

@@ -4,6 +4,8 @@ export enum YakitRoute {
     NewHome = "new-home",
     /** 手动渗透 */
     HTTPHacker = "httpHacker",
+    /**mitm v2 */
+    MITMHacker = "mitm-hijack",
     HTTPFuzzer = "httpFuzzer",
     WebsocketFuzzer = "websocket-fuzzer",
     Codec = "codec",

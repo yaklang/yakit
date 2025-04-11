@@ -1,4 +1,13 @@
-import React, {Profiler, ReactElement, useEffect, useRef, useState} from "react"
+import React, {
+    Profiler,
+    ReactElement,
+    forwardRef,
+    useContext,
+    useEffect,
+    useImperativeHandle,
+    useRef,
+    useState
+} from "react"
 import {Form, notification} from "antd"
 import {failed, info, success, yakitFailed, yakitNotify} from "../../utils/notification"
 import {MITMFilterSchema} from "./MITMServerStartForm/MITMFilters"
@@ -42,6 +51,23 @@ import {onSetRemoteValuesBase} from "@/components/yakitUI/utils"
 import {CacheDropDownGV, RemoteGV} from "@/yakitGV"
 import classNames from "classnames"
 import {useStore} from "@/store/mitmState"
+import MITMContext from "./Context/MITMContext"
+import {
+    MITMExecScriptByIdRequest,
+    MITMRemoveHookRequest,
+    MITMStartCallRequest,
+    grpcClientMITMError,
+    grpcClientMITMMessage,
+    grpcClientMITMNotification,
+    grpcClientMITMStartSuccess,
+    grpcMITMExecScriptById,
+    grpcMITMHaveCurrentStream,
+    grpcMITMRecover,
+    grpcMITMRemoveHook,
+    grpcMITMStartCall,
+    grpcMITMStopCall
+} from "./MITMHacker/utils"
+import {KVPair} from "@/models/kv"
 const {ipcRenderer} = window.require("electron")
 
 type idleTabKeys = "plugin"
@@ -105,6 +131,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const [showPluginHistoryList, setShowPluginHistoryList] = useState<string[]>([])
     const [tempShowPluginHistory, setTempShowPluginHistory] = useState<string>("")
 
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     useEffect(() => {
         statusRef.current = status
         setMitmStatus(status)
@@ -113,27 +144,26 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     // 检测当前劫持状态
     useEffect(() => {
         // 用于启动 MITM 开始之后，接受开始成功之后的第一个消息，如果收到，则认为说 MITM 启动成功了
-        ipcRenderer.on("client-mitm-start-success", () => {
+
+        grpcClientMITMStartSuccess(mitmVersion).on(() => {
             setStatus("hijacking")
         })
-
-        ipcRenderer.on("client-mitm-notification", (_, i: Uint8Array) => {
+        grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
             try {
                 info(Uint8ArrayToString(i))
             } catch (e) {}
         })
 
         return () => {
-            ipcRenderer.invoke("mitm-stop-call")
-            ipcRenderer.removeAllListeners("client-mitm-start-success")
-            ipcRenderer.removeAllListeners("client-mitm-notification")
+            grpcMITMStopCall(mitmVersion)
+            grpcClientMITMStartSuccess(mitmVersion).remove()
+            grpcClientMITMNotification(mitmVersion).remove()
         }
     }, [])
     // 用于接受后端传回的信息
     useEffect(() => {
         // 用于前端恢复状态
-        ipcRenderer
-            .invoke("mitm-have-current-stream")
+        grpcMITMHaveCurrentStream(mitmVersion)
             .then((data) => {
                 const {haveStream, host, port} = data
                 if (haveStream) {
@@ -150,7 +180,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         let messages: ExecResultLog[] = []
         const statusMap = new Map<string, StatusCardProps>()
         let lastStatusHash = ""
-        ipcRenderer.on("client-mitm-message", (e, data: ExecResult) => {
+        grpcClientMITMMessage(mitmVersion).on((data: ExecResult) => {
             let msg = ExtractExecResultMessage(data)
             if (msg !== undefined) {
                 const currentLog = msg as ExecResultLog
@@ -175,18 +205,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                 }
             }
         })
-
-        // let currentFlow: HTTPFlow[] = []
-        ipcRenderer.on("client-mitm-history-update", (e: any, data: any) => {
-            // currentFlow.push(data.historyHTTPFlow as HTTPFlow)
-            //
-            // if (currentFlow.length > 30) {
-            //     currentFlow = [...currentFlow.slice(0, 30)]
-            // }
-            // setFlows([...currentFlow])
-        })
-
-        ipcRenderer.on("client-mitm-error", (e, msg) => {
+        grpcClientMITMError(mitmVersion).on((msg) => {
             if (!msg) {
                 info("MITM 劫持服务器已关闭")
             } else {
@@ -202,7 +221,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
                     }
                 })
             }
-            ipcRenderer.invoke("mitm-stop-call")
+            grpcMITMStopCall(mitmVersion)
             setStatus("idle")
         })
 
@@ -238,15 +257,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
         return () => {
             clearInterval(id)
-            ipcRenderer.removeAllListeners("client-mitm-error")
-            ipcRenderer.removeAllListeners("client-mitm-history-update")
-            ipcRenderer.removeAllListeners("mitm-have-current-stream")
-            ipcRenderer.removeAllListeners("client-mitm-message")
+            grpcClientMITMError(mitmVersion).remove()
+            grpcClientMITMMessage(mitmVersion).remove()
         }
     }, [])
 
     const recover = useMemoizedFn(() => {
-        ipcRenderer.invoke("mitm-recover").then(() => {
+        grpcMITMRecover(mitmVersion).then(() => {
             // success("恢复 MITM 会话成功")
         })
     })
@@ -261,20 +278,19 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             certs: ClientCertificate[],
             extra?: ExtraMITMServerProps
         ) => {
-            return ipcRenderer
-                .invoke(
-                    "mitm-start-call",
-                    targetHost,
-                    targetPort,
-                    downstreamProxy,
-                    enableHttp2,
-                    ForceDisableKeepAlive,
-                    certs,
-                    extra
-                )
-                .catch((e: any) => {
-                    notification["error"]({message: `启动中间人劫持失败：${e}`})
-                })
+            const params: MITMStartCallRequest = {
+                host: targetHost,
+                port: targetPort,
+                downstreamProxy: downstreamProxy,
+                enableHttp2: enableHttp2,
+                ForceDisableKeepAlive: ForceDisableKeepAlive,
+                certificates: certs,
+                extra,
+                version: mitmVersion
+            }
+            return grpcMITMStartCall(params, true).catch((e: any) => {
+                notification["error"]({message: `启动中间人劫持失败：${e}`})
+            })
         }
     )
 
@@ -369,40 +385,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         }
     })
 
-    // useEffect(() => {
-    //     if (status !== "idle") {
-    //         getRules()
-    //     }
-    // }, [status, visible])
-    // const getRules = useMemoizedFn(() => {
-    //     ipcRenderer
-    //         .invoke("GetCurrentRules", {})
-    //         .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-    //             const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-    //             const findOpenRepRule = newRules.find(
-    //                 (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
-    //             )
-    //             if (findOpenRepRule !== undefined) {
-    //                 if (tip.indexOf("启用替换规则") === -1) {
-    //                     setTip(tip + "|启用替换规则")
-    //                 }
-    //             } else {
-    //                 setTip(tip.replace("|启用替换规则", ""))
-    //             }
-    //         })
-    //         .catch((e) => yakitFailed("获取规则列表失败:" + e))
-    // })
-
     useEffect(() => {
         const onChangeAddrAndEnableInitialPlugin = (values) => {
             try {
                 const valObj = JSON.parse(values) || {}
+                if (valObj.version !== mitmVersion) return
                 setAddr(`http://${valObj.host}:${valObj.port} 或 socks5://${valObj.host}:${valObj.port}`)
                 setHost(valObj.host)
                 setPort(valObj.port)
                 setEnableInitialMITMPlugin(valObj.enableInitialPlugin)
                 if (!valObj.enableInitialPlugin) {
-                    emiter.emit("onClearMITMHackPlugin")
+                    emiter.emit("onClearMITMHackPlugin", mitmVersion)
                 }
                 setRemoteValue(MITMConsts.MITMDefaultPort, `${valObj.port}`)
                 onSetRemoteValuesBase({
@@ -448,7 +441,7 @@ export interface ExtraMITMServerProps {
     proxyPassword: string
     proxyUsername: string
     dnsServers: string[]
-    hosts: {Key: string; Value: string}[]
+    hosts: KVPair[]
     /**@name 过滤WebSocket */
     filterWebsocket: boolean
     /**禁用初始页 */
@@ -501,6 +494,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
         setTempShowPluginHistory,
         setFiltersVisible
     } = props
+
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
 
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
 
@@ -558,7 +557,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
 
     const onSubmitYakScriptId = useMemoizedFn((id: number, params: YakExecutorParam[]) => {
         info(`加载 MITM 插件[${id}]`)
-        ipcRenderer.invoke("mitm-exec-script-by-id", id, params)
+        const value: MITMExecScriptByIdRequest = {
+            id,
+            params,
+            version: mitmVersion
+        }
+        grpcMITMExecScriptById(value)
     })
     const onStartMITMServer = useMemoizedFn(
         (
@@ -620,11 +624,12 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
      */
     const onSelectAllHijacking = useMemoizedFn((checked: boolean) => {
         if (checked) {
-            ipcRenderer
-                .invoke("mitm-remove-hook", {
-                    HookName: [],
-                    RemoveHookID: listNames.concat(noParamsCheckList)
-                } as any)
+            const value: MITMRemoveHookRequest = {
+                HookName: [],
+                RemoveHookID: listNames.concat(noParamsCheckList),
+                version: mitmVersion
+            }
+            grpcMITMRemoveHook(value)
                 .then(() => {
                     onEnableMITMPluginMode(checked)
                     setIsSelectAll(checked)
@@ -634,17 +639,21 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
                 })
         } else {
             // 点按钮清空
-            ipcRenderer
-                .invoke("mitm-remove-hook", {
-                    HookName: [],
-                    RemoveHookID: [...new Set([...listNames, ...hasParamsCheckList, ...noParamsCheckList])]
-                } as any)
+            const value: MITMRemoveHookRequest = {
+                HookName: [],
+                RemoveHookID: [...new Set([...listNames, ...hasParamsCheckList, ...noParamsCheckList])],
+                version: mitmVersion
+            }
+            grpcMITMRemoveHook(value)
                 .then(() => {
                     setIsSelectAll(checked)
-                    emiter.emit("onMitmClearFromPlugin")
+                    emiter.emit("onMitmClearFromPlugin", mitmVersion)
                     setShowPluginHistoryList([])
                     setTempShowPluginHistory && setTempShowPluginHistory("")
-                    emiter.emit("onHasParamsJumpHistory", "")
+                    emiter.emit(
+                        "onHasParamsJumpHistory",
+                        JSON.stringify({version: mitmVersion, mitmHasParamsNames: ""})
+                    )
                 })
                 .catch((err) => {
                     yakitFailed("清空失败:" + err)
@@ -653,8 +662,10 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     })
 
     useEffect(() => {
-        const onClearMITMHackPlugin = () => {
-            onSelectAllHijacking(false)
+        const onClearMITMHackPlugin = (version) => {
+            if (version === mitmVersion) {
+                onSelectAllHijacking(false)
+            }
         }
         emiter.on("onClearMITMHackPlugin", onClearMITMHackPlugin)
         return () => {
@@ -663,7 +674,7 @@ export const MITMServer: React.FC<MITMServerProps> = React.memo((props) => {
     }, [])
 
     const onEnableMITMPluginMode = useMemoizedFn((checked: boolean) => {
-        enableMITMPluginMode(listNames)
+        enableMITMPluginMode({initPluginNames: listNames, version: mitmVersion})
             .then(() => {
                 setIsSelectAll(checked)
                 info("启动 MITM 插件成功")

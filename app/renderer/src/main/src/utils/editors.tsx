@@ -520,6 +520,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     noPacketModifier?: boolean
     noTitle?: boolean
     title?: React.ReactNode
+    titleStyle?: React.CSSProperties
     noHex?: boolean
 
     // lang
@@ -960,7 +961,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 style={{height: "100%", width: "100%", backgroundColor: "#f0f2f5"}}
                 title={
                     !props.noHeader && (
-                        <div style={{display: "flex", gap: 2}}>
+                        <div style={{display: "flex", gap: 2, ...(props.titleStyle || {})}}>
                             {!props.noTitle &&
                                 (!!props.title ? (
                                     props.title

@@ -107,6 +107,7 @@ import {
     AuditCodePageInfoProps,
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
+    MITMHackerPageInfoProps,
     ModifyNotepadPageInfoProps,
     PageNodeItemProps,
     PageProps,
@@ -152,6 +153,7 @@ import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
+import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -557,6 +559,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Rule_Management:
                 addRuleManagement()
                 break
+            case YakitRoute.MITMHacker:
+                addMITMHacker(params)
+                break
             default:
                 break
         }
@@ -678,6 +683,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             {
                 pageParams: {
                     hTTPHackerPageInfoProps: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
+    /** HTTPHackerPage v2 */
+    const addMITMHacker = useMemoizedFn((data: MITMHackerPageInfoProps) => {
+        openMenuPage(
+            {route: YakitRoute.MITMHacker},
+            {
+                pageParams: {
+                    mitmHackerPageInfo: {
                         ...data
                     }
                 }
@@ -1239,13 +1257,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         sortFieId: 1
                     }
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
-                    switch (route) {
-                        case YakitRoute.AddYakitScript:
-                            onSetAddYakitScriptData(singleUpdateNode, 1)
-                            break
-                        default:
-                            break
-                    }
+                    onSetPageInfoDataOfSingle(route, singleUpdateNode)
                     openFlag && setCurrentTabKey(key)
                     return
                 }
@@ -1264,13 +1276,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     sortFieId: 1
                 }
                 //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
-                switch (route) {
-                    case YakitRoute.AddYakitScript:
-                        onSetAddYakitScriptData(singleNode, 1)
-                        break
-                    default:
-                        break
-                }
+                onSetPageInfoDataOfSingle(route, singleNode)
 
                 setPageCache([
                     ...pageCache,
@@ -1338,79 +1344,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                         pages.push({...eleItem})
                     })
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
-                    switch (route) {
-                        case YakitRoute.HTTPFuzzer:
-                            addFuzzerList(node.id, node, order)
-                            break
-                        case YakitRoute.Space_Engine:
-                            onSetSpaceEngineData(node, order)
-                            break
-                        case YakitRoute.PoC:
-                            onSetPocData(node, order)
-                            break
-                        case YakitRoute.BatchExecutorPage:
-                            onBatchExecutorPage(node, order)
-                            break
-                        case YakitRoute.Mod_Brute:
-                            onBrutePage(node, order)
-                            break
-                        case YakitRoute.Mod_ScanPort:
-                            onScanPortPage(node, order)
-                            break
-                        case YakitRoute.SimpleDetect:
-                            onSetSimpleDetectData(node, order)
-                            break
-                        case YakitRoute.WebsocketFuzzer:
-                            onWebsocketFuzzer(node, order)
-                            break
-                        case YakitRoute.Modify_Notepad:
-                            onSetModifyNotepadData(node, order)
-                            break
-                        case YakitRoute.YakRunner_Code_Scan:
-                            onCodeScanPage(node, order)
-                            break
-                        default:
-                            break
-                    }
+                    onSetPageInfoDataOfMultiple(route, node, order)
                     setPageCache([...pages])
                     openFlag && setCurrentTabKey(key)
                 } else {
                     //  请勿随意调整执行顺序，先加页面的数据，再新增页面，以便于设置页面初始值
-
-                    switch (route) {
-                        case YakitRoute.HTTPFuzzer:
-                            addFuzzerList(node.id, node, 1)
-                            break
-                        case YakitRoute.Space_Engine:
-                            onSetSpaceEngineData(node, 1)
-                            break
-                        case YakitRoute.PoC:
-                            onSetPocData(node, 1)
-                            break
-                        case YakitRoute.BatchExecutorPage:
-                            onBatchExecutorPage(node, 1)
-                            break
-                        case YakitRoute.Mod_Brute:
-                            onBrutePage(node, 1)
-                            break
-                        case YakitRoute.Mod_ScanPort:
-                            onScanPortPage(node, 1)
-                            break
-                        case YakitRoute.SimpleDetect:
-                            onSetSimpleDetectData(node, 1)
-                            break
-                        case YakitRoute.WebsocketFuzzer:
-                            onWebsocketFuzzer(node, 1)
-                            break
-                        case YakitRoute.Modify_Notepad:
-                            onSetModifyNotepadData(node, 1)
-                            break
-                        case YakitRoute.YakRunner_Code_Scan:
-                            onCodeScanPage(node, 1)
-                            break
-                        default:
-                            break
-                    }
+                    onSetPageInfoDataOfMultiple(route, node, 1)
                     setPageCache([
                         ...pageCache,
                         {
@@ -1431,6 +1370,57 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
         }
     )
+    /**单开页面 设置数据中心页面中的值 */
+    const onSetPageInfoDataOfSingle = useMemoizedFn((route: YakitRoute, singleUpdateNode: MultipleNodeInfo) => {
+        switch (route) {
+            case YakitRoute.AddYakitScript:
+                onSetAddYakitScriptData(singleUpdateNode, 1)
+                break
+            case YakitRoute.MITMHacker:
+                onMITMHackerPage(singleUpdateNode, 1)
+                break
+            default:
+                break
+        }
+    })
+    /**多开页面 设置数据中心页面中的值 */
+    const onSetPageInfoDataOfMultiple = useMemoizedFn((route: YakitRoute, node: MultipleNodeInfo, order: number) => {
+        switch (route) {
+            case YakitRoute.HTTPFuzzer:
+                addFuzzerList(node.id, node, order)
+                break
+            case YakitRoute.Space_Engine:
+                onSetSpaceEngineData(node, order)
+                break
+            case YakitRoute.PoC:
+                onSetPocData(node, order)
+                break
+            case YakitRoute.BatchExecutorPage:
+                onBatchExecutorPage(node, order)
+                break
+            case YakitRoute.Mod_Brute:
+                onBrutePage(node, order)
+                break
+            case YakitRoute.Mod_ScanPort:
+                onScanPortPage(node, order)
+                break
+            case YakitRoute.SimpleDetect:
+                onSetSimpleDetectData(node, order)
+                break
+            case YakitRoute.WebsocketFuzzer:
+                onWebsocketFuzzer(node, order)
+                break
+            case YakitRoute.Modify_Notepad:
+                onSetModifyNotepadData(node, order)
+                break
+            case YakitRoute.YakRunner_Code_Scan:
+                onCodeScanPage(node, order)
+                break
+
+            default:
+                break
+        }
+    })
     /**单页面直接set */
     const onSetAddYakitScriptData = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
@@ -2116,6 +2106,26 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             sortFieId: order
         }
         addPagesDataCache(YakitRoute.YakRunner_Code_Scan, newPageNode)
+    })
+    /**mitm劫持 v2版本 */
+    const onMITMHackerPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.MITMHacker,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                mitmHackerPageInfo: node.pageParams?.mitmHackerPageInfo || defaultMITMHackerPageInfo
+            },
+            sortFieId: order
+        }
+        let pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [newPageNode],
+            routeKey: YakitRoute.MITMHacker
+        }
+        setPagesData(YakitRoute.MITMHacker, pageNodeInfo)
     })
     /**WebsocketFuzzer */
     const onWebsocketFuzzer = useMemoizedFn((node: MultipleNodeInfo, order: number) => {

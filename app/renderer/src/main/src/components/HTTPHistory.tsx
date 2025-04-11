@@ -1,8 +1,8 @@
-import React, {ReactElement, useEffect, useMemo, useRef, useState} from "react"
+import React, {ReactElement, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
@@ -53,6 +53,7 @@ import {RefreshIcon} from "@/assets/newIcon"
 import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
 import styles from "./HTTPHistory.module.scss"
 
+import MITMContext from "@/pages/mitm/Context/MITMContext"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -248,6 +249,11 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
 
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         try {
@@ -267,7 +273,10 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             delete processQuery.ProcessName
             setProcessQueryparams(JSON.stringify(processQuery))
             if (pageType === "MITM") {
-                emiter.emit("onMITMLogProcessQuery", JSON.stringify(processQuery))
+                emiter.emit(
+                    "onMITMLogProcessQuery",
+                    JSON.stringify({queryStr: JSON.stringify(processQuery), version: mitmVersion})
+                )
             }
         } catch (error) {}
     })
