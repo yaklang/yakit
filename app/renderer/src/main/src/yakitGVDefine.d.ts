@@ -38,11 +38,10 @@ export type YakitStatusType =
     | "ready" // 开始尝试连接引擎
     | "control-remote" // 远程控制中(不是远程连接)
     | "control-remote-timeout" // 远程控制连接超时
+    | "engine-error" // 引擎文件问题
     | ""
 /** @name 引擎其他操作 */
-export type EngineOtherOperation = 
-    | "changePort"
-    | ""
+export type EngineOtherOperation = "changePort" | ""
 
 /** @name funcDomain组件-全局setting功能的点击回调事件类型 */
 export type YakitSettingCallbackType = "console" | "break" | "changeProject" | "encryptionProject" | "plaintextProject"

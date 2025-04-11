@@ -563,6 +563,11 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 handleLinkLocalMode()
                 return
 
+            case "engine-error":
+                setTimeoutLoading(setRestartLoading)
+                if (localEngineRef.current) localEngineRef.current.resetBuiltIn()
+                return
+
             default:
                 return
         }
@@ -1741,7 +1746,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
                         <LocalEngine
                             ref={localEngineRef}
-                            system={system}
                             setLog={setCheckLog}
                             onLinkEngine={handleLinkLocalEngine}
                             setYakitStatus={setYakitStatus}

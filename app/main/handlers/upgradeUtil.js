@@ -20,14 +20,10 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
-const {
-    downloadYakitEE,
-    downloadYakitCommunity,
-    downloadYakEngine,
-    getDownloadUrl
-} = require("./utils/network")
+const {downloadYakitEE, downloadYakitCommunity, downloadYakEngine, getDownloadUrl} = require("./utils/network")
 const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
 const {getCheckTextUrl} = require("../handlers/utils/network")
+const {engineLogOutputFileAndUI} = require("../logFile")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
 const authMeta = []
@@ -195,10 +191,12 @@ module.exports = {
         const asyncGetCurrentLatestYakVersion = (params) => {
             return new Promise((resolve, reject) => {
                 if (latestVersionCache) {
+                    engineLogOutputFileAndUI(win, `----- 获取到yak版本(缓存): ${latestVersionCache} -----`)
                     resolve(latestVersionCache)
                     return
                 }
 
+                engineLogOutputFileAndUI(win, `----- 开始获取 yak 本地版本 -----`)
                 console.info("YAK-VERSION: mount version")
                 yakVersionEmitter.once("version", (err, version) => {
                     if (err) {
@@ -223,9 +221,10 @@ module.exports = {
 
                 console.info("YAK-VERSION process is executing...")
                 isFetchingVersion = true
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], (err, stdout) => {
-                    console.info(stdout)
+                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout) => {
+                    engineLogOutputFileAndUI(win, `${stdout.toString("utf-8")}`)
                     if (err) {
+                        engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
                         yakVersionEmitter.emit("version", err, null)
                         isFetchingVersion = false
                         return
@@ -234,10 +233,12 @@ module.exports = {
                     const match = /.*?yak(\.exe)?\s+version\s+(\S+)/.exec(stdout)
                     const version = match && match[2]
                     if (!version) {
+                        engineLogOutputFileAndUI(win, "[unknown reason] cannot fetch yak version (yak -v)")
                         const error = new Error("[unknown reason] cannot fetch yak version (yak -v)")
                         yakVersionEmitter.emit("version", error, null)
                         isFetchingVersion = false
                     } else {
+                        engineLogOutputFileAndUI(win, `----- 获取到yak本地版本: ${version}-----`)
                         latestVersionCache = version
                         yakVersionEmitter.emit("version", null, version)
                         isFetchingVersion = false
@@ -255,10 +256,13 @@ module.exports = {
                 fs.access(commandPath, fs.constants.X_OK, (err) => {
                     if (err) {
                         if (err.code === "ENOENT") {
+                            engineLogOutputFileAndUI(win, `命令未找到: ${commandPath}`)
                             reject(new Error(`命令未找到: ${commandPath}`))
                         } else if (err.code === "EACCES") {
+                            engineLogOutputFileAndUI(win, `命令无法执行(无权限): ${commandPath}`)
                             reject(new Error(`命令无法执行(无权限): ${commandPath}`))
                         } else {
+                            engineLogOutputFileAndUI(win, `命令无法执行: ${commandPath}`)
                             reject(new Error(`命令无法执行: ${commandPath}`))
                         }
                         return
@@ -276,6 +280,8 @@ module.exports = {
                             } else if (error.code === "ETIMEDOUT") {
                                 errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
                             }
+
+                            engineLogOutputFileAndUI(win, `${errorMessage}`)
 
                             reject(new Error(errorMessage))
                             return
@@ -379,13 +385,13 @@ module.exports = {
                 console.info("start to fetching download-url for yakit")
                 let downloadUrl = ""
                 if (IRifyCE) {
-                    downloadUrl = await getDownloadUrl(version,"IRifyCE")
+                    downloadUrl = await getDownloadUrl(version, "IRifyCE")
                 } else if (IRifyEE) {
-                    downloadUrl = await getDownloadUrl(version,"IRifyEE")
+                    downloadUrl = await getDownloadUrl(version, "IRifyEE")
                 } else if (YakitEE) {
-                    downloadUrl = await getDownloadUrl(version,"YakitEE")
+                    downloadUrl = await getDownloadUrl(version, "YakitEE")
                 } else {
-                    downloadUrl = await getDownloadUrl(version,"YakitCE")
+                    downloadUrl = await getDownloadUrl(version, "YakitCE")
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
                 if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})

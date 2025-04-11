@@ -113,7 +113,10 @@ function testEngineAvaiableVersion(params) {
         try {
             const {port, version} = params
             const yak = new Yak(`127.0.0.1:${port}`, grpc.credentials.createInsecure(), options)
-            yak.Handshake({Name: version}, (err, data) => {
+            const deadline = new Date()
+            // 设置超时时间为3秒
+            deadline.setSeconds(deadline.getSeconds() + 3)
+            yak.Handshake({Name: version}, {deadline}, (err, data) => {
                 if (err) {
                     reject(err)
                     return

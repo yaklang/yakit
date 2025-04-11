@@ -25,7 +25,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
-        const {system, setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
+        const {setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion} = props
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -37,7 +37,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             ipcRenderer
                 .invoke("check-local-database")
                 .then((e) => {
-                    isError = e === "not allow to write" && system !== "Windows_NT"
+                    isError = e === "not allow to write" && SystemInfo.system !== "Windows_NT"
                     if (isError) {
                         setLog((old) => old.concat(["数据库权限错误，开始进行修复操作(非WIN系统检查)"]))
                         setDatabaseErrorVisible(true)
@@ -56,6 +56,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const localPort = useRef<number>(0)
         /** 获取上次本地连接引擎的端口缓存 */
         const handleLinkEnginePort = useMemoizedFn(async (isInit: boolean) => {
+            let builtInVersion = ""
+            try {
+                builtInVersion = await grpcFetchBuildInYakVersion(true)
+            } catch (error) {}
+
             let avaPort = 0
             let err: any
             try {
@@ -70,8 +75,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 // 缓存端口和可用端口都不存在
                 if (!cachePort && !avaPort) {
                     continueExe = false
-                    setLog([`获取可用端口失败: ${err}`])
-                    setYakitStatus("break")
+                    setLog([
+                        `获取可用端口失败: ${err}`,
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                    ])
+                    setYakitStatus("engine-error")
                 }
                 // 缓存端口存在
                 if (!!cachePort) {
@@ -92,8 +100,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     localPort.current = avaPort
                 } else {
                     continueExe = false
-                    setLog([`获取可用端口失败: ${err}`])
-                    setYakitStatus("break")
+                    setLog([
+                        `获取可用端口失败: ${err}`,
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                    ])
+                    setYakitStatus("engine-error")
                 }
             } finally {
                 if (continueExe) {
@@ -147,7 +158,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                             const [res1, res2] = await Promise.allSettled([
                                 grpcFetchLocalYakitVersion(true),
                                 Promise.race([grpcFetchLatestYakitVersion({timeout: 2000}, true), promise])
-                                // grpcFetchLatestYakitVersion({timeout: 2000}, true)
                             ])
                             if (res1.status === "fulfilled") {
                                 currentYakit.current = res1.value || ""
@@ -188,9 +198,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCheckEngineVersion = useMemoizedFn(async () => {
             setLog(["获取引擎版本号并检查更新..."])
             try {
+                const promise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Fetch local engine timeout")), 5100)
+                )
                 const [res1, res2] = await Promise.allSettled([
                     // 本地
-                    grpcFetchLocalYakVersion(true),
+                    Promise.race([grpcFetchLocalYakVersion(true), promise]),
+                    // grpcFetchLocalYakVersion(true),
                     // 内置
                     grpcFetchBuildInYakVersion(true)
                 ])
@@ -199,12 +213,17 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     buildInYak.current = buildIn.startsWith("v") ? buildIn.substring(1) : buildIn
                 }
                 if (res1.status === "fulfilled") {
-                    currentYak.current = res1.value || ""
+                    currentYak.current = (res1.value as string) || ""
                     setLog((old) =>
                         old.concat([
                             currentYak.current ? `本地引擎版本——${currentYak.current}` : "未获取到本地引擎版本号"
                         ])
                     )
+
+                    if (isResetBuiltInReason.current && !!buildInYak.current) {
+                        setShowYak(true)
+                        return
+                    }
 
                     if (!!currentYak.current && !!buildInYak.current && buildInYak.current > currentYak.current) {
                         setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
@@ -230,18 +249,25 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCheckEngineSource = useMemoizedFn(async (version: string) => {
             setLog(["开始校验引擎来源..."])
             try {
+                const promise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Fetch engine online hash request timed out")), 2100)
+                )
                 const [res1, res2] = await Promise.all([
                     // 远端
-                    grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
+                    Promise.race([
+                        grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
+                        promise
+                    ]),
+                    // grpcFetchSpecifiedYakVersionHash({version: version, config: {timeout: 2000}}, true),
                     // 本地
                     grpcFetchLocalYakVersionHash()
                 ])
 
-                if (res1 === "" || !Array.isArray(res2) || res2.length === 0) {
+                if (!res1 || !Array.isArray(res2) || res2.length === 0) {
                     setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {
-                    if (res2.includes(res1)) {
+                    if (res2.includes(res1 as string)) {
                         setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
                         handleLinkLocalEnging()
                     } else {
@@ -249,7 +275,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         setVersionAbnormalVisible(true)
                     }
                 }
-                
             } catch (error) {
                 setLog((old) => old.concat(["异常情况，无法检测来源，准备连接引擎"]))
                 handleLinkLocalEnging()
@@ -310,12 +335,18 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const toLink = useMemoizedFn(() => {
             handleLinkEnginePort(false)
         })
+        // 重置内置引擎的确认弹框
+        const resetBuiltIn = useMemoizedFn(() => {
+            isResetBuiltInReason.current = true
+            handleCheckEngineVersion()
+        })
 
         useImperativeHandle(
             ref,
             () => ({
                 init: initLink,
-                link: toLink
+                link: toLink,
+                resetBuiltIn: resetBuiltIn
             }),
             []
         )
@@ -358,6 +389,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         /** ---------- Yakit更新弹框 End ---------- */
 
         /** ---------- 引擎更新弹框 Start ---------- */
+        // 是否因为引擎文件错误导致的重置内置引擎安装
+        const isResetBuiltInReason = useRef(false)
         // 本地引擎版本
         const currentYak = useRef<string>("")
         // 内置引擎版本
@@ -365,12 +398,17 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const [showYak, setShowYak] = useState<boolean>(false)
         const onCancelUpdateYak = useMemoizedFn((result: boolean) => {
             setShowYak(false)
-            if (currentYak.current) {
-                handleCheckEngineSource(result ? buildInYak.current : currentYak.current)
+            if (isResetBuiltInReason.current) {
+                handleLinkEnginePort(true)
             } else {
-                setLog((old) => old.concat(["未获取到引擎版本号，请重试!"]))
-                setYakitStatus("checkError")
+                if (currentYak.current) {
+                    handleCheckEngineSource(result ? buildInYak.current : currentYak.current)
+                } else {
+                    setLog((old) => old.concat(["未获取到引擎版本号，请重试!"]))
+                    setYakitStatus("checkError")
+                }
             }
+            isResetBuiltInReason.current = false
         })
         /** ---------- 引擎更新弹框 End ---------- */
 

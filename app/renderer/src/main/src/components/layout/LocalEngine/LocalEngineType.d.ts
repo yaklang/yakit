@@ -1,9 +1,8 @@
 import React, {Dispatch, SetStateAction} from "react"
-import {YakitSystem} from "@/yakitGVDefine"
+import {YakitStatusType, YakitSystem} from "@/yakitGVDefine"
 
 export interface LocalEngineProps {
     ref?: React.ForwardedRef<LocalEngineLinkFuncProps>
-    system: YakitSystem
     setLog: Dispatch<SetStateAction<string[]>>
     onLinkEngine: (port: number) => any
     setYakitStatus: (v: YakitStatusType) => any
@@ -15,4 +14,6 @@ export interface LocalEngineLinkFuncProps {
     init: () => any
     /** 检查引擎版本后的本地连接 */
     link: () => any
+    /** 引擎版本问题后的内置版本解压弹框确认 */
+    resetBuiltIn: () => void
 }

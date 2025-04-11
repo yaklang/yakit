@@ -3,22 +3,9 @@ const childProcess = require("child_process")
 const _sudoPrompt = require("sudo-prompt")
 const {GLOBAL_YAK_SETTING} = require("../state")
 const {testRemoteClient} = require("../ipc")
-const {getLocalYaklangEngine, engineLog, YakitProjectPath} = require("../filePath")
+const {getLocalYaklangEngine, YakitProjectPath} = require("../filePath")
 const net = require("net")
-const fs = require("fs")
-const path = require("path")
-const {getNowTime} = require("../toolsFunc")
-
-/** 引擎错误日志 */
-const logPath = path.join(engineLog, `engine-log-${getNowTime()}.txt`)
-let out = null
-fs.open(logPath, "a", (err, fd) => {
-    if (err) {
-        console.log("获取本地引擎日志错误：", err)
-    } else {
-        out = fd
-    }
-})
+const {engineLogOutputFileAndUI, engineLogOutputUI} = require("../logFile")
 
 let dbFile = undefined
 
@@ -44,8 +31,6 @@ function isPortAvailable(port) {
     })
 }
 
-function isPortOpen(port) {}
-
 const isWindows = process.platform === "win32"
 
 /** @name 生成windows系统的管理员权限命令 */
@@ -64,35 +49,22 @@ const isWindows = process.platform === "win32"
 //     }
 // }
 
-const engineStdioOutputFactory = (win) => (buf) => {
-    if (win) {
-        win.webContents.send("live-engine-stdio", buf.toString("utf-8"))
-    }
-}
-
-const engineLogOutputFactory = (win) => (message) => {
-    if (win) {
-        console.info(message)
-        win.webContents.send("live-engine-log", message + "\n")
-    }
-}
-
 const ECHO_TEST_MSG = "Hello Yakit!"
 
 module.exports = (win, callback, getClient, newClient) => {
-    // 输出到欢迎页面的 output 中
-    const toStdout = engineStdioOutputFactory(win)
-    // 输出到日志中
-    const toLog = engineLogOutputFactory(win)
-
     /** 获取本地引擎版本号 */
     ipcMain.handle("fetch-yak-version", () => {
         try {
+            engineLogOutputFileAndUI(win, `----- 获取正在连接引擎的版本号 -----`)
             getClient().Version({}, async (err, data) => {
-                if (win && data.Version) win.webContents.send("fetch-yak-version-callback", data.Version)
-                else win.webContents.send("fetch-yak-version-callback", "")
+                if (win && data.Version) {
+                    engineLogOutputFileAndUI(win, `----- 正在连接引擎的版本号: ${data.Version} -----`)
+                    win.webContents.send("fetch-yak-version-callback", data.Version)
+                } else win.webContents.send("fetch-yak-version-callback", "")
             })
         } catch (e) {
+            engineLogOutputFileAndUI(win, `----- 获取正在连接引擎版本号失败 -----`)
+            engineLogOutputFileAndUI(win, `${e}`)
             win.webContents.send("fetch-yak-version-callback", "")
         }
     })
@@ -158,21 +130,20 @@ module.exports = (win, callback, getClient, newClient) => {
         const {port, isEnpriTraceAgent, isIRify} = params
         return new Promise((resolve, reject) => {
             try {
-                toLog("已启动本地引擎进程")
+                engineLogOutputFileAndUI(win, `----- 已启动本地引擎进程 -----`)
                 if (isIRify) {
                     dbFile = ["--profile-db", "irify-profile-rule.db", "--project-db", "default-irify.db"]
                 }
-                const log = out ? out : "ignore"
 
                 const grpcPort = ["grpc", "--port", `${port}`, "--frontend", `${version || "yakit"}`]
                 const extraParams = dbFile ? [...grpcPort, ...dbFile] : grpcPort
                 const resultParams = isEnpriTraceAgent ? [...extraParams, "--disable-output"] : extraParams
 
+                engineLogOutputFileAndUI(win, `启动命令: ${getLocalYaklangEngine()} ${resultParams.join(" ")}`)
                 const subprocess = childProcess.spawn(getLocalYaklangEngine(), resultParams, {
-                    // stdio: ["ignore", "ignore", "ignore"]
                     detached: false,
                     windowsHide: true,
-                    stdio: ["ignore", log, log],
+                    stdio: ["ignore", "pipe", "pipe"],
                     env: {
                         ...process.env,
                         YAKIT_HOME: YakitProjectPath
@@ -185,26 +156,26 @@ module.exports = (win, callback, getClient, newClient) => {
                     subprocess.kill()
                 })
                 subprocess.on("error", (err) => {
-                    toLog(`本地引擎遭遇错误，错误原因为：${err}`)
+                    engineLogOutputFileAndUI(win, `----- 本地引擎遭遇错误，错误原因 -----`)
+                    engineLogOutputFileAndUI(win, err)
                     win.webContents.send("start-yaklang-engine-error", `本地引擎遭遇错误，错误原因为：${err}`)
                     reject(err)
                 })
                 subprocess.on("close", async (e) => {
-                    toLog(`本地引擎退出，退出码为：${e}`)
-                    fs.readFile(engineLog, (err, data) => {
-                        if (err) {
-                            console.log("读取引擎文件失败", err)
-                        } else {
-                            toStdout(data)
-                            setTimeout(() => {
-                                try {
-                                    fs.unlinkSync(engineLog)
-                                } catch (e) {
-                                    console.info(`unlinkSync 'engine.log' local cache failed: ${e}`, e)
-                                }
-                            }, 1000)
-                        }
-                    })
+                    engineLogOutputFileAndUI(win, `----- 本地引擎退出，退出码为：${e} -----`)
+                })
+
+                subprocess.stdout.on("data", (data) => {
+                    try {
+                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
+                })
+                subprocess.stderr.on("data", (data) => {
+                    try {
+                        // const match = data.toString("utf-8").match(/\[\w+:\d+]\s+(.*)/)[1]
+                        engineLogOutputFileAndUI(win, `${data.toString("utf-8")}`)
+                    } catch (error) {}
                 })
                 resolve()
             } catch (e) {
@@ -265,8 +236,8 @@ module.exports = (win, callback, getClient, newClient) => {
             hostFormatted = `${hostRaw.substr(0, hostRaw.lastIndexOf(":"))}`
         }
         const addr = `${hostFormatted}:${portFromRaw}`
-        toLog(`原始参数为: ${JSON.stringify(params)}`)
-        toLog(`开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
+        engineLogOutputFileAndUI(win, `原始参数为: ${JSON.stringify(params)}`)
+        engineLogOutputFileAndUI(win, `开始连接引擎地址为：${addr} Host: ${hostRaw} Port: ${portFromRaw}`)
         GLOBAL_YAK_SETTING.defaultYakGRPCAddr = addr
 
         callback(
@@ -289,12 +260,9 @@ module.exports = (win, callback, getClient, newClient) => {
         })
     })
 
-    /** 断开引擎(暂未使用) */
-    ipcMain.handle("break-yaklalng-engine", () => {})
-
     /** 输出到欢迎界面的日志中 */
     ipcMain.handle("output-log-to-welcome-console", (e, msg) => {
-        toLog(`${msg}`)
+        engineLogOutputUI(win, `${msg}`, true)
     })
 
     /** 调用命令生成运行节点 */
