@@ -17,8 +17,8 @@ export interface MITMManualProps {
 export interface ManualHijackInfoRefProps {
     /**提交数据 */
     onSubmitData: (s: SingleManualHijackInfoMessage) => void
-    /**mitm 转发 */
-    onHijackingForward: (s: SingleManualHijackInfoMessage) => void
+    /**劫持响应 */
+    onHijackingResponse: (s: SingleManualHijackInfoMessage) => void
 }
 export interface ManualHijackInfoProps {
     ref?: React.ForwardedRef<ManualHijackInfoRefProps>
@@ -59,8 +59,8 @@ export interface MITMV2ManualEditorProps {
     onScrollTo?: (i: number) => void
     /**切换劫持类型 */
     handleAutoForward: (v: ManualHijackTypeProps) => void
-    /**mitm 转发 */
-    onHijackingForward: (s: SingleManualHijackInfoMessage) => void
+    /**劫持响应 */
+    onHijackingResponse: (s: SingleManualHijackInfoMessage) => void
 
     /**美化&渲染 */
     typeOptionVal?: RenderTypeOptionVal

@@ -12,6 +12,7 @@ export interface SingleManualHijackControlMessage {
     CancelHijackResponse?: boolean
     Drop?: boolean
     Forward?: boolean
+    SendPacket?: boolean
     Tags?: string[]
     UpdateTags?: boolean
     Payload?: Uint8Array
@@ -43,15 +44,23 @@ export const grpcMITMSetColor: APIFunc<MITMSetColorRequest, null> = (params, hid
             })
     })
 }
-
+export interface MITMV2HijackedCurrentResponseRequest {
+    TaskID: string
+    SendPacket: boolean
+    Request?: Uint8Array
+    Response?: Uint8Array
+    Payload?: Uint8Array
+}
 /**发送劫持请当前请求的消息，可以劫持当前响应的请求 */
-export const grpcMITMV2HijackedCurrentResponse: APIFunc<string, null> = (taskID, hiddenError) => {
+export const grpcMITMV2HijackedCurrentResponse: APIFunc<MITMV2HijackedCurrentResponseRequest, null> = (
+    params,
+    hiddenError
+) => {
     return new Promise((resolve, reject) => {
-        const params: SingleManualHijackControlMessage = {
-            TaskID: taskID,
+        grpcMITMManualHijackMessage({
+            ...params,
             HijackResponse: true
-        }
-        grpcMITMManualHijackMessage(params)
+        })
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMV2HijackedCurrentResponse 失败:" + e)
@@ -59,14 +68,17 @@ export const grpcMITMV2HijackedCurrentResponse: APIFunc<string, null> = (taskID,
             })
     })
 }
+export interface MITMV2CancelHijackedCurrentResponseRequest extends MITMV2HijackedCurrentResponseRequest {}
 /** 取消 劫持该Request对应得响应 */
-export const grpcMITMV2CancelHijackedCurrentResponse: APIFunc<string, null> = (taskID, hiddenError) => {
+export const grpcMITMV2CancelHijackedCurrentResponse: APIFunc<MITMV2CancelHijackedCurrentResponseRequest, null> = (
+    params,
+    hiddenError
+) => {
     return new Promise((resolve, reject) => {
-        const params: SingleManualHijackControlMessage = {
-            TaskID: taskID,
+        grpcMITMManualHijackMessage({
+            ...params,
             CancelHijackResponse: true
-        }
-        grpcMITMManualHijackMessage(params)
+        })
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMV2CancelHijackedCurrentResponse 失败:" + e)
@@ -112,7 +124,7 @@ export interface MITMV2SubmitRequestDataRequest {
 /**提交Request数据 */
 export const grpcMITMV2SubmitRequestData: APIFunc<MITMV2SubmitRequestDataRequest, null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        grpcMITMManualHijackMessage(params)
+        grpcMITMManualHijackMessage({...params, SendPacket: true})
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMV2SubmitRequestData 失败:" + e)
@@ -131,7 +143,7 @@ export const grpcMITMV2SubmitResponseData: APIFunc<MITMV2SubmitRequestDataRespon
     hiddenError
 ) => {
     return new Promise((resolve, reject) => {
-        grpcMITMManualHijackMessage(params)
+        grpcMITMManualHijackMessage({...params, SendPacket: true})
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMV2SubmitResponseData 失败:" + e)
@@ -147,7 +159,7 @@ export interface MITMV2SubmitPayloadDataRequest {
 /**提交WS数据 */
 export const grpcMITMV2SubmitPayloadData: APIFunc<MITMV2SubmitPayloadDataRequest, null> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
-        grpcMITMManualHijackMessage(params)
+        grpcMITMManualHijackMessage({...params, SendPacket: true})
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMV2SubmitPayloadData 失败:" + e)
