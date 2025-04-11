@@ -9,6 +9,9 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {QueryFuzzerConfigRequest} from "./utils"
 import {APIFunc} from "@/apiUtils/type"
 import {genDefaultPagination} from "@/pages/invoker/schema"
+import {getRemoteValue} from "@/utils/kv"
+import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
+import { yakitNotify } from "@/utils/notification"
 interface TabRenameModalProps {
     title: string
     onClose: () => void
@@ -84,6 +87,10 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
     const [number, setNumber] = useState<number>(20)
     const [loading, setLoading] = useState<boolean>(false)
     const onOK = useMemoizedFn(() => {
+        if (number > secondaryTabsNum) {
+            yakitNotify("info", "恢复标签数超过上限")
+            return
+        }
         setLoading(true)
         const query: QueryFuzzerConfigRequest = {
             Pagination: {
@@ -98,20 +105,28 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
             onClose()
         })
     })
+    const [secondaryTabsNum, setSecondaryTabsNum] = useState<number>(100)
+    useEffect(() => {
+        getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
+            if (set) {
+                setSecondaryTabsNum(Number(set))
+            }
+        })
+    }, [])
     return (
         <div className={styles["restore-tab-content"]}>
             <div className={styles["item"]}>
                 <span>恢复最近</span>
                 <YakitInputNumber
                     min={1}
-                    max={100}
+                    max={secondaryTabsNum}
                     style={{width: 350}}
                     value={number}
                     onChange={(v) => setNumber(v as number)}
                 />
                 <span>个标签页</span>
             </div>
-            <div className={styles["item-tip"]}>恢复标签页不能超过100个</div>
+            <div className={styles["item-tip"]}>恢复标签页不能超过{secondaryTabsNum}个</div>
             <div className={styles["footer"]}>
                 <YakitButton type='outline2' onClick={onClose}>
                     取消
