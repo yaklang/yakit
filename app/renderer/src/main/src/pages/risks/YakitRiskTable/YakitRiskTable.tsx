@@ -553,6 +553,10 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             {
                 title: "发现时间",
                 dataKey: "CreatedAt",
+                filterProps: {
+                    filterKey: "CreatedAt",
+                    filtersType: "dateTime"
+                },
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {
@@ -973,7 +977,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
             Severity: !!query.SeverityList ? query.SeverityList.join(",") : "",
             Tags: !!query.TagList ? query.TagList.join("|") : "",
             Network: getQueryNetwork(query.Network, query.IPList || []),
-            IsRead: type === "all" ? "" : "false"
+            IsRead: type === "all" ? "" : "false",
+            AfterCreatedAt: !!query.CreatedAt ? query.CreatedAt[0] : undefined,
+            BeforeCreatedAt: !!query.CreatedAt ? query.CreatedAt[1] : undefined
         }
         return finalParams
     })
@@ -2193,11 +2199,11 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> = React.mem
 
 interface YakRiskCodemirrorProps {
     info: YakURLDataItemProps
-    editorDidMount?: (editor:any)=>void
+    editorDidMount?: (editor: any) => void
 }
 
 export const YakRiskCodemirror: React.FC<YakRiskCodemirrorProps> = React.memo((props) => {
-    const {info,editorDidMount} = props
+    const {info, editorDidMount} = props
     const filename = info.code_range.url.split("/").pop()
     const {start_line, end_line, source_code_line, start_column, end_column} = info.code_range
     return (

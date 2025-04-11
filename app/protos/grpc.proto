@@ -3244,6 +3244,8 @@ message QueryRisksRequest {
   string Severity = 8;
 
   int64 FromId = 9;
+  int64 BeforeCreatedAt = 17;
+  int64 AfterCreatedAt = 18;
   int64 UntilId = 10;
   string Tags = 11;
   string IsRead = 12;

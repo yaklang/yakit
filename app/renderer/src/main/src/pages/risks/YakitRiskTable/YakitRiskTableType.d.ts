@@ -33,6 +33,8 @@ export interface QueryRisksRequest {
     FromId: number
     UntilId: number
     Tags: string
+    BeforeCreatedAt?: number
+    AfterCreatedAt?: number
     /** 全部'' 已读:'true'，未读：'false' */
     IsRead: string
     Title: string
@@ -46,6 +48,8 @@ export interface QueryRisksRequest {
     TagList?: string[]
     /**IP段 */
     IPList?: string[]
+    /**前端展示使用 */
+    CreatedAt?: number[]
 
     RuntimeId?: string
 }
