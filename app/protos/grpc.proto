@@ -6646,15 +6646,23 @@ message MITMV2Response {
 
 message SingleManualHijackControlMessage{
   string TaskID = 1;
-  bytes Request = 2;
-  bytes Response = 3;
-  bool HijackResponse = 4;
-  bool CancelHijackResponse = 5;
-  bool Drop = 6;
-  bool Forward = 7;
-  bool UpdateTags = 10;
-  repeated string Tags = 8;
-  bytes Payload = 9;
+
+  // update config action: can process multiple config info in single control message
+  bool HijackResponse = 2;
+  bool CancelHijackResponse = 3;
+
+  bool UpdateTags = 4;
+  repeated string Tags = 5;
+  //--------------------------
+
+  // send packet action: every hijack just can process a send packet action, if set drop|forward|sendpacket hijack will done
+  bool Drop = 6; // drop request|response|payload
+  bool Forward = 7; // send origin request|response|payload
+
+  bool SendPacket = 8; // send request|response|payload
+  bytes Request = 9;
+  bytes Response = 10;
+  bytes Payload = 11;
 }
 
 message SingleManualHijackInfoMessage{
