@@ -202,7 +202,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         }
     })
     const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-        if (rowData) {
+        if (rowData.TaskID !== currentSelectItem?.TaskID) {
             onSetCurrentRow(rowData)
         }
         let menu = mitmManualContextmenuRef.current
@@ -520,32 +520,15 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
 
         /**提交数据 */
         const onSubmitData = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
-            let rowData: SingleManualHijackInfoMessage = {
-                ...value,
-                Request: new Uint8Array(StringToUint8Array(modifiedRequestPacket)),
-                Response: new Uint8Array(StringToUint8Array(modifiedResponsePacket))
-            }
-            if (rowData.IsWebsocket) {
-                rowData = {
-                    ...value,
-                    Payload: new Uint8Array(StringToUint8Array(modifiedRequestPacket))
-                }
-            } else {
-                rowData = {
-                    ...value,
-                    Request: new Uint8Array(StringToUint8Array(modifiedRequestPacket)),
-                    Response: new Uint8Array(StringToUint8Array(modifiedResponsePacket))
-                }
-            }
-            switch (rowData.Status) {
+            switch (value.Status) {
                 case ManualHijackListStatus.Hijacking_Request:
-                    onSubmitRequestData(rowData)
+                    onSubmitRequestData(value)
                     break
                 case ManualHijackListStatus.Hijacking_Response:
-                    onSubmitResponseData(rowData)
+                    onSubmitResponseData(value)
                     break
                 case ManualHijackListStatus.Hijack_WS:
-                    onSubmitPayloadData(rowData)
+                    onSubmitPayloadData(value)
                     break
                 default:
                     break
@@ -556,7 +539,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            if (isEqual(rowData.Request, info.Request)) {
+            const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
+            if (isEqual(request, info.Request)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -565,7 +549,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
             const value: MITMV2SubmitRequestDataRequest = {
                 TaskID: rowData.TaskID,
-                Request: rowData.Request
+                Request: request
             }
             grpcMITMV2SubmitRequestData(value)
         })
@@ -574,7 +558,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            if (isEqual(rowData.Response, info.Response)) {
+
+            const response = new Uint8Array(StringToUint8Array(modifiedResponsePacket))
+
+            if (isEqual(response, info.Response)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -583,7 +570,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
             const value: MITMV2SubmitRequestDataResponseRequest = {
                 TaskID: rowData.TaskID,
-                Response: rowData.Response
+                Response: response
             }
             grpcMITMV2SubmitResponseData(value)
         })
@@ -592,7 +579,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            if (isEqual(rowData.Payload, info.Payload)) {
+            const payload = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
+            if (isEqual(payload, info.Payload)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -601,7 +589,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
             const value: MITMV2SubmitPayloadDataRequest = {
                 TaskID: rowData.TaskID,
-                Payload: rowData.Payload
+                Payload: payload
             }
             grpcMITMV2SubmitPayloadData(value)
         })
@@ -688,24 +676,22 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 secondMinSize={300}
                 secondNode={
                     <>
-                        {currentResponsePacketInfo.currentPacket && (
-                            <div style={{height: "100%"}}>
-                                <MITMV2ManualEditor
-                                    modifiedPacket={modifiedResponsePacket}
-                                    setModifiedPacket={setModifiedResponsePacket}
-                                    isResponse={true}
-                                    info={info}
-                                    onDiscardData={onDiscardData}
-                                    onSubmitData={onSubmitData}
-                                    currentPacketInfo={currentResponsePacketInfo}
-                                    disabled={disabledResponse}
-                                    handleAutoForward={handleAutoForward}
-                                    typeOptionVal={responseTypeOptionVal}
-                                    onTypeOptionVal={onResponseTypeOptionVal}
-                                    onHijackingResponse={onHijackingResponse}
-                                />
-                            </div>
-                        )}
+                        <div style={{height: "100%"}}>
+                            <MITMV2ManualEditor
+                                modifiedPacket={modifiedResponsePacket}
+                                setModifiedPacket={setModifiedResponsePacket}
+                                isResponse={true}
+                                info={info}
+                                onDiscardData={onDiscardData}
+                                onSubmitData={onSubmitData}
+                                currentPacketInfo={currentResponsePacketInfo}
+                                disabled={disabledResponse}
+                                handleAutoForward={handleAutoForward}
+                                typeOptionVal={responseTypeOptionVal}
+                                onTypeOptionVal={onResponseTypeOptionVal}
+                                onHijackingResponse={onHijackingResponse}
+                            />
+                        </div>
                     </>
                 }
                 lineStyle={{display: !currentResponsePacketInfo.currentPacket ? "none" : ""}}
@@ -795,7 +781,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 }
             }
         }
-    }, [forResponse, info])
+    }, [forResponse, info, modifiedPacket])
 
     const onHijackCurrentResponse = useMemoizedFn(() => {
         if (info.Status === ManualHijackListStatus.WaitHijack) {
