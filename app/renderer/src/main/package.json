@@ -1,6 +1,6 @@
 {
     "name": "main",
-    "version": "1.04.03",
+    "version": "1.04.11",
     "private": true,
     "dependencies": {
         "@ant-design/compatible": "^1.0.8",
