@@ -620,11 +620,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许 放行该 HTTP Response")
                 return
             }
-            grpcMITMV2CancelHijackedCurrentResponse(value.TaskID).then(() => {
-                setTimeout(() => {
-                    onSubmitData(value)
-                }, 200)
-            })
+            grpcMITMV2CancelHijackedCurrentResponse(value.TaskID)
+            onSubmitData(value)
         })
         const onRequestTypeOptionVal = useMemoizedFn((value) => {
             // setRequestTypeOptionVal(value)
@@ -781,9 +778,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             return
         }
         onHijackingResponse(info)
-        setTimeout(() => {
-            onSubmitData(info)
-        }, 200)
+        onSubmitData(info)
     })
 
     const btnDisable = useCreation(() => {
