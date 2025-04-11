@@ -173,11 +173,6 @@
             }
         }
     }
-
-    .http-history-table-right-search {
-        width: 280px;
-        @extend .inputSearchModule;
-    }
 }
 
 .http-history-table-left-shield {
@@ -625,6 +620,11 @@
         color: var(--yakit-helper-text-color);
         font-size: 12px;
     }
+}
+
+.http-history-table-right-search {
+    width: 280px;
+    @extend .inputSearchModule;
 }
 
 .http-history-search-drop-down-popover {

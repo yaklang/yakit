@@ -18,13 +18,17 @@ import {
     ColorSearch,
     ColumnAllInfoItem,
     contentType,
+    ExportHTTPFlowStreamRequest,
     getClassNameData,
+    getHTTPFlowReqAndResToString,
     HistorySearch,
     HTTPFlow,
     HTTPFlowsFieldGroupResponse,
+    ImportExportProgress,
     MultipleSelect,
     onConvertBodySizeByUnit,
     onExpandHTTPFlow,
+    onSendToTab,
     RangeInputNumberTable,
     SourceType,
     YakQueryHTTPFlowResponse
@@ -36,8 +40,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon} from "@/assets/newIcon"
 import {formatTime, formatTimestamp} from "@/utils/timeUtil"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {openExternalWebsite} from "@/utils/openWebsite"
-import {MITMConsts} from "@/pages/mitm/MITMConsts"
+import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -47,14 +50,29 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {CheckedSvgIcon} from "@/components/layout/icons"
 import {Divider} from "antd"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {HTTPFlowTableFormConfiguration, HTTPFlowTableFormConsts} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
+import {HTTPFlowTableFormConfiguration} from "@/components/HTTPFlowTable/HTTPFlowTableForm"
 import {WebTree} from "@/components/WebTree/WebTree"
 import ReactResizeDetector from "react-resize-detector"
 import {HistoryProcess} from "@/components/HTTPHistory"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
-import styles from "./HTTPHistoryFilter.module.scss"
 import {isEqual} from "lodash"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {convertKeyboard} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {YakitSystem} from "@/yakitGVDefine"
+import {randomString} from "@/utils/randomUtil"
+import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
+import {usePageInfo} from "@/store/pageInfo"
+import {shallow} from "zustand/shallow"
+import {ExportSelect} from "@/components/DataExport/DataExport"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {formatJson} from "@/pages/yakitStore/viewers/base"
+import {YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
+import {setClipboardText} from "@/utils/clipboard"
+import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
+import {useHotkeys} from "react-hotkeys-hook"
+import styles from "./HTTPHistoryFilter.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -68,9 +86,22 @@ interface TabsItem {
 interface HTTPHistoryFilterProps {
     onSetSelectedHttpFlowIds: (ids: string[]) => void
     onSetIsAllHttpFlow: (b: boolean) => void
+    onSetHTTPFlowFilter: (filterStr: string) => void
+    downstreamProxy: string
+    toWebFuzzer?: boolean
+    runtimeId?: string[]
+    sourceType?: string
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
-    const {onSetSelectedHttpFlowIds, onSetIsAllHttpFlow} = props
+    const {
+        onSetSelectedHttpFlowIds,
+        onSetIsAllHttpFlow,
+        onSetHTTPFlowFilter,
+        downstreamProxy,
+        toWebFuzzer,
+        runtimeId,
+        sourceType
+    } = props
 
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
@@ -163,6 +194,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
 
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
+        onSetHTTPFlowFilter(queryParams)
         try {
             const treeQuery = JSON.parse(queryParams) || {}
             delete treeQuery.Pagination
@@ -276,6 +308,11 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             ProcessName={curProcess}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
                             onSetIsAllHttpFlow={onSetIsAllHttpFlow}
+                            downstreamProxy={downstreamProxy}
+                            inMouseEnterTable={true}
+                            toWebFuzzer={toWebFuzzer}
+                            runtimeId={runtimeId}
+                            sourceType={sourceType}
                         />
                     </div>
                 }
@@ -296,19 +333,45 @@ interface HTTPFlowTableProps {
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
     onSetIsAllHttpFlow?: (b: boolean) => void
+    downstreamProxy?: string
+    inMouseEnterTable?: boolean
+    toWebFuzzer?: boolean
+    runtimeId?: string[]
+    sourceType?: string
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
-    const {searchURL, includeInUrl, ProcessName, onQueryParams, onSetSelectedHttpFlowIds, onSetIsAllHttpFlow} = props
+    const {
+        searchURL,
+        includeInUrl,
+        ProcessName,
+        onQueryParams,
+        onSetSelectedHttpFlowIds,
+        onSetIsAllHttpFlow,
+        downstreamProxy = "",
+        inMouseEnterTable = false,
+        toWebFuzzer = false,
+        runtimeId = [],
+        sourceType = "mitm"
+    } = props
+    const {currentPageTabRouteKey} = usePageInfo(
+        (s) => ({
+            currentPageTabRouteKey: s.currentPageTabRouteKey
+        }),
+        shallow
+    )
     const hTTPFlowFilterTableRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(hTTPFlowFilterTableRef)
     const size = useSize(hTTPFlowFilterTableRef)
-    const [downstreamProxy, setDownstreamProxy] = useState<string>("")
     const [query, setQuery] = useState<YakQueryHTTPFlowRequest>({
-        SourceType: "mitm",
-        Full: false
+        SourceType: sourceType,
+        Full: false,
+        WithPayload: toWebFuzzer,
+        RuntimeIDs: runtimeId.length > 1 ? runtimeId : undefined,
+        RuntimeId: runtimeId.length === 1 ? runtimeId[0] : undefined
     })
     const [color, setColor] = useState<string[]>([])
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
+
     // 表格相关变量
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [loading, setLoading] = useState(false)
@@ -321,25 +384,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         Order: "desc",
         OrderBy: "Id"
     })
-
-    // #region mitm页面配置的下游代理
-    useEffect(() => {
-        if (inViewport) {
-            getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                if (res) {
-                    try {
-                        const obj = JSON.parse(res) || {}
-                        setDownstreamProxy(obj.defaultValue || "")
-                    } catch (error) {
-                        setDownstreamProxy("")
-                    }
-                } else {
-                    setDownstreamProxy("")
-                }
-            })
-        }
-    }, [inViewport])
-    // #endregion
 
     // #region 网站树、进程
     const campareProcessName = useCampare(ProcessName)
@@ -461,27 +505,47 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }, [hostName, urlPath, fileSuffix, searchContentType, excludeKeywords])
     // #endregion
 
-    // #region 表格勾选相关
+    // #region 表格勾选，表格行选中相关
+    const [selected, setSelected] = useState<HTTPFlow>()
+    const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
+        if (rowDate) {
+            setSelected(rowDate)
+        } else {
+            setSelected(undefined)
+        }
+    })
+    const onSetCurrentRow = useDebounceFn(
+        (rowDate: HTTPFlow | undefined) => {
+            onRowClick(rowDate ? getHTTPFlowReqAndResToString(rowDate) : undefined)
+        },
+        {wait: 200, leading: true}
+    ).run
+
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+    const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
     const onSelectAll = useMemoizedFn(() => {
         if (isAllSelect) {
             setIsAllSelect(false)
             setSelectedRowKeys([])
+            setSelectedRows([])
         } else {
             setIsAllSelect(true)
             const ids = data.map((item) => item.Id + "")
             setSelectedRowKeys(ids)
+            setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
         }
     })
     const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: HTTPFlow) => {
         if (c) {
             const ids = [...selectedRowKeys, rows.Id + ""]
             setSelectedRowKeys(ids)
+            setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
         } else {
             setIsAllSelect(false)
             const ids = selectedRowKeys.filter((ele) => ele !== rows.Id + "")
             setSelectedRowKeys(ids)
+            setSelectedRows(data.filter((item) => ids.includes(String(item.Id))))
         }
     })
     const compareSelectedRowKeys = useCampare(selectedRowKeys)
@@ -507,7 +571,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     RefreshRequest
                 })
                 .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                    const tags = rsp.Tags.filter((item) => item.Value)
+                    const tags = rsp.Tags.filter((item) => (toWebFuzzer ? item.Value === "webfuzzer" : item.Value))
                     const realTags: FiltersItemProps[] = tags.map((ele) => ({label: ele.Value, value: ele.Value}))
                     setTags(realTags)
                     callBack && callBack(realTags)
@@ -550,6 +614,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         if (newSort.orderBy === "DurationMs") {
             newSort.orderBy = "duration"
         }
+        if (newSort.orderBy === "BodyLength") {
+            newSort.orderBy = "body_length"
+        }
         sorterTableRef.current = newSort
 
         setQuery((prev) => {
@@ -580,7 +647,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
     // #region 表格自定义相关
     // 需要完全排除列字段，表格不可能出现的列
-    const noColumnsKey = []
+    const noColumnsKey = toWebFuzzer ? [] : ["Payloads"]
     // 排除展示的列
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
@@ -610,13 +677,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             ]).then((res) => {
                 let refreshTabelKey = false
                 if (res[0].status === "fulfilled") {
-                    if (res[0].value) {
-                        const arr = res[0].value.split(",")
-                        const excludeKeys = [...arr, ...noColumnsKey]
-                        if (!isEqual(excludeKeys, excludeColumnsKey)) {
-                            refreshTabelKey = true
-                            setExcludeColumnsKey(excludeKeys)
-                        }
+                    const arr = res[0].value.split(",")
+                    const excludeKeys = [...arr, ...noColumnsKey].filter((key) => key)
+                    if (!isEqual(excludeKeys, excludeColumnsKey)) {
+                        refreshTabelKey = true
+                        setExcludeColumnsKey(excludeKeys)
                     }
                 }
                 if (res[1].status === "fulfilled") {
@@ -624,16 +689,16 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         const arr = JSON.parse(res[1].value) || []
                         // 确保顺序缓存里面的key一定在默认所有列中存在
                         const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-                        // 特殊处理 Payloads 在Url后面
-                        if (false) {
-                            if (realArr.findIndex((key: string) => key === "Payloads") === -1) {
-                                const urlIndex = realArr.findIndex((key: string) => key === "Url")
-                                realArr.splice(urlIndex + 1, 0, "Payloads")
-                            }
-                        } else {
-                            // 如果列表有新增列，顺序从新再次缓存
-                            setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
+                        // toWebFuzzer 跳转过来 需要 特殊处理 Payloads 在Url后面
+                        if (toWebFuzzer && realArr.findIndex((key: string) => key === "Payloads") === -1) {
+                            const urlIndex = realArr.findIndex((key: string) => key === "Url")
+                            realArr.splice(urlIndex + 1, 0, "Payloads")
                         }
+                        // 如果列表有新增列，顺序从新再次缓存
+                        setRemoteValue(
+                            RemoteHistoryGV.HistroyColumnsOrder,
+                            JSON.stringify(realArr.filter((key) => key !== "Payloads"))
+                        )
                         if (!isEqual(realArr, columnsOrder)) {
                             refreshTabelKey = true
                             setColumnsOrder(realArr)
@@ -1108,6 +1173,569 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     ])
     // #endregion
 
+    // #region 表格右键操作
+    const menuData = useCreation(() => {
+        return [
+            {
+                key: "发送到 Web Fuzzer",
+                label: "发送到 Web Fuzzer",
+                number: 10,
+                default: true,
+                children: [
+                    {
+                        key: "sendAndJumpToWebFuzzer",
+                        label: "发送并跳转",
+                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                    },
+                    {
+                        key: "sendToWebFuzzer",
+                        label: "仅发送",
+                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                    }
+                ],
+                onClickBatch: () => {}
+            },
+            {
+                key: "发送到 WS Fuzzer",
+                label: "发送到 WS Fuzzer",
+                number: 10,
+                default: false,
+                webSocket: true,
+                children: [
+                    {
+                        key: "sendAndJumpToWS",
+                        label: "发送并跳转",
+                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                    },
+                    {
+                        key: "sendToWS",
+                        label: "仅发送",
+                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                    }
+                ],
+                onClickBatch: () => {}
+            },
+            {
+                key: "复制 URL",
+                label: "复制 URL",
+                number: 30,
+                default: true,
+                webSocket: true,
+                onClickSingle: (v) => setClipboardText(v.Url),
+                onClickBatch: (v, number) => {
+                    if (v.length === 0) {
+                        yakitNotify("warning", "请选择数据")
+                        return
+                    }
+                    if (v.length < number) {
+                        setClipboardText(v.map((ele) => `${ele.Url}`).join("\r\n"))
+                        setSelectedRowKeys([])
+                        setSelectedRows([])
+                    } else {
+                        yakitNotify("warning", `最多同时只能复制${number}条数据`)
+                    }
+                }
+            },
+            {
+                key: "下载 Response Body",
+                label: "下载 Response Body",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
+                        saveABSFileToOpen(`response-body.txt`, bytes.Raw)
+                    })
+                }
+            },
+            {
+                key: "浏览器中打开URL",
+                label: "浏览器中打开URL",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    v.Url && openExternalWebsite(v.Url)
+                }
+            },
+            {
+                key: "浏览器中查看响应",
+                label: "浏览器中查看响应",
+                default: true,
+                webSocket: false,
+                onClickSingle: (v) => {
+                    showResponseViaHTTPFlowID(v)
+                }
+            },
+            {
+                key: "导出数据",
+                label: "导出数据",
+                default: true,
+                webSocket: false,
+                children: [
+                    {
+                        key: "导出为Excel",
+                        label: "导出为Excel"
+                    },
+                    {
+                        key: "导出为HAR",
+                        label: "导出为HAR"
+                    }
+                ],
+                onClickBatch: () => {}
+            }
+        ]
+    }, [])
+
+    /** 菜单自定义快捷键渲染处理事件 */
+    const systemRef = useRef<YakitSystem>("Darwin")
+    useEffect(() => {
+        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
+            systemRef.current = systemType
+        })
+    }, [])
+    const contextMenuKeybindingHandle = useMemoizedFn((data) => {
+        const menus: any = []
+        for (let item of data) {
+            /** 处理带快捷键的菜单项 */
+            const info = {...item}
+            if (info.children && info.children.length > 0) {
+                info.children = contextMenuKeybindingHandle(info.children)
+            } else {
+                if (info.keybindings && info.keybindings.length > 0) {
+                    const keysContent = convertKeyboard(systemRef.current, info.keybindings)
+                    info.label = keysContent ? (
+                        <div className={styles["editor-context-menu-keybind-wrapper"]}>
+                            <div className={styles["content-style"]}>{info.label}</div>
+                            <div className={classNames(styles["keybind-style"], "keys-style")}>{keysContent}</div>
+                        </div>
+                    ) : (
+                        info.label
+                    )
+                }
+            }
+            menus.push(info)
+        }
+        return menus
+    })
+    const getBatchContextMenu = useMemoizedFn(() => {
+        return menuData
+            .filter((f) => f.onClickBatch)
+            .map((m) => {
+                return {
+                    key: m.key,
+                    label: m.label,
+                    children: m.children || []
+                }
+            })
+    })
+    const getRowContextMenu = useMemoizedFn((rowData: HTTPFlow) => {
+        return contextMenuKeybindingHandle(menuData)
+            .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
+            .map((ele) => {
+                return {
+                    label: ele.label,
+                    key: ele.key,
+                    children: ele.children || []
+                }
+            })
+    })
+    const onRowContextMenu = useMemoizedFn((rowData: HTTPFlow, _, event: React.MouseEvent) => {
+        if (rowData) {
+            setSelected(rowData)
+        }
+
+        let rowContextmenu: any[] = []
+
+        // 批量操作
+        if (selectedRowKeys.length > 0) {
+            rowContextmenu = getBatchContextMenu()
+        } else {
+            rowContextmenu = getRowContextMenu(rowData)
+        }
+
+        showByRightContext(
+            {
+                width: 180,
+                data: rowContextmenu,
+                onClick: ({key, keyPath}) => {
+                    // 批量操作菜单点击
+                    if (selectedRowKeys.length > 0) {
+                        onMultipleClick(key, keyPath)
+                        return
+                    }
+                    switch (key) {
+                        case "sendAndJumpToWebFuzzer":
+                            onSendToTab(rowData, true, downstreamProxy)
+                            break
+                        case "sendToWebFuzzer":
+                            onSendToTab(rowData, false, downstreamProxy)
+                            break
+                        case "sendAndJumpToWS":
+                            newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request)
+                            break
+                        case "sendToWS":
+                            newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
+                            break
+                        case "导出为Excel":
+                            onExcelExport([rowData.Id])
+                            break
+                        case "导出为HAR":
+                            onHarExport([rowData.Id])
+                            break
+                        default:
+                            const currentItem = menuData.find((f) => f.key === key)
+                            if (!currentItem) return
+                            if (currentItem.onClickSingle) currentItem.onClickSingle(rowData)
+                            break
+                    }
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    })
+
+    const onMultipleClick = useMemoizedFn((key: string, keyPath: string[]) => {
+        switch (key) {
+            case "sendAndJumpToWebFuzzer":
+                const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
+                if (!currentItemJumpToFuzzer) return
+                onBatch(
+                    (el) => onSendToTab(el, true, downstreamProxy),
+                    currentItemJumpToFuzzer?.number || 0,
+                    selectedRowKeys.length === total
+                )
+                break
+            case "sendToWebFuzzer":
+                const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
+                if (!currentItemToFuzzer) return
+                onBatch(
+                    (el) => onSendToTab(el, false, downstreamProxy),
+                    currentItemToFuzzer?.number || 0,
+                    selectedRowKeys.length === total
+                )
+                break
+            case "sendAndJumpToWS":
+                const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到WS Fuzzer")
+                if (!currentItemJumpToWS) return
+                onBatch(
+                    (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
+                    currentItemJumpToWS?.number || 0,
+                    selectedRowKeys.length === total
+                )
+
+                break
+            case "sendToWS":
+                const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到WS Fuzzer")
+                if (!currentItemToWS) return
+                onBatch(
+                    (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
+                    currentItemToWS?.number || 0,
+                    selectedRowKeys.length === total
+                )
+                break
+            case "导出为Excel":
+                onExcelExport(selectedRowKeys.map((id) => Number(id)))
+                break
+            case "导出为HAR":
+                onHarExport(isAllSelect ? [] : selectedRowKeys.map((id) => Number(id)))
+                break
+            default:
+                const currentItem = menuData.find((f) => f.onClickBatch && f.key === key)
+                if (!currentItem) return
+                if (currentItem.onClickBatch) currentItem.onClickBatch(selectedRows, currentItem.number)
+                break
+        }
+    })
+    const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
+        const length = selectedRowKeys.length
+        if (length <= 0) {
+            yakitNotify("warning", `请选择数据`)
+            return
+        }
+        if (isAllSelect && !all) {
+            yakitNotify("warning", "该批量操作不支持全选")
+            return
+        }
+        if (number < length) {
+            yakitNotify("warning", `最多同时只能发送${number}条数据`)
+            return
+        }
+        for (let i = 0; i < length; i++) {
+            const element = selectedRows[i]
+            f(element)
+            if (i === length - 1) {
+                setSelectedRowKeys([])
+                setSelectedRows([])
+            }
+        }
+    })
+
+    // 右键菜单 发送到 Web Fuzzer、发送到 WS Fuzzer、快捷键发送
+    useHotkeys(
+        "ctrl+r",
+        (e) => {
+            if (selected) {
+                selected.IsWebsocket
+                    ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
+                    : onSendToTab(selected, true, downstreamProxy)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [hTTPFlowFilterTableRef, selected, downstreamProxy]
+    )
+
+    useHotkeys(
+        "ctrl+shift+r",
+        (e) => {
+            e.stopPropagation()
+            if (selected) {
+                selected.IsWebsocket
+                    ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
+                    : onSendToTab(selected, false, downstreamProxy)
+            }
+        },
+        {
+            enabled: inViewport
+        },
+        [hTTPFlowFilterTableRef, selected, downstreamProxy]
+    )
+
+    // 导出为EXCEL
+    const [exportTitle, setExportTitle] = useState<string[]>([])
+    const onExcelExport = (list: number[]) => {
+        const titleValue = configColumnRef.current.map((item) => item.title)
+        const exportValue = [...titleValue, "请求包", "响应包"]
+        const m = showYakitModal({
+            title: "导出字段",
+            content: (
+                <ExportSelect
+                    exportValue={exportValue}
+                    initCheckValue={
+                        toWebFuzzer ? exportValue.filter((i) => !["参数", "请求包", "响应包"].includes(i)) : exportValue
+                    }
+                    setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
+                    exportKey={toWebFuzzer ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"}
+                    fileName={!toWebFuzzer ? "History" : "WebFuzzer"}
+                    getData={(pagination) => getExcelData(pagination, list)}
+                    onClose={() => m.destroy()}
+                />
+            ),
+            onCancel: () => {
+                m.destroy()
+            },
+            width: 650,
+            footer: null,
+            maskClosable: false
+        })
+    }
+    const getPageSize = useCreation(() => {
+        if (total > 5000) {
+            return 500
+        } else if (total < 1000) {
+            return 100
+        } else {
+            return Math.round(total / 1000) * 100
+        }
+    }, [total])
+    const getExcelData = useMemoizedFn((pagination, list: number[]) => {
+        return new Promise((resolve) => {
+            const params: any = {
+                ...query,
+                OffsetId: undefined,
+                Pagination: {...pagination}
+            }
+
+            let exportParams: any = {}
+            // 这里的key值 不一定和表格的key对应的上
+            const arrList = [
+                {
+                    title: "序号",
+                    key: "id"
+                },
+                {
+                    title: "方法",
+                    key: "method"
+                },
+                {
+                    title: "状态码",
+                    key: "status_code"
+                },
+                {
+                    title: "URL",
+                    key: "url"
+                },
+                {
+                    title: "Payloads",
+                    key: "payloads"
+                },
+                {
+                    title: "相关插件",
+                    key: "from_plugin"
+                },
+                {
+                    title: "Tags",
+                    key: "tags"
+                },
+                {
+                    title: "IP",
+                    key: "iP_address"
+                },
+                {
+                    title: "响应长度",
+                    key: "body_length"
+                },
+                {
+                    title: "Title",
+                    key: "response"
+                },
+                {
+                    title: "参数",
+                    key: "get_params_total"
+                },
+                {
+                    title: "响应类型",
+                    key: "content_type"
+                },
+                {
+                    title: "请求时间",
+                    key: "updated_at"
+                },
+                {
+                    title: "请求大小",
+                    key: "request"
+                },
+                {
+                    title: "请求包",
+                    key: "request"
+                },
+                {
+                    title: "响应包",
+                    key: "response"
+                }
+            ]
+            const FieldName = arrList.filter((item) => exportTitle.includes(item.title)).map((item) => item.key)
+
+            const Ids: number[] = list.map((id) => Number(id))
+            // 最大请求条数
+            let pageSize = getPageSize
+            // 需要多少次请求
+            let count = Math.ceil((isAllSelect ? total : Ids.length) / pageSize)
+            const resultArray: number[] = []
+            for (let i = 1; i <= count; i++) {
+                resultArray.push(i)
+            }
+            const promiseList = resultArray.map((item) => {
+                params.Pagination.Limit = pageSize
+                params.Pagination.Page = item
+                exportParams = {ExportWhere: params, FieldName}
+                if (!isAllSelect) {
+                    exportParams.Ids = Ids
+                }
+                return new Promise((resolve, reject) => {
+                    ipcRenderer
+                        .invoke("ExportHTTPFlows", exportParams)
+                        .then((rsp: YakQueryHTTPFlowResponse) => {
+                            resolve(rsp)
+                        })
+                        .catch((e) => {
+                            reject(e)
+                        })
+                        .finally(() => {})
+                })
+            })
+            Promise.allSettled(promiseList).then((results) => {
+                let rsp: YakQueryHTTPFlowResponse = {
+                    Data: [],
+                    Pagination: {...pagination, Page: 1, OrderBy: "id", Order: ""},
+                    Total: total
+                }
+                let message: string = ""
+                results.forEach((item) => {
+                    if (item.status === "fulfilled") {
+                        const value = item.value as YakQueryHTTPFlowResponse
+                        rsp.Data = [...rsp.Data, ...value.Data]
+                    } else {
+                        message = item.reason?.message
+                    }
+                })
+                if (message.length > 0) {
+                    yakitNotify("warning", `部分导出内容缺失:${message}`)
+                }
+                initExcelData(resolve, rsp.Data, rsp)
+            })
+        })
+    })
+    const initExcelData = (resolve, newExportData: HTTPFlow[], rsp) => {
+        let exportData: any = []
+        const header: string[] = []
+        const filterVal: string[] = []
+        exportTitle.map((item) => {
+            if (item === "请求包") {
+                header.push(item)
+                filterVal.push("Request")
+            } else if (item === "响应包") {
+                header.push(item)
+                filterVal.push("Response")
+            } else if (item === "序号") {
+                header.push(item)
+                filterVal.push("Id")
+            } else {
+                const itemData = configColumnRef.current.filter((itemIn) => itemIn.title === item)[0]
+                header.push(item)
+                filterVal.push(itemData.dataKey)
+            }
+        })
+        exportData = formatJson(filterVal, newExportData)
+        resolve({
+            header,
+            exportData,
+            response: rsp
+        })
+    }
+
+    // 导出为HAR
+    const [exportToken, setExportToken] = useState<string>("")
+    const [percentVisible, setPercentVisible] = useState<boolean>(false)
+    const percentContainerRef = useRef<string>(currentPageTabRouteKey)
+    const onHarExport = (ids: number[]) => {
+        handleSaveFileSystemDialog({
+            title: "保存文件",
+            defaultPath: !toWebFuzzer ? "History" : "WebFuzzer",
+            filters: [
+                {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
+            ]
+        }).then((file) => {
+            if (!file.canceled) {
+                const filePath = file?.filePath?.toString()
+                if (filePath) {
+                    const exportParams: ExportHTTPFlowStreamRequest = {
+                        Filter: {
+                            ...query,
+                            IncludeId: ids
+                        },
+                        ExportType: "har",
+                        TargetPath: filePath
+                    }
+
+                    const token = randomString(40)
+                    setExportToken(token)
+                    ipcRenderer
+                        .invoke("ExportHTTPFlowStream", exportParams, token)
+                        .then(() => {
+                            percentContainerRef.current = currentPageTabRouteKey
+                            setPercentVisible(true)
+                        })
+                        .catch((error) => {
+                            yakitNotify("error", `[ExportHTTPFlowStream] error: ${error}`)
+                        })
+                }
+            }
+        })
+    }
+    // #endregion
+
     const queyChangeUpdateData = useDebounceFn(
         () => {
             update(1)
@@ -1139,12 +1767,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         delete params["UpdatedAt-time"]
         delete params["ContentType"]
 
-        console.log("发送请求", params)
         const copyParams = {...params}
         copyParams.Color = copyParams.Color ? copyParams.Color : []
         copyParams.StatusCode = copyParams.StatusCode ? copyParams.StatusCode : ""
         onQueryParams && onQueryParams(JSON.stringify(copyParams), false)
-
         ipcRenderer
             .invoke("QueryHTTPFlows", params)
             .then((res: YakQueryHTTPFlowResponse) => {
@@ -1163,9 +1789,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     setIsRefresh((prev) => !prev)
                     setIsAllSelect(false)
                     setSelectedRowKeys([])
+                    setSelectedRows([])
+                    setSelected(undefined)
                 } else {
                     if (isAllSelect) {
                         setSelectedRowKeys(d.map((item) => item.Id + ""))
+                        setSelectedRows(d)
                     }
                 }
             })
@@ -1348,7 +1977,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 columns={columns}
                 enableDrag
                 useUpAndDown
+                inMouseEnterTable={inMouseEnterTable}
                 onChange={onTableChange}
+                onRowContextMenu={onRowContextMenu}
+                onSetCurrentRow={onSetCurrentRow}
             />
             {/* 高级筛选抽屉 */}
             {drawerFormVisible && (
@@ -1373,6 +2005,24 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     fileSuffix={fileSuffix}
                     searchContentType={searchContentType}
                     excludeKeywords={excludeKeywords}
+                />
+            )}
+            {/* 导出HAR数据 */}
+            {percentVisible && (
+                <ImportExportProgress
+                    getContainer={
+                        document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+                    }
+                    visible={percentVisible}
+                    title='导出HAR流量数据'
+                    token={exportToken}
+                    apiKey='ExportHTTPFlowStream'
+                    onClose={(finish) => {
+                        setPercentVisible(false)
+                        if (finish) {
+                            yakitNotify("success", "导出成功")
+                        }
+                    }}
                 />
             )}
         </div>

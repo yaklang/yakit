@@ -813,6 +813,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     }
                 } else {
                     setHighLightText([])
+                    setHighLightItem(undefined)
+                    setCurrId(undefined)
                 }
             })
             .catch((e) => {
@@ -1367,6 +1369,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 const resArr = highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []
                 if (reqArr.length) {
                     setReqTypeOptionVal(undefined)
+                    setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, "")
                 } else {
                     getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
                         if (!!res) {
@@ -1379,6 +1382,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
 
                 if (resArr.length) {
                     setResTypeOptionVal(undefined)
+                    setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, "")
                 } else {
                     getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
                         if (!!res) {
@@ -1615,6 +1619,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         typeOptionVal={reqTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
+                            console.log(111, typeOptionVal);
                             if (typeOptionVal === "beautify") {
                                 setReqTypeOptionVal(typeOptionVal)
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)

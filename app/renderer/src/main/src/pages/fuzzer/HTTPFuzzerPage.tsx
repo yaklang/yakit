@@ -151,7 +151,6 @@ import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
 
-const ResponseAllDataCard = React.lazy(() => import("./FuzzerSequence/ResponseAllDataCard"))
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
 
@@ -1109,7 +1108,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const dCountRef = useRef<number>(0)
     const tokenRef = useRef<string>(randomString(60))
     const taskIDRef = useRef<string>("")
-    const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
     const runtimeIdRef = useRef<string>("")
     const [fuzzerResChartData, setFuzzerResChartData] = useState<string>("")
     useEffect(() => {
@@ -1265,7 +1263,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
             try {
                 const data: WebFuzzerDroppedProps = JSON.parse(content)
                 // data.fuzzer_index 存在代表是序列的丢弃数据
-                if(!!data.fuzzer_index)return
+                if (!!data.fuzzer_index) return
                 if (data.fuzzer_tab_index === props.id) {
                     setDroppedCount(Number(data.discard_count) || 0)
                 }
@@ -1793,7 +1791,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     }, [advancedConfigShowType, advancedConfigShow])
     return (
         <>
-            <div className={styles["http-fuzzer-body"]} ref={fuzzerRef} style={{display: showAllDataRes ? "none" : ""}}>
+            <div className={styles["http-fuzzer-body"]} ref={fuzzerRef}>
                 <React.Suspense fallback={<>加载中...</>}>
                     <HttpQueryAdvancedConfig
                         advancedConfigValue={advancedConfigValue}
@@ -2115,7 +2113,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 <YakitButton
                                                                     type='text'
                                                                     onClick={() => {
-                                                                        setShowAllDataRes(true)
+                                                                        // setShowAllDataRes(true)
+                                                                        emiter.emit(
+                                                                            "openPage",
+                                                                            JSON.stringify({
+                                                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                                                                                params: {
+                                                                                    webFuzzer: true,
+                                                                                    runtimeId:
+                                                                                        runtimeIdRef.current.split(","),
+                                                                                    sourceType: "scan"
+                                                                                }
+                                                                            })
+                                                                        )
                                                                     }}
                                                                     style={{padding: 0}}
                                                                 >
@@ -2124,7 +2134,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 查看所有数据
                                                             </div>
                                                         }
-                                                        tableKeyUpDownEnabled={!showAllDataRes}
                                                         fuzzerTableMaxData={fuzzerTableMaxData}
                                                     />
                                                 )}
@@ -2181,13 +2190,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                     />
                 </React.Suspense>
             </div>
-            <React.Suspense fallback={<>loading...</>}>
-                <ResponseAllDataCard
-                    runtimeId={runtimeIdRef.current}
-                    showAllDataRes={showAllDataRes}
-                    setShowAllDataRes={() => setShowAllDataRes(false)}
-                />
-            </React.Suspense>
         </>
     )
 }

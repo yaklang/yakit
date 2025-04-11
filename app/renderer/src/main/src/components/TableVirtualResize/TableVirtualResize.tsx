@@ -130,6 +130,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         enableDragSort,
         onMoveRowEnd,
         useUpAndDown,
+        inMouseEnterTable = false,
         containerClassName,
         isRightClickBatchOperate,
         isHiddenLoadingUI = false
@@ -252,11 +253,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     }, [scrollToIndex])
 
     const [inViewport] = useInViewport(containerRef)
-
+    const [mouseEnter, setMouseEnter] = useState<boolean>(false)
     // 使用上箭头
     useHotkeys(
         "up",
         () => {
+            if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -291,7 +293,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
         },
         {enabled: inViewport && useUpAndDown},
-        [data, currentRow, containerRef.current]
+        [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
     )
     const upKey = useDebounceFn(
         (index: number) => {
@@ -319,6 +321,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useHotkeys(
         "down",
         () => {
+            if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
             if (dataLength <= 0) {
@@ -330,7 +333,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 if (onSetCurrentRow) onSetCurrentRow(data[0])
                 return
             }
-
             let index
             // 如果上点的话，应该是选择更新的内容
             for (let i = 0; i < dataLength; i++) {
@@ -355,7 +357,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             }
         },
         {enabled: inViewport && useUpAndDown},
-        [data, currentRow, containerRef.current]
+        [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
     )
     const downKey = useDebounceFn(
         (index: number) => {
@@ -977,6 +979,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             ref={tableRef}
             tabIndex={-1}
             onMouseMove={(e) => onMouseMoveLine(e)}
+            onMouseEnter={() => {
+                setMouseEnter(true)
+            }}
+            onMouseLeave={() => {
+                setMouseEnter(false)
+            }}
         >
             <ReactResizeDetector
                 onResize={(w, h) => {

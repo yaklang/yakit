@@ -2,14 +2,20 @@ import React, {ReactElement, useContext, useEffect, useMemo, useRef, useState} f
 import "react-resizable/css/styles.css"
 import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
-import {useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceEffect,
+    useInViewport,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import {useStore} from "@/store/mitmState"
 import {YakQueryHTTPFlowRequest} from "@/utils/yakQueryHTTPFlow"
 import {YakitResizeBox} from "./yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {v4 as uuidv4} from "uuid"
 import classNames from "classnames"
-import {RemoteGV} from "@/yakitGV"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
 import {OutlineLog2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
@@ -51,10 +57,13 @@ import {YakitSpin} from "./yakitUI/YakitSpin/YakitSpin"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {RefreshIcon} from "@/assets/newIcon"
 import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
+import ReactResizeDetector from "react-resize-detector"
+import {RemoteHistoryGV} from "@/enums/history"
 import styles from "./HTTPHistory.module.scss"
 
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import cloneDeep from "lodash/cloneDeep"
+import {RemoteGV} from "@/yakitGV"
+import {cloneDeep} from "lodash"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -65,8 +74,7 @@ export interface HTTPPacketFuzzable {
 }
 
 type tabKeys = "web-tree" | "process"
-
-interface HTTPHistoryTabsItem {
+interface TabsItem {
     key: tabKeys
     label: ReactElement | string
     contShow: boolean
@@ -80,97 +88,24 @@ export interface HTTPFlowBodyByIdRequest {
     IsRisk?: boolean
 }
 
-// 使用 HTTPHistory 控件的来源页面
+// 使用 HTTPHistory 或者 编辑器 控件的来源页面
 export type HTTPHistorySourcePageType =
     | "MITM"
     | "History"
     | "Plugin"
-    | "Webfuzzer"
     | "History_Analysis_ruleData"
     | "HTTPHistoryFilter"
-export interface HTTPHistoryProp extends HTTPPacketFuzzable, HistoryTableTitleShow {
-    pageType?: HTTPHistorySourcePageType
+interface HTTPHistoryProp extends HistoryTableTitleShow {
+    pageType: HTTPHistorySourcePageType
     params?: YakQueryHTTPFlowRequest
-    onSetTableTotal?: (t: number) => void
-    onSetTableSelectNum?: (s: number) => void
 }
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
-    const {
-        pageType,
-        downstreamProxyStr,
-        params,
-        noTableTitle = false,
-        showSourceType = true,
-        showAdvancedSearch = true,
-        showProtocolType = true,
-        showHistorySearch = true,
-        showColorSwatch = true,
-        showBatchActions = true,
-        showDelAll = true,
-        showSetting = true,
-        showRefresh = true,
-        onSetTableTotal,
-        onSetTableSelectNum
-    } = props
-    // History Id 用于区分每个history控件
-    const [historyId, setHistoryId] = useState<string>(uuidv4())
-    // History页面
-    const historyPage = pageType === "History"
-    const ref = useRef(null)
-    const [inViewport] = useInViewport(ref)
+    const {pageType} = props
 
-    // #region mitm页面Forward数据后需要刷新页面数据
-    const {isRefreshHistory, setIsRefreshHistory} = useStore()
-    const [refresh, setRefresh] = useState<boolean>(false)
-    useUpdateEffect(() => {
-        if (isRefreshHistory && ["History", "MITM"].includes(pageType || "")) {
-            setRefresh(!refresh)
-            setIsRefreshHistory(false)
-        }
-    }, [inViewport])
-    // #endregion
-
-    // #region 流量表导出数据，统一history页面刷新
-    const [importRefresh, setImportRefresh] = useState<boolean>(false)
-    const onRefreshImportHistoryTable = useMemoizedFn(() => {
-        setImportRefresh(!importRefresh)
-    })
-    useEffect(() => {
-        if (historyPage) {
-            emiter.on("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
-            return () => {
-                emiter.off("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
-            }
-        }
-    }, [historyPage])
-    // #endregion
-
-    // #region mitm页面配置代理用于发送webFuzzer带过去
-    const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
-    useDebounceEffect(
-        () => {
-            if (inViewport) {
-                getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
-                    if (!["MITM"].includes(pageType || "") && res) {
-                        try {
-                            const obj = JSON.parse(res) || {}
-                            setDownstreamProxy(obj.defaultValue || "")
-                        } catch (error) {
-                            setDownstreamProxy(downstreamProxyStr || "")
-                        }
-                    } else {
-                        setDownstreamProxy(downstreamProxyStr || "")
-                    }
-                })
-            }
-        },
-        [downstreamProxyStr, inViewport, pageType],
-        {wait: 300}
-    )
-    // #endregion
-
-    // #region history页面左侧tab部分
-    const [hTTPHistoryTabs, setHTTPHistoryTabs] = useState<Array<HTTPHistoryTabsItem>>([
+    // #region 左侧tab
+    const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
+    const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
+    const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
             key: "web-tree",
             label: (
@@ -178,7 +113,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     <OutlineLog2Icon /> 网站树
                 </>
             ),
-            contShow: false // 初始为false
+            contShow: true // 初始为true
         },
         {
             key: "process",
@@ -188,60 +123,91 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                     进程
                 </>
             ),
-            contShow: false
+            contShow: false // 初始为false
         }
     ])
-    const [curTabKey, setCurTabKey] = useState<tabKeys>("web-tree")
     useEffect(() => {
-        if (historyPage) {
-            getRemoteValue(RemoteGV.HistoryLeftTabs).then((setting: string) => {
-                if (setting) {
-                    try {
-                        const {key, contShow} = JSON.parse(setting)
-                        hTTPHistoryTabs.forEach((i) => {
-                            if (i.key === key) {
-                                i.contShow = contShow
+        getRemoteValue(RemoteHistoryGV.HistoryLeftTabs).then((setting: string) => {
+            if (setting) {
+                try {
+                    const tabs = JSON.parse(setting)
+                    setTabsData((prev) => {
+                        prev.forEach((i) => {
+                            if (i.key === tabs.key) {
+                                i.contShow = tabs.contShow
                             } else {
                                 i.contShow = false
                             }
                         })
-                        setHTTPHistoryTabs([...hTTPHistoryTabs])
-                        setCurTabKey(key)
-                    } catch (error) {
-                        hTTPHistoryTabs.forEach((i) => {
-                            i.contShow = false
+                        return [...prev]
+                    })
+                    setCurTabKey(tabs.key)
+                } catch (error) {
+                    setTabsData((prev) => {
+                        prev.forEach((i) => {
+                            if (i.key === "web-tree") {
+                                i.contShow = true
+                            } else {
+                                i.contShow = false
+                            }
                         })
-                        setHTTPHistoryTabs([...hTTPHistoryTabs])
-                        setCurTabKey("web-tree")
-                    }
+                        return [...prev]
+                    })
+                    setCurTabKey("web-tree")
                 }
-            })
-        }
-    }, [historyPage])
-    const handleTabClick = (key: tabKeys, contShow: boolean) => {
-        hTTPHistoryTabs.forEach((i) => {
-            if (i.key === key) {
-                i.contShow = !contShow
-            } else {
-                i.contShow = false
             }
         })
-        setRemoteValue(RemoteGV.HistoryLeftTabs, JSON.stringify({key, contShow: !contShow}))
-        setHTTPHistoryTabs([...hTTPHistoryTabs])
-        setCurTabKey(key)
+    }, [])
+    const handleTabClick = async (item: TabsItem) => {
+        const contShow = !item.contShow
+        setTabsData((prev) => {
+            prev.forEach((i) => {
+                if (i.key === item.key) {
+                    i.contShow = contShow
+                } else {
+                    i.contShow = false
+                }
+            })
+            return [...prev]
+        })
+        setRemoteValue(RemoteHistoryGV.HistoryLeftTabs, JSON.stringify({contShow: contShow, key: item.key}))
+        setCurTabKey(item.key)
     }
-    const tabContItemShow = (key: tabKeys) => {
-        return curTabKey === key && hTTPHistoryTabs.find((item) => item.key === curTabKey)?.contShow
+    const specifyTabToOpen = (tab: tabKeys) => {
+        setTabsData((prev) => {
+            prev.forEach((i) => {
+                if (i.key === tab) {
+                    i.contShow = true
+                } else {
+                    i.contShow = false
+                }
+            })
+            return [...prev]
+        })
+        setRemoteValue(RemoteHistoryGV.HistoryLeftTabs, JSON.stringify({contShow: true, key: tab}))
+        setCurTabKey(tab)
     }
-    const openTabsFlag = useMemo(() => {
-        return hTTPHistoryTabs.some((item) => item.contShow)
-    }, [hTTPHistoryTabs])
+    useEffect(() => {
+        setOpenTabsFlag(tabsData.some((item) => item.contShow))
+    }, [tabsData])
+    const ResizeBoxProps = useCreation(() => {
+        let p = {
+            firstRatio: "20%",
+            secondRatio: "80%"
+        }
+
+        if (openTabsFlag) {
+            p.firstRatio = "20%"
+        } else {
+            p.firstRatio = "24px"
+        }
+        return p
+    }, [openTabsFlag])
     // #endregion
 
-    // #region history页面网站树、进程
+    // #region 网站树、进程
     const [refreshFlag, setRefreshFlag] = useState<boolean>(false)
     const webTreeRef = useRef<any>()
-    const treeWrapRef = useRef<any>()
     const [treeWrapHeight, setTreeWrapHeight] = useState<number>(0)
     const [searchURL, setSearchURL] = useState<string>("")
     const [includeInUrl, setIncludeInUrl] = useState<string>("")
@@ -255,6 +221,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     const mitmVersion = useCreation(() => {
         return mitmContent.mitmStore.version
     }, [mitmContent.mitmStore.version])
+
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
         try {
@@ -282,118 +249,73 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
         } catch (error) {}
     })
 
-    const resizeObserver = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-        entries.forEach((entry) => {
-            const target = entry.target
-            setTreeWrapHeight(target.getBoundingClientRect().height)
-        })
-    })
-    useEffect(() => {
-        if (treeWrapRef.current) {
-            resizeObserver.observe(treeWrapRef.current)
-        }
-    }, [treeWrapRef.current])
-
     // 跳转网站树指定节点
     const onJumpWebTree = useMemoizedFn((value) => {
-        if (inViewport && webTreeRef.current) {
+        if (webTreeRef.current) {
             const val = JSON.parse(value)
             const host = val.host
             webTreeRef.current.onJumpWebTree(host)
-            handleTabClick("web-tree", false)
+            specifyTabToOpen("web-tree")
         }
     })
     useEffect(() => {
-        if (historyPage) {
+        if (pageType === "History") {
             emiter.on("onHistoryJumpWebTree", onJumpWebTree)
             return () => {
                 emiter.off("onHistoryJumpWebTree", onJumpWebTree)
             }
         }
-    }, [historyPage])
-    // #endregion
+    }, [pageType])
 
-    // #region 编辑器部分是否显示
+    // 用于控制HTTPFlowRealTimeTableAndEditor
     const [onlyShowFirstNode, setOnlyShowFirstNode] = useState<boolean>(true)
     const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
-    const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
-    const [highlightSearch, setHighlightSearch] = useState("")
-    useEffect(() => {
-        setSecondNodeVisible(!onlyShowFirstNode)
-    }, [onlyShowFirstNode])
     // #endregion
 
-    const lastRatioRef = useRef<{firstRatio:string,secondRatio:string}>({
-        firstRatio: "50%",
-        secondRatio: "50%"
-    })
-    useEffect(()=>{
-        getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
-            if(res){
-                try {
-                    const {
-                        firstSizePercent,
-                        secondSizePercent
-                    } = JSON.parse(res)
-                    lastRatioRef.current = {
-                        firstRatio:firstSizePercent,
-                        secondRatio:secondSizePercent
-                    }
-            } catch (error) {}
-            }
-        })
-    })
-    const ResizeBoxProps = useCreation(() => {
-        let p = cloneDeep(lastRatioRef.current)
-        if (onlyShowFirstNode) {
-            p.firstRatio = "100%"
-            p.secondRatio = "0%"
-        }
-        return p
-    }, [onlyShowFirstNode])
-
     return (
-        <div
-            ref={ref}
-            className={styles.hTTPHistory}
-            style={{
-                paddingRight: historyPage ? 16 : 0
-            }}
-        >
+        <div className={styles.hTTPHistory}>
             <YakitResizeBox
-                isShowDefaultLineStyle={historyPage}
-                freeze={historyPage && openTabsFlag}
-                isRecalculateWH={historyPage ? openTabsFlag : true}
-                firstMinSize={historyPage ? (openTabsFlag ? "325px" : "24px") : 0}
-                firstRatio={historyPage ? (openTabsFlag ? "25%" : "24px") : "0px"}
-                firstNode={() => {
-                    if (historyPage) {
-                        return (
-                            <div className={styles["hTTPHistory-tab-wrap"]}>
-                                <div className={styles["hTTPHistory-tab"]}>
-                                    {hTTPHistoryTabs.map((item) => (
-                                        <div
-                                            className={classNames(styles["hTTPHistory-tab-item"], {
-                                                [styles["hTTPHistory-tab-item-active"]]: curTabKey === item.key,
-                                                [styles["hTTPHistory-tab-item-unshowCont"]]:
-                                                    curTabKey === item.key && !item.contShow
-                                            })}
-                                            key={item.key}
-                                            onClick={() => {
-                                                handleTabClick(item.key, item.contShow)
-                                            }}
-                                        >
-                                            {item.label}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div
-                                    className={classNames(styles["hTTPHistory-tab-cont-item"], styles["tree-wrap"])}
-                                    style={{
-                                        display: tabContItemShow("web-tree") ? "block" : "none",
-                                        overflowY: "hidden"
+                isVer={false}
+                freeze={openTabsFlag}
+                isRecalculateWH={openTabsFlag}
+                firstNode={() => (
+                    <div className={styles["hTTPHistory-left"]}>
+                        <div className={styles["tab-wrap"]}>
+                            <div className={styles["tab"]}>
+                                {tabsData.map((item) => (
+                                    <div
+                                        className={classNames(styles["tab-item"], {
+                                            [styles["tab-item-active"]]: curTabKey === item.key,
+                                            [styles["tab-item-unshowCont"]]: curTabKey === item.key && !item.contShow
+                                        })}
+                                        key={item.key}
+                                        onClick={() => {
+                                            handleTabClick(item)
+                                        }}
+                                    >
+                                        {item.label}
+                                    </div>
+                                ))}
+                            </div>
+                            <div
+                                className={classNames(styles["tab-cont-item"])}
+                                style={{
+                                    overflowY: "hidden"
+                                }}
+                            >
+                                <ReactResizeDetector
+                                    onResize={(width, height) => {
+                                        if (!width || !height) return
+                                        setTreeWrapHeight(height)
                                     }}
-                                    ref={treeWrapRef}
+                                    handleWidth={true}
+                                    handleHeight={true}
+                                    refreshMode={"debounce"}
+                                    refreshRate={50}
+                                />
+                                <div
+                                    className={styles["webTree-wrapper"]}
+                                    style={{display: curTabKey === "web-tree" ? "block" : "none"}}
                                 >
                                     <WebTree
                                         ref={webTreeRef}
@@ -412,11 +334,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     ></WebTree>
                                 </div>
                                 <div
-                                    className={classNames(styles["hTTPHistory-tab-cont-item"])}
-                                    style={{
-                                        display: tabContItemShow("process") ? "block" : "none",
-                                        overflowY: "hidden"
-                                    }}
+                                    className={styles["process-wrapper"]}
+                                    style={{display: curTabKey === "process" ? "block" : "none"}}
                                 >
                                     <HistoryProcess
                                         queryparamsStr={processQueryparams}
@@ -430,101 +349,262 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                     ></HistoryProcess>
                                 </div>
                             </div>
-                        )
-                    }
-                    return <></>
-                }}
-                secondMinSize={historyPage ? "720px" : "100%"}
-                secondRatio={historyPage ? "75%" : "100%"}
-                secondNode={() => (
-                    <YakitResizeBox
-                        style={{paddingBottom: historyPage ? 13 : 0}}
-                        firstNode={() => (
-                            <div
-                                style={{
-                                    paddingTop: historyPage ? 8 : 0,
-                                    paddingLeft: historyPage ? 12 : 0,
-                                    height: "100%"
-                                }}
-                            >
-                                <HTTPFlowTable
-                                    noTableTitle={noTableTitle}
-                                    showSourceType={showSourceType}
-                                    showAdvancedSearch={showAdvancedSearch}
-                                    showProtocolType={showProtocolType}
-                                    showHistorySearch={showHistorySearch}
-                                    showColorSwatch={showColorSwatch}
-                                    showBatchActions={showBatchActions}
-                                    showDelAll={showDelAll}
-                                    showSetting={showSetting}
-                                    showRefresh={showRefresh}
-                                    params={params}
-                                    searchURL={searchURL}
-                                    includeInUrl={includeInUrl}
-                                    onSelected={(i) => {
-                                        setSelectedHTTPFlow(i)
-                                    }}
-                                    onSearch={setHighlightSearch}
-                                    onlyShowFirstNode={onlyShowFirstNode}
-                                    setOnlyShowFirstNode={setOnlyShowFirstNode}
-                                    refresh={refresh}
-                                    importRefresh={importRefresh}
-                                    pageType={pageType}
-                                    historyId={historyId}
-                                    onQueryParams={onQueryParams}
-                                    inViewport={inViewport}
-                                    downstreamProxyStr={downstreamProxy}
-                                    ProcessName={curProcess}
-                                    onSetTableTotal={onSetTableTotal}
-                                    onSetTableSelectNum={onSetTableSelectNum}
-                                />
-                            </div>
-                        )}
-                        firstMinSize={160}
-                        isVer={true}
-                        freeze={!onlyShowFirstNode}
-                        secondNodeStyle={{
-                            padding: onlyShowFirstNode ? 0 : undefined,
-                            display: onlyShowFirstNode ? "none" : ""
-                        }}
-                        secondMinSize={50}
-                        secondNode={() => (
-                            <>
-                                {secondNodeVisible && (
-                                    <div style={{width: "100%", height: "100%"}}>
-                                        <HTTPFlowDetailMini
-                                            noHeader={true}
-                                            search={highlightSearch}
-                                            id={selected?.Id || 0}
-                                            sendToWebFuzzer={true}
-                                            selectedFlow={selected}
-                                            refresh={refresh}
-                                            historyId={historyId}
-                                            downstreamProxyStr={downstreamProxy}
-                                            pageType={pageType}
-                                        />
-                                    </div>
-                                )}
-                            </>
-                        )}
-                        onMouseUp={({firstSizePercent,secondSizePercent})=>{
-                            lastRatioRef.current = {
-                                firstRatio:firstSizePercent,
-                                secondRatio:secondSizePercent
-                            }
-                            // 缓存比例用于下次加载
-                            setRemoteValue(RemoteGV.historyTableYakitResizeBox, JSON.stringify({
-                                firstSizePercent,
-                                secondSizePercent
-                            }))
-                        }}
-                        {...ResizeBoxProps}
-                    />
+                        </div>
+                    </div>
                 )}
+                lineStyle={{display: ""}}
+                firstMinSize={openTabsFlag ? "325px" : "24px"}
+                secondMinSize={720}
+                secondNode={
+                    <div className={styles["hTTPHistory-right"]}>
+                        <HTTPFlowRealTimeTableAndEditor
+                            searchURL={searchURL}
+                            includeInUrl={includeInUrl}
+                            curProcess={curProcess}
+                            onQueryParams={onQueryParams}
+                            setOnlyShowFirstNode={setOnlyShowFirstNode}
+                            setSecondNodeVisible={setSecondNodeVisible}
+                            {...props}
+                        />
+                    </div>
+                }
+                secondNodeStyle={{
+                    padding: undefined,
+                    display: ""
+                }}
+                {...ResizeBoxProps}
             />
         </div>
     )
 }
+
+interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
+    pageType: HTTPHistorySourcePageType
+    wrapperStyle?: any
+    params?: YakQueryHTTPFlowRequest
+    searchURL?: string
+    includeInUrl?: string | string[]
+    curProcess?: string[]
+    onQueryParams?: (queryParams: string, execFlag: boolean) => void
+    downstreamProxyStr?: string
+    onSetTableTotal?: (t: number) => void
+    onSetTableSelectNum?: (s: number) => void
+    setOnlyShowFirstNode?: (only: boolean) => void
+    setSecondNodeVisible?: (show: boolean) => void
+}
+/**
+ * 此组件用于实时流量表和编辑器
+ */
+export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEditorProps> = React.memo((props) => {
+    const {
+        pageType,
+        wrapperStyle,
+        params,
+        searchURL,
+        includeInUrl,
+        curProcess,
+        onQueryParams,
+        downstreamProxyStr,
+        onSetTableTotal,
+        onSetTableSelectNum,
+        noTableTitle = false,
+        showSourceType = true,
+        showAdvancedSearch = true,
+        showProtocolType = true,
+        showHistorySearch = true,
+        showColorSwatch = true,
+        showBatchActions = true,
+        showDelAll = true,
+        showSetting = true,
+        showRefresh = true
+    } = props
+
+    const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(hTTPFlowRealTimeTableAndEditorRef)
+
+    // History Id 用于区分每个history控件
+    const [historyId, setHistoryId] = useState<string>(uuidv4())
+    const [highlightSearch, setHighlightSearch] = useState("")
+
+    // #region mitm页面Forward数据后需要刷新页面数据
+    const {isRefreshHistory, setIsRefreshHistory} = useStore()
+    const [refresh, setRefresh] = useState<boolean>(false)
+    useUpdateEffect(() => {
+        if (isRefreshHistory && ["History", "MITM"].includes(pageType)) {
+            setRefresh((prev) => !prev)
+            setIsRefreshHistory(false)
+        }
+    }, [inViewport])
+    // #endregion
+
+    // #region mitm页面配置代理，其余pageType使用该组件通过获取缓存，发送到webFuzzer带过去
+    const [downstreamProxy, setDownstreamProxy] = useState<string>(downstreamProxyStr || "")
+    useDebounceEffect(
+        () => {
+            if (inViewport) {
+                getRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+                    if (!(pageType === "MITM") && res) {
+                        try {
+                            const obj = JSON.parse(res) || {}
+                            setDownstreamProxy(obj.defaultValue || "")
+                        } catch (error) {
+                            setDownstreamProxy(downstreamProxyStr || "")
+                        }
+                    } else {
+                        setDownstreamProxy(downstreamProxyStr || "")
+                    }
+                })
+            }
+        },
+        [downstreamProxyStr, inViewport, pageType],
+        {wait: 300}
+    )
+    // #endregion
+
+    // #region 流量表导出数据，统一history页面刷新
+    const [importRefresh, setImportRefresh] = useState<boolean>(false)
+    const onRefreshImportHistoryTable = useMemoizedFn(() => {
+        setImportRefresh((prev) => !prev)
+    })
+    useEffect(() => {
+        if (pageType === "History") {
+            emiter.on("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
+            return () => {
+                emiter.off("onRefreshImportHistoryTable", onRefreshImportHistoryTable)
+            }
+        }
+    }, [pageType])
+    // #endregion
+
+    // #region 编辑器部分是否显示
+    const [onlyShowFirstNode, setOnlyShowFirstNode] = useControllableValue<boolean>(props, {
+        defaultValue: true,
+        valuePropName: "onlyShowFirstNode",
+        trigger: "setOnlyShowFirstNode"
+    })
+    const [secondNodeVisible, setSecondNodeVisible] = useControllableValue<boolean>({
+        defaultValue: false,
+        valuePropName: "secondNodeVisible",
+        trigger: "setSecondNodeVisible"
+    })
+    const [selected, setSelectedHTTPFlow] = useState<HTTPFlow>()
+    useEffect(() => {
+        setSecondNodeVisible(!onlyShowFirstNode)
+    }, [onlyShowFirstNode])
+    const lastRatioRef = useRef<{firstRatio: string; secondRatio: string}>({
+        firstRatio: "50%",
+        secondRatio: "50%"
+    })
+    useEffect(() => {
+        getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
+            if (res) {
+                try {
+                    const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                    lastRatioRef.current = {
+                        firstRatio: firstSizePercent,
+                        secondRatio: secondSizePercent
+                    }
+                } catch (error) {}
+            }
+        })
+    })
+    const ResizeBoxProps = useCreation(() => {
+        let p = cloneDeep(lastRatioRef.current)
+        if (onlyShowFirstNode) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+        }
+        return p
+    }, [onlyShowFirstNode])
+    // #endregion
+
+    return (
+        <div
+            className={styles["hTTPFlowRealTimeTableAndEditor"]}
+            ref={hTTPFlowRealTimeTableAndEditorRef}
+            style={wrapperStyle}
+        >
+            <YakitResizeBox
+                isVer={true}
+                firstNode={() => (
+                    <div style={{width: "100%", height: "100%"}}>
+                        <HTTPFlowTable
+                            noTableTitle={noTableTitle}
+                            showSourceType={showSourceType}
+                            showAdvancedSearch={showAdvancedSearch}
+                            showProtocolType={showProtocolType}
+                            showHistorySearch={showHistorySearch}
+                            showColorSwatch={showColorSwatch}
+                            showBatchActions={showBatchActions}
+                            showDelAll={showDelAll}
+                            showSetting={showSetting}
+                            showRefresh={showRefresh}
+                            params={params}
+                            searchURL={searchURL}
+                            includeInUrl={includeInUrl}
+                            onSelected={(i) => {
+                                setSelectedHTTPFlow(i)
+                            }}
+                            onSearch={setHighlightSearch}
+                            onlyShowFirstNode={onlyShowFirstNode}
+                            setOnlyShowFirstNode={setOnlyShowFirstNode}
+                            refresh={refresh}
+                            importRefresh={importRefresh}
+                            pageType={pageType}
+                            historyId={historyId}
+                            onQueryParams={onQueryParams}
+                            inViewport={inViewport}
+                            downstreamProxyStr={downstreamProxy}
+                            ProcessName={curProcess}
+                            onSetTableTotal={onSetTableTotal}
+                            onSetTableSelectNum={onSetTableSelectNum}
+                        />
+                    </div>
+                )}
+                secondNode={
+                    <div style={{width: "100%", height: "100%"}}>
+                        {secondNodeVisible && (
+                            <HTTPFlowDetailMini
+                                noHeader={true}
+                                search={highlightSearch}
+                                id={selected?.Id || 0}
+                                sendToWebFuzzer={true}
+                                selectedFlow={selected}
+                                refresh={refresh}
+                                historyId={historyId}
+                                downstreamProxyStr={downstreamProxy}
+                                pageType={pageType}
+                            />
+                        )}
+                    </div>
+                }
+                firstMinSize={80}
+                secondMinSize={200}
+                secondNodeStyle={{
+                    display: !secondNodeVisible ? "none" : "",
+                    padding: !secondNodeVisible ? 0 : undefined
+                }}
+                lineStyle={{display: !secondNodeVisible ? "none" : ""}}
+                lineDirection='top'
+                onMouseUp={({firstSizePercent, secondSizePercent}) => {
+                    lastRatioRef.current = {
+                        firstRatio: firstSizePercent,
+                        secondRatio: secondSizePercent
+                    }
+                    // 缓存比例用于下次加载
+                    setRemoteValue(
+                        RemoteGV.historyTableYakitResizeBox,
+                        JSON.stringify({
+                            firstSizePercent,
+                            secondSizePercent
+                        })
+                    )
+                }}
+                {...ResizeBoxProps}
+            />
+        </div>
+    )
+})
 
 interface CommonProcessItem {
     process: string[]

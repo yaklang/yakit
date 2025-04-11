@@ -1,4 +1,5 @@
 .HTTPHistoryAnalysis {
+    height: 100%;
     &-top {
         height: 100%;
         &-header {
@@ -116,16 +117,24 @@
     }
     &-right {
         height: 100%;
-        padding: 8px;
-        padding-top: 0;
-        overflow-y: auto;
+        padding: 0 8px;
+        padding-bottom: 12px;
         &-default {
+            display: flex;
+            flex-direction: column;
             padding-top: 16px;
-            &-title {
+            gap: 16px;
+            height: 100%;
+            &-header {
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
+                .title-wrapper {
+                    display: flex;
+                    align-items: center;
 
-                gap: 8px;
+                    gap: 8px;
+                }
                 span.title {
                     color: #31343f;
                     font-size: 16px;
@@ -135,16 +144,24 @@
             .exec-form-item {
                 display: flex;
                 align-items: center;
+
                 gap: 8px;
-                margin-bottom: 16px;
                 .exec-form-item-label {
                     min-width: 150px;
                     text-align: right;
                 }
+                .row-editor-title {
+                    display: flex;
+
+                    gap: 8px;
+                }
+            }
+            .rawpacket-editor-wrapper {
+                height: 100%;
+                width: 100%;
             }
             .exec-btn {
-                margin-top: 15px;
-                text-align: center;
+                margin-left: 160px;
             }
         }
         &-noDefault {

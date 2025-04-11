@@ -148,7 +148,8 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
         excludeColumnsKey = [],
         excludeBatchMenuKey = [],
         onSetRules,
-        onRefreshCom
+        onRefreshCom,
+        inMouseEnterTable = false
     } = props
     const mitmContent = useContext(MITMContext)
 
@@ -920,6 +921,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     enableDragSort={true}
                     enableDrag={true}
                     onMoveRowEnd={onMoveRowEnd}
+                    inMouseEnterTable={inMouseEnterTable}
                 />
             </div>
         )

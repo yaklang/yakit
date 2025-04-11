@@ -42,6 +42,7 @@ export interface MITMRuleProp {
     excludeBatchMenuKey?: string[]
     onSetRules?: (r: MITMContentReplacerRule[]) => void
     onRefreshCom?: () => void
+    inMouseEnterTable?: boolean
 }
 
 export interface ButtonTextProps {

@@ -118,6 +118,7 @@ import {
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
     MITMHackerPageInfoProps,
+    HTTPHistoryAnalysisPageInfo,
     ModifyNotepadPageInfoProps,
     PluginBatchExecutorPageInfoProps,
     PocPageInfoProps,
@@ -263,7 +264,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.ICMPSizeLog,
     YakitRoute.TCPPortLog,
     YakitRoute.DB_HTTPHistory,
-    YakitRoute.DB_HTTPHistoryAnalysis,
     YakitRoute.DB_Report,
     YakitRoute.DB_Risk,
     YakitRoute.Misstatement,
@@ -345,6 +345,8 @@ export const NoScrollRoutes: YakitRoute[] = [
 ]
 /** 一级tab固定展示tab  */
 export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+/** 一级tab固定展示tab支持多开页面 */
+export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
 export const LogOutCloseRoutes: YakitRoute[] = [YakitRoute.Plugin_Audit, YakitRoute.Data_Statistics]
 
@@ -421,6 +423,8 @@ export interface ComponentParams {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**webSocket页面 */
     websocketFuzzerPageInfo?: WebsocketFuzzerPageInfoProps
+    /**流量分析器页面 */
+    hTTPHistoryAnalysisPageInfo?: HTTPHistoryAnalysisPageInfo
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
     /**漏洞与风险统计页面 */
@@ -522,7 +526,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.DB_HTTPHistory:
             return <HTTPHistory pageType='History' />
         case YakitRoute.DB_HTTPHistoryAnalysis:
-            return <HTTPHistoryAnalysis />
+            return <HTTPHistoryAnalysis pageId={params?.id || ""} />
         case YakitRoute.DB_Report:
             return <ReportViewerPage />
         case YakitRoute.DB_Risk:

@@ -36,6 +36,7 @@ import {YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
  * @property {boolean} enableDragSort 是否拖拽排序
  * @event   onMoveRowEnd 拖拽结束
  * @property {boolean}  useUpAndDown 是否启用上下建
+ * @property {boolean}  inMouseEnterTable 是否启用上下建多个表格时使用，防止上下键冲突
  * @property {string}  containerClassName 容器得类样式
  * @property {boolean}  isRightClickBatchOperate 右键菜单批量操作，支持Shift + 鼠标左键同时点击
  */
@@ -76,6 +77,7 @@ export interface TableVirtualResizeProps<T> {
     enableDragSort?: boolean
     onMoveRowEnd?: () => void
     useUpAndDown?: boolean
+    inMouseEnterTable?: boolean
     containerClassName?: string
     isRightClickBatchOperate?: boolean
 

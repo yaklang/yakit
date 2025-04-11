@@ -1,4 +1,6 @@
 export enum RemoteHistoryGV {
+    /** @name history页面左侧tabs */
+    HistoryLeftTabs = "new_history_left_tabs",
     /** @name 是否已了解chat-cs功能 */
     BackgroundRefresh = "background-refresh",
     /** @name 排除展示列key值 */
