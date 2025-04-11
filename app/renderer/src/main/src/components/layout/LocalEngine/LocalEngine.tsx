@@ -263,7 +263,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     grpcFetchLocalYakVersionHash()
                 ])
 
-                if (res1 === "" || !Array.isArray(res2) || res2.length === 0) {
+                if (!res1 || !Array.isArray(res2) || res2.length === 0) {
                     setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
                     handleLinkLocalEnging()
                 } else {
