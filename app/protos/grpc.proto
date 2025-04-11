@@ -4965,7 +4965,25 @@ message HTTPFlowsToOnlineRequest {
 message AnalyzeHTTPFlowRequest{
   string HotPatchCode = 1;
   repeated MITMContentReplacer Replacers = 2;
+  AnalyzeHTTPFlowConfig Config =3 ;
+  // 分析数据源
+  AnalyzedDataSource Source = 4;
 }
+
+message AnalyzedDataSource {
+  string SourceType = 1; // 分数数据源来自数据库或者用户手动输入的数据包 database / rawpacket
+  // database
+  QueryHTTPFlowRequest HTTPFlowFilter = 2;
+  // rawpacket
+  string RawRequest = 3;
+  string RawResponse = 4;
+}
+
+message AnalyzeHTTPFlowConfig {
+  int64 Concurrency = 1; // 并发数量，不传默认为10
+  bool  EnableDeduplicate =2; // 是否进行单条数据去重
+}
+
 
 message AnalyzeHTTPFlowResponse{
   ExecResult ExecResult = 1;
