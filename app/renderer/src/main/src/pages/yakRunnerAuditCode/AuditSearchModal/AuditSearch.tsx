@@ -243,15 +243,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
     const handleKeyPress = useMemoizedFn((event) => {
         const {key} = event
-        if (key === "Tab" || key === "ArrowRight") {
+        if (key === "Tab") {
             if (getExecuting()) {
                 warn("当前已有搜索，请等待完毕后切换")
             } else {
                 onNextSearchTabFun()
             }
-            event.preventDefault()
-        } else if (key === "ArrowLeft") {
-            onPreviousSearchTabFun()
             event.preventDefault()
         } else if (key === "ArrowUp") {
             onSetActiveInfo("last")

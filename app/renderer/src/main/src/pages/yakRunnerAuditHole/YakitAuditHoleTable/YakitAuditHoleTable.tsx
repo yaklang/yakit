@@ -364,6 +364,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             {
                 title: "发现时间",
                 dataKey: "CreatedAt",
+                filterProps: {
+                    filterKey: "CreatedAt",
+                    filtersType: "dateTime"
+                },
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {
@@ -576,7 +580,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             sort.order = "desc"
             sort.orderBy = "id"
         }
-
+        if (filter["CreatedAt"]) {
+            const time = filter["CreatedAt"]
+            filter.AfterCreatedAt = time[0]
+            filter.BeforeCreatedAt = time[1]
+        }
+        
         if (setQuery) {
             const newPagination = {
                 ...tableParams.Pagination,

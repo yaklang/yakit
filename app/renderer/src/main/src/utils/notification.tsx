@@ -2,6 +2,7 @@ import {notification} from "antd"
 import {ArgsProps} from "antd/lib/notification"
 import React, {ReactNode} from "react"
 import {CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon} from "@/assets/newIcon"
+import { CopyComponents } from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const warn = (msg: React.ReactNode) => {
     yakitNotify("warning", msg)
@@ -27,12 +28,26 @@ export const failed = (msg: React.ReactNode) => {
 }
 
 // ==========================新版 yakit notification ==========================
-export const yakitFailed = (props: ArgsProps | string | React.ReactNode) => {
+export const yakitFailed = (props: ArgsProps | string | React.ReactNode, isShowCopy?: boolean) => {
     let newProps: ArgsProps = {
         message: ""
     }
+
+    const copyBtn= (copyStr) => (
+        <div style={{display:"flex",justifyContent:"end"}}>
+            <CopyComponents copyText={copyStr} />
+        </div>
+    )
+
     if (typeof props === "string") {
-        newProps.message = <div style={{whiteSpace: "pre-wrap"}}>{props}</div>
+        const isCopy = isShowCopy && props.length > 500
+        const str = isCopy ? `${props.slice(0, 500)}...` : props
+        newProps.message = (
+            <div style={{whiteSpace: "pre-wrap"}}>
+                {str}
+                {isCopy && copyBtn(props)}
+            </div>
+        )
     } else if (typeof props === "object") {
         newProps = props as ArgsProps
     } else {
