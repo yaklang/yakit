@@ -8,7 +8,7 @@ import {
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SingleManualHijackInfoMessage} from "../MITMHacker/utils"
-import {useControllableValue, useCounter, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCounter, useCreation, useMap, useMemoizedFn} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {ManualHijackListAction, ManualHijackListStatus, ManualHijackListStatusMap} from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -42,6 +42,7 @@ import {openPacketNewWindow} from "@/utils/openWebsite"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {isEqual} from "lodash"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward} = props
@@ -49,6 +50,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
     const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
     const [scrollToIndex, setScrollToIndex] = useState<number>()
+
+    const [loadingMap, {set: setLoading, remove: removeLoading, get: getLoading, reset: resetLoading}] = useMap<
+        string,
+        boolean
+    >(new Map())
 
     const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
 
@@ -147,6 +153,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 addOrder()
                 break
             case ManualHijackListAction.Hijack_List_Delete:
+                removeLoading(item.TaskID)
                 if (currentSelectItem?.TaskID === taskID) {
                     let selectItem: SingleManualHijackInfoMessage | undefined = undefined
                     let selectIndex = editorShowIndex
@@ -169,6 +176,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 setData((preV) => preV.filter((item) => item.TaskID !== taskID))
                 break
             case ManualHijackListAction.Hijack_List_Update:
+                setLoading(item.TaskID, false)
                 if (currentSelectItem?.TaskID === taskID) {
                     setCurrentSelectItem({
                         ...item,
@@ -184,6 +192,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 })
                 break
             case ManualHijackListAction.Hijack_List_Reload:
+                resetLoading()
                 let order = 0
                 const newData = manualHijackList.map((ele) => {
                     order += 1
@@ -261,6 +270,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             TaskID: rowData.TaskID,
             Drop: true
         }
+        setLoading(rowData.TaskID, true)
         grpcMITMV2Drop(value)
     })
     const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
@@ -274,6 +284,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             TaskID: rowData.TaskID,
             Tags: existedTags
         }
+        setLoading(rowData.TaskID, true)
         grpcMITMSetColor(value)
     })
     const onRemoveColor = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -286,6 +297,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             TaskID: rowData.TaskID,
             Tags: existedTags
         }
+        setLoading(rowData.TaskID, true)
         grpcMITMSetColor(value)
     })
     const onSetCurrentRow = useMemoizedFn((val) => {
@@ -383,6 +395,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                         autoForward={autoForward}
                         handleAutoForward={handleAutoForward}
                         onDiscardData={onDiscardData}
+                        loading={getLoading(currentSelectItem.TaskID)}
+                        setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
                     />
                 )
             }
@@ -396,7 +410,7 @@ export default MITMManual
 
 const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
     forwardRef((props, ref) => {
-        const {info, index, autoForward, handleAutoForward, onDiscardData, onScrollTo} = props
+        const {info, index, autoForward, handleAutoForward, onDiscardData, onScrollTo, loading, setLoading} = props
         // request/ws 修改的值
         const [modifiedRequestPacket, setModifiedRequestPacket] = useState<string>("")
         const [modifiedResponsePacket, setModifiedResponsePacket] = useState<string>("")
@@ -539,6 +553,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
+            setLoading(true)
             const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
             if (isEqual(request, info.Request)) {
                 grpcMITMV2Forward({
@@ -558,7 +573,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-
+            setLoading(true)
             const response = new Uint8Array(StringToUint8Array(modifiedResponsePacket))
 
             if (isEqual(response, info.Response)) {
@@ -579,6 +594,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
+            setLoading(true)
             const payload = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
             if (isEqual(payload, info.Payload)) {
                 grpcMITMV2Forward({
@@ -629,6 +645,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 yakitNotify("warning", "当前状态不允许劫持")
                 return
             }
+            setLoading(true)
             grpcMITMV2HijackedCurrentResponse(getActionHijackingRData(value))
         })
         const onRequestTypeOptionVal = useMemoizedFn((value) => {
@@ -651,53 +668,55 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             return p
         }, [currentResponsePacketInfo.currentPacket])
         return (
-            <YakitResizeBox
-                firstMinSize={300}
-                firstNode={
-                    <div style={{height: "100%"}}>
-                        <MITMV2ManualEditor
-                            index={index}
-                            onScrollTo={onScrollTo}
-                            modifiedPacket={modifiedRequestPacket}
-                            setModifiedPacket={setModifiedRequestPacket}
-                            isResponse={false}
-                            info={info}
-                            onDiscardData={onDiscardData}
-                            onSubmitData={onSubmitData}
-                            currentPacketInfo={currentRequestPacketInfo}
-                            disabled={disabledRequest}
-                            handleAutoForward={handleAutoForward}
-                            typeOptionVal={requestTypeOptionVal}
-                            onTypeOptionVal={onRequestTypeOptionVal}
-                            onHijackingResponse={onHijackingResponse}
-                        />
-                    </div>
-                }
-                secondMinSize={300}
-                secondNode={
-                    <>
+            <YakitSpin spinning={loading}>
+                <YakitResizeBox
+                    firstMinSize={300}
+                    firstNode={
                         <div style={{height: "100%"}}>
                             <MITMV2ManualEditor
-                                modifiedPacket={modifiedResponsePacket}
-                                setModifiedPacket={setModifiedResponsePacket}
-                                isResponse={true}
+                                index={index}
+                                onScrollTo={onScrollTo}
+                                modifiedPacket={modifiedRequestPacket}
+                                setModifiedPacket={setModifiedRequestPacket}
+                                isResponse={false}
                                 info={info}
                                 onDiscardData={onDiscardData}
                                 onSubmitData={onSubmitData}
-                                currentPacketInfo={currentResponsePacketInfo}
-                                disabled={disabledResponse}
+                                currentPacketInfo={currentRequestPacketInfo}
+                                disabled={disabledRequest}
                                 handleAutoForward={handleAutoForward}
-                                typeOptionVal={responseTypeOptionVal}
-                                onTypeOptionVal={onResponseTypeOptionVal}
+                                typeOptionVal={requestTypeOptionVal}
+                                onTypeOptionVal={onRequestTypeOptionVal}
                                 onHijackingResponse={onHijackingResponse}
                             />
                         </div>
-                    </>
-                }
-                lineStyle={{display: !currentResponsePacketInfo.currentPacket ? "none" : ""}}
-                secondNodeStyle={{display: currentResponsePacketInfo.currentPacket ? "block" : "none"}}
-                {...ResizeBoxProps}
-            />
+                    }
+                    secondMinSize={300}
+                    secondNode={
+                        <>
+                            <div style={{height: "100%"}}>
+                                <MITMV2ManualEditor
+                                    modifiedPacket={modifiedResponsePacket}
+                                    setModifiedPacket={setModifiedResponsePacket}
+                                    isResponse={true}
+                                    info={info}
+                                    onDiscardData={onDiscardData}
+                                    onSubmitData={onSubmitData}
+                                    currentPacketInfo={currentResponsePacketInfo}
+                                    disabled={disabledResponse}
+                                    handleAutoForward={handleAutoForward}
+                                    typeOptionVal={responseTypeOptionVal}
+                                    onTypeOptionVal={onResponseTypeOptionVal}
+                                    onHijackingResponse={onHijackingResponse}
+                                />
+                            </div>
+                        </>
+                    }
+                    lineStyle={{display: !currentResponsePacketInfo.currentPacket ? "none" : ""}}
+                    secondNodeStyle={{display: currentResponsePacketInfo.currentPacket ? "block" : "none"}}
+                    {...ResizeBoxProps}
+                />
+            </YakitSpin>
         )
     })
 )

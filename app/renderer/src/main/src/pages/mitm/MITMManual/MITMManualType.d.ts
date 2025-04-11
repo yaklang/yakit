@@ -33,6 +33,8 @@ export interface ManualHijackInfoProps {
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**丢弃数据 */
     onDiscardData: (s: SingleManualHijackInfoMessage) => void
+    loading?: boolean
+    setLoading: (b: boolean) => void
 }
 
 export type ManualHijackTypeProps = `${ManualHijackType}`
