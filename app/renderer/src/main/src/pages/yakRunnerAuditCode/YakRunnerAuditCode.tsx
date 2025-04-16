@@ -762,7 +762,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                             firstRatio={isUnShow ? "25px" : "300px"}
                             firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                             lineDirection='right'
-                            firstMinSize={isUnShow ? 25 : 200}
+                            firstMinSize={isUnShow ? 25 : 252}
                             lineStyle={{width: 4}}
                             secondMinSize={480}
                             firstNode={

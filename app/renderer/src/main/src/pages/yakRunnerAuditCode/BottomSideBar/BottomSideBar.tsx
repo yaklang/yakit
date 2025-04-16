@@ -3,17 +3,15 @@ import {BottomSideBarProps} from "./BottomSideBarType"
 
 import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
-import {
-    OutlineBugIcon,
-    OutlineScanRuleEditIcon,
-} from "@/assets/icon/outline"
+import {OutlineBugIcon, OutlineScanRuleEditIcon} from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
+import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
-    const {activeFile} = useStore()
+    const {activeFile, projectName} = useStore()
 
     const showLocationInfo = useMemo(() => {
         let data = {
@@ -26,7 +24,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
         }
         return data
     }, [activeFile?.position])
-    
+
     return (
         <div className={styles["bottom-side-bar"]}>
             {/* 语法检查|终端|帮助信息 */}
@@ -48,6 +46,25 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                 >
                     <OutlineBugIcon />
                     漏洞汇总
+                </div>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        emiter.emit("onOpenLeftSecondNode", "result")
+                    }}
+                >
+                    审计结果
+                </div>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"], {
+                        [styles["left-item-disable"]]: !projectName
+                    })}
+                    onClick={() => {
+                        if(!projectName) return
+                        emiter.emit("onOpenLeftSecondNode", "history")
+                    }}
+                >
+                    审计历史
                 </div>
             </div>
 

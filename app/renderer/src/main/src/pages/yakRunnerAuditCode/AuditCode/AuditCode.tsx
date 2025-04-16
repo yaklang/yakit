@@ -946,12 +946,18 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         onCancelAuditStream()
     })
 
+    const onOpenLeftSecondNodeFun = useMemoizedFn((v: "result" | "history")=>{
+        setOnlyFileTree(false)
+        setAuditType(v)
+    })
     useEffect(() => {
         emiter.on("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
         emiter.on("onStopAuditRule", onStopAuditRuleFun)
+        emiter.on("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         return () => {
             emiter.off("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
             emiter.off("onStopAuditRule", onStopAuditRuleFun)
+            emiter.off("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         }
     }, [])
 
@@ -1041,7 +1047,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         </div>
                     ) : (
                         <>
-                            {auditType === "history" && (
+                            {auditType === "history" ? (
                                 <div className={styles["extra"]}>
                                     <YakitButton
                                         type='text'
@@ -1089,6 +1095,19 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             icon={<DeleteOutlined />}
                                         />
                                     </YakitDropdownMenu>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
+                                </div>
+                            ) : (
+                                <div className={styles["extra"]}>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
                                 </div>
                             )}
                         </>
