@@ -114,6 +114,7 @@ import {
     SSARisk
 } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
+import SelectUpload from "@/pages/SelectUpload"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -179,6 +180,7 @@ const UserMenusMap: Record<string, YakitMenuItemType> = {
     roleAdmin: {key: "role-admin", label: "角色管理"},
     accountAdmin: {key: "account-admin", label: "用户管理"},
     setPassword: {key: "set-password", label: "修改密码"},
+    uploadData: {key: "upload-data", label: "上传数据"},
     controlAdmin: {key: "control-admin", label: "远程管理"},
     dynamicControl: {key: "dynamic-control", label: "发起远程"},
     closeDynamicControl: {key: "close-dynamic-control", label: "退出远程"},
@@ -229,6 +231,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     const [passwordShow, setPasswordShow] = useState<boolean>(false)
     /** 是否允许密码框关闭 */
     const [passwordClose, setPasswordClose] = useState<boolean>(true)
+    /** 上传数据弹框 */
+    const [uploadModalShow, setUploadModalShow] = useState<boolean>(false)
 
     /** 发起远程弹框 受控端 - 控制端 */
     const [dynamicControlModal, setDynamicControlModal] = useState<boolean>(false)
@@ -329,6 +333,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 } else {
                     let cacheMenus: YakitMenuItemType[] = [
                         ...userAvatar,
+                        UserMenusMap["uploadData"],
                         UserMenusMap["dynamicControl"],
                         UserMenusMap["controlAdmin"],
                         UserMenusMap["closeDynamicControl"],
@@ -363,6 +368,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 let isNew: boolean = false
                 let cacheMenus: YakitMenuItemType[] = [
                     ...userAvatar,
+                    UserMenusMap["uploadData"],
                     UserMenusMap["dynamicControl"],
                     UserMenusMap["closeDynamicControl"],
                     UserMenusMap["setPassword"],
@@ -621,6 +627,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                                                     setPasswordClose(true)
                                                     setPasswordShow(true)
                                                 }
+                                                if (key === "upload-data") setUploadModalShow(true)
                                                 if (key === "role-admin") {
                                                     onOpenPage({route: YakitRoute.RoleAdminPage})
                                                 }
@@ -699,6 +706,19 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 footer={null}
             >
                 <SetPassword onCancel={() => setPasswordShow(false)} userInfo={userInfo} />
+            </YakitModal>
+
+            <YakitModal
+                visible={uploadModalShow}
+                title={"上传数据"}
+                destroyOnClose={true}
+                maskClosable={false}
+                bodyStyle={{padding: "10px 24px 24px 24px"}}
+                width={520}
+                onCancel={() => setUploadModalShow(false)}
+                footer={null}
+            >
+                <SelectUpload onCancel={() => setUploadModalShow(false)} />
             </YakitModal>
 
             <DynamicControl
