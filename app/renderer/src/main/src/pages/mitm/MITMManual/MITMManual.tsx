@@ -41,8 +41,10 @@ import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {isEqual} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import { getRemoteValue, setRemoteValue } from "@/utils/kv"
+import { RemoteGV } from "@/yakitGV"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward} = props
@@ -350,20 +352,41 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const onlyShowFirstNode = useCreation(() => {
         return !(data.length && currentSelectItem && currentSelectItem.TaskID)
     }, [currentSelectItem, data.length])
+
+    const lastRatioRef = useRef<{firstRatio:string,secondRatio:string}>({
+        firstRatio: "21%",
+        secondRatio: "79%"
+    })
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox).then((res) => {
+            if(res){
+                try {
+                if(data){
+                    const {
+                        firstSizePercent,
+                        secondSizePercent
+                    } = JSON.parse(res)
+                    lastRatioRef.current = {
+                        firstRatio:firstSizePercent,
+                        secondRatio:secondSizePercent
+                    }
+                }
+            } catch (error) {}
+            }
+        })
+    })
     const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "50%",
-            secondRatio: "50%"
-        }
+        let p = cloneDeep(lastRatioRef.current)
         if (onlyShowFirstNode) {
-            p.secondRatio = "0%"
             p.firstRatio = "100%"
+            p.secondRatio = "0%"
         }
         return p
     }, [onlyShowFirstNode])
+
     return (
         <YakitResizeBox
-            firstMinSize={160}
+            firstMinSize={70}
             firstNode={
                 <TableVirtualResize<SingleManualHijackInfoMessage>
                     isRefresh={false}
@@ -401,6 +424,17 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 )
             }
             secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+            onMouseUp={({firstSizePercent,secondSizePercent})=>{
+                lastRatioRef.current = {
+                    firstRatio:firstSizePercent,
+                    secondRatio:secondSizePercent
+                }
+                // 缓存比例用于下次加载
+                setRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox, JSON.stringify({
+                    firstSizePercent,
+                    secondSizePercent
+                }))
+            }}
             {...ResizeBoxProps}
         ></YakitResizeBox>
     )
