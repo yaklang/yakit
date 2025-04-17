@@ -541,6 +541,9 @@
 .mitm-v2-hijacked-manual-heard-extra {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
+    justify-content: space-between;
+    &-right{
+        display: flex;
+        gap: 8px;
+    }
 }
