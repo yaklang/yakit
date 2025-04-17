@@ -119,7 +119,9 @@ export enum RemoteGV {
     /** @name mitm手动劫持编辑器请求美化&渲染 */
     MITMManualHijackRequestEditorBeautify = "mitm_manual_hijack_request_editor_beautify",
     /** @name mitm手动劫持YakitResizeBox比例缓存 */
-    MITMManualHijackYakitResizeBox = "mitm_manual_hijack_yakit_resize_box"
+    MITMManualHijackYakitResizeBox = "mitm_manual_hijack_yakit_resize_box",
+    /** @name historyTableYakitResizeBox比例缓存 */
+    historyTableYakitResizeBox = "history_table_yakit_resize_box"
 }
 
 /** 项目逻辑全局变量 */
