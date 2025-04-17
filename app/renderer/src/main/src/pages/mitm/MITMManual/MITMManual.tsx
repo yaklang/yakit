@@ -8,7 +8,7 @@ import {
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SingleManualHijackInfoMessage} from "../MITMHacker/utils"
-import {useControllableValue, useCounter, useCreation, useMap, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCounter, useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {ManualHijackListAction, ManualHijackListStatus, ManualHijackListStatusMap} from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
@@ -47,7 +47,7 @@ import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 import { RemoteGV } from "@/yakitGV"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
-    const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward} = props
+    const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward, setManualTableTotal} = props
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
     const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
@@ -352,6 +352,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const onlyShowFirstNode = useCreation(() => {
         return !(data.length && currentSelectItem && currentSelectItem.TaskID)
     }, [currentSelectItem, data.length])
+
+    useUpdateEffect(()=>{
+        setManualTableTotal(data.length)
+    },[data.length])
 
     const lastRatioRef = useRef<{firstRatio:string,secondRatio:string}>({
         firstRatio: "21%",
@@ -939,6 +943,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 isShowSelectRangeMenu: true
             }}
             showDownBodyMenu={false}
+            sendToWebFuzzer={true}
             onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
                 openPacketNewWindow({
                     request: {

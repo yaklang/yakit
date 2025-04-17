@@ -1052,7 +1052,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     对比
                                 </YakitButton>
                             )}
-                            {props.sendToWebFuzzer && props.readOnly && (
+                            {props.sendToWebFuzzer && (
                                 <YakitButton
                                     size={"small"}
                                     type={"primary"}
