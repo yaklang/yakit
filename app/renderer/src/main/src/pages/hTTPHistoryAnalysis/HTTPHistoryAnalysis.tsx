@@ -16,6 +16,7 @@ import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
     OutlineRefreshIcon,
+    OutlineReplyIcon,
     OutlineSearchIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -519,8 +520,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             }
         }
 
-        console.log(execParamsRef.current)
-
         ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current, tokenRef.current).then(() => {
             debugPluginStreamEvent.start()
             setExecuteStatus("process")
@@ -899,16 +898,22 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                 : "退出"}
                                         </YakitButton>
                                         <YakitButton
-                                            type='text2'
+                                            type='outline2'
+                                            icon={<OutlineReplyIcon />}
                                             onClick={() => {
                                                 onStopExecute()
                                                 setTimeout(() => {
+                                                    handleTabClick({
+                                                        key: curTabKey,
+                                                        label: "",
+                                                        contShow: false
+                                                    })
                                                     setIsExit(true)
-                                                    onRefreshCurrentRules()
                                                 }, 300)
                                             }}
-                                            icon={<OutlineXIcon />}
-                                        ></YakitButton>
+                                        >
+                                            返回
+                                        </YakitButton>
                                     </div>
                                 </div>
                                 <div className={styles["AnalysisMain-result"]}>
