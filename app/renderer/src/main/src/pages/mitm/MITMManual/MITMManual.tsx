@@ -45,6 +45,8 @@ import {cloneDeep, isEqual} from "lodash"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import { getRemoteValue, setRemoteValue } from "@/utils/kv"
 import { RemoteGV } from "@/yakitGV"
+import { setClipboardText } from "@/utils/clipboard"
+import { OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon } from "@/assets/icon/outline"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
     const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward, setManualTableTotal} = props
@@ -60,66 +62,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
 
     const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
 
-    const mitmManualContextmenuRef = useRef([
-        {
-            key: "submit-data",
-            label: "提交数据"
-        },
-        {
-            key: "discard-data",
-            label: "丢弃数据"
-        },
-        {
-            key: "send-webFuzzer",
-            label: "发送到 Web Fuzzer",
-            children: [
-                // SystemInfo
-                {
-                    key: "send-and-jump-to-webFuzzer",
-                    label: (
-                        <div className={styles["context-menu-keybind-wrapper"]}>
-                            <div className={styles["content-style"]}>发送并跳转</div>
-                            <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                {convertKeyboard(SystemInfo.system || "Darwin", [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.KEY_R
-                                ])}
-                            </div>
-                        </div>
-                    )
-                },
-                {
-                    key: "send-to-webFuzzer",
-                    label: (
-                        <div className={styles["context-menu-keybind-wrapper"]}>
-                            <div className={styles["content-style"]}>仅发送</div>
-                            <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                {convertKeyboard(SystemInfo.system || "Darwin", [
-                                    YakitEditorKeyCode.Control,
-                                    YakitEditorKeyCode.Shift,
-                                    YakitEditorKeyCode.KEY_R
-                                ])}
-                            </div>
-                        </div>
-                    )
-                }
-            ]
-        },
-        {
-            key: "mark-color",
-            label: "标注颜色",
-            children: availableColors.map((i) => {
-                return {
-                    key: i.title,
-                    label: i.render
-                }
-            })
-        },
-        {
-            key: "remove-color",
-            label: "移除颜色"
-        }
-    ])
     const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
         onSubmitData: () => {},
         onHijackingResponse: () => {}
@@ -212,20 +154,102 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                 break
         }
     })
+
+    const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage)=>{
+        const getStatusStr = () => {
+            switch (rowData.Status) {
+                case "hijacking request":
+                case "wait hijack":
+                    return "请求"
+                case "hijacking response":
+                   return "响应"
+                default:
+                    return ""
+            }
+        }
+
+        let menu = [
+            {
+                key: "submit-data",
+                label: `放行${getStatusStr()}`
+            },
+            {
+                key: "hijacking-response",
+                label: "劫持响应"
+            },
+            {
+                key: "copy-url",
+                label: "复制 URL"
+            },
+            {
+                key: "discard-data",
+                label: `丢弃${getStatusStr()}`
+            },
+            {
+                key: "send-webFuzzer",
+                label: "发送到 Web Fuzzer",
+                children: [
+                    // SystemInfo
+                    {
+                        key: "send-and-jump-to-webFuzzer",
+                        label: (
+                            <div className={styles["context-menu-keybind-wrapper"]}>
+                                <div className={styles["content-style"]}>发送并跳转</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                    {convertKeyboard(SystemInfo.system || "Darwin", [
+                                        YakitEditorKeyCode.Control,
+                                        YakitEditorKeyCode.KEY_R
+                                    ])}
+                                </div>
+                            </div>
+                        )
+                    },
+                    {
+                        key: "send-to-webFuzzer",
+                        label: (
+                            <div className={styles["context-menu-keybind-wrapper"]}>
+                                <div className={styles["content-style"]}>仅发送</div>
+                                <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                    {convertKeyboard(SystemInfo.system || "Darwin", [
+                                        YakitEditorKeyCode.Control,
+                                        YakitEditorKeyCode.Shift,
+                                        YakitEditorKeyCode.KEY_R
+                                    ])}
+                                </div>
+                            </div>
+                        )
+                    }
+                ]
+            },
+            {
+                key: "mark-color",
+                label: "标注颜色",
+                children: availableColors.map((i) => {
+                    return {
+                        key: i.title,
+                        label: i.render
+                    }
+                })
+            },
+            {
+                key: "remove-color",
+                label: "移除颜色"
+            }
+        ]
+        if(rowData.Status !== ManualHijackListStatus.Hijacking_Request){
+            menu = menu.filter((item)=>item.key === "hijacking-response")
+        }
+        return menu
+    })
+
     const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
         if (rowData.TaskID !== currentSelectItem?.TaskID) {
             onSetCurrentRow(rowData)
         }
-        let menu = mitmManualContextmenuRef.current
-        if (rowData.Status === ManualHijackListStatus.Hijacking_Request) {
-            menu = [
-                {
-                    key: "hijacking-response",
-                    label: "劫持响应"
-                },
-                ...menu
-            ]
-        }
+        console.log("nixx",rowData);
+        
+        let menu = getMitmManualContextMenu(rowData)
+        
         showByRightContext({
             width: 180,
             data: menu,
@@ -242,6 +266,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                         break
                     case "submit-data":
                         manualHijackInfoRef.current.onSubmitData(rowData)
+                        break
+                    case "copy-url":
+                        setClipboardText(rowData.URL)
                         break
                     case "discard-data":
                         onDiscardData(rowData)
@@ -322,7 +349,21 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             {
                 title: "状态",
                 dataKey: "Status",
-                render: (value: string) => ManualHijackListStatusMap[value],
+                render: (value: ManualHijackListStatus) => {
+                    let icon = <></>
+                    switch (value) {
+                        case "hijacking request":
+                            icon = <OutlineArrowrightIcon/>
+                            break;
+                        case "hijacking response":
+                            icon = <OutlineArrowleftIcon/>
+                            break;
+                        case "wait hijack":
+                            icon = <OutlineLoadingIcon className={styles["icon-rotate-animation"]}/>
+                            break;
+                    }
+                    return <div className={styles['mitm-v2-manual-table-status']}>{ManualHijackListStatusMap[value]}{icon}</div>
+                },
                 width: 120
             },
             {
@@ -800,7 +841,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             },
             {
                 key: "submit-data",
-                label: "提交数据"
+                label: "放行数据"
             },
             {
                 key: "drop-data",
@@ -913,7 +954,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                             size='small'
                             onClick={() => onDiscardData && onDiscardData(info)}
                         >
-                            丢弃数据
+                            丢弃
                         </YakitButton>
                         <YakitButton
                             disabled={btnDisable}
@@ -921,7 +962,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                             size='small'
                             onClick={() => onSubmitData && onSubmitData(info)}
                         >
-                            提交数据
+                            放行
                         </YakitButton>
                     </div>
                 )
