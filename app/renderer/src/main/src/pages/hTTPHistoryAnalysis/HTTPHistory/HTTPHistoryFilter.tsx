@@ -1979,7 +1979,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 useUpAndDown
                 inMouseEnterTable={inMouseEnterTable}
                 onChange={onTableChange}
-                onRowContextMenu={onRowContextMenu}
+                // onRowContextMenu={onRowContextMenu}
                 onSetCurrentRow={onSetCurrentRow}
             />
             {/* 高级筛选抽屉 */}
