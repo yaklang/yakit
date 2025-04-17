@@ -365,7 +365,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         getRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox).then((res) => {
             if(res){
                 try {
-                if(data){
                     const {
                         firstSizePercent,
                         secondSizePercent
@@ -374,7 +373,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
                         firstRatio:firstSizePercent,
                         secondRatio:secondSizePercent
                     }
-                }
             } catch (error) {}
             }
         })

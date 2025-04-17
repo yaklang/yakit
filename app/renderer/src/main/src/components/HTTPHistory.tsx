@@ -54,6 +54,7 @@ import {YakitCheckbox} from "./yakitUI/YakitCheckbox/YakitCheckbox"
 import styles from "./HTTPHistory.module.scss"
 
 import MITMContext from "@/pages/mitm/Context/MITMContext"
+import cloneDeep from "lodash/cloneDeep"
 const {ipcRenderer} = window.require("electron")
 
 export interface HTTPPacketFuzzable {
@@ -322,6 +323,35 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
     }, [onlyShowFirstNode])
     // #endregion
 
+    const lastRatioRef = useRef<{firstRatio:string,secondRatio:string}>({
+        firstRatio: "50%",
+        secondRatio: "50%"
+    })
+    useEffect(()=>{
+        getRemoteValue(RemoteGV.historyTableYakitResizeBox).then((res) => {
+            if(res){
+                try {
+                    const {
+                        firstSizePercent,
+                        secondSizePercent
+                    } = JSON.parse(res)
+                    lastRatioRef.current = {
+                        firstRatio:firstSizePercent,
+                        secondRatio:secondSizePercent
+                    }
+            } catch (error) {}
+            }
+        })
+    })
+    const ResizeBoxProps = useCreation(() => {
+        let p = cloneDeep(lastRatioRef.current)
+        if (onlyShowFirstNode) {
+            p.firstRatio = "100%"
+            p.secondRatio = "0%"
+        }
+        return p
+    }, [onlyShowFirstNode])
+
     return (
         <div
             ref={ref}
@@ -453,7 +483,6 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                         firstMinSize={160}
                         isVer={true}
                         freeze={!onlyShowFirstNode}
-                        firstRatio={onlyShowFirstNode ? "100%" : undefined}
                         secondNodeStyle={{
                             padding: onlyShowFirstNode ? 0 : undefined,
                             display: onlyShowFirstNode ? "none" : ""
@@ -478,9 +507,21 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                 )}
                             </>
                         )}
+                        onMouseUp={({firstSizePercent,secondSizePercent})=>{
+                            lastRatioRef.current = {
+                                firstRatio:firstSizePercent,
+                                secondRatio:secondSizePercent
+                            }
+                            // 缓存比例用于下次加载
+                            setRemoteValue(RemoteGV.historyTableYakitResizeBox, JSON.stringify({
+                                firstSizePercent,
+                                secondSizePercent
+                            }))
+                        }}
+                        {...ResizeBoxProps}
                     />
                 )}
-            ></YakitResizeBox>
+            />
         </div>
     )
 }
