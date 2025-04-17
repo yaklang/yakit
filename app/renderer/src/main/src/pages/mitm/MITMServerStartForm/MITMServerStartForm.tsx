@@ -29,6 +29,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {toMITMHacker} from "@/pages/hacker/httpHacker"
+import { OutlineXIcon } from "@/assets/icon/outline"
 const MITMFormAdvancedConfiguration = React.lazy(() => import("./MITMFormAdvancedConfiguration"))
 const ChromeLauncherButton = React.lazy(() => import("../MITMChromeLauncher"))
 
@@ -252,9 +253,22 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
     const [width, setWidth] = useState<number>(0)
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
-
+    
+    const [alertVisible, setAlertVisible] = useState<boolean>(true)
     return (
+        <>
+        {mitmVersion === MITMVersion.V2 && <div className={styles["mitm-alert-msg"]} style={{display: alertVisible ? "block" : "none"}}>
+            当前使用的是MITM v2版本
+            <YakitButton
+                style={{float: "right"}}
+                type='text2'
+                size={"middle"}
+                icon={<OutlineXIcon />}
+                onClick={() => setAlertVisible(false)}
+            />
+        </div>}
         <div className={styles["mitm-server-start-form"]}>
+            
             <ReactResizeDetector
                 onResize={(w) => {
                     if (!w) {
@@ -454,6 +468,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
                 />
             </React.Suspense>
         </div>
+        </>
     )
 })
 
