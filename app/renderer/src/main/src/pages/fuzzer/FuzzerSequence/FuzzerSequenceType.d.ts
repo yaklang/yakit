@@ -193,15 +193,6 @@ export interface ResponseCardProps {
     setShowAllResponse: () => void
 }
 
-/**
- * @description 展示所有响应的card
- */
-export interface ResponseAllDataCardProps {
-    showAllDataRes: boolean
-    setShowAllDataRes: () => void
-    runtimeId: string
-}
-
 export interface WebFuzzerDroppedProps {
     /**序列丢弃数据key */
     fuzzer_index: string

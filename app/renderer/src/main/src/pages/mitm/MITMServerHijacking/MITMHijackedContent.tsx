@@ -11,7 +11,7 @@ import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import ReactResizeDetector from "react-resize-detector"
 import {useStore} from "@/store/mitmState"
-import {HTTPHistory} from "@/components/HTTPHistory"
+import {HTTPFlowRealTimeTableAndEditor, HTTPHistory} from "@/components/HTTPHistory"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
 import emiter from "@/utils/eventBus/eventBus"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
@@ -781,13 +781,22 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 </div>
                 {/* 自动放行 */}
                 <div style={{display: autoForward === "log" ? "block" : "none", height: `calc(100% - ${height}px)`}}>
-                    <HTTPHistory
+                    <HTTPFlowRealTimeTableAndEditor
                         pageType='MITM'
                         noTableTitle={true}
                         downstreamProxyStr={downstreamProxyStr}
                         params={{SourceType: sourceType}}
                         onSetTableTotal={setTableTotal}
                         onSetTableSelectNum={setTableSelectNum}
+                        wrapperStyle={{padding: 0}}
+                        onQueryParams={(queryParams) => {
+                            const processQuery = JSON.parse(queryParams) || {}
+                            delete processQuery.Pagination
+                            delete processQuery.AfterId
+                            delete processQuery.BeforeId
+                            delete processQuery.ProcessName
+                            emiter.emit("onMITMLogProcessQuery", JSON.stringify(processQuery))
+                        }}
                     />
                 </div>
 

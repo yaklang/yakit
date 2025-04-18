@@ -1,3 +1,10 @@
+import {HTTPHistoryAnalysisPageInfo} from "@/store/pageInfo"
+
+export const defaultHTTPHistoryAnalysisPageInfo: HTTPHistoryAnalysisPageInfo = {
+    webFuzzer: false,
+    runtimeId: [],
+    sourceType: "mitm"
+}
 export const HotPatchDefaultContent = `analyzeHTTPFlow = func(flow /* *yakit.HTTPFlow */ ,extract /*func(ruleName string, flow *yakit.HTTPFlow)*/){
     // flow 从数据库查询的流量数据
     // extract 将数据进行提取,ruleName做为提取流量的规则名

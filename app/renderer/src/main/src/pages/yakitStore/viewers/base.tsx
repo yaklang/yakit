@@ -558,8 +558,6 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         onlyShowFirstNode={isOnlyTable}
                         setOnlyShowFirstNode={onIsOnlyTable}
                         httpHistoryTableTitleStyle={{
-                            borderLeft: pageType === "Webfuzzer" ? "1px solid var(--yakit-border-color)" : undefined,
-                            borderRight: pageType === "Webfuzzer" ? "1px solid var(--yakit-border-color)" : undefined,
                             paddingTop: 12,
                             paddingLeft: 8,
                             paddingRight: 8,
@@ -575,7 +573,7 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         showSourceType={false}
                         showAdvancedSearch={false}
                         showProtocolType={false}
-                        showColorSwatch={pageType === "Webfuzzer"}
+                        showColorSwatch={false}
                         showBatchActions={showBatchActions}
                         showDelAll={false}
                         showSetting={false}

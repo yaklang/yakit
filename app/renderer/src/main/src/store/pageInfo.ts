@@ -58,6 +58,8 @@ interface PageParamsInfoProps {
     simpleDetectPageInfo?: SimpleDetectPageInfoProps
     /**webSocketFuzzer页面 */
     websocketFuzzerPageInfo?: WebsocketFuzzerPageInfoProps
+    /**流量分析器页面 */
+    hTTPHistoryAnalysisPageInfo?: HTTPHistoryAnalysisPageInfo
     /**新建插件页面 */
     addYakitScriptPageInfo?: AddYakitScriptPageInfoProps
     /**打开插件仓库页面 */
@@ -93,6 +95,13 @@ export interface WebsocketFuzzerPageInfoProps {
     wsRequest?: Uint8Array
     wsToServer?: Uint8Array
 }
+
+export interface HTTPHistoryAnalysisPageInfo {
+    webFuzzer?: boolean
+    runtimeId?: string[]
+    sourceType?: string
+}
+
 export interface PluginBatchExecutorPageInfoProps {
     /**执行批量执行的runtimeId */
     runtimeId: string

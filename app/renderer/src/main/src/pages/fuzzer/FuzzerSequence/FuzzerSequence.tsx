@@ -109,7 +109,6 @@ import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 
-const ResponseAllDataCard = React.lazy(() => import("./ResponseAllDataCard"))
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
 const PluginDebugDrawer = React.lazy(() => import("../components/PluginDebugDrawer/PluginDebugDrawer"))
@@ -176,8 +175,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     const [errorIndex, setErrorIndex] = useState<number>(-1)
 
-    const [showAllDataRes, setShowAllDataRes] = useState<boolean>(false)
-    const [showAllRes, setShowAllRes] = useState<boolean>(false)
     const [showAllResponse, setShowAllResponse] = useState<boolean>(false)
 
     // 匹配器和提取器相关
@@ -223,7 +220,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerSequenceRef = useRef(null)
     const [inViewport] = useInViewport(fuzzerSequenceRef)
     const inViewportRef = useRef<boolean>(inViewport === true)
-    const droppedSequenceIndexMapRef = useRef<Map<string, Map<string, number>>>(new Map())//序列丢弃:中间缓存的数据用于计算最后的丢弃数
+    const droppedSequenceIndexMapRef = useRef<Map<string, Map<string, number>>>(new Map()) //序列丢弃:中间缓存的数据用于计算最后的丢弃数
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
 
@@ -511,9 +508,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             const data: WebFuzzerDroppedProps = JSON.parse(content)
             const isExist = !!sequenceList.find((ele) => ele.id === data.fuzzer_index)
             if (isExist) {
-                const current:Map<string, number> = droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
+                const current: Map<string, number> =
+                    droppedSequenceIndexMapRef.current.get(data.fuzzer_index) || new Map()
                 current.set(data.fuzzer_sequence_index, data.discard_count)
-                const sum = [...current.values()].reduce((sum, value) => sum + value, 0);
+                const sum = [...current.values()].reduce((sum, value) => sum + value, 0)
                 setDroppedCount(data.fuzzer_index, sum)
                 droppedSequenceIndexMapRef.current.set(data.fuzzer_index, current)
             }
@@ -1045,34 +1043,32 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         }
     )
     /**保存代理数据*/
-    const onSaveProxy = useMemoizedFn(
-        () => {
-            if (!currentSelectRequest?.pageId) return
-            const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
-                YakitRoute.HTTPFuzzer,
-                currentSelectRequest.pageId
-            )
-            if (!currentItem) return
-            if (
-                currentItem.pageParamsInfo.webFuzzerPageInfo &&
-                currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
-            ) {
-                const newCurrentItem: PageNodeItemProps = {
-                    ...currentItem,
-                    pageParamsInfo: {
-                        webFuzzerPageInfo: {
-                            ...currentItem.pageParamsInfo.webFuzzerPageInfo,
-                            advancedConfigValue: {
-                                ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
-                                proxy: []
-                            }
+    const onSaveProxy = useMemoizedFn(() => {
+        if (!currentSelectRequest?.pageId) return
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.HTTPFuzzer,
+            currentSelectRequest.pageId
+        )
+        if (!currentItem) return
+        if (
+            currentItem.pageParamsInfo.webFuzzerPageInfo &&
+            currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue
+        ) {
+            const newCurrentItem: PageNodeItemProps = {
+                ...currentItem,
+                pageParamsInfo: {
+                    webFuzzerPageInfo: {
+                        ...currentItem.pageParamsInfo.webFuzzerPageInfo,
+                        advancedConfigValue: {
+                            ...currentItem.pageParamsInfo.webFuzzerPageInfo.advancedConfigValue,
+                            proxy: []
                         }
                     }
                 }
-                updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
             }
+            updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
         }
-    )
+    })
     /**多条数据返回的第一条数据的ResponseRaw,一条数据就返回这一条的 ResponseRaw */
     const defaultHttpResponse: string = useMemo(() => {
         if (currentSelectResponse) {
@@ -1125,7 +1121,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         <>
             <div
                 className={styles["fuzzer-sequence"]}
-                style={{display: showAllDataRes || showAllResponse ? "none" : ""}}
+                style={{display: showAllResponse ? "none" : ""}}
                 ref={fuzzerSequenceRef}
             >
                 <div className={styles["fuzzer-sequence-left"]}>
@@ -1307,8 +1303,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
                                     if (judgeMoreFuzzerTableMaxData()) {
-                                        setShowAllRes(true)
-                                        setShowAllDataRes(true)
+                                        emiter.emit(
+                                            "openPage",
+                                            JSON.stringify({
+                                                route: YakitRoute.DB_HTTPHistoryAnalysis,
+                                                params: {
+                                                    webFuzzer: true,
+                                                    runtimeId: allRuntimeIds(),
+                                                    sourceType: "scan"
+                                                }
+                                            })
+                                        )
                                     } else {
                                         setShowAllResponse(true)
                                     }
@@ -1327,7 +1332,17 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 setHotPatchCode={setHotPatchCode}
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                                 onShowAll={() => {
-                                    setShowAllDataRes(true)
+                                    emiter.emit(
+                                        "openPage",
+                                        JSON.stringify({
+                                            route: YakitRoute.DB_HTTPHistoryAnalysis,
+                                            params: {
+                                                webFuzzer: true,
+                                                runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
+                                                sourceType: "scan"
+                                            }
+                                        })
+                                    )
                                 }}
                                 onDebug={(response) => {
                                     onDebug({httpResponse: response, type: "matchers", activeKey: "ID:0", order: 0})
@@ -1349,19 +1364,6 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     )}
                 </div>
             </div>
-
-            <React.Suspense fallback={<>loading...</>}>
-                <ResponseAllDataCard
-                    runtimeId={
-                        showAllRes ? allRuntimeIds().join(",") : currentSelectResponse?.runtimeIdFuzzer.join(",") || ""
-                    }
-                    showAllDataRes={showAllDataRes}
-                    setShowAllDataRes={() => {
-                        setShowAllRes(false)
-                        setShowAllDataRes(false)
-                    }}
-                />
-            </React.Suspense>
 
             <React.Suspense fallback={<>loading...</>}>
                 <ResponseCard

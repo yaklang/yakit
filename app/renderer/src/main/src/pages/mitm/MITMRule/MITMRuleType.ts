@@ -36,12 +36,13 @@ export interface MITMRuleProp {
     ruleUse?: "mitm" | "historyAnalysis"
     status: MitmStatus
     visible: boolean
-    setVisible: (b: boolean) => void
+    setVisible?: (b: boolean) => void
     getContainer?: HTMLElement | (() => HTMLElement) | false
-    excludeColumnsKey?: string[]
-    excludeBatchMenuKey?: string[]
+    excludeColumnsKey?: string
+    excludeBatchMenuKey?: string
     onSetRules?: (r: MITMContentReplacerRule[]) => void
     onRefreshCom?: () => void
+    inMouseEnterTable?: boolean
 }
 
 export interface ButtonTextProps {

@@ -97,7 +97,7 @@ const HitColor = {
     }
 }
 
-const batchMenuData = (excludeBatchMenuKey: string[]) => {
+const batchMenuData = (excludeBatchMenuKey: string) => {
     const arr = [
         {
             key: "ban",
@@ -116,7 +116,12 @@ const batchMenuData = (excludeBatchMenuKey: string[]) => {
             label: "删除"
         }
     ]
-    return arr.filter((ele) => !excludeBatchMenuKey.includes(ele.key))
+    try {
+        const excludeBatchMenuKeyArr = JSON.parse(excludeBatchMenuKey) || []
+        return arr.filter((ele) => !excludeBatchMenuKeyArr.includes(ele.key))
+    } catch (error) {
+        return arr
+    }
 }
 
 export const colorSelectNode = (
@@ -142,11 +147,11 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
     const {
         ruleUse = "mitm",
         visible,
-        setVisible,
+        setVisible = () => {},
         getContainer,
         status,
-        excludeColumnsKey = [],
-        excludeBatchMenuKey = [],
+        excludeColumnsKey = "",
+        excludeBatchMenuKey = "",
         onSetRules,
         onRefreshCom
     } = props
@@ -459,7 +464,14 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                 }
             }
         ]
-        return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+
+        try {
+            const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
+            return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
+        } catch (error) {
+            return columnArr
+        }
+
     }, [excludeColumnsKey])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {

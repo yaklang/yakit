@@ -26,7 +26,8 @@ import {
     NoPaddingRoute,
     ComponentParams,
     defaultFixedTabs,
-    LogOutCloseRoutes
+    LogOutCloseRoutes,
+    defaultFixedTabsNoSinglPageRoute
 } from "@/routes/newRoute"
 import {
     isEnpriTraceAgent,
@@ -108,6 +109,7 @@ import {
     CodeScanPageInfoProps,
     HTTPHackerPageInfoProps,
     MITMHackerPageInfoProps,
+    HTTPHistoryAnalysisPageInfo,
     ModifyNotepadPageInfoProps,
     PageNodeItemProps,
     PageProps,
@@ -154,6 +156,7 @@ import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
+import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
 const PageItem = React.lazy(() => import("./renderSubPage/RenderSubPage"))
@@ -321,7 +324,7 @@ export const getInitPageCache: () => PageCache[] = () => {
             verbose: "流量分析器",
             menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
             route: YakitRoute.DB_HTTPHistoryAnalysis,
-            singleNode: true,
+            singleNode: false,
             multipleNode: []
         }
     ]
@@ -416,6 +419,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
+
+        // 固定页面多开，如果从未打开，则默认新增一个标签页
+        if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey as YakitRoute)) {
+            const item = getPageCache().find((i) => i.routeKey === currentTabKey)
+            if (!item?.multipleNode.length) {
+                openMenuPage({route: currentTabKey as YakitRoute})
+            }
+        }
     }, [currentTabKey])
 
     // 发送到专项漏洞检测modal-show变量
@@ -561,6 +572,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
+                break
+            case YakitRoute.DB_HTTPHistoryAnalysis:
+                addHTTPHistoryAnalysis(params)
                 break
             default:
                 break
@@ -1058,6 +1072,19 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             )
         }
     )
+    /** 流量分析器 */
+    const addHTTPHistoryAnalysis = useMemoizedFn((data: HTTPHistoryAnalysisPageInfo) => {
+        openMenuPage(
+            {route: YakitRoute.DB_HTTPHistoryAnalysis},
+            {
+                pageParams: {
+                    hTTPHistoryAnalysisPageInfo: {
+                        ...data
+                    }
+                }
+            }
+        )
+    })
     /** 数据对比*/
     const addDataCompare = useMemoizedFn((res: {leftData: string; rightData: string}) => {
         openMenuPage(
@@ -1416,7 +1443,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.YakRunner_Code_Scan:
                 onCodeScanPage(node, order)
                 break
-
+            case YakitRoute.DB_HTTPHistoryAnalysis:
+                onHTTPHistoryAnalysis(node, order)
+                break
             default:
                 break
         }
@@ -2092,6 +2121,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
         addPagesDataCache(YakitRoute.SimpleDetect, newPageNode)
     })
+    /**流量分析器页面 */
+    const onHTTPHistoryAnalysis = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
+        const newPageNode: PageNodeItemProps = {
+            id: `${randomString(8)}-${order}`,
+            routeKey: YakitRoute.DB_HTTPHistoryAnalysis,
+            pageGroupId: node.groupId,
+            pageId: node.id,
+            pageName: node.verbose,
+            pageParamsInfo: {
+                hTTPHistoryAnalysisPageInfo: {
+                    ...(node?.pageParams?.hTTPHistoryAnalysisPageInfo || defaultHTTPHistoryAnalysisPageInfo)
+                }
+            },
+            sortFieId: order
+        }
+        addPagesDataCache(YakitRoute.DB_HTTPHistoryAnalysis, newPageNode)
+    })
     /**代码扫描 */
     const onCodeScanPage = useMemoizedFn((node: MultipleNodeInfo, order: number) => {
         const newPageNode: PageNodeItemProps = {
@@ -2713,7 +2759,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     } = props
     // webFuzzer 序列化
     const [type, setType] = useState<WebFuzzerType>("config")
-
     const [subPage, setSubPage] = useState<MultipleNodeInfo[]>(pageItem.multipleNode || [])
     const [selectSubMenu, setSelectSubMenu] = useState<MultipleNodeInfo>({
         id: "0",
@@ -3671,7 +3716,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const i = menuData[1] as YakitMenuItemProps
                 i.children?.push(node)
             })
-            const {subIndex} = getPageItemById(subPage, item.id)
+            const {subIndex, index} = getPageItemById(subPage, item.id)
             if (subIndex !== -1) {
                 menuData.splice(2, 0, {
                     label: "从组中移出",
@@ -3684,6 +3729,13 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     key: "restoreTab"
                 })
             }
+
+            // 固定页面支持多开页面第一个标签页需要移除关闭标签选项
+            if (defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) && index === 0) {
+                // @ts-ignore
+                menuData = menuData.filter((item) => item.key !== "remove")
+            }
+
             showByRightContext(
                 {
                     width: 180,
@@ -4433,6 +4485,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                         onGroupContextMenu={onGroupRightClickOperation}
                                                         dropType={subDropType}
                                                         isDragDisabled={isExpand}
+                                                        currentTabKey={currentTabKey}
                                                     />
                                                 </React.Fragment>
                                             )
@@ -4449,6 +4502,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                                                     onContextMenu={onRightClickOperation}
                                                     combineColor={isCombine ? combineColorRef.current : ""}
                                                     isDragDisabled={isExpand}
+                                                    currentTabKey={currentTabKey}
                                                 />
                                             </React.Fragment>
                                         )
@@ -4514,8 +4568,17 @@ export interface SimpleTabInterface {
 }
 
 const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
-    const {subItem, isDragDisabled, index, selectSubMenu, setSelectSubMenu, onRemoveSub, onContextMenu, combineColor} =
-        props
+    const {
+        subItem,
+        isDragDisabled,
+        index,
+        selectSubMenu,
+        setSelectSubMenu,
+        onRemoveSub,
+        onContextMenu,
+        combineColor,
+        currentTabKey
+    } = props
     const isActive = useMemo(() => subItem.id === selectSubMenu?.id, [subItem, selectSubMenu])
     const [tabStatus, setTabStatus] = useState<ExpandAndRetractExcessiveState>()
     useEffect(() => {
@@ -4572,15 +4635,17 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                 <div className={styles["tab-menu-item-verbose"]}>
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
-                                <RemoveIcon
-                                    className={classNames(styles["remove-icon"], {
-                                        [styles["remove-show-icon"]]: isActive
-                                    })}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onRemoveSub(subItem)
-                                    }}
-                                />
+                                {!(defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) && index === 0) && (
+                                    <RemoveIcon
+                                        className={classNames(styles["remove-icon"], {
+                                            [styles["remove-show-icon"]]: isActive
+                                        })}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            onRemoveSub(subItem)
+                                        }}
+                                    />
+                                )}
                             </div>
                         </Tooltip>
                     </div>
@@ -4625,7 +4690,8 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
         onUnfoldAndCollapse,
         onGroupContextMenu,
         dropType,
-        isDragDisabled
+        isDragDisabled,
+        currentTabKey
     } = props
     const color = useMemo(() => subItem.color || "purple", [subItem.color])
 
@@ -4746,6 +4812,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
                                                     onContextMenu={onContextMenu}
                                                     combineColor={color}
                                                     isDragDisabled={isDragDisabled}
+                                                    currentTabKey={currentTabKey}
                                                 />
                                             </React.Fragment>
                                         ))}

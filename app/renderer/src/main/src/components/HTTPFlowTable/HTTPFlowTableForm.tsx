@@ -12,8 +12,11 @@ import {OutlineXIcon} from "@/assets/icon/outline"
 import {yakitNotify} from "@/utils/notification"
 import cloneDeep from "lodash/cloneDeep"
 import styles from "./HTTPFlowTableForm.module.scss"
+import {HTTPHistorySourcePageType} from "../HTTPHistory"
+import {RemoteHistoryGV} from "@/enums/history"
 
 export interface HTTPFlowTableFormConfigurationProps {
+    pageType?: HTTPHistorySourcePageType
     visible: boolean
     setVisible: (b: boolean) => void
     responseType: FiltersItemProps[]
@@ -46,6 +49,7 @@ export enum HTTPFlowTableFormConsts {
 
 export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigurationProps> = (props) => {
     const {
+        pageType,
         visible,
         setVisible,
         responseType,
@@ -84,15 +88,27 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
                 .then((formValue) => {
                     const {filterMode, urlPath = [], hostName = [], fileSuffix = [], excludeKeywords = []} = formValue
                     let searchContentType: string = (formValue.searchContentType || []).join(",")
-                    setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode, filterMode)
-                    setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName, JSON.stringify(hostName))
-                    setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath, JSON.stringify(urlPath))
-                    setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix, JSON.stringify(fileSuffix))
-                    setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType, searchContentType)
-                    setRemoteValue(
-                        HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords,
-                        JSON.stringify(excludeKeywords)
-                    )
+                    if (pageType === "HTTPHistoryFilter") {
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFilterMode, filterMode)
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisHostName, JSON.stringify(hostName))
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisUrlPath, JSON.stringify(urlPath))
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFileSuffix, JSON.stringify(fileSuffix))
+                        setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisContentType, searchContentType)
+                        setRemoteValue(
+                            RemoteHistoryGV.HTTPFlowTableAnalysisExcludeKeywords,
+                            JSON.stringify(excludeKeywords)
+                        )
+                    } else {
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFilterMode, filterMode)
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableHostName, JSON.stringify(hostName))
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableUrlPath, JSON.stringify(urlPath))
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableFileSuffix, JSON.stringify(fileSuffix))
+                        setRemoteValue(HTTPFlowTableFormConsts.HTTPFlowTableContentType, searchContentType)
+                        setRemoteValue(
+                            HTTPFlowTableFormConsts.HTTPFlowTableExcludeKeywords,
+                            JSON.stringify(excludeKeywords)
+                        )
+                    }
                     const info: HTTPFlowTableFromValue = {
                         filterMode: filterMode,
                         hostName,
@@ -142,9 +158,7 @@ export const HTTPFlowTableFormConfiguration: React.FC<HTTPFlowTableFormConfigura
     const handleSave = useMemoizedFn(async () => {
         try {
             const advancedFilters = await handleAdvancedFiltersSave()
-            onSave(
-                cloneDeep(advancedFilters)
-            )
+            onSave(cloneDeep(advancedFilters))
         } catch (error) {
             yakitNotify("error", `${error}`)
         }

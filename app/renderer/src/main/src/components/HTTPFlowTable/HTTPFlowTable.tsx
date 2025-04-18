@@ -1,7 +1,6 @@
 import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState,useContext} from "react"
 import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress, Modal} from "antd"
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
-import {showDrawer} from "../../utils/showModal"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
@@ -101,7 +100,7 @@ import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
-import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
+import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
 const {ipcRenderer} = window.require("electron")
@@ -679,7 +678,7 @@ export const onConvertBodySizeToB = (length: number, unit: "B" | "K" | "M") => {
 
 const HTTP_FLOW_TABLE_SHIELD_DATA = "HTTP_FLOW_TABLE_SHIELD_DATA"
 
-interface ExportHTTPFlowStreamRequest {
+export interface ExportHTTPFlowStreamRequest {
     Filter: YakQueryHTTPFlowRequest
     FieldName?: string[]
     ExportType: "csv" | "har"
@@ -735,13 +734,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const [isShowColor, setIsShowColor] = useState<boolean>(false)
     const [params, setParams, getParams] = useGetState<YakQueryHTTPFlowRequest>({
         SourceType: props.params?.SourceType || "mitm",
-        WithPayload: pageType === "Webfuzzer",
         RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
         RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
         FromPlugin: "",
         Full: false,
-        Tags: [],
-        AnalyzedIds: props.params?.AnalyzedIds
+        Tags: []
     })
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
@@ -1153,12 +1150,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     // 方法请求
     const getDataByGrpc = useMemoizedFn(async (query, type: "top" | "bottom" | "update" | "offset") => {
-        // 插件执行、WebFuzzer中流量数据必有runTimeId
-        // 流量分析必有AnalyzedIds
-        if (
-            (["Plugin", "Webfuzzer"].includes(pageType || "") && !runTimeId) ||
-            (pageType === "History_Analysis_HistoryData" && !props.params?.AnalyzedIds?.length)
-        ) {
+        // 插件执行中流量数据必有runTimeId
+        if (["Plugin"].includes(pageType || "") && !runTimeId) {
             setTimeout(() => {
                 setLoading(false)
                 isGrpcRef.current = false
@@ -1474,9 +1467,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     RefreshRequest
                 })
                 .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                    const tags = rsp.Tags.filter((item) =>
-                        pageType === "Webfuzzer" ? item.Value === "webfuzzer" : item.Value
-                    )
+                    const tags = rsp.Tags.filter((item) => item.Value)
                     const realTags: FiltersItemProps[] = tags.map((ele) => ({label: ele.Value, value: ele.Value}))
                     setTags(realTags)
                     callBack && callBack(realTags)
@@ -1725,7 +1716,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     ).run
 
     // 需要完全排除列字段，表格不可能出现的列
-    const noColumnsKey = pageType === "Webfuzzer" ? [] : ["Payloads"]
+    const noColumnsKey: string[] = []
     // 排除展示的列
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
@@ -1733,7 +1724,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         "Method",
         "StatusCode",
         "Url",
-        "Payloads",
         "FromPlugin",
         "Tags",
         "IPAddress",
@@ -1761,16 +1751,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 const arr = JSON.parse(res) || []
                 // 确保顺序缓存里面的key一定在默认所有列中存在
                 const realArr = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-                // 特殊处理 Payloads 在Url后面
-                if (pageType === "Webfuzzer") {
-                    if (realArr.findIndex((key: string) => key === "Payloads") === -1) {
-                        const urlIndex = realArr.findIndex((key: string) => key === "Url")
-                        realArr.splice(urlIndex + 1, 0, "Payloads")
-                    }
-                } else if (pageType === "History") {
-                    // 如果列表有新增列，顺序从新再次缓存
-                    setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
-                }
+                // 如果列表有新增列，顺序从新再次缓存
+                setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
                 setColumnsOrder(realArr)
             } catch (error) {}
         })
@@ -1863,14 +1845,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filterKey: "SearchURL",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={style["filter-icon"]} />
-                }
-            },
-            {
-                title: "Payloads",
-                dataKey: "Payloads",
-                width: 300,
-                render: (v) => {
-                    return v ? v.join(",") : "-"
                 }
             },
             {
@@ -2183,7 +2157,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 })}
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    let m = showDrawer({
+                                    let m = showYakitDrawer({
                                         width: "80%",
                                         content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr),
                                         bodyStyle: {paddingTop: 5}
@@ -2543,10 +2517,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     key: "url"
                 },
                 {
-                    title: "Payloads",
-                    key: "payloads"
-                },
-                {
                     title: "相关插件",
                     key: "from_plugin"
                 },
@@ -2651,16 +2621,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             content: (
                 <ExportSelect
                     exportValue={exportValue}
-                    initCheckValue={
-                        pageType === "Webfuzzer"
-                            ? exportValue.filter((i) => !["参数", "请求包", "响应包"].includes(i))
-                            : exportValue
-                    }
+                    initCheckValue={exportValue}
                     setExportTitle={(v: string[]) => setExportTitle(["序号", ...v])}
-                    exportKey={
-                        pageType === "Webfuzzer" ? "WEBFUZZER-HISTORY-EXPORT-KEY" : "MITM-HTTP-HISTORY-EXPORT-KEY"
-                    }
-                    fileName={!(pageType === "Webfuzzer") ? "History" : "WebFuzzer"}
+                    exportKey={"MITM-HTTP-HISTORY-EXPORT-KEY"}
+                    fileName={"History"}
                     getData={(pagination) => getExcelData(pagination, list)}
                     onClose={() => m.destroy()}
                 />
@@ -2685,7 +2649,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onHarExport = (ids: number[]) => {
         handleSaveFileSystemDialog({
             title: "保存文件",
-            defaultPath: !(pageType === "Webfuzzer") ? "History" : "WebFuzzer",
+            defaultPath: "History",
             filters: [
                 {name: "HAR Files", extensions: ["har"]} // 只允许保存 .har 文件
             ]
@@ -2932,7 +2896,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 10,
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             children: [
                 {
                     key: "sendAndJumpToWebFuzzer",
@@ -2953,7 +2916,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 10,
             webSocket: true,
             default: false,
-            toWebFuzzer: false,
             children: [
                 {
                     key: "sendAndJumpToWS",
@@ -2974,7 +2936,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 200,
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
@@ -2987,7 +2948,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "插件扩展",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: getCodecHistoryPlugin()
@@ -3003,7 +2963,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             ),
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: getCodecAIPlugin()
@@ -3014,7 +2973,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 30,
             webSocket: true,
             default: true,
-            toWebFuzzer: true,
             onClickSingle: (v) => setClipboardText(v.Url),
             onClickBatch: (v, number) => {
                 if (v.length === 0) {
@@ -3035,7 +2993,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "下载 Response Body",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: (v) => {
                 ipcRenderer.invoke("GetResponseBodyByHTTPFlowID", {Id: v.Id}).then((bytes: {Raw: Uint8Array}) => {
                     saveABSFileToOpen(`response-body.txt`, bytes.Raw)
@@ -3047,7 +3004,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "浏览器中打开URL",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: (v) => {
                 v.Url && openExternalWebsite(v.Url)
             }
@@ -3057,7 +3013,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "浏览器中查看响应",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: (v) => {
                 showResponseViaHTTPFlowID(v)
             }
@@ -3067,7 +3022,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "复制为 CSRF Poc",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: (v) => {
                 const flow = v as HTTPFlow
                 if (!flow) return
@@ -3081,7 +3035,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "复制为 Yak PoC 模版",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -3099,7 +3052,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "标注颜色",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             number: 20,
             onClickSingle: () => {},
             onClickBatch: () => {},
@@ -3117,7 +3069,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "移除颜色",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             number: 20,
             onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
             onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
@@ -3127,7 +3078,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "发送到对比器",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -3147,7 +3097,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "屏蔽",
             webSocket: true,
             default: true,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             children: [
                 {
@@ -3169,7 +3118,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "删除",
             webSocket: true,
             default: true,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             all: true,
@@ -3216,7 +3164,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             number: 30,
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: (v) => onShareData([v.Id], 50),
             onClickBatch: (list, n) => {
                 const ids: string[] = list.map((ele) => ele.Id)
@@ -3228,7 +3175,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "导出数据",
             default: true,
             webSocket: false,
-            toWebFuzzer: true,
             onClickSingle: () => {},
             onClickBatch: () => {},
             children: [
@@ -3255,7 +3201,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             label: "编辑tag",
             default: true,
             webSocket: true,
-            toWebFuzzer: true,
             onClickSingle: (v) => onEditTags(v)
         }
     ]
@@ -3288,9 +3233,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const getRowContextMenu = useMemoizedFn((rowData: HTTPFlow) => {
         return contextMenuKeybindingHandle(menuData)
-            .filter((item) =>
-                rowData.IsWebsocket ? item.webSocket : pageType === "Webfuzzer" ? item.toWebFuzzer : item.default
-            )
+            .filter((item) => (rowData.IsWebsocket ? item.webSocket : item.default))
             .map((ele) => {
                 return {
                     label: ele.label,
@@ -3512,11 +3455,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const obj: YakQueryHTTPFlowRequest = {
             // 这里是外界传进来的条件重置时需要保留
             SourceType: props.params?.SourceType || "mitm",
-            WithPayload: pageType === "Webfuzzer",
             RuntimeIDs: runTimeId && runTimeId.indexOf(",") !== -1 ? runTimeId.split(",") : undefined,
             RuntimeId: runTimeId && runTimeId.indexOf(",") === -1 ? runTimeId : undefined,
             Full: false,
-            AnalyzedIds: props.params?.AnalyzedIds,
             // 屏蔽条件和高级筛选里面的参数需要保留
             ExcludeId: params.ExcludeId,
             ExcludeInUrl: params.ExcludeInUrl,
@@ -3602,7 +3543,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const getBatchContextMenu = useMemoizedFn(() => {
         return menuData
-            .filter((f) => (pageType === "Webfuzzer" ? f.onClickBatch && f.toWebFuzzer : f.onClickBatch))
+            .filter((f) => f.onClickBatch)
             .map((m) => {
                 return {
                     key: m.key,
@@ -3762,16 +3703,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setBatchVisible(false)
     })
-
-    useEffect(() => {
-        if (props.params?.AnalyzedIds !== undefined) {
-            const newParams = {...params, AnalyzedIds: props.params?.AnalyzedIds}
-            setParams(newParams)
-            setTimeout(() => {
-                updateData()
-            }, 20)
-        }
-    }, [props.params?.AnalyzedIds])
 
     useEffect(() => {
         if (props.params?.SourceType !== undefined) {
@@ -4271,6 +4202,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             </div>
             {drawerFormVisible && (
                 <HTTPFlowTableFormConfiguration
+                    pageType={pageType}
                     responseType={contentType}
                     visible={drawerFormVisible}
                     setVisible={setDrawerFormVisible}
@@ -4413,7 +4345,7 @@ interface ColorSearchProps {
     setIsShowColor: (b: boolean) => void
 }
 
-const ColorSearch = React.memo((props: ColorSearchProps) => {
+export const ColorSearch = React.memo((props: ColorSearchProps) => {
     const {color, setColor, onReset, onSure, setIsShowColor} = props
     const onMouseLeave = useMemoizedFn(() => {
         setIsShowColor(false)
@@ -4453,7 +4385,7 @@ const ColorSearch = React.memo((props: ColorSearchProps) => {
     )
 })
 
-const contentType: FiltersItemProps[] = [
+export const contentType: FiltersItemProps[] = [
     {
         value: "javascript",
         label: "javascript"
@@ -5068,7 +5000,7 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
     )
 })
 
-interface ColumnAllInfoItem {
+export interface ColumnAllInfoItem {
     dataKey: string
     title: string
     isShow: boolean
@@ -5227,7 +5159,7 @@ const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
                         </YakitButton>
                     </div>
                     <div className={style["history-advanced-set-item-desc"]}>
-                        点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、webfuzzer流量表全部生效
+                        点击禁用则不在列表展示，列表字段展示顺序为从上到下的顺序，可拖拽调整，该配置对插件执行流量表、流量分析表全部生效
                     </div>
                     <div className={style["history-advanced-set-item-cont"]}>
                         <DragDropContext onDragEnd={handleDragEnd}>

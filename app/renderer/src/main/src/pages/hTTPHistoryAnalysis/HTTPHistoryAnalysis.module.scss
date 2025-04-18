@@ -1,5 +1,29 @@
 .HTTPHistoryAnalysis {
     height: 100%;
+    &-top {
+        height: 100%;
+        &-header {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--yakit-border-color);
+        }
+        &-title {
+            margin-right: 8px;
+            color: var(--yakit-header-color);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        &-desc {
+            color: var(--yakit-helper-text-color);
+            font-size: 12px;
+        }
+    }
+    &-bottom {
+        overflow-y: auto;
+        height: 100%;
+    }
+}
+.AnalysisMain {
+    height: 100%;
     &-left {
         height: 100%;
         .tab-wrap {
@@ -94,27 +118,55 @@
     &-right {
         height: 100%;
         padding: 0 8px;
+        padding-bottom: 12px;
         &-default {
+            display: flex;
+            flex-direction: column;
             padding-top: 16px;
-            &-title {
+            gap: 16px;
+            height: 100%;
+            &-header {
                 display: flex;
+                justify-content: space-between;
                 align-items: center;
+                .title-wrapper {
+                    display: flex;
+                    align-items: center;
 
-                gap: 8px;
+                    gap: 8px;
+                }
                 span.title {
                     color: #31343f;
                     font-size: 16px;
                     font-weight: 600;
                 }
             }
+            .exec-form-item {
+                display: flex;
+                align-items: center;
+
+                gap: 8px;
+                .exec-form-item-label {
+                    min-width: 150px;
+                    text-align: right;
+                }
+                .row-editor-title {
+                    display: flex;
+
+                    gap: 8px;
+                }
+            }
+            .rawpacket-editor-wrapper {
+                height: 100%;
+                width: 100%;
+            }
             .exec-btn {
-                margin-top: 15px;
-                text-align: center;
+                margin-left: 160px;
             }
         }
         &-noDefault {
             height: 100%;
-            .HTTPHistoryAnalysis-header {
+            .AnalysisMain-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -125,22 +177,22 @@
                     font-size: 16px;
                     font-weight: 600;
                 }
-                .HTTPHistoryAnalysis-execStatus-wrapper {
+                .AnalysisMain-execStatus-wrapper {
                     display: flex;
                     align-items: center;
 
                     gap: 8px;
                 }
             }
-            .HTTPHistoryAnalysis-result {
+            .AnalysisMain-result {
                 height: calc(100% - 49px);
                 padding: 12px 0;
                 &-tab {
                     height: calc(100% - 92px);
                     margin-top: 12px;
                     .rule-data {
-                        padding: 8px 8px 8px 0;
                         height: 100%;
+                        padding: 8px 8px 8px 0;
                         .HttpRule-first {
                             height: 100%;
                             .HttpRule-table-wrapper {
@@ -162,10 +214,6 @@
                                 height: 100%;
                             }
                         }
-                    }
-                    .history-data {
-                        padding: 8px 8px 8px 0;
-                        height: 100%;
                     }
                 }
             }

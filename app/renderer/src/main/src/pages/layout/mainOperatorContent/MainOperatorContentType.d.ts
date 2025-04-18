@@ -205,6 +205,7 @@ export interface SubTabItemProps {
     combineColor?: string
     /**是否可以拖拽 */
     isDragDisabled: boolean
+    currentTabKey: YakitRoute
 }
 /**
  * @description 组
