@@ -13,7 +13,7 @@ export interface MITMManualProps {
     autoForward: ManualHijackTypeProps
     /**切换劫持类型 */
     handleAutoForward: (v: ManualHijackTypeProps) => void
-    /**更改表tatal */
+    /**更改表total */
     setManualTableTotal: (v: number) => void
 }
 export interface ManualHijackInfoRefProps {
