@@ -137,7 +137,7 @@ export const colorSelectNode = (
     </>
 )
 
-export const MITMRule: React.FC<MITMRuleProp> = React.memo(React.forwardRef((props, ref) => {
+export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) => {
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
@@ -464,12 +464,14 @@ export const MITMRule: React.FC<MITMRuleProp> = React.memo(React.forwardRef((pro
                 }
             }
         ]
+
         try {
             const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
             return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
         } catch (error) {
             return columnArr
         }
+
     }, [excludeColumnsKey])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
@@ -975,7 +977,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.memo(React.forwardRef((pro
             )}
         </>
     )
-}))
+})
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props
