@@ -271,8 +271,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     return (
         <div className={styles["runner-file-tree"]}>
             <div className={styles["container"]}>
-                <OpenedFile />
-
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
@@ -340,6 +338,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                         </div>
                     </div>
                 </div>
+                <OpenedFile />
             </div>
             <YakitDrawer
                 getContainer={document.getElementById("audit-code") || document.body}

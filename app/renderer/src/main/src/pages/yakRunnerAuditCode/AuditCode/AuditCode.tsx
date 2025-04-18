@@ -743,10 +743,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         setRefreshTree(!refreshTree)
     }, [projectName])
 
+    const [resultId, setResultId] = useState<string>()
     const onAuditRuleSubmitFun = useMemoizedFn(
         async (textArea: string = "", Query?: {Key: string; Value: number}[]) => {
             try {
                 resetMap()
+                setResultId(undefined)
                 setLoading(true)
                 setShowEmpty(false)
                 setOnlyFileTree(false)
@@ -830,6 +832,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     setRefreshTree(!getRefreshTree())
                 } else {
                     setShowEmpty(true)
+                }
+                // 获取ID并展示
+                if (params.Query) {
+                    let showId = params.Query.find((item) => item.Key === "result_id")?.Value
+                    showId && setResultId(showId)
                 }
                 setLoading(false)
             } catch (error: any) {
@@ -946,7 +953,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         onCancelAuditStream()
     })
 
-    const onOpenLeftSecondNodeFun = useMemoizedFn((v: "result" | "history")=>{
+    const onOpenLeftSecondNodeFun = useMemoizedFn((v: "result" | "history") => {
         setOnlyFileTree(false)
         setAuditType(v)
     })
@@ -1102,7 +1109,13 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                     />
                                 </div>
                             ) : (
-                                <div className={styles["extra"]}>
+                                <div className={styles["extra"]} style={{gap: 0}}>
+                                    {resultId && (
+                                        <div style={{flex: 1}}>
+                                            <YakitTag color='info'>ID:{resultId}</YakitTag>
+                                        </div>
+                                    )}
+
                                     <YakitButton
                                         type='text'
                                         icon={<OutlineXIcon />}
