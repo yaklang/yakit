@@ -81,6 +81,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         const taskID = item.TaskID
         switch (manualHijackListAction) {
             case ManualHijackListAction.Hijack_List_Add:
+                setLoading(item.TaskID, false)
                 if (data.length === 0) {
                     const selectItem: SingleManualHijackInfoMessage = {
                         ...item,
@@ -237,7 +238,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
             }
         ]
         if(rowData.Status !== ManualHijackListStatus.Hijacking_Request){
-            menu = menu.filter((item)=>item.key === "hijacking-response")
+            menu = menu.filter((item)=>item.key !== "hijacking-response")
         }
         return menu
     })
@@ -246,7 +247,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
         if (rowData.TaskID !== currentSelectItem?.TaskID) {
             onSetCurrentRow(rowData)
         }
-        console.log("nixx",rowData);
         
         let menu = getMitmManualContextMenu(rowData)
         
@@ -938,7 +938,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             extra={
                 !disabled && (
                     <div className={styles["mitm-v2-manual-editor-btn"]}>
-                        {!isResponse && (
+                        {!isResponse && !info.IsWebsocket && (
                             <YakitButton
                                 disabled={btnDisable}
                                 type='outline1'
@@ -982,7 +982,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 isShowSelectRangeMenu: true
             }}
             showDownBodyMenu={false}
-            sendToWebFuzzer={true}
+            sendToWebFuzzer={!isResponse && !info.IsWebsocket}
             onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
                 openPacketNewWindow({
                     request: {

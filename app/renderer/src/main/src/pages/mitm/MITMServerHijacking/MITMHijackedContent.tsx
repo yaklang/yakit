@@ -683,7 +683,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                <TableTotalAndSelectNumber total={manualTableTotal} /> 
                             </div>
                             <div className={styles['mitm-v2-hijacked-manual-heard-extra-right']}>
-                                <YakitButton onClick={onSubmitAll}>全部提交</YakitButton>
+                                <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
                             <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
                             </div>
                             
