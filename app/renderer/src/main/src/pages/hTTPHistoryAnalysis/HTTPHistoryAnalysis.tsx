@@ -354,6 +354,14 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const onRefreshCurrentRules = useMemoizedFn(() => {
         setMitmRuleKey(randomString(40))
     })
+    const onSetRules = useMemoizedFn((r) => {
+        setCurRules(
+            r.map((item) => ({
+                ...item,
+                ...rulesResetFieldsRef.current
+            }))
+        )
+    })
     const judgmentRulesChange = useMemoizedFn(() => {
         return new Promise((resolve) => {
             ipcRenderer
@@ -689,17 +697,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         inMouseEnterTable={true}
                                         visible={true}
                                         status={mitmStatus}
-                                        setVisible={() => {}}
-                                        excludeColumnsKey={["NoReplace", "Drop", "ExtraRepeat"]}
-                                        excludeBatchMenuKey={["no-replace", "replace"]}
-                                        onSetRules={(r) => {
-                                            setCurRules(
-                                                r.map((item) => ({
-                                                    ...item,
-                                                    ...rulesResetFieldsRef.current
-                                                }))
-                                            )
-                                        }}
+                                        excludeColumnsKey={JSON.stringify(["NoReplace", "Drop", "ExtraRepeat"])}
+                                        excludeBatchMenuKey={JSON.stringify(["no-replace", "replace"])}
+                                        onSetRules={onSetRules}
                                         onRefreshCom={onRefreshCurrentRules}
                                     />
                                 </div>

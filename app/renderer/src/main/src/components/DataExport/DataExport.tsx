@@ -268,10 +268,10 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                     <Space wrap>
                         {chunksData.map((item, index) => {
                             if (index === 0) {
-                                beginNumberRef.current = 0
+                                beginNumberRef.current = 1
                             }
-                            let start: number = beginNumberRef.current || 1
-                            let end: number = beginNumberRef.current + item.length
+                            const start = beginNumberRef.current
+                            const end = start + item.length - 1
                             beginNumberRef.current = end + 1
                             return (
                                 <YakitButton

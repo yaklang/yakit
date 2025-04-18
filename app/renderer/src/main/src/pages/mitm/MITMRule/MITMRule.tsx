@@ -97,7 +97,7 @@ const HitColor = {
     }
 }
 
-const batchMenuData = (excludeBatchMenuKey: string[]) => {
+const batchMenuData = (excludeBatchMenuKey: string) => {
     const arr = [
         {
             key: "ban",
@@ -116,7 +116,12 @@ const batchMenuData = (excludeBatchMenuKey: string[]) => {
             label: "删除"
         }
     ]
-    return arr.filter((ele) => !excludeBatchMenuKey.includes(ele.key))
+    try {
+        const excludeBatchMenuKeyArr = JSON.parse(excludeBatchMenuKey) || []
+        return arr.filter((ele) => !excludeBatchMenuKeyArr.includes(ele.key))
+    } catch (error) {
+        return arr
+    }
 }
 
 export const colorSelectNode = (
@@ -132,7 +137,7 @@ export const colorSelectNode = (
     </>
 )
 
-export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) => {
+export const MITMRule: React.FC<MITMRuleProp> = React.memo(React.forwardRef((props, ref) => {
     const {menuBodyHeight} = useMenuHeight(
         (s) => ({
             menuBodyHeight: s.menuBodyHeight
@@ -142,14 +147,13 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
     const {
         ruleUse = "mitm",
         visible,
-        setVisible,
+        setVisible = () => {},
         getContainer,
         status,
-        excludeColumnsKey = [],
-        excludeBatchMenuKey = [],
+        excludeColumnsKey = "",
+        excludeBatchMenuKey = "",
         onSetRules,
-        onRefreshCom,
-        inMouseEnterTable = false
+        onRefreshCom
     } = props
     const mitmContent = useContext(MITMContext)
 
@@ -460,7 +464,12 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                 }
             }
         ]
-        return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
+        try {
+            const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
+            return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
+        } catch (error) {
+            return columnArr
+        }
     }, [excludeColumnsKey])
 
     const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
@@ -921,7 +930,6 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     enableDragSort={true}
                     enableDrag={true}
                     onMoveRowEnd={onMoveRowEnd}
-                    inMouseEnterTable={inMouseEnterTable}
                 />
             </div>
         )
@@ -967,7 +975,7 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
             )}
         </>
     )
-})
+}))
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props
