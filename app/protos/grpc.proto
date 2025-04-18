@@ -139,6 +139,8 @@ service Yak {
   rpc ResetMITMFilter(Empty) returns (SetMITMFilterRequest); //重置MITM启动前的过滤器
   rpc DownloadMITMCert(Empty) returns (MITMCert);
 
+  rpc MITMV2(stream MITMV2Request) returns (stream MITMV2Response);
+
   // 开启端口
   rpc OpenPort(stream Input) returns (stream Output);
 
@@ -6522,4 +6524,165 @@ message ListAiModelRequest{
 
 message ListAiModelResponse{
   repeated string ModelName =1;
+}
+
+message MITMV2Request{
+  /*
+    mitm config message
+  */
+  string Host = 1;
+  uint32 Port = 2;
+  string DownstreamProxy = 3;
+  // runtime change proxy
+  bool SetDownstreamProxy = 4; // runtime change proxy
+
+  bool EnableHttp2 = 5;
+
+  // gmtls config
+  bool EnableGMTLS = 6;
+  bool OnlyEnableGMTLS = 7;
+  bool PreferGMTLS = 8;
+  repeated Certificate Certificates = 9;
+
+  string ProxyUsername = 10;
+  string ProxyPassword = 11;
+  bool EnableProxyAuth = 12;
+  repeated string DnsServers = 13;
+  repeated KVPair hosts = 14;
+
+  // max content-length
+  int64 MaxContentLength = 15;
+  int64 MaxReadWaitTime = 16;
+
+  // 过滤 ws
+  bool FilterWebsocket = 17;
+  bool UpdateFilterWebsocket = 18;
+
+  // force close
+  bool ForceDisableKeepAlive = 19;
+
+  // disable MITM CA Cert Page
+  bool DisableCACertPage = 20;
+
+  // random JA3 fingerprint
+  bool RandomJA3 = 21;
+
+  // disable websocket compression
+  bool DisableWebsocketCompression = 22;
+
+  // filter
+  MITMFilterData FilterData = 23;
+  bool UpdateFilter = 24;
+  bool ResetFilter = 25;
+
+  // condition hijack filter
+  MITMFilterData HijackFilterData = 26;
+  bool UpdateHijackFilter = 27;
+
+  // set content replacers
+  bool SetContentReplacers = 28;
+  repeated MITMContentReplacer Replacers = 29;
+
+
+  // mitm yak script cli/hotpatch
+  bool SetYakScript = 30;
+  repeated ExecParamItem YakScriptParams = 31;
+  int64 YakScriptID = 32;
+  string YakScriptContent = 33;
+
+  bool GetCurrentHook = 34; // get current hook plugin
+
+  // remove hook plugin
+  bool RemoveHook = 35;
+  RemoveHookParams RemoveHookParams = 36;
+
+  bool SetClearMITMPluginContext = 37;
+
+
+  // 设置启用插件模式，自动加载所有主插件。
+  // 如果不设置 initPluginNames 的话，启动所有默认插件
+  bool SetPluginMode = 38;
+  repeated string InitPluginNames = 39;
+
+
+  /*
+  mitm manual hijack message
+  */
+  bool SetAutoForward = 40;
+  bool AutoForwardValue = 41;
+
+  bool RecoverManualHijack = 42;
+  bool ManualHijackControl = 43;
+  SingleManualHijackControlMessage ManualHijackMessage = 44;
+
+  bool RecoverContext = 45; // recover mitm context plugin config...
+}
+
+message MITMV2Response {
+  // filter
+  bool JustFilter = 1;
+  MITMFilterData FilterData = 2;
+
+  // Replacer
+  bool JustContentReplacer = 3;
+  repeated MITMContentReplacer Replacers = 4;
+
+  // exec result
+  bool HaveMessage = 7;
+  ExecResult Message = 8;
+
+  bool GetCurrentHook = 9;
+  repeated YakScriptHooks Hooks = 10;
+
+  // server notification, just show a dialog
+  bool HaveNotification = 11;
+  bytes NotificationContent = 12;
+
+  // 这两个标志是用来设置 MITM 加载状态的，用于服务端控制用户端的 "加载中"
+  bool HaveLoadingSetter = 13;
+  bool LoadingFlag = 14;
+
+  string ManualHijackListAction = 15; // add\delete\update\reload
+  repeated SingleManualHijackInfoMessage ManualHijackList = 16; // top 20 hijack message
+}
+
+message SingleManualHijackControlMessage{
+  string TaskID = 1;
+
+  // update config action: can process multiple config info in single control message
+  bool HijackResponse = 2;
+  bool CancelHijackResponse = 3;
+
+  bool UpdateTags = 4;
+  repeated string Tags = 5;
+  //--------------------------
+
+  // send packet action: every hijack just can process a send packet action, if set drop|forward|sendpacket hijack will done
+  bool Drop = 6; // drop request|response|payload
+  bool Forward = 7; // send origin request|response|payload
+
+  bool SendPacket = 8; // send request|response|payload
+  bytes Request = 9;
+  bytes Response = 10;
+  bytes Payload = 11;
+}
+
+message SingleManualHijackInfoMessage{
+  string TaskID = 1;
+  bytes Request = 2;
+  bytes Response = 3;
+  string Status = 4; // hijack request / hijack response
+  bool HijackResponse = 5;
+  repeated string Tags = 6;
+  bool IsHttps = 7;
+  string URL = 8;
+  string RemoteAddr = 9;
+
+  // websocket
+  bool IsWebsocket = 10;
+  bytes Payload = 11;
+  repeated string WebsocketEncode = 12;
+  TraceInfo TraceInfo = 15;
+
+  string Method = 16;
 }

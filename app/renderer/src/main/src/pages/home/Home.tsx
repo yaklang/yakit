@@ -88,6 +88,7 @@ import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN} from "../mitm/MITMPage"
 import {PluginHubPageInfoProps} from "@/store/pageInfo"
 import {WebsiteGV} from "@/enums/website"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {toMITMHacker} from "../hacker/httpHacker"
 const {ipcRenderer} = window.require("electron")
 
 export const convertToBytes = (size: number, unit: string) => {
@@ -787,6 +788,23 @@ const Home: React.FC<HomeProp> = (props) => {
                                     <div className={styles["home-card-header-title"]}>
                                         <PublicMitmIcon className={styles["title-icon"]} />
                                         <span className={styles["title-text"]}>MITM 交互式劫持</span>
+                                        <YakitButton
+                                            type='outline1'
+                                            style={{marginLeft: 8}}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                toMITMHacker({
+                                                    immediatelyLaunchedInfo: {
+                                                        host: hostWatch || "127.0.0.1",
+                                                        port: portWatch || "8083",
+                                                        enableInitialPlugin:
+                                                            form.getFieldValue("enableInitialPlugin") === true
+                                                    }
+                                                })
+                                            }}
+                                        >
+                                            MITM 劫持 v2
+                                        </YakitButton>
                                     </div>
                                     <div className={styles["home-card-header-desc"]}>
                                         安装 SSL/TLS

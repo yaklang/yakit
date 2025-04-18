@@ -14,10 +14,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("send-to-tab", async (e, params) => {
         win.webContents.send("fetch-send-to-tab", params)
     })
-    // 请求包通过通信打开一个数据包插件执行弹窗
-    ipcMain.handle("send-to-packet-hack", async (e, params) => {
-        win.webContents.send("fetch-send-to-packet-hack", params)
-    })
+
     // 缓存fuzzer内数据和配置通信
     // ipcMain.handle("send-fuzzer-setting-data", async (e, params) => {
     //     win.webContents.send("fetch-fuzzer-setting-data", params)

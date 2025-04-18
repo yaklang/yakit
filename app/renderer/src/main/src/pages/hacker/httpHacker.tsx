@@ -1,45 +1,45 @@
-import React, {useState, useEffect} from "react"
-import {Tabs} from "antd"
+import React from "react"
 import {MITMPage} from "../mitm/MITMPage"
-import {HTTPHistory} from "../../components/HTTPHistory"
-import {showDrawer} from "../../utils/showModal"
-import {HackerPlugin} from "./HackerPlugin"
-import ReactDOM from "react-dom"
+import emiter from "@/utils/eventBus/eventBus"
+import {YakitRoute} from "@/enums/yakitRoute"
+import MITMContext, {MITMContextStore, MITMVersion} from "../mitm/Context/MITMContext"
+import {useCreation} from "ahooks"
+import {MITMHackerPageInfoProps} from "@/store/pageInfo"
 
 export interface HTTPHackerProp {}
 
-const {ipcRenderer} = window.require("electron")
-
 const HTTPHacker: React.FC<HTTPHackerProp> = (props) => {
-    const [activeTab, setActiveTag] = useState("mitm")
-
-    useEffect(() => {
-        ipcRenderer.on("fetch-send-to-packet-hack", (e, res: any) => {
-            const {request, ishttps, response} = res || {}
-            if (request && ishttps !== undefined) {
-                let m = showDrawer({
-                    width: "80%",
-                    content: <HackerPlugin request={request} isHTTPS={ishttps} response={response}></HackerPlugin>
-                })
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-send-to-packet-hack")
-        }
-    }, [])
-    useEffect(() => {
-        ipcRenderer.on("fetch-positioning-http-history", (e, res) => {
-            if (res.activeTab) setActiveTag(res.activeTab)
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("fetch-positioning-http-history")
+    const mitmStore: MITMContextStore = useCreation(() => {
+        return {
+            version: MITMVersion.V1,
+            route: YakitRoute.HTTPHacker
         }
     }, [])
     return (
         <div style={{margin: 0, height: "100%"}}>
-            <MITMPage />
+            <MITMContext.Provider value={{mitmStore}}>
+                <MITMPage />
+            </MITMContext.Provider>
         </div>
     )
 }
 
 export default HTTPHacker
+
+export const toMITMHacker = (params?: MITMHackerPageInfoProps) => {
+    emiter.emit(
+        "openPage",
+        JSON.stringify({
+            route: YakitRoute.MITMHacker,
+            params: {
+                ...(params || {
+                    immediatelyLaunchedInfo: {
+                        host: "",
+                        port: "",
+                        enableInitialPlugin: true
+                    }
+                })
+            }
+        })
+    )
+}

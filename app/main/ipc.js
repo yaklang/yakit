@@ -204,6 +204,7 @@ module.exports = {
         require("./handlers/listenPort")(win, getClient)
         require("./handlers/yakRunnerTerminal")(win, getClient)
         require("./handlers/mitm")(win, getClient)
+        require("./handlers/mitmV2")(win, getClient)
         require("./handlers/queryHTTPFlow")(win, getClient)
         require("./handlers/httpFuzzer")(win, getClient)
         require("./handlers/httpAnalyzer")(win, getClient)

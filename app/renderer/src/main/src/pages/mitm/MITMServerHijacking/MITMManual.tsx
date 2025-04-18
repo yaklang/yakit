@@ -13,8 +13,9 @@ import {availableColors} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {EditorMenuItemType} from "@/components/yakitUI/YakitEditor/EditorMenu"
 import {TraceInfo} from "../MITMPage"
 import {useMemoizedFn} from "ahooks"
-import {yakitNotify} from "@/utils/notification"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import {grpcMITMDropRequestById, grpcMITMDropResponseById} from "../MITMHacker/utils"
+import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -221,8 +222,8 @@ interface MITMManualEditorProps {
     setModifiedPacket: (u: string) => void
     forResponse: boolean
     currentPacketId: number
-    handleAutoForward: (v: "manual" | "log" | "passive") => void
-    autoForward: "manual" | "log" | "passive"
+    handleAutoForward: (v: ManualHijackTypeProps) => void
+    autoForward: ManualHijackTypeProps
     forward: (isManual: boolean) => void
     hijacking: () => void
     status: MITMStatus
@@ -230,6 +231,7 @@ interface MITMManualEditorProps {
     currentIsForResponse: boolean
     requestPacket: string
     beautifyTriggerRefresh: boolean
+    taskId?: string
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
     const {
@@ -398,9 +400,9 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
 })
 
 export const dropRequest = (id: number) => {
-    return ipcRenderer.invoke("mitm-drop-request", id)
+    return grpcMITMDropRequestById(id, true)
 }
 
 export const dropResponse = (id: number) => {
-    return ipcRenderer.invoke("mitm-drop-response", id)
+    return grpcMITMDropResponseById(id, true)
 }

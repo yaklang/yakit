@@ -1,8 +1,8 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./MITMServerHijacking.module.scss"
 import {HistorySearch, HTTPFlowShield, ShieldData, SourceType} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {useDebounceFn, useMemoizedFn, useSize} from "ahooks"
+import {useCreation, useDebounceFn, useMemoizedFn, useSize} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -16,6 +16,7 @@ import {iconProcessMap, ProcessItem} from "@/components/HTTPHistory"
 import classNames from "classnames"
 import {SolidCheckIcon} from "@/assets/icon/solid"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import MITMContext from "../Context/MITMContext"
 
 const {ipcRenderer} = window.require("electron")
 interface MITMLogHeardExtraProps {
@@ -39,7 +40,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const [shieldData, setShieldData] = useState<ShieldData>({
         data: []
     })
+    const mitmContent = useContext(MITMContext)
 
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     useEffect(() => {
         emiter.on("onGetMITMShieldDataEvent", onGetMITMShieldData)
         return () => {
@@ -48,19 +53,29 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     }, [])
 
     const onGetMITMShieldData = useMemoizedFn((str: string) => {
-        const value = JSON.parse(str)
-        setShieldData(value)
+        try {
+            const value = JSON.parse(str)
+            const {shieldData, version} = value
+            if (version !== mitmVersion) return
+            setShieldData(shieldData)
+        } catch (error) {}
     })
 
     const cancleFilter = useMemoizedFn((value) => {
-        emiter.emit("cancleMitmFilterEvent", JSON.stringify(value))
+        emiter.emit("cancleMitmFilterEvent", JSON.stringify({value, version: mitmVersion}))
     })
-    const cancleAllFilter = useMemoizedFn(() => {
-        emiter.emit("cancleMitmAllFilterEvent")
+    const cancleAllFilter = useMemoizedFn((version) => {
+        if (version !== mitmVersion) return
+        emiter.emit("cancleMitmAllFilterEvent", mitmVersion)
     })
 
-    const onHistorySourceTypeToMitm = useMemoizedFn((sourceType: string) => {
-        onSetSourceType(sourceType)
+    const onHistorySourceTypeToMitm = useMemoizedFn((data) => {
+        try {
+            const value = JSON.parse(data)
+            const {sourceType, version} = value
+            if (version !== mitmVersion) return
+            onSetSourceType(sourceType)
+        } catch (error) {}
     })
     useEffect(() => {
         emiter.on("onHistorySourceTypeToMitm", onHistorySourceTypeToMitm)
@@ -92,12 +107,23 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     }
     const sendFun = useDebounceFn(
         () => {
-            emiter.emit("onMitmCurProcess", curProcess + "")
+            emiter.emit(
+                "onMitmCurProcess",
+                JSON.stringify({
+                    curProcess: curProcess + "",
+                    version: mitmVersion
+                })
+            )
         },
         {wait: 300}
     ).run
-    const onMITMLogProcessQuery = useMemoizedFn((queryStr: string) => {
-        setQueryparamsStr(queryStr)
+    const onMITMLogProcessQuery = useMemoizedFn((data: string) => {
+        try {
+            const value = JSON.parse(data)
+            const {queryStr, version} = value
+            if (version !== mitmVersion) return
+            setQueryparamsStr(queryStr)
+        } catch (error) {}
     })
     useEffect(() => {
         emiter.on("onMITMLogProcessQuery", onMITMLogProcessQuery)
@@ -150,7 +176,10 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
     const headerSize = useSize(headerRef)
 
     const handleSearch = useMemoizedFn((searchValue, searchType) => {
-        emiter.emit("onMitmSearchInputVal", JSON.stringify({KeywordType: searchType, Keyword: searchValue}))
+        emiter.emit(
+            "onMitmSearchInputVal",
+            JSON.stringify({KeywordType: searchType, Keyword: searchValue, version: mitmVersion})
+        )
     })
 
     return (
@@ -162,7 +191,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                             key={tag.value}
                             checked={!!sourceType.split(",").includes(tag.value)}
                             onChange={(checked) => {
-                                emiter.emit("onMitmClearFromPlugin")
+                                emiter.emit("onMitmClearFromPlugin",mitmVersion)
                                 setShowPluginHistoryList([])
                                 setTempShowPluginHistory && setTempShowPluginHistory("")
 
@@ -265,7 +294,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
                         // 记录时间戳
                         const nowTime: string = Math.floor(new Date().getTime() / 1000).toString()
                         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
-                        emiter.emit("cleanMitmLogEvent")
+                        emiter.emit("cleanMitmLogEvent", mitmVersion)
                     }}
                 >
                     重置

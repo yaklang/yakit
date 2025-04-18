@@ -1,10 +1,10 @@
-import React, {Ref, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {Ref, useContext, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {Divider, Form, Modal, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
 import {useHotkeys} from "react-hotkeys-hook"
-import {useGetState, useLatest, useMemoizedFn} from "ahooks"
+import {useCreation, useGetState, useLatest, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import {MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
@@ -27,7 +27,19 @@ import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import { useGoogleChromePluginPath } from "@/store"
+import {useGoogleChromePluginPath} from "@/store"
+import MITMContext from "../Context/MITMContext"
+import {
+    MITMEnablePluginModeRequest,
+    MITMFilterWebsocketRequest,
+    MITMHotPortRequest,
+    MITMSetDownstreamProxyRequest,
+    grpcMITMEnablePluginMode,
+    grpcMITMFilterWebsocket,
+    grpcMITMHotPort,
+    grpcMITMSetDownstreamProxy,
+    grpcMITMStopCall
+} from "../MITMHacker/utils"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -87,7 +99,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         showPluginHistoryList,
         setShowPluginHistoryList,
         tempShowPluginHistory,
-        setTempShowPluginHistory,
+        setTempShowPluginHistory
     } = props
 
     const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
@@ -111,9 +123,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
     const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
 
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
+
     useEffect(() => {
         if (!!props.enableInitialMITMPlugin && (props?.defaultPlugins || []).length > 0) {
-            enableMITMPluginMode(props.defaultPlugins).then(() => {
+            enableMITMPluginMode({
+                initPluginNames: props.defaultPlugins || [],
+                version: mitmVersion
+            }).then(() => {
                 info("启动初始 MITM 插件成功")
             })
         }
@@ -125,12 +146,18 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
             ipcRenderer.invoke("IsChromeLaunched").then((e) => {
                 if (e) {
-                    ipcRenderer.invoke("mitm-host-port", info.host, info.port)
+                    const value: MITMHotPortRequest = {
+                        host: info.host,
+                        port: +info.port,
+                        version: mitmVersion
+                    }
+                    grpcMITMHotPort(value)
                 }
             })
             emiter.emit(
                 "onChangeAddrAndEnableInitialPlugin",
                 JSON.stringify({
+                    version: mitmVersion,
                     host: info.host,
                     port: info.port,
                     enableInitialPlugin: info.enableInitialPlugin
@@ -142,8 +169,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     const stop = useMemoizedFn(() => {
         // setLoading(true)
         return new Promise((resolve, reject) => {
-            ipcRenderer
-                .invoke("mitm-stop-call")
+            grpcMITMStopCall(mitmVersion)
                 .then(() => {
                     onIsHasParams(false)
                     setShowPluginHistoryList([])
@@ -201,7 +227,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                     onChange={(value) => {
                                         setFilterWebsocket(value)
                                         setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${value}`)
-                                        ipcRenderer.invoke("mitm-filter-websocket", value)
+                                        const params: MITMFilterWebsocketRequest = {
+                                            filterWebsocket: value,
+                                            version: mitmVersion
+                                        }
+                                        grpcMITMFilterWebsocket(params)
                                     }}
                                 />
                             </label>
@@ -232,7 +262,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     {/*    系统代理*/}
                     {/*</YakitButton>*/}
                     <div className={style["mitm-server-chrome"]}>
-                        <ChromeLauncherButton isStartMITM={true} host={host} port={port} disableCACertPage={disableCACertPage} />
+                        <ChromeLauncherButton
+                            isStartMITM={true}
+                            host={host}
+                            port={port}
+                            disableCACertPage={disableCACertPage}
+                        />
                     </div>
                     <div className={style["mitm-server-quit-icon"]}>
                         <QuitIcon onClick={() => stop()} />
@@ -265,7 +300,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 />
             </div>
             <React.Suspense fallback={<div>loading...</div>}>
-                <MITMFiltersModal filterType="filter" visible={filtersVisible} setVisible={setFiltersVisible} isStartMITM={true} />
+                <MITMFiltersModal
+                    filterType='filter'
+                    visible={filtersVisible}
+                    setVisible={setFiltersVisible}
+                    isStartMITM={true}
+                />
                 <MITMCertificateDownloadModal visible={downloadVisible} setVisible={setDownloadVisible} />
             </React.Suspense>
         </div>
@@ -283,11 +323,20 @@ interface DownStreamAgentModalProp {
 const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((props) => {
     const {downStreamAgentModalVisible, onCloseModal, tip, onSetTip, setDownstreamProxyStr} = props
     const [form] = Form.useForm()
+    const mitmContent = useContext(MITMContext)
+
+    const mitmVersion = useCreation(() => {
+        return mitmContent.mitmStore.version
+    }, [mitmContent.mitmStore.version])
     const onOKFun = useMemoizedFn(async () => {
         const tipArr = tip.split("|")
         const downstreamProxy = form.getFieldsValue().downstreamProxy
         downstreamProxyRef.current.onSetRemoteValues(downstreamProxy)
-        ipcRenderer.invoke("mitm-set-downstream-proxy", downstreamProxy)
+        const proxyValue: MITMSetDownstreamProxyRequest = {
+            downstreamProxy,
+            version: mitmVersion
+        }
+        grpcMITMSetDownstreamProxy(proxyValue)
         if (downstreamProxy) {
             if (tip.indexOf("下游代理") === -1) {
                 onSetTip(`下游代理${downstreamProxy}` + (tip.indexOf("|") === 0 ? tip : `|${tip}`))
@@ -378,6 +427,6 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     )
 })
 
-export const enableMITMPluginMode = (initPluginNames?: string[]) => {
-    return ipcRenderer.invoke("mitm-enable-plugin-mode", initPluginNames)
+export const enableMITMPluginMode = (params: MITMEnablePluginModeRequest) => {
+    return grpcMITMEnablePluginMode(params)
 }
