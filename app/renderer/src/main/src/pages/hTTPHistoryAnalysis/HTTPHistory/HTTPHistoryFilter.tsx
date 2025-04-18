@@ -66,7 +66,6 @@ import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {formatJson} from "@/pages/yakitStore/viewers/base"
 import {YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {setClipboardText} from "@/utils/clipboard"
@@ -1529,6 +1528,19 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             footer: null,
             maskClosable: false
         })
+    }
+    const formatJson = (filterVal, jsonData) => {
+        return jsonData.map((v, index) =>
+            filterVal.map((j) => {
+                if (["Request", "Response"].includes(j)) {
+                    return new Buffer(v[j]).toString("utf8")
+                }
+                if (j === "UpdatedAt") {
+                    return formatTimestamp(v[j])
+                }
+                return v[j]
+            })
+        )
     }
     const getPageSize = useCreation(() => {
         if (total > 5000) {

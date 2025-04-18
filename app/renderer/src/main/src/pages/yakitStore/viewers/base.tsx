@@ -558,8 +558,6 @@ export const CurrentHttpFlow: React.FC<CurrentHttpFlowProp> = (props) => {
                         onlyShowFirstNode={isOnlyTable}
                         setOnlyShowFirstNode={onIsOnlyTable}
                         httpHistoryTableTitleStyle={{
-                            borderLeft: undefined,
-                            borderRight: undefined,
                             paddingTop: 12,
                             paddingLeft: 8,
                             paddingRight: 8,

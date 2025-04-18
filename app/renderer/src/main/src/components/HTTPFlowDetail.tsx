@@ -1619,7 +1619,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         typeOptionVal={reqTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
-                            console.log(111, typeOptionVal);
                             if (typeOptionVal === "beautify") {
                                 setReqTypeOptionVal(typeOptionVal)
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)

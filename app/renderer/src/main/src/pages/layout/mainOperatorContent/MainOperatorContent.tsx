@@ -1444,8 +1444,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 onCodeScanPage(node, order)
                 break
             case YakitRoute.DB_HTTPHistoryAnalysis:
-                    onHTTPHistoryAnalysis(node, order)
-                    break
+                onHTTPHistoryAnalysis(node, order)
+                break
             default:
                 break
         }
@@ -4635,21 +4635,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
                                 <div className={styles["tab-menu-item-verbose"]}>
                                     <span className='content-ellipsis'>{subItem.verbose || ""}</span>
                                 </div>
-                                {defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) ? (
-                                    <>
-                                        {index !== 0 && (
-                                            <RemoveIcon
-                                                className={classNames(styles["remove-icon"], {
-                                                    [styles["remove-show-icon"]]: isActive
-                                                })}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    onRemoveSub(subItem)
-                                                }}
-                                            />
-                                        )}
-                                    </>
-                                ) : (
+                                {((defaultFixedTabsNoSinglPageRoute.includes(currentTabKey) && index !== 0) ||
+                                    !defaultFixedTabsNoSinglPageRoute.includes(currentTabKey)) && (
                                     <RemoveIcon
                                         className={classNames(styles["remove-icon"], {
                                             [styles["remove-show-icon"]]: isActive
