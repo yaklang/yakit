@@ -572,6 +572,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
+                break
             case YakitRoute.DB_HTTPHistoryAnalysis:
                 addHTTPHistoryAnalysis(params)
                 break
