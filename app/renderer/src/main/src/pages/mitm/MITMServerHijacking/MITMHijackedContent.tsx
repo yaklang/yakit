@@ -54,6 +54,7 @@ import {
 import {ManualHijackListAction} from "@/defaultConstants/mitmV2"
 import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
+import { TableTotalAndSelectNumber } from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -144,6 +145,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [sourceType, setSourceType] = useState<string>("mitm")
     const [tableTotal, setTableTotal] = useState<number>(0)
     const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+    const [manualTableTotal,setManualTableTotal] = useState<number>(0)
 
     /** 黄色提示 start */
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
@@ -677,8 +679,14 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
                     {mitmVersion === MITMVersion.V2 ? (
                         <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
-                            <YakitButton onClick={onSubmitAll}>全部提交</YakitButton>
+                            <div className={styles['mitm-v2-hijacked-manual-heard-extra-left']}>
+                               <TableTotalAndSelectNumber total={manualTableTotal} /> 
+                            </div>
+                            <div className={styles['mitm-v2-hijacked-manual-heard-extra-right']}>
+                                <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
                             <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
+                            </div>
+                            
                         </div>
                     ) : (
                         <MITMManualHeardExtra
@@ -732,6 +740,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             manualHijackList={mitmV2Response?.ManualHijackList || []}
                             autoForward={autoForward}
                             handleAutoForward={handleAutoForward}
+                            setManualTableTotal={setManualTableTotal}
                         />
                     ) : (
                         <>

@@ -435,3 +435,22 @@
     background-color: var(--yakit-card-background-color);
     padding: 12px 8px;
 }
+
+.mitm-alert-msg {
+    line-height: 25px;
+    margin-bottom: 12px;
+    background-color: #fffbe6;
+    border: 1px solid #ffe58f;
+    padding: 8px 15px;
+    border-radius: 2px;
+    margin-right: 8px;
+    .circle-icon {
+        position: relative;
+        top: 1px;
+        color: var(--yakit-helper-text-color);
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+}

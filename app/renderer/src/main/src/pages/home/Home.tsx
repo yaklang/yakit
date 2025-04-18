@@ -140,6 +140,7 @@ const Home: React.FC<HomeProp> = (props) => {
     const [pcapHintLoading, setPcapHintLoading] = useState<boolean>(false)
     const {screenRecorderInfo} = useScreenRecorder()
     const [searchToolVal, setSearchToolVal] = useState<string>("")
+    const [mitmShow,setMitmShow] = useState<boolean>(false)
     const toolsList = useMemo(() => {
         return [
             {
@@ -853,19 +854,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                                 style={{borderRadius: "40px 0 0 40px"}}
                                                                 onClick={(e) => {
                                                                     e.stopPropagation()
-                                                                    onMenuParams({
-                                                                        route: YakitRoute.HTTPHacker,
-                                                                        params: {
-                                                                            immediatelyLaunchedInfo: {
-                                                                                host: hostWatch || "127.0.0.1",
-                                                                                port: portWatch || "8083",
-                                                                                enableInitialPlugin:
-                                                                                    form.getFieldValue(
-                                                                                        "enableInitialPlugin"
-                                                                                    ) === true
-                                                                            }
-                                                                        }
-                                                                    })
+                                                                    setMitmShow(true)
                                                                 }}
                                                             >
                                                                 <SolidPlayIcon className={styles["open-icon"]} />
@@ -1439,6 +1428,40 @@ const Home: React.FC<HomeProp> = (props) => {
                 secondRatio='10%'
                 secondMinSize='350px'
             ></YakitResizeBox>
+            <YakitHint
+                visible={mitmShow}
+                title='MITM V2上线测试'
+                content='MITM v2增加手动劫持列表，以解决旧版MITM手动劫持抓包卡住的问题'
+                okButtonText='使用新版'
+                cancelButtonText={"使用旧版"}
+                onOk={() => {
+                    setMitmShow(false)
+                    toMITMHacker({
+                        immediatelyLaunchedInfo: {
+                            host: hostWatch || "127.0.0.1",
+                            port: portWatch || "8083",
+                            enableInitialPlugin:
+                                form.getFieldValue("enableInitialPlugin") === true
+                        }
+                    })
+                }}
+                onCancel={() => {
+                    setMitmShow(false)
+                    onMenuParams({
+                        route: YakitRoute.HTTPHacker,
+                        params: {
+                            immediatelyLaunchedInfo: {
+                                host: hostWatch || "127.0.0.1",
+                                port: portWatch || "8083",
+                                enableInitialPlugin:
+                                    form.getFieldValue(
+                                        "enableInitialPlugin"
+                                    ) === true
+                            }
+                        }
+                    })
+                }}
+            />
         </div>
     )
 }

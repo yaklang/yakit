@@ -214,8 +214,8 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                         <YakitResizeBox
                             isVer={false}
                             firstRatio='30%'
-                            onMouseUp={(firstSize) => {
-                                setTreeHeight(firstSize)
+                            onMouseUp={({firstSizeNum}) => {
+                                setTreeHeight(firstSizeNum)
                             }}
                             firstNode={
                                 <div ref={TreeBoxRef} style={{height: "100%"}}>
