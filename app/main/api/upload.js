@@ -4,6 +4,7 @@ const fs = require("fs")
 const customPath = require("path")
 const FormData = require("form-data")
 const {Readable} = require("stream")
+const {hashChunk} = require("../toolsFunc")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("upload-group-data", async (event, params) => {
