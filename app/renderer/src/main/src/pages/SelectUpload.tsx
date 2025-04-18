@@ -1,19 +1,14 @@
 import React, {useEffect, useRef, useState} from "react"
-import {Form, Select, Progress, Cascader} from "antd"
-import {useMemoizedFn, useThrottleFn, useGetState} from "ahooks"
+import {Form, Progress} from "antd"
+import {useMemoizedFn, useGetState} from "ahooks"
 import {failed, success, warn} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
-import {
-    FileProjectInfoProps,
-    ProjectDescription,
-    ProjectIOProgress,
-    ProjectsResponse
-} from "./softwareSettings/ProjectManage"
+import {FileProjectInfoProps, ProjectIOProgress, ProjectsResponse} from "./softwareSettings/ProjectManage"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {ChevronDownIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import YakitCascader from "@/components/yakitUI/YakitCascader/YakitCascader"
+import {OutlineChevrondownIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -263,7 +258,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                             setCascaderValue({Id: item.Id, DatabasePath: item.DatabasePath})
                         }
                     }}
-                    suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
+                    suffixIcon={<OutlineChevrondownIcon style={{color: "var(--yakit-body-text-color)"}} />}
                 />
             </Form.Item>
             {percent > 0 && (
