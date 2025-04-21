@@ -17,12 +17,7 @@ import classNames from "classnames"
 import styles from "./RunnerFileTree.module.scss"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import {
-    grpcFetchAuditTree,
-    removeAreaFileInfo,
-    setAreaFileActive,
-    updateAreaFileInfo
-} from "../utils"
+import {grpcFetchAuditTree, removeAreaFileInfo, setAreaFileActive, updateAreaFileInfo} from "../utils"
 
 import emiter from "@/utils/eventBus/eventBus"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
@@ -268,8 +263,74 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         setVisible(false)
     })
 
+    const [isUnShow, setUnShow] = useState<boolean>(false)
+    const [active, setActive] = useState<"all"|"risk"|"rule">("all")
+    // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
+    const rendered = useRef<Set<string>>(new Set(["all"]))
+    const onSetActive = useMemoizedFn((type: "all"|"risk"|"rule") => {
+        if (!rendered.current.has(type as string)) {
+            rendered.current.add(type as string)
+        }
+        setActive(type)
+    })
+
     return (
         <div className={styles["runner-file-tree"]}>
+            {/* 左侧边栏 */}
+            <div className={styles["left-side-bar-list"]}>
+                <div
+                    className={classNames(styles["left-side-bar-item"], {
+                        [styles["left-side-bar-item-active"]]: active === "all",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "all" && isUnShow
+                    })}
+                    onClick={() => {
+                        if (active !== "all") {
+                            setUnShow(false)
+                        }
+                        if (active === "all") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("all")
+                    }}
+                >
+                    <span className={styles["item-text"]}>全部</span>
+                </div>
+                <div
+                    className={classNames(styles["left-side-bar-item"], {
+                        [styles["left-side-bar-item-active"]]: active === "risk",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "risk" && isUnShow
+                    })}
+                    onClick={() => {
+                        if (active !== "risk") {
+                            setUnShow(false)
+                        }
+                        if (active === "risk") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("risk")
+                    }}
+                >
+                    <span className={styles["item-text"]}>漏洞文件</span>
+                </div>
+                <div
+                    className={classNames(styles["left-side-bar-item"], {
+                        [styles["left-side-bar-item-active"]]: active === "rule",
+                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "rule" && isUnShow
+                    })}
+                    onClick={() => {
+                        if (active !== "rule") {
+                            setUnShow(false)
+                        }
+                        if (active === "rule") {
+                            setUnShow(!isUnShow)
+                        }
+                        onSetActive("rule")
+                    }}
+                >
+                    <span className={styles["item-text"]}>规则汇总</span>
+                </div>
+            </div>
+
             <div className={styles["container"]}>
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
@@ -340,6 +401,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 </div>
                 <OpenedFile />
             </div>
+
             <YakitDrawer
                 getContainer={document.getElementById("audit-code") || document.body}
                 placement='bottom'

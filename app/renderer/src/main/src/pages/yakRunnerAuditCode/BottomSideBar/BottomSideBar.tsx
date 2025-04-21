@@ -1,17 +1,14 @@
 import React, {useEffect, useMemo, useState} from "react"
 import {BottomSideBarProps} from "./BottomSideBarType"
-
 import classNames from "classnames"
 import styles from "./BottomSideBar.module.scss"
-import {OutlineBugIcon, OutlineScanRuleEditIcon} from "@/assets/icon/outline"
+import {OutlineBugIcon, OutlineClockIcon, OutlineScanRuleEditIcon, OutlineTagIcon} from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 
-const {ipcRenderer} = window.require("electron")
-
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
-    const {activeFile, projectName} = useStore()
+    const {activeFile} = useStore()
 
     const showLocationInfo = useMemo(() => {
         let data = {
@@ -32,6 +29,24 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                 <div
                     className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
                     onClick={() => {
+                        emiter.emit("onOpenLeftSecondNode", "result")
+                    }}
+                >
+                    <OutlineTagIcon />
+                    审计结果
+                </div>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
+                        emiter.emit("onOpenLeftSecondNode", "history")
+                    }}
+                >
+                    <OutlineClockIcon />
+                    审计历史
+                </div>
+                <div
+                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
+                    onClick={() => {
                         onOpenEditorDetails("ruleEditor")
                     }}
                 >
@@ -46,25 +61,6 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                 >
                     <OutlineBugIcon />
                     漏洞汇总
-                </div>
-                <div
-                    className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
-                    onClick={() => {
-                        emiter.emit("onOpenLeftSecondNode", "result")
-                    }}
-                >
-                    审计结果
-                </div>
-                <div
-                    className={classNames(styles["left-item"], styles["left-terminal-and-help"], {
-                        [styles["left-item-disable"]]: !projectName
-                    })}
-                    onClick={() => {
-                        if(!projectName) return
-                        emiter.emit("onOpenLeftSecondNode", "history")
-                    }}
-                >
-                    审计历史
                 </div>
             </div>
 

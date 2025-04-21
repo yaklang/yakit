@@ -28,7 +28,7 @@ import {
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {RuleManagementAuditIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import yakitSSMiniProject from "@/assets/yakitSS.png"
 import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
@@ -535,17 +535,17 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "关闭所有",
                 key: "removeAll"
-            },
-            {type: "divider"},
-            {
-                label: "重命名",
-                key: "rename"
-            },
-            {
-                label: "在文件夹中显示",
-                key: "openFolder",
-                disabled: info.isUnSave
             }
+            // {type: "divider"},
+            // {
+            //     label: "重命名",
+            //     key: "rename"
+            // },
+            // {
+            //     label: "在文件夹中显示",
+            //     key: "openFolder",
+            //     disabled: info.isUnSave
+            // }
         ]
         if (splitDirection.length > 0) {
             let direction: YakitMenuItemType[] = splitDirection.map((item) => {
@@ -958,10 +958,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新当前底部展示信息
     const updateBottomEditorDetails = useDebounceFn(
         async () => {
-            if (!editorInfo || !projectName || !activeFile) return
+            if (!editorInfo || !projectName) return
             let newActiveFile = editorInfo
             let ProgramName = [projectName]
-            let CodeSourceUrl = [activeFile.path]
+            let CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
             // 注入漏洞汇总结果
             newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl)
             // 如若文件检查结果出来时 文件已被切走 则不再更新
@@ -1383,7 +1383,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     highLightClass='hight-light-yak-runner-color'
                     highLightFind={highLightFind}
                     // renderValidationDecorations此项为on时可使只读模式下，显示下划线提示
-                    renderValidationDecorations = "on"
+                    renderValidationDecorations='on'
                 />
             )}
         </div>
@@ -1418,7 +1418,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
-                    <RuleManagementAuditIcon />
+                    <img style={{height: "100%"}} src={yakitSSMiniProject} alt='暂无图片' />
                 </div>
                 <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>

@@ -11,15 +11,10 @@ import {randomString} from "@/utils/randomUtil"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
-import {
-    ConvertYakStaticAnalyzeErrorToMarker,
-    IMonacoEditorMarker,
-    YakStaticAnalyzeErrorResult
-} from "@/utils/editorMarkers"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
-import { QuerySSARisksResponse, SSARisk } from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -146,7 +141,7 @@ export const loadAuditFromYakURLRaw = (
                 Url: params,
                 Body: body,
                 Page,
-                PageSize,
+                PageSize
             })
             .then((rsp: RequestYakURLResponse) => {
                 resolve(rsp)
@@ -528,7 +523,7 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
 /**
  * @name 漏洞汇总
  */
-export const onSyntaxRisk = ({ProgramName,CodeSourceUrl}) => {
+export const onSyntaxRisk = ({ProgramName, CodeSourceUrl}) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("QuerySSARisks", {
@@ -550,15 +545,17 @@ export const onSyntaxRisk = ({ProgramName,CodeSourceUrl}) => {
 /**
  * @name 注入漏洞汇总结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo,ProgramName:string[],CodeSourceUrl:string[]) => {
-    if(info.syntaxCheck){
+export const getDefaultActiveFile = async (info: FileDetailInfo, ProgramName: string[], CodeSourceUrl: string[]) => {
+    if (info.syntaxCheck) {
         return info
     }
     let newActiveFile = info
-    // 注入漏洞汇总结果
-    const syntaxCheck = (await onSyntaxRisk({ProgramName,CodeSourceUrl})) as SSARisk[]
-    if (syntaxCheck) {
-        newActiveFile = {...newActiveFile, syntaxCheck}
+    if (CodeSourceUrl.length > 0) {
+        // 注入漏洞汇总结果
+        const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl})) as SSARisk[]
+        if (syntaxCheck) {
+            newActiveFile = {...newActiveFile, syntaxCheck}
+        }
     }
     return newActiveFile
 }

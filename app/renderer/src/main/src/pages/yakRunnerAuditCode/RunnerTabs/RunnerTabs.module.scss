@@ -398,6 +398,10 @@
                 width: 72px;
                 height: 72px;
             }
+            img {
+                width: 72px;
+                height: 72px;
+            }
         }
         .header-style {
             color: #31343f;
@@ -542,23 +546,23 @@
     }
 }
 
-.code-scan-monaco-widget{
+.code-scan-monaco-widget {
     border-radius: 4px;
     width: 188px;
     background-color: rgba(203, 210, 222, 0.5);
     padding: 10px;
-    &:hover{
+    &:hover {
         background-color: rgba(203, 210, 222, 0.8);
     }
-    .header{
+    .header {
         // color: #ffffff;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        .title{
+        .title {
             flex: 1;
         }
-        .extra{
+        .extra {
             width: 16px;
             height: 16px;
             display: flex;
@@ -577,10 +581,10 @@
             }
         }
     }
-    .content{
+    .content {
         margin-top: 10px;
     }
-    .option{
+    .option {
         margin-top: 10px;
         display: flex;
         gap: 8px;

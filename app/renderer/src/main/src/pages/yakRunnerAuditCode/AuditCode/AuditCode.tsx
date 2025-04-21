@@ -558,17 +558,20 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const initTreeLeaf = initTree.filter((item) => item.isLeaf)
         const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
         const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
-        newInitTree.push({
-            parent: null,
-            name: "已经到底啦~",
-            id: "111",
-            depth: 1,
-            isBottom: true,
-            Extra: [],
-            ResourceType: "",
-            VerboseType: "",
-            Size: 0
-        })
+        if (newInitTree.length > 0) {
+            newInitTree.push({
+                parent: null,
+                name: "已经到底啦~",
+                id: "111",
+                depth: 1,
+                isBottom: true,
+                Extra: [],
+                ResourceType: "",
+                VerboseType: "",
+                Size: 0
+            })
+        }
+
         return newInitTree
     }, [refreshTree])
 
@@ -1038,8 +1041,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 },
                                 {
                                     label: "审计历史",
-                                    value: "history",
-                                    disabled: !projectName
+                                    value: "history"
                                 }
                             ]}
                         />
@@ -1141,29 +1143,41 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         />
                                     </div>
                                 ) : (
-                                    <AuditTree
-                                        data={auditDetailTree}
-                                        expandedKeys={expandedKeys}
-                                        setExpandedKeys={setExpandedKeys}
-                                        onLoadData={onLoadData}
-                                        foucsedKey={foucsedKey}
-                                        setFoucsedKey={setFoucsedKey}
-                                        onJump={onJump}
-                                        loadTreeMore={loadTreeMore}
-                                    />
+                                    <>
+                                        {auditDetailTree.length > 0 ? (
+                                            <AuditTree
+                                                data={auditDetailTree}
+                                                expandedKeys={expandedKeys}
+                                                setExpandedKeys={setExpandedKeys}
+                                                onLoadData={onLoadData}
+                                                foucsedKey={foucsedKey}
+                                                setFoucsedKey={setFoucsedKey}
+                                                onJump={onJump}
+                                                loadTreeMore={loadTreeMore}
+                                            />
+                                        ) : (
+                                            <div className={styles["no-data"]}>暂无数据</div>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
                     </>
                 ) : (
-                    <AuditHistoryList
-                        ref={auditHistoryListRef}
-                        setAuditType={setAuditType}
-                        onAuditRuleSubmitFun={onAuditRuleSubmitFun}
-                        onOpenEditorDetails={onOpenEditorDetails}
-                        query={query}
-                        setQuery={setQuery}
-                    />
+                    <>
+                        {!projectName ? (
+                            <div className={styles["no-data"]}>暂无数据</div>
+                        ) : (
+                            <AuditHistoryList
+                                ref={auditHistoryListRef}
+                                setAuditType={setAuditType}
+                                onAuditRuleSubmitFun={onAuditRuleSubmitFun}
+                                onOpenEditorDetails={onOpenEditorDetails}
+                                query={query}
+                                setQuery={setQuery}
+                            />
+                        )}
+                    </>
                 )}
                 <YakitHint
                     visible={removeVisible}
