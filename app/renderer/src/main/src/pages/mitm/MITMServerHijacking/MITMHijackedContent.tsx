@@ -795,7 +795,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             delete processQuery.AfterId
                             delete processQuery.BeforeId
                             delete processQuery.ProcessName
-                            emiter.emit("onMITMLogProcessQuery", JSON.stringify(processQuery))
+                            emiter.emit(
+                                "onMITMLogProcessQuery",
+                                JSON.stringify({queryStr: JSON.stringify(processQuery), version: mitmVersion})
+                            )
                         }}
                     />
                 </div>

@@ -110,7 +110,7 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             emiter.emit(
                 "onMitmCurProcess",
                 JSON.stringify({
-                    curProcess: curProcess + "",
+                    curProcess,
                     version: mitmVersion
                 })
             )
