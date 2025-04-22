@@ -545,6 +545,17 @@
     &-right {
         display: flex;
         gap: 8px;
+        .mitm-v2-switch {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            &-label {
+                font-weight: 500;
+                font-size: 12px;
+                line-height: 24px;
+                color: var(--yakit-header-color);
+            }
+        }
     }
 }
 .mitm-v2-hijacked-manual-drop-down-popover {

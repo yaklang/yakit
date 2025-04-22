@@ -25,6 +25,8 @@ export interface MITMManualProps {
     setManualTableTotal: (v: number) => void
     /**更改表选中数 */
     setManualTableSelectNumber: (v: number) => void
+    /**是否只看响应 */
+    isOnlyLookResponse: boolean
 }
 export interface ManualHijackInfoRefProps {
     /**提交数据 */

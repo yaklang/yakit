@@ -58,6 +58,9 @@ import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {ChevronDownIcon} from "@/assets/newIcon"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -151,6 +154,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [manualTableTotal, setManualTableTotal] = useState<number>(0)
     const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
     const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
+    const [isOnlyLookResponse, setIsOnlyLookResponse] = useState<boolean>(false)
     const mitmManualRef = useRef<MITMManualRefProps>({
         onBatchDiscardData: () => {},
         onBatchSubmitData: () => {},
@@ -438,6 +442,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     useEffect(() => {
         getMITMHijackFilter()
+        getMITMManualIsHijackResponse()
     }, [])
     /** 条件劫持 end */
 
@@ -697,6 +702,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
         setMITMV2PopoverVisible(false)
     })
+    const onHijackResponse = useMemoizedFn((e) => {
+        const c = e.target.checked
+        setIsOnlyLookResponse(c)
+        setRemoteValue(RemoteGV.MITMManualIsOnlyLookResponse, `${c}`)
+    })
+    const getMITMManualIsHijackResponse = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.MITMManualIsOnlyLookResponse).then((res) => {
+            if (!!res) {
+                setIsOnlyLookResponse(res === "true")
+            }
+        })
+    })
     const onRenderHeardExtra = useMemoizedFn(() => {
         return (
             <>
@@ -711,6 +728,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 />
                             </div>
                             <div className={styles["mitm-v2-hijacked-manual-heard-extra-right"]}>
+                                <div className={styles["mitm-v2-switch"]}>
+                                    <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
+                                    <Tooltip
+                                        overlayClassName='plugins-tooltip'
+                                        title='勾选以后会默认放行所有请求，劫持对应响应'
+                                        placement='top'
+                                    >
+                                        <span className={styles["mitm-v2-switch-label"]}>只看响应</span>
+                                    </Tooltip>
+                                </div>
                                 <YakitPopover
                                     overlayClassName={styles["mitm-v2-hijacked-manual-drop-down-popover"]}
                                     content={
@@ -810,6 +837,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             handleAutoForward={handleAutoForward}
                             setManualTableTotal={setManualTableTotal}
                             setManualTableSelectNumber={setManualTableSelectNumber}
+                            isOnlyLookResponse={isOnlyLookResponse}
                         />
                     ) : (
                         <>

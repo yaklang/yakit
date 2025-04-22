@@ -57,7 +57,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             autoForward,
             handleAutoForward,
             setManualTableTotal,
-            setManualTableSelectNumber
+            setManualTableSelectNumber,
+            isOnlyLookResponse
         } = props
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
@@ -119,6 +120,15 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                         return index === -1 ? [...preV, {...addItem}] : preV
                     })
                     addOrder()
+                    if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
+                        // 该状态下默认劫持响应为true时,自动发送劫持响应数据
+                        const params: MITMV2HijackedCurrentResponseRequest = {
+                            TaskID: item.TaskID,
+                            SendPacket: true,
+                            Request: item.Request
+                        }
+                        grpcMITMV2HijackedCurrentResponse(params)
+                    }
                     break
                 case ManualHijackListAction.Hijack_List_Delete:
                     removeLoading(item.TaskID)
@@ -182,10 +192,10 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             const getStatusStr = () => {
                 switch (rowData.Status) {
-                    case "hijacking request":
-                    case "wait hijack":
+                    case ManualHijackListStatus.Hijacking_Request:
+                    case ManualHijackListStatus.WaitHijack:
                         return "请求"
-                    case "hijacking response":
+                    case ManualHijackListStatus.Hijacking_Response:
                         return "响应"
                     default:
                         return ""
