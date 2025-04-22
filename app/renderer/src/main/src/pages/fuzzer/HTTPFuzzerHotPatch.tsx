@@ -694,7 +694,9 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                     trigger='hover'
                                     placement='right'
                                     overlayClassName={styles["hotCode-popover"]}
-                                    content={dropdown && <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />}
+                                    content={
+                                        dropdown && <YakitEditor type={"yak"} value={viewCurHotCode} readOnly={true} />
+                                    }
                                     onVisibleChange={(v) => {
                                         if (v) {
                                             onClickHotCodeName(item)
@@ -702,56 +704,67 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                                     }}
                                     zIndex={9999}
                                 >
-                                    <div
-                                        className={classNames(styles["hotCode-item-cont"])}
-                                        onClick={() => {
+                                    <YakitPopconfirm
+                                        title={"是否确认覆盖当前热加载代码"}
+                                        onConfirm={(e) => {
                                             onClickHotCodeName(item, true)
                                         }}
+                                        placement='right'
+                                        disabled={dropdown}
                                     >
                                         <div
-                                            className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
-                                            title={item.name}
+                                            className={classNames(styles["hotCode-item-cont"])}
+                                            onClick={() => {
+                                                if (dropdown) {
+                                                    onClickHotCodeName(item, true)
+                                                }
+                                            }}
                                         >
-                                            {item.name}
+                                            <div
+                                                className={classNames(styles["hotCode-item-name"], "content-ellipsis")}
+                                                title={item.name}
+                                            >
+                                                {item.name}
+                                            </div>
+                                            <div className={styles["extra-opt-btns"]}>
+                                                {/* 本地上传 */}
+                                                {tab === "local" && !item.isDefault && hasPermissions && (
+                                                    <YakitButton
+                                                        icon={<OutlineClouduploadIcon />}
+                                                        type='text2'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            uploadHotPatchTemplateToOnline(item)
+                                                        }}
+                                                    ></YakitButton>
+                                                )}
+                                                {/* 线上下载 */}
+                                                {tab === "online" && (
+                                                    <YakitButton
+                                                        icon={<OutlineClouddownloadIcon />}
+                                                        type='text2'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            downloadHotPatchTemplate(item)
+                                                        }}
+                                                    ></YakitButton>
+                                                )}
+                                                {/* 删除 */}
+                                                {(tab === "local" && !item.isDefault) ||
+                                                (tab === "online" && hasPermissions) ? (
+                                                    <YakitButton
+                                                        icon={<OutlineTrashIcon />}
+                                                        type='text'
+                                                        colors='danger'
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            deleteHotPatchTemplate(item)
+                                                        }}
+                                                    ></YakitButton>
+                                                ) : null}
+                                            </div>
                                         </div>
-                                        <div className={styles["extra-opt-btns"]}>
-                                            {/* 本地上传 */}
-                                            {tab === "local" && !item.isDefault && hasPermissions && (
-                                                <YakitButton
-                                                    icon={<OutlineClouduploadIcon />}
-                                                    type='text2'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        uploadHotPatchTemplateToOnline(item)
-                                                    }}
-                                                ></YakitButton>
-                                            )}
-                                            {/* 线上下载 */}
-                                            {tab === "online" && (
-                                                <YakitButton
-                                                    icon={<OutlineClouddownloadIcon />}
-                                                    type='text2'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        downloadHotPatchTemplate(item)
-                                                    }}
-                                                ></YakitButton>
-                                            )}
-                                            {/* 删除 */}
-                                            {(tab === "local" && !item.isDefault) ||
-                                            (tab === "online" && hasPermissions) ? (
-                                                <YakitButton
-                                                    icon={<OutlineTrashIcon />}
-                                                    type='text'
-                                                    colors='danger'
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        deleteHotPatchTemplate(item)
-                                                    }}
-                                                ></YakitButton>
-                                            ) : null}
-                                        </div>
-                                    </div>
+                                    </YakitPopconfirm>
                                 </YakitPopover>
                             </div>
                         ))}
@@ -778,9 +791,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                     <YakitButton type='text'>代码模板</YakitButton>
                 </Dropdown>
             ) : (
-                <div style={{width: 250}}>
-                    {overlayCont}
-                </div>
+                <div style={{width: 250}}>{overlayCont}</div>
             )}
             <YakitHint
                 visible={sameNameHint}
