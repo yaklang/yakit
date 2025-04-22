@@ -617,9 +617,8 @@ export const grpcMITMExecScriptContent: APIFunc<MITMExecScriptContentRequest, nu
     return new Promise((resolve, reject) => {
         const {version} = params
         const url = `mitm${version}-exec-script-content`
-        const value = omit(params, "version")
         ipcRenderer
-            .invoke(url, value)
+            .invoke(url, params.YakScriptContent)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMExecScriptContent 失败:" + e)
@@ -682,9 +681,8 @@ export const grpcMITMFilterWebsocket: APIFunc<MITMFilterWebsocketRequest, null> 
     return new Promise((resolve, reject) => {
         const {version} = params
         const url = `mitm${version}-filter-websocket`
-        const value = omit(params, "version")
         ipcRenderer
-            .invoke(url, value)
+            .invoke(url, params.filterWebsocket)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMFilterWebsocket 失败:" + e)
@@ -701,9 +699,8 @@ export const grpcMITMSetDownstreamProxy: APIFunc<MITMSetDownstreamProxyRequest, 
     return new Promise((resolve, reject) => {
         const {version} = params
         const url = `mitm${version}-set-downstream-proxy`
-        const value = omit(params, "version")
         ipcRenderer
-            .invoke(url, value)
+            .invoke(url, params.downstreamProxy)
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcMITMSetDownstreamProxy 失败:" + e)
