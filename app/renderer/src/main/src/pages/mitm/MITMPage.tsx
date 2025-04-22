@@ -20,7 +20,6 @@ import {useCreation, useDebounceEffect, useGetState, useInViewport, useLatest, u
 import {StatusCardProps} from "../yakitStore/viewers/base"
 import {enableMITMPluginMode, MITMServerHijacking} from "@/pages/mitm/MITMServerHijacking/MITMServerHijacking"
 import {Uint8ArrayToString} from "@/utils/str"
-import {MITMRule} from "./MITMRule/MITMRule"
 import {MITMContentReplacerRule} from "./MITMRule/MITMRuleType"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -68,6 +67,8 @@ import {
     grpcMITMStopCall
 } from "./MITMHacker/utils"
 import {KVPair} from "@/models/kv"
+const MITMRule = React.lazy(() => import("./MITMRule/MITMRule"))
+
 const {ipcRenderer} = window.require("electron")
 
 type idleTabKeys = "plugin"

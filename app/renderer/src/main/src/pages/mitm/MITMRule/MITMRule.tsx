@@ -137,545 +137,479 @@ export const colorSelectNode = (
     </>
 )
 
-export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) => {
-    const {menuBodyHeight} = useMenuHeight(
-        (s) => ({
-            menuBodyHeight: s.menuBodyHeight
-        }),
-        shallow
-    )
-    const {
-        ruleUse = "mitm",
-        visible,
-        setVisible = () => {},
-        getContainer,
-        status,
-        excludeColumnsKey = "",
-        excludeBatchMenuKey = "",
-        onSetRules,
-        onRefreshCom
-    } = props
-    const mitmContent = useContext(MITMContext)
+const MITMRule: React.FC<MITMRuleProp> = React.memo(
+    React.forwardRef((props, ref) => {
+        const {menuBodyHeight} = useMenuHeight(
+            (s) => ({
+                menuBodyHeight: s.menuBodyHeight
+            }),
+            shallow
+        )
+        const {
+            ruleUse = "mitm",
+            visible,
+            setVisible = () => {},
+            getContainer,
+            status,
+            excludeColumnsKey = "",
+            excludeBatchMenuKey = "",
+            onSetRules,
+            onRefreshCom,
+            inMouseEnterTable = false,
+        } = props
+        const mitmContent = useContext(MITMContext)
 
-    const mitmVersion = useCreation(() => {
-        return mitmContent.mitmStore.version
-    }, [mitmContent.mitmStore.version])
-    // 内容替代模块
-    const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
-    const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
+        const mitmVersion = useCreation(() => {
+            return mitmContent.mitmStore.version
+        }, [mitmContent.mitmStore.version])
+        // 内容替代模块
+        const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
+        const [originalRules, setOriginalRules] = useState<MITMContentReplacerRule[]>([])
 
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
-    const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
-    const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(false)
+        const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+        const [selectedRows, setSelectedRows] = useState<MITMContentReplacerRule[]>([])
+        const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
+        const [loading, setLoading] = useState<boolean>(false)
 
-    const [modalVisible, setModalVisible] = useState<boolean>(false)
+        const [modalVisible, setModalVisible] = useState<boolean>(false)
 
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
+        const [isRefresh, setIsRefresh] = useState<boolean>(false)
 
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-    const [isAllBan, setIsAllBan] = useState<boolean>(false)
-    const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
-    const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
-    const [currentIndex, setCurrentIndex] = useState<number>()
+        const [isEdit, setIsEdit] = useState<boolean>(false)
+        const [isAllBan, setIsAllBan] = useState<boolean>(false)
+        const [isNoReplace, setIsNoReplace] = useState<boolean>(false)
+        const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
+        const [currentIndex, setCurrentIndex] = useState<number>()
 
-    useImperativeHandle(
-        ref,
-        () => ({
-            onSaveToDataBase: onSaveToDataBase
-        }),
-        []
-    )
+        useImperativeHandle(
+            ref,
+            () => ({
+                onSaveToDataBase: onSaveToDataBase
+            }),
+            []
+        )
 
-    const heightDrawer = useMemo(() => {
-        return menuBodyHeight.firstTabMenuBodyHeight - 58
-    }, [menuBodyHeight.firstTabMenuBodyHeight])
+        const heightDrawer = useMemo(() => {
+            return menuBodyHeight.firstTabMenuBodyHeight - 58
+        }, [menuBodyHeight.firstTabMenuBodyHeight])
 
-    useEffect(() => {
-        ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-            const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
-            setOriginalRules(newRules)
-        })
-    }, [visible])
-    useEffect(() => {
-        onGetCurrentRules()
-    }, [visible])
-    useEffect(() => {
-        grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
-            const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
-            setRules(newRules)
-            setBanAndNoReplace(newRules)
-        })
-        return () => {
-            grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
-        }
-    }, [])
-    const onGetCurrentRules = useMemoizedFn(() => {
-        setLoading(true)
-        ipcRenderer
-            .invoke("GetCurrentRules", {})
-            .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+        useEffect(() => {
+            ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setOriginalRules(newRules)
+            })
+        }, [visible])
+        useEffect(() => {
+            onGetCurrentRules()
+        }, [visible])
+        useEffect(() => {
+            grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
+                const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
                 setRules(newRules)
                 setBanAndNoReplace(newRules)
-                setIsRefresh(!isRefresh)
             })
-            .finally(() => setTimeout(() => setLoading(false), 100))
-    })
-    const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
-        const listReplace = rules.filter((item) => item.NoReplace === false)
-        const listDisabled = rules.filter((item) => item.Disabled === false)
-        setIsNoReplace(listReplace.length === 0)
-        setIsAllBan(listDisabled.length === 0)
-    })
-
-    const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
-        const rows = selected.filter((ele) => !ele.Disabled)
-        setIsAllSelect(checked)
-        setSelectedRowKeys(rows.map((ele: any) => ele.Index))
-        setSelectedRows(rows)
-    }
-
-    const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
-        if (c) {
-            setSelectedRowKeys([...selectedRowKeys, keys])
-            setSelectedRows([...selectedRows, rows])
-        } else {
-            setIsAllSelect(false)
-            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
-            const newSelectedRows = selectedRows.filter((ele) => ele.Index !== rows.Index)
-            setSelectedRowKeys(newSelectedRowKeys)
-            setSelectedRows(newSelectedRows)
-        }
-    })
-    const onSetCurrentRow = useDebounceFn(
-        (rowDate: MITMContentReplacerRule) => {
-            setCurrentItem(rowDate)
-        },
-        {wait: 200}
-    ).run
-    const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-        setRules(rules.filter((t) => t.Id !== rowDate.Id))
-    })
-
-    const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
-        setModalVisible(true)
-        setIsEdit(true)
-        setCurrentItem(rowDate)
-    })
-    const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
-        const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
-            if (item.Id === rowDate.Id) {
-                if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {
-                    setCurrentItem(undefined)
-                }
-                item = {
-                    ...rowDate,
-                    Disabled: !rowDate.Disabled
-                }
+            return () => {
+                grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
             }
-            return item
-        })
-        setRules(newRules)
-    })
-
-    const rulesRangeList = useCreation(() => {
-        return [
-            {
-                label: "请求",
-                value: "EnableForRequest"
-            },
-            {
-                label: "响应",
-                value: "EnableForResponse"
-            },
-            {
-                label: "URI",
-                value: "EnableForURI"
-            },
-            {
-                label: "Header",
-                value: "EnableForHeader"
-            },
-            {
-                label: "Body",
-                value: "EnableForBody"
-            }
-        ]
-    }, [])
-
-    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        const columnArr: ColumnsTypeProps[] = [
-            {
-                title: "执行顺序",
-                dataKey: "Index",
-                fixed: "left",
-                width: 130
-            },
-            {
-                title: "规则名称",
-                dataKey: "VerboseName",
-                fixed: "left",
-                width: 150
-            },
-            {
-                title: "规则内容",
-                dataKey: "Rule",
-                width: 240
-            },
-            {
-                title: "替换结果",
-                dataKey: "NoReplace",
-                width: 350,
-                tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
-                beforeIconExtra: <div className={styles["table-result-extra"]}>开/关</div>,
-                render: (_, i: MITMContentReplacerRule) => (
-                    <YakitSwitchMemo
-                        ExtraCookies={i.ExtraCookies}
-                        ExtraHeaders={i.ExtraHeaders}
-                        Result={i.Result}
-                        disabled={i.Disabled}
-                        checked={!i.NoReplace}
-                        onChange={(val) => {
-                            onEdit({Id: i.Id, NoReplace: !val}, "NoReplace")
-                        }}
-                    />
-                )
-            },
-            {
-                title: "丢弃结果",
-                dataKey: "Drop",
-                width: 110,
-                tip: "设置开启替代之后，可丢弃当前请求/响应",
-                render: (_, i: MITMContentReplacerRule) => (
-                    <YakitProtoSwitch
-                        checked={i.Drop}
-                        disabled={i.Disabled}
-                        onChange={(val) => {
-                            if (val) {
-                                onEdit({Id: i.Id, Drop: val, NoReplace: false}, "Drop")
-                            } else {
-                                onEdit({Id: i.Id, Drop: val}, "Drop")
-                            }
-                        }}
-                    />
-                )
-            },
-            {
-                title: "自动重发",
-                dataKey: "ExtraRepeat",
-                width: 110,
-                tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
-                render: (_, i: MITMContentReplacerRule) => (
-                    <YakitProtoSwitch
-                        disabled={i.Disabled}
-                        checked={i.ExtraRepeat}
-                        onChange={(val) => {
-                            if (val) {
-                                onEdit({Id: i.Id, ExtraRepeat: val, NoReplace: false}, "ExtraRepeat")
-                            } else {
-                                onEdit({Id: i.Id, ExtraRepeat: val}, "ExtraRepeat")
-                            }
-                        }}
-                    />
-                )
-            },
-            {
-                title: "规则作用范围",
-                dataKey: "EnableForRequest",
-                tip: "选择请求或响应后，Header和Body至少选择一个",
-                width: 280,
-                render: (_, record: MITMContentReplacerRule) => {
-                    return (
-                        <div>
-                            {rulesRangeList.map((item) => (
-                                <YakitCheckableTag
-                                    key={item.value}
-                                    checked={record[item.value]}
-                                    onChange={(checked) => {
-                                        onEditRuleAction(checked, record, item)
-                                    }}
-                                    disable={record.Disabled}
-                                >
-                                    {item.label}
-                                </YakitCheckableTag>
-                            ))}
-                        </div>
-                    )
-                }
-            },
-            {
-                title: "生效url",
-                dataKey: "EffectiveURL",
-                width: 240
-            },
-            {
-                title: "命中颜色",
-                dataKey: "Color",
-                ellipsis: false,
-                width: 85,
-                render: (text, record: MITMContentReplacerRule) => (
-                    <div className={classNames(styles["table-hit-color-content"])}>
-                        <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
-                        {HitColor[text]?.title || "-"}
-                    </div>
-                )
-            },
-            {
-                title: "追加 Tag",
-                dataKey: "ExtraTag",
-                minWidth: 120
-            },
-            {
-                title: "操作",
-                dataKey: "action",
-                fixed: "right",
-                width: 128,
-                render: (_, record: MITMContentReplacerRule) => {
-                    return (
-                        <div className={styles["table-action-icon"]}>
-                            <TrashIcon
-                                className={styles["icon-trash"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onRemove(record)
-                                }}
-                            />
-                            <PencilAltIcon
-                                className={classNames(styles["action-icon"], {
-                                    [styles["action-icon-edit-disabled"]]: record.Disabled
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onOpenAddOrEdit(record)
-                                }}
-                            />
-                            <BanIcon
-                                className={classNames(styles["action-icon"], {
-                                    [styles["action-icon-ban-disabled"]]: record.Disabled
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onBan(record)
-                                }}
-                            />
-                        </div>
-                    )
-                }
-            }
-        ]
-
-        try {
-            const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
-            return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
-        } catch (error) {
-            return columnArr
-        }
-
-    }, [excludeColumnsKey])
-
-    const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
-        record[item.value] = checked
-        const first = item.value === "EnableForRequest" || item.value === "EnableForResponse"
-        const firstChecked = record["EnableForRequest"] || record["EnableForResponse"]
-        const second =
-            item.value === "EnableForHeader" || item.value === "EnableForBody" || item.value === "EnableForURI"
-        const secondChecked = record["EnableForHeader"] || record["EnableForBody"] || record["EnableForURI"]
-        // 请求和响应其中一个为true,那么 Header和Body必须要选中一个
-        // 请求和响应都为false,那么 Header和Body都为 false
-        if (first) {
-            if (firstChecked) {
-                if (!secondChecked) {
-                    record["EnableForHeader"] = true
-                    record["EnableForBody"] = true
-                    record["EnableForURI"] = true
-                }
-            } else {
-                record["EnableForHeader"] = false
-                record["EnableForBody"] = false
-                record["EnableForURI"] = false
-            }
-        }
-        if (second) {
-            if (secondChecked) {
-                if (!firstChecked) {
-                    record["EnableForRequest"] = true
-                    record["EnableForResponse"] = true
-                }
-            } else {
-                record["EnableForRequest"] = false
-                record["EnableForResponse"] = false
-            }
-        }
-        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (item.Id === record.Id) {
-                item = record
-            }
-            return {...item}
-        })
-        setRules(newRules)
-    })
-
-    const onEdit = useMemoizedFn((record, text: string) => {
-        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (item.Id === record.Id) {
-                item[text] = record[text]
-            }
-            return {...item}
-        })
-        setRules(newRules)
-    })
-    const onMenuSelect = useMemoizedFn((key: string) => {
-        switch (key) {
-            case "ban":
-                onBatchNoReplaceOrBan(true, "Disabled")
-                break
-            case "replace":
-                onBatchNoReplaceOrBan(false, "NoReplace")
-                break
-            case "no-replace":
-                onBatchNoReplaceOrBan(true, "NoReplace")
-                break
-            case "remove":
-                onBatchRemove()
-                break
-            default:
-                break
-        }
-    })
-    const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
-        if (b) {
-            const index = rules.length + 1
-            const defRowDate: MITMContentReplacerRule = {
-                EffectiveURL: "",
-                Color: "",
-                EnableForRequest: false,
-                EnableForResponse: true,
-                EnableForBody: true,
-                EnableForHeader: true,
-                EnableForURI: false,
-                Index: index,
-                Drop: false,
-                ExtraRepeat: false,
-                Id: index,
-                NoReplace: false,
-                Result: "",
-                Rule: "",
-                RegexpGroups: [],
-                ExtraTag: [],
-                Disabled: false,
-                VerboseName: "RULE:" + randomString(10),
-                ExtraCookies: [],
-                ExtraHeaders: []
-            }
-            setCurrentItem(defRowDate)
-        } else {
-            setIsEdit(false)
-        }
-        setModalVisible(b)
-    })
-
-    const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
-        const obj = {...val}
-        if (ruleUse === "historyAnalysis") {
-            obj.NoReplace = true
-            obj.Result = ""
-            obj.ExtraHeaders = []
-            obj.ExtraCookies = []
-            obj.Drop = false
-            obj.ExtraRepeat = false
-        }
-        if (isEdit) {
-            const index = rules.findIndex((item) => item.Id === val.Id)
-            if (index === -1) return
-            rules[index] = obj
-            setRules([...rules])
-        } else {
-            const newRules = [obj, ...rules].sort((a, b) => a.Index - b.Index)
-            setRules(newRules)
-            setCurrentIndex(newRules.length - 1)
-        }
-        onOpenOrCloseModal(false)
-    })
-    const onRefreshCurrentRules = () => {
-        if (ruleUse === "mitm") {
-            emiter.emit("onRefreshCurrentRules")
-        }
-    }
-    const onSaveToDataBase = useMemoizedFn((saveOk?: () => void) => {
-        const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
-        if (status === "idle") {
-            // 劫持未开启
+        }, [])
+        const onGetCurrentRules = useMemoizedFn(() => {
+            setLoading(true)
             ipcRenderer
-                .invoke("SetCurrentRules", {Rules: newRules})
-                .then((e) => {
-                    setVisible(false)
-                    if (saveOk) {
-                        saveOk()
-                    } else {
-                        success("保存成功")
-                    }
-                    onRefreshCurrentRules()
+                .invoke("GetCurrentRules", {})
+                .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                    const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                    setRules(newRules)
+                    setBanAndNoReplace(newRules)
+                    setIsRefresh(!isRefresh)
                 })
-                .catch((e) => {
-                    failed(`保存失败: ${e}`)
-                })
-        } else {
-            // 开启劫持
-            const findOpenRepRule = newRules.find(
-                (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
-            )
-            if (ruleUse === "mitm" && findOpenRepRule !== undefined) {
-                Modal.confirm({
-                    title: "温馨提示",
-                    icon: <ExclamationCircleOutlined />,
-                    content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
-                    okText: "确认",
-                    cancelText: "取消",
-                    closable: true,
-                    centered: true,
-                    closeIcon: (
-                        <div
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                Modal.destroyAll()
-                            }}
-                            className='modal-remove-icon'
-                        >
-                            <RemoveIcon />
-                        </div>
-                    ),
-                    cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                    okButtonProps: {size: "small", className: "modal-ok-button"},
-                    onOk: () => {
-                        const value: MITMContentReplacersRequest = {
-                            replacers: newRules,
-                            version: mitmVersion
-                        }
-                        grpcMITMContentReplacers(value)
-                            .then((val) => {
-                                emiter.emit("onRefreshRuleEvent", mitmVersion)
-                                setVisible(false)
-                                if (saveOk) {
-                                    saveOk()
-                                } else {
-                                    success("保存成功")
-                                }
-                                onRefreshCurrentRules()
-                            })
-                            .catch((e) => {
-                                failed(`保存失败: ${e}`)
-                            })
-                    }
-                })
+                .finally(() => setTimeout(() => setLoading(false), 100))
+        })
+        const setBanAndNoReplace = useMemoizedFn((rules: MITMContentReplacerRule[]) => {
+            const listReplace = rules.filter((item) => item.NoReplace === false)
+            const listDisabled = rules.filter((item) => item.Disabled === false)
+            setIsNoReplace(listReplace.length === 0)
+            setIsAllBan(listDisabled.length === 0)
+        })
+
+        const onSelectAll = (newSelectedRowKeys: string[], selected: MITMContentReplacerRule[], checked: boolean) => {
+            const rows = selected.filter((ele) => !ele.Disabled)
+            setIsAllSelect(checked)
+            setSelectedRowKeys(rows.map((ele: any) => ele.Index))
+            setSelectedRows(rows)
+        }
+
+        const onSelectChange = useMemoizedFn((c: boolean, keys: string, rows: MITMContentReplacerRule) => {
+            if (c) {
+                setSelectedRowKeys([...selectedRowKeys, keys])
+                setSelectedRows([...selectedRows, rows])
             } else {
-                const value: MITMContentReplacersRequest = {
-                    replacers: newRules,
-                    version: mitmVersion
+                setIsAllSelect(false)
+                const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== keys)
+                const newSelectedRows = selectedRows.filter((ele) => ele.Index !== rows.Index)
+                setSelectedRowKeys(newSelectedRowKeys)
+                setSelectedRows(newSelectedRows)
+            }
+        })
+        const onSetCurrentRow = useDebounceFn(
+            (rowDate: MITMContentReplacerRule) => {
+                setCurrentItem(rowDate)
+            },
+            {wait: 200}
+        ).run
+        const onRemove = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
+            setRules(rules.filter((t) => t.Id !== rowDate.Id))
+        })
+
+        const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
+            setModalVisible(true)
+            setIsEdit(true)
+            setCurrentItem(rowDate)
+        })
+        const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
+            const newRules: MITMContentReplacerRule[] = rules.map((item: MITMContentReplacerRule) => {
+                if (item.Id === rowDate.Id) {
+                    if (!rowDate.Disabled && rowDate.Id === currentItem?.Id) {
+                        setCurrentItem(undefined)
+                    }
+                    item = {
+                        ...rowDate,
+                        Disabled: !rowDate.Disabled
+                    }
                 }
-                grpcMITMContentReplacers(value)
-                    .then((val) => {
-                        emiter.emit("onRefreshRuleEvent", mitmVersion)
+                return item
+            })
+            setRules(newRules)
+        })
+
+        const rulesRangeList = useCreation(() => {
+            return [
+                {
+                    label: "请求",
+                    value: "EnableForRequest"
+                },
+                {
+                    label: "响应",
+                    value: "EnableForResponse"
+                },
+                {
+                    label: "URI",
+                    value: "EnableForURI"
+                },
+                {
+                    label: "Header",
+                    value: "EnableForHeader"
+                },
+                {
+                    label: "Body",
+                    value: "EnableForBody"
+                }
+            ]
+        }, [])
+
+        const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+            const columnArr: ColumnsTypeProps[] = [
+                {
+                    title: "执行顺序",
+                    dataKey: "Index",
+                    fixed: "left",
+                    width: 130
+                },
+                {
+                    title: "规则名称",
+                    dataKey: "VerboseName",
+                    fixed: "left",
+                    width: 150
+                },
+                {
+                    title: "规则内容",
+                    dataKey: "Rule",
+                    width: 240
+                },
+                {
+                    title: "替换结果",
+                    dataKey: "NoReplace",
+                    width: 350,
+                    tip: "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
+                    beforeIconExtra: <div className={styles["table-result-extra"]}>开/关</div>,
+                    render: (_, i: MITMContentReplacerRule) => (
+                        <YakitSwitchMemo
+                            ExtraCookies={i.ExtraCookies}
+                            ExtraHeaders={i.ExtraHeaders}
+                            Result={i.Result}
+                            disabled={i.Disabled}
+                            checked={!i.NoReplace}
+                            onChange={(val) => {
+                                onEdit({Id: i.Id, NoReplace: !val}, "NoReplace")
+                            }}
+                        />
+                    )
+                },
+                {
+                    title: "丢弃结果",
+                    dataKey: "Drop",
+                    width: 110,
+                    tip: "设置开启替代之后，可丢弃当前请求/响应",
+                    render: (_, i: MITMContentReplacerRule) => (
+                        <YakitProtoSwitch
+                            checked={i.Drop}
+                            disabled={i.Disabled}
+                            onChange={(val) => {
+                                if (val) {
+                                    onEdit({Id: i.Id, Drop: val, NoReplace: false}, "Drop")
+                                } else {
+                                    onEdit({Id: i.Id, Drop: val}, "Drop")
+                                }
+                            }}
+                        />
+                    )
+                },
+                {
+                    title: "自动重发",
+                    dataKey: "ExtraRepeat",
+                    width: 110,
+                    tip: "设置改选项后，将不会替换（请求）数据包，会把替换后的结果进行额外发包",
+                    render: (_, i: MITMContentReplacerRule) => (
+                        <YakitProtoSwitch
+                            disabled={i.Disabled}
+                            checked={i.ExtraRepeat}
+                            onChange={(val) => {
+                                if (val) {
+                                    onEdit({Id: i.Id, ExtraRepeat: val, NoReplace: false}, "ExtraRepeat")
+                                } else {
+                                    onEdit({Id: i.Id, ExtraRepeat: val}, "ExtraRepeat")
+                                }
+                            }}
+                        />
+                    )
+                },
+                {
+                    title: "规则作用范围",
+                    dataKey: "EnableForRequest",
+                    tip: "选择请求或响应后，Header和Body至少选择一个",
+                    width: 280,
+                    render: (_, record: MITMContentReplacerRule) => {
+                        return (
+                            <div>
+                                {rulesRangeList.map((item) => (
+                                    <YakitCheckableTag
+                                        key={item.value}
+                                        checked={record[item.value]}
+                                        onChange={(checked) => {
+                                            onEditRuleAction(checked, record, item)
+                                        }}
+                                        disable={record.Disabled}
+                                    >
+                                        {item.label}
+                                    </YakitCheckableTag>
+                                ))}
+                            </div>
+                        )
+                    }
+                },
+                {
+                    title: "生效url",
+                    dataKey: "EffectiveURL",
+                    width: 240
+                },
+                {
+                    title: "命中颜色",
+                    dataKey: "Color",
+                    ellipsis: false,
+                    width: 85,
+                    render: (text, record: MITMContentReplacerRule) => (
+                        <div className={classNames(styles["table-hit-color-content"])}>
+                            <div className={classNames(styles["table-hit-color"], HitColor[text]?.className)} />
+                            {HitColor[text]?.title || "-"}
+                        </div>
+                    )
+                },
+                {
+                    title: "追加 Tag",
+                    dataKey: "ExtraTag",
+                    minWidth: 120
+                },
+                {
+                    title: "操作",
+                    dataKey: "action",
+                    fixed: "right",
+                    width: 128,
+                    render: (_, record: MITMContentReplacerRule) => {
+                        return (
+                            <div className={styles["table-action-icon"]}>
+                                <TrashIcon
+                                    className={styles["icon-trash"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onRemove(record)
+                                    }}
+                                />
+                                <PencilAltIcon
+                                    className={classNames(styles["action-icon"], {
+                                        [styles["action-icon-edit-disabled"]]: record.Disabled
+                                    })}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onOpenAddOrEdit(record)
+                                    }}
+                                />
+                                <BanIcon
+                                    className={classNames(styles["action-icon"], {
+                                        [styles["action-icon-ban-disabled"]]: record.Disabled
+                                    })}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onBan(record)
+                                    }}
+                                />
+                            </div>
+                        )
+                    }
+                }
+            ]
+
+            try {
+                const excludeColumnsKeyArr = JSON.parse(excludeColumnsKey) || []
+                return columnArr.filter((ele) => !excludeColumnsKeyArr.includes(ele.dataKey))
+            } catch (error) {
+                return columnArr
+            }
+        }, [excludeColumnsKey])
+
+        const onEditRuleAction = useMemoizedFn((checked: boolean, record: MITMContentReplacerRule, item) => {
+            record[item.value] = checked
+            const first = item.value === "EnableForRequest" || item.value === "EnableForResponse"
+            const firstChecked = record["EnableForRequest"] || record["EnableForResponse"]
+            const second =
+                item.value === "EnableForHeader" || item.value === "EnableForBody" || item.value === "EnableForURI"
+            const secondChecked = record["EnableForHeader"] || record["EnableForBody"] || record["EnableForURI"]
+            // 请求和响应其中一个为true,那么 Header和Body必须要选中一个
+            // 请求和响应都为false,那么 Header和Body都为 false
+            if (first) {
+                if (firstChecked) {
+                    if (!secondChecked) {
+                        record["EnableForHeader"] = true
+                        record["EnableForBody"] = true
+                        record["EnableForURI"] = true
+                    }
+                } else {
+                    record["EnableForHeader"] = false
+                    record["EnableForBody"] = false
+                    record["EnableForURI"] = false
+                }
+            }
+            if (second) {
+                if (secondChecked) {
+                    if (!firstChecked) {
+                        record["EnableForRequest"] = true
+                        record["EnableForResponse"] = true
+                    }
+                } else {
+                    record["EnableForRequest"] = false
+                    record["EnableForResponse"] = false
+                }
+            }
+            const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+                if (item.Id === record.Id) {
+                    item = record
+                }
+                return {...item}
+            })
+            setRules(newRules)
+        })
+
+        const onEdit = useMemoizedFn((record, text: string) => {
+            const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+                if (item.Id === record.Id) {
+                    item[text] = record[text]
+                }
+                return {...item}
+            })
+            setRules(newRules)
+        })
+        const onMenuSelect = useMemoizedFn((key: string) => {
+            switch (key) {
+                case "ban":
+                    onBatchNoReplaceOrBan(true, "Disabled")
+                    break
+                case "replace":
+                    onBatchNoReplaceOrBan(false, "NoReplace")
+                    break
+                case "no-replace":
+                    onBatchNoReplaceOrBan(true, "NoReplace")
+                    break
+                case "remove":
+                    onBatchRemove()
+                    break
+                default:
+                    break
+            }
+        })
+        const onOpenOrCloseModal = useMemoizedFn((b: boolean) => {
+            if (b) {
+                const index = rules.length + 1
+                const defRowDate: MITMContentReplacerRule = {
+                    EffectiveURL: "",
+                    Color: "",
+                    EnableForRequest: false,
+                    EnableForResponse: true,
+                    EnableForBody: true,
+                    EnableForHeader: true,
+                    EnableForURI: false,
+                    Index: index,
+                    Drop: false,
+                    ExtraRepeat: false,
+                    Id: index,
+                    NoReplace: false,
+                    Result: "",
+                    Rule: "",
+                    RegexpGroups: [],
+                    ExtraTag: [],
+                    Disabled: false,
+                    VerboseName: "RULE:" + randomString(10),
+                    ExtraCookies: [],
+                    ExtraHeaders: []
+                }
+                setCurrentItem(defRowDate)
+            } else {
+                setIsEdit(false)
+            }
+            setModalVisible(b)
+        })
+
+        const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
+            const obj = {...val}
+            if (ruleUse === "historyAnalysis") {
+                obj.NoReplace = true
+                obj.Result = ""
+                obj.ExtraHeaders = []
+                obj.ExtraCookies = []
+                obj.Drop = false
+                obj.ExtraRepeat = false
+            }
+            if (isEdit) {
+                const index = rules.findIndex((item) => item.Id === val.Id)
+                if (index === -1) return
+                rules[index] = obj
+                setRules([...rules])
+            } else {
+                const newRules = [obj, ...rules].sort((a, b) => a.Index - b.Index)
+                setRules(newRules)
+                setCurrentIndex(newRules.length - 1)
+            }
+            onOpenOrCloseModal(false)
+        })
+        const onRefreshCurrentRules = () => {
+            if (ruleUse === "mitm") {
+                emiter.emit("onRefreshCurrentRules")
+            }
+        }
+        const onSaveToDataBase = useMemoizedFn((saveOk?: () => void) => {
+            const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
+            if (status === "idle") {
+                // 劫持未开启
+                ipcRenderer
+                    .invoke("SetCurrentRules", {Rules: newRules})
+                    .then((e) => {
                         setVisible(false)
                         if (saveOk) {
                             saveOk()
@@ -687,297 +621,367 @@ export const MITMRule: React.FC<MITMRuleProp> = React.forwardRef((props, ref) =>
                     .catch((e) => {
                         failed(`保存失败: ${e}`)
                     })
-            }
-        }
-    })
-    useEffect(() => {
-        onSetRules && onSetRules(rules.map((item, index) => ({...item, Index: index + 1})))
-    }, [rules])
-
-    const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
-        if (selectedRowKeys.length === 0) return
-        setLoading(true)
-        const newRules: MITMContentReplacerRule[] = rules.map((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) !== -1) {
-                item[text] = checked
-            }
-            return item
-        })
-        setRules([...newRules])
-        setSelectedRowKeys([])
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-
-    const onBatchRemove = useMemoizedFn(() => {
-        if (selectedRowKeys.length === 0) return
-        setLoading(true)
-        const newRules: MITMContentReplacerRule[] = []
-        rules.forEach((item) => {
-            if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) === -1) {
-                newRules.push(item)
-            }
-        })
-        setRules([...newRules])
-        setSelectedRowKeys([])
-        setIsAllSelect(false)
-        setIsRefresh(!isRefresh)
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-
-    const onAllBan = useMemoizedFn((checked: boolean) => {
-        setIsAllBan(checked)
-        setLoading(true)
-        const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
-        setRules(newRules)
-        setSelectedRowKeys([])
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-    const onAllNoReplace = useMemoizedFn((checked: boolean) => {
-        setIsNoReplace(checked)
-        setLoading(true)
-        const newRules: MITMContentReplacerRule[] = []
-        rules.forEach((item) => {
-            if (item.Disabled) {
-                newRules.push(item)
             } else {
-                newRules.push({...item, NoReplace: checked})
+                // 开启劫持
+                const findOpenRepRule = newRules.find(
+                    (item) => !item.Disabled && (!item.NoReplace || item.Drop || item.ExtraRepeat)
+                )
+                if (ruleUse === "mitm" && findOpenRepRule !== undefined) {
+                    Modal.confirm({
+                        title: "温馨提示",
+                        icon: <ExclamationCircleOutlined />,
+                        content: "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
+                        okText: "确认",
+                        cancelText: "取消",
+                        closable: true,
+                        centered: true,
+                        closeIcon: (
+                            <div
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    Modal.destroyAll()
+                                }}
+                                className='modal-remove-icon'
+                            >
+                                <RemoveIcon />
+                            </div>
+                        ),
+                        cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                        okButtonProps: {size: "small", className: "modal-ok-button"},
+                        onOk: () => {
+                            const value: MITMContentReplacersRequest = {
+                                replacers: newRules,
+                                version: mitmVersion
+                            }
+                            grpcMITMContentReplacers(value)
+                                .then((val) => {
+                                    emiter.emit("onRefreshRuleEvent", mitmVersion)
+                                    setVisible(false)
+                                    if (saveOk) {
+                                        saveOk()
+                                    } else {
+                                        success("保存成功")
+                                    }
+                                    onRefreshCurrentRules()
+                                })
+                                .catch((e) => {
+                                    failed(`保存失败: ${e}`)
+                                })
+                        }
+                    })
+                } else {
+                    const value: MITMContentReplacersRequest = {
+                        replacers: newRules,
+                        version: mitmVersion
+                    }
+                    grpcMITMContentReplacers(value)
+                        .then((val) => {
+                            emiter.emit("onRefreshRuleEvent", mitmVersion)
+                            setVisible(false)
+                            if (saveOk) {
+                                saveOk()
+                            } else {
+                                success("保存成功")
+                            }
+                            onRefreshCurrentRules()
+                        })
+                        .catch((e) => {
+                            failed(`保存失败: ${e}`)
+                        })
+                }
             }
         })
-        setRules(newRules)
-        setSelectedRowKeys([])
-        setTimeout(() => {
-            setLoading(false)
-        }, 200)
-    })
-    const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
-        setRules((prevRules: MITMContentReplacerRule[]) =>
-            update(prevRules, {
-                $splice: [
-                    [dragIndex, 1],
-                    [hoverIndex, 0, prevRules[dragIndex]]
-                ]
+        useEffect(() => {
+            onSetRules && onSetRules(rules.map((item, index) => ({...item, Index: index + 1})))
+        }, [rules])
+
+        const onBatchNoReplaceOrBan = useMemoizedFn((checked: boolean, text: string) => {
+            if (selectedRowKeys.length === 0) return
+            setLoading(true)
+            const newRules: MITMContentReplacerRule[] = rules.map((item) => {
+                if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) !== -1) {
+                    item[text] = checked
+                }
+                return item
             })
-        )
-    })
-    const onMoveRowEnd = useMemoizedFn(() => {
-        setRules((prevRules: MITMContentReplacerRule[]) => {
-            const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
-            return [...newRules]
+            setRules([...newRules])
+            setSelectedRowKeys([])
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
         })
-    })
 
-    const onOkImport = useMemoizedFn(() => {
-        onGetCurrentRules()
-    })
-
-    const onClose = useMemoizedFn(() => {
-        if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
-            Modal.confirm({
-                title: "温馨提示",
-                icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存规则内容并关闭弹框？",
-                okText: "保存",
-                cancelText: "不保存",
-                closable: true,
-                closeIcon: (
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            Modal.destroyAll()
-                        }}
-                        className='modal-remove-icon'
-                    >
-                        <RemoveIcon />
-                    </div>
-                ),
-                onOk: () => {
-                    onSaveToDataBase()
-                },
-                onCancel: () => {
-                    setVisible(false)
-                },
-                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                okButtonProps: {size: "small", className: "modal-ok-button"}
+        const onBatchRemove = useMemoizedFn(() => {
+            if (selectedRowKeys.length === 0) return
+            setLoading(true)
+            const newRules: MITMContentReplacerRule[] = []
+            rules.forEach((item) => {
+                if (selectedRowKeys.findIndex((ele) => ele == `${item.Id}`) === -1) {
+                    newRules.push(item)
+                }
             })
-        } else {
-            setVisible(false)
-        }
-    })
+            setRules([...newRules])
+            setSelectedRowKeys([])
+            setIsAllSelect(false)
+            setIsRefresh(!isRefresh)
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
 
-    const title = () => {
-        return <div className={styles["heard-title"]}>内容规则配置</div>
-    }
-    const extra = () => {
-        return (
-            <div className={styles["heard-right-operation"]}>
-                <RuleExportAndImportButton onOkImport={onOkImport} />
-                <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveToDataBase()}>
-                    保存
-                </YakitButton>
-                {ruleUse === "mitm" && (
-                    <>
-                        <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
-                            <YakitButton
-                                type='outline2'
-                                className={styles["button-question"]}
-                                onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
-                                icon={<QuestionMarkCircleIcon />}
-                            ></YakitButton>
-                        </Tooltip>
-                        <div onClick={() => onClose()} className={styles["icon-remove"]}>
+        const onAllBan = useMemoizedFn((checked: boolean) => {
+            setIsAllBan(checked)
+            setLoading(true)
+            const newRules: MITMContentReplacerRule[] = rules.map((item) => ({...item, Disabled: checked}))
+            setRules(newRules)
+            setSelectedRowKeys([])
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
+        const onAllNoReplace = useMemoizedFn((checked: boolean) => {
+            setIsNoReplace(checked)
+            setLoading(true)
+            const newRules: MITMContentReplacerRule[] = []
+            rules.forEach((item) => {
+                if (item.Disabled) {
+                    newRules.push(item)
+                } else {
+                    newRules.push({...item, NoReplace: checked})
+                }
+            })
+            setRules(newRules)
+            setSelectedRowKeys([])
+            setTimeout(() => {
+                setLoading(false)
+            }, 200)
+        })
+        const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
+            setRules((prevRules: MITMContentReplacerRule[]) =>
+                update(prevRules, {
+                    $splice: [
+                        [dragIndex, 1],
+                        [hoverIndex, 0, prevRules[dragIndex]]
+                    ]
+                })
+            )
+        })
+        const onMoveRowEnd = useMemoizedFn(() => {
+            setRules((prevRules: MITMContentReplacerRule[]) => {
+                const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
+                return [...newRules]
+            })
+        })
+
+        const onOkImport = useMemoizedFn(() => {
+            onGetCurrentRules()
+        })
+
+        const onClose = useMemoizedFn(() => {
+            if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
+                Modal.confirm({
+                    title: "温馨提示",
+                    icon: <ExclamationCircleOutlined />,
+                    content: "请问是否要保存规则内容并关闭弹框？",
+                    okText: "保存",
+                    cancelText: "不保存",
+                    closable: true,
+                    closeIcon: (
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                Modal.destroyAll()
+                            }}
+                            className='modal-remove-icon'
+                        >
                             <RemoveIcon />
                         </div>
-                    </>
-                )}
-            </div>
-        )
-    }
-    const content = () => {
-        return (
-            <div className={styles["mitm-rule-table"]}>
-                <TableVirtualResize<MITMContentReplacerRule>
-                    currentIndex={currentIndex}
-                    isRefresh={isRefresh}
-                    titleHeight={42}
-                    title={
-                        <div className={styles["table-title-body"]}>
-                            <div className={styles["table-title"]}>现有 MITM 内容规则</div>
-                            <div className={styles["table-total"]}>
-                                共 <span>{rules.length}</span> 条规则
-                            </div>
-                        </div>
-                    }
-                    extra={
-                        <div className={styles["table-title-body"]}>
-                            <div className={styles["table-switch"]}>
-                                <span className={styles["switch-text"]}>全部禁用</span>
-                                <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
-                            </div>
-                            {ruleUse === "mitm" && (
-                                <>
-                                    <Divider type='vertical' style={{margin: "0 16px"}} />
-                                    <div className={styles["table-switch"]}>
-                                        <span className={styles["switch-text"]}>全部不替换</span>
-                                        <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
-                                    </div>
-                                </>
-                            )}
-                            <YakitPopover
-                                placement={"bottom"}
-                                arrowPointAtCenter={true}
-                                content={
-                                    <YakitMenu
-                                        data={batchMenuData(excludeBatchMenuKey)}
-                                        selectedKeys={[]}
-                                        width={92}
-                                        onSelect={({key}) => onMenuSelect(key)}
-                                    />
-                                }
-                                trigger='hover'
-                                overlayClassName={classNames(styles["popover-remove"])}
-                            >
+                    ),
+                    onOk: () => {
+                        onSaveToDataBase()
+                    },
+                    onCancel: () => {
+                        setVisible(false)
+                    },
+                    cancelButtonProps: {size: "small", className: "modal-cancel-button"},
+                    okButtonProps: {size: "small", className: "modal-ok-button"}
+                })
+            } else {
+                setVisible(false)
+            }
+        })
+
+        const title = () => {
+            return <div className={styles["heard-title"]}>内容规则配置</div>
+        }
+        const extra = () => {
+            return (
+                <div className={styles["heard-right-operation"]}>
+                    <RuleExportAndImportButton onOkImport={onOkImport} />
+                    <YakitButton type='primary' className={styles["button-save"]} onClick={() => onSaveToDataBase()}>
+                        保存
+                    </YakitButton>
+                    {ruleUse === "mitm" && (
+                        <>
+                            <Tooltip title='官方网站' placement='top' overlayClassName={styles["question-tooltip"]}>
                                 <YakitButton
                                     type='outline2'
-                                    disabled={selectedRowKeys.length === 0}
-                                    className={classNames(styles["button-batch-remove"])}
-                                >
-                                    批量操作
-                                    <ChevronDownIcon />
-                                </YakitButton>
-                            </YakitPopover>
-                            <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
-                                <div className={styles["button-add-rule"]}>
-                                    <PlusIcon />
-                                    新增规则
+                                    className={styles["button-question"]}
+                                    onClick={() => openExternalWebsite(WebsiteGV.OfficialWebsite)}
+                                    icon={<QuestionMarkCircleIcon />}
+                                ></YakitButton>
+                            </Tooltip>
+                            <div onClick={() => onClose()} className={styles["icon-remove"]}>
+                                <RemoveIcon />
+                            </div>
+                        </>
+                    )}
+                </div>
+            )
+        }
+        const content = () => {
+            return (
+                <div className={styles["mitm-rule-table"]}>
+                    <TableVirtualResize<MITMContentReplacerRule>
+                        currentIndex={currentIndex}
+                        isRefresh={isRefresh}
+                        titleHeight={42}
+                        title={
+                            <div className={styles["table-title-body"]}>
+                                <div className={styles["table-title"]}>现有 MITM 内容规则</div>
+                                <div className={styles["table-total"]}>
+                                    共 <span>{rules.length}</span> 条规则
                                 </div>
-                            </YakitButton>
-                            {ruleUse === "historyAnalysis" && (
-                                <YakitButton
-                                    style={{marginLeft: 8}}
-                                    type='text2'
-                                    icon={<RefreshIcon />}
-                                    onClick={() => {
-                                        onRefreshCom && onRefreshCom()
-                                    }}
-                                />
-                            )}
-                        </div>
-                    }
-                    renderKey='Id'
-                    data={rules}
-                    rowSelection={{
-                        isAll: isAllSelect,
-                        type: "checkbox",
-                        selectedRowKeys,
-                        onSelectAll: onSelectAll,
-                        onChangeCheckboxSingle: onSelectChange
-                    }}
-                    pagination={{
-                        total: rules.length,
-                        limit: 20,
-                        page: 1,
-                        onChange: () => {}
-                    }}
-                    loading={loading}
-                    columns={columns}
-                    currentSelectItem={currentItem}
-                    onRowClick={onSetCurrentRow}
-                    onMoveRow={onMoveRow}
-                    enableDragSort={true}
-                    enableDrag={true}
-                    onMoveRowEnd={onMoveRowEnd}
-                />
-            </div>
-        )
-    }
+                            </div>
+                        }
+                        extra={
+                            <div className={styles["table-title-body"]}>
+                                <div className={styles["table-switch"]}>
+                                    <span className={styles["switch-text"]}>全部禁用</span>
+                                    <YakitSwitch checked={isAllBan} onChange={(c) => onAllBan(c)} />
+                                </div>
+                                {ruleUse === "mitm" && (
+                                    <>
+                                        <Divider type='vertical' style={{margin: "0 16px"}} />
+                                        <div className={styles["table-switch"]}>
+                                            <span className={styles["switch-text"]}>全部不替换</span>
+                                            <YakitSwitch checked={isNoReplace} onChange={(c) => onAllNoReplace(c)} />
+                                        </div>
+                                    </>
+                                )}
+                                <YakitPopover
+                                    placement={"bottom"}
+                                    arrowPointAtCenter={true}
+                                    content={
+                                        <YakitMenu
+                                            data={batchMenuData(excludeBatchMenuKey)}
+                                            selectedKeys={[]}
+                                            width={92}
+                                            onSelect={({key}) => onMenuSelect(key)}
+                                        />
+                                    }
+                                    trigger='hover'
+                                    overlayClassName={classNames(styles["popover-remove"])}
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={selectedRowKeys.length === 0}
+                                        className={classNames(styles["button-batch-remove"])}
+                                    >
+                                        批量操作
+                                        <ChevronDownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
+                                <YakitButton type='primary' onClick={() => onOpenOrCloseModal(true)}>
+                                    <div className={styles["button-add-rule"]}>
+                                        <PlusIcon />
+                                        新增规则
+                                    </div>
+                                </YakitButton>
+                                {ruleUse === "historyAnalysis" && (
+                                    <YakitButton
+                                        style={{marginLeft: 8}}
+                                        type='text2'
+                                        icon={<RefreshIcon />}
+                                        onClick={() => {
+                                            onRefreshCom && onRefreshCom()
+                                        }}
+                                    />
+                                )}
+                            </div>
+                        }
+                        renderKey='Id'
+                        data={rules}
+                        rowSelection={{
+                            isAll: isAllSelect,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll: onSelectAll,
+                            onChangeCheckboxSingle: onSelectChange
+                        }}
+                        pagination={{
+                            total: rules.length,
+                            limit: 20,
+                            page: 1,
+                            onChange: () => {}
+                        }}
+                        loading={loading}
+                        columns={columns}
+                        currentSelectItem={currentItem}
+                        onRowClick={onSetCurrentRow}
+                        onMoveRow={onMoveRow}
+                        enableDragSort={true}
+                        enableDrag={true}
+                        inMouseEnterTable={inMouseEnterTable}
+                        onMoveRowEnd={onMoveRowEnd}
+                    />
+                </div>
+            )
+        }
 
-    return (
-        <>
-            {ruleUse === "mitm" ? (
-                <YakitDrawer
-                    placement='bottom'
-                    closable={false}
-                    onClose={() => onClose()}
-                    visible={visible}
-                    getContainer={getContainer}
-                    mask={false}
-                    style={{height: visible ? heightDrawer : 0}}
-                    className={classNames(styles["mitm-rule-drawer"])}
-                    contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
-                    title={title()}
-                    extra={extra()}
-                >
-                    {content()}
-                </YakitDrawer>
-            ) : (
-                <>
-                    <div className={styles["header"]}>
-                        <>{title()}</>
-                        {extra()}
-                    </div>
-                    {content()}
-                </>
-            )}
-            {modalVisible && (
-                <MITMRuleFromModal
-                    ruleUse={ruleUse}
-                    rules={rules}
-                    modalVisible={modalVisible}
-                    isEdit={isEdit}
-                    onClose={() => onOpenOrCloseModal(false)}
-                    onSave={onSaveRules}
-                    currentItem={currentItem}
-                />
-            )}
-        </>
-    )
-})
+        return (
+            <>
+                {ruleUse === "mitm" ? (
+                    <YakitDrawer
+                        placement='bottom'
+                        closable={false}
+                        onClose={() => onClose()}
+                        visible={visible}
+                        getContainer={getContainer}
+                        mask={false}
+                        style={{height: visible ? heightDrawer : 0}}
+                        className={classNames(styles["mitm-rule-drawer"])}
+                        contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
+                        title={title()}
+                        extra={extra()}
+                    >
+                        {content()}
+                    </YakitDrawer>
+                ) : (
+                    <>
+                        <div className={styles["header"]}>
+                            <>{title()}</>
+                            {extra()}
+                        </div>
+                        {content()}
+                    </>
+                )}
+                {modalVisible && (
+                    <MITMRuleFromModal
+                        ruleUse={ruleUse}
+                        rules={rules}
+                        modalVisible={modalVisible}
+                        isEdit={isEdit}
+                        onClose={() => onOpenOrCloseModal(false)}
+                        onSave={onSaveRules}
+                        currentItem={currentItem}
+                    />
+                )}
+            </>
+        )
+    })
+)
+export default MITMRule
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props

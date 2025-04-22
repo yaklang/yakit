@@ -324,7 +324,6 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         </div>
     )
 })
-
 interface HTTPFlowTableProps {
     searchURL?: string
     includeInUrl?: string
@@ -1991,7 +1990,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 useUpAndDown
                 inMouseEnterTable={inMouseEnterTable}
                 onChange={onTableChange}
-                // onRowContextMenu={onRowContextMenu}
+                onRowContextMenu={onRowContextMenu}
                 onSetCurrentRow={onSetCurrentRow}
             />
             {/* 高级筛选抽屉 */}
