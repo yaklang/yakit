@@ -3,7 +3,15 @@ import {ManualHijackListStatusType, SingleManualHijackInfoMessage} from "../MITM
 import {TraceInfo} from "../MITMPage"
 import {RenderTypeOptionVal} from "@/utils/editors"
 
+export interface MITMManualRefProps {
+    onBatchDiscardData: () => void
+    onBatchSubmitData: () => void
+    onBatchHijackingResponse: () => void
+    /**全部放行 */
+    onSubmitAllData: () => void
+}
 export interface MITMManualProps {
+    ref?: React.ForwardedRef<MITMManualRefProps>
     downstreamProxyStr: string
     /**劫持的数据 */
     manualHijackList: SingleManualHijackInfoMessage[]
@@ -15,6 +23,8 @@ export interface MITMManualProps {
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**更改表total */
     setManualTableTotal: (v: number) => void
+    /**更改表选中数 */
+    setManualTableSelectNumber: (v: number) => void
 }
 export interface ManualHijackInfoRefProps {
     /**提交数据 */

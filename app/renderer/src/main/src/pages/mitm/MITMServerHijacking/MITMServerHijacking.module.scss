@@ -542,8 +542,16 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    &-right{
+    &-right {
         display: flex;
         gap: 8px;
+    }
+}
+.mitm-v2-hijacked-manual-drop-down-popover {
+    padding-top: 5px;
+    :global {
+        .ant-popover-inner-content {
+            padding: 4px;
+        }
     }
 }
