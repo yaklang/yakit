@@ -43,445 +43,539 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {cloneDeep, isEqual} from "lodash"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import { getRemoteValue, setRemoteValue } from "@/utils/kv"
-import { RemoteGV } from "@/yakitGV"
-import { setClipboardText } from "@/utils/clipboard"
-import { OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon } from "@/assets/icon/outline"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {setClipboardText} from "@/utils/clipboard"
+import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@/assets/icon/outline"
 
-const MITMManual: React.FC<MITMManualProps> = React.memo((props) => {
-    const {manualHijackList, manualHijackListAction, downstreamProxyStr, autoForward, handleAutoForward, setManualTableTotal} = props
-    const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
-    const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
-    const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
-    const [scrollToIndex, setScrollToIndex] = useState<number>()
+const MITMManual: React.FC<MITMManualProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {
+            manualHijackList,
+            manualHijackListAction,
+            downstreamProxyStr,
+            autoForward,
+            handleAutoForward,
+            setManualTableTotal,
+            setManualTableSelectNumber
+        } = props
+        const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
+        const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
+        const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
+        const [scrollToIndex, setScrollToIndex] = useState<number>()
 
-    const [loadingMap, {set: setLoading, remove: removeLoading, get: getLoading, reset: resetLoading}] = useMap<
-        string,
-        boolean
-    >(new Map())
+        const [loadingMap, {set: setLoading, remove: removeLoading, get: getLoading, reset: resetLoading}] = useMap<
+            string,
+            boolean
+        >(new Map())
 
-    const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
+        const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
 
-    const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
-        onSubmitData: () => {},
-        onHijackingResponse: () => {}
-    })
-    useEffect(() => {
-        if (autoForward !== "manual") {
-            resetOrder()
-        }
-    }, [autoForward])
-    useEffect(() => {
-        handleManualHijackList()
-    }, [manualHijackList, manualHijackListAction])
-    /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
-    const handleManualHijackList = useMemoizedFn(() => {
-        // 只有manualHijackListAction为ManualHijackListAction.Hijack_List_Reload，manualHijackList才有可能为空,为空就相当于清空数据
-        const item = manualHijackList[0] || {}
-        const taskID = item.TaskID
-        switch (manualHijackListAction) {
-            case ManualHijackListAction.Hijack_List_Add:
-                setLoading(item.TaskID, false)
-                if (data.length === 0) {
-                    const selectItem: SingleManualHijackInfoMessage = {
-                        ...item,
-                        arrivalOrder: currentOrder
-                    }
-                    setCurrentSelectItem(selectItem)
-                    setEditorShowIndexShowIndex(0)
+        const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
+            onSubmitData: () => {},
+            onHijackingResponse: () => {}
+        })
+
+        useImperativeHandle(
+            ref,
+            () => {
+                return {
+                    onBatchDiscardData: () => onBatchDiscardData(),
+                    onBatchSubmitData: () => onBatchSubmitData(),
+                    onBatchHijackingResponse: () => onBatchHijackingResponse(),
+                    onSubmitAllData: () => onSubmitAllData()
                 }
-                setData((preV) => {
-                    const index = preV.findIndex((item) => item.TaskID === taskID)
-                    const addItem = {...item, arrivalOrder: currentOrder}
-                    return index === -1 ? [...preV, {...addItem}] : preV
-                })
-                addOrder()
-                break
-            case ManualHijackListAction.Hijack_List_Delete:
-                removeLoading(item.TaskID)
-                if (currentSelectItem?.TaskID === taskID) {
-                    let selectItem: SingleManualHijackInfoMessage | undefined = undefined
-                    let selectIndex = editorShowIndex
-                    // 删除后选中下一个数据
-                    if (editorShowIndex === 0) {
-                        selectItem = data[editorShowIndex + 1]
-                    } else if (editorShowIndex === data.length - 1) {
-                        selectIndex = editorShowIndex - 1
-                        selectItem = data[selectIndex]
-                    } else if (editorShowIndex) {
-                        selectItem = data[editorShowIndex + 1]
-                    }
-                    setCurrentSelectItem(selectItem)
-                    if (selectItem) {
-                        setEditorShowIndexShowIndex(selectIndex)
-                    } else {
+            },
+            []
+        )
+
+        useEffect(() => {
+            if (autoForward !== "manual") {
+                resetOrder()
+            }
+        }, [autoForward])
+        useEffect(() => {
+            handleManualHijackList()
+        }, [manualHijackList, manualHijackListAction])
+        /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
+        const handleManualHijackList = useMemoizedFn(() => {
+            // 只有manualHijackListAction为ManualHijackListAction.Hijack_List_Reload，manualHijackList才有可能为空,为空就相当于清空数据
+            const item = manualHijackList[0] || {}
+            const taskID = item.TaskID
+            switch (manualHijackListAction) {
+                case ManualHijackListAction.Hijack_List_Add:
+                    setLoading(item.TaskID, false)
+                    if (data.length === 0) {
+                        const selectItem: SingleManualHijackInfoMessage = {
+                            ...item,
+                            arrivalOrder: currentOrder
+                        }
+                        setCurrentSelectItem(selectItem)
                         setEditorShowIndexShowIndex(0)
                     }
-                }
-                setData((preV) => preV.filter((item) => item.TaskID !== taskID))
-                break
-            case ManualHijackListAction.Hijack_List_Update:
-                setLoading(item.TaskID, false)
-                if (currentSelectItem?.TaskID === taskID) {
-                    setCurrentSelectItem({
-                        ...item,
-                        arrivalOrder: currentSelectItem.arrivalOrder
+                    setData((preV) => {
+                        const index = preV.findIndex((item) => item.TaskID === taskID)
+                        const addItem = {...item, arrivalOrder: currentOrder}
+                        return index === -1 ? [...preV, {...addItem}] : preV
                     })
-                }
-                setData((preV) => {
-                    const newV = [...preV]
-                    const index = newV.findIndex((item) => item.TaskID === taskID)
-                    if (index === -1) return newV
-                    newV.splice(index, 1, {...item, arrivalOrder: newV[index].arrivalOrder})
-                    return newV
-                })
-                break
-            case ManualHijackListAction.Hijack_List_Reload:
-                resetLoading()
-                let order = 0
-                const newData = manualHijackList.map((ele) => {
-                    order += 1
-                    return {
-                        ...ele,
-                        arrivalOrder: order
+                    addOrder()
+                    break
+                case ManualHijackListAction.Hijack_List_Delete:
+                    removeLoading(item.TaskID)
+                    if (currentSelectItem?.TaskID === taskID) {
+                        let selectItem: SingleManualHijackInfoMessage | undefined = undefined
+                        let selectIndex = editorShowIndex
+                        // 删除后选中下一个数据
+                        if (editorShowIndex === 0) {
+                            selectItem = data[editorShowIndex + 1]
+                        } else if (editorShowIndex === data.length - 1) {
+                            selectIndex = editorShowIndex - 1
+                            selectItem = data[selectIndex]
+                        } else if (editorShowIndex) {
+                            selectItem = data[editorShowIndex + 1]
+                        }
+                        setCurrentSelectItem(selectItem)
+                        if (selectItem) {
+                            setEditorShowIndexShowIndex(selectIndex)
+                        } else {
+                            setEditorShowIndexShowIndex(0)
+                        }
                     }
-                })
-                setData(newData)
+                    setData((preV) => preV.filter((item) => item.TaskID !== taskID))
+                    break
+                case ManualHijackListAction.Hijack_List_Update:
+                    setLoading(item.TaskID, false)
+                    if (currentSelectItem?.TaskID === taskID) {
+                        setCurrentSelectItem({
+                            ...item,
+                            arrivalOrder: currentSelectItem.arrivalOrder
+                        })
+                    }
+                    setData((preV) => {
+                        const newV = [...preV]
+                        const index = newV.findIndex((item) => item.TaskID === taskID)
+                        if (index === -1) return newV
+                        newV.splice(index, 1, {...item, arrivalOrder: newV[index].arrivalOrder})
+                        return newV
+                    })
+                    break
+                case ManualHijackListAction.Hijack_List_Reload:
+                    resetLoading()
+                    let order = 0
+                    const newData = manualHijackList.map((ele) => {
+                        order += 1
+                        return {
+                            ...ele,
+                            arrivalOrder: order
+                        }
+                    })
+                    setData(newData)
+                    setCurrentSelectItem(undefined)
+                    setEditorShowIndexShowIndex(0)
+                    setOrder(order + 1)
+                    break
+                default:
+                    break
+            }
+        })
+
+        const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+            const getStatusStr = () => {
+                switch (rowData.Status) {
+                    case "hijacking request":
+                    case "wait hijack":
+                        return "请求"
+                    case "hijacking response":
+                        return "响应"
+                    default:
+                        return ""
+                }
+            }
+
+            let menu = [
+                {
+                    key: "submit-data",
+                    label: `放行${getStatusStr()}`
+                },
+                {
+                    key: "hijacking-response",
+                    label: "劫持响应"
+                },
+                {
+                    key: "copy-url",
+                    label: "复制 URL"
+                },
+                {
+                    key: "discard-data",
+                    label: `丢弃${getStatusStr()}`
+                },
+                {
+                    key: "send-webFuzzer",
+                    label: "发送到 Web Fuzzer",
+                    children: [
+                        // SystemInfo
+                        {
+                            key: "send-and-jump-to-webFuzzer",
+                            label: (
+                                <div className={styles["context-menu-keybind-wrapper"]}>
+                                    <div className={styles["content-style"]}>发送并跳转</div>
+                                    <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                        {convertKeyboard(SystemInfo.system || "Darwin", [
+                                            YakitEditorKeyCode.Control,
+                                            YakitEditorKeyCode.KEY_R
+                                        ])}
+                                    </div>
+                                </div>
+                            )
+                        },
+                        {
+                            key: "send-to-webFuzzer",
+                            label: (
+                                <div className={styles["context-menu-keybind-wrapper"]}>
+                                    <div className={styles["content-style"]}>仅发送</div>
+                                    <div className={classNames(styles["keybind-style"], "keys-style")}>
+                                        {convertKeyboard(SystemInfo.system || "Darwin", [
+                                            YakitEditorKeyCode.Control,
+                                            YakitEditorKeyCode.Shift,
+                                            YakitEditorKeyCode.KEY_R
+                                        ])}
+                                    </div>
+                                </div>
+                            )
+                        }
+                    ]
+                },
+                {
+                    key: "mark-color",
+                    label: "标注颜色",
+                    children: availableColors.map((i) => {
+                        return {
+                            key: i.title,
+                            label: i.render
+                        }
+                    })
+                },
+                {
+                    key: "remove-color",
+                    label: "移除颜色"
+                }
+            ]
+            if (rowData.Status !== ManualHijackListStatus.Hijacking_Request) {
+                menu = menu.filter((item) => item.key !== "hijacking-response")
+            }
+            return menu
+        })
+
+        const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+            if (rowData.TaskID !== currentSelectItem?.TaskID) {
+                onSetCurrentRow(rowData)
+            }
+
+            let menu = getMitmManualContextMenu(rowData)
+
+            showByRightContext({
+                width: 180,
+                data: menu,
+                onClick: ({key, keyPath}) => {
+                    if (keyPath.includes("mark-color")) {
+                        const colorItem = availableColors.find((e) => e.title === key)
+                        if (!colorItem) return
+                        onSetColor(colorItem.color, rowData)
+                        return
+                    }
+                    switch (key) {
+                        case "hijacking-response":
+                            manualHijackInfoRef.current.onHijackingResponse(rowData)
+                            break
+                        case "submit-data":
+                            manualHijackInfoRef.current.onSubmitData(rowData)
+                            break
+                        case "copy-url":
+                            setClipboardText(rowData.URL)
+                            break
+                        case "discard-data":
+                            onDiscardData(rowData)
+                            break
+                        case "send-and-jump-to-webFuzzer":
+                            onSendToTab(rowData, true, downstreamProxyStr)
+                            break
+                        case "send-to-webFuzzer":
+                            onSendToTab(rowData, false, downstreamProxyStr)
+                            break
+                        case "remove-color":
+                            onRemoveColor(rowData)
+                            break
+                        case "mark-color":
+                        default:
+                            break
+                    }
+                }
+            })
+        })
+
+        const onDiscardData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+                yakitNotify("warning", "当前状态不允许丢弃数据")
+                return
+            }
+            const value: MITMV2DropRequest = {
+                TaskID: rowData.TaskID,
+                Drop: true
+            }
+            setLoading(rowData.TaskID, true)
+            grpcMITMV2Drop(value)
+        })
+        const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
+            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+                yakitNotify("warning", "当前状态不允许设置颜色")
+                return
+            }
+            const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+            existedTags.push(`YAKIT_COLOR_${color.toUpperCase()}`)
+            const value: MITMSetColorRequest = {
+                TaskID: rowData.TaskID,
+                Tags: existedTags
+            }
+            setLoading(rowData.TaskID, true)
+            grpcMITMSetColor(value)
+        })
+        const onRemoveColor = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
+            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+                yakitNotify("warning", "当前状态不允许设置颜色")
+                return
+            }
+            const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
+            const value: MITMSetColorRequest = {
+                TaskID: rowData.TaskID,
+                Tags: existedTags
+            }
+            setLoading(rowData.TaskID, true)
+            grpcMITMSetColor(value)
+        })
+        const onSetCurrentRow = useMemoizedFn((val) => {
+            if (val) {
+                setCurrentSelectItem(val)
+                const index = data.findIndex((i) => i.TaskID === val.TaskID)
+                if (index !== -1) {
+                    setEditorShowIndexShowIndex(index)
+                }
+            } else {
                 setCurrentSelectItem(undefined)
                 setEditorShowIndexShowIndex(0)
-                setOrder(order + 1)
-                break
-            default:
-                break
-        }
-    })
-
-    const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage)=>{
-        const getStatusStr = () => {
-            switch (rowData.Status) {
-                case "hijacking request":
-                case "wait hijack":
-                    return "请求"
-                case "hijacking response":
-                   return "响应"
-                default:
-                    return ""
             }
-        }
-
-        let menu = [
-            {
-                key: "submit-data",
-                label: `放行${getStatusStr()}`
-            },
-            {
-                key: "hijacking-response",
-                label: "劫持响应"
-            },
-            {
-                key: "copy-url",
-                label: "复制 URL"
-            },
-            {
-                key: "discard-data",
-                label: `丢弃${getStatusStr()}`
-            },
-            {
-                key: "send-webFuzzer",
-                label: "发送到 Web Fuzzer",
-                children: [
-                    // SystemInfo
-                    {
-                        key: "send-and-jump-to-webFuzzer",
-                        label: (
-                            <div className={styles["context-menu-keybind-wrapper"]}>
-                                <div className={styles["content-style"]}>发送并跳转</div>
-                                <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                    {convertKeyboard(SystemInfo.system || "Darwin", [
-                                        YakitEditorKeyCode.Control,
-                                        YakitEditorKeyCode.KEY_R
-                                    ])}
-                                </div>
+        })
+        const onScrollTo = useMemoizedFn((val: number) => {
+            setScrollToIndex(val)
+        })
+        const columns: ColumnsTypeProps[] = useCreation(() => {
+            return [
+                {
+                    title: "到达顺序",
+                    dataKey: "arrivalOrder",
+                    width: 120
+                },
+                {
+                    title: "状态",
+                    dataKey: "Status",
+                    render: (value: ManualHijackListStatus) => {
+                        let icon = <></>
+                        switch (value) {
+                            case "hijacking request":
+                                icon = <OutlineArrowrightIcon />
+                                break
+                            case "hijacking response":
+                                icon = <OutlineArrowleftIcon />
+                                break
+                            case "wait hijack":
+                                icon = <OutlineLoadingIcon className={styles["icon-rotate-animation"]} />
+                                break
+                        }
+                        return (
+                            <div className={styles["mitm-v2-manual-table-status"]}>
+                                {ManualHijackListStatusMap[value]}
+                                {icon}
                             </div>
                         )
                     },
-                    {
-                        key: "send-to-webFuzzer",
-                        label: (
-                            <div className={styles["context-menu-keybind-wrapper"]}>
-                                <div className={styles["content-style"]}>仅发送</div>
-                                <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                    {convertKeyboard(SystemInfo.system || "Darwin", [
-                                        YakitEditorKeyCode.Control,
-                                        YakitEditorKeyCode.Shift,
-                                        YakitEditorKeyCode.KEY_R
-                                    ])}
-                                </div>
-                            </div>
-                        )
-                    }
-                ]
-            },
-            {
-                key: "mark-color",
-                label: "标注颜色",
-                children: availableColors.map((i) => {
-                    return {
-                        key: i.title,
-                        label: i.render
-                    }
-                })
-            },
-            {
-                key: "remove-color",
-                label: "移除颜色"
-            }
-        ]
-        if(rowData.Status !== ManualHijackListStatus.Hijacking_Request){
-            menu = menu.filter((item)=>item.key !== "hijacking-response")
-        }
-        return menu
-    })
-
-    const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-        if (rowData.TaskID !== currentSelectItem?.TaskID) {
-            onSetCurrentRow(rowData)
-        }
-        
-        let menu = getMitmManualContextMenu(rowData)
-        
-        showByRightContext({
-            width: 180,
-            data: menu,
-            onClick: ({key, keyPath}) => {
-                if (keyPath.includes("mark-color")) {
-                    const colorItem = availableColors.find((e) => e.title === key)
-                    if (!colorItem) return
-                    onSetColor(colorItem.color, rowData)
-                    return
-                }
-                switch (key) {
-                    case "hijacking-response":
-                        manualHijackInfoRef.current.onHijackingResponse(rowData)
-                        break
-                    case "submit-data":
-                        manualHijackInfoRef.current.onSubmitData(rowData)
-                        break
-                    case "copy-url":
-                        setClipboardText(rowData.URL)
-                        break
-                    case "discard-data":
-                        onDiscardData(rowData)
-                        break
-                    case "send-and-jump-to-webFuzzer":
-                        onSendToTab(rowData, true, downstreamProxyStr)
-                        break
-                    case "send-to-webFuzzer":
-                        onSendToTab(rowData, false, downstreamProxyStr)
-                        break
-                    case "remove-color":
-                        onRemoveColor(rowData)
-                        break
-                    case "mark-color":
-                    default:
-                        break
-                }
-            }
-        })
-    })
-
-    const onDiscardData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-        if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-            yakitNotify("warning", "当前状态不允许丢弃数据")
-            return
-        }
-        const value: MITMV2DropRequest = {
-            TaskID: rowData.TaskID,
-            Drop: true
-        }
-        setLoading(rowData.TaskID, true)
-        grpcMITMV2Drop(value)
-    })
-    const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
-        if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-            yakitNotify("warning", "当前状态不允许设置颜色")
-            return
-        }
-        const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-        existedTags.push(`YAKIT_COLOR_${color.toUpperCase()}`)
-        const value: MITMSetColorRequest = {
-            TaskID: rowData.TaskID,
-            Tags: existedTags
-        }
-        setLoading(rowData.TaskID, true)
-        grpcMITMSetColor(value)
-    })
-    const onRemoveColor = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-        if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-            yakitNotify("warning", "当前状态不允许设置颜色")
-            return
-        }
-        const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-        const value: MITMSetColorRequest = {
-            TaskID: rowData.TaskID,
-            Tags: existedTags
-        }
-        setLoading(rowData.TaskID, true)
-        grpcMITMSetColor(value)
-    })
-    const onSetCurrentRow = useMemoizedFn((val) => {
-        setCurrentSelectItem(val)
-        const index = data.findIndex((i) => i.TaskID === val.TaskID)
-        if (index !== -1) {
-            setEditorShowIndexShowIndex(index)
-        }
-    })
-    const onScrollTo = useMemoizedFn((val: number) => {
-        setScrollToIndex(val)
-    })
-    const columns: ColumnsTypeProps[] = useCreation(() => {
-        return [
-            {
-                title: "到达顺序",
-                dataKey: "arrivalOrder",
-                width: 120
-            },
-            {
-                title: "状态",
-                dataKey: "Status",
-                render: (value: ManualHijackListStatus) => {
-                    let icon = <></>
-                    switch (value) {
-                        case "hijacking request":
-                            icon = <OutlineArrowrightIcon/>
-                            break;
-                        case "hijacking response":
-                            icon = <OutlineArrowleftIcon/>
-                            break;
-                        case "wait hijack":
-                            icon = <OutlineLoadingIcon className={styles["icon-rotate-animation"]}/>
-                            break;
-                    }
-                    return <div className={styles['mitm-v2-manual-table-status']}>{ManualHijackListStatusMap[value]}{icon}</div>
+                    width: 120
                 },
-                width: 120
-            },
-            {
-                title: "方法",
-                dataKey: "Method",
-                width: 80
-            },
-            {
-                title: "URL",
-                dataKey: "URL"
-            },
-            {
-                title: "标记颜色",
-                dataKey: "Tags",
-                width: 200,
-                render: (text) => {
-                    return text
-                        ? `${text}`
-                              .split("|")
-                              .filter((i) => i.startsWith("YAKIT_COLOR_"))
-                              .join(", ")
-                        : ""
-                }
-            }
-        ]
-    }, [])
-    const onlyShowFirstNode = useCreation(() => {
-        return !(data.length && currentSelectItem && currentSelectItem.TaskID)
-    }, [currentSelectItem, data.length])
-
-    useUpdateEffect(()=>{
-        setManualTableTotal(data.length)
-    },[data.length])
-
-    const lastRatioRef = useRef<{firstRatio:string,secondRatio:string}>({
-        firstRatio: "21%",
-        secondRatio: "79%"
-    })
-    useEffect(()=>{
-        getRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox).then((res) => {
-            if(res){
-                try {
-                    const {
-                        firstSizePercent,
-                        secondSizePercent
-                    } = JSON.parse(res)
-                    lastRatioRef.current = {
-                        firstRatio:firstSizePercent,
-                        secondRatio:secondSizePercent
+                {
+                    title: "方法",
+                    dataKey: "Method",
+                    width: 80
+                },
+                {
+                    title: "URL",
+                    dataKey: "URL"
+                },
+                {
+                    title: "标记颜色",
+                    dataKey: "Tags",
+                    width: 200,
+                    render: (text) => {
+                        return text
+                            ? `${text}`
+                                  .split("|")
+                                  .filter((i) => i.startsWith("YAKIT_COLOR_"))
+                                  .join(", ")
+                            : ""
                     }
-            } catch (error) {}
+                }
+            ]
+        }, [])
+        const onlyShowFirstNode = useCreation(() => {
+            return !(data.length && currentSelectItem && currentSelectItem.TaskID)
+        }, [currentSelectItem, data.length])
+
+        useUpdateEffect(() => {
+            setManualTableTotal(data.length)
+        }, [data.length])
+
+        const lastRatioRef = useRef<{firstRatio: string; secondRatio: string}>({
+            firstRatio: "21%",
+            secondRatio: "79%"
+        })
+        useEffect(() => {
+            getRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox).then((res) => {
+                if (res) {
+                    try {
+                        const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                        lastRatioRef.current = {
+                            firstRatio: firstSizePercent,
+                            secondRatio: secondSizePercent
+                        }
+                    } catch (error) {}
+                }
+            })
+        })
+        const ResizeBoxProps = useCreation(() => {
+            let p = cloneDeep(lastRatioRef.current)
+            if (onlyShowFirstNode) {
+                p.firstRatio = "100%"
+                p.secondRatio = "0%"
+            }
+            return p
+        }, [onlyShowFirstNode])
+        //#region 勾选/批量操作
+        const [allSelected, setAllSelected] = useState<boolean>(false)
+        const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+        const onSelectAll = useMemoizedFn((selectedRowKeyList: string[], _, c: boolean) => {
+            if (c) {
+                setManualTableSelectNumber(selectedRowKeyList.length)
+                setSelectedRowKeys(selectedRowKeyList)
+            } else {
+                setManualTableSelectNumber(0)
+                setSelectedRowKeys([])
+            }
+            setAllSelected(c)
+        })
+        const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string) => {
+            if (c) {
+                const newSelect = [...selectedRowKeys, key]
+                setSelectedRowKeys(newSelect)
+                setManualTableSelectNumber(newSelect.length)
+            } else {
+                const newSelect = selectedRowKeys.filter((ele) => ele !== key)
+                setAllSelected(false)
+                setSelectedRowKeys(newSelect)
+                setManualTableSelectNumber(newSelect.length)
             }
         })
-    })
-    const ResizeBoxProps = useCreation(() => {
-        let p = cloneDeep(lastRatioRef.current)
-        if (onlyShowFirstNode) {
-            p.firstRatio = "100%"
-            p.secondRatio = "0%"
-        }
-        return p
-    }, [onlyShowFirstNode])
-
-    return (
-        <YakitResizeBox
-            firstMinSize={70}
-            firstNode={
-                <TableVirtualResize<SingleManualHijackInfoMessage>
-                    isRefresh={false}
-                    isShowTitle={false}
-                    data={data}
-                    renderKey='TaskID'
-                    pagination={{
-                        page: 1,
-                        limit: 50,
-                        total: data.length,
-                        onChange: () => {}
-                    }}
-                    columns={columns}
-                    onSetCurrentRow={onSetCurrentRow}
-                    currentSelectItem={currentSelectItem}
-                    onRowContextMenu={onRowContextMenu}
-                    scrollToIndex={scrollToIndex}
-                />
+        const onSubmitAllData = useMemoizedFn(() => {
+            const length = data.length
+            for (let index = 0; index < length; index++) {
+                const item = data[index]
+                if (!item) continue
+                manualHijackInfoRef.current.onSubmitData(item)
             }
-            isVer={true}
-            freeze={!onlyShowFirstNode}
-            secondNode={
-                currentSelectItem && (
-                    <ManualHijackInfo
-                        ref={manualHijackInfoRef}
-                        index={editorShowIndex}
-                        onScrollTo={onScrollTo}
-                        info={currentSelectItem}
-                        autoForward={autoForward}
-                        handleAutoForward={handleAutoForward}
-                        onDiscardData={onDiscardData}
-                        loading={getLoading(currentSelectItem.TaskID)}
-                        setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
+            onSelectAll([], [], false)
+        })
+        const onBatchDiscardData = useMemoizedFn(() => {
+            onBatchBase((item) => onDiscardData(item))
+        })
+        const onBatchSubmitData = useMemoizedFn(() => {
+            onBatchBase((item) => manualHijackInfoRef.current.onSubmitData(item))
+        })
+        const onBatchHijackingResponse = useMemoizedFn(() => {
+            onBatchBase((item) => manualHijackInfoRef.current.onHijackingResponse(item))
+        })
+        const onBatchBase = useMemoizedFn((fun) => {
+            const length = selectedRowKeys.length
+            for (let index = 0; index < length; index++) {
+                const taskId = selectedRowKeys[index]
+                const item = data.find((ele) => ele.TaskID === taskId)
+                if (!item) continue
+                fun(item)
+            }
+            onSelectAll([], [], false)
+        })
+        //#endregion
+        return (
+            <YakitResizeBox
+                firstMinSize={70}
+                firstNode={
+                    <TableVirtualResize<SingleManualHijackInfoMessage>
+                        isRefresh={false}
+                        isShowTitle={false}
+                        data={data}
+                        renderKey='TaskID'
+                        pagination={{
+                            page: 1,
+                            limit: 50,
+                            total: data.length,
+                            onChange: () => {}
+                        }}
+                        columns={columns}
+                        onSetCurrentRow={onSetCurrentRow}
+                        currentSelectItem={currentSelectItem}
+                        onRowContextMenu={onRowContextMenu}
+                        scrollToIndex={scrollToIndex}
+                        rowSelection={{
+                            isAll: allSelected,
+                            type: "checkbox",
+                            selectedRowKeys,
+                            onSelectAll,
+                            onChangeCheckboxSingle
+                        }}
                     />
-                )
-            }
-            secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
-            onMouseUp={({firstSizePercent,secondSizePercent})=>{
-                lastRatioRef.current = {
-                    firstRatio:firstSizePercent,
-                    secondRatio:secondSizePercent
                 }
-                // 缓存比例用于下次加载
-                setRemoteValue(RemoteGV.MITMManualHijackYakitResizeBox, JSON.stringify({
-                    firstSizePercent,
-                    secondSizePercent
-                }))
-            }}
-            {...ResizeBoxProps}
-        ></YakitResizeBox>
-    )
-})
+                isVer={true}
+                freeze={!onlyShowFirstNode}
+                secondNode={
+                    currentSelectItem && (
+                        <ManualHijackInfo
+                            ref={manualHijackInfoRef}
+                            index={editorShowIndex}
+                            onScrollTo={onScrollTo}
+                            info={currentSelectItem}
+                            autoForward={autoForward}
+                            handleAutoForward={handleAutoForward}
+                            onDiscardData={onDiscardData}
+                            loading={!!getLoading(currentSelectItem.TaskID)}
+                            setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
+                        />
+                    )
+                }
+                secondNodeStyle={{padding: onlyShowFirstNode ? 0 : undefined, display: onlyShowFirstNode ? "none" : ""}}
+                onMouseUp={({firstSizePercent, secondSizePercent}) => {
+                    lastRatioRef.current = {
+                        firstRatio: firstSizePercent,
+                        secondRatio: secondSizePercent
+                    }
+                    // 缓存比例用于下次加载
+                    setRemoteValue(
+                        RemoteGV.MITMManualHijackYakitResizeBox,
+                        JSON.stringify({
+                            firstSizePercent,
+                            secondSizePercent
+                        })
+                    )
+                }}
+                {...ResizeBoxProps}
+            ></YakitResizeBox>
+        )
+    })
+)
 
 export default MITMManual
 

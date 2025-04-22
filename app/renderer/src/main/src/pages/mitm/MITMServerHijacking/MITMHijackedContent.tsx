@@ -52,9 +52,12 @@ import {
     isMITMV2Response
 } from "../MITMHacker/utils"
 import {ManualHijackListAction} from "@/defaultConstants/mitmV2"
-import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
+import {ManualHijackTypeProps, MITMManualRefProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
-import { TableTotalAndSelectNumber } from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
+import {ChevronDownIcon} from "@/assets/newIcon"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -145,7 +148,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [sourceType, setSourceType] = useState<string>("mitm")
     const [tableTotal, setTableTotal] = useState<number>(0)
     const [tableSelectNum, setTableSelectNum] = useState<number>(0)
-    const [manualTableTotal,setManualTableTotal] = useState<number>(0)
+    const [manualTableTotal, setManualTableTotal] = useState<number>(0)
+    const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
+    const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
+    const mitmManualRef = useRef<MITMManualRefProps>({
+        onBatchDiscardData: () => {},
+        onBatchSubmitData: () => {},
+        onBatchHijackingResponse: () => {},
+        onSubmitAllData: () => {}
+    })
 
     /** 黄色提示 start */
     const [whiteListFlag, setWhiteListFlag] = useState<boolean>(false) // 是否配置过过滤器白名单文案
@@ -667,10 +678,24 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         })
     })
     const onSubmitAll = useMemoizedFn(() => {
-        handleAutoForward("log")
-        setTimeout(() => {
-            handleAutoForward("manual")
-        }, 500)
+        mitmManualRef.current.onSubmitAllData()
+    })
+    /**手动劫持批量操作 */
+    const onMITMManualBatchOperate = useMemoizedFn(({key, keyPath}) => {
+        switch (key) {
+            case "batch-hijacking-response":
+                mitmManualRef.current.onBatchHijackingResponse()
+                break
+            case "batch-submit-data":
+                mitmManualRef.current.onBatchSubmitData()
+                break
+            case "batch-discard-data":
+                mitmManualRef.current.onBatchDiscardData()
+                break
+            default:
+                break
+        }
+        setMITMV2PopoverVisible(false)
     })
     const onRenderHeardExtra = useMemoizedFn(() => {
         return (
@@ -679,14 +704,55 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div style={{display: autoForward === "manual" ? "block" : "none", width: "100%"}}>
                     {mitmVersion === MITMVersion.V2 ? (
                         <div className={styles["mitm-v2-hijacked-manual-heard-extra"]}>
-                            <div className={styles['mitm-v2-hijacked-manual-heard-extra-left']}>
-                               <TableTotalAndSelectNumber total={manualTableTotal} /> 
+                            <div className={styles["mitm-v2-hijacked-manual-heard-extra-left"]}>
+                                <TableTotalAndSelectNumber
+                                    total={manualTableTotal}
+                                    selectNum={manualTableSelectNumber}
+                                />
                             </div>
-                            <div className={styles['mitm-v2-hijacked-manual-heard-extra-right']}>
+                            <div className={styles["mitm-v2-hijacked-manual-heard-extra-right"]}>
+                                <YakitPopover
+                                    overlayClassName={styles["mitm-v2-hijacked-manual-drop-down-popover"]}
+                                    content={
+                                        <YakitMenu
+                                            width={150}
+                                            selectedKeys={[]}
+                                            data={[
+                                                {
+                                                    key: "batch-submit-data",
+                                                    label: "批量放行"
+                                                },
+                                                {
+                                                    key: "batch-discard-data",
+                                                    label: "批量丢弃"
+                                                },
+                                                {
+                                                    key: "batch-hijacking-response",
+                                                    label: "批量劫持响应"
+                                                }
+                                            ]}
+                                            onClick={onMITMManualBatchOperate}
+                                        />
+                                    }
+                                    trigger='click'
+                                    placement='bottomLeft'
+                                    visible={mitmV2PopoverVisible}
+                                    onVisibleChange={setMITMV2PopoverVisible}
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={!manualTableSelectNumber}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        批量操作
+                                        <ChevronDownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
                                 <YakitButton onClick={onSubmitAll}>全部放行</YakitButton>
-                            <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
+                                <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefreshManual} />
                             </div>
-                            
                         </div>
                     ) : (
                         <MITMManualHeardExtra
@@ -723,6 +789,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             </>
         )
     })
+
     const onRenderContent = useMemoizedFn(() => {
         return (
             <>
@@ -733,6 +800,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 >
                     {mitmVersion === MITMVersion.V2 ? (
                         <MITMManual
+                            ref={mitmManualRef}
                             downstreamProxyStr={downstreamProxyStr}
                             manualHijackListAction={
                                 mitmV2Response?.ManualHijackListAction || ManualHijackListAction.Empty
@@ -741,6 +809,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                             autoForward={autoForward}
                             handleAutoForward={handleAutoForward}
                             setManualTableTotal={setManualTableTotal}
+                            setManualTableSelectNumber={setManualTableSelectNumber}
                         />
                     ) : (
                         <>
