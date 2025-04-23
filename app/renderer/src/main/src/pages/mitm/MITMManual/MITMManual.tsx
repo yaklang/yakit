@@ -498,12 +498,24 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 setManualTableSelectNumber(newSelect.length)
             }
         })
+        /**全部放行，不用管当前选中得数据是否被修改，除了等待劫持状态全部原封不动得转发 */
         const onSubmitAllData = useMemoizedFn(() => {
             const length = data.length
             for (let index = 0; index < length; index++) {
                 const item = data[index]
                 if (!item) continue
-                manualHijackInfoRef.current.onSubmitData(item)
+                switch (item.Status) {
+                    case ManualHijackListStatus.Hijacking_Request:
+                    case ManualHijackListStatus.Hijacking_Response:
+                    case ManualHijackListStatus.Hijack_WS:
+                        grpcMITMV2Forward({
+                            TaskID: item.TaskID,
+                            Forward: true
+                        })
+                        break
+                    default:
+                        break
+                }
             }
             onSelectAll([], [], false)
         })
