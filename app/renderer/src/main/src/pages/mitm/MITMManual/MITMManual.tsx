@@ -732,7 +732,12 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 }
             })
         })
-
+        const disabledRequest = useCreation(() => {
+            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
+        }, [info.IsWebsocket, info.Status])
+        const disabledResponse = useCreation(() => {
+            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
+        }, [info.IsWebsocket, info.Status])
         /**提交数据 */
         const onSubmitData = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
             switch (value.Status) {
@@ -858,7 +863,17 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             // setResponseTypeOptionVal(value)
             // setRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify, value ? value : "")
         })
-
+        const ResizeBoxProps = useCreation(() => {
+            let p = {
+                firstRatio: "50%",
+                secondRatio: "50%"
+            }
+            if (!currentResponsePacketInfo.currentPacket) {
+                p.secondRatio = "0%"
+                p.firstRatio = "100%"
+            }
+            return p
+        }, [currentResponsePacketInfo.currentPacket])
         const modifiedPacket = useCreation(() => {
             switch (type) {
                 case PackageType.Request:
@@ -897,13 +912,13 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             switch (type) {
                 case PackageType.Request:
                 case PackageType.WS:
-                    return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
+                    return disabledRequest
                 case PackageType.Response:
-                    return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
+                    return disabledResponse
                 default:
                     return true
             }
-        }, [type, info.IsWebsocket, info.Status])
+        }, [type, disabledRequest, disabledResponse])
 
         const typeOptionVal = useCreation(() => {
             switch (type) {
@@ -916,7 +931,9 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                     return "render"
             }
         }, [type, requestTypeOptionVal, responseTypeOptionVal])
-
+        const isResponse = useCreation(() => {
+            return type === "response"
+        }, [type])
         const onSetModifiedPacket = useMemoizedFn((v) => {
             switch (type) {
                 case PackageType.Request:
@@ -945,25 +962,77 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         return (
             <YakitSpin spinning={loading}>
-                <div style={{height: "100%"}}>
-                    <MITMV2ManualEditor
-                        type={type}
-                        setType={setType}
-                        index={index}
-                        onScrollTo={onScrollTo}
-                        modifiedPacket={modifiedPacket}
-                        setModifiedPacket={onSetModifiedPacket}
-                        info={info}
-                        onDiscardData={onDiscardData}
-                        onSubmitData={onSubmitData}
-                        currentPacketInfo={currentPacketInfo}
-                        disabled={disabled}
-                        handleAutoForward={handleAutoForward}
-                        typeOptionVal={typeOptionVal}
-                        onTypeOptionVal={onTypeOptionVal}
-                        onHijackingResponse={onHijackingResponse}
+                {isOnlyLookResponse ? (
+                    <div style={{height: "100%"}}>
+                        <MITMV2ManualEditor
+                            type={type}
+                            setType={setType}
+                            index={index}
+                            onScrollTo={onScrollTo}
+                            modifiedPacket={modifiedPacket}
+                            setModifiedPacket={onSetModifiedPacket}
+                            info={info}
+                            onDiscardData={onDiscardData}
+                            onSubmitData={onSubmitData}
+                            currentPacketInfo={currentPacketInfo}
+                            disabled={disabled}
+                            handleAutoForward={handleAutoForward}
+                            typeOptionVal={typeOptionVal}
+                            onTypeOptionVal={onTypeOptionVal}
+                            onHijackingResponse={onHijackingResponse}
+                            isResponse={isResponse}
+                            isOnlyLookResponse={true}
+                        />
+                    </div>
+                ) : (
+                    <YakitResizeBox
+                        firstMinSize={300}
+                        firstNode={
+                            <div style={{height: "100%"}}>
+                                <MITMV2ManualEditor
+                                    index={index}
+                                    onScrollTo={onScrollTo}
+                                    modifiedPacket={modifiedRequestPacket}
+                                    setModifiedPacket={setModifiedRequestPacket}
+                                    isResponse={false}
+                                    info={info}
+                                    onDiscardData={onDiscardData}
+                                    onSubmitData={onSubmitData}
+                                    currentPacketInfo={currentRequestPacketInfo}
+                                    disabled={disabledRequest}
+                                    handleAutoForward={handleAutoForward}
+                                    typeOptionVal={requestTypeOptionVal}
+                                    onTypeOptionVal={onRequestTypeOptionVal}
+                                    onHijackingResponse={onHijackingResponse}
+                                />
+                            </div>
+                        }
+                        secondMinSize={300}
+                        secondNode={
+                            <>
+                                <div style={{height: "100%"}}>
+                                    <MITMV2ManualEditor
+                                        modifiedPacket={modifiedResponsePacket}
+                                        setModifiedPacket={setModifiedResponsePacket}
+                                        isResponse={true}
+                                        info={info}
+                                        onDiscardData={onDiscardData}
+                                        onSubmitData={onSubmitData}
+                                        currentPacketInfo={currentResponsePacketInfo}
+                                        disabled={disabledResponse}
+                                        handleAutoForward={handleAutoForward}
+                                        typeOptionVal={responseTypeOptionVal}
+                                        onTypeOptionVal={onResponseTypeOptionVal}
+                                        onHijackingResponse={onHijackingResponse}
+                                    />
+                                </div>
+                            </>
+                        }
+                        lineStyle={{display: !currentResponsePacketInfo.currentPacket ? "none" : ""}}
+                        secondNodeStyle={{display: currentResponsePacketInfo.currentPacket ? "block" : "none"}}
+                        {...ResizeBoxProps}
                     />
-                </div>
+                )}
             </YakitSpin>
         )
     })
@@ -980,8 +1049,10 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         onScrollTo,
         handleAutoForward,
         onHijackingResponse,
+        isResponse,
         typeOptionVal,
-        onTypeOptionVal
+        onTypeOptionVal,
+        isOnlyLookResponse
     } = props
     const {currentPacket, requestPacket} = currentPacketInfo
     const [modifiedPacket, setModifiedPacket] = useControllableValue<string>(props, {
@@ -1064,10 +1135,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const btnDisable = useCreation(() => {
         return info.Status === ManualHijackListStatus.WaitHijack
     }, [info])
-    const isResponse = useCreation(() => {
-        return type === "response"
-    }, [type])
-
     return (
         <NewHTTPPacketEditor
             noMinimap={!isResponse}
@@ -1082,13 +1149,13 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             // typeOptionVal={typeOptionVal}
             // onTypeOptionVal={(v) => onTypeOptionVal && onTypeOptionVal(v)}
             title={
-                <div className={styles["mitm-v2-manual-editor-title"]}>
-                    {info.IsWebsocket ? (
-                        <YakitTag color='danger' size='small'>
-                            Websocket
-                        </YakitTag>
-                    ) : (
-                        <>
+                isOnlyLookResponse ? (
+                    <div className={styles["mitm-v2-manual-editor-title"]}>
+                        {info.IsWebsocket ? (
+                            <YakitTag color='danger' size='small'>
+                                Websocket
+                            </YakitTag>
+                        ) : (
                             <YakitRadioButtons
                                 size='small'
                                 buttonStyle='solid'
@@ -1104,33 +1171,66 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                                     }
                                 ]}
                                 onChange={(e) => {
-                                    setType(e.target.value)
+                                    setType && setType(e.target.value)
                                 }}
                                 style={{marginRight: 8}}
                             />
-                        </>
-                    )}
-                    <YakitTag
-                        color={"info"}
-                        size='small'
-                        style={{cursor: "pointer"}}
-                        onClick={() => onScrollTo && onScrollTo(index || 0)}
-                    >
-                        index:{info.arrivalOrder}
-                    </YakitTag>
-                    <div className={styles["mitm-v2-manual-editor-title"]}>
-                        <YakitTag color='green' size='small'>
-                            {ManualHijackListStatusMap[info.Status]}
+                        )}
+                        <YakitTag
+                            color={"info"}
+                            size='small'
+                            style={{cursor: "pointer"}}
+                            onClick={() => onScrollTo && onScrollTo(index || 0)}
+                        >
+                            index:{info.arrivalOrder}
                         </YakitTag>
-                    </div>
-                    {isResponse && (
                         <div className={styles["mitm-v2-manual-editor-title"]}>
-                            {info?.TraceInfo?.DurationMs && (
-                                <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
-                            )}
+                            <YakitTag color='green' size='small'>
+                                {ManualHijackListStatusMap[info.Status]}
+                            </YakitTag>
                         </div>
-                    )}
-                </div>
+                        {isResponse && (
+                            <div className={styles["mitm-v2-manual-editor-title"]}>
+                                {info?.TraceInfo?.DurationMs && (
+                                    <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {isResponse ? (
+                            <div className={styles["mitm-v2-manual-editor-title"]}>
+                                <span style={{marginRight: 8}}>Response</span>
+                                {info?.TraceInfo?.DurationMs && (
+                                    <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
+                                )}
+                            </div>
+                        ) : (
+                            <div className={styles["mitm-v2-manual-editor-title"]}>
+                                {info.IsWebsocket ? (
+                                    <YakitTag color='danger' size='small'>
+                                        Websocket
+                                    </YakitTag>
+                                ) : (
+                                    <span style={{marginRight: 8}}>Request</span>
+                                )}
+
+                                <YakitTag
+                                    color={"info"}
+                                    size='small'
+                                    style={{cursor: "pointer"}}
+                                    onClick={() => onScrollTo && onScrollTo(index || 0)}
+                                >
+                                    index:{info.arrivalOrder}
+                                </YakitTag>
+                                <YakitTag color='green' size='small'>
+                                    {ManualHijackListStatusMap[info.Status]}
+                                </YakitTag>
+                            </div>
+                        )}
+                    </>
+                )
             }
             extra={
                 !disabled && (

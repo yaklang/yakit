@@ -80,8 +80,12 @@ export interface MITMV2ManualEditorProps {
     typeOptionVal?: RenderTypeOptionVal
     onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
 
-    type: PackageTypeProps
-    setType: (v: PackageTypeProps) => void
+    type?: PackageTypeProps
+    setType?: (v: PackageTypeProps) => void
+    /**是否为响应包 */
+    isResponse: boolean
+    /**是否为只看响应 */
+    isOnlyLookResponse?: boolean
 }
 
 export interface CurrentPacketInfoProps {
