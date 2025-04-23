@@ -280,6 +280,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             if (rowData.Status !== ManualHijackListStatus.Hijacking_Request) {
                 menu = menu.filter((item) => item.key !== "hijacking-response")
             }
+            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+                menu = menu.filter((item) => ["copy-url", "send-webFuzzer"].includes(item.key))
+            }
             return menu
         })
 
@@ -332,7 +335,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
 
         const onDiscardData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许丢弃数据")
                 return
             }
             const value: MITMV2DropRequest = {
@@ -344,7 +346,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         })
         const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许设置颜色")
                 return
             }
             const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
@@ -358,7 +359,6 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         })
         const onRemoveColor = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许设置颜色")
                 return
             }
             const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
@@ -739,12 +739,12 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         const onSubmitRequestData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            setLoading(true)
+            if (rowData.TaskID === info.TaskID) setLoading(true)
+
             const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
-            if (isEqual(request, info.Request)) {
+            if (isEqual(request, rowData.Request)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -759,13 +759,13 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         const onSubmitResponseData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            setLoading(true)
+            if (rowData.TaskID === info.TaskID) setLoading(true)
+
             const response = new Uint8Array(StringToUint8Array(modifiedResponsePacket))
 
-            if (isEqual(response, info.Response)) {
+            if (isEqual(response, rowData.Response)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -780,12 +780,12 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         const onSubmitPayloadData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
             if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许提交数据")
                 return
             }
-            setLoading(true)
+            if (rowData.TaskID === info.TaskID) setLoading(true)
+
             const payload = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
-            if (isEqual(payload, info.Payload)) {
+            if (isEqual(payload, rowData.Payload)) {
                 grpcMITMV2Forward({
                     TaskID: rowData.TaskID,
                     Forward: true
@@ -831,10 +831,10 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         /**劫持响应并提交数据 */
         const onHijackingResponse = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
             if (value.Status === ManualHijackListStatus.WaitHijack) {
-                yakitNotify("warning", "当前状态不允许劫持")
                 return
             }
-            setLoading(true)
+            if (value.TaskID === info.TaskID) setLoading(true)
+
             grpcMITMV2HijackedCurrentResponse(getActionHijackingRData(value))
             setType("response")
         })
@@ -1044,7 +1044,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
 
     const onHijackCurrentResponse = useMemoizedFn(() => {
         if (info.Status === ManualHijackListStatus.WaitHijack) {
-            yakitNotify("warning", "当前状态不允许 劫持该 Request 对应的响应")
             return
         }
         onHijackingResponse(info)
