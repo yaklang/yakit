@@ -70,7 +70,7 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
             </YakitAutoComplete>
             <div style={{maxHeight: 300, overflowY: "auto"}}>
                 <div style={{marginBottom: 5}}>
-                    <span style={{color: "#ff4d4f"}}>*</span> 添加tab到组：
+                    <span style={{color: "#ff4d4f"}}>*</span> 添加标签页到组：
                 </div>
                 <Checkbox.Group value={checkedTabs} onChange={handleTabsChange}>
                     {tabs.map((item) => (
