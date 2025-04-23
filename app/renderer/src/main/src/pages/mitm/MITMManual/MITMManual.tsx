@@ -4,13 +4,19 @@ import {
     ManualHijackInfoProps,
     ManualHijackInfoRefProps,
     MITMManualProps,
-    MITMV2ManualEditorProps
+    MITMV2ManualEditorProps,
+    PackageTypeProps
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {SingleManualHijackInfoMessage} from "../MITMHacker/utils"
 import {useControllableValue, useCounter, useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {ManualHijackListAction, ManualHijackListStatus, ManualHijackListStatusMap} from "@/defaultConstants/mitmV2"
+import {
+    ManualHijackListAction,
+    ManualHijackListStatus,
+    ManualHijackListStatusMap,
+    PackageType
+} from "@/defaultConstants/mitmV2"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
@@ -47,6 +53,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteGV} from "@/yakitGV"
 import {setClipboardText} from "@/utils/clipboard"
 import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@/assets/icon/outline"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -558,11 +565,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                             index={editorShowIndex}
                             onScrollTo={onScrollTo}
                             info={currentSelectItem}
-                            autoForward={autoForward}
                             handleAutoForward={handleAutoForward}
                             onDiscardData={onDiscardData}
                             loading={!!getLoading(currentSelectItem.TaskID)}
                             setLoading={(l) => setLoading(currentSelectItem.TaskID, l)}
+                            isOnlyLookResponse={isOnlyLookResponse}
                         />
                     )
                 }
@@ -591,7 +598,8 @@ export default MITMManual
 
 const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
     forwardRef((props, ref) => {
-        const {info, index, autoForward, handleAutoForward, onDiscardData, onScrollTo, loading, setLoading} = props
+        const {info, index, isOnlyLookResponse, handleAutoForward, onDiscardData, onScrollTo, loading, setLoading} =
+            props
         // request/ws 修改的值
         const [modifiedRequestPacket, setModifiedRequestPacket] = useState<string>("")
         const [modifiedResponsePacket, setModifiedResponsePacket] = useState<string>("")
@@ -625,6 +633,9 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
         })
         const [responseTypeOptionVal, setResponseTypeOptionVal] = useState<RenderTypeOptionVal>()
+
+        const [type, setType] = useState<PackageTypeProps>("response")
+
         useImperativeHandle(
             ref,
             () => {
@@ -652,6 +663,9 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 onSetResponse(info)
             }
         }, [info])
+        useEffect(() => {
+            if (isOnlyLookResponse) setType("response")
+        }, [isOnlyLookResponse])
         /**TODO - Request 美化缓存 */
         const getRequestEditorBeautify = useMemoizedFn(() => {
             // getRemoteValue(RemoteGV.MITMManualHijackRequestEditorBeautify).then((res) => {
@@ -706,12 +720,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 }
             })
         })
-        const disabledRequest = useCreation(() => {
-            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
-        }, [info.IsWebsocket, info.Status])
-        const disabledResponse = useCreation(() => {
-            return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
-        }, [info.IsWebsocket, info.Status])
 
         /**提交数据 */
         const onSubmitData = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
@@ -828,6 +836,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
             setLoading(true)
             grpcMITMV2HijackedCurrentResponse(getActionHijackingRData(value))
+            setType("response")
         })
         const onRequestTypeOptionVal = useMemoizedFn((value) => {
             // setRequestTypeOptionVal(value)
@@ -837,66 +846,112 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             // setResponseTypeOptionVal(value)
             // setRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify, value ? value : "")
         })
-        const ResizeBoxProps = useCreation(() => {
-            let p = {
-                firstRatio: "50%",
-                secondRatio: "50%"
+
+        const modifiedPacket = useCreation(() => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    return modifiedRequestPacket
+                case PackageType.Response:
+                    return modifiedResponsePacket
+                default:
+                    return ""
             }
-            if (!currentResponsePacketInfo.currentPacket) {
-                p.secondRatio = "0%"
-                p.firstRatio = "100%"
+        }, [type, modifiedResponsePacket, modifiedRequestPacket])
+        const currentPacketInfo = useCreation(() => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    return currentRequestPacketInfo
+                case PackageType.Response:
+                    return currentResponsePacketInfo
+                default:
+                    return {
+                        requestPacket: "",
+                        TaskId: "",
+                        currentPacket: "",
+                        isHttp: true,
+                        traceInfo: {
+                            AvailableDNSServers: [],
+                            DurationMs: 0,
+                            DNSDurationMs: 0,
+                            ConnDurationMs: 0,
+                            TotalDurationMs: 0
+                        }
+                    }
             }
-            return p
-        }, [currentResponsePacketInfo.currentPacket])
+        }, [type, currentRequestPacketInfo, currentResponsePacketInfo])
+        const disabled = useCreation(() => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Request
+                case PackageType.Response:
+                    return info.IsWebsocket ? false : info.Status !== ManualHijackListStatus.Hijacking_Response
+                default:
+                    return true
+            }
+        }, [type, info.IsWebsocket, info.Status])
+
+        const typeOptionVal = useCreation(() => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    return requestTypeOptionVal
+                case PackageType.Response:
+                    return responseTypeOptionVal
+                default:
+                    return "render"
+            }
+        }, [type, requestTypeOptionVal, responseTypeOptionVal])
+
+        const onSetModifiedPacket = useMemoizedFn((v) => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    setModifiedRequestPacket(v)
+                    break
+                case PackageType.Response:
+                    setModifiedResponsePacket(v)
+                    break
+                default:
+                    break
+            }
+        })
+        const onTypeOptionVal = useMemoizedFn((v) => {
+            switch (type) {
+                case PackageType.Request:
+                case PackageType.WS:
+                    onRequestTypeOptionVal(v)
+                    break
+                case PackageType.Response:
+                    onResponseTypeOptionVal(v)
+                    break
+                default:
+                    break
+            }
+        })
         return (
             <YakitSpin spinning={loading}>
-                <YakitResizeBox
-                    firstMinSize={300}
-                    firstNode={
-                        <div style={{height: "100%"}}>
-                            <MITMV2ManualEditor
-                                index={index}
-                                onScrollTo={onScrollTo}
-                                modifiedPacket={modifiedRequestPacket}
-                                setModifiedPacket={setModifiedRequestPacket}
-                                isResponse={false}
-                                info={info}
-                                onDiscardData={onDiscardData}
-                                onSubmitData={onSubmitData}
-                                currentPacketInfo={currentRequestPacketInfo}
-                                disabled={disabledRequest}
-                                handleAutoForward={handleAutoForward}
-                                typeOptionVal={requestTypeOptionVal}
-                                onTypeOptionVal={onRequestTypeOptionVal}
-                                onHijackingResponse={onHijackingResponse}
-                            />
-                        </div>
-                    }
-                    secondMinSize={300}
-                    secondNode={
-                        <>
-                            <div style={{height: "100%"}}>
-                                <MITMV2ManualEditor
-                                    modifiedPacket={modifiedResponsePacket}
-                                    setModifiedPacket={setModifiedResponsePacket}
-                                    isResponse={true}
-                                    info={info}
-                                    onDiscardData={onDiscardData}
-                                    onSubmitData={onSubmitData}
-                                    currentPacketInfo={currentResponsePacketInfo}
-                                    disabled={disabledResponse}
-                                    handleAutoForward={handleAutoForward}
-                                    typeOptionVal={responseTypeOptionVal}
-                                    onTypeOptionVal={onResponseTypeOptionVal}
-                                    onHijackingResponse={onHijackingResponse}
-                                />
-                            </div>
-                        </>
-                    }
-                    lineStyle={{display: !currentResponsePacketInfo.currentPacket ? "none" : ""}}
-                    secondNodeStyle={{display: currentResponsePacketInfo.currentPacket ? "block" : "none"}}
-                    {...ResizeBoxProps}
-                />
+                <div style={{height: "100%"}}>
+                    <MITMV2ManualEditor
+                        type={type}
+                        setType={setType}
+                        index={index}
+                        onScrollTo={onScrollTo}
+                        modifiedPacket={modifiedPacket}
+                        setModifiedPacket={onSetModifiedPacket}
+                        info={info}
+                        onDiscardData={onDiscardData}
+                        onSubmitData={onSubmitData}
+                        currentPacketInfo={currentPacketInfo}
+                        disabled={disabled}
+                        handleAutoForward={handleAutoForward}
+                        typeOptionVal={typeOptionVal}
+                        onTypeOptionVal={onTypeOptionVal}
+                        onHijackingResponse={onHijackingResponse}
+                    />
+                </div>
             </YakitSpin>
         )
     })
@@ -910,7 +965,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         info,
         onDiscardData,
         onSubmitData,
-        isResponse,
         onScrollTo,
         handleAutoForward,
         onHijackingResponse,
@@ -924,6 +978,11 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     })
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
+
+    const [type, setType] = useControllableValue<string>(props, {
+        valuePropName: "type",
+        trigger: "setType"
+    })
 
     useEffect(() => {
         setRefreshTrigger(!refreshTrigger)
@@ -994,6 +1053,10 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const btnDisable = useCreation(() => {
         return info.Status === ManualHijackListStatus.WaitHijack
     }, [info])
+    const isResponse = useCreation(() => {
+        return type === "response"
+    }, [type])
+
     return (
         <NewHTTPPacketEditor
             noMinimap={!isResponse}
@@ -1008,36 +1071,55 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
             // typeOptionVal={typeOptionVal}
             // onTypeOptionVal={(v) => onTypeOptionVal && onTypeOptionVal(v)}
             title={
-                isResponse ? (
-                    <div className={styles["mitm-v2-manual-editor-title"]}>
-                        <span style={{marginRight: 8}}>Response</span>
-                        {info?.TraceInfo?.DurationMs && (
-                            <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
-                        )}
-                    </div>
-                ) : (
-                    <div className={styles["mitm-v2-manual-editor-title"]}>
-                        {info.IsWebsocket ? (
-                            <YakitTag color='danger' size='small'>
-                                Websocket
-                            </YakitTag>
-                        ) : (
-                            <span style={{marginRight: 8}}>Request</span>
-                        )}
-
-                        <YakitTag
-                            color={"info"}
-                            size='small'
-                            style={{cursor: "pointer"}}
-                            onClick={() => onScrollTo && onScrollTo(index || 0)}
-                        >
-                            index:{info.arrivalOrder}
+                <div className={styles["mitm-v2-manual-editor-title"]}>
+                    {info.IsWebsocket ? (
+                        <YakitTag color='danger' size='small'>
+                            Websocket
                         </YakitTag>
+                    ) : (
+                        <>
+                            <YakitRadioButtons
+                                size='small'
+                                buttonStyle='solid'
+                                value={type}
+                                options={[
+                                    {
+                                        label: "请求",
+                                        value: "request"
+                                    },
+                                    {
+                                        label: "响应",
+                                        value: "response"
+                                    }
+                                ]}
+                                onChange={(e) => {
+                                    setType(e.target.value)
+                                }}
+                                style={{marginRight: 8}}
+                            />
+                        </>
+                    )}
+                    <YakitTag
+                        color={"info"}
+                        size='small'
+                        style={{cursor: "pointer"}}
+                        onClick={() => onScrollTo && onScrollTo(index || 0)}
+                    >
+                        index:{info.arrivalOrder}
+                    </YakitTag>
+                    <div className={styles["mitm-v2-manual-editor-title"]}>
                         <YakitTag color='green' size='small'>
                             {ManualHijackListStatusMap[info.Status]}
                         </YakitTag>
                     </div>
-                )
+                    {isResponse && (
+                        <div className={styles["mitm-v2-manual-editor-title"]}>
+                            {info?.TraceInfo?.DurationMs && (
+                                <YakitTag size='small'>{info.TraceInfo.DurationMs} ms</YakitTag>
+                            )}
+                        </div>
+                    )}
+                </div>
             }
             extra={
                 !disabled && (

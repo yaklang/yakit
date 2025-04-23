@@ -29,6 +29,12 @@ export enum ManualHijackType {
     HijackFilter = "hijackFilter"
 }
 
+export enum PackageType {
+    Request = "request",
+    Response = "response",
+    WS = "ws"
+}
+
 export const ManualHijackListStatusMap: Record<string, string> = {
     "hijacking request": "劫持请求",
     "hijacking response": "劫持响应",
