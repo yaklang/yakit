@@ -48,8 +48,6 @@ export interface FileNodeProps {
 }
 
 export interface FileTreeProps {
-    // 根文件夹路径
-    folderPath: string
     data: FileNodeProps[]
     onLoadData: (node: FileNodeProps) => Promise<any>
     foucsedKey: string
@@ -64,7 +62,6 @@ export interface FileTreeProps {
 }
 
 export interface FileTreeNodeProps {
-    isDownCtrlCmd: boolean
     info: FileNodeProps
 
     foucsedKey: string

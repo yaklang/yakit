@@ -1,6 +1,6 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
-import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
+import {ActiveProps, OpenedFileProps, RiskTreeProps, RuleTreeProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlinePluscircleIcon,
@@ -263,15 +263,25 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         setVisible(false)
     })
 
-    const [isUnShow, setUnShow] = useState<boolean>(false)
-    const [active, setActive] = useState<"all"|"risk"|"rule">("all")
+    const [active, setActive] = useState<ActiveProps>("all")
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
-    const rendered = useRef<Set<string>>(new Set(["all"]))
-    const onSetActive = useMemoizedFn((type: "all"|"risk"|"rule") => {
-        if (!rendered.current.has(type as string)) {
-            rendered.current.add(type as string)
+    const rendered = useRef<Set<ActiveProps>>(new Set(["all"]))
+    const onSetActive = useMemoizedFn((type: ActiveProps) => {
+        if (!rendered.current.has(type)) {
+            rendered.current.add(type)
         }
         setActive(type)
+    })
+
+    const getActiveName = useMemoizedFn((type: ActiveProps) => {
+        switch (type) {
+            case "risk":
+                return "漏洞文件"
+            case "rule":
+                return "规则汇总"
+            default:
+                return "文件列表"
+        }
     })
 
     return (
@@ -280,16 +290,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             <div className={styles["left-side-bar-list"]}>
                 <div
                     className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "all",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "all" && isUnShow
+                        [styles["left-side-bar-item-active"]]: active === "all"
                     })}
                     onClick={() => {
-                        if (active !== "all") {
-                            setUnShow(false)
-                        }
-                        if (active === "all") {
-                            setUnShow(!isUnShow)
-                        }
                         onSetActive("all")
                     }}
                 >
@@ -297,16 +300,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 </div>
                 <div
                     className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "risk",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "risk" && isUnShow
+                        [styles["left-side-bar-item-active"]]: active === "risk"
                     })}
                     onClick={() => {
-                        if (active !== "risk") {
-                            setUnShow(false)
-                        }
-                        if (active === "risk") {
-                            setUnShow(!isUnShow)
-                        }
                         onSetActive("risk")
                     }}
                 >
@@ -314,16 +310,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 </div>
                 <div
                     className={classNames(styles["left-side-bar-item"], {
-                        [styles["left-side-bar-item-active"]]: active === "rule",
-                        [styles["left-side-bar-item-advanced-config-unShow"]]: active === "rule" && isUnShow
+                        [styles["left-side-bar-item-active"]]: active === "rule"
                     })}
                     onClick={() => {
-                        if (active !== "rule") {
-                            setUnShow(false)
-                        }
-                        if (active === "rule") {
-                            setUnShow(!isUnShow)
-                        }
                         onSetActive("rule")
                     }}
                 >
@@ -336,7 +325,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
                             <div className={styles["title-box"]}>
-                                <div className={styles["title-style"]}>文件列表</div>
+                                <div className={styles["title-style"]}>{getActiveName(active)}</div>
                                 {fileTreeLoad && <YakitSpin size='small' />}
                             </div>
                             <div className={styles["extra"]}>
@@ -384,18 +373,41 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                         </div>
 
                         <div className={styles["file-tree-tree"]}>
-                            <div className={styles["tree-body"]}>
-                                <FileTree
-                                    folderPath={fileTree.length > 0 ? fileTree[0].path : ""}
-                                    data={fileDetailTree}
-                                    onLoadData={onLoadData}
-                                    onSelect={onSelectFileTree}
-                                    foucsedKey={foucsedKey}
-                                    setFoucsedKey={setFoucsedKey}
-                                    expandedKeys={expandedKeys}
-                                    setExpandedKeys={setExpandedKeys}
-                                />
-                            </div>
+                            {rendered.current.has("all") && (
+                                <div
+                                    className={classNames(styles["tree-body"], {
+                                        [styles["hidden-tree-body"]]: active !== "all"
+                                    })}
+                                >
+                                    <FileTree
+                                        data={fileDetailTree}
+                                        onLoadData={onLoadData}
+                                        onSelect={onSelectFileTree}
+                                        foucsedKey={foucsedKey}
+                                        setFoucsedKey={setFoucsedKey}
+                                        expandedKeys={expandedKeys}
+                                        setExpandedKeys={setExpandedKeys}
+                                    />
+                                </div>
+                            )}
+                            {rendered.current.has("risk") && (
+                                <div
+                                    className={classNames(styles["tree-body"], {
+                                        [styles["hidden-tree-body"]]: active !== "risk"
+                                    })}
+                                >
+                                    1
+                                </div>
+                            )}
+                            {rendered.current.has("rule") && (
+                                <div
+                                    className={classNames(styles["tree-body"], {
+                                        [styles["hidden-tree-body"]]: active !== "rule"
+                                    })}
+                                >
+                                    2
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -445,6 +457,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     )
 })
 
+// 目前已打开的文件列表
 export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {} = props
     const {areaInfo, activeFile} = useStore()
@@ -545,4 +558,27 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
             )}
         </>
     )
+})
+
+// 漏洞文件树
+export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
+    return (
+        <div className={styles["risk-tree"]}>
+            {/* <FileTree
+                folderPath={""}
+                data={[]}
+                onLoadData={onLoadData}
+                onSelect={onSelectFileTree}
+                foucsedKey={foucsedKey}
+                setFoucsedKey={setFoucsedKey}
+                expandedKeys={expandedKeys}
+                setExpandedKeys={setExpandedKeys}
+            /> */}
+        </div>
+    )
+})
+
+// 规则汇总文件树
+export const RuleTree: React.FC<RuleTreeProps> = memo((props) => {
+    return <div className={styles["rule-tree"]}></div>
 })

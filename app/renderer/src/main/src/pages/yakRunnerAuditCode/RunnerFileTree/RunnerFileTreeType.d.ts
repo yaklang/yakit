@@ -6,3 +6,13 @@ export interface RunnerFileTreeProps {
 export interface OpenedFileProps{
     
 }
+
+export type ActiveProps = "all"|"risk"|"rule"
+
+export interface RiskTreeProps {
+
+}
+
+export interface RuleTreeProps {
+    
+}

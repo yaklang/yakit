@@ -59,6 +59,9 @@
                 height: 100%;
                 overflow: hidden;
             }
+            .hidden-tree-body {
+                display: none;
+            }
         }
     }
 }
@@ -200,10 +203,6 @@
         svg {
             color: #ffffff;
         }
-    }
-
-    &-item-advanced-config-unShow {
-        background-color: var(--yakit-primary-3);
     }
 
     &-item-disable {

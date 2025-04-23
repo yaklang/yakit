@@ -13,58 +13,20 @@ import styles from "./FileTree.module.scss"
 import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
 import {setYakRunnerLastFolderExpanded} from "../utils"
+import useStore from "../hooks/useStore"
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
-    const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
-        props
+    const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} = props
+    // const {fileTree} = useStore()
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
-    const getInViewport = useMemoizedFn(() => inViewport)
-
-    const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
-
-    // 复制 粘贴
-    const [copyPath, setCopyPath] = useState<string>("")
 
     useEffect(() => {
         // 滚动文件树
         emiter.on("onCodeAuditScrollToFileTree", onScrollToFileTreeFun)
         return () => {
             emiter.off("onCodeAuditScrollToFileTree", onScrollToFileTreeFun)
-        }
-    }, [])
-
-    useEffect(() => {
-        let system = SystemInfo.system
-        if (!system) {
-        }
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            return
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            // console.log("down", e, SystemInfo)
-            setIsDownCtrlCmd(true)
-        }
-        const handleKeyUp = (e: KeyboardEvent) => {
-            return
-            // console.log("up", e, SystemInfo)
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            setIsDownCtrlCmd(false)
-        }
-
-        document.addEventListener("keydown", handleKeyDown)
-        document.addEventListener("keyup", handleKeyUp)
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown)
-            document.removeEventListener("keyup", handleKeyUp)
         }
     }, [])
 
@@ -85,12 +47,13 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         }
     })
 
-    // 缓存tree展开项 用于关闭后打开
+    // 缓存tree展开项 用于关闭后打开(YakRunner移植功能目前未使用，使用时注意区分树来源)
     const onSaveYakRunnerLastExpanded = useMemoizedFn((value: string[]) => {
-        setYakRunnerLastFolderExpanded({
-            folderPath,
-            expandedKeys: value
-        })
+        return
+        // setYakRunnerLastFolderExpanded({
+        //     folderPath: fileTree.length > 0 ? fileTree[0].path : "",
+        //     expandedKeys: value
+        // })
     })
 
     const onScrollToFileTreeFun = useMemoizedFn((path) => {
@@ -117,17 +80,12 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
             if (foucsedKey === path) {
                 setFoucsedKey("")
             }
-            if (copyPath.length !== 0 && copyPath.startsWith(path)) {
-                setCopyPath("")
-            }
             const newSelectedNodes = selectedNodes.filter((item) => !item.path.startsWith(path))
             const newExpandedKeys = expandedKeys.filter((item) => !item.startsWith(path))
             setSelectedNodes(newSelectedNodes)
             onSaveYakRunnerLastExpanded(newExpandedKeys)
             setExpandedKeys(newExpandedKeys)
         } else {
-            // 全部清空
-            setCopyPath("")
             setFoucsedKey("")
             setSelectedNodes([])
             onSaveYakRunnerLastExpanded([])
@@ -163,17 +121,8 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const handleSelect = useMemoizedFn((selected: boolean, node: FileNodeProps) => {
         let arr = [...selectedNodes]
         let isSelect = selected
-        if (isDownCtrlCmd) {
-            if (selected) {
-                arr = arr.filter((item) => item.path !== node.path)
-            } else {
-                arr = [...arr, node]
-            }
-            isSelect = !isSelect
-        } else {
-            arr = [node]
-            isSelect = true
-        }
+        arr = [node]
+        isSelect = true
         setFoucsedKey(node.path)
         setSelectedNodes([...arr])
         if (onSelect) {
@@ -218,7 +167,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
                 titleRender={(nodeData) => {
                     return (
                         <FileTreeNode
-                            isDownCtrlCmd={isDownCtrlCmd}
                             info={nodeData}
                             foucsedKey={foucsedKey}
                             selectedKeys={selectedKeys}
@@ -234,7 +182,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
 })
 
 const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
-    const {isDownCtrlCmd, info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded} = props
+    const {info, foucsedKey, selectedKeys, expandedKeys, onSelected, onExpanded} = props
 
     const isFoucsed = useMemo(() => {
         return foucsedKey === info.path
@@ -260,8 +208,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         if (info.isLeaf) {
             handleSelect()
         } else {
-            if (isDownCtrlCmd) handleSelect()
-            else handleExpand()
+            handleExpand()
         }
     })
 
