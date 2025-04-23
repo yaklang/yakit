@@ -2116,7 +2116,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filtersType: "dateTime"
                 },
                 width: 200,
-                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
+                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTimestamp(text)}</div>
             },
             {
                 title: "请求大小",

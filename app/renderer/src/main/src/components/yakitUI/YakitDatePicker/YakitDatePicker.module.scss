@@ -108,6 +108,20 @@
             border: 1px solid rgba(242, 139, 68, 0.3);
             cursor: pointer;
         }
+
+        .ant-picker-time-panel-column > li.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+            background: var(--yakit-primary-5);
+        }
+        .ant-picker-time-panel-column > li.ant-picker-time-panel-cell.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+            color: #fff;
+        }
+        .ant-picker-ranges .ant-picker-ok .ant-btn-primary {
+            background-color: var(--yakit-primary-5);
+            color: #fff;
+            border-radius: 4px;
+            border: none;
+            font-size: 12px;
+        }
     }
 }
 
