@@ -14,6 +14,7 @@ import {getMapFileDetail} from "../FileTreeMap/FileMap"
 import emiter from "@/utils/eventBus/eventBus"
 import {setYakRunnerLastFolderExpanded} from "../utils"
 import useStore from "../hooks/useStore"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} = props
@@ -221,7 +222,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             return ""
         }
         if (isFolder) {
-            if (isExpanded) {
+            // 特殊树的可展开结构并不想展示文件夹
+            if (info.icon !== "_fd_default"){
+                return KeyToIcon[info.icon].iconPath
+            }
+            else if (isExpanded) {
                 return KeyToIcon[FolderDefaultExpanded].iconPath
             } else {
                 return KeyToIcon[FolderDefault].iconPath
@@ -264,6 +269,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                         >
                             {info.name}
                         </div>
+                        {info.count && (
+                            <YakitTag size='small' color='info' style={{marginRight: 0, marginLeft: 4}}>
+                                {info.count}
+                            </YakitTag>
+                        )}
                     </div>
                 </div>
             )}

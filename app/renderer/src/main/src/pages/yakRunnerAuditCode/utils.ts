@@ -39,13 +39,50 @@ const initFileTreeData = (list, path) => {
             path: item.Path,
             isFolder: isFolder,
             icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isLeaf: isLeaf
+            isLeaf
+        }
+    })
+}
+
+const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
+    return list.Resources.sort((a, b) => {
+        // 将 ResourceType 为 'program'与'source' 的对象排在前面
+        if (["program", "source"].includes(a.ResourceType) && !["program", "source"].includes(b.ResourceType)) {
+            return -1 // a排在b前面
+        } else if (!["program", "source"].includes(a.ResourceType) && ["program", "source"].includes(b.ResourceType)) {
+            return 1 // b排在a前面
+        } else {
+            return 0 // 保持原有顺序
+        }
+    }).map((item) => {
+        const isFile = !item.HaveChildrenNodes
+        const isFolder = item.HaveChildrenNodes
+        const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
+        const count = item.Extra.find((item) => item.Key === "count")?.Value
+        const name = item.ResourceName.split("/").pop() || ""
+
+        let folderIcon = FolderDefault
+        if(item.ResourceType === "source"){
+            folderIcon = FileSuffix[item.ResourceName.split(".").pop()||""]
+        }
+        if(item.ResourceType === "function"){
+            folderIcon = FileSuffix["function"]
+        }
+        return {
+            parent: path || null,
+            name,
+            path: item.Path,
+            isFolder,
+            icon: isFolder ? folderIcon : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+            isLeaf: isFile,
+            count,
+            data: item
         }
     })
 }
 
 /**
- * @name 审计树获取
+ * @name 审计完整树获取
  */
 export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
     path
@@ -59,6 +96,50 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
+            resolve({res, data})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 漏洞文件/规则汇总树获取
+ */
+export const grpcFetchRiskOrRuleTree: (
+    path: string,
+    Query: {
+        program: string
+        type: "risk" | "file" | "rule"
+        search?: string
+    }
+) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (path, {program, type, search}) => {
+    return new Promise(async (resolve, reject) => {
+        // ssadb path为/时 展示最近编译
+        const params = {
+            Method: "GET",
+            Url: {
+                Schema: "ssarisk",
+                Path: path,
+                Query: [
+                    {
+                        Key: "type",
+                        Value: type
+                    },
+                    {
+                        Key: "program",
+                        Value: type !== "risk" ? program : ""
+                    },
+                    {
+                        Key: "search",
+                        Value: search
+                    }
+                ]
+            }
+        }
+        try {
+            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const data: FileNodeMapProps[] = initRiskOrRuleTreeData(res, path === "/" ? program : path)
             resolve({res, data})
         } catch (error) {
             reject(error)

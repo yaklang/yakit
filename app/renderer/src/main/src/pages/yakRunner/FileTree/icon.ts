@@ -810,7 +810,8 @@ export const FileSuffix: Record<string, string> = {
     "mocha.cjs": "_f_mocha",
     groovy: "_f_groovy",
     jenkinsfile: "_f_jenkinsfile",
-    yak: "_f_yak"
+    yak: "_f_yak",
+    function: "_f_function",
 }
 
 // 以下对象的设置暂未实现

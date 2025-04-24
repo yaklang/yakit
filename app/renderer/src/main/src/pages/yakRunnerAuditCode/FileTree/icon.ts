@@ -273,7 +273,8 @@ export const KeyToIcon: Record<string, {iconPath: string}> = {
     _f_prql: {iconPath: "./icons/database2.svg"},
     _f_prolog: {iconPath: "./icons/swi-prolog.svg"},
     _f_groovy: {iconPath: "./icons/groovy.svg"},
-    _f_yak: {iconPath: "./icons/yak.svg"}
+    _f_yak: {iconPath: "./icons/yak.svg"},
+    _f_function: {iconPath: "./icons/function.svg"}
 }
 
 /** 默认文件图标 */
