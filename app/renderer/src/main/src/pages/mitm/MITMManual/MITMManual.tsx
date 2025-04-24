@@ -334,7 +334,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         })
 
         const onDiscardData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+            if (!!getLoading(rowData.TaskID) || rowData.Status === ManualHijackListStatus.WaitHijack) {
                 return
             }
             const value: MITMV2DropRequest = {
@@ -345,7 +345,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             grpcMITMV2Drop(value)
         })
         const onSetColor = useMemoizedFn((color: string, rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
+            if (!!getLoading(rowData.TaskID) || rowData.Status === ManualHijackListStatus.WaitHijack) {
                 return
             }
             const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
@@ -358,9 +358,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             grpcMITMSetColor(value)
         })
         const onRemoveColor = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                return
-            }
+            if (!!getLoading(rowData.TaskID) || rowData.Status === ManualHijackListStatus.WaitHijack) return
+
             const existedTags = rowData.Tags ? rowData.Tags.filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
             const value: MITMSetColorRequest = {
                 TaskID: rowData.TaskID,
@@ -504,29 +503,68 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             for (let index = 0; index < length; index++) {
                 const item = data[index]
                 if (!item) continue
-                switch (item.Status) {
-                    case ManualHijackListStatus.Hijacking_Request:
-                    case ManualHijackListStatus.Hijacking_Response:
-                    case ManualHijackListStatus.Hijack_WS:
-                        grpcMITMV2Forward({
-                            TaskID: item.TaskID,
-                            Forward: true
-                        })
-                        break
-                    default:
-                        break
-                }
+                onForwardData(item)
             }
             onSelectAll([], [], false)
+        })
+        /**原封不动转发 */
+        const onForwardData = useMemoizedFn((item: SingleManualHijackInfoMessage) => {
+            if (!!getLoading(item.TaskID)) return
+            switch (item.Status) {
+                case ManualHijackListStatus.Hijacking_Request:
+                case ManualHijackListStatus.Hijacking_Response:
+                case ManualHijackListStatus.Hijack_WS:
+                    setLoading(item.TaskID, true)
+                    grpcMITMV2Forward({
+                        TaskID: item.TaskID,
+                        Forward: true
+                    })
+                    break
+                default:
+                    break
+            }
+        })
+        /**批量操作中得劫持响应 */
+        const onHijackingResponseByBatch = useMemoizedFn((item: SingleManualHijackInfoMessage) => {
+            if (!!getLoading(item.TaskID) || item.Status === ManualHijackListStatus.WaitHijack) return
+            let params: MITMV2HijackedCurrentResponseRequest = {
+                TaskID: item.TaskID,
+                SendPacket: true
+            }
+            switch (item.Status) {
+                case ManualHijackListStatus.Hijacking_Request:
+                    params = {
+                        ...params,
+                        Request: item.Request
+                    }
+                    break
+                case ManualHijackListStatus.Hijacking_Response:
+                    params = {
+                        ...params,
+                        Response: item.Response
+                    }
+                    break
+                case ManualHijackListStatus.Hijack_WS:
+                    params = {
+                        ...params,
+                        Payload: item.Payload
+                    }
+                    break
+                default:
+                    break
+            }
+            setLoading(item.TaskID, true)
+            grpcMITMV2HijackedCurrentResponse(params)
         })
         const onBatchDiscardData = useMemoizedFn(() => {
             onBatchBase((item) => onDiscardData(item))
         })
+        /**批量放行，不用管当前选中得数据是否被修改，除了等待劫持状态全部原封不动得转发 */
         const onBatchSubmitData = useMemoizedFn(() => {
-            onBatchBase((item) => manualHijackInfoRef.current.onSubmitData(item))
+            onBatchBase((item) => onForwardData(item))
         })
         const onBatchHijackingResponse = useMemoizedFn(() => {
-            onBatchBase((item) => manualHijackInfoRef.current.onHijackingResponse(item))
+            onBatchBase((item) => onHijackingResponseByBatch(item))
         })
         const onBatchBase = useMemoizedFn((fun) => {
             const length = selectedRowKeys.length
@@ -755,9 +793,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
         })
         const onSubmitRequestData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                return
-            }
+            if (loading || rowData.Status === ManualHijackListStatus.WaitHijack) return
+
             if (rowData.TaskID === info.TaskID) setLoading(true)
 
             const request = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
@@ -775,9 +812,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             grpcMITMV2SubmitRequestData(value)
         })
         const onSubmitResponseData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                return
-            }
+            if (loading || rowData.Status === ManualHijackListStatus.WaitHijack) return
+
             if (rowData.TaskID === info.TaskID) setLoading(true)
 
             const response = new Uint8Array(StringToUint8Array(modifiedResponsePacket))
@@ -796,9 +832,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             grpcMITMV2SubmitResponseData(value)
         })
         const onSubmitPayloadData = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
-            if (rowData.Status === ManualHijackListStatus.WaitHijack) {
-                return
-            }
+            if (loading || rowData.Status === ManualHijackListStatus.WaitHijack) return
+
             if (rowData.TaskID === info.TaskID) setLoading(true)
 
             const payload = new Uint8Array(StringToUint8Array(modifiedRequestPacket))
@@ -847,9 +882,8 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         })
         /**劫持响应并提交数据 */
         const onHijackingResponse = useMemoizedFn((value: SingleManualHijackInfoMessage) => {
-            if (value.Status === ManualHijackListStatus.WaitHijack) {
-                return
-            }
+            if (loading || value.Status === ManualHijackListStatus.WaitHijack) return
+
             if (value.TaskID === info.TaskID) setLoading(true)
 
             grpcMITMV2HijackedCurrentResponse(getActionHijackingRData(value))
