@@ -35,7 +35,7 @@ import {
 import {API} from "@/services/swagger/resposeType"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {Form, Tooltip} from "antd"
+import {Form, Progress, Tooltip} from "antd"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
@@ -86,6 +86,10 @@ import useAdmin from "@/hook/useAdmin"
 
 import "../plugins.scss"
 import styles from "./pluginManage.module.scss"
+import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
+import {randomString} from "@/utils/randomUtil"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {SolidClouduploadIcon} from "@/assets/icon/solid"
 
 const {ipcRenderer} = window.require("electron")
 interface PluginManageProps {}
@@ -550,7 +554,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             yakitNotify("error", "请先登录")
             return
         }
-        if (!admin.ee) {
+        if (!(admin.ee && admin.isAdmin)) {
             yakitNotify("error", "暂无权限")
             return
         }
@@ -951,6 +955,54 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     })
     /** ---------- 下载插件 End ---------- */
 
+    /** ---------- 上传插件 start ---------- */
+    const [uploadPluginLibraryVisible, setUploadPluginLibraryVisible] = useState<boolean>(false)
+    const uploadTokenRef = useRef(randomString(40))
+    const [percent, setPercent] = useState<number>(0)
+    const [percentShow, setPercentShow] = useState<boolean>(false)
+    const onUploadPluginLibrary = useMemoizedFn((path) => {
+        setPercentShow(true)
+        setPercent(0)
+        uploadTokenRef.current = randomString(40)
+
+        ipcRenderer
+            .invoke("split-upload", {
+                url: "fragment/upload",
+                path: path,
+                token: uploadTokenRef.current,
+                type: "PluginDB"
+            })
+            .then((TaskStatus) => {
+                if (TaskStatus) {
+                    setPercent(100)
+                    yakitNotify("success", "上传成功")
+                    setTimeout(() => {
+                        setPercentShow(false)
+                    }, 300)
+                } else {
+                    yakitNotify("error", "上传失败")
+                }
+            })
+            .catch((err) => {
+                yakitNotify("error", "上传失败：" + err)
+            })
+    })
+    const onUploadPluginLibraryCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke("cancle-split-upload").then(() => {
+            setPercentShow(false)
+        })
+    })
+    useEffect(() => {
+        ipcRenderer.on(`callback-split-upload-${uploadTokenRef.current}`, async (e, result: any) => {
+            const {progress} = result
+            setPercent(progress)
+        })
+        return () => {
+            ipcRenderer.removeAllListeners(`callback-split-upload-${uploadTokenRef.current}`)
+        }
+    }, [])
+    /** ---------- 上传插件 end ---------- */
+
     return (
         <div ref={layoutRef} className={styles["plugin-manage-layout"]}>
             {!!plugin && (
@@ -1015,53 +1067,81 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     onClick={() => setImportGroupVisible(true)}
                                 />
                             )}
-                            {admin.ee && (
-                                <FuncBtn
-                                    maxWidth={1150}
-                                    icon={<OutlineClouduploadIcon />}
-                                    type='outline2'
-                                    size='large'
-                                    loading={resetLoading}
-                                    name={"一键重置"}
-                                    onClick={() => {
-                                        let m = showYakitModal({
-                                            title: "一键重置",
-                                            centered: true,
-                                            width: 400,
-                                            closable: true,
-                                            maskClosable: false,
-                                            footer: (
-                                                <div style={{textAlign: "right", width: "100%", margin: "0 15px 15px"}}>
-                                                    <YakitButton
-                                                        type='outline1'
-                                                        style={{marginRight: 15}}
-                                                        onClick={() => {
+                            {admin.ee && admin.isAdmin && (
+                                <YakitDropdownMenu
+                                    menu={{
+                                        data: [
+                                            {key: "resetAll", label: "一键重置"},
+                                            {key: "uploadPluginLibrary", label: "上传插件库"}
+                                        ],
+                                        onClick: ({key}) => {
+                                            switch (key) {
+                                                case "resetAll":
+                                                    let m = showYakitModal({
+                                                        title: "一键重置",
+                                                        centered: true,
+                                                        width: 400,
+                                                        closable: true,
+                                                        maskClosable: false,
+                                                        footer: (
+                                                            <div
+                                                                style={{
+                                                                    textAlign: "right",
+                                                                    width: "100%",
+                                                                    margin: "0 15px 15px"
+                                                                }}
+                                                            >
+                                                                <YakitButton
+                                                                    type='outline1'
+                                                                    style={{marginRight: 15}}
+                                                                    onClick={() => {
+                                                                        m.destroy()
+                                                                    }}
+                                                                >
+                                                                    取消
+                                                                </YakitButton>
+                                                                <YakitButton
+                                                                    onClick={() => {
+                                                                        onResetAll()
+                                                                        m.destroy()
+                                                                    }}
+                                                                >
+                                                                    确定
+                                                                </YakitButton>
+                                                            </div>
+                                                        ),
+                                                        content: (
+                                                            <div style={{padding: 15}}>
+                                                                一键重置会清空线上所有数据，再从服务器内置库中重新内置插件数据，是否确认重置
+                                                            </div>
+                                                        ),
+                                                        onCancel: () => {
                                                             m.destroy()
-                                                        }}
-                                                    >
-                                                        取消
-                                                    </YakitButton>
-                                                    <YakitButton
-                                                        onClick={() => {
-                                                            onResetAll()
-                                                            m.destroy()
-                                                        }}
-                                                    >
-                                                        确定
-                                                    </YakitButton>
-                                                </div>
-                                            ),
-                                            content: (
-                                                <div style={{padding: 15}}>
-                                                    一键重置会清空线上所有数据，再从服务器内置库中重新内置插件数据，是否确认重置
-                                                </div>
-                                            ),
-                                            onCancel: () => {
-                                                m.destroy()
+                                                        }
+                                                    })
+                                                    break
+                                                case "uploadPluginLibrary":
+                                                    setUploadPluginLibraryVisible(true)
+                                                    break
+                                                default:
+                                                    break
                                             }
-                                        })
+                                        }
                                     }}
-                                />
+                                    dropdown={{
+                                        trigger: ["click"],
+                                        placement: "bottom"
+                                    }}
+                                >
+                                    <FuncBtn
+                                        maxWidth={1150}
+                                        icon={<OutlineClouduploadIcon />}
+                                        type='outline2'
+                                        size='large'
+                                        loading={resetLoading}
+                                        name='重置插件'
+                                    />
+                                </YakitDropdownMenu>
                             )}
                             {admin.isAdmin && (
                                 <FuncBtn
@@ -1371,6 +1451,38 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
                 onCallback={handleSingleSameNameHint}
             />
+            {/* 上传插件库 */}
+            {uploadPluginLibraryVisible && (
+                <YakitModal
+                    title='上传插件库'
+                    closable={true}
+                    visible={uploadPluginLibraryVisible}
+                    maskClosable={false}
+                    onCancel={() => setUploadPluginLibraryVisible(false)}
+                    footer={null}
+                >
+                    <UploadPluginLibrary
+                        onUploadPluginLibrary={onUploadPluginLibrary}
+                        onClose={() => setUploadPluginLibraryVisible(false)}
+                    />
+                </YakitModal>
+            )}
+            <YakitHint
+                visible={percentShow}
+                title='上传插件库'
+                heardIcon={<SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />}
+                onCancel={onUploadPluginLibraryCancel}
+                okButtonProps={{style: {display: "none"}}}
+                isDrag={true}
+                mask={false}
+            >
+                <Progress
+                    strokeColor='#F28B44'
+                    trailColor='#F0F2F5'
+                    percent={percent}
+                    format={(percent) => `已上传 ${percent}%`}
+                />
+            </YakitHint>
         </div>
     )
 }
@@ -1749,6 +1861,81 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                         导入
                     </YakitButton>
                 )}
+            </div>
+        </div>
+    )
+}
+
+interface UploadPluginLibraryProps {
+    onUploadPluginLibrary: (path: string) => void
+    onClose: () => void
+}
+const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
+    const {onUploadPluginLibrary, onClose} = props
+    const [file, setFile] = useState<RcFile>()
+
+    const suffixFun = (file_name: string) => {
+        let file_index = file_name.lastIndexOf(".")
+        return file_name.slice(file_index, file_name.length)
+    }
+
+    return (
+        <div className={styles["upload-yakit-ee"]}>
+            <div className={styles["upload-dragger-box"]}>
+                <Dragger
+                    className={styles["upload-dragger"]}
+                    multiple={false}
+                    maxCount={1}
+                    showUploadList={false}
+                    beforeUpload={(f) => {
+                        const file_name = f.name
+                        const suffix = suffixFun(file_name)
+                        const typeArr: string[] = [".db"]
+                        if (!typeArr.includes(suffix)) {
+                            setFile(undefined)
+                            yakitNotify("warning", "上传文件格式错误，请重新上传")
+                            return false
+                        }
+                        setFile(f)
+                        return false
+                    }}
+                >
+                    <div className={styles["upload-info"]}>
+                        <div className={styles["add-file-icon"]}>
+                            <PropertyIcon />
+                        </div>
+                        {file ? (
+                            file.name
+                        ) : (
+                            <div className={styles["content"]}>
+                                <div className={styles["title"]}>
+                                    可将文件拖入框内，或
+                                    <span className={styles["hight-light"]}>点击此处导入</span>
+                                </div>
+                                <div className={styles["sub-title"]}>（仅支持.db格式文件）</div>
+                            </div>
+                        )}
+                    </div>
+                </Dragger>
+            </div>
+            <div style={{textAlign: "right", marginTop: 16}}>
+                <YakitButton className={styles["btn-style"]} type='outline2' style={{marginRight: 8}} onClick={onClose}>
+                    取消
+                </YakitButton>
+                <YakitButton
+                    className={styles["btn-style"]}
+                    type='primary'
+                    disabled={!file}
+                    onClick={() => {
+                        // @ts-ignore
+                        const path = file.path
+                        if (!path) return
+                        onUploadPluginLibrary(path)
+                        onClose()
+                    }}
+                >
+                    上传
+                </YakitButton>
             </div>
         </div>
     )
