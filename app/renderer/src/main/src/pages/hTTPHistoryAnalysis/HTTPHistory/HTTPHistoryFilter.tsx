@@ -630,6 +630,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         if (newSort.orderBy === "BodyLength") {
             newSort.orderBy = "body_length"
         }
+        if (newSort.orderBy === "RequestSizeVerbose") {
+            newSort.orderBy = "request_length"
+        }
         sorterTableRef.current = newSort
 
         setQuery((prev) => {
@@ -821,7 +824,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 dataKey: "Payloads",
                 width: 300,
                 filterProps: {
-                    filterKey: "Payloads",
+                    filterKey: "PayloadKeyword",
                     filtersType: "input",
                     filterIcon: <OutlineSearchIcon className={styles["filter-icon"]} />
                 },
@@ -1088,7 +1091,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 title: "请求大小",
                 dataKey: "RequestSizeVerbose",
                 enableDrag: false,
-                width: 200
+                width: 200,
+                sorterProps: {
+                    sorter: true
+                }
             },
             {
                 title: "操作",
@@ -1371,7 +1377,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 onClickBatch: () => {}
             }
         ]
-    }, [data])
+    }, [data, compareState])
 
     /** 菜单自定义快捷键渲染处理事件 */
     const systemRef = useRef<YakitSystem>("Darwin")
