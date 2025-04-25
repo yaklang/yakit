@@ -24,6 +24,7 @@ import {CVEViewer} from "@/pages/cve/CVEViewer"
 import { YakJavaDecompiler } from "@/pages/yakJavaDecompiler/YakJavaDecompiler";
 import {PageLoading} from "./PageLoading"
 import {
+    PrivateOutlineAIAgentIcon,
     PrivateOutlineAuditCodeIcon,
     PrivateOutlineAuditHoleIcon,
     PrivateOutlineBasicCrawlerIcon,
@@ -57,6 +58,7 @@ import {
     PrivateOutlineTCPPortLogIcon,
     PrivateOutlineWebFuzzerIcon,
     PrivateOutlineWebsocketFuzzerIcon,
+    PrivateSolidAIAgentIcon,
     PrivateSolidAuditCodeIcon,
     PrivateSolidAuditHoleIcon,
     PrivateSolidBasicCrawlerIcon,
@@ -159,6 +161,7 @@ import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
+import {AIAgent} from "@/pages/ai-agent/AIAgent"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -263,7 +266,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "system-config": {label: "系统配置"},
     "yak-java-decompiler": {label: "Java 反编译"},
     "shortcut-key": {label: "快捷键设置"},
-    "fingerprint-manage": {label: "指纹库"}
+    "fingerprint-manage": {label: "指纹库"},
+    "ai-agent": {label: "AIAgent"},
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -307,7 +311,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.System_Config,
     YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey,
-    YakitRoute.FingerprintManage
+    YakitRoute.FingerprintManage,
+    YakitRoute.AI_Agent,
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -351,7 +356,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey,
-    YakitRoute.FingerprintManage
+    YakitRoute.FingerprintManage,
+    YakitRoute.AI_Agent,
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -359,6 +365,7 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.MITMHacker,
     YakitRoute.Mod_Brute,
     YakitRoute.YakScript,
+    YakitRoute.AI_Agent,
     YakitRoute.ShortcutKey
 ]
 /** 一级tab固定展示tab  */
@@ -632,6 +639,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <SystemConfig />
         case YakitRoute.Yak_Java_Decompiler:
             return <YakJavaDecompiler />
+        case YakitRoute.AI_Agent:
+            return <AIAgent />
         case YakitRoute.ShortcutKey:
             return <ShortcutKeyList />
         case YakitRoute.FingerprintManage:
@@ -787,6 +796,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
               page: undefined,
               label: "数据库",
               children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
+          },
+          {
+              page: undefined,
+              label: "AI",
+              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
           }
       ]
     : [
@@ -929,6 +943,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
                   {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
               ]
+          },
+          {
+              page: undefined,
+              label: "AI",
+              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
           }
       ]
 /**
@@ -1189,6 +1208,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineSpaceEngineIcon />,
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
+    },
+    [YakitRoute.AI_Agent]: {
+        page: YakitRoute.AI_Agent,
+        icon: <PrivateOutlineAIAgentIcon />,
+        hoverIcon: <PrivateSolidAIAgentIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
     }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
@@ -1236,6 +1261,11 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
               label: "数据库",
               children: routeToChildren([YakitRoute.DB_Report])
           }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: routeToChildren([YakitRoute.AI_Agent])
+          //   }
       ]
     : [
           {
@@ -1316,6 +1346,11 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
                   YakitRoute.DB_CVE
               ])
           }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: routeToChildren([YakitRoute.AI_Agent])
+          //   }
       ]
 
 /**
@@ -1384,6 +1419,11 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_CVE
         ])
     }
+    //   {
+    //       page: undefined,
+    //       label: "AI",
+    //       children: routeToChildren([YakitRoute.AI_Agent])
+    //   }
 ]
 /**
  * @name private版简易版菜单配置数据

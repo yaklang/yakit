@@ -1,17 +1,31 @@
 import {Dispatch, SetStateAction} from "react"
-import {MCPClientInfo, MCPClientResource} from "./mcpClient/type"
+import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 
 export interface AIAgentProps {}
 
-/** tab 类型 */
-export type AIAgentTab = "mcp"
+// #region 页面全局变量
+/** ai-agent-chat 全局配置 */
+export interface AIAgentSetting {
+    /** 是否自动执行AI任务 */
+    AutoExecute?: boolean
+    /** 是否激活系统文件操作权限 */
+    EnableSystemFileSystemOperator?: AIStartParams["EnableSystemFileSystemOperator"]
+    /** 是否使用默认系统配置AI */
+    UseDefaultAIConfig?: AIStartParams["UseDefaultAIConfig"]
+}
+// #endregion
 
+export interface AIAgentSideListProps {}
+/** tab 类型 */
+export type AIAgentTab = "history" // | "log" | "mcp"
+
+// #region mcp 服务器组件相关定义
 /** resourcesTemplates */
 export interface RenderResourcesTemplates {
     name: string
     uriTemplate: string
 }
-
 /** tool-param */
 export interface RenderToolsParam {
     key: string
@@ -29,7 +43,6 @@ export interface RenderTools {
     description: string
     params: RenderToolsParam[]
 }
-
 /** 客户端配置信息 */
 export interface RenderMCPClientInfo extends MCPClientInfo {
     /** 是否是默认服务器 */
@@ -45,20 +58,19 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
     resourceTemplates?: RenderResourcesTemplates[]
 }
 
-export interface MCPServerProps {}
-export interface ServerSettingProps {
-    servers: RenderMCPClientInfo[]
-    setServers: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
+export interface MCPServerProps {
+    servers?: RenderMCPClientInfo[]
+    setServers?: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
 }
-export interface ServerChatProps {
-    getContainer?: HTMLElement
-    servers: RenderMCPClientInfo[]
-}
+// #endregion
 
-export interface ServerChatInfo {
-    id: string
-    name: string
-    time: number
+export interface AIChatSettingProps {}
+export interface HistoryChatProps {}
+
+export interface ServerChatProps {}
+
+export interface AIChatLogsProps {
+    logs: AIChatMessage.Log[]
 }
 
 export interface AddServerModalProps {
@@ -69,9 +81,9 @@ export interface AddServerModalProps {
 
 export interface EditChatNameModalProps {
     getContainer?: HTMLElement
-    info: ServerChatInfo
+    info: AIChatInfo
     visible: boolean
-    onCallback: (result: boolean, info?: ServerChatInfo) => viod
+    onCallback: (result: boolean, info?: AIChatInfo) => viod
 }
 
 export interface ServerInfoModalProps {
@@ -81,5 +93,11 @@ export interface ServerInfoModalProps {
 }
 
 export interface AIAgentEmptyProps {}
-
-export interface AIAgentTaskProps {}
+export interface AIAgentChatProps extends AIAgentChatStreamProps {
+    chatInfo: AIChatInfo
+    consumption: AIChatMessage.Consumption
+}
+export interface AIAgentChatStreamProps {
+    activeStream: string
+    streams: AIChatStreams[]
+}

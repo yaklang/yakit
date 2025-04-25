@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef, useState} from "react"
 import {Form} from "antd"
 import {useMemoizedFn} from "ahooks"
-import {AddServerModalProps, AIAgentEmptyProps, EditChatNameModalProps, RenderMCPClientInfo} from "./aiAgentType"
+import {AddServerModalProps, EditChatNameModalProps, RenderMCPClientInfo} from "./aiAgentType"
 import {MCPTransportTypeList} from "./defaultConstant"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -9,10 +9,9 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {randomString} from "@/utils/randomUtil"
 import {yakitNotify} from "@/utils/notification"
 import {isValidURL} from "@/utils/tool"
-import {OutlineChevronrightIcon} from "@/assets/icon/outline"
 
-import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+// import classNames from "classnames"
+// import styles from "./AIAgent.module.scss"
 
 export const AddServerModal: React.FC<AddServerModalProps> = memo((props) => {
     const {info, visible, onCallback} = props
@@ -229,52 +228,5 @@ export const EditChatNameModal: React.FC<EditChatNameModalProps> = memo((props) 
                 </Form.Item>
             </Form>
         </YakitModal>
-    )
-})
-
-/** @name 欢迎页 */
-export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
-    const {} = props
-
-    return (
-        <div className={styles["ai-agent-empty"]}>
-            <div className={styles["empty-title"]}>AI-Agent安全助手</div>
-            <div className={styles["empty-subtitle"]}>专注于安全编码与漏洞分析的智能助手</div>
-        </div>
-    )
-})
-
-/** @name 任务栏项(可折叠) */
-export const AIAgentTask: React.FC<AIAgentEmptyProps> = memo((props) => {
-    const {} = props
-
-    const [expand, setExpand] = useState(false)
-    const handleExpand = useMemoizedFn(() => {})
-
-    return (
-        <div className={styles["ai-agent-task"]}>
-            <div className={styles["task-header"]}>
-                <div className={styles["header-title"]} onClick={() => setExpand(!expand)}>
-                    <div className={classNames(styles["expand-icon"], {[styles["expand-active"]]: expand})}>
-                        <OutlineChevronrightIcon />
-                    </div>
-                    <div className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}>
-                        {`任务${expand ? "" : ": 生成一个编码解码base64的脚本"}`}
-                    </div>
-                </div>
-
-                <div className={classNames(styles["header-content"], {[styles["header-content-hidden"]]: !expand})}>
-                    <div className={styles["content-body"]}>
-                        <div className={styles["content-question"]}>生成一个编码解码base64的脚本</div>
-                        <div className={styles["content-setting"]}>
-                            <div>Tokens: ⬆️1.5m ⬇️4.8k</div>
-                            <div>Context Window: 666</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div></div>
-        </div>
     )
 })

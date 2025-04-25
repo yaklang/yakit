@@ -1,7 +1,7 @@
 import {APIFunc, APINoRequestFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
 import {RenderMCPClientInfo} from "./aiAgentType"
-import {MCPCallToolRequest, MCPClientResource} from "./mcpClient/type"
+import {MCPCallToolRequest, MCPClientResource} from "./type/mcpClient"
 
 const {ipcRenderer} = window.require("electron")
 

@@ -9,6 +9,7 @@ import RehypeHighlight from "rehype-highlight"
 import mermaid from "mermaid"
 import rehypeRaw from "rehype-raw"
 import {CopyComponents} from "../yakitUI/YakitTag/YakitTag"
+import rehypeSanitize from "rehype-sanitize"
 
 import "./chatMarkdown.scss"
 
@@ -16,15 +17,14 @@ const {ipcRenderer} = window.require("electron")
 
 interface ChatMarkdownBaseProps {
     content: string
+    skipHtml?: boolean
 }
 export type ChatMarkdownProps = ChatMarkdownBaseProps & React.DOMAttributes<HTMLDivElement>
 
 export const ChatMarkdown: React.FC<ChatMarkdownProps> = memo((props) => {
-    const {content} = props
-
     return (
         <div className='markdown-body'>
-            <MarkdownContent content={content} />
+            <MarkdownContent {...props} />
         </div>
     )
 })
@@ -102,7 +102,7 @@ function PreCode(props: {children?: React.ReactNode}) {
     )
 }
 
-function _MarkDownContent(props: {content: string}) {
+function _MarkDownContent(props: ChatMarkdownBaseProps) {
     return (
         <ReactMarkdown
             remarkPlugins={[RemarkMath, RemarkGfm, RemarkBreaks]}
@@ -115,7 +115,8 @@ function _MarkDownContent(props: {content: string}) {
                         detect: false,
                         ignoreMissing: true
                     }
-                ]
+                ],
+                rehypeSanitize
             ]}
             components={{
                 pre: PreCode,
@@ -131,6 +132,7 @@ function _MarkDownContent(props: {content: string}) {
                     )
                 }
             }}
+            skipHtml={props.skipHtml}
         >
             {props.content}
         </ReactMarkdown>
