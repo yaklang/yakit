@@ -23,6 +23,7 @@ import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
 import {PageLoading} from "./PageLoading"
 import {
+    PrivateOutlineAIAgentIcon,
     PrivateOutlineAuditCodeIcon,
     PrivateOutlineAuditHoleIcon,
     PrivateOutlineBasicCrawlerIcon,
@@ -55,6 +56,7 @@ import {
     PrivateOutlineTCPPortLogIcon,
     PrivateOutlineWebFuzzerIcon,
     PrivateOutlineWebsocketFuzzerIcon,
+    PrivateSolidAIAgentIcon,
     PrivateSolidAuditCodeIcon,
     PrivateSolidAuditHoleIcon,
     PrivateSolidBasicCrawlerIcon,
@@ -155,6 +157,7 @@ import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalys
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import {AIAgent} from "@/pages/ai-agent/AIAgent"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -256,6 +259,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "modify-notepad": {label: `编辑${getNotepadNameByEdition()}`},
     "yakrunner-audit-hole": {label: "审计漏洞"},
     "system-config": {label: "系统配置"},
+    "ai-agent": {label: "AIAgent"},
     "shortcut-key": {label: "快捷键设置"}
 }
 /** 页面路由(无法多开的页面) */
@@ -298,6 +302,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.System_Config,
+    YakitRoute.AI_Agent,
     YakitRoute.ShortcutKey
 ]
 /** 不需要软件安全边距的页面路由 */
@@ -340,6 +345,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Modify_Notepad,
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
+    YakitRoute.AI_Agent,
     YakitRoute.ShortcutKey
 ]
 /** 无滚动条的页面路由 */
@@ -348,6 +354,7 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.MITMHacker,
     YakitRoute.Mod_Brute,
     YakitRoute.YakScript,
+    YakitRoute.AI_Agent,
     YakitRoute.ShortcutKey
 ]
 /** 一级tab固定展示tab  */
@@ -619,6 +626,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:
             return <SystemConfig />
+        case YakitRoute.AI_Agent:
+            return <AIAgent />
         case YakitRoute.ShortcutKey:
             return <ShortcutKey page={params?.shortcutKeyPage || "global"} />
         default:
@@ -768,6 +777,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
               page: undefined,
               label: "数据库",
               children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
+          },
+          {
+              page: undefined,
+              label: "AI",
+              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
           }
       ]
     : [
@@ -909,6 +923,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
                   {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
               ]
+          },
+          {
+              page: undefined,
+              label: "AI",
+              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
           }
       ]
 /**
@@ -1163,6 +1182,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         icon: <PrivateOutlineSpaceEngineIcon />,
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
+    },
+    [YakitRoute.AI_Agent]: {
+        page: YakitRoute.AI_Agent,
+        icon: <PrivateOutlineAIAgentIcon />,
+        hoverIcon: <PrivateSolidAIAgentIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
     }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
@@ -1210,6 +1235,11 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
               label: "数据库",
               children: routeToChildren([YakitRoute.DB_Report])
           }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: routeToChildren([YakitRoute.AI_Agent])
+          //   }
       ]
     : [
           {
@@ -1289,6 +1319,11 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
                   YakitRoute.DB_CVE
               ])
           }
+          //   {
+          //       page: undefined,
+          //       label: "AI",
+          //       children: routeToChildren([YakitRoute.AI_Agent])
+          //   }
       ]
 
 /**
@@ -1356,6 +1391,11 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_CVE
         ])
     }
+    //   {
+    //       page: undefined,
+    //       label: "AI",
+    //       children: routeToChildren([YakitRoute.AI_Agent])
+    //   }
 ]
 /**
  * @name private版简易版菜单配置数据
