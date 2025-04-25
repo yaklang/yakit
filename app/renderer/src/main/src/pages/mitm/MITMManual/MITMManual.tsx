@@ -245,6 +245,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                             }
                             newData.push(item)
                             if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
+                                setLoading(taskID, true)
                                 // 该状态下默认劫持响应为true时,自动发送劫持响应数据
                                 const params: MITMV2HijackedCurrentResponseRequest = {
                                     TaskID: taskID,
