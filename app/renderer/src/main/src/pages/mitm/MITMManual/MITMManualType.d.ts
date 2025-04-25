@@ -13,12 +13,9 @@ export interface MITMManualRefProps {
 export interface MITMManualProps {
     ref?: React.ForwardedRef<MITMManualRefProps>
     downstreamProxyStr: string
-    /**劫持的数据 */
-    manualHijackList: SingleManualHijackInfoMessage[]
-    /**当前数据对应的操作类型 */
-    manualHijackListAction: ManualHijackListAction
     /**劫持类型 */
     autoForward: ManualHijackTypeProps
+    setAutoForward: (a: ManualHijackTypeProps) => void
     /**切换劫持类型 */
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**更改表total */
@@ -27,6 +24,8 @@ export interface MITMManualProps {
     setManualTableSelectNumber: (v: number) => void
     /**是否只看响应 */
     isOnlyLookResponse: boolean
+    /**条件劫持 */
+    hijackFilterFlag: boolean
 }
 export interface ManualHijackInfoRefProps {
     /**提交数据 */

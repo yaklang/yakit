@@ -6,9 +6,7 @@ export enum ManualHijackListAction {
     Hijack_List_Delete = "delete",
     Hijack_List_Update = "update",
     /**重置手动劫持表格数据 */
-    Hijack_List_Reload = "reload",
-    /**前端默认值与后端无关 */
-    Empty = "empty"
+    Hijack_List_Reload = "reload"
 }
 
 export enum ManualHijackListStatus {

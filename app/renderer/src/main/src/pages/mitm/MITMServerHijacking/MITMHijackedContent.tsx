@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCounter, useCreation, useInterval, useMemoizedFn} from "ahooks"
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -36,7 +36,6 @@ import {
     MITMForwardModifiedRequest,
     MITMForwardModifiedResponseRequest,
     MITMHijackGetFilterRequest,
-    MITMV2Response,
     grpcClientMITMHijacked,
     grpcMITMAutoForward,
     grpcMITMCancelHijackedCurrentResponseById,
@@ -51,7 +50,6 @@ import {
     isMITMResponse,
     isMITMV2Response
 } from "../MITMHacker/utils"
-import {ManualHijackListAction} from "@/defaultConstants/mitmV2"
 import {ManualHijackTypeProps, MITMManualRefProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
@@ -448,27 +446,19 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     // 自动转发劫持，进行的操作
     useEffect(() => {
-        grpcClientMITMHijacked(mitmVersion).on(onClientMITMHijacked)
+        // v1版本的手动劫持处理
+        if (mitmVersion !== MITMVersion.V1) return
+        grpcClientMITMHijacked(mitmVersion).on((data: ClientMITMHijackedResponse) => {
+            if (mitmVersion === MITMVersion.V1) {
+                if (!isMITMResponse(data)) return
+                forwardHandler(data)
+            }
+        })
         return () => {
             grpcClientMITMHijacked(mitmVersion).remove()
         }
     }, [autoForward])
-    const [mitmV2Response, setMITMV2Response] = useState<MITMV2Response>()
-    const onClientMITMHijacked = useMemoizedFn((data: ClientMITMHijackedResponse) => {
-        if (mitmVersion === MITMVersion.V2) {
-            if (!isMITMV2Response(data)) return
-            if (autoForward !== "manual" && data.ManualHijackListAction) {
-                if (hijackFilterFlag) {
-                    setAutoForward("manual")
-                    info("已触发 条件 劫持")
-                }
-            }
-            setMITMV2Response(data)
-        } else {
-            if (!isMITMResponse(data)) return
-            forwardHandler(data)
-        }
-    })
+
     const forwardHandler = useMemoizedFn((msg: MITMResponse) => {
         if (msg?.RemoteAddr) {
             setIpInfo(msg?.RemoteAddr)
@@ -829,15 +819,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         <MITMManual
                             ref={mitmManualRef}
                             downstreamProxyStr={downstreamProxyStr}
-                            manualHijackListAction={
-                                mitmV2Response?.ManualHijackListAction || ManualHijackListAction.Empty
-                            }
-                            manualHijackList={mitmV2Response?.ManualHijackList || []}
                             autoForward={autoForward}
+                            setAutoForward={setAutoForward}
                             handleAutoForward={handleAutoForward}
                             setManualTableTotal={setManualTableTotal}
                             setManualTableSelectNumber={setManualTableSelectNumber}
                             isOnlyLookResponse={isOnlyLookResponse}
+                            hijackFilterFlag={hijackFilterFlag}
                         />
                     ) : (
                         <>

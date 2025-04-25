@@ -1,4 +1,4 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, {forwardRef, useContext, useEffect, useImperativeHandle, useRef, useState} from "react"
 import {
     CurrentPacketInfoProps,
     ManualHijackInfoProps,
@@ -8,8 +8,22 @@ import {
     PackageTypeProps
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {SingleManualHijackInfoMessage} from "../MITMHacker/utils"
-import {useControllableValue, useCounter, useCreation, useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {
+    ClientMITMHijackedResponse,
+    grpcClientMITMHijacked,
+    isMITMV2Response,
+    MITMV2Response,
+    SingleManualHijackInfoMessage
+} from "../MITMHacker/utils"
+import {
+    useControllableValue,
+    useCounter,
+    useCreation,
+    useInterval,
+    useMap,
+    useMemoizedFn,
+    useUpdateEffect
+} from "ahooks"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import {
     ManualHijackListAction,
@@ -54,18 +68,19 @@ import {RemoteGV} from "@/yakitGV"
 import {setClipboardText} from "@/utils/clipboard"
 import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@/assets/icon/outline"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import MITMContext, {MITMVersion} from "../Context/MITMContext"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
         const {
-            manualHijackList,
-            manualHijackListAction,
-            downstreamProxyStr,
             autoForward,
+            downstreamProxyStr,
             handleAutoForward,
             setManualTableTotal,
             setManualTableSelectNumber,
-            isOnlyLookResponse
+            isOnlyLookResponse,
+            hijackFilterFlag,
+            setAutoForward
         } = props
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
@@ -78,12 +93,21 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         >(new Map())
 
         const [currentOrder, {inc: addOrder, set: setOrder, reset: resetOrder}] = useCounter(1, {min: 1})
+        const [intervalTime, setIntervalTime] = useState<number>()
+        const mitmV2HijackInfoRef = useRef<SingleManualHijackInfoMessage[]>([])
+        const clearMITMHijackV2 = useInterval(() => {
+            handleManualHijackList()
+        }, intervalTime)
 
         const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
             onSubmitData: () => {},
             onHijackingResponse: () => {}
         })
+        const mitmContent = useContext(MITMContext)
 
+        const mitmVersion = useCreation(() => {
+            return mitmContent.mitmStore.version
+        }, [mitmContent.mitmStore.version])
         useImperativeHandle(
             ref,
             () => {
@@ -98,102 +122,173 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         )
 
         useEffect(() => {
+            // v2版本的手动劫持处理
+            if (mitmVersion !== MITMVersion.V2) return
+            grpcClientMITMHijacked(mitmVersion).on((data: ClientMITMHijackedResponse) => {
+                if (mitmVersion === MITMVersion.V2) {
+                    if (!isMITMV2Response(data)) return
+                    forwardHandlerV2(data)
+                }
+            })
+            return () => {
+                clearMITMHijackV2()
+                grpcClientMITMHijacked(mitmVersion).remove()
+            }
+        }, [])
+        useEffect(() => {
             if (autoForward !== "manual") {
                 resetOrder()
             }
         }, [autoForward])
-        useEffect(() => {
-            handleManualHijackList()
-        }, [manualHijackList, manualHijackListAction])
-        /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
-        const handleManualHijackList = useMemoizedFn(() => {
-            // 只有manualHijackListAction为ManualHijackListAction.Hijack_List_Reload，manualHijackList才有可能为空,为空就相当于清空数据
-            const item = manualHijackList[0] || {}
-            const taskID = item.TaskID
-            switch (manualHijackListAction) {
-                case ManualHijackListAction.Hijack_List_Add:
-                    setLoading(item.TaskID, false)
-                    if (data.length === 0) {
-                        const selectItem: SingleManualHijackInfoMessage = {
-                            ...item,
-                            arrivalOrder: currentOrder
+
+        const forwardHandlerV2 = useMemoizedFn((value: MITMV2Response) => {
+            if (autoForward !== "manual" && value.ManualHijackListAction) {
+                if (hijackFilterFlag) {
+                    setAutoForward("manual")
+                    yakitNotify("info", "已触发 条件 劫持")
+                }
+            }
+            const hijackData = value.ManualHijackList[0]
+            switch (value.ManualHijackListAction) {
+                case ManualHijackListAction.Hijack_List_Add: // 新增的需要考虑到达顺序/arrivalOrder
+                    if (!!hijackData) {
+                        const item: SingleManualHijackInfoMessage = {
+                            ...hijackData,
+                            arrivalOrder: currentOrder,
+                            manualHijackListAction: ManualHijackListAction.Hijack_List_Add
                         }
-                        setCurrentSelectItem(selectItem)
-                        setEditorShowIndexShowIndex(0)
-                    }
-                    setData((preV) => {
-                        const index = preV.findIndex((item) => item.TaskID === taskID)
-                        const addItem = {...item, arrivalOrder: currentOrder}
-                        return index === -1 ? [...preV, {...addItem}] : preV
-                    })
-                    addOrder()
-                    if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
-                        // 该状态下默认劫持响应为true时,自动发送劫持响应数据
-                        const params: MITMV2HijackedCurrentResponseRequest = {
-                            TaskID: item.TaskID,
-                            SendPacket: true,
-                            Request: item.Request
-                        }
-                        grpcMITMV2HijackedCurrentResponse(params)
+                        mitmV2HijackInfoRef.current.push(item)
+                        addOrder()
                     }
                     break
                 case ManualHijackListAction.Hijack_List_Delete:
-                    removeLoading(item.TaskID)
-                    if (currentSelectItem?.TaskID === taskID) {
-                        let selectItem: SingleManualHijackInfoMessage | undefined = undefined
-                        let selectIndex = editorShowIndex
-                        // 删除后选中下一个数据
-                        if (editorShowIndex === 0) {
-                            selectItem = data[editorShowIndex + 1]
-                        } else if (editorShowIndex === data.length - 1) {
-                            selectIndex = editorShowIndex - 1
-                            selectItem = data[selectIndex]
-                        } else if (editorShowIndex) {
-                            selectItem = data[editorShowIndex + 1]
-                        }
-                        setCurrentSelectItem(selectItem)
-                        if (selectItem) {
-                            setEditorShowIndexShowIndex(selectIndex)
-                        } else {
-                            setEditorShowIndexShowIndex(0)
-                        }
+                    const deleteIndex = mitmV2HijackInfoRef.current.findIndex((ele) => ele.TaskID === hijackData.TaskID)
+                    const deleteItem: SingleManualHijackInfoMessage = {
+                        ...hijackData,
+                        manualHijackListAction: ManualHijackListAction.Hijack_List_Delete
                     }
-                    setData((preV) => preV.filter((item) => item.TaskID !== taskID))
-                    break
-                case ManualHijackListAction.Hijack_List_Update:
-                    setLoading(item.TaskID, false)
-                    if (currentSelectItem?.TaskID === taskID) {
-                        setCurrentSelectItem({
-                            ...item,
-                            arrivalOrder: currentSelectItem.arrivalOrder
+                    if (deleteIndex === -1) {
+                        mitmV2HijackInfoRef.current.push(deleteItem)
+                    } else {
+                        mitmV2HijackInfoRef.current.splice(deleteIndex, 1, {
+                            ...deleteItem,
+                            arrivalOrder: mitmV2HijackInfoRef.current[deleteIndex].arrivalOrder
                         })
                     }
-                    setData((preV) => {
-                        const newV = [...preV]
-                        const index = newV.findIndex((item) => item.TaskID === taskID)
-                        if (index === -1) return newV
-                        newV.splice(index, 1, {...item, arrivalOrder: newV[index].arrivalOrder})
-                        return newV
-                    })
+                    break
+                case ManualHijackListAction.Hijack_List_Update:
+                    const updateIndex = mitmV2HijackInfoRef.current.findIndex((ele) => ele.TaskID === hijackData.TaskID)
+                    if (updateIndex === -1) {
+                        // 缓存数据中没有数据，直接使用data
+                        const updateDataIndex = data.findIndex((ele) => ele.TaskID === hijackData.TaskID)
+                        if (updateDataIndex !== -1) {
+                            mitmV2HijackInfoRef.current.push({
+                                ...hijackData,
+                                manualHijackListAction: ManualHijackListAction.Hijack_List_Update,
+                                arrivalOrder: data[updateDataIndex].arrivalOrder
+                            })
+                        }
+                    } else {
+                        // 缓存数据中有add数据或者Update，以缓存数据中的manualHijackListAction为准
+                        mitmV2HijackInfoRef.current.splice(updateIndex, 1, {
+                            ...hijackData,
+                            manualHijackListAction: mitmV2HijackInfoRef.current[updateIndex].manualHijackListAction,
+                            arrivalOrder: mitmV2HijackInfoRef.current[updateIndex].arrivalOrder
+                        })
+                    }
+
                     break
                 case ManualHijackListAction.Hijack_List_Reload:
+                    mitmV2HijackInfoRef.current = []
                     resetLoading()
                     let order = 0
-                    const newData = manualHijackList.map((ele) => {
+                    const newData = value.ManualHijackList.map((ele) => {
                         order += 1
                         return {
                             ...ele,
                             arrivalOrder: order
                         }
                     })
-                    setData(newData)
+                    setOrder(order + 1)
                     setCurrentSelectItem(undefined)
                     setEditorShowIndexShowIndex(0)
-                    setOrder(order + 1)
+                    setData(newData)
                     break
                 default:
                     break
             }
+            if (mitmV2HijackInfoRef.current.length > 0 && !intervalTime) {
+                setIntervalTime(100)
+            }
+        })
+        /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
+        const handleManualHijackList = useMemoizedFn(() => {
+            const length = mitmV2HijackInfoRef.current.length
+            if (!length) return
+            let newData = [...data]
+            let newSelectItem = currentSelectItem
+            let newEditorShowIndexShowIndex = editorShowIndex
+            for (let index = 0; index < length; index++) {
+                const item = mitmV2HijackInfoRef.current[index]
+                const taskID = item.TaskID
+                const manualHijackListAction = item.manualHijackListAction
+                switch (manualHijackListAction) {
+                    case ManualHijackListAction.Hijack_List_Add:
+                        const index = newData.findIndex((ele) => ele.TaskID === taskID)
+                        if (index === -1) {
+                            setLoading(taskID, false)
+                            if (newData.length === 0 && !newSelectItem) {
+                                newSelectItem = {
+                                    ...item
+                                }
+                                newEditorShowIndexShowIndex = 0
+                            }
+                            newData.push(item)
+                            if (item.Status === ManualHijackListStatus.Hijacking_Request && isOnlyLookResponse) {
+                                // 该状态下默认劫持响应为true时,自动发送劫持响应数据
+                                const params: MITMV2HijackedCurrentResponseRequest = {
+                                    TaskID: taskID,
+                                    SendPacket: true,
+                                    Request: item.Request
+                                }
+                                grpcMITMV2HijackedCurrentResponse(params)
+                            }
+                        }
+                        break
+                    case ManualHijackListAction.Hijack_List_Delete:
+                        removeLoading(taskID)
+                        newData = newData.filter((ele) => ele.TaskID !== taskID)
+                        if (newSelectItem?.TaskID === taskID) {
+                            if (newData.length === 1) {
+                                newEditorShowIndexShowIndex = 0
+                                newSelectItem = newData[0]
+                            } else if (newEditorShowIndexShowIndex >= newData.length - 1) {
+                                newEditorShowIndexShowIndex = newData.length - 1
+                                newSelectItem = newData[newEditorShowIndexShowIndex]
+                            } else {
+                                newSelectItem = newData[newEditorShowIndexShowIndex]
+                            }
+                        }
+                        break
+                    case ManualHijackListAction.Hijack_List_Update:
+                        setLoading(taskID, false)
+                        if (newSelectItem?.TaskID === taskID) {
+                            newSelectItem = {
+                                ...item
+                            }
+                        }
+                        const updateIndex = newData.findIndex((ele) => ele.TaskID === taskID)
+                        newData.splice(updateIndex, 1, {...item, arrivalOrder: newData[updateIndex].arrivalOrder})
+                        break
+                    default:
+                        break
+                }
+            }
+            setCurrentSelectItem(newSelectItem)
+            setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
+            setData([...newData])
+            mitmV2HijackInfoRef.current = []
+            setIntervalTime(undefined)
         })
 
         const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
