@@ -179,10 +179,8 @@ $keyColor: map-keys($CardStatusColor);
             @extend %display-column-center;
             justify-content: space-between;
             border-radius: 4px;
-            padding: 12px 16px;
             flex: 1 0 fit-content;
             min-width: 96px;
-            min-height: 68px;
 
             &-data {
                 color: var(--yakit-header-color);

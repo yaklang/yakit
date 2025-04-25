@@ -1,4 +1,4 @@
-import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState,useContext} from "react"
+import React, {ReactNode, Ref, useEffect, useMemo, useRef, useState, useContext} from "react"
 import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress, Modal} from "antd"
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
@@ -6,7 +6,7 @@ import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/input
 import {HTTPFlowDetail} from "../HTTPFlowDetail"
 import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
-import {formatTime, formatTimestamp} from "../../utils/timeUtil"
+import {formatTimestamp} from "../../utils/timeUtil"
 import {useHotkeys} from "react-hotkeys-hook"
 import {
     useCreation,
@@ -2116,7 +2116,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     filtersType: "dateTime"
                 },
                 width: 200,
-                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTime(text)}</div>
+                render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTimestamp(text)}</div>
             },
             {
                 title: "请求大小",
@@ -2345,6 +2345,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const onUpdateOtherPage = useMemoizedFn(() => {
         // 说明： 此处emit并非是通知当前组件 而是通知复用此组件的其余组件 根据pageType区分
         emiter.emit("onDeleteToUpdate", JSON.stringify({sourcePage: pageType}))
+        emiter.emit("onDeleteToUpdateHTTPHistoryFilter")
     })
 
     //删除 重置请求 ID
@@ -4284,7 +4285,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 interface HTTPFlowShieldProps {
     shieldData: ShieldData
     cancleFilter: (s: string | number) => void
-    cancleAllFilter: (mitmVersion:string) => void
+    cancleAllFilter: (mitmVersion: string) => void
 }
 
 export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {

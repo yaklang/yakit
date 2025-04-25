@@ -118,7 +118,6 @@
     &-right {
         height: 100%;
         padding: 0 8px;
-        padding-bottom: 12px;
         &-default {
             display: flex;
             flex-direction: column;
@@ -162,6 +161,7 @@
             }
             .exec-btn {
                 margin-left: 160px;
+                margin-bottom: 12px;
             }
         }
         &-noDefault {
@@ -170,7 +170,7 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                height: 49px;
+                height: 30px;
                 border-bottom: 1px solid #eaecf3;
                 &-text {
                     color: #31343f;
@@ -185,14 +185,14 @@
                 }
             }
             .AnalysisMain-result {
-                height: calc(100% - 49px);
-                padding: 12px 0;
+                height: calc(100% - 15px);
+                padding-top: 12px;
                 &-tab {
                     height: calc(100% - 92px);
                     margin-top: 12px;
                     .rule-data {
                         height: 100%;
-                        padding: 8px 8px 8px 0;
+                        padding: 8px 8px 0 0;
                         .HttpRule-first {
                             height: 100%;
                             .HttpRule-table-wrapper {

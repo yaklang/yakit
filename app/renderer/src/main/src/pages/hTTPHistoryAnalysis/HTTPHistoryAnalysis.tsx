@@ -1,14 +1,6 @@
-import React, {ReactElement, useEffect, useRef, useState} from "react"
+import React, {ReactElement, Suspense, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {
-    useCreation,
-    useDebounceEffect,
-    useDebounceFn,
-    useInViewport,
-    useMemoizedFn,
-    useThrottleEffect,
-    useUpdateEffect
-} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
@@ -17,15 +9,13 @@ import {
     OutlineArrowsexpandIcon,
     OutlineRefreshIcon,
     OutlineReplyIcon,
-    OutlineSearchIcon,
-    OutlineXIcon
+    OutlineSearchIcon
 } from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "../fuzzer/HTTPFuzzerHotPatch"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {defaultHTTPHistoryAnalysisPageInfo, HotPatchDefaultContent} from "@/defaultConstants/hTTPHistoryAnalysis"
-import {MITMRule} from "../mitm/MITMRule/MITMRule"
 import {MITMContentReplacerRule, MITMRulePropRef} from "../mitm/MITMRule/MITMRuleType"
 import {yakitNotify} from "@/utils/notification"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -45,11 +35,10 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
-import {isEqual} from "lodash"
+import {cloneDeep, isEqual} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -60,7 +49,10 @@ import {Uint8ArrayToString} from "@/utils/str"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import styles from "./HTTPHistoryAnalysis.module.scss"
+
+const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 
 const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
@@ -68,7 +60,7 @@ const {ipcRenderer} = window.require("electron")
 interface HTTPHistoryAnalysisProps {
     pageId: string
 }
-export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) => {
+export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.memo((props) => {
     const {pageId} = props
     const {queryPagesDataById} = usePageInfo(
         (s) => ({
@@ -166,11 +158,14 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = (props) =
             />
         </div>
     )
-}
+})
 
-type tabKeys = "hot-patch" | "rule"
+type TabKeys = "hot-patch" | "rule"
+type TabRenderState = {
+    [K in TabKeys]: boolean
+}
 interface TabsItem {
-    key: tabKeys
+    key: TabKeys
     label: ReactElement | string
     contShow: boolean
 }
@@ -207,7 +202,11 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
 
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
-    const [curTabKey, setCurTabKey] = useState<tabKeys>("hot-patch")
+    const [curTabKey, setCurTabKey] = useState<TabKeys>("hot-patch")
+    const [initRenderTabCont, setInitRenderTabCont] = useState<TabRenderState>({
+        ["rule"]: false,
+        ["hot-patch"]: false
+    }) // 初次页面渲染的时候，非当前tab的内容是否不加载
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([
         {
             key: "rule",
@@ -220,6 +219,11 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             contShow: false // 初始为false
         }
     ])
+    const updateInitRenderTabCont = (activeKey: TabKeys) => {
+        setInitRenderTabCont((prev) => {
+            return Object.fromEntries(Object.keys(prev).map((key) => [key, key === activeKey])) as TabRenderState
+        })
+    }
     useEffect(() => {
         getRemoteValue(RemoteHistoryGV.HistoryAnalysisLeftTabs).then((setting: string) => {
             if (setting) {
@@ -236,10 +240,16 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                         return [...prev]
                     })
                     setCurTabKey(tabs.curTabKey)
+                    if (tabs.contShow) {
+                        updateInitRenderTabCont(tabs.curTabKey)
+                    } else {
+                        // 规则表没有渲染出来但是这里需要拿到规则数据
+                        onSetRules()
+                    }
                 } catch (error) {
                     setTabsData((prev) => {
                         prev.forEach((i) => {
-                            if (i.key === "hot-patch") {
+                            if (i.key === "rule") {
                                 i.contShow = true
                             } else {
                                 i.contShow = false
@@ -247,8 +257,12 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                         })
                         return [...prev]
                     })
-                    setCurTabKey("hot-patch")
+                    setCurTabKey("rule")
+                    updateInitRenderTabCont("rule")
                 }
+
+                // 获取热加载缓存数据
+                getRemoteValueHotCode()
             }
         })
     }, [])
@@ -269,6 +283,14 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 }
             }
         }
+
+        setInitRenderTabCont((prev) => {
+            return {
+                ...prev,
+                [item.key]: true
+            }
+        })
+
         const contShow = !item.contShow
         setTabsData((prev) => {
             prev.forEach((i) => {
@@ -296,7 +318,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const [curHotPatch, setCurHotPatch, getCurHotPatch] = useGetSetState<string>(HotPatchDefaultContent)
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>([])
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
-    useEffect(() => {
+    const getRemoteValueHotCode = useMemoizedFn(() => {
         getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave).then((setting: string) => {
             let code = HotPatchDefaultContent
             try {
@@ -310,8 +332,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 onSaveHotCode(false)
             }, 50)
         })
-    }, [])
-
+    })
     const onSaveHotCode = useMemoizedFn((notifyFlag: boolean = true) => {
         setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, JSON.stringify({code: getCurHotPatch()}))
         notifyFlag && yakitNotify("success", "保存成功")
@@ -354,13 +375,25 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const onRefreshCurrentRules = useMemoizedFn(() => {
         setMitmRuleKey(randomString(40))
     })
-    const onSetRules = useMemoizedFn((r) => {
-        setCurRules(
-            r.map((item) => ({
-                ...item,
-                ...rulesResetFieldsRef.current
-            }))
-        )
+    const onSetRules = useMemoizedFn((r?: MITMContentReplacerRule[]) => {
+        if (r === undefined) {
+            ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
+                const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
+                setCurRules(
+                    newRules.map((item) => ({
+                        ...item,
+                        ...rulesResetFieldsRef.current
+                    }))
+                )
+            })
+        } else {
+            setCurRules(
+                r.map((item) => ({
+                    ...item,
+                    ...rulesResetFieldsRef.current
+                }))
+            )
+        }
     })
     const judgmentRulesChange = useMemoizedFn(() => {
         return new Promise((resolve) => {
@@ -485,12 +518,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     })
 
     const onStartExecute = () => {
-        handleTabClick({
-            key: curTabKey,
-            label: "",
-            contShow: true
-        })
-
         // 热加载、规则保存操作
         onSaveHotCode(false)
         mitmRuleRef.current?.onSaveToDataBase(() => {})
@@ -527,7 +554,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 RawResponse: rawResponse
             }
         }
-
         ipcRenderer.invoke("AnalyzeHTTPFlow", execParamsRef.current, tokenRef.current).then(() => {
             debugPluginStreamEvent.start()
             setExecuteStatus("process")
@@ -566,19 +592,28 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         setActiveKey(key)
     })
 
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "55%",
-            secondRatio: "45%"
-        }
-
-        if (openTabsFlag) {
-            p.firstRatio = "55%"
-            if (executeStatus !== "default") {
-                p.firstRatio = "45%"
-                p.secondRatio = "55%"
+    // #region YakitResizeBox
+    const [lastRatio, setLastRatio] = useState<{firstRatio: string; secondRatio: string}>({
+        firstRatio: "40%",
+        secondRatio: "60%"
+    })
+    useEffect(() => {
+        getRemoteValue(RemoteHistoryGV.HTTPFlowAnalysisMainYakitResizeBox).then((res) => {
+            if (res) {
+                try {
+                    const {firstSizePercent, secondSizePercent} = JSON.parse(res)
+                    setLastRatio({
+                        firstRatio: firstSizePercent,
+                        secondRatio: secondSizePercent
+                    })
+                } catch (error) {}
             }
-        } else {
+        })
+    }, [])
+    const ResizeBoxProps = useCreation(() => {
+        let p = cloneDeep(lastRatio)
+
+        if (!openTabsFlag) {
             p.firstRatio = "24px"
         }
 
@@ -587,7 +622,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             p.firstRatio = "100%"
         }
         return p
-    }, [fullScreenFirstNode, openTabsFlag, executeStatus])
+    }, [fullScreenFirstNode, openTabsFlag, lastRatio])
+    // #endregion
 
     return (
         <div className={styles["AnalysisMain"]}>
@@ -624,84 +660,92 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                     className={styles["hotPatch-wrapper"]}
                                     style={{display: curTabKey === "hot-patch" ? "block" : "none"}}
                                 >
-                                    <div className={styles["hotPatch-header"]}>
-                                        <div className={styles["hotPatch-header-left"]}>
-                                            <HotCodeTemplate
-                                                type='httpflow-analyze'
-                                                hotPatchTempLocal={hotPatchTempLocal}
-                                                onSetHotPatchTempLocal={setHotPatchTempLocal}
-                                                onClickHotCode={setCurHotPatch}
-                                            ></HotCodeTemplate>
-                                        </div>
-                                        <div className={styles["hotPatch-header-right"]}>
-                                            <YakitPopconfirm
-                                                title={"确认重置热加载代码？"}
-                                                onConfirm={() => {
-                                                    setCurHotPatch(HotPatchDefaultContent)
-                                                }}
-                                                placement='top'
-                                            >
-                                                <YakitButton type='text'>
-                                                    <OutlineRefreshIcon />
-                                                </YakitButton>
-                                            </YakitPopconfirm>
-                                            <YakitButton
-                                                type='outline1'
-                                                onClick={() => setAddHotCodeTemplateVisible(true)}
-                                            >
-                                                保存模板
-                                            </YakitButton>
-                                            <AddHotCodeTemplate
-                                                type='httpflow-analyze'
-                                                hotPatchTempLocal={hotPatchTempLocal}
-                                                hotPatchCode={curHotPatch}
-                                                visible={addHotCodeTemplateVisible}
-                                                onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
-                                            ></AddHotCodeTemplate>
-                                            <YakitButton type='outline1' onClick={() => onSaveHotCode()}>
-                                                保存
-                                            </YakitButton>
-                                            {fullScreenFirstNode ? (
-                                                <OutlineArrowscollapseIcon
-                                                    className={styles["expand-icon"]}
-                                                    onClick={() => setFullScreenFirstNode(false)}
+                                    {initRenderTabCont["hot-patch"] && (
+                                        <>
+                                            <div className={styles["hotPatch-header"]}>
+                                                <div className={styles["hotPatch-header-left"]}>
+                                                    <HotCodeTemplate
+                                                        type='httpflow-analyze'
+                                                        hotPatchTempLocal={hotPatchTempLocal}
+                                                        onSetHotPatchTempLocal={setHotPatchTempLocal}
+                                                        onClickHotCode={setCurHotPatch}
+                                                    ></HotCodeTemplate>
+                                                </div>
+                                                <div className={styles["hotPatch-header-right"]}>
+                                                    <YakitPopconfirm
+                                                        title={"确认重置热加载代码？"}
+                                                        onConfirm={() => {
+                                                            setCurHotPatch(HotPatchDefaultContent)
+                                                        }}
+                                                        placement='top'
+                                                    >
+                                                        <YakitButton type='text'>
+                                                            <OutlineRefreshIcon />
+                                                        </YakitButton>
+                                                    </YakitPopconfirm>
+                                                    <YakitButton
+                                                        type='outline1'
+                                                        onClick={() => setAddHotCodeTemplateVisible(true)}
+                                                    >
+                                                        保存模板
+                                                    </YakitButton>
+                                                    <AddHotCodeTemplate
+                                                        type='httpflow-analyze'
+                                                        hotPatchTempLocal={hotPatchTempLocal}
+                                                        hotPatchCode={curHotPatch}
+                                                        visible={addHotCodeTemplateVisible}
+                                                        onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                                                    ></AddHotCodeTemplate>
+                                                    <YakitButton type='outline1' onClick={() => onSaveHotCode()}>
+                                                        保存
+                                                    </YakitButton>
+                                                    {fullScreenFirstNode ? (
+                                                        <OutlineArrowscollapseIcon
+                                                            className={styles["expand-icon"]}
+                                                            onClick={() => setFullScreenFirstNode(false)}
+                                                        />
+                                                    ) : (
+                                                        <OutlineArrowsexpandIcon
+                                                            className={styles["expand-icon"]}
+                                                            onClick={() => {
+                                                                setFullScreenFirstNode(true)
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className={styles["hotPatch-editor"]}>
+                                                <YakitEditor
+                                                    type={"mitm"}
+                                                    value={curHotPatch}
+                                                    setValue={setCurHotPatch}
+                                                    noMiniMap={true}
+                                                    noWordWrap={true}
                                                 />
-                                            ) : (
-                                                <OutlineArrowsexpandIcon
-                                                    className={styles["expand-icon"]}
-                                                    onClick={() => {
-                                                        setFullScreenFirstNode(true)
-                                                    }}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className={styles["hotPatch-editor"]}>
-                                        <YakitEditor
-                                            type={"mitm"}
-                                            value={curHotPatch}
-                                            setValue={setCurHotPatch}
-                                            noMiniMap={true}
-                                            noWordWrap={true}
-                                        />
-                                    </div>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <div
                                     className={styles["rule-wrapper"]}
                                     style={{display: curTabKey === "rule" ? "block" : "none"}}
                                 >
-                                    <MITMRule
-                                        key={mitmRuleKey}
-                                        ref={mitmRuleRef}
-                                        ruleUse='historyAnalysis'
-                                        inMouseEnterTable={true}
-                                        visible={true}
-                                        status={mitmStatus}
-                                        excludeColumnsKey={JSON.stringify(["NoReplace", "Drop", "ExtraRepeat"])}
-                                        excludeBatchMenuKey={JSON.stringify(["no-replace", "replace"])}
-                                        onSetRules={onSetRules}
-                                        onRefreshCom={onRefreshCurrentRules}
-                                    />
+                                    {initRenderTabCont["rule"] && (
+                                        <Suspense fallback={<div>loading</div>}>
+                                            <MITMRule
+                                                key={mitmRuleKey}
+                                                ref={mitmRuleRef}
+                                                ruleUse='historyAnalysis'
+                                                inMouseEnterTable={true}
+                                                visible={true}
+                                                status={mitmStatus}
+                                                excludeColumnsKey={JSON.stringify(["NoReplace", "Drop", "ExtraRepeat"])}
+                                                excludeBatchMenuKey={JSON.stringify(["no-replace", "replace"])}
+                                                onSetRules={onSetRules}
+                                                onRefreshCom={onRefreshCurrentRules}
+                                            />
+                                        </Suspense>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -800,6 +844,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             }}
                                                             editorOperationRecord='HTTP_FLOW_ANALYSIS_REQUEST_Record'
                                                             onlyBasicMenu
+                                                            noLineNumber
                                                         />
                                                     </>
                                                 }
@@ -841,6 +886,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             onEditor={setResEditor}
                                                             editorOperationRecord='HTTP_FLOW_ANALYSIS_RESPONSE_Record'
                                                             onlyBasicMenu
+                                                            noLineNumber
                                                         />
                                                     </>
                                                 }
@@ -918,7 +964,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 </div>
                                 <div className={styles["AnalysisMain-result"]}>
                                     {streamInfo.cardState.length > 0 && (
-                                        <HorizontalScrollCard title='Data Card' data={streamInfo.cardState} />
+                                        <HorizontalScrollCard title='Data Card' data={streamInfo.cardState} compact />
                                     )}
                                     <div className={styles["AnalysisMain-result-tab"]}>
                                         <PluginTabs activeKey={activeKey} onChange={onTabChange}>
@@ -944,6 +990,19 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 secondNodeStyle={{
                     padding: fullScreenFirstNode ? 0 : undefined,
                     display: fullScreenFirstNode ? "none" : ""
+                }}
+                onMouseUp={({firstSizePercent, secondSizePercent}) => {
+                    setLastRatio({
+                        firstRatio: firstSizePercent,
+                        secondRatio: secondSizePercent
+                    })
+                    setRemoteValue(
+                        RemoteHistoryGV.HTTPFlowAnalysisMainYakitResizeBox,
+                        JSON.stringify({
+                            firstSizePercent,
+                            secondSizePercent
+                        })
+                    )
                 }}
                 {...ResizeBoxProps}
             />

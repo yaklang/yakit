@@ -5,6 +5,8 @@ export interface HorizontalScrollCardProps {
     title?: string
     /**卡片数据源 */
     data: HoldGRPCStreamProps.InfoCards[]
+    /**卡片标题数据横向排列 */
+    compact?: boolean
 }
 
 export interface StatusCardListProps {
@@ -27,6 +29,7 @@ export interface StatusCardProps {
 export interface HorizontalScrollCardItemInfoSingleProps {
     item: StatusCardProps
     tag: string
+    compact: boolean
 }
 /**滚动信息记录 */
 export interface HorizontalScrollCardScrollProps {

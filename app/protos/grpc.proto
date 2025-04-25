@@ -4954,6 +4954,8 @@ message QueryHTTPFlowRequest {
   repeated string ExcludeKeywords = 44;
   string KeywordType = 45; // <empty> = all/response/request
   repeated int64 AnalyzedIds = 46;
+
+  string PayloadKeyword = 47;
 }
 
 message HTTPFlowsToOnlineRequest {

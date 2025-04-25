@@ -46,7 +46,7 @@ const getBgColor = (id: string) => {
 }
 
 export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.memo((props) => {
-    const {title, data = []} = props
+    const {title, data = [], compact = false} = props
     const [scroll, setScroll] = useState<HorizontalScrollCardScrollProps>({
         scrollLeft: 0,
         scrollRight: 0
@@ -167,6 +167,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
                                 <HorizontalScrollCardItemInfoSingle
                                     tag={cardItem.tag}
                                     item={(cardItem.info || [])[0]}
+                                    compact={compact}
                                 />
                             )}
                         </React.Fragment>
@@ -242,7 +243,7 @@ const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps> = Reac
 })
 
 const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardItemInfoSingleProps> = React.memo((props) => {
-    const {tag, item} = props
+    const {tag, item, compact} = props
     const isSuccess = useMemo(() => {
         return getTextColor(tag || item.Id) === "success"
     }, [tag, item.Id])
@@ -263,16 +264,39 @@ const HorizontalScrollCardItemInfoSingle: React.FC<HorizontalScrollCardItemInfoS
                     [styles["text-error"]]: isError
                 }
             )}
+            style={{
+                flexDirection: compact ? "row" : "column",
+                alignItems: compact ? "center" : undefined,
+                gap: compact ? "8px" : undefined,
+                minHeight: compact ? undefined : 68,
+                padding: compact ? "5px 16px" : "12px 16px"
+            }}
         >
-            <div
-                className={classNames(styles["horizontal-scroll-card-list-item-info-single-data"], {
-                    [styles["text-success"]]: isSuccess,
-                    [styles["text-error"]]: isError
-                })}
-            >
-                {item.Data}
-            </div>
-            <div className={styles["horizontal-scroll-card-list-item-info-single-id"]}>{tag || item.Id}</div>
+            {compact ? (
+                <>
+                    <div className={styles["horizontal-scroll-card-list-item-info-single-id"]}>{tag || item.Id}</div>
+                    <div
+                        className={classNames(styles["horizontal-scroll-card-list-item-info-single-data"], {
+                            [styles["text-success"]]: isSuccess,
+                            [styles["text-error"]]: isError
+                        })}
+                    >
+                        {item.Data}
+                    </div>
+                </>
+            ) : (
+                <>
+                    <div
+                        className={classNames(styles["horizontal-scroll-card-list-item-info-single-data"], {
+                            [styles["text-success"]]: isSuccess,
+                            [styles["text-error"]]: isError
+                        })}
+                    >
+                        {item.Data}
+                    </div>
+                    <div className={styles["horizontal-scroll-card-list-item-info-single-id"]}>{tag || item.Id}</div>
+                </>
+            )}
         </div>
     )
 })
