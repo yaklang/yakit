@@ -38,9 +38,7 @@ import {
 } from "@/assets/newIcon"
 import {useHotkeys} from "react-hotkeys-hook"
 import moment, {Moment} from "moment"
-// import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
-import {useDrag, useDrop, DndProvider} from "react-dnd"
-import {HTML5Backend} from "react-dnd-html5-backend"
+import {useDrag, useDrop} from "react-dnd"
 import type {Identifier, XYCoord} from "dnd-core"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
@@ -1447,6 +1445,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
         >
             {list.length !== 0 &&
                 list.map((item, number) => {
+                    console.log(item.data, "data")
                     return (
                         <React.Fragment key={`${item.data[renderKey]}-${colIndex}` || number}>
                             {(colIndex === 0 && (

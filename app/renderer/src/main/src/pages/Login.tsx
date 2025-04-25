@@ -9,8 +9,8 @@ import {ConfigPrivateDomain} from "@/components/ConfigPrivateDomain/ConfigPrivat
 import {showModal} from "../utils/showModal"
 import {isEnterpriseEdition} from "@/utils/envfile"
 import {apiDownloadPluginMine} from "./plugins/utils"
-import { YakitModalConfirm } from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 const {ipcRenderer} = window.require("electron")
 
 export interface LoginProp {
@@ -55,6 +55,8 @@ const Login: React.FC<LoginProp> = (props) => {
                 }
             })
                 .then((res) => {
+                    console.log("登录地址", res)
+                    return
                     if (res) ipcRenderer.send("user-sign-in", {url: res, type: type})
                 })
                 .catch((err) => {

@@ -103,6 +103,7 @@ import {shallow} from "zustand/shallow"
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import console from "console"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -1203,6 +1204,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
         updateQueryParams(realQuery)
+        console.log(realQuery, " realQuery")
         ipcRenderer
             .invoke("QueryHTTPFlows", realQuery)
             .then((rsp: YakQueryHTTPFlowResponse) => {
@@ -2115,7 +2117,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 //     sorter: true
                 // },
                 filterProps: {
-                    filterKey: "UpdatedAt",
+                    filterKey: "UpdatedAta",
                     filtersType: "dateTime"
                 },
                 width: 200,
@@ -5002,7 +5004,7 @@ export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.m
                 </YakitButton>
             }
         >
-            <div style={{padding: 15}} className="yakit-progress-wrapper">
+            <div style={{padding: 15}} className='yakit-progress-wrapper'>
                 {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
                 <Progress
                     strokeColor='#F28B44'
