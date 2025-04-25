@@ -1460,7 +1460,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                             {(colIndex === 0 && (
                                 <CellRenderDrop
                                     colIndex={colIndex}
-                                    key={`${item.data[renderKey]}-${colIndex}` || number}
+                                    key={`${item.data[renderKey]}-${colIndex}-${item.data["cellClassName"]}` || number}
                                     item={item}
                                     columnsItem={columnsItem}
                                     number={item.index}
@@ -1487,7 +1487,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                 <CellRender
                                     colIndex={colIndex}
                                     key={
-                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}` ||
+                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}-${item.data["cellClassName"]}` ||
                                         number
                                     }
                                     item={item}
