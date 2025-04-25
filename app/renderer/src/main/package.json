@@ -92,6 +92,7 @@
         "react-sparklines": "^1.7.0",
         "rehype-highlight": "^6.0.0",
         "rehype-katex": "^6.0.3",
+        "rehype-sanitize": "^6.0.0",
         "remark-breaks": "^3.0.3",
         "remark-directive": "^3.0.0",
         "remark-gfm": "^3.0.1",
