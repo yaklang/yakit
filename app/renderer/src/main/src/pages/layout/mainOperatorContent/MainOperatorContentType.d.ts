@@ -202,6 +202,7 @@ export interface SubTabItemProps {
     setSelectSubMenu: (m: MultipleNodeInfo) => void
     onRemoveSub: (m: MultipleNodeInfo) => void
     onContextMenu: (e: React.MouseEvent, subItem: MultipleNodeInfo) => void
+    onShowRenameModal: (subItem: MultipleNodeInfo) => void
     combineColor?: string
     /**是否可以拖拽 */
     isDragDisabled: boolean
