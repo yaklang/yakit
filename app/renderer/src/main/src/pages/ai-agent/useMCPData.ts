@@ -1,5 +1,5 @@
 import {useEffect, useRef} from "react"
-import {MCPData, MCPDataProgress} from "./mcpClient/type"
+import {MCPData, MCPDataProgress} from "./type/mcpClient"
 import {yakitNotify} from "@/utils/notification"
 import {grpcMCPClientCancelCallTool} from "./grpc"
 import {useMemoizedFn} from "ahooks"
