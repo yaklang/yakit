@@ -1,6 +1,6 @@
 {
     "name": "yakit",
-    "version": "v1.4.1-0426",
+    "version": "1.4.1-0426",
     "description": "Yakit is for yaklang.io Electron GUI Entry",
     "main": "app/main/index.js",
     "scripts": {
