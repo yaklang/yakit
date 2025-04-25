@@ -192,3 +192,32 @@ export const formatMCPResourceTemplates = (templates: any[]): RenderResourcesTem
 export const formatTime = (time: number): string => {
     return moment(time).format("YYYY-MM-DD HH:mm:ss")
 }
+
+/** @name 将纳秒转换为 YYYY-MM-DD HH:mm:ss */
+export const formatTimeNS = (time: number): string => {
+    const timestampNs = BigInt(`${time}`)
+    const divisor = BigInt(1000000) // 1e6
+
+    const quotient = timestampNs / divisor
+    const remainder = timestampNs % divisor
+
+    const timestampMs = Number(quotient) + Number(remainder) / 1e6
+
+    return moment(timestampMs).format("YYYY-MM-DD HH:mm:ss")
+}
+
+/** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
+export const formatTimeUnix = (time: number): string => {
+    return moment.unix(time).format("YYYY-MM-DD HH:mm:ss")
+}
+
+/** @name 将数字转换为 k/m 等带单位字符 */
+export const formatNumberUnits = (num: number) => {
+    if (num >= 1_000_000) {
+        return (num / 1_000_000).toFixed(1) + "m"
+    } else if (num >= 1_000) {
+        return (num / 1_000).toFixed(1) + "k"
+    } else {
+        return num.toString()
+    }
+}

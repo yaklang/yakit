@@ -838,6 +838,7 @@ message AIOutputEvent {
   bytes StreamDelta = 7;
   bool IsJson = 8;
   bytes Content = 9;
+  int64 Timestamp = 10;
 }
 
 message AIInputEvent {
