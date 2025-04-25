@@ -68,12 +68,14 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
     const reset = useMemoizedFn(() => {
         setSearchValue("")
         setRealSearch("")
+        setInit(!init)
     })
 
     // 搜索树
     const onSearchTree = useMemoizedFn((value: string) => {
         setSearchValue(value)
         setRealSearch(value)
+        setInit(!init)
     })
 
     // 刷新树
@@ -83,7 +85,6 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
             setQuery({...query, ...cacheQueryRef.current})
         }
         reset()
-        setInit(!init)
     })
 
     return (

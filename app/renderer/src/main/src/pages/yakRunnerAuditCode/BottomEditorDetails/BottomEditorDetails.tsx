@@ -3,7 +3,7 @@ import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
 import styles from "./BottomEditorDetails.module.scss"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, JumpToAuditEditorProps, ShowItemType} from "./BottomEditorDetailsType"
-import {OutlineChevrondownIcon, OutlineChevronupIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineChevronupIcon, OutlineCollectionIcon, OutlineXIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useStore from "../hooks/useStore"
 import emiter from "@/utils/eventBus/eventBus"
@@ -13,7 +13,7 @@ import useDispatcher from "../hooks/useDispatcher"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {Divider} from "antd"
+import {Divider, Tooltip} from "antd"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {SeverityMapTag, YakitRiskDetailContent} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
@@ -42,6 +42,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
     const [refresh, setRefresh] = useState<boolean>(false)
+
+    const [reset,setReset] = useState<boolean>(false)
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -141,6 +143,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                             )}
                         </>
                     )}
+                    {(activeFile?.syntaxCheck || [])?.length > 0 && showItem === "holeDetail" && (
+                        <Tooltip title='一键收起'>
+                            <YakitButton
+                                type='text2'
+                                icon={<OutlineCollectionIcon />}
+                                onClick={() => {
+                                    setReset(!reset)
+                                }}
+                            />
+                        </Tooltip>
+                    )}
                     <YakitButton
                         type='text2'
                         icon={<OutlineXIcon />}
@@ -172,11 +185,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {activeFile?.syntaxCheck && activeFile.syntaxCheck.length !== 0 ? (
-                            <HoleBugList
-                                bugHash={bugHash}
-                                refresh={refresh}
-                                list={activeFile.syntaxCheck}
-                            />
+                            <HoleBugList bugHash={bugHash} refresh={refresh} list={activeFile.syntaxCheck} reset={reset}/>
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />
@@ -331,10 +340,11 @@ interface HoleBugListProps {
     bugHash: string
     refresh: boolean
     list: SSARisk[]
+    reset?: boolean
 }
 
 export const HoleBugList: React.FC<HoleBugListProps> = React.memo((props) => {
-    const {bugHash, refresh, list} = props
+    const {bugHash, refresh, list, reset} = props
     const {activeFile} = useStore()
     const [openKeyList, setOpenKeyList] = useState<string[]>([])
     // 数组去重
@@ -347,7 +357,7 @@ export const HoleBugList: React.FC<HoleBugListProps> = React.memo((props) => {
 
     useUpdateEffect(() => {
         setOpenKeyList([])
-    }, [activeFile?.path])
+    }, [activeFile?.path,reset])
     return (
         <>
             {list.map((info) => (

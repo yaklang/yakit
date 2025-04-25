@@ -15,6 +15,7 @@ import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -57,17 +58,22 @@ const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
     }).map((item) => {
         const isFile = !item.HaveChildrenNodes
         const isFolder = item.HaveChildrenNodes
-        const suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
+        let suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
         const count = item.Extra.find((item) => item.Key === "count")?.Value
         const name = item.ResourceName.split("/").pop() || ""
-
+        const severity = item.Extra.find((item) => item.Key === "severity")?.Value
+        const severityValue = SeverityMapTag.find((item) => item.key.includes(severity || ""))?.value
         let folderIcon = FolderDefault
-        if(item.ResourceType === "source"){
-            folderIcon = FileSuffix[item.ResourceName.split(".").pop()||""]
+        if (item.ResourceType === "source") {
+            folderIcon = FileSuffix[item.ResourceName.split(".").pop() || ""]
         }
-        if(item.ResourceType === "function"){
+        if (item.ResourceType === "function") {
             folderIcon = FileSuffix["function"]
         }
+        if (item.ResourceType === "risk" && severityValue) {
+            suffix = severityValue
+        }
+
         return {
             parent: path || null,
             name,

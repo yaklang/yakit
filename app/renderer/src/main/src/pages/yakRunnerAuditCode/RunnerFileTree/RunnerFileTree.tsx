@@ -34,7 +34,7 @@ import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {AfreshAuditModal, AuditHistoryTable} from "../AuditCode/AuditCode"
 
 import {KeyToIcon} from "@/pages/yakRunner/FileTree/icon"
-import {OpenFileByPathProps} from "../YakRunnerAuditCodeType"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "../YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {FileTree} from "../FileTree/FileTree"
 import {YakitRoute} from "@/enums/yakitRoute"
@@ -45,6 +45,7 @@ import {AuditSearchModal} from "../AuditSearchModal/AuditSearch"
 import {FolderDefault} from "../FileTree/icon"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {YakURLResource} from "@/pages/yakURLTree/data"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
@@ -85,6 +86,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             setExpandedKeys(defaultExpanded)
         } catch (error) {}
     })
+
+    const [fileRefresh, setFileRefresh] = useState<boolean>(false)
+    const [ruleRefresh, setRuleRefresh] = useState<boolean>(false)
 
     // 打开已有项目
     const onCodeAuditHistoryExpandedFun = useMemoizedFn(() => {
@@ -339,14 +343,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                 {fileTreeLoad && active === "all" && <YakitSpin size='small' />}
                             </div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={"定位"}>
-                                    <YakitButton
-                                        disabled={fileTreeLoad || fileTree.length === 0}
-                                        type='text2'
-                                        icon={<OutlinePositionIcon />}
-                                        onClick={onActiveFileScrollToFileTree}
-                                    />
-                                </Tooltip>
+                                {active === "all" && (
+                                    <Tooltip title={"定位"}>
+                                        <YakitButton
+                                            disabled={fileTreeLoad || fileTree.length === 0}
+                                            type='text2'
+                                            icon={<OutlinePositionIcon />}
+                                            onClick={onActiveFileScrollToFileTree}
+                                        />
+                                    </Tooltip>
+                                )}
                                 <Tooltip title={"搜索"}>
                                     <YakitButton
                                         disabled={fileTree.length === 0}
@@ -363,7 +369,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         disabled={fileTree.length === 0}
                                         icon={<OutlineRefreshIcon />}
                                         onClick={() => {
-                                            emiter.emit("onCodeAuditRefreshTree")
+                                            if (active === "all") {
+                                                emiter.emit("onCodeAuditRefreshTree")
+                                            } else if (active === "file") {
+                                                setFileRefresh(!fileRefresh)
+                                            } else if (active === "rule") {
+                                                setRuleRefresh(!ruleRefresh)
+                                            }
                                         }}
                                     />
                                 </Tooltip>
@@ -406,7 +418,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         [styles["hidden-tree-body"]]: active !== "file"
                                     })}
                                 >
-                                    <RiskTree type='file' projectName={projectName} />
+                                    <RiskTree type='file' projectName={projectName} init={fileRefresh} />
                                 </div>
                             )}
                             {rendered.current.has("rule") && (
@@ -415,7 +427,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         [styles["hidden-tree-body"]]: active !== "rule"
                                     })}
                                 >
-                                    <RiskTree type='rule' projectName={projectName} />
+                                    <RiskTree type='rule' projectName={projectName} init={ruleRefresh} />
                                 </div>
                             )}
                         </div>
@@ -588,13 +600,8 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
     const [expandedKeys, setExpandedKeys] = React.useState<string[]>([])
 
     useEffect(() => {
-        setFoucsedKey("")
-        setExpandedKeys([])
-    }, [init])
-
-    useEffect(() => {
-        projectName && onInitRiskTreeFun(projectName, true)
-    }, [projectName, search])
+        projectName && onInitRiskTreeFun(projectName)
+    }, [projectName, init])
 
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
     const initRiskFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
@@ -632,14 +639,14 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
     })
 
     // 重置Map与轮询
-    const resetMap = useMemoizedFn((isFirst) => {
+    const resetMap = useMemoizedFn(() => {
         clearMap()
-        // FileTree缓存清除
-        isFirst && emiter.emit("onCodeAuditResetFileTree")
     })
 
-    const onInitRiskTreeFun = useMemoizedFn(async (program: string, isFirst: boolean = true) => {
-        resetMap(isFirst)
+    const onInitRiskTreeFun = useMemoizedFn(async (program: string) => {
+        resetMap()
+        setFoucsedKey("")
+        setExpandedKeys([])
         if (program.length > 0) {
             const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search})
             const children: FileTreeListProps[] = []
@@ -694,6 +701,23 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
         return onLoadRiskTree(node.path, projectName)
     })
 
+    // 跳转至审计结果
+    const onJump = useMemoizedFn((data: YakURLResource) => {
+        const variable = data.Extra.find((item) => item.Key === "variable")?.Value
+        const index = data.Extra.find((item) => item.Key === "index")?.Value
+        const result_id = data.Extra.find((item) => item.Key === "result_id")?.Value
+        let rightParams: AuditEmiterYakUrlProps = {
+            Schema: "syntaxflow",
+            Location: projectName || "",
+            Path: `/${variable}/${index}`,
+            Body: ""
+        }
+        if (result_id) {
+            rightParams.Query = [{Key: "result_id", Value: result_id}]
+        }
+        emiter.emit("onCodeAuditOpenRightDetail", JSON.stringify(rightParams))
+    })
+
     // 文件树选中
     const onSelectFileTree = useMemoizedFn(
         (selectedKeys: string[], e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}) => {
@@ -705,6 +729,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                 if (e.selected) {
                     const {path, name, parent, isFolder, data} = e.node
                     if (!isFolder && data) {
+                        onJump(data)
                         const arr = data.Extra.filter((item) => item.Key === "code_range")
                         const hash = data.Extra.find((item) => item.Key === "hash")?.Value
                         if (arr.length > 0) {
