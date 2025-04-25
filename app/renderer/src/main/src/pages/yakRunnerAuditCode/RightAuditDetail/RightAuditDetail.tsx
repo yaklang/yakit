@@ -26,7 +26,7 @@ import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetails
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
 import {clearMapResultDetail, getMapResultDetail, setMapResultDetail} from "./ResultMap"
 import {Selection} from "../RunnerTabs/RunnerTabsType"
-import { YakitSpin } from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 export interface JumpSourceDataProps {
     title: string
@@ -174,24 +174,22 @@ export const AuditResultBox: React.FC<AuditResultBoxProps> = (props) => {
     const {nodeId, graphLine, message, activeKey, setActiveKey, auditRightParams} = props
     const [resultKey, setResultKey] = useState<string | string[]>()
 
-    const onExpendRightPathFun = useMemoizedFn((value:string)=>{
+    const onExpendRightPathFun = useMemoizedFn((value: string) => {
         try {
             const data: JumpSourceDataProps = JSON.parse(value)
-            const index = getMapResultDetail(data.title).findIndex((item)=>item.node_id === data.node_id)
+            const index = getMapResultDetail(data.title).findIndex((item) => item.node_id === data.node_id)
             setActiveKey([data.title])
             setResultKey([`${data.title}-${index}`])
-        } catch (error) {
-            
-        }
+        } catch (error) {}
     })
 
-    useEffect(()=>{
+    useEffect(() => {
         // 打开编译右侧详情
         emiter.on("onExpendRightPath", onExpendRightPathFun)
         return () => {
             emiter.off("onExpendRightPath", onExpendRightPathFun)
         }
-    },[])
+    }, [])
 
     useUpdateEffect(() => {
         if (activeKey === undefined) {
@@ -318,6 +316,8 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
+    // 记录root节点id 使样式控制将其排除在外
+    const parentElementNodeRef = useRef<string>()
     // 初始默认样式
     const onInitSvgStyle = useMemoizedFn((id?: string) => {
         if (id) {
@@ -332,6 +332,7 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                         if (parentElement) {
                             // 新增class用于屏蔽通用hover样式
                             parentElement.classList.add("node-main")
+                            parentElementNodeRef.current = parentElement.id
                             // 查找该元素下的所有 ellipse 标签
                             const ellipses = parentElement.getElementsByTagName("ellipse")
 
@@ -350,10 +351,10 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
 
     // 更改SVG样式
     const onChangeSvgStyle = useMemoizedFn((id?: string) => {
-        if (styleNodeRef.current) {
+        if (styleNodeRef.current && styleNodeRef.current !== parentElementNodeRef.current) {
             onElementStyle(styleNodeRef.current, "black", "#ffffff")
         }
-        if (id) {
+        if (id && id !== parentElementNodeRef.current) {
             styleNodeRef.current = id
             onElementStyle(styleNodeRef.current, "#f28b44", "#fbe7d9")
         }
@@ -367,7 +368,9 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
             if (titleElement) {
                 const titleText = titleElement.textContent
                 // 本身节点不用点击展开详情
-                if (titleText === node_id) return
+                // if (titleText === node_id) return
+
+                // 节点本身的反选
                 if (titleText === nodeId) {
                     setNodeId(undefined)
                     onChangeSvgStyle()
@@ -381,14 +384,29 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         }
     })
 
-    const onRefreshAuditDetailFun = useMemoizedFn((newNodeId?:string) => {
-        if(newNodeId && svgBoxRef.current){
+    const onJumpEventListener = useMemoizedFn((event: any) => {
+        const target = event.target
+        if (target && target?.tagName === "text" && (target.parentNode?.id || "").startsWith("node")) {
+            const titleElement = target.parentNode.querySelector("title")
+            if (titleElement) {
+                const titleText = titleElement.textContent
+                // 直接跳转
+                const result = getMapGraphInfoDetail(titleText)
+                result && onJumpRunnerFile(result)
+            }
+        }
+    })
+
+    const onRefreshAuditDetailFun = useMemoizedFn((newNodeId?: string) => {
+        if (newNodeId && svgBoxRef.current) {
             // 此处根据node_id染色
             // 查找 title 为 n6 的元素
-            const targetElement = Array.from(svgBoxRef.current.getElementsByTagName('title')).find(el => el.innerHTML === newNodeId);
+            const targetElement = Array.from(svgBoxRef.current.getElementsByTagName("title")).find(
+                (el) => el.innerHTML === newNodeId
+            )
             if (targetElement) {
                 // 获取父元素的 id
-                const parentId = targetElement?.parentElement?.id;
+                const parentId = targetElement?.parentElement?.id
                 onChangeSvgStyle(parentId)
             }
         }
@@ -407,9 +425,10 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
         if (!graph) return
         instance().then((viz) => {
             const svg = viz.renderSVGElement(graph, {})
-            svgRef.current = svg
 
-            svg.addEventListener("click", onEventListener)
+            svgRef.current = svg
+            svg.addEventListener("click", onJumpEventListener)
+            svg.addEventListener("contextmenu", onEventListener)
 
             if (svgBoxRef.current) {
                 // 清空所有子元素
@@ -421,6 +440,13 @@ export const FlowChartBox: React.FC<FlowChartBoxProps> = (props) => {
                 onInitSvgStyle(node_id)
             }
         })
+
+        return () => {
+            if (svgRef.current) {
+                svgRef.current.removeEventListener("click", onJumpEventListener)
+                svgRef.current.removeEventListener("contextmenu", onEventListener)
+            }
+        }
     }, [graph])
 
     const contentInfo = useMemo(() => {
@@ -617,7 +643,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
     const [nodeId, setNodeId] = useState<string>()
     const [refresh, setRefresh] = useState<boolean>(false)
     const [activeKey, setActiveKey] = useState<string | string[]>()
-    const [loading,setLoading] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
     useEffect(() => {
         if (isShowAuditDetail && auditRightParams) {
             initData(auditRightParams)
@@ -677,61 +703,61 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
 
     return (
         <YakitSpin spinning={loading}>
-        <div className={classNames(styles["right-audit-detail"])}>
-            <div className={styles["header"]}>
-                <div className={styles["relative-box"]}>
-                    <div className={styles["absolute-box"]}>
-                        <div className={styles["title"]}>审计结果</div>
-                        <div className={styles["extra"]}>
-                            <Tooltip title='一键收起'>
+            <div className={classNames(styles["right-audit-detail"])}>
+                <div className={styles["header"]}>
+                    <div className={styles["relative-box"]}>
+                        <div className={styles["absolute-box"]}>
+                            <div className={styles["title"]}>审计结果</div>
+                            <div className={styles["extra"]}>
+                                <Tooltip title='一键收起'>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineCollectionIcon />}
+                                        disabled={(graphLine || []).length === 0}
+                                        onClick={() => {
+                                            setActiveKey(undefined)
+                                        }}
+                                    />
+                                </Tooltip>
                                 <YakitButton
                                     type='text2'
-                                    icon={<OutlineCollectionIcon />}
-                                    disabled={(graphLine || []).length === 0}
+                                    icon={<OutlineXIcon />}
                                     onClick={() => {
-                                        setActiveKey(undefined)
+                                        setShowAuditDetail(false)
                                     }}
                                 />
-                            </Tooltip>
-                            <YakitButton
-                                type='text2'
-                                icon={<OutlineXIcon />}
-                                onClick={() => {
-                                    setShowAuditDetail(false)
-                                }}
-                            />
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div className={styles["main"]}>
+                    <YakitResizeBox
+                        isVer={true}
+                        secondRatio={!isShowAuditDetail ? "0px" : undefined}
+                        lineDirection='bottom'
+                        firstRatio={"200px"}
+                        firstMinSize={140}
+                        firstNodeStyle={{padding: 0}}
+                        secondNodeStyle={{padding: 0}}
+                        secondMinSize={350}
+                        firstNode={
+                            <>
+                                {auditRightParams && (
+                                    <AuditResultBox
+                                        activeKey={activeKey}
+                                        setActiveKey={setActiveKey}
+                                        graphLine={graphLine}
+                                        message={message}
+                                        nodeId={nodeId}
+                                        auditRightParams={auditRightParams}
+                                    />
+                                )}
+                            </>
+                        }
+                        secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
+                    />
+                </div>
             </div>
-            <div className={styles["main"]}>
-                <YakitResizeBox
-                    isVer={true}
-                    secondRatio={!isShowAuditDetail ? "0px" : undefined}
-                    lineDirection='bottom'
-                    firstRatio={"200px"}
-                    firstMinSize={140}
-                    firstNodeStyle={{padding: 0}}
-                    secondNodeStyle={{padding: 0}}
-                    secondMinSize={350}
-                    firstNode={
-                        <>
-                            {auditRightParams && (
-                                <AuditResultBox
-                                    activeKey={activeKey}
-                                    setActiveKey={setActiveKey}
-                                    graphLine={graphLine}
-                                    message={message}
-                                    nodeId={nodeId}
-                                    auditRightParams={auditRightParams}
-                                />
-                            )}
-                        </>
-                    }
-                    secondNode={<FlowChartBox graph={graph} refresh={refresh} node_id={nodeId} />}
-                />
-            </div>
-        </div>
         </YakitSpin>
     )
 }
