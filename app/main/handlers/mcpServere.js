@@ -1,7 +1,6 @@
 const {ipcMain} = require("electron")
 const {Client} = require("@modelcontextprotocol/sdk/client/index.js")
 const {StdioClientTransport} = require("@modelcontextprotocol/sdk/client/stdio.js")
-const {handleIPCError} = require("../handleIPC")
 // 动态 import
 async function newSSE(url) {
     const {SSEClientTransport} = await import("@modelcontextprotocol/sdk/client/sse.js")
@@ -9,6 +8,8 @@ async function newSSE(url) {
     const transport = new SSEClientTransport(uri)
     return transport
 }
+const {handleIPCError} = require("../handleIPC")
+const handlerHelper = require("./handleStreamWithContext")
 
 /**
  * @typedef {Object} ClientConfig
@@ -270,4 +271,27 @@ module.exports = (win, getClient) => {
             }
         })
     })
+
+    let aiChatStreamPool = new Map()
+    ipcMain.handle("start-ai-agent-chat", async (e, token, params) => {
+        let stream = getClient().StartAITask()
+        handlerHelper.registerHandler(win, stream, aiChatStreamPool, token)
+        try {
+            stream.write({...params})
+        } catch (error) {
+            throw new Error(error)
+        }
+    })
+    ipcMain.handle("send-ai-agent-chat", async (e, token, params) => {
+        const currentStream = aiChatStreamPool.get(token)
+        if (!currentStream) {
+            return Promise.reject("stream no exist")
+        }
+        try {
+            currentStream.write({...params})
+        } catch (error) {
+            throw new Error(error)
+        }
+    })
+    ipcMain.handle("cancel-ai-agent-chat", handlerHelper.cancelHandler(aiChatStreamPool))
 }
