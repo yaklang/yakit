@@ -1,5 +1,79 @@
 const {ipcMain} = require("electron")
 const DNS = require("dns")
+const {engineLogOutputFile, getFormattedDateTime} = require("../logFile")
+
+// 创建消息发送器的工厂函数
+const createMessageSender = (stream, options) => {
+    const {maxRetries = 3} = options || {}
+    // 内部变量
+    let count = 0
+    let isProcessing = false
+    let messageStreamRequest = [] // 消息数据
+    // 添加重试计数器
+    let retryMap = new Map()
+    // 失败重试
+    const onErrorRetry = (id, message) => {
+        const retries = retryMap.get(id) || 0
+        if (retries < maxRetries) {
+            retryMap.set(id, retries + 1)
+            messageStreamRequest.unshift(message)
+        } else {
+            engineLogOutputFile(
+                JSON.stringify({
+                    grpcIInterface: "MITMV2",
+                    time: getFormattedDateTime(),
+                    message
+                })
+            )
+        }
+    }
+    // 处理请求发送
+    const processQueue = async () => {
+        if (isProcessing || !stream || !messageStreamRequest.length) return
+
+        isProcessing = true
+        const {id, message} = messageStreamRequest.shift()
+        try {
+            // 尝试写入流
+            const canWrite = stream.write(
+                message, // 消息序列化方法
+                (error) => {
+                    if (error) {
+                        onErrorRetry(id, message)
+                    }
+                }
+            )
+            // 处理背压
+            if (!canWrite) {
+                await new Promise((resolve) => stream.once("drain", resolve))
+            }
+        } catch (err) {
+            onErrorRetry(id, message)
+        } finally {
+            await new Promise((resolve) => setTimeout(resolve, 20)) // 必须加上，不然后端接口会卡死
+            isProcessing = false
+            processQueue() // 继续处理下一条
+        }
+    }
+    // 对外暴露的接口
+    return {
+        send: (data) => {
+            count += 1
+            messageStreamRequest.push({
+                id: count,
+                message: data
+            })
+            processQueue() // 触发处理
+        },
+        destroy: () => {
+            count = 0
+            isProcessing = false
+            messageStreamRequest = []
+            retryMap.clear()
+            stream.cancel()
+        }
+    }
+}
 
 // module.exports = (win, originGetClient) => {
 module.exports = (win, getClient) => {
@@ -7,6 +81,9 @@ module.exports = (win, getClient) => {
     let currentPort
     let currentHost
     let currentDownstreamProxy
+    let sendMessage
+    let destroyMessage
+
     // 用于恢复正在劫持的 MITM 状态
     ipcMain.handle("mitmV2-have-current-stream", (e) => {
         return {
@@ -20,44 +97,34 @@ module.exports = (win, getClient) => {
     // 发送恢复会话信息，让服务器把上下文发回来
     ipcMain.handle("mitmV2-recover", (e) => {
         if (stream) {
-            stream.write({
-                RecoverContext: true
-            })
+            sendMessage({RecoverContext: true})
         }
     })
 
     // 发送恢复会话信息，让服务器把上下文发回来
     ipcMain.handle("mitmV2-reset-filter", (e) => {
         if (stream) {
-            stream.write({
-                ResetFilter: true
-            })
+            sendMessage({ResetFilter: true})
         }
     })
 
     //
     ipcMain.handle("mitmV2-auto-forward", (e, value) => {
         if (stream) {
-            stream.write({SetAutoForward: true, AutoForwardValue: value})
+            sendMessage({SetAutoForward: true, AutoForwardValue: value})
         }
     })
 
     ipcMain.handle("mitmV2-enable-plugin-mode", (e, InitPluginNames) => {
         if (stream) {
-            stream.write({
-                SetPluginMode: true,
-                InitPluginNames
-            })
+            sendMessage({SetPluginMode: true, InitPluginNames})
         }
     })
 
     // MITM 启用插件
     ipcMain.handle("mitmV2-exec-script-content", (e, content) => {
         if (stream) {
-            stream.write({
-                SetYakScript: true,
-                YakScriptContent: content
-            })
+            sendMessage({SetYakScript: true, YakScriptContent: content})
         }
     })
 
@@ -65,27 +132,21 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitmV2-exec-script-by-id", (e, data) => {
         if (stream) {
             const {id, params} = data
-            stream.write({
-                SetYakScript: true,
-                YakScriptID: `${id}`,
-                YakScriptParams: params
-            })
+            sendMessage({SetYakScript: true, YakScriptID: `${id}`, YakScriptParams: params})
         }
     })
 
     // MITM 获取当前已经启用的插件
     ipcMain.handle("mitmV2-get-current-hook", (e, data) => {
         if (stream) {
-            stream.write({
-                GetCurrentHook: true
-            })
+            sendMessage({GetCurrentHook: true})
         }
     })
 
     // MITM 移除插件
     ipcMain.handle("mitmV2-remove-hook", (e, params) => {
         if (stream) {
-            stream.write({
+            sendMessage({
                 RemoveHook: true,
                 RemoveHookParams: params
             })
@@ -95,43 +156,35 @@ module.exports = (win, getClient) => {
     // 设置过滤器
     ipcMain.handle("mitmV2-filter", (e, filter) => {
         if (stream) {
-            stream.write(filter)
+            sendMessage(filter)
         }
     })
 
     // 设置正则替换
     ipcMain.handle("mitmV2-content-replacers", (e, Replacers) => {
         if (stream) {
-            stream.write({Replacers, SetContentReplacers: true})
+            sendMessage({Replacers, SetContentReplacers: true})
         }
     })
 
     // 清除 mitm 插件缓存
     ipcMain.handle("mitmV2-clear-plugin-cache", () => {
         if (stream) {
-            stream.write({
-                SetClearMITMPluginContext: true
-            })
+            sendMessage({SetClearMITMPluginContext: true})
         }
     })
 
     // 过滤 ws
     ipcMain.handle("mitmV2-filter-websocket", (e, filterWebsocket) => {
         if (stream) {
-            stream.write({
-                FilterWebsocket: filterWebsocket,
-                UpdateFilterWebsocket: true
-            })
+            sendMessage({FilterWebsocket: filterWebsocket, UpdateFilterWebsocket: true})
         }
     })
 
     // 下游代理
     ipcMain.handle("mitmV2-set-downstream-proxy", (e, downstreamProxy) => {
         if (stream) {
-            stream.write({
-                SetDownstreamProxy: true,
-                DownstreamProxy: downstreamProxy
-            })
+            sendMessage({SetDownstreamProxy: true, DownstreamProxy: downstreamProxy})
         }
     })
 
@@ -139,7 +192,7 @@ module.exports = (win, getClient) => {
     ipcMain.handle("mitmV2-host-port", (e, params) => {
         if (stream) {
             const {host, port} = params
-            stream.write({
+            sendMessage({
                 Host: host,
                 Port: port
             })
@@ -149,9 +202,7 @@ module.exports = (win, getClient) => {
     /** 刷新重置手动劫持列表 */
     ipcMain.handle("mitmV2-recover-manual-hijack", (e, params) => {
         if (stream) {
-            stream.write({
-                RecoverManualHijack: true
-            })
+            sendMessage({RecoverManualHijack: true})
         }
     })
 
@@ -221,6 +272,7 @@ module.exports = (win, getClient) => {
         })
         stream.on("error", (err) => {
             stream = null
+            destroyMessage()
             if (err.code && win) {
                 switch (err.code) {
                     case 1:
@@ -236,12 +288,16 @@ module.exports = (win, getClient) => {
             if (stream) {
                 stream.cancel()
             }
-            stream = undefined
+            stream = null
+            destroyMessage()
         })
         currentHost = Host
         currentPort = Port
         currentDownstreamProxy = DownstreamProxy
         if (stream) {
+            const {send, destroy} = createMessageSender(stream)
+            sendMessage = send
+            destroyMessage = destroy
             if (params.hasOwnProperty("extra")) {
                 delete params.extra
             }
@@ -250,7 +306,7 @@ module.exports = (win, getClient) => {
                 ...extra,
                 DisableWebsocketCompression: !extra.DisableWebsocketCompression
             }
-            stream.write(value)
+            sendMessage(value)
         }
     })
     ipcMain.handle("mitmV2-stop-call", () => {
@@ -268,7 +324,7 @@ module.exports = (win, getClient) => {
                 ManualHijackControl: true,
                 ManualHijackMessage: params
             }
-            stream.write(value)
+            sendMessage(value)
         }
     })
 
@@ -288,7 +344,7 @@ module.exports = (win, getClient) => {
 
     ipcMain.handle("mitmV2-set-filter", async (e, params) => {
         if (stream) {
-            stream.write({...params, UpdateFilter: true})
+            sendMessage({...params, UpdateFilter: true})
         }
         return await asyncSetMITMFilter(params)
     })
@@ -308,7 +364,7 @@ module.exports = (win, getClient) => {
     }
     ipcMain.handle("mitmV2-hijack-set-filter", async (e, params) => {
         if (stream) {
-            stream.write({HijackFilterData: params.FilterData, UpdateHijackFilter: true})
+            sendMessage({HijackFilterData: params.FilterData, UpdateHijackFilter: true})
         }
         return await asyncSetMITMHijackFilter(params)
     })

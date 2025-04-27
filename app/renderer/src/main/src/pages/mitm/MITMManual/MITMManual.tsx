@@ -83,6 +83,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             setAutoForward
         } = props
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
+        const [isRefresh, setIsRefresh] = useState<boolean>(false)
         const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
         const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
         const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -213,6 +214,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     setCurrentSelectItem(undefined)
                     setEditorShowIndexShowIndex(0)
                     setData(newData)
+                    setIsRefresh(!isRefresh)
                     break
                 default:
                     break
@@ -620,34 +622,16 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     break
             }
         })
-        /**批量操作中得劫持响应 */
+        /**批量操作中得劫持响应,只有http的请求有劫持响应 */
         const onHijackingResponseByBatch = useMemoizedFn((item: SingleManualHijackInfoMessage) => {
-            if (!!getLoading(item.TaskID) || item.Status === ManualHijackListStatus.WaitHijack) return
+            if (!!getLoading(item.TaskID) || item.Status !== ManualHijackListStatus.Hijacking_Request) return
             let params: MITMV2HijackedCurrentResponseRequest = {
                 TaskID: item.TaskID,
                 SendPacket: true
             }
-            switch (item.Status) {
-                case ManualHijackListStatus.Hijacking_Request:
-                    params = {
-                        ...params,
-                        Request: item.Request
-                    }
-                    break
-                case ManualHijackListStatus.Hijacking_Response:
-                    params = {
-                        ...params,
-                        Response: item.Response
-                    }
-                    break
-                case ManualHijackListStatus.Hijack_WS:
-                    params = {
-                        ...params,
-                        Payload: item.Payload
-                    }
-                    break
-                default:
-                    break
+            params = {
+                ...params,
+                Request: item.Request
             }
             setLoading(item.TaskID, true)
             grpcMITMV2HijackedCurrentResponse(params)
@@ -678,7 +662,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 firstMinSize={70}
                 firstNode={
                     <TableVirtualResize<SingleManualHijackInfoMessage>
-                        isRefresh={false}
+                        isRefresh={isRefresh}
                         isShowTitle={false}
                         data={data}
                         renderKey='TaskID'
