@@ -129,10 +129,12 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
     ).run
     return (
         <div className={styles["horizontal-scroll-card"]}>
-            <div className={styles["horizontal-scroll-card-heard"]}>
-                <span className={styles["horizontal-scroll-card-heard-title"]}>{title}</span>
-                <div className={styles["horizontal-scroll-card-heard-total"]}>{data.length}</div>
-            </div>
+            {!compact && (
+                <div className={styles["horizontal-scroll-card-heard"]}>
+                    <span className={styles["horizontal-scroll-card-heard-title"]}>{title}</span>
+                    <div className={styles["horizontal-scroll-card-heard-total"]}>{data.length}</div>
+                </div>
+            )}
             <div className={styles["horizontal-scroll-card-list-wrapper"]} ref={horizontalScrollCardWrapperRef}>
                 <ReactResizeDetector
                     onResize={(w, h) => {

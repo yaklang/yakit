@@ -76,6 +76,10 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
     scrollTo?: (id: number | string) => void
     scrollID?: number | string
     analyzedIds?: number[]
+
+    showEditTag?: boolean
+    showJumpTree?: boolean
+    noPacketModifier?: boolean
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -1153,7 +1157,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         pageType,
         downstreamProxyStr,
         scrollTo,
-        scrollID
+        scrollID,
+        showEditTag = true,
+        showJumpTree = true,
+        noPacketModifier = false
     } = props
 
     // 编辑器发送到对比器
@@ -1497,6 +1504,25 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [isShowBeforeData, beforeResValue, resType, highLightItem])
 
+    const getPacketNewWindow = () => {
+        openPacketNewWindow({
+            showParentPacketCom: {
+                components: "HTTPFlowDetailMini",
+                props: {
+                    noHeader: true,
+                    id: props.id,
+                    analyzedIds: props.analyzedIds,
+                    sendToWebFuzzer: true,
+                    selectedFlow: props.selectedFlow,
+                    downstreamProxyStr: props.downstreamProxyStr,
+                    pageType: pageType,
+                    showEditTag: false,
+                    showJumpTree: false
+                }
+            }
+        })
+    }
+
     return (
         <YakitResizeBox
             firstNode={() => {
@@ -1512,6 +1538,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             highLightText={highLightText}
                             highLightItem={highLightItem}
                             highLightFindClass='hight-light-rule-color'
+                            showJumpTree={showJumpTree}
                         />
                     )
                 }
@@ -1565,7 +1592,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                                 </YakitTag>
                             )
                             // history页面
-                            if (["History"].includes(pageType || "")) {
+                            if (["History"].includes(pageType || "") && showJumpTree) {
                                 titleEle.push(
                                     <OutlineLog2Icon
                                         className={styles["jump-web-tree"]}
@@ -1577,7 +1604,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             if (reqSelectionByteCount > 0) {
                                 titleEle.push(
                                     <YakitTag
-                                        style={{marginLeft: pageType === "History" ? 8 : 0}}
+                                        style={{marginLeft: pageType === "History" && showJumpTree ? 8 : 0}}
                                         key='reqSelectionByteCount'
                                     >
                                         {reqSelectionByteCount} bytes
@@ -1633,17 +1660,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: true}}
-                        onClickOpenPacketNewWindowMenu={() => {
-                            openPacketNewWindow({
-                                request: {
-                                    originValue: originResValue
-                                },
-                                response: {
-                                    originValue: codeKey === "utf-8" ? originRspValue : codeValue,
-                                    originalPackage: flow.Response
-                                }
-                            })
-                        }}
+                        onClickOpenPacketNewWindowMenu={getPacketNewWindow}
+                        noPacketModifier={noPacketModifier}
                     />
                 )
             }}
@@ -1727,7 +1745,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         extra={secondNodeResExtraBtn()}
                         AfterBeautifyRenderBtn={
                             <>
-                                {pageType !== "History_Analysis_ruleData" && (
+                                {showEditTag && (
                                     <YakitButton
                                         size='small'
                                         onClick={() => {
@@ -1780,17 +1798,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
                         url={flow.Url}
                         downbodyParams={{Id: flow.Id, IsRequest: false}}
-                        onClickOpenPacketNewWindowMenu={() => {
-                            openPacketNewWindow({
-                                request: {
-                                    originValue: originResValue
-                                },
-                                response: {
-                                    originValue: codeKey === "utf-8" ? originRspValue : codeValue,
-                                    originalPackage: flow.Response
-                                }
-                            })
-                        }}
+                        onClickOpenPacketNewWindowMenu={getPacketNewWindow}
+                        noPacketModifier={noPacketModifier}
                     />
                 )
             }}
