@@ -12,7 +12,7 @@ const createMessageSender = (stream, options) => {
     // 添加重试计数器
     let retryMap = new Map()
     // 失败重试
-    const onErrorRetry = (id, message) => {
+    const onErrorRetry = ({id, message, error}) => {
         const retries = retryMap.get(id) || 0
         if (retries < maxRetries) {
             retryMap.set(id, retries + 1)
@@ -22,7 +22,8 @@ const createMessageSender = (stream, options) => {
                 JSON.stringify({
                     grpcIInterface: "MITMV2",
                     time: getFormattedDateTime(),
-                    message
+                    message,
+                    error
                 })
             )
         }
@@ -39,7 +40,7 @@ const createMessageSender = (stream, options) => {
                 message, // 消息序列化方法
                 (error) => {
                     if (error) {
-                        onErrorRetry(id, message)
+                        onErrorRetry({id, message, error})
                     }
                 }
             )
@@ -48,7 +49,7 @@ const createMessageSender = (stream, options) => {
                 await new Promise((resolve) => stream.once("drain", resolve))
             }
         } catch (err) {
-            onErrorRetry(id, message)
+            onErrorRetry({id, message, error})
         } finally {
             await new Promise((resolve) => setTimeout(resolve, 20)) // 必须加上，不然后端接口会卡死
             isProcessing = false
