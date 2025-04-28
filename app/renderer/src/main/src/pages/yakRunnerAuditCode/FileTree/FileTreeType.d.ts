@@ -24,13 +24,17 @@ export interface FileNodeMapProps {
     // 是否读取失败
     isReadFail?: boolean
     isLeaf?: boolean
-    // 是否展示count
+    // 是否有count
     count?: string
+    // 是否有描述
+    description?: string
+    // 是否展示行号
+    line?: number
     // 文件其余数据
     data?: YakURLResource
 }
 
-export interface FileNodeProps extends FileNodeMapProps{
+export interface FileNodeProps extends FileNodeMapProps {
     // 层级
     depth: number
     // 底部占位

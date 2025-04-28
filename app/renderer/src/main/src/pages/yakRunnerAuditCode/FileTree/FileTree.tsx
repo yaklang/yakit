@@ -223,10 +223,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         }
         if (isFolder) {
             // 特殊树的可展开结构并不想展示文件夹
-            if (info.icon !== "_fd_default"){
+            if (info.icon !== "_fd_default") {
                 return KeyToIcon[info.icon].iconPath
-            }
-            else if (isExpanded) {
+            } else if (isExpanded) {
                 return KeyToIcon[FolderDefaultExpanded].iconPath
             } else {
                 return KeyToIcon[FolderDefault].iconPath
@@ -262,18 +261,29 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                     <div className={styles["node-content"]}>
                         <div className={styles["content-icon"]}>
                             <img src={iconImage} />
+                            {info.line && <span className={styles["line"]}>{info.line}</span>}
                         </div>
-                        <div
-                            className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}
-                            title={info.name}
-                        >
-                            {info.name}
+                        <div className={classNames(styles["content-body"], "yakit-content-single-ellipsis")}>
+                            <div
+                                className={classNames(styles["name"], "yakit-content-single-ellipsis")}
+                                title={info.name}
+                            >
+                                {info.name}
+                                {info.count && (
+                                    <YakitTag className={styles["detail-tag"]} size='small' color='info'>
+                                        {info.count}
+                                    </YakitTag>
+                                )}
+                            </div>
+                            {info.description && (
+                                <div
+                                    className={classNames("yakit-content-single-ellipsis", styles["description"])}
+                                    title={info.description}
+                                >
+                                    {info.description}
+                                </div>
+                            )}
                         </div>
-                        {info.count && (
-                            <YakitTag size='small' color='info' style={{marginRight: 0, marginLeft: 4}}>
-                                {info.count}
-                            </YakitTag>
-                        )}
                     </div>
                 </div>
             )}

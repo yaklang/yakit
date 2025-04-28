@@ -1,5 +1,5 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {RequestYakURLResponse} from "../yakURLTree/data"
+import {RequestYakURLResponse, YakURLResource} from "../yakURLTree/data"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
@@ -16,6 +16,7 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {CodeRangeProps} from "./RightAuditDetail/RightAuditDetail"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +46,20 @@ const initFileTreeData = (list, path) => {
     })
 }
 
+const getLineFun = (info: YakURLResource) => {
+    try {
+        if (info.ResourceType === "risk") {
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
+                const {start_line} = item
+                return start_line
+            }
+        }
+        return undefined
+    } catch (error) {}
+}
+
 const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
     return list.Resources.sort((a, b) => {
         // 将 ResourceType 为 'program'与'source' 的对象排在前面
@@ -64,16 +79,21 @@ const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
         const severity = item.Extra.find((item) => item.Key === "severity")?.Value
         const severityValue = SeverityMapTag.find((item) => item.key.includes(severity || ""))?.value
         let folderIcon = FolderDefault
+        let description: string | undefined = undefined
+        let line: number | undefined = undefined
         if (item.ResourceType === "source") {
             folderIcon = FileSuffix[item.ResourceName.split(".").pop() || ""]
+            description = path ? item.Path.replace(path, "") : item.Path
         }
         if (item.ResourceType === "function") {
             folderIcon = FileSuffix["function"]
         }
+        if (item.ResourceType === "risk") {
+            line = getLineFun(item)
+        }
         if (item.ResourceType === "risk" && severityValue) {
             suffix = severityValue
         }
-
         return {
             parent: path || null,
             name,
@@ -82,6 +102,8 @@ const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
             icon: isFolder ? folderIcon : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
             isLeaf: isFile,
             count,
+            description,
+            line,
             data: item
         }
     })

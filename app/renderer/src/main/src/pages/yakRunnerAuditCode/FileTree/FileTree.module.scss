@@ -112,23 +112,43 @@
                 width: 16px;
                 height: 16px;
             }
+            .line{
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                margin-left: 2px;
+                margin-right: 8px;
+            }
         }
         .content-body {
-            // flex: 1;
+            flex: 1;
             overflow: hidden;
-            color: #31343f;
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-            .file-tree-input-wrapper {
-                height: 16px;
-                .file-tree-input {
-                    padding: 0px;
-                    height: 16px;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 4px;
+            
+            .name{
+                color: #31343f;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                overflow: hidden;
+
+                flex-shrink: 0; /* 防止这个元素被压缩  */
+                .detail-tag {
+                    margin-left: 4px;
                 }
-                input {
-                    border: 0;
-                }
+            }
+            .description {
+                color: #b4bbca;
+                font-size: 12px;
+                font-weight: 500;
+                line-height: 16px;
+                overflow: hidden;
+
+                flex-shrink: 1; /* 允许这个元素被压缩 */
             }
         }
     }

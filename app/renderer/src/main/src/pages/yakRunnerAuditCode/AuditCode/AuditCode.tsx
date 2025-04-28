@@ -153,9 +153,9 @@ export const isBugFun = (info: AuditNodeProps) => {
 export const getDetailFun = (info: AuditNodeProps | AuditDetailItemProps) => {
     try {
         if (info.ResourceType === "value") {
-            const arr = info.Extra.filter((item) => item.Key === "code_range")
-            if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
                 const {url, start_line, start_column, end_line, end_column} = item
                 const lastSlashIndex = url.lastIndexOf("/")
                 const fileName = url.substring(lastSlashIndex + 1)
