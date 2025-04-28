@@ -755,6 +755,10 @@ service Yak {
   rpc UpdateSyntaxFlowRuleAndGroup(UpdateSyntaxFlowRuleAndGroupRequest) returns (DbOperateMessage);
   // 查找多个规则的交集组，一个规则则为其组本身
   rpc QuerySyntaxFlowSameGroup(QuerySyntaxFlowSameGroupRequest)returns (QuerySyntaxFlowSameGroupResponse);
+
+  rpc SyntaxFlowRuleToOnline(SyntaxFlowRuleToOnlineRequest) returns (stream SyntaxFlowRuleOnlineProgress);
+  rpc DownloadSyntaxFlowRule(QuerySyntaxFlowRuleRequest) returns (stream SyntaxFlowRuleOnlineProgress);
+
   // syntaxflow scan
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
   rpc QuerySyntaxFlowScanTask(QuerySyntaxFlowScanTaskRequest) returns (QuerySyntaxFlowScanTaskResponse);
@@ -6074,6 +6078,20 @@ message DeleteSyntaxFlowRuleGroupRequest{
   SyntaxFlowRuleGroupFilter Filter = 1;
 }
 
+
+message SyntaxFlowRuleToOnlineRequest{
+  Paging Pagination = 1;
+  SyntaxFlowRuleFilter Filter = 2;
+  string Token = 3;
+}
+
+message SyntaxFlowRuleOnlineProgress {
+  // 进度
+  double Progress = 1;
+  string Message = 2;
+  string MessageType = 3;
+}
+
 message SyntaxFlowScanRequest{
   string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
 
@@ -6532,7 +6550,7 @@ message UpdateNoteRequest {
 }
 
 message DeleteNoteRequest {
-  NoteFilter Filter = 1;
+    NoteFilter Filter = 1;
 }
 
 message QueryNoteRequest {
@@ -6586,6 +6604,9 @@ message ListAiModelRequest{
 message ListAiModelResponse{
   repeated string ModelName =1;
 }
+
+
+
 
 message MITMV2Request{
   /*
