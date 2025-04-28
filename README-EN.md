@@ -132,7 +132,7 @@ If you have any constructive feedback or bug reports regarding our product, we w
 
 You can also contact us through our official WeChat account for inquiries or to explore business licensing and partnership opportunities.
 
-If you would like to join our community for discussions or have questions to communicate with our technical team, please contact and add our operations WeChat ID.
+If you would like to join our community for discussions or have questions to communicate with our technical team, please contact us and add our operations WeChat ID.
 
 
 <h3 align="left">
@@ -160,5 +160,5 @@ If you have any illegal behavior when using this tool, you shall bear the corres
 
 Before installing and using this tool, please read carefully and fully understand the terms
 
-Unless you have fully read, fully understood and accepted all the terms of this agreement, please do not install and use this tool.Your use behavior or your acceptance of this Agreement in any other express or implied manner shall be deemed to have been read and agreed to be bound by this Agreement
+Unless you have fully read, fully understood, and accepted all the terms of this agreement, please do not install and use this tool. Your use behavior or your acceptance of this Agreement in any other express or implied manner shall be deemed to have been read and agreed to be bound by this Agreement
 
