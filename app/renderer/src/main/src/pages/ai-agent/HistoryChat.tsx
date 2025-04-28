@@ -65,11 +65,7 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         setDelLoading((old) => [...old, id])
         let active: AIChatInfo | undefined =
             findIndex === chats.length - 1 ? chats[findIndex - 1] : chats[findIndex + 1]
-        setChats &&
-            setChats((old) => {
-                old.splice(findIndex, 1)
-                return [...old]
-            })
+        setChats && setChats((old) => old.filter((item) => item.id !== id))
 
         if (activeID !== id) active = undefined
         active && handleSetActiveChat(active)

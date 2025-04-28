@@ -11,6 +11,8 @@ export interface AIStartParams {
     /** allow ai to use the fs */
     EnableSystemFileSystemOperator?: boolean
     UseDefaultAIConfig?: boolean
+    /** 模板名 */
+    ForgeName?: string
 }
 export interface AIInputEvent {
     IsStart?: boolean

@@ -225,6 +225,7 @@ function useChatData(params?: UseChatDataParams) {
                 handleFailTaskState()
             }, 300)
         })
+        console.log("start-ai-agent-chat", token, params)
         ipcRenderer.invoke("start-ai-agent-chat", token, params)
     })
 

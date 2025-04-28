@@ -4,7 +4,7 @@ import {AIAgentTabList} from "./defaultConstant"
 import {AIAgentSideListProps, AIAgentTab} from "./aiAgentType"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 // import {MCPServer} from "./MCPServer"
-// import {AIChatSetting} from "./AIChatSetting"
+import {AIChatSetting} from "./AIChatSetting"
 import {HistoryChat} from "./HistoryChat"
 
 import classNames from "classnames"
@@ -60,14 +60,14 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                     <MCPServer />
                 </div> */}
 
-                {/* <div
+                <div
                     className={classNames(styles["active-content"], {
                         [styles["hidden-content"]]: active !== "setting"
                     })}
                     tabIndex={active !== "setting" ? -1 : 1}
                 >
                     <AIChatSetting />
-                </div> */}
+                </div>
 
                 <div
                     className={classNames(styles["active-content"], {

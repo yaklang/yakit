@@ -5,6 +5,7 @@ import useDispatcher from "./useContext/useDispatcher"
 import {Form} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn} from "ahooks"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 // import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -36,6 +37,9 @@ export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                 </Form.Item>
                 <Form.Item label='使用默认系统配置AI :' name='UseDefaultAIConfig' valuePropName='checked'>
                     <YakitSwitch />
+                </Form.Item>
+                <Form.Item label='任务模板 :' name='ForgeName'>
+                    <YakitInput placeholder='请输入任务模板' />
                 </Form.Item>
             </Form>
         </div>

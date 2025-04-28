@@ -29,6 +29,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     const [activeChat, setActiveChat] = useState<AIChatInfo>()
 
     useUpdateEffect(() => {
+        setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
+    }, [setting])
+    useUpdateEffect(() => {
         setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, JSON.stringify(getChats()))
     }, [chats])
 

@@ -6,7 +6,7 @@ export const YakitAIAgentPageID = "yakit-ai-agent"
 
 export const AIAgentTabList: {key: AIAgentTab; title: string}[] = [
     // {key: "mcp", title: "MCP"},
-    // {key: "setting", title: "配置"},
+    {key: "setting", title: "配置"},
     {key: "history", title: "历史对话"}
 ]
 

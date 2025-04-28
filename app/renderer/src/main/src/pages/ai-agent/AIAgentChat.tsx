@@ -106,7 +106,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     return (
         <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
             <div className={styles["stream-list"]}>
-                <YakitCollapse activeKey={activeKeys} onChange={handleChange}>
+                <YakitCollapse destroyInactivePanel={true} activeKey={activeKeys} onChange={handleChange}>
                     {streams.map((item) => {
                         const {type, timestamp, data} = item
                         const key = `${type}-${timestamp}`
