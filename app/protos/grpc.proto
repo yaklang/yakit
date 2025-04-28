@@ -863,6 +863,8 @@ message AIStartParams {
   // allow ai to use the fs
   bool EnableSystemFileSystemOperator = 3;
   bool UseDefaultAIConfig = 4;
+
+  string ForgeName = 5;
 }
 
 
