@@ -231,7 +231,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                                 type={"primary"}
                                 onClick={() => {
                                     props.onInsert(params.Template)
-                                    saveCode(params.HotPatchCode)
                                 }}
                             >
                                 插入编辑器位置
