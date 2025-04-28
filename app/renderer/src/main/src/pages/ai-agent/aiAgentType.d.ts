@@ -13,12 +13,14 @@ export interface AIAgentSetting {
     EnableSystemFileSystemOperator?: AIStartParams["EnableSystemFileSystemOperator"]
     /** 是否使用默认系统配置AI */
     UseDefaultAIConfig?: AIStartParams["UseDefaultAIConfig"]
+    /** 任务模板 */
+    ForgeName?: string
 }
 // #endregion
 
 export interface AIAgentSideListProps {}
 /** tab 类型 */
-export type AIAgentTab = "history" // | "log" | "mcp"
+export type AIAgentTab = "history" | "setting" //  | "mcp"
 
 // #region mcp 服务器组件相关定义
 /** resourcesTemplates */

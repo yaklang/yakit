@@ -136,7 +136,8 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             Params: {
                 UserQuery: question,
                 EnableSystemFileSystemOperator: !!setting.EnableSystemFileSystemOperator || true,
-                UseDefaultAIConfig: !!setting.UseDefaultAIConfig || true
+                UseDefaultAIConfig: !!setting.UseDefaultAIConfig || true,
+                ForgeName: setting.ForgeName || undefined
             }
         })
         setTimeout(() => {
@@ -385,7 +386,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         <React.Fragment key={value}>
                             {!allow_extra_prompt ? (
                                 <YakitButton
-                                    type='outline2'
+                                    type={value === "continue" ? "primary" : "outline2"}
                                     className={styles["selectors-btn"]}
                                     size='small'
                                     onClick={() => onSend(el)}
@@ -423,7 +424,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                 })}
             </div>
         )
-    }, [review, reviewShow])
+    }, [review, reviewShow, reviewQuestion])
 
     // 弹框里的审阅操作列表
     // 这里的(review)信息只能是从通信数据里获取, 历史对话不展示(review)操作按钮
@@ -440,7 +441,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                         <React.Fragment key={value}>
                             {!allow_extra_prompt ? (
                                 <YakitButton
-                                    type='outline2'
+                                    type={value === "continue" ? "primary" : "outline2"}
                                     className={styles["selectors-btn"]}
                                     size='small'
                                     onClick={() => onSend(el)}
@@ -478,7 +479,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                 })}
             </div>
         )
-    }, [review, reviewShow])
+    }, [review, reviewShow, reviewQuestion])
 
     return (
         <div ref={wrapper} className={styles["server-chat"]}>
@@ -565,7 +566,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                             </div>
                                         ) : (
                                             <div className={styles["review-loading"]}>
-                                                {execute ? "思考中..." : "提问已停止..."}
+                                                {execute ? "思考中..." : "任务已完成, 请点击右下角+号创建新任务"}
                                             </div>
                                         )}
 
@@ -694,9 +695,10 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
 
             <YakitModal
                 getContainer={wrapper.current || undefined}
+                style={{bottom: 0, right: 10, top: "unset", position: "absolute"}}
+                maskStyle={{backgroundColor: "rgba(0, 0, 0, 0.15)"}}
                 type='white'
                 title='审阅'
-                centered={true}
                 closable={false}
                 keyboard={false}
                 maskClosable={false}
