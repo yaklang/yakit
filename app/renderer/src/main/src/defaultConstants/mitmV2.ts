@@ -6,9 +6,7 @@ export enum ManualHijackListAction {
     Hijack_List_Delete = "delete",
     Hijack_List_Update = "update",
     /**重置手动劫持表格数据 */
-    Hijack_List_Reload = "reload",
-    /**前端默认值与后端无关 */
-    Empty = "empty"
+    Hijack_List_Reload = "reload"
 }
 
 export enum ManualHijackListStatus {
@@ -27,6 +25,12 @@ export enum ManualHijackType {
     Passive = "passive",
     /**条件劫持 */
     HijackFilter = "hijackFilter"
+}
+
+export enum PackageType {
+    Request = "request",
+    Response = "response",
+    WS = "ws"
 }
 
 export const ManualHijackListStatusMap: Record<string, string> = {

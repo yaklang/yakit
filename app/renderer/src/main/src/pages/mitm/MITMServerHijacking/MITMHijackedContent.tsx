@@ -1,6 +1,6 @@
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCounter, useCreation, useInterval, useMemoizedFn} from "ahooks"
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react"
 import {MITMResponse, TraceInfo} from "../MITMPage"
 import styles from "./MITMServerHijacking.module.scss"
@@ -36,7 +36,6 @@ import {
     MITMForwardModifiedRequest,
     MITMForwardModifiedResponseRequest,
     MITMHijackGetFilterRequest,
-    MITMV2Response,
     grpcClientMITMHijacked,
     grpcMITMAutoForward,
     grpcMITMCancelHijackedCurrentResponseById,
@@ -51,13 +50,15 @@ import {
     isMITMResponse,
     isMITMV2Response
 } from "../MITMHacker/utils"
-import {ManualHijackListAction} from "@/defaultConstants/mitmV2"
 import {ManualHijackTypeProps, MITMManualRefProps} from "../MITMManual/MITMManualType"
 import {grpcMITMV2RecoverManualHijack} from "../MITMManual/utils"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {ChevronDownIcon} from "@/assets/newIcon"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {RemoteGV} from "@/yakitGV"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
 
@@ -151,6 +152,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     const [manualTableTotal, setManualTableTotal] = useState<number>(0)
     const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
     const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
+    const [isOnlyLookResponse, setIsOnlyLookResponse] = useState<boolean>(false)
     const mitmManualRef = useRef<MITMManualRefProps>({
         onBatchDiscardData: () => {},
         onBatchSubmitData: () => {},
@@ -438,32 +440,25 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     })
     useEffect(() => {
         getMITMHijackFilter()
+        getMITMManualIsHijackResponse()
     }, [])
     /** 条件劫持 end */
 
     // 自动转发劫持，进行的操作
     useEffect(() => {
-        grpcClientMITMHijacked(mitmVersion).on(onClientMITMHijacked)
+        // v1版本的手动劫持处理
+        if (mitmVersion !== MITMVersion.V1) return
+        grpcClientMITMHijacked(mitmVersion).on((data: ClientMITMHijackedResponse) => {
+            if (mitmVersion === MITMVersion.V1) {
+                if (!isMITMResponse(data)) return
+                forwardHandler(data)
+            }
+        })
         return () => {
             grpcClientMITMHijacked(mitmVersion).remove()
         }
     }, [autoForward])
-    const [mitmV2Response, setMITMV2Response] = useState<MITMV2Response>()
-    const onClientMITMHijacked = useMemoizedFn((data: ClientMITMHijackedResponse) => {
-        if (mitmVersion === MITMVersion.V2) {
-            if (!isMITMV2Response(data)) return
-            if (autoForward !== "manual" && data.ManualHijackListAction) {
-                if (hijackFilterFlag) {
-                    setAutoForward("manual")
-                    info("已触发 条件 劫持")
-                }
-            }
-            setMITMV2Response(data)
-        } else {
-            if (!isMITMResponse(data)) return
-            forwardHandler(data)
-        }
-    })
+
     const forwardHandler = useMemoizedFn((msg: MITMResponse) => {
         if (msg?.RemoteAddr) {
             setIpInfo(msg?.RemoteAddr)
@@ -697,6 +692,18 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
         setMITMV2PopoverVisible(false)
     })
+    const onHijackResponse = useMemoizedFn((e) => {
+        const c = e.target.checked
+        setIsOnlyLookResponse(c)
+        setRemoteValue(RemoteGV.MITMManualIsOnlyLookResponse, `${c}`)
+    })
+    const getMITMManualIsHijackResponse = useMemoizedFn(() => {
+        getRemoteValue(RemoteGV.MITMManualIsOnlyLookResponse).then((res) => {
+            if (!!res) {
+                setIsOnlyLookResponse(res === "true")
+            }
+        })
+    })
     const onRenderHeardExtra = useMemoizedFn(() => {
         return (
             <>
@@ -711,6 +718,16 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                                 />
                             </div>
                             <div className={styles["mitm-v2-hijacked-manual-heard-extra-right"]}>
+                                <div className={styles["mitm-v2-switch"]}>
+                                    <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
+                                    <Tooltip
+                                        overlayClassName='plugins-tooltip'
+                                        title='勾选以后会默认放行所有请求，劫持对应响应'
+                                        placement='top'
+                                    >
+                                        <span className={styles["mitm-v2-switch-label"]}>只看响应</span>
+                                    </Tooltip>
+                                </div>
                                 <YakitPopover
                                     overlayClassName={styles["mitm-v2-hijacked-manual-drop-down-popover"]}
                                     content={
@@ -802,14 +819,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         <MITMManual
                             ref={mitmManualRef}
                             downstreamProxyStr={downstreamProxyStr}
-                            manualHijackListAction={
-                                mitmV2Response?.ManualHijackListAction || ManualHijackListAction.Empty
-                            }
-                            manualHijackList={mitmV2Response?.ManualHijackList || []}
                             autoForward={autoForward}
+                            setAutoForward={setAutoForward}
                             handleAutoForward={handleAutoForward}
                             setManualTableTotal={setManualTableTotal}
                             setManualTableSelectNumber={setManualTableSelectNumber}
+                            isOnlyLookResponse={isOnlyLookResponse}
+                            hijackFilterFlag={hijackFilterFlag}
                         />
                     ) : (
                         <>

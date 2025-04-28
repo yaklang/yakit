@@ -85,6 +85,7 @@ const engineLogOutputFileAndUI = (win, message, isTitle) => {
 // #endregion
 
 module.exports = {
+    getFormattedDateTime,
     engineLogFile,
     fetchEngineLogFile,
     closeEngineLogFile,

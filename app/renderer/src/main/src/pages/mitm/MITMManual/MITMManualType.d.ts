@@ -1,4 +1,4 @@
-import {ManualHijackType} from "@/defaultConstants/mitmV2"
+import {ManualHijackType, PackageType} from "@/defaultConstants/mitmV2"
 import {ManualHijackListStatusType, SingleManualHijackInfoMessage} from "../MITMHacker/utils"
 import {TraceInfo} from "../MITMPage"
 import {RenderTypeOptionVal} from "@/utils/editors"
@@ -13,18 +13,19 @@ export interface MITMManualRefProps {
 export interface MITMManualProps {
     ref?: React.ForwardedRef<MITMManualRefProps>
     downstreamProxyStr: string
-    /**劫持的数据 */
-    manualHijackList: SingleManualHijackInfoMessage[]
-    /**当前数据对应的操作类型 */
-    manualHijackListAction: ManualHijackListAction
     /**劫持类型 */
     autoForward: ManualHijackTypeProps
+    setAutoForward: (a: ManualHijackTypeProps) => void
     /**切换劫持类型 */
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**更改表total */
     setManualTableTotal: (v: number) => void
     /**更改表选中数 */
     setManualTableSelectNumber: (v: number) => void
+    /**是否只看响应 */
+    isOnlyLookResponse: boolean
+    /**条件劫持 */
+    hijackFilterFlag: boolean
 }
 export interface ManualHijackInfoRefProps {
     /**提交数据 */
@@ -39,26 +40,24 @@ export interface ManualHijackInfoProps {
     /**滚动到数据下标位置 */
     onScrollTo: (i: number) => void
     info: SingleManualHijackInfoMessage
-    /**劫持类型 */
-    autoForward: ManualHijackTypeProps
     /**切换劫持类型 */
     handleAutoForward: (v: ManualHijackTypeProps) => void
     /**丢弃数据 */
     onDiscardData: (s: SingleManualHijackInfoMessage) => void
     loading?: boolean
     setLoading: (b: boolean) => void
+    /**是否只看响应 */
+    isOnlyLookResponse: boolean
 }
 
 export type ManualHijackTypeProps = `${ManualHijackType}`
-
+export type PackageTypeProps = `${PackageType}`
 export interface MITMV2ManualEditorProps {
     /**修改的包 */
     modifiedPacket: string
     setModifiedPacket: (s: string) => void
     /**当前请求包的详情 */
     currentPacketInfo: CurrentPacketInfoProps
-    /**是否为响应包 */
-    isResponse: boolean
     /**是否可操作 */
     disabled: boolean
     /**当前操作记录详情 */
@@ -79,6 +78,13 @@ export interface MITMV2ManualEditorProps {
     /**美化&渲染 */
     typeOptionVal?: RenderTypeOptionVal
     onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
+
+    type?: PackageTypeProps
+    setType?: (v: PackageTypeProps) => void
+    /**是否为响应包 */
+    isResponse: boolean
+    /**是否为只看响应 */
+    isOnlyLookResponse?: boolean
 }
 
 export interface CurrentPacketInfoProps {
