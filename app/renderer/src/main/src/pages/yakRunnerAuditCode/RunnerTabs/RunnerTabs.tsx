@@ -31,7 +31,7 @@ import {
 import yakitSSMiniProject from "@/assets/yakitSS.png"
 import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerAuditCodeType"
@@ -1337,13 +1337,15 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         {wait: 300}
     )
 
-    useEffect(() => {
-        if (editorInfo && activeFile?.path !== editorInfo.path && editor) {
+    useDebounceEffect(() => {
+        if (editorInfo && editor) {
             /** 代码审计 代码错误检查 */
             const model = editor.getModel()
             model && auditStaticAnalyze.run(model)
         }
-    }, [activeFile, editorInfo?.code, editor])
+    }, [activeFile, editorInfo?.code, editor],
+    {wait: 200}
+)
 
     return (
         <div className={styles["runner-tab-pane"]}>

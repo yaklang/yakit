@@ -17,6 +17,11 @@ import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
 import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {CodeRangeProps} from "./RightAuditDetail/RightAuditDetail"
+import {
+    QuerySyntaxFlowScanTaskRequest,
+    QuerySyntaxFlowScanTaskResponse
+} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import {genDefaultPagination} from "../invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -140,8 +145,13 @@ export const grpcFetchRiskOrRuleTree: (
         program: string
         type: "risk" | "file" | "rule"
         search?: string
+        task_id?: string
+        result_id?: string
     }
-) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (path, {program, type, search}) => {
+) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
+    path,
+    {program, type, search, task_id, result_id}
+) => {
     return new Promise(async (resolve, reject) => {
         // ssadb path为/时 展示最近编译
         const params = {
@@ -161,6 +171,14 @@ export const grpcFetchRiskOrRuleTree: (
                     {
                         Key: "search",
                         Value: search
+                    },
+                    {
+                        Key: "task_id",
+                        Value: task_id
+                    },
+                    {
+                        Key: "result_id",
+                        Value: result_id
                     }
                 ]
             }
@@ -169,6 +187,28 @@ export const grpcFetchRiskOrRuleTree: (
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
             const data: FileNodeMapProps[] = initRiskOrRuleTreeData(res, path === "/" ? program : path)
             resolve({res, data})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 漏洞文件/规则汇树筛选列表获取
+ */
+export const grpcFetchRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (
+    Programs,
+) => {
+    return new Promise(async (resolve, reject) => {
+        const params: QuerySyntaxFlowScanTaskRequest = {
+            Pagination: genDefaultPagination(100, 1),
+            Filter: {
+                Programs: [Programs]
+            }
+        }
+        try {
+            const res: QuerySyntaxFlowScanTaskResponse = await ipcRenderer.invoke("QuerySyntaxFlowScanTask", params)
+            resolve(res)
         } catch (error) {
             reject(error)
         }

@@ -20,6 +20,7 @@ import {YakitMenuItemType} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {
     getNameByPath,
     grpcFetchAuditTree,
+    grpcFetchRiskOrRuleList,
     grpcFetchRiskOrRuleTree,
     removeAreaFileInfo,
     setAreaFileActive,
@@ -46,6 +47,10 @@ import {FolderDefault} from "../FileTree/icon"
 import {CodeRangeProps} from "../RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {YakURLResource} from "@/pages/yakURLTree/data"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
+import {formatTimestamp} from "@/utils/timeUtil"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
@@ -298,6 +303,48 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
     })
 
+    const [options, setOptions] = useState<SelectOptionsProps[]>([{label: "全部", value: ""}])
+    const [checkItem, setCheckItem] = useState<string>("")
+    const getRiskSelectList = useMemoizedFn(async () => {
+        try {
+            if (projectName) {
+                // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
+                const res = await grpcFetchRiskOrRuleList(projectName)
+                const newOptions = res.Data.map((item) => {
+                    return {
+                        label: (
+                            <span>
+                                {formatTimestamp(item.CreatedAt)}
+                                <YakitTag style={{marginLeft: 4}} size='small' color='info'>
+                                    {item.RiskCount}
+                                </YakitTag>
+                            </span>
+                        ),
+                        value: item.TaskId
+                    }
+                })
+                setOptions([{label: "全部", value: ""}, ...newOptions])
+            }
+        } catch (error) {}
+    })
+    useEffect(() => {
+        getRiskSelectList()
+    }, [projectName])
+
+    const getSelectDom = useMemoizedFn(() => {
+        return (
+            <YakitSelect
+                value={checkItem}
+                options={options}
+                onChange={(value) => {
+                    setCheckItem(value)
+                }}
+                style={{margin: "0px 12px"}}
+                size='small'
+            />
+        )
+    })
+
     return (
         <div className={styles["runner-file-tree"]}>
             {/* 左侧边栏 */}
@@ -418,7 +465,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         [styles["hidden-tree-body"]]: active !== "file"
                                     })}
                                 >
-                                    <RiskTree type='file' projectName={projectName} init={fileRefresh} />
+                                    {getSelectDom()}
+                                    <RiskTree
+                                        type='file'
+                                        projectName={projectName}
+                                        init={fileRefresh}
+                                        task_id={checkItem}
+                                    />
                                 </div>
                             )}
                             {rendered.current.has("rule") && (
@@ -427,7 +480,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         [styles["hidden-tree-body"]]: active !== "rule"
                                     })}
                                 >
-                                    <RiskTree type='rule' projectName={projectName} init={ruleRefresh} />
+                                    {getSelectDom()}
+                                    <RiskTree
+                                        type='rule'
+                                        projectName={projectName}
+                                        init={ruleRefresh}
+                                        task_id={checkItem}
+                                    />
                                 </div>
                             )}
                         </div>
@@ -584,7 +643,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
 
 // 漏洞/规则 树
 export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
-    const {type, projectName, onSelectedNodes, init, search} = props
+    const {type, projectName, onSelectedNodes, init, search, task_id, result_id} = props
     /** ---------- 文件树 ---------- */
     const [riskTree, setRiskTree] = useState<FileTreeListProps[]>([])
     const [refreshRiskTree, setRefreshRiskTree] = useState<boolean>(false)
@@ -601,7 +660,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
 
     useEffect(() => {
         projectName && onInitRiskTreeFun(projectName)
-    }, [projectName, init])
+    }, [projectName, init, task_id])
 
     // 将文件详情注入文件树结构中 并 根据foldersMap修正其子项
     const initRiskFileTree = useMemoizedFn((data: FileTreeListProps[], depth: number) => {
@@ -648,7 +707,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
         setFoucsedKey("")
         setExpandedKeys([])
         if (program.length > 0) {
-            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search})
+            const {res, data} = await grpcFetchRiskOrRuleTree("/", {program, type, search, task_id, result_id})
             const children: FileTreeListProps[] = []
             let childArr: string[] = []
             data.forEach((item) => {
@@ -673,7 +732,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                 setRefreshRiskTree(!refreshRiskTree)
                 resolve("")
             } else {
-                grpcFetchRiskOrRuleTree(path, {program, type, search}).then(({data}) => {
+                grpcFetchRiskOrRuleTree(path, {program, type, search, task_id, result_id}).then(({data}) => {
                     if (data.length > 0) {
                         let childArr: string[] = []
                         data.forEach((item) => {

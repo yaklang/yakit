@@ -65,6 +65,7 @@ import {
     OutlineChevronrightIcon,
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
+    OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
     OutlineReloadScanIcon,
@@ -132,6 +133,7 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
+import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -1019,6 +1021,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     })
 
     const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>(defaultQuery)
+    const [isShowRiskTree, setShowRiskTree] = useState<boolean>(false)
 
     return (
         <YakitSpin spinning={loading}>
@@ -1111,11 +1114,23 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                     />
                                 </div>
                             ) : (
-                                <div className={styles["extra"]} style={{gap: 0}}>
+                                <div className={styles["extra"]}>
                                     {resultId && (
-                                        <div style={{flex: 1}}>
-                                            <YakitTag color='info'>ID:{resultId}</YakitTag>
-                                        </div>
+                                        <>
+                                            <div style={{flex: 1}}>
+                                                <YakitTag color='info'>ID:{resultId}</YakitTag>
+                                            </div>
+                                            <Tooltip title={isShowRiskTree ? "隐藏漏洞树" : "查看漏洞树"}>
+                                                <YakitButton
+                                                    type='text'
+                                                    size={"small"}
+                                                    icon={<OutlineEyeIcon />}
+                                                    onClick={() => {
+                                                        setShowRiskTree(!isShowRiskTree)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </>
                                     )}
 
                                     <YakitButton
@@ -1144,19 +1159,25 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                     </div>
                                 ) : (
                                     <>
-                                        {auditDetailTree.length > 0 ? (
-                                            <AuditTree
-                                                data={auditDetailTree}
-                                                expandedKeys={expandedKeys}
-                                                setExpandedKeys={setExpandedKeys}
-                                                onLoadData={onLoadData}
-                                                foucsedKey={foucsedKey}
-                                                setFoucsedKey={setFoucsedKey}
-                                                onJump={onJump}
-                                                loadTreeMore={loadTreeMore}
-                                            />
+                                        {isShowRiskTree && resultId ? (
+                                            <RiskTree type='file' projectName={projectName} result_id={resultId} />
                                         ) : (
-                                            <div className={styles["no-data"]}>暂无数据</div>
+                                            <>
+                                                {auditDetailTree.length > 0 ? (
+                                                    <AuditTree
+                                                        data={auditDetailTree}
+                                                        expandedKeys={expandedKeys}
+                                                        setExpandedKeys={setExpandedKeys}
+                                                        onLoadData={onLoadData}
+                                                        foucsedKey={foucsedKey}
+                                                        setFoucsedKey={setFoucsedKey}
+                                                        onJump={onJump}
+                                                        loadTreeMore={loadTreeMore}
+                                                    />
+                                                ) : (
+                                                    <div className={styles["no-data"]}>暂无数据</div>
+                                                )}
+                                            </>
                                         )}
                                     </>
                                 )}

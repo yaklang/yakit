@@ -95,7 +95,7 @@ interface SyntaxFlowScanTaskFilter {
     Kind?: string[]
 }
 
-interface QuerySyntaxFlowScanTaskRequest {
+export interface QuerySyntaxFlowScanTaskRequest {
     Pagination: Paging
     Filter?: SyntaxFlowScanTaskFilter
 }
@@ -120,7 +120,7 @@ interface SyntaxFlowScanTask {
     Kind: "debug" | "scan"
 }
 
-interface QuerySyntaxFlowScanTaskResponse {
+export interface QuerySyntaxFlowScanTaskResponse {
     Pagination: Paging
     Data: SyntaxFlowScanTask[]
     Total: number
