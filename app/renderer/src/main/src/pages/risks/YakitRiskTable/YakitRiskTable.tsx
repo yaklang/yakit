@@ -94,8 +94,8 @@ import ReactResizeDetector from "react-resize-detector"
 import {serverPushStatus} from "@/utils/duplex/duplex"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
-import {AuditEmiterYakUrlProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
+import {getNameByPath, loadAuditFromYakURLRaw} from "@/pages/yakRunnerAuditCode/utils"
+import {AuditEmiterYakUrlProps, OpenFileByPathProps} from "@/pages/yakRunnerAuditCode/YakRunnerAuditCodeType"
 import {CollapseList} from "@/pages/yakRunner/CollapseList/CollapseList"
 import {addToTab} from "@/pages/MainTabs"
 import {YakCodemirror} from "@/components/yakCodemirror/YakCodemirror"
@@ -106,6 +106,9 @@ import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import { JumpToAuditEditorProps } from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
+import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -2011,7 +2014,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
 })
 
 export interface AuditResultDescribeProps {
-    info: Risk | SSARisk
+    info: SSARisk
     columnSize?: number
     isScroll?: boolean
 }
@@ -2096,6 +2099,35 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
         const newInfo = info as any
         return newInfo?.FromYakScript || newInfo?.FromRule || "漏洞检测"
     })
+
+    const onContext = useMemoizedFn(async () => {
+        const item: CodeRangeProps = JSON.parse(info.CodeRange)
+        const {url, start_line, start_column, end_line, end_column} = item
+        const name = await getNameByPath(url)
+        const highLightRange: Selection = {
+            startLineNumber: start_line,
+            startColumn: start_column,
+            endLineNumber: end_line,
+            endColumn: end_column
+        }
+        const OpenFileByPathParams: OpenFileByPathProps = {
+            params: {
+                path: url,
+                name,
+                highLightRange
+            }
+        }
+        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+        // 纯跳转行号
+        setTimeout(() => {
+            const obj: JumpToAuditEditorProps = {
+                selections: highLightRange,
+                path: url,
+                isSelect: false
+            }
+            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+        }, 100)
+    })
     return (
         <div
             className={classNames(styles["yakit-risk-details-content"], "yakit-descriptions", {
@@ -2117,7 +2149,7 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     </div>
                     <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
                     <div className={styles["content-heard-body"]}>
-                        <div className={classNames(styles["content-heard-body-title"], "content-ellipsis")}>
+                        <div className={classNames(styles["content-heard-body-title"],styles["content-heard-body-title-click"], "content-ellipsis")} onClick={onContext}>
                             {info.Title || "-"}
                         </div>
                         <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
