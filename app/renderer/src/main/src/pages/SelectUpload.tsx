@@ -29,7 +29,6 @@ const layout = {
 const SelectUpload: React.FC<SelectUploadProps> = (props) => {
     const {onCancel} = props
     const [loading, setLoading] = useState<boolean>(false)
-    const [allowPassword, setAllowPassword] = useState<"0" | "1" | "2">()
     const [token, _] = useState(randomString(40))
     const [uploadToken, __] = useState(randomString(40))
     const [form] = Form.useForm()
@@ -46,7 +45,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
     const uploadFile = useMemoizedFn(async () => {
         if (isCancle.current) return
-        setPercent(allowPassword === "2" ? 0.01 : 0.51)
+        setPercent(0.51)
         await ipcRenderer
             .invoke("split-upload", {url: "import/project", path: filePath.current, token: uploadToken})
             .then((TaskStatus) => {
@@ -85,16 +84,13 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
                 newProgress = 1
             }
             let intProgress = newProgress / 100
-            if (allowPassword === "2") {
-                setPercent(intProgress)
-            } else {
-                setPercent(intProgress * 0.5 + 0.5)
-            }
+
+            setPercent(intProgress * 0.5 + 0.5)
         })
         return () => {
             ipcRenderer.removeAllListeners(`callback-split-upload-${uploadToken}`)
         }
-    }, [allowPassword])
+    }, [])
 
     const cancleUpload = () => {
         ipcRenderer.invoke("cancel-ExportProject", token)
@@ -141,18 +137,12 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         if (!cascaderValue) return
         setLoading(true)
         isCancle.current = false
-        if (allowPassword === "2") {
-            // 直接上传 不走ExportProject 直接读取项目 default-yakit.db
-            filePath.current = cascaderValue.DatabasePath
-            uploadFile()
-            return
-        }
         hasErrorRef.current = false
         ipcRenderer.invoke(
             "ExportProject",
             {
                 Id: cascaderValue.Id,
-                Password: allowPassword === "1" ? values.password || "" : ""
+                Password: ""
             },
             token
         )
@@ -229,18 +219,6 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
 
     return (
         <Form {...layout} form={form} onFinish={onFinish}>
-            <Form.Item name='allow_password' label='上传方式' rules={[{required: true, message: "该项为必填"}]}>
-                <YakitSelect disabled={loading} placeholder='请选择加密方式' onChange={setAllowPassword}>
-                    <YakitSelect.Option value='1'>加密上传</YakitSelect.Option>
-                    <YakitSelect.Option value='0'>压缩上传</YakitSelect.Option>
-                    <YakitSelect.Option value='2'>直接上传</YakitSelect.Option>
-                </YakitSelect>
-            </Form.Item>
-            {allowPassword === "1" && (
-                <Form.Item name='password' label='密码' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput disabled={loading} placeholder='请输入密码' />
-                </Form.Item>
-            )}
             <Form.Item name='name' label='项目' rules={[{required: true, message: "该项为必填"}]}>
                 <YakitCascader
                     disabled={loading}
