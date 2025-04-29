@@ -835,6 +835,7 @@ message AIOutputEvent {
   bytes StreamDelta = 7;
   bool IsJson = 8;
   bytes Content = 9;
+  int64 Timestamp = 10;
 }
 
 message AIInputEvent {
@@ -844,6 +845,9 @@ message AIInputEvent {
   bool IsInteractiveMessage = 3;
   string InteractiveId = 4;
   string InteractiveJSONInput = 5;
+
+  bool IsSyncMessage = 6;
+  string SyncType = 7;
 }
 
 message McpConfig {
@@ -859,6 +863,8 @@ message AIStartParams {
   // allow ai to use the fs
   bool EnableSystemFileSystemOperator = 3;
   bool UseDefaultAIConfig = 4;
+
+  string ForgeName = 5;
 }
 
 
@@ -1890,6 +1896,7 @@ message GetProjectsRequest {
   // this type effect response.ProjectTotal, this type mark kind of frontend
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
+  int64 AfterUpdatedAt = 8;
 }
 
 message ProjectDescription {
@@ -6293,6 +6300,8 @@ message SSARisksFilter {
   string Title = 12; // fuzz search
   repeated string Hash = 13;
   repeated string FunctionName = 14;
+  int64 BeforeCreatedAt = 15;
+  int64 AfterCreatedAt = 16;
 }
 
 message QuerySSARisksRequest {
@@ -6598,6 +6607,7 @@ message MITMV2Request{
   // condition hijack filter
   MITMFilterData HijackFilterData = 26;
   bool UpdateHijackFilter = 27;
+
 
   // set content replacers
   bool SetContentReplacers = 28;
