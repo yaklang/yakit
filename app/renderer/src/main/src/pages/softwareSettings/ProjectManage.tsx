@@ -79,7 +79,7 @@ export interface ProjectParamsProps {
     ChildFolderId?: number
 }
 /** 项目列表查询条件 */
-interface ProjectParamsProp extends QueryGeneralRequest {
+export interface ProjectParamsProp extends QueryGeneralRequest {
     ProjectName?: string
     Description?: string
     Type: string

@@ -47,7 +47,12 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         if (isCancle.current) return
         setPercent(0.51)
         await ipcRenderer
-            .invoke("split-upload", {url: "import/project", path: filePath.current, token: uploadToken})
+            .invoke("split-upload", {
+                url: "fragment/upload",
+                path: filePath.current,
+                token: uploadToken,
+                type: "Project"
+            })
             .then((TaskStatus) => {
                 if (isCancle.current) return
                 if (TaskStatus) {

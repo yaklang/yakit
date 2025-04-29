@@ -42,9 +42,7 @@ module.exports = (win, getClient) => {
             formData.append("totalChunks", totalChunks)
             formData.append("hash", fileHash)
             formData.append("fileName", fileName)
-            if (type) {
-                formData.append("type", type)
-            }
+            formData.append("type", type)
             // console.log("参数---", fileName, fileHash)
             httpApi(
                 "post",
@@ -60,7 +58,7 @@ module.exports = (win, getClient) => {
                         res,
                         progress
                     })
-                    if (res.code === 209 && type) {
+                    if (res.code === 209) {
                         reject(res.data.reason)
                     } else {
                         if (res.code !== 200 && postPackageHistory[hash] <= 3) {
@@ -80,18 +78,21 @@ module.exports = (win, getClient) => {
         })
     }
 
-    const postProjectFail = ({ fileName, hash, fileIndex }) => {
+    const postProjectFail = ({fileName, hash, fileIndex, type}) => {
         service({
             url: "import/project/fail",
             method: "post",
             data: {
                 fileName,
                 hash,
-                fileIndex
+                fileIndex,
+                type
             }
-        }).then((res) => {
-            // console.log("rrrr---", res)
         })
+            .then((res) => {
+                // console.log("rrrr---", res)
+            })
+            .catch(reject)
     }
 
     // 上传状态
@@ -101,7 +102,11 @@ module.exports = (win, getClient) => {
         return new Promise(async (resolve, reject) => {
             // console.log("params---",params);
             // path为文件路径 token为切片进度回调 url为接口
-            const { url, path, token, type = "" } = params
+            const {url, path, token, type = ""} = params
+            if (!type) {
+                reject("type必传")
+                return
+            }
             // 获取文件名
             const fileName = customPath.basename(path)
             // 文件大小（以字节为单位）
@@ -117,7 +122,7 @@ module.exports = (win, getClient) => {
             // 计算分片总数
             const totalChunks = Math.ceil(size / chunkSize)
             // 计算整个文件Hash
-            const fileHash = await hashChunk({ path })
+            const fileHash = await hashChunk({path})
             const fileHashTime = `${fileHash}-${Date.now()}`
             TaskStatus = true
             for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
@@ -144,7 +149,8 @@ module.exports = (win, getClient) => {
                         postProjectFail({
                             fileName,
                             hash: fileHashTime,
-                            fileIndex: chunkIndex
+                            fileIndex: chunkIndex,
+                            type
                         })
                         reject(error)
                         TaskStatus = false

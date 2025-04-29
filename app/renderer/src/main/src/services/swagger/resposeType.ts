@@ -175,6 +175,10 @@ export declare namespace API {
         userName?: string
         ip: string
         totalRequestTimes: string
+        /**
+         * 所属组织
+         */
+        departmentName?: string
     }
     export interface TouristTimesResponse {
         dayTimes: number
@@ -549,13 +553,10 @@ export declare namespace API {
         user_name: string
         head_img: string
     }
-    export interface QueryPluginsWhereListRequest extends PluginsWhere, QueryPluginsWhereList {}
+    export interface QueryPluginsWhereListRequest extends PluginsWhere, QueryPluginsWhereList, Pagination {}
     export interface QueryPluginsWhereList {
-        page?: number
-        limit?: number
         token?: string
-        orderBy?: string
-        order?: string
+        uuid?: string[]
     }
     export interface ProjectListResponse extends Paging {
         data: ProjectList[]
