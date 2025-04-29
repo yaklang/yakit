@@ -23,6 +23,7 @@ import {
     useControllableValue,
     useCreation,
     useDebounceFn,
+    useGetState,
     useInterval,
     useInViewport,
     useMemoizedFn,
@@ -281,10 +282,6 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         setHidden(true)
     })
 
-    const onSetSelectGroupList = useMemoizedFn((groups) => {
-        setPageInfo((v) => ({...v, selectGroup: groups}))
-    })
-
     const onClearAll = useMemoizedFn(() => {
         setPageInfo((v) => ({...v, selectGroup: [], selectGroupListByKeyWord: []}))
         setHidden(false)
@@ -330,6 +327,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                 selectGroupList={selectGroupListAll}
                 onClearAll={onClearAll}
                 pageInfo={pageInfo}
+                setPageInfo={setPageInfo}
                 pageId={pageId}
                 onSetSelectGroupListByKeyWord={onSetSelectGroupListByKeyWord}
             />
@@ -349,7 +347,7 @@ const initialLocalState: QuerySyntaxFlowRuleResponse = {
 }
 
 const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
-    const {selectGroupList, setTotal, hidden,filterLibRuleKind} = props
+    const {selectGroupList, setTotal, hidden, filterLibRuleKind} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, setResponse] = useState<QuerySyntaxFlowRuleResponse>(initialLocalState)
     const [loading, setLoading] = useState<boolean>(false)
@@ -357,7 +355,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
 
     useEffect(() => {
         fetchList(true)
-    }, [selectGroupList,filterLibRuleKind])
+    }, [selectGroupList, filterLibRuleKind])
 
     const fetchList = useDebounceFn(
         useMemoizedFn(async (reset?: boolean) => {
@@ -395,7 +393,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                 }
             }
             if (query.Filter) query.Filter.GroupNames = selectGroupList
-            
+
             try {
                 const res = await grpcFetchLocalRuleList(query)
                 if (!res.Rule) res.Rule = []
@@ -471,7 +469,7 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
 })
 
 const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo((props) => {
-    const {onClearAll, selectGroupList, pageInfo, onSetSelectGroupListByKeyWord, pageId} = props
+    const {onClearAll, selectGroupList, pageInfo, setPageInfo, onSetSelectGroupListByKeyWord, pageId} = props
     /** 子组件方法传递给父组件 */
     const codeScanExecuteContentRef = useRef<CodeScanExecuteContentRefProps>(null)
     const [hidden, setHidden] = useControllableValue<boolean>(props, {
@@ -507,10 +505,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
         if (executeStatus === "paused") return true
         return false
     }, [executeStatus])
-
-    const selectGroupNum = useCreation(() => {
-        return selectGroupList.length
-    }, [selectGroupList])
 
     const isShowFlowRule = useCreation(() => {
         return selectGroupList.length > 0
@@ -604,7 +598,12 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                             </div>
                         </div>
                     </div>
-                    <CodeScanByGroup hidden={false} selectGroupList={selectGroupList} filterLibRuleKind={filterLibRuleKind} setTotal={setTotal} />
+                    <CodeScanByGroup
+                        hidden={false}
+                        selectGroupList={selectGroupList}
+                        filterLibRuleKind={filterLibRuleKind}
+                        setTotal={setTotal}
+                    />
                 </div>
             )}
             <div className={styles["code-scan-execute-wrapper"]}>
@@ -670,6 +669,40 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                       <div className={styles["divider-style"]}></div>
                                   </>
                               )}
+                        {Object.keys(pageInfo).length > 0 && (
+                            <Tooltip
+                                title='在代码审计中打开'
+                                destroyTooltipOnHide={true}
+                                overlayStyle={{paddingBottom: 0}}
+                                placement='top'
+                            >
+                                <YakitButton
+                                    type='text2'
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (!pageInfo.projectName) return
+                                        if (pageInfo.projectName.length > 1) {
+                                        } else {
+                                            // 跳转到审计页面的参数
+                                            const params: AuditCodePageInfoProps = {
+                                                Schema: "syntaxflow",
+                                                Location: pageInfo.projectName[0],
+                                                Path: `/`,
+                                                runtimeId: pageInfo.runtimeId
+                                            }
+                                            emiter.emit(
+                                                "openPage",
+                                                JSON.stringify({
+                                                    route: YakitRoute.YakRunner_Audit_Code,
+                                                    params
+                                                })
+                                            )
+                                        }
+                                    }}
+                                    icon={<OutlineTerminalIcon />}
+                                />
+                            </Tooltip>
+                        )}
                         <YakitButton
                             type='text2'
                             icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
@@ -706,6 +739,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         setStopLoading={setStopLoading}
                         continueLoading={continueLoading}
                         setContinueLoading={setContinueLoading}
+                        setPageInfo={setPageInfo}
                     />
                 </div>
             </div>
@@ -733,7 +767,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             setExecuteType,
             onSetSelectGroupListByKeyWord,
             pageInfo,
-            pageId
+            pageId,
+            setPageInfo
         } = props
 
         const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -861,7 +896,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             [form]
         )
 
-        const [runtimeId, setRuntimeId] = useState<string>("")
+        const [runtimeId, setRuntimeId, getRuntimeId] = useGetState<string>("")
         const [stopLoading, setStopLoading] = useControllableValue<boolean>(props, {
             defaultValue: false,
             valuePropName: "stopLoading",
@@ -993,6 +1028,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
             updatePagesDataCacheById(route, {...newCurrentItem})
         })
 
+        const pageInfoCacheRef = useRef<CodeScanPageInfoProps>()
+
         useEffect(() => {
             ipcRenderer.on(`${token}-data`, async (e: any, res: SyntaxFlowScanResponse) => {
                 if (res) {
@@ -1018,8 +1055,12 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                 break
                         }
                     }
-                    if (!!data?.RuntimeID && runtimeId !== data.RuntimeID) {
+                    if (!!data?.RuntimeID && getRuntimeId() !== data.RuntimeID) {
                         setRuntimeId(data.RuntimeID)
+                        if (pageInfoCacheRef.current) {
+                            setPageInfo({...pageInfoCacheRef.current, runtimeId: data.RuntimeID})
+                        }
+
                         /**更新该页面最新的runtimeId */
                         onUpdateExecutorPageInfo(data.RuntimeID)
                     }
@@ -1120,6 +1161,10 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 }
             }
             apiSyntaxFlowScan(params, token).then(() => {
+                pageInfoCacheRef.current = {
+                    ...pageInfo,
+                    projectName: project
+                }
                 setIsExpand(false)
                 setExecuteStatus("process")
                 resetStreamInfo()

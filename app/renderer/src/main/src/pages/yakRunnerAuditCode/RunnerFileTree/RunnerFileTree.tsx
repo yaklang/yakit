@@ -54,7 +54,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
-    const {fileTree, activeFile, projectName} = useStore()
+    const {fileTree, activeFile, projectName, pageInfo} = useStore()
     const {handleFileLoadData} = useDispatcher()
     const [afreshName, setAfreshName] = useState<string>()
     const [visible, setVisible] = useState<boolean>(false)
@@ -330,6 +330,12 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     useEffect(() => {
         getRiskSelectList()
     }, [projectName])
+
+    useEffect(() => {
+        if(pageInfo && pageInfo.runtimeId){
+            setCheckItem(pageInfo.runtimeId)
+        }
+    }, [pageInfo])
 
     const getSelectDom = useMemoizedFn(() => {
         return (

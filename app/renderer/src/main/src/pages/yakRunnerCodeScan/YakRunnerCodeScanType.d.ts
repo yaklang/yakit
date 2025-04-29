@@ -36,6 +36,7 @@ export interface CodeScanExecuteContentProps {
     pageInfo: CodeScanPageInfoProps
     pageId: string
     onSetSelectGroupListByKeyWord: (v: string[]) => void
+    setPageInfo: (v: CodeScanPageInfoProps) => void
 }
 
 export interface CodeScanByGroupProps {
@@ -82,6 +83,7 @@ export interface CodeScaMainExecuteContentProps {
     setStopLoading: (v: boolean) => void
     continueLoading: boolean
     setContinueLoading: (v: boolean) => void
+    setPageInfo: (v: CodeScanPageInfoProps) => void
 }
 
 export interface FlowRuleDetailsListItemProps {
