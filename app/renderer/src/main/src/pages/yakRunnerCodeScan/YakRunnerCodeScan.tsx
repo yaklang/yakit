@@ -18,7 +18,7 @@ import {
     VerifyStartProps,
     YakRunnerCodeScanProps
 } from "./YakRunnerCodeScanType"
-import {Col, Divider, Form, Row, Slider, Tooltip} from "antd"
+import {Col, Divider, Form, Radio, Row, Slider, Tooltip} from "antd"
 import {
     useControllableValue,
     useCreation,
@@ -92,6 +92,7 @@ import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {DefaultRuleGroupFilterPageMeta} from "@/defaultConstants/RuleManagement"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RuleDebugAuditDetail} from "../ruleManagement/template"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
 
@@ -566,6 +567,9 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     }, [])
 
     const [filterLibRuleKind, setFilterLibRuleKind] = useState<"" | "noLib">("noLib")
+
+    const [selectProject, setsSelectProject] = useState<string[]>([])
+    const [openProject, setOpenProject] = useState<string>()
     return (
         <>
             {isShowFlowRule && (
@@ -682,6 +686,8 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                                         e.stopPropagation()
                                         if (!pageInfo.projectName) return
                                         if (pageInfo.projectName.length > 1) {
+                                            setsSelectProject(pageInfo.projectName)
+                                            setOpenProject(pageInfo.projectName[0])
                                         } else {
                                             // 跳转到审计页面的参数
                                             const params: AuditCodePageInfoProps = {
@@ -748,6 +754,55 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                     <CodeScanTaskListDrawer visible={visibleScanList} setVisible={setVisibleScanList} />
                 )}
             </React.Suspense>
+            <YakitHint
+                visible={selectProject.length > 0}
+                title={"选择项目打开"}
+                children={
+                    <>
+                        <div className={styles["default-content"]}>
+                            代码审计只能打开一个项目，请选择项目在代码审计中查看
+                        </div>
+                        <Radio.Group
+                            className='plugins-radio-wrapper'
+                            value={openProject}
+                            onChange={(e) => {
+                                setOpenProject(e.target.value)
+                            }}
+                            options={selectProject.map((item) => ({
+                                label: item,
+                                value: item
+                            }))}
+                        />
+                    </>
+                }
+                onOk={() => {
+                    if (openProject) {
+                        // 跳转到审计页面的参数
+                        const params: AuditCodePageInfoProps = {
+                            Schema: "syntaxflow",
+                            Location: openProject,
+                            Path: `/`,
+                            runtimeId: pageInfo.runtimeId
+                        }
+                        emiter.emit(
+                            "openPage",
+                            JSON.stringify({
+                                route: YakitRoute.YakRunner_Audit_Code,
+                                params
+                            })
+                        )
+                        setOpenProject(undefined)
+                        setsSelectProject([])
+                    } else {
+                        setOpenProject(undefined)
+                        setsSelectProject([])
+                    }
+                }}
+                onCancel={() => {
+                    setOpenProject(undefined)
+                    setsSelectProject([])
+                }}
+            />
         </>
     )
 })
