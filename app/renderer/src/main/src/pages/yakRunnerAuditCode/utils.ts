@@ -697,7 +697,7 @@ export const getDefaultActiveFile = async (
     info: FileDetailInfo,
     ProgramName: string[],
     CodeSourceUrl: string[],
-    RuntimeID: string
+    RuntimeID: string[]
 ) => {
     // if (info.syntaxCheck) {
     //     return info

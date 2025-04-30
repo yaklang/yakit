@@ -972,7 +972,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             let ProgramName = [projectName]
             let CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
             // 注入漏洞汇总结果
-            newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl, runtimeID)
+            newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl, [runtimeID])
             // 如若文件检查结果出来时 文件已被切走 则不再更新
             if (newActiveFile.path !== nowPathRef.current) return
             // 更新位置信息
