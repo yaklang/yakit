@@ -196,9 +196,7 @@ export const grpcFetchRiskOrRuleTree: (
 /**
  * @name 漏洞文件/规则汇树筛选列表获取
  */
-export const grpcFetchRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (
-    Programs,
-) => {
+export const grpcFetchRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (Programs) => {
     return new Promise(async (resolve, reject) => {
         const params: QuerySyntaxFlowScanTaskRequest = {
             Pagination: genDefaultPagination(100, 1),
@@ -672,13 +670,14 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
 /**
  * @name 漏洞汇总
  */
-export const onSyntaxRisk = ({ProgramName, CodeSourceUrl}) => {
+export const onSyntaxRisk = ({ProgramName, CodeSourceUrl, RuntimeID}) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
             .invoke("QuerySSARisks", {
                 Filter: {
                     ProgramName,
-                    CodeSourceUrl
+                    CodeSourceUrl,
+                    RuntimeID
                 }
             })
             .then((res: QuerySSARisksResponse) => {
@@ -694,14 +693,19 @@ export const onSyntaxRisk = ({ProgramName, CodeSourceUrl}) => {
 /**
  * @name 注入漏洞汇总结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo, ProgramName: string[], CodeSourceUrl: string[]) => {
-    if (info.syntaxCheck) {
-        return info
-    }
+export const getDefaultActiveFile = async (
+    info: FileDetailInfo,
+    ProgramName: string[],
+    CodeSourceUrl: string[],
+    RuntimeID: string
+) => {
+    // if (info.syntaxCheck) {
+    //     return info
+    // }
     let newActiveFile = info
     if (CodeSourceUrl.length > 0) {
         // 注入漏洞汇总结果
-        const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl})) as SSARisk[]
+        const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl, RuntimeID})) as SSARisk[]
         if (syntaxCheck) {
             newActiveFile = {...newActiveFile, syntaxCheck}
         }

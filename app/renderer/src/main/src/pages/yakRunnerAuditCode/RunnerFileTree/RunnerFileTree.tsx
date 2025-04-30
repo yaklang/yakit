@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMap, useMemoizedFn} from "ahooks"
+import {useMap, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {ActiveProps, OpenedFileProps, RiskTreeProps, RuleTreeProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
@@ -55,7 +55,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
     const {fileTree, activeFile, projectName, pageInfo} = useStore()
-    const {handleFileLoadData} = useDispatcher()
+    const {handleFileLoadData, setRuntimeID} = useDispatcher()
     const [afreshName, setAfreshName] = useState<string>()
     const [visible, setVisible] = useState<boolean>(false)
     const [searchVisible, setSearchVisible] = useState<boolean>(false)
@@ -332,10 +332,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     }, [projectName])
 
     useEffect(() => {
-        if(pageInfo && pageInfo.runtimeId){
+        if (pageInfo && pageInfo.runtimeId) {
             setCheckItem(pageInfo.runtimeId)
         }
     }, [pageInfo])
+
+    useUpdateEffect(() => {
+        setRuntimeID && setRuntimeID(checkItem)
+    }, [checkItem])
 
     const getSelectDom = useMemoizedFn(() => {
         return (
@@ -815,6 +819,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
                                     highLightRange
                                 }
                             }
+
                             emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
                             // 纯跳转行号
                             setTimeout(() => {

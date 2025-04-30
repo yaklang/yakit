@@ -31,7 +31,16 @@ import {
 import yakitSSMiniProject from "@/assets/yakitSS.png"
 import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useDebounceEffect, useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useLongPress,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useUpdate,
+    useUpdateEffect
+} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerAuditCodeType"
@@ -880,7 +889,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, projectName} = useStore()
+    const {areaInfo, activeFile, projectName, runtimeID} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
@@ -963,7 +972,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             let ProgramName = [projectName]
             let CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
             // 注入漏洞汇总结果
-            newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl)
+            newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl, runtimeID)
             // 如若文件检查结果出来时 文件已被切走 则不再更新
             if (newActiveFile.path !== nowPathRef.current) return
             // 更新位置信息
@@ -984,6 +993,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             wait: 200
         }
     ).run
+
+    useUpdateEffect(() => {
+        updateBottomEditorDetails()
+    }, [runtimeID])
 
     const [highLightFind, setHighLightFind] = useState<Selection[]>([])
     // 获取编辑器中关联字符
@@ -1337,15 +1350,17 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         {wait: 300}
     )
 
-    useDebounceEffect(() => {
-        if (editorInfo && editor) {
-            /** 代码审计 代码错误检查 */
-            const model = editor.getModel()
-            model && auditStaticAnalyze.run(model)
-        }
-    }, [activeFile, editorInfo?.code, editor],
-    {wait: 200}
-)
+    useDebounceEffect(
+        () => {
+            if (editorInfo && editor) {
+                /** 代码审计 代码错误检查 */
+                const model = editor.getModel()
+                model && auditStaticAnalyze.run(model)
+            }
+        },
+        [activeFile, editorInfo?.code, editor],
+        {wait: 200}
+    )
 
     return (
         <div className={styles["runner-tab-pane"]}>
