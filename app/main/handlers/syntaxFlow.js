@@ -1,7 +1,7 @@
-const {ipcMain} = require("electron")
+const { ipcMain } = require("electron")
 const fs = require("fs")
 const path = require("path")
-const {yakProjects} = require("../filePath")
+const { yakProjects } = require("../filePath")
 
 module.exports = (win, getClient) => {
     // query local rule group list
@@ -257,11 +257,11 @@ module.exports = (win, getClient) => {
     const exportSyntaxFlowsMap = new Map()
     ipcMain.handle("cancel-ExportSyntaxFlows", handlerHelper.cancelHandler(exportSyntaxFlowsMap))
     ipcMain.handle("ExportSyntaxFlows", (_, params, token) => {
-        const {TargetPath} = params
+        const { TargetPath } = params
         if (!fs.existsSync(yakProjects)) {
             try {
-                fs.mkdirSync(yakProjects, {recursive: true})
-            } catch (error) {}
+                fs.mkdirSync(yakProjects, { recursive: true })
+            } catch (error) { }
         }
         params.TargetPath = path.join(yakProjects, TargetPath)
         let stream = getClient().ExportSyntaxFlows(params)
@@ -351,5 +351,21 @@ module.exports = (win, getClient) => {
     ipcMain.handle("ApplySyntaxFlowRuleUpdate", async (e, token) => {
         let stream = getClient().ApplySyntaxFlowRuleUpdate()
         handlerHelper.registerHandler(win, stream, streamApplySyntaxFlowRuleUpdate, token)
+    })
+
+    // 上传规则
+    const streamSyntaxFlowRuleToOnlineMap = new Map()
+    ipcMain.handle("cancel-SyntaxFlowRuleToOnline", handlerHelper.cancelHandler(streamSyntaxFlowRuleToOnlineMap))
+    ipcMain.handle("SyntaxFlowRuleToOnline", (e, params, token) => {
+        let stream = getClient().SyntaxFlowRuleToOnline(params)
+        handlerHelper.registerHandler(win, stream, streamSyntaxFlowRuleToOnlineMap, token)
+    })
+
+    // 下载规则
+    const streamDownloadSyntaxFlowRuleMap = new Map()
+    ipcMain.handle("cancel-DownloadSyntaxFlowRule", handlerHelper.cancelHandler(streamDownloadSyntaxFlowRuleMap))
+    ipcMain.handle("DownloadSyntaxFlowRule", (e, params, token) => {
+        let stream = getClient().DownloadSyntaxFlowRule(params)
+        handlerHelper.registerHandler(win, stream, streamDownloadSyntaxFlowRuleMap, token)
     })
 }

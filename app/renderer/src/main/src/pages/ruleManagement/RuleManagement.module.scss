@@ -34,6 +34,15 @@
         height: 1px;
         border-bottom: 1px solid #e6e8ed;
     }
+    .online-group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        .online-group-desc {
+            color: #85899e;
+        }
+    }
 }
 
 .rule-management-body {
@@ -740,6 +749,29 @@
         }
         .audit-opt:hover + .audit-opt {
             border-top-color: #f8f8f8;
+        }
+    }
+}
+
+// 规则上传
+.RuleUploadAndDownloadModal {
+    .progressTitle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .text {
+            font-weight: 600;
+        }
+    }
+    .log-info {
+        margin-top: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        .log-item {
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 24px;
         }
     }
 }

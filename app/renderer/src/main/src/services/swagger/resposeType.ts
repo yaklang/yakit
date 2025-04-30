@@ -1422,6 +1422,54 @@ export declare namespace API {
         autoTemplate?: string
         isHTTPS?: boolean
     }
+    export interface FlowRuleWhere {
+        ruleNames?: string[]
+        language?: string[]
+        groupNames?: string[]
+        severity?: string[]
+        purpose?: string[]
+        tag?: string[]
+        keyword?: string
+        filterRuleKind?: string
+        filterLibRuleKind?: string
+    }
+    export interface FlowRuleResponse extends Paging {
+        data: FlowRuleDetail[]
+    }
+    export interface FlowRuleRequest extends FlowRuleWhere, Pagination {}
+    export interface FlowRuleGroupWhere {
+        groupNames?: string[]
+        keyword?: string
+        filterGroupKind?: string
+    }
+    export interface FlowRuleGroupResponse extends Paging {
+        data: FlowRuleGroupDetail[]
+    }
+    export interface FlowRuleGroupRequest extends FlowRuleGroupWhere, Pagination {}
+    export interface FlowRuleGroupDetail {
+        groupName?: string
+        count?: number
+        isBuildIn?: boolean
+    }
+    export interface FlowRuleDetail {
+        id?: number
+        ruleName?: string
+        content?: string
+        language?: string
+        type?: string
+        severity?: string
+        purpose?: string
+        isBuildInRule?: boolean
+        title?: string
+        titleZh?: string
+        description?: string
+        verified?: boolean
+        allowIncluded?: boolean
+        includedName?: string
+        tag?: string
+        hash?: string
+        groupName?: string[]
+    }
     export interface Fields {
         data: FieldName[]
     }
