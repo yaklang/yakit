@@ -823,6 +823,9 @@ service Yak {
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+
+  // MCP
+  rpc StartSSEMCP(StartMCPRequest) returns (stream StartMCPResponse);
 }
 
 message AIOutputEvent {
@@ -835,6 +838,7 @@ message AIOutputEvent {
   bytes StreamDelta = 7;
   bool IsJson = 8;
   bytes Content = 9;
+  int64 Timestamp = 10;
 }
 
 message AIInputEvent {
@@ -859,6 +863,8 @@ message AIStartParams {
   // allow ai to use the fs
   bool EnableSystemFileSystemOperator = 3;
   bool UseDefaultAIConfig = 4;
+
+  string ForgeName = 5;
 }
 
 
@@ -6705,4 +6711,15 @@ message SingleManualHijackInfoMessage{
   TraceInfo TraceInfo = 15;
 
   string Method = 16;
+}
+
+message StartMCPRequest {
+  repeated string Tools = 1;
+  repeated string Resources = 2;
+  repeated string DisableTools = 3;
+  repeated string DisableResources = 4;
+}
+  
+message StartMCPResponse {
+  string URL = 1;
 }

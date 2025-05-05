@@ -95,5 +95,7 @@ export enum YakitRoute {
     // YakRunner漏洞管理
     YakRunner_Audit_Hole = "yakrunner-audit-hole",
     // 系统配置（目前仅供IRify企业版配置水印）
-    System_Config = "system-config"
+    System_Config = "system-config",
+    // AI-Agent
+    AI_Agent = "ai-agent"
 }
