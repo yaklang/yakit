@@ -51,6 +51,7 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
@@ -349,7 +350,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 onChange={(value) => {
                     setCheckItem(value)
                 }}
-                style={{margin: "0px 12px"}}
+                style={{margin: "0px 12px 4px"}}
                 size='small'
             />
         )
@@ -843,14 +844,22 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
         }
     )
     return (
-        <FileTree
-            data={fileDetailRiskTree}
-            onLoadData={onLoadData}
-            onSelect={onSelectFileTree}
-            foucsedKey={foucsedKey}
-            setFoucsedKey={setFoucsedKey}
-            expandedKeys={expandedKeys}
-            setExpandedKeys={setExpandedKeys}
-        />
+        <>
+            {fileDetailRiskTree.length !== 0 ? (
+                <FileTree
+                    data={fileDetailRiskTree}
+                    onLoadData={onLoadData}
+                    onSelect={onSelectFileTree}
+                    foucsedKey={foucsedKey}
+                    setFoucsedKey={setFoucsedKey}
+                    expandedKeys={expandedKeys}
+                    setExpandedKeys={setExpandedKeys}
+                />
+            ) : (
+                <div style={{marginTop:20}}>
+                    <YakitEmpty title='暂无漏洞' />
+                </div>
+            )}
+        </>
     )
 })
