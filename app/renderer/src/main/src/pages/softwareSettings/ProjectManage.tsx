@@ -86,6 +86,7 @@ export interface ProjectParamsProp extends QueryGeneralRequest {
     FolderId?: number
     ChildFolderId?: number
     FrontendType?: "project" | "ssa_project"
+    AfterUpdatedAt?:number
 }
 /** 单条项目数据 */
 export interface ProjectDescription {

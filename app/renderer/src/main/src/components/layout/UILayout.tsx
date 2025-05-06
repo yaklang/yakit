@@ -228,15 +228,17 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 }
                 //自动上传项目
                 if (autoUploadProject.isOpen && userInfo.isLogin) {
-                    onGetProjects()
+                    onGetProjects(autoUploadProject.day)
                 }
             })
         }
     }, [userInfo.isLogin])
-    const onGetProjects = useMemoizedFn(() => {
+    const onGetProjects = useMemoizedFn((day) => {
+        const time = moment().subtract(day, "days").startOf("day")
         const query: ProjectParamsProp = {
             Type: "project",
             FrontendType: "project",
+            AfterUpdatedAt: time.unix(),
             Pagination: {
                 Page: 1,
                 Limit: -1,
@@ -246,7 +248,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         }
         grpcGetProjects(query).then((res) => {
             const {Projects} = res
-            projectListRef.current = [...(Projects || [])]
+            const name = currentProject?.ProjectName || ""
+            projectListRef.current = [...(Projects || [])].filter((item) => item.ProjectName !== name) // 过滤当前打开的项目
             if (projectListRef.current.length > 0) {
                 onExportProject()
             }
