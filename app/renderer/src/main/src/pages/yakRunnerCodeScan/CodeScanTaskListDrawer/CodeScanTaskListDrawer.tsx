@@ -93,6 +93,7 @@ interface SyntaxFlowScanTaskFilter {
     FromId?: number
     UntilId?: number
     Kind?: string[]
+    HaveRisk?: boolean
 }
 
 export interface QuerySyntaxFlowScanTaskRequest {

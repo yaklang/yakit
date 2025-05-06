@@ -201,7 +201,8 @@ export const grpcFetchRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxF
         const params: QuerySyntaxFlowScanTaskRequest = {
             Pagination: genDefaultPagination(100, 1),
             Filter: {
-                Programs: [Programs]
+                Programs: [Programs],
+                HaveRisk:true, 
             }
         }
         try {

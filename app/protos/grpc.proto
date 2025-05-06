@@ -6045,6 +6045,7 @@ message SyntaxFlowScanTaskFilter{
   int64  UntilId = 5;
   string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
+  bool HaveRisk = 17; // 只显示有风险的任务
 }
 
 message QuerySyntaxFlowScanTaskResponse{
