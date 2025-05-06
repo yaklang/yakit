@@ -1,18 +1,12 @@
-import React, {Ref, useContext, useEffect, useImperativeHandle, useRef, useState} from "react"
-import {Divider, Form, Modal, notification, Typography} from "antd"
+import React, {useContext, useEffect, useRef, useState} from "react"
+import {Divider, Form, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
-import {useHotkeys} from "react-hotkeys-hook"
-import {useCreation, useGetState, useLatest, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
-import {MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
-import {ExecResult} from "@/pages/invoker/schema"
-import {ExtractExecResultMessage} from "@/components/yakitLogSchema"
-import {MITMResponse, MITMServer} from "@/pages/mitm/MITMPage"
-import {showConfigSystemProxyForm} from "@/utils/ConfigSystemProxy"
-import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
+import {MITMServer} from "@/pages/mitm/MITMPage"
 import style from "./MITMServerHijacking.module.scss"
 import {QuitIcon} from "@/assets/newIcon"
 import classNames from "classnames"
@@ -21,13 +15,10 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {MITMConsts} from "../MITMConsts"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {AgentConfigModal} from "../MITMServerStartForm/MITMServerStartForm"
-import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {useGoogleChromePluginPath} from "@/store"
 import MITMContext from "../Context/MITMContext"
 import {
     MITMEnablePluginModeRequest,
@@ -40,6 +31,9 @@ import {
     grpcMITMSetDownstreamProxy,
     grpcMITMStopCall
 } from "../MITMHacker/utils"
+import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import {YakitBaseSelectRef} from "@/components/yakitUI/YakitSelect/YakitSelectType"
+import {onGetRemoteValuesBase} from "@/components/yakitUI/utils"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -211,7 +205,38 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                 !item.startsWith("下游代理") ? (
                                     <YakitTag color='success'>{item}</YakitTag>
                                 ) : (
-                                    <YakitTag>{item}</YakitTag>
+                                    <YakitTag
+                                        closable={true}
+                                        onClose={() => {
+                                            const tipStr = tip
+                                                .split("|")
+                                                .filter((item) => !item.startsWith("下游代理"))
+                                                .join("|")
+                                            onSetTip(tipStr)
+                                            setDownstreamProxyStr("")
+                                            // 更新下拉缓存数据
+                                            onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then(
+                                                (res) => {
+                                                    const cacheData = {
+                                                        options: res.options || [],
+                                                        defaultValue: ""
+                                                    }
+                                                    setRemoteValue(
+                                                        MITMConsts.MITMDefaultDownstreamProxyHistory,
+                                                        JSON.stringify(cacheData)
+                                                    )
+                                                }
+                                            )
+
+                                            const proxyValue: MITMSetDownstreamProxyRequest = {
+                                                downstreamProxy: "",
+                                                version: mitmVersion
+                                            }
+                                            grpcMITMSetDownstreamProxy(proxyValue)
+                                        }}
+                                    >
+                                        {item}
+                                    </YakitTag>
                                 )
                             )}
                     </div>
@@ -330,16 +355,18 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     }, [mitmContent.mitmStore.version])
     const onOKFun = useMemoizedFn(async () => {
         const tipArr = tip.split("|")
+
         const downstreamProxy = form.getFieldsValue().downstreamProxy
         downstreamProxyRef.current.onSetRemoteValues(downstreamProxy)
+
         const proxyValue: MITMSetDownstreamProxyRequest = {
-            downstreamProxy,
+            downstreamProxy: downstreamProxy.join(","),
             version: mitmVersion
         }
         grpcMITMSetDownstreamProxy(proxyValue)
-        if (downstreamProxy) {
+        if (downstreamProxy.length) {
             if (tip.indexOf("下游代理") === -1) {
-                onSetTip(`下游代理${downstreamProxy}` + (tip.indexOf("|") === 0 ? tip : `|${tip}`))
+                onSetTip(`下游代理：${downstreamProxy}` + (tip.indexOf("|") === 0 ? tip : `|${tip}`))
             } else {
                 const tipStr = tipArr
                     .map((item) => {
@@ -352,7 +379,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                     .join("|")
                 onSetTip(tipStr)
             }
-            setDownstreamProxyStr(downstreamProxy)
+            setDownstreamProxyStr(downstreamProxy.join(","))
         } else {
             const tipStr = tipArr.filter((item) => !item.startsWith("下游代理")).join("|")
             onSetTip(tipStr)
@@ -366,9 +393,9 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     })
 
     const [agentConfigModalVisible, setAgentConfigModalVisible] = useState<boolean>(false)
-    const downstreamProxyRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
+    const downstreamProxyRef: React.MutableRefObject<YakitBaseSelectRef> = useRef<YakitBaseSelectRef>({
         onGetRemoteValues: () => {},
-        onSetRemoteValues: (s: string) => {}
+        onSetRemoteValues: (s: string[]) => {}
     })
 
     return (
@@ -407,10 +434,14 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                                 </div>
                             }
                         >
-                            <YakitAutoComplete
+                            <YakitSelect
                                 ref={downstreamProxyRef}
-                                placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                                 cacheHistoryDataKey={MITMConsts.MITMDefaultDownstreamProxyHistory}
+                                isCacheDefaultValue={true}
+                                allowClear
+                                mode='tags'
+                                maxTagCount={2}
+                                placeholder='例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890'
                             />
                         </Form.Item>
                     </Form>
@@ -420,7 +451,10 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                 agentConfigModalVisible={agentConfigModalVisible}
                 onCloseModal={() => setAgentConfigModalVisible(false)}
                 generateURL={(url) => {
-                    form.setFieldsValue({downstreamProxy: url})
+                    const v = form.getFieldsValue()
+                    const arr = Array.isArray(v.downstreamProxy) ? v.downstreamProxy.slice() : []
+                    arr.push(url)
+                    form.setFieldsValue({downstreamProxy: [...new Set(arr)]})
                 }}
             ></AgentConfigModal>
         </>

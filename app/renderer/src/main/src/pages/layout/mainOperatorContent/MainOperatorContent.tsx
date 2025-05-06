@@ -1139,7 +1139,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                newAdvancedConfigValue.proxy = [downstreamProxyStr]
+                newAdvancedConfigValue.proxy = downstreamProxyStr.split(',')
             }
 
             // 获取全局热加载缓存信息
