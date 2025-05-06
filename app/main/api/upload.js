@@ -88,11 +88,9 @@ module.exports = (win, getClient) => {
                 fileIndex,
                 type
             }
-        })
-            .then((res) => {
+        }).then((res) => {
                 // console.log("rrrr---", res)
             })
-            .catch(reject)
     }
 
     // 上传状态
