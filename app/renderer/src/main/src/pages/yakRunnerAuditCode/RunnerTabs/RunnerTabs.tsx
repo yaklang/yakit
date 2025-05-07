@@ -28,7 +28,7 @@ import {
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import yakitSSMiniProject from "@/assets/yakitSS.png"
+import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
 import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {
