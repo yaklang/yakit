@@ -109,6 +109,18 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const [groupRefresh, setGroupRefresh] = useState<boolean>(false)
     const handleGroupChange = useMemoizedFn((groups: string[]) => {
         if (groups.length) {
+            setOnlineData({
+                data: [],
+                pagemeta: {
+                    page: 1,
+                    limit: 20,
+                    total: 0,
+                    total_page: 0
+                }
+            })
+            setOnlineFilters({
+                filterLibRuleKind: ""
+            })
             onlineRuleGroupListRef.current?.handleReset()
         }
         setFilters((filters) => {
@@ -425,6 +437,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 setData((res) => {
                     return {...res, Rule: res.Rule.filter((ele) => ele.RuleName !== RuleName), Total: res.Total - 1}
                 })
+                setGroupRefresh((v) => !v)
             })
             .catch(() => {})
             .finally(() => {
@@ -452,6 +465,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             .then(() => {
                 handleAllCheck([], [], false)
                 fetchList()
+                setGroupRefresh((v) => !v)
             })
             .catch(() => {})
             .finally(() => {
@@ -511,7 +525,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                           FilterRuleKind: onlineFilters.filterRuleKind as FilterRuleKind,
                           FilterLibRuleKind: onlineFilters.filterLibRuleKind as FilterLibRuleKind
                       },
-                Pagination: {Page: 1, Limit: -1, OrderBy: "created_at", Order: "desc"}
+                Pagination: {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}
             },
             tokenRef.current
         ).then((res) => {
@@ -546,7 +560,17 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const [groupOnlineRefresh, setGroupOnlineRefresh] = useState<boolean>(false)
     const handleOnlineGroupChange = useMemoizedFn((groups: string[]) => {
         if (groups.length) {
+            setData({
+                Rule: [],
+                Pagination: {...genDefaultPagination(20)},
+                Total: 0
+            })
+            setFilters({
+                FilterLibRuleKind: ""
+            })
             localRuleGroupListRef.current?.handleReset()
+        } else {
+            fetchList()
         }
         setOnlineFilters((filters) => {
             return {...filters, groupNames: groups}
@@ -587,8 +611,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             setOnlineLoading(true)
             httpFetchOnlineRuleList({...cloneDeep(onlineFilters), ...pagination})
                 .then((res) => {
-                    const {pagemeta, data = []} = res
-                    const rules = pagemeta.page === 1 ? data : onlineData.data.concat(data)
+                    const {pagemeta, data} = res
+                    const d = data || []
+                    const rules = pagemeta.page === 1 ? d : onlineData.data.concat(d)
                     setOnlineData({
                         pagemeta: {
                             ...pagemeta,
@@ -690,6 +715,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                         pagemeta: {...res.pagemeta, total: res.pagemeta.total === 0 ? 0 : res.pagemeta.total - 1}
                     }
                 })
+                setGroupOnlineRefresh((v) => !v)
             })
             .catch(() => {})
             .finally(() => {
@@ -716,6 +742,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
             .then(() => {
                 handleOnlineAllCheck([], [], false)
                 fetchOnlineList()
+                setGroupOnlineRefresh((v) => !v)
             })
             .catch(() => {})
             .finally(() => {
@@ -804,9 +831,9 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                 title: "操作",
                 dataKey: "action",
                 fixed: "right",
-                width: 100,
+                width: 65,
                 render: (_, rowData) => {
-                    const {ruleName, isBuildInRule} = rowData
+                    const {ruleName} = rowData
                     const isLoading = delOnlineRules.includes(ruleName)
                     return (
                         <div className={styles["col-btns"]}>
@@ -846,7 +873,8 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                     <div className={styles["group-divider"]}></div>
                     <div className={styles["online-group-header"]}>
                         <span className={styles["online-group-desc"]}>
-                            线上规则{(isCommunityIRify() || eeIRifyIsLogin) && "（下载即可使用）"}
+                            线上规则
+                            {isCommunityIRify() || eeIRifyIsLogin ? "（下载即可使用）" : "（登录即可下载使用）"}
                         </span>
                         {isCommunityIRify() ||
                             (eeIRifyIsLogin && (
@@ -885,6 +913,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                         <>
                             {/* 本地规则列表 */}
                             <TableVirtualResize<SyntaxFlowRule>
+                                key={"rule-local"}
                                 titleHeight={68}
                                 isHiddenLoadingUI={true}
                                 renderTitle={
@@ -1029,6 +1058,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                         <>
                             {/* 线上规则列表 */}
                             <TableVirtualResize<API.FlowRuleDetail>
+                                key={"rule-online"}
                                 titleHeight={68}
                                 isHiddenLoadingUI={true}
                                 renderTitle={

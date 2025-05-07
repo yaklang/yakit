@@ -2372,12 +2372,6 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
 
         const wrapperRef = useRef<HTMLDivElement>(null)
         const bodyRef = useRef<HTMLDivElement>(null)
-        const [list] = useVirtualList(data, {
-            containerTarget: wrapperRef,
-            wrapperTarget: bodyRef,
-            itemHeight: 40,
-            overscan: 5
-        })
 
         /** ---------- 获取数据 ---------- */
         const [loading, setLoading] = useState<boolean>(false)
@@ -2466,7 +2460,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                 grpcDownloadSyntaxFlowRule(
                     {
                         Filter: {GroupNames: [ruleGroupItemRef.current.groupName]},
-                        Pagination: {Page: 1, Limit: -1, OrderBy: "created_at", Order: "desc"}
+                        Pagination: {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}
                     },
                     downloadTokenRef.current
                 ).then((res) => {
@@ -2518,7 +2512,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                     </>
                 ) : (
                     <>
-                        {list.length === 0 ? (
+                        {data.length === 0 ? (
                             <YakitSpin spinning={loading}>
                                 <YakitEmpty title='暂无数据' />
                             </YakitSpin>
@@ -2537,9 +2531,8 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                     <YakitSpin spinning={loading}>
                                         <div ref={wrapperRef} className={styles["list-body"]}>
                                             <div ref={bodyRef}>
-                                                {list.map((item) => {
-                                                    const {data} = item
-                                                    const {groupName: name = ""} = data
+                                                {data.map((item) => {
+                                                    const {groupName: name = ""} = item
 
                                                     const isCheck = selectGroups.includes(name)
                                                     const isDelLoading = loadingDelKeys.includes(name)
@@ -2551,14 +2544,14 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                                                 [styles["list-local-opt-active"]]: isCheck
                                                             })}
                                                             onClick={() => {
-                                                                handleSelect(data)
+                                                                handleSelect(item)
                                                             }}
                                                         >
                                                             <div className={styles["info-wrapper"]}>
                                                                 <YakitCheckbox
                                                                     checked={isCheck}
                                                                     onChange={() => {
-                                                                        handleSelect(data)
+                                                                        handleSelect(item)
                                                                     }}
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 />
@@ -2568,13 +2561,13 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                                                         styles["title-style"],
                                                                         "yakit-content-single-ellipsis"
                                                                     )}
-                                                                    title={data.groupName}
+                                                                    title={item.groupName}
                                                                 >
-                                                                    {data.groupName}
+                                                                    {item.groupName}
                                                                 </span>
                                                             </div>
 
-                                                            <div className={styles["total-style"]}>{data.count}</div>
+                                                            <div className={styles["total-style"]}>{item.count}</div>
                                                             <div
                                                                 className={styles["btns-wrapper"]}
                                                                 onClick={(e) => {
@@ -2585,7 +2578,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                                                     type='secondary2'
                                                                     icon={<OutlineClouddownloadIcon />}
                                                                     onClick={() => {
-                                                                        ruleGroupItemRef.current = data
+                                                                        ruleGroupItemRef.current = item
                                                                         setDownloadInfoVisible(true)
                                                                     }}
                                                                 />
@@ -2596,7 +2589,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                                                         icon={<OutlineTrashIcon />}
                                                                         loading={isDelLoading}
                                                                         onClick={() => {
-                                                                            handleDelete(data)
+                                                                            handleDelete(item)
                                                                         }}
                                                                     />
                                                                 )}

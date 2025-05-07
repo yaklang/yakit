@@ -28,6 +28,7 @@ export const grpcFetchLocalRuleGroupList: APIFunc<QuerySyntaxFlowRuleGroupReques
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
+        console.log('获取本地规则组数据：', request);
         ipcRenderer
             .invoke("QuerySyntaxFlowRuleGroup", request)
             .then(resolve)
