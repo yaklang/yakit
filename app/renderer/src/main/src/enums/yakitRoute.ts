@@ -95,5 +95,7 @@ export enum YakitRoute {
     // 系统配置（目前仅供IRify企业版配置水印）
     System_Config = "system-config",
     /** Java 反编译 */
-    Java_Decompiler = "java-decompiler"
+    Java_Decompiler = "java-decompiler",
+    /** 新Java 反编译 */
+    Yak_Java_Decompiler = "yak-java-decompiler"
 }

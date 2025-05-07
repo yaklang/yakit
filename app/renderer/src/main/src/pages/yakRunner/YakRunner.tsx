@@ -89,8 +89,6 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
-    /** ---------- 审计树 ---------- */
-    const [projectNmae, setProjectNmae] = useState<string>()
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -459,17 +457,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const store: YakRunnerContextStore = useMemo(() => {
         return {
             fileTree: fileTree,
-            projectNmae: projectNmae,
             areaInfo: areaInfo,
             activeFile: activeFile,
             runnerTabsId: runnerTabsId
         }
-    }, [fileTree, projectNmae, areaInfo, activeFile, runnerTabsId])
+    }, [fileTree, areaInfo, activeFile, runnerTabsId])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
             setFileTree: setFileTree,
-            setProjectNmae: setProjectNmae,
             handleFileLoadData: handleFileLoadData,
             setAreaInfo: setAreaInfo,
             setActiveFile: setActiveFile,

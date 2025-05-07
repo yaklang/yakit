@@ -1,0 +1,108 @@
+.bottom-editor-details {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    .header {
+        height: 32px;
+        border-top: 1px solid #eaecf3;
+        border-bottom: 1px solid #eaecf3;
+        background: #f8f8f8;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        .select-box {
+            display: flex;
+            flex-direction: row;
+            height: 100%;
+            .item {
+                display: flex;
+                flex-direction: row;
+                padding: 4px 12px;
+                align-items: center;
+                cursor: pointer;
+                border-right: 1px solid #eaecf3;
+                .title {
+                    color: #31343f;
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 16px;
+                }
+                .count {
+                    margin-left: 4px;
+                    padding: 0px 8px;
+                    border-radius: 8px;
+                    background: #f6544a;
+                    color: #fff;
+                    font-size: 12px;
+                    font-weight: 400;
+                    line-height: 16px;
+                }
+            }
+            .active-item {
+                background: var(--yakit-primary-5);
+                .title {
+                    color: #fff;
+                }
+            }
+            .no-active-item {
+                &:hover {
+                    background-color: rgba(204, 210, 222, 0.5);
+                }
+            }
+        }
+        .extra {
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    }
+    .content {
+        flex: 1;
+        overflow: auto;
+        .render-hideen {
+            height: 100%;
+            width: 100%;
+            display: none;
+        }
+        .render-show {
+            display: block;
+        }
+        .no-syntax-check {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+    }
+}
+
+.yak-runner-menu-popover {
+    .title-font {
+        font-size: 12px;
+        margin-bottom: 4px;
+        .default-font {
+            color: var(--yakit-primary-5);
+            cursor: pointer;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+}
+
+.yak-runner-terminal-close {
+    svg{
+        color: var(--yakit-danger-4) !important;
+    }
+}
+
+.no-audit{
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

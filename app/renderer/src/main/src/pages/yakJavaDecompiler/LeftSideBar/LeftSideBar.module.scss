@@ -1,0 +1,95 @@
+.left-side-bar {
+    height: 100%;
+    display: flex;
+    // border-left: 1px solid #eaecf3;
+    // border-right: 1px solid #eaecf3;
+
+    &-list {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        background: #f8f8f8;
+        border-right: 1px solid #eaecf3;
+    }
+
+    &-item {
+        padding: 12px 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        cursor: pointer;
+        border-bottom: 1px solid #eaecf3;
+        position: relative;
+        user-select: none;
+
+        .item-text {
+            color: #31343f;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+            writing-mode: vertical-rl;
+            text-orientation: sideways-right;
+            transform: rotate(180deg);
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #85899e;
+        }
+    }
+    &-item:hover {
+        background-color: rgba(204, 210, 222, 0.5);
+    }
+
+    &-item-active {
+        background-color: var(--yakit-primary-5);
+        .item-text {
+            color: #ffffff;
+        }
+        svg {
+            color: #ffffff;
+        }
+    }
+
+    &-item-advanced-config-unShow {
+        background-color: var(--yakit-primary-3);
+    }
+
+    &-item-disable {
+        background-color: rgba(204, 210, 222, 0.5);
+        cursor: not-allowed;
+    }
+
+    &-item-active:hover {
+        background-color: var(--yakit-primary-4);
+    }
+
+    &-content {
+        flex: 1;
+        overflow: hidden;
+        height: 100%;
+        .content-wrapper {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hidden-content {
+            display: none;
+        }
+    }
+}
+
+.folded {
+    .left-side-bar-list {
+        border-right: 0;
+    }
+
+    .left-side-bar-content {
+        width: 0;
+    }
+}
+
+.hidden {
+    border-right: 1px solid var(--yakit-background-color);
+}
