@@ -19,14 +19,15 @@ const getMachineIDOperation = () => {
     })
 }
 
-const visitorsStatisticsOperation = (token?: string) => {
+const visitorsStatisticsOperation = (token?: string, form?: string) => {
     return new Promise(async (resolve, reject) => {
         NetWorkApi<API.TouristRequest, API.ActionSucceeded>({
             url: "tourist",
             method: "post",
             data: {
                 macCode: MachineID,
-                token: token
+                token: token,
+                form: form
             }
         })
             .then((data) => {})
@@ -38,13 +39,13 @@ const visitorsStatisticsOperation = (token?: string) => {
 }
 
 /** 游客信息统计 */
-export const visitorsStatisticsFun = async (token?: string) => {
+export const visitorsStatisticsFun = async (token?: string, form?: string) => {
     return new Promise(async (resolve, reject) => {
         try {
             if (MachineID.length === 0) {
                 await getMachineIDOperation()
             }
-            visitorsStatisticsOperation(token)
+            visitorsStatisticsOperation(token, form)
             resolve(true)
         } catch (error) {resolve(false)}
     })
