@@ -76,6 +76,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
     // 新增状态 - 标签页管理
     const [activeTabKey, setActiveTabKey] = useState<string>("")
     const [tabs, setTabs] = useState<FileTabInfo[]>([])
+    
     const tokenRef = useRef<string>(randomString(40))
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
@@ -121,6 +122,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         if (!jarPath) {
             return
         }
+console.log("???",jarPath);
 
         setLoading(true)
         const yakURL = `javadec:///jar-aifix?jar=${jarPath}&dir=/`
@@ -244,6 +246,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
         )}`
 
         loadFromYakURLRaw(decompileURL, (rsp) => {
+            console.log("加载内容",decompileURL,rsp);
             if (rsp.Resources && rsp.Resources.length > 0) {
                 // Assuming the decompiled content is stored in the Extra field
                 const decompiled = rsp.Resources[0].Extra.find((kv) => kv.Key === "content")
@@ -356,6 +359,7 @@ export const JavaDecompiler: React.FC<JavaDecompilerProps> = (props) => {
 
             const dirPath = node.path
             const requestURL = `javadec:///jar-aifix?jar=${jarPath}&dir=${dirPath}`
+console.log("onLoadData---",requestURL);
 
             loadFromYakURLRaw(requestURL, (rsp) => {
                 if (rsp.Resources && rsp.Resources.length > 0) {

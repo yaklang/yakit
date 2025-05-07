@@ -22,6 +22,7 @@ import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
 import {JavaDecompiler} from "@/pages/javaDecompiler/JavaDecompiler"
+import { YakJavaDecompiler } from "@/pages/yakJavaDecompiler/YakJavaDecompiler";
 import {PageLoading} from "./PageLoading"
 import {
     PrivateOutlineAuditCodeIcon,
@@ -258,6 +259,7 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-audit-hole": {label: "审计漏洞"},
     "system-config": {label: "系统配置"},
     "java-decompiler": {label: "Java 反编译"},
+    "yak-java-decompiler": {label: "Java 反编译"},
     "shortcut-key": {label: "快捷键设置"}
 }
 /** 页面路由(无法多开的页面) */
@@ -301,6 +303,7 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.System_Config,
     YakitRoute.Java_Decompiler,
+    YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey
 ]
 /** 不需要软件安全边距的页面路由 */
@@ -344,6 +347,7 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.Java_Decompiler,
+    YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey
 ]
 /** 无滚动条的页面路由 */
@@ -625,6 +629,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <SystemConfig />
         case YakitRoute.Java_Decompiler:
             return <JavaDecompiler />
+        case YakitRoute.Yak_Java_Decompiler:
+            return <YakJavaDecompiler />
         case YakitRoute.ShortcutKey:
             return <ShortcutKey page={params?.shortcutKeyPage || "global"} />
         default:
