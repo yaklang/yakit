@@ -370,6 +370,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             size='large'
                             bordered={false}
                             className={styles["notepad-input"]}
+                            wrapperStyle={{height: 40}}
                             value={tabName}
                             onChange={(e) => {
                                 onSetTabName(e.target.value)
