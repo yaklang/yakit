@@ -106,8 +106,8 @@ import {NoPromptHint} from "@/pages/pluginHub/utilsUI/UtilsTemplate"
 import {RemoteRiskGV} from "@/enums/risk"
 import {useStore} from "@/store"
 import {openPacketNewWindow} from "@/utils/openWebsite"
-import { CodeRangeProps } from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
-import { JumpToAuditEditorProps } from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
+import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
+import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
@@ -1779,7 +1779,7 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
 })
 
 export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = React.memo((props) => {
-    const {info, isShowCollapse, setIsShowCollapse, jumpCodeScanPage, isShowExtra,isScroll} = props
+    const {info, isShowCollapse, setIsShowCollapse, jumpCodeScanPage, isShowExtra, isScroll} = props
     const [loading, setLoading] = useState<boolean>(false)
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
     const extraResizeBoxProps = useCreation(() => {
@@ -1873,7 +1873,7 @@ export const YakitRiskDetailContent: React.FC<YakitRiskDetailContentProps> = Rea
                     </YakitSpin>
                 </div>
             }
-            secondNode={<AuditResultDescribe info={info} isScroll={isScroll}/>}
+            secondNode={<AuditResultDescribe info={info} isScroll={isScroll} />}
             firstMinSize={200}
             secondMinSize={400}
         />
@@ -2101,32 +2101,34 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
     })
 
     const onContext = useMemoizedFn(async () => {
-        const item: CodeRangeProps = JSON.parse(info.CodeRange)
-        const {url, start_line, start_column, end_line, end_column} = item
-        const name = await getNameByPath(url)
-        const highLightRange: Selection = {
-            startLineNumber: start_line,
-            startColumn: start_column,
-            endLineNumber: end_line,
-            endColumn: end_column
-        }
-        const OpenFileByPathParams: OpenFileByPathProps = {
-            params: {
-                path: url,
-                name,
-                highLightRange
+        try {
+            const item: CodeRangeProps = JSON.parse(info.CodeRange)
+            const {url, start_line, start_column, end_line, end_column} = item
+            const name = await getNameByPath(url)
+            const highLightRange: Selection = {
+                startLineNumber: start_line,
+                startColumn: start_column,
+                endLineNumber: end_line,
+                endColumn: end_column
             }
-        }
-        emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-        // 纯跳转行号
-        setTimeout(() => {
-            const obj: JumpToAuditEditorProps = {
-                selections: highLightRange,
-                path: url,
-                isSelect: false
+            const OpenFileByPathParams: OpenFileByPathProps = {
+                params: {
+                    path: url,
+                    name,
+                    highLightRange
+                }
             }
-            emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-        }, 100)
+            emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+            // 纯跳转行号
+            setTimeout(() => {
+                const obj: JumpToAuditEditorProps = {
+                    selections: highLightRange,
+                    path: url,
+                    isSelect: false
+                }
+                emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+            }, 100)
+        } catch (error) {}
     })
     return (
         <div
@@ -2149,7 +2151,14 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     </div>
                     <Divider type='vertical' style={{height: 40, margin: "0 16px"}} />
                     <div className={styles["content-heard-body"]}>
-                        <div className={classNames(styles["content-heard-body-title"],styles["content-heard-body-title-click"], "content-ellipsis")} onClick={onContext}>
+                        <div
+                            className={classNames(
+                                styles["content-heard-body-title"],
+                                styles["content-heard-body-title-click"],
+                                "content-ellipsis"
+                            )}
+                            onClick={onContext}
+                        >
                             {info.Title || "-"}
                         </div>
                         <div className={styles["content-heard-body-description"]} style={{flexWrap: "wrap"}}>
