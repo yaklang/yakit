@@ -40,6 +40,11 @@ module.exports = {
       childWindow.on('closed', () => {
         childWindow = null
       })
+
+      // 从父窗口发送新数据到已打开的子窗口
+      ipcMain.handle("minWin-send-to-childWin", async (e, params) => {
+        childWindow.webContents.send('get-parent-window-data', params)
+      })
     })
   }
 }

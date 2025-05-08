@@ -1,8 +1,14 @@
 import React, {useMemo} from "react"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 import {NewHTTPPacketEditor} from "@/utils/editors"
-
+import {HTTPFlowDetailMini, HTTPFlowDetailProp} from "../HTTPFlowDetail"
 export interface OpenPacketNewWindowItem {
+    showParentPacketCom?: {
+        components: string
+        props: {
+            [key: string]: any
+        }
+    }
     request?: {
         [key: string]: any
     }
@@ -19,11 +25,9 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
     const reqOriginValue = useMemo(() => {
         return data?.request?.originValue || ""
     }, [data])
-
     const resOriginValue = useMemo(() => {
         return data?.response?.originValue || ""
     }, [data])
-
     const reqEditor = () => {
         return (
             <NewHTTPPacketEditor
@@ -36,7 +40,6 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
             />
         )
     }
-
     const resEditor = () => {
         return (
             <NewHTTPPacketEditor
@@ -52,31 +55,46 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
         )
     }
 
-    if (reqOriginValue && resOriginValue) {
-        return (
-            <YakitResizeBox
-                firstNode={reqEditor()}
-                secondNode={resEditor()}
-                firstMinSize={300}
-                secondMinSize={300}
-            ></YakitResizeBox>
-        )
-    } else if (reqOriginValue) {
-        return reqEditor()
-    } else if (resOriginValue) {
-        return resEditor()
+    if (data.showParentPacketCom) {
+        // 显示父窗口的组件
+        switch (data.showParentPacketCom.components) {
+            case "HTTPFlowDetailMini":
+                return (
+                    <HTTPFlowDetailMini
+                        {...(data.showParentPacketCom.props as HTTPFlowDetailProp)}
+                        noPacketModifier={true}
+                    />
+                )
+            default:
+                return <></>
+        }
     } else {
-        // 请求 响应都没有 默认展示个空编辑器
-        return (
-            <NewHTTPPacketEditor
-                originValue={""}
-                simpleMode={true}
-                noModeTag={true}
-                readOnly={true}
-                noMinimap={true}
-                onlyBasicMenu={true}
-            />
-        )
+        if (reqOriginValue && resOriginValue) {
+            return (
+                <YakitResizeBox
+                    firstNode={reqEditor()}
+                    secondNode={resEditor()}
+                    firstMinSize={300}
+                    secondMinSize={300}
+                ></YakitResizeBox>
+            )
+        } else if (reqOriginValue) {
+            return reqEditor()
+        } else if (resOriginValue) {
+            return resEditor()
+        } else {
+            // 请求 响应都没有 默认展示个空编辑器
+            return (
+                <NewHTTPPacketEditor
+                    originValue={""}
+                    simpleMode={true}
+                    noModeTag={true}
+                    readOnly={true}
+                    noMinimap={true}
+                    onlyBasicMenu={true}
+                />
+            )
+        }
     }
 }
 

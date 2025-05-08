@@ -1,6 +1,14 @@
 import React, {ReactElement, Suspense, useEffect, useRef, useState} from "react"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
+import {
+    useControllableValue,
+    useCreation,
+    useDebounceFn,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleEffect,
+    useUpdateEffect
+} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemoteHistoryGV} from "@/enums/history"
 import classNames from "classnames"
@@ -23,12 +31,10 @@ import {useStore} from "@/store/mitmState"
 import {ExpandAndRetractExcessiveState} from "../plugins/operator/expandAndRetract/ExpandAndRetract"
 import {PluginExecuteProgress} from "../plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
 import {HorizontalScrollCard} from "../plugins/operator/horizontalScrollCard/HorizontalScrollCard"
-import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {v4 as uuidv4} from "uuid"
 import {MITMConsts} from "../mitm/MITMConsts"
-import {HTTPFlowDetailMini} from "@/components/HTTPFlowDetail"
+import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
 import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
@@ -50,11 +56,12 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
+import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {minWinSendToChildWin} from "@/ChildNewApp"
 import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))
 
-const {TabPane} = PluginTabs
 const {ipcRenderer} = window.require("electron")
 
 interface HTTPHistoryAnalysisProps {
@@ -76,6 +83,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
         return {...defaultHTTPHistoryAnalysisPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<HTTPHistoryAnalysisPageInfo>(initPageInfo())
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
 
     const [isAllHttpFlow, setIsAllHttpFlow] = useState<boolean>(false)
     const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
@@ -115,12 +123,6 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                 isVer={true}
                 firstNode={() => (
                     <div className={styles["HTTPHistoryAnalysis-top"]}>
-                        <div className={styles["HTTPHistoryAnalysis-top-header"]}>
-                            <span className={styles["HTTPHistoryAnalysis-top-title"]}>分析流量</span>
-                            <span className={styles["HTTPHistoryAnalysis-top-desc"]}>
-                                勾选流量进行分析，未勾选默认跑所有流量
-                            </span>
-                        </div>
                         <HTTPHistoryFilter
                             onSetSelectedHttpFlowIds={setSelectedHttpFlowIds}
                             onSetIsAllHttpFlow={setIsAllHttpFlow}
@@ -135,6 +137,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             toWebFuzzer={pageInfo.webFuzzer}
                             runtimeId={pageInfo.runtimeId}
                             sourceType={pageInfo.sourceType}
+                            executeStatus={executeStatus}
                         />
                     </div>
                 )}
@@ -144,10 +147,11 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
                             hTTPFlowFilter={hTTPFlowFilter}
                             httpFlowIds={isAllHttpFlow ? [] : selectedHttpFlowIds.map((id) => Number(id))}
                             downstreamProxy={downstreamProxy}
+                            setExecuteStatus={setExecuteStatus}
                         />
                     </div>
                 }
-                firstMinSize={80}
+                firstMinSize={40}
                 secondMinSize={300}
                 secondNodeStyle={{
                     display: "",
@@ -194,6 +198,7 @@ interface AnalysisMainProps {
     hTTPFlowFilter?: YakQueryHTTPFlowRequest
     httpFlowIds: number[]
     downstreamProxy: string
+    setExecuteStatus: (s: ExpandAndRetractExcessiveState) => void
 }
 const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const {hTTPFlowFilter, httpFlowIds, downstreamProxy} = props
@@ -478,7 +483,11 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     const execParamsRef = useRef<AnalyzeHTTPFlowRequest>()
     const tokenRef = useRef<string>(randomString(40))
     const [isExit, setIsExit] = useState<boolean>(false)
-    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+    const [executeStatus, setExecuteStatus] = useControllableValue<ExpandAndRetractExcessiveState>(props, {
+        defaultValue: "default",
+        valuePropName: "executeStatus",
+        trigger: "setExecuteStatus"
+    })
     const [currentSelectItem, setCurrentSelectItem] = useState<HTTPFlowRuleData>()
     const [isRefreshTable, setIsRefreshTable] = useState<boolean>(true)
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
@@ -524,7 +533,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
 
         setIsExit(false)
         debugPluginStreamEvent.reset()
-        onTabChange("ruleData")
         setCurrentSelectItem(undefined)
         setIsRefreshTable((prev) => !prev)
 
@@ -586,11 +594,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         }
     }, [isExit, executeStatus])
     // #endregion
-
-    const [activeKey, setActiveKey] = useState<"ruleData">("ruleData")
-    const onTabChange = useMemoizedFn((key) => {
-        setActiveKey(key)
-    })
 
     // #region YakitResizeBox
     const [lastRatio, setLastRatio] = useState<{firstRatio: string; secondRatio: string}>({
@@ -967,20 +970,16 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                         <HorizontalScrollCard title='Data Card' data={streamInfo.cardState} compact />
                                     )}
                                     <div className={styles["AnalysisMain-result-tab"]}>
-                                        <PluginTabs activeKey={activeKey} onChange={onTabChange}>
-                                            <TabPane key={"ruleData"} tab={"规则数据"}>
-                                                <div className={styles["rule-data"]}>
-                                                    <HttpRule
-                                                        tableData={streamInfo.rulesState}
-                                                        currentSelectItem={currentSelectItem}
-                                                        onSetCurrentSelectItem={setCurrentSelectItem}
-                                                        isRefreshTable={isRefreshTable}
-                                                        executeStatus={executeStatus}
-                                                        downstreamProxy={downstreamProxy}
-                                                    />
-                                                </div>
-                                            </TabPane>
-                                        </PluginTabs>
+                                        <div className={styles["rule-data"]}>
+                                            <HttpRule
+                                                tableData={streamInfo.rulesState}
+                                                currentSelectItem={currentSelectItem}
+                                                onSetCurrentSelectItem={setCurrentSelectItem}
+                                                isRefreshTable={isRefreshTable}
+                                                executeStatus={executeStatus}
+                                                downstreamProxy={downstreamProxy}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1019,78 +1018,65 @@ interface HttpRuleProps {
 }
 const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
     const {tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable, executeStatus, downstreamProxy} = props
-    const [historyId, setHistoryId] = useState<string>(uuidv4())
-
-    // #region 定位数据包id
     const [scrollToIndex, setScrollToIndex] = useState<string>()
-    const scrollTo = useMemoizedFn((id) => {
-        const index = tableData.findIndex((item: HTTPFlowRuleData) => item.Id === id)
-        // 加随机值触发更新渲染执行表格跳转方法
-        if (index !== -1) setScrollToIndex(index + "_" + Math.random())
+
+    // #region 规则数据包打开新窗口
+    const HTTPFlowDetailMiniProps = (v: HTTPFlowRuleData) => {
+        return {
+            noHeader: true,
+            id: v?.HTTPFlowId || 0,
+            analyzedIds: v?.Id ? [v.Id] : undefined,
+            sendToWebFuzzer: true,
+            downstreamProxyStr: downstreamProxy,
+            scrollID: v?.Id,
+            showEditTag: false,
+            showJumpTree: false
+        } as HTTPFlowDetailProp
+    }
+
+    // 双击表格行打开新窗口数据包
+    const onHttpRuleTableRowDoubleClick = useMemoizedFn((r) => {
+        openPacketNewWindow({
+            showParentPacketCom: {
+                components: "HTTPFlowDetailMini",
+                props: {
+                    ...HTTPFlowDetailMiniProps(r)
+                }
+            }
+        })
     })
     // #endregion
 
-    const ResizeBoxProps = useCreation(() => {
-        let p = {
-            firstRatio: "50%",
-            secondRatio: "50%"
-        }
-        if (!currentSelectItem?.HTTPFlowId) {
-            p.secondRatio = "0%"
-            p.firstRatio = "100%"
-        }
-        return p
-    }, [currentSelectItem])
-
     return (
-        <YakitResizeBox
-            isVer={true}
-            firstNode={() => (
-                <div className={styles["HttpRule-first"]}>
-                    <HttpRuleTable
-                        tableData={tableData}
-                        currentSelectItem={currentSelectItem}
-                        onSelect={(i) => {
-                            if (!i) {
-                                onSetCurrentSelectItem(undefined)
-                                return
+        <div className={styles["HttpRule-first"]}>
+            <HttpRuleTable
+                tableData={tableData}
+                currentSelectItem={currentSelectItem}
+                onSelect={(i) => {
+                    if (!i) {
+                        onSetCurrentSelectItem(undefined)
+                        return
+                    }
+                    onSetCurrentSelectItem(i)
+                    minWinSendToChildWin({
+                        type: "openPacketNewWindow",
+                        data: {
+                            showParentPacketCom: {
+                                components: "HTTPFlowDetailMini",
+                                props: {
+                                    ...HTTPFlowDetailMiniProps(i)
+                                }
                             }
-                            onSetCurrentSelectItem(i)
-                        }}
-                        scrollToIndex={scrollToIndex}
-                        onSetScrollToIndex={setScrollToIndex}
-                        isRefreshTable={isRefreshTable}
-                        executeStatus={executeStatus}
-                    />
-                </div>
-            )}
-            secondNode={
-                <div className={styles["HttpRule-second"]}>
-                    {currentSelectItem?.HTTPFlowId && (
-                        <HTTPFlowDetailMini
-                            noHeader={true}
-                            id={currentSelectItem?.HTTPFlowId || 0}
-                            sendToWebFuzzer={true}
-                            historyId={historyId}
-                            downstreamProxyStr={downstreamProxy}
-                            pageType={"History_Analysis_ruleData"}
-                            scrollTo={scrollTo}
-                            scrollID={currentSelectItem.Id}
-                            analyzedIds={[currentSelectItem.Id]}
-                        />
-                    )}
-                </div>
-            }
-            firstMinSize={80}
-            secondMinSize={200}
-            secondNodeStyle={{
-                display: currentSelectItem?.HTTPFlowId === undefined ? "none" : "",
-                padding: currentSelectItem?.HTTPFlowId === undefined ? 0 : undefined
-            }}
-            lineStyle={{display: currentSelectItem?.HTTPFlowId === undefined ? "none" : ""}}
-            lineDirection='top'
-            {...ResizeBoxProps}
-        />
+                        }
+                    })
+                }}
+                scrollToIndex={scrollToIndex}
+                onSetScrollToIndex={setScrollToIndex}
+                isRefreshTable={isRefreshTable}
+                executeStatus={executeStatus}
+                onRowDoubleClick={onHttpRuleTableRowDoubleClick}
+            />
+        </div>
     )
 })
 
@@ -1113,6 +1099,7 @@ interface HttpRuleTableProps {
     onSetScrollToIndex: (i?: string) => void
     isRefreshTable: boolean
     executeStatus: ExpandAndRetractExcessiveState
+    onRowDoubleClick: (r?: HTTPFlowRuleData) => void
 }
 const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     const {currentPageTabRouteKey} = usePageInfo(
@@ -1121,8 +1108,16 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         }),
         shallow
     )
-    const {tableData, currentSelectItem, onSelect, scrollToIndex, onSetScrollToIndex, isRefreshTable, executeStatus} =
-        props
+    const {
+        tableData,
+        currentSelectItem,
+        onSelect,
+        scrollToIndex,
+        onSetScrollToIndex,
+        isRefreshTable,
+        executeStatus,
+        onRowDoubleClick
+    } = props
 
     const tableRef = useRef<any>(null)
     const [loading, setLoading] = useState<boolean>(false)
@@ -1282,6 +1277,27 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
         }
     })
 
+    const onRowContextMenu = useMemoizedFn((rowData: HTTPFlowRuleData, _, event: React.MouseEvent) => {
+        showByRightContext(
+            {
+                width: 180,
+                data: [
+                    {
+                        label: "在新窗口打开",
+                        key: "在新窗口打开"
+                    }
+                ],
+                onClick: ({key, keyPath}) => {
+                    if (key === "在新窗口打开") {
+                        onRowDoubleClick(rowData)
+                    }
+                }
+            },
+            event.clientX,
+            event.clientY
+        )
+    })
+
     const ruleColumns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
         return [
             {
@@ -1356,7 +1372,6 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 query={tableQuery}
                 isRefresh={isRefreshTable || loading}
                 loading={loading}
-                titleHeight={42}
                 isShowTotal={true}
                 extra={
                     <>
@@ -1390,6 +1405,8 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 useUpAndDown
                 inMouseEnterTable
                 scrollToIndex={scrollToIndex}
+                onRowContextMenu={onRowContextMenu}
+                onRowDoubleClick={onRowDoubleClick}
             ></TableVirtualResize>
             {exportPercentVisible && (
                 <ImportExportProgress

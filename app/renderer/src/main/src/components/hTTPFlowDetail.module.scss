@@ -140,6 +140,12 @@
             min-height: 33px;
             padding: 0 12px;
         }
+        .ant-spin {
+            color: var(--yakit-primary-5);
+            .ant-spin-dot-item {
+                background-color: var(--yakit-primary-5);
+            }
+        }
     }
     .filter-icon {
         svg {

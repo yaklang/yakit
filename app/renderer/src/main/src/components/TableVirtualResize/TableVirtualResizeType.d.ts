@@ -83,6 +83,8 @@ export interface TableVirtualResizeProps<T> {
 
     /** 是否隐藏表格初始渲染时的 loadingUI */
     isHiddenLoadingUI?: boolean
+
+    onRowDoubleClick?: (record?: T) => void
 }
 
 export interface SortProps {

@@ -25,11 +25,12 @@ export interface HTTPFlowForWebsocketViewerProp {
     highLightText?: HistoryHighLightText[]
     highLightItem?: HistoryHighLightText
     highLightFindClass?: string
+    showJumpTree?: boolean
 }
 
 export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp> = (props) => {
     const [mode, setMode] = useState<"request" | "response">("request")
-    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass} = props
+    const {flow, historyId, pageType, highLightText, highLightItem, highLightFindClass, showJumpTree} = props
     const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
     const [resEditor, setResEditor] = useState<IMonacoEditor>()
     const [reqSelectionByteCount, setReqSelectionByteCount] = useState<number>(0)
@@ -97,7 +98,7 @@ export const HTTPFlowForWebsocketViewer: React.FC<HTTPFlowForWebsocketViewerProp
                             ? `请求大小：${flow.RequestSizeVerbose}`
                             : `Body大小: ${flow.BodySizeVerbose}`}
                     </YakitTag>
-                    {["History"].includes(pageType || "") && (
+                    {["History"].includes(pageType || "") && showJumpTree && (
                         <OutlineLog2Icon className={styles["jump-web-tree"]} onClick={handleJumpWebTree} />
                     )}
                     {mode === "request" ? (

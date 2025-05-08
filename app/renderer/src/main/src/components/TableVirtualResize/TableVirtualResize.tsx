@@ -133,7 +133,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         inMouseEnterTable = false,
         containerClassName,
         isRightClickBatchOperate,
-        isHiddenLoadingUI = false
+        isHiddenLoadingUI = false,
+        onRowDoubleClick
     } = props
     const defItemHeight = useCreation(() => {
         if (size === "middle") return 32
@@ -1131,6 +1132,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                                         renderKey={renderKey}
                                         isLastItem={index === columns.length - 1}
                                         onRowClick={onRowClick}
+                                        onRowDoubleClick={onRowDoubleClick}
                                         onRowContextMenu={(data, e, rowIndex) => {
                                             onRowContextMenu(data, e, rowIndex)
                                         }}
@@ -1389,6 +1391,7 @@ interface ColRenderProps {
     renderKey: string
     isLastItem: boolean
     onRowClick: (r: any, rowIndex: number) => void
+    onRowDoubleClick?: (r: any) => void
     onRowContextMenu: (r: any, e: any, rowIndex: number) => void
     currentRow: any
     selectedRows?: any[]
@@ -1413,6 +1416,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
         renderKey,
         isLastItem,
         onRowClick,
+        onRowDoubleClick,
         onRowContextMenu,
         currentRow,
         selectedRows,
@@ -1466,6 +1470,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                     number={item.index}
                                     isLastItem={isLastItem}
                                     onRowClick={() => onRowClick(item.data, item.index)}
+                                    onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
                                     onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                     currentRow={currentRow}
                                     selectedRows={selectedRows}
@@ -1487,14 +1492,16 @@ const ColRender = React.memo((props: ColRenderProps) => {
                                 <CellRender
                                     colIndex={colIndex}
                                     key={
-                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}-${item.data["cellClassName"]}` ||
-                                        number
+                                        `${item.data[renderKey]}-${colIndex}-${item.data[columnsItem.dataKey]}-${
+                                            item.data["cellClassName"]
+                                        }` || number
                                     }
                                     item={item}
                                     columnsItem={columnsItem}
                                     number={item.index}
                                     isLastItem={isLastItem}
                                     onRowClick={() => onRowClick(item.data, item.index)}
+                                    onRowDoubleClick={() => onRowDoubleClick && onRowDoubleClick(item.data)}
                                     onRowContextMenu={(e) => onRowContextMenu(item.data, e, item.index)}
                                     currentRow={currentRow}
                                     selectedRows={selectedRows}
@@ -1522,6 +1529,7 @@ interface CellRenderProps {
     number: number
     isLastItem: boolean
     onRowClick: () => void
+    onRowDoubleClick: () => void
     onRowContextMenu: (e: any) => void
     currentRow: any
     selectedRows?: any[]
@@ -1546,6 +1554,7 @@ const CellRender = React.memo(
             number,
             isLastItem,
             onRowClick,
+            onRowDoubleClick,
             onRowContextMenu,
             // isSelect,
             colIndex,
@@ -1597,6 +1606,9 @@ const CellRender = React.memo(
                     // @ts-ignore
                     if (e.target.nodeName === "INPUT") return
                     onRowClick()
+                }}
+                onDoubleClick={() => {
+                    onRowDoubleClick()
                 }}
                 onContextMenu={(e) => {
                     onRowContextMenu(e)
@@ -1676,6 +1688,7 @@ const CellRenderDrop = React.memo(
             number,
             isLastItem,
             onRowClick,
+            onRowDoubleClick,
             onRowContextMenu,
             // isSelect,
             colIndex,
@@ -1811,6 +1824,9 @@ const CellRenderDrop = React.memo(
                     // @ts-ignore
                     if (e.target.nodeName === "INPUT") return
                     onRowClick()
+                }}
+                onDoubleClick={() => {
+                    onRowDoubleClick()
                 }}
                 onContextMenu={(e) => {
                     onRowContextMenu(e)

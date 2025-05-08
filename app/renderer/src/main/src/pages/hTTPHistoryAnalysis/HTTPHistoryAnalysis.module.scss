@@ -2,10 +2,6 @@
     height: 100%;
     &-top {
         height: 100%;
-        &-header {
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--yakit-border-color);
-        }
         &-title {
             margin-right: 8px;
             color: var(--yakit-header-color);
@@ -112,7 +108,7 @@
         }
         .rule-wrapper {
             height: 100%;
-            padding: 16px 0;
+            padding: 8px 0;
         }
     }
     &-right {
@@ -185,14 +181,13 @@
                 }
             }
             .AnalysisMain-result {
-                height: calc(100% - 15px);
-                padding-top: 12px;
+                height: calc(100% - 30px);
+                padding-top: 8px;
                 &-tab {
-                    height: calc(100% - 92px);
-                    margin-top: 12px;
+                    height: calc(100% - 34px);
                     .rule-data {
                         height: 100%;
-                        padding: 8px 8px 0 0;
+                        padding-bottom: 8px;
                         .HttpRule-first {
                             height: 100%;
                             .HttpRule-table-wrapper {

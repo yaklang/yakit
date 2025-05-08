@@ -3,7 +3,7 @@ import {Button, Divider, Empty, Form, Input, Space, Tooltip, Badge, Progress, Mo
 import {HistoryPluginSearchType, YakQueryHTTPFlowRequest} from "../../utils/yakQueryHTTPFlow"
 import {PaginationSchema, YakScript} from "../../pages/invoker/schema"
 import {InputItem, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
-import {HTTPFlowDetail} from "../HTTPFlowDetail"
+import {HTTPFlowDetail, HTTPFlowDetailProp} from "../HTTPFlowDetail"
 import {info, yakitNotify, yakitFailed} from "../../utils/notification"
 import style from "./HTTPFlowTable.module.scss"
 import {formatTimestamp} from "../../utils/timeUtil"
@@ -46,7 +46,7 @@ import {
     SelectSearchProps,
     SortProps
 } from "../TableVirtualResize/TableVirtualResizeType"
-import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
+import {openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
@@ -103,6 +103,7 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
+import {minWinSendToChildWin} from "@/ChildNewApp"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -1689,6 +1690,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (rowDate) {
             setSelected(rowDate)
             setOnlyShowFirstNode && setOnlyShowFirstNode(false)
+            minWinSendToChildWin({
+                type: "openPacketNewWindow",
+                data: getPacketNewWindow(rowDate)
+            })
         } else {
             setSelected(undefined)
             setOnlyShowFirstNode && setOnlyShowFirstNode(!onlyShowFirstNode)
@@ -2683,6 +2688,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         })
     }
 
+    const getPacketNewWindow = useMemoizedFn((r) => {
+        return {
+            showParentPacketCom: {
+                components: "HTTPFlowDetailMini",
+                props: {
+                    noHeader: true,
+                    id: r?.Id || 0,
+                    sendToWebFuzzer: true,
+                    selectedFlow: getHTTPFlowReqAndResToString(r),
+                    downstreamProxyStr: downstreamProxyStr,
+                    pageType: pageType,
+                    showEditTag: false,
+                    showJumpTree: false
+                } as HTTPFlowDetailProp
+            }
+        }
+    })
+    const onHTTPFlowTableRowDoubleClick = useMemoizedFn((r) => {
+        openPacketNewWindow(getPacketNewWindow(r))
+    })
+
     const systemRef = useRef<YakitSystem>("Darwin")
     useEffect(() => {
         ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
@@ -3203,6 +3229,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             default: true,
             webSocket: true,
             onClickSingle: (v) => onEditTags(v)
+        },
+        {
+            key: "新窗口打开",
+            label: "新窗口打开",
+            default: true,
+            webSocket: true,
+            onClickSingle: (v) => {
+                onHTTPFlowTableRowDoubleClick(v)
+            }
         }
     ]
     /** 菜单自定义快捷键渲染处理事件 */
@@ -4199,6 +4234,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     onSetCurrentRow={onSetCurrentRow}
                     useUpAndDown={true}
                     containerClassName={containerClassName}
+                    onRowDoubleClick={onHTTPFlowTableRowDoubleClick}
                 />
             </div>
             {drawerFormVisible && (

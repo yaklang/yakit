@@ -43,7 +43,7 @@ import {yakitNotify} from "@/utils/notification"
 import {ArrowCircleRightSvgIcon, CheckCircleIcon, ChromeFrameSvgIcon, ColorSwatchIcon} from "@/assets/newIcon"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {openExternalWebsite, saveABSFileToOpen} from "@/utils/openWebsite"
+import {openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
@@ -81,8 +81,11 @@ import {
 } from "@/pages/invoker/fromPacketToYakCode"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import emiter from "@/utils/eventBus/eventBus"
-
+import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
+import {minWinSendToChildWin} from "@/ChildNewApp"
+import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import styles from "./HTTPHistoryFilter.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 
 type tabKeys = "web-tree" | "process"
@@ -100,6 +103,7 @@ interface HTTPHistoryFilterProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    executeStatus: ExpandAndRetractExcessiveState
 }
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((props) => {
     const {
@@ -109,7 +113,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         downstreamProxy,
         toWebFuzzer,
         runtimeId,
-        sourceType
+        sourceType,
+        executeStatus
     } = props
 
     // #region 左侧tab
@@ -322,6 +327,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             toWebFuzzer={toWebFuzzer}
                             runtimeId={runtimeId}
                             sourceType={sourceType}
+                            executeStatus={executeStatus}
                         />
                     </div>
                 }
@@ -346,6 +352,7 @@ interface HTTPFlowTableProps {
     toWebFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
+    executeStatus?: ExpandAndRetractExcessiveState
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
     const {
@@ -359,7 +366,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         inMouseEnterTable = false,
         toWebFuzzer = false,
         runtimeId = [],
-        sourceType = "mitm"
+        sourceType = "mitm",
+        executeStatus
     } = props
     const {currentPageTabRouteKey} = usePageInfo(
         (s) => ({
@@ -518,6 +526,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
         if (rowDate) {
             setClickRow(rowDate)
+            minWinSendToChildWin({
+                type: "openPacketNewWindow",
+                data: getPacketNewWindow(rowDate)
+            })
         } else {
             setClickRow(undefined)
         }
@@ -528,6 +540,26 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         },
         {wait: 200, leading: true}
     ).run
+
+    const getPacketNewWindow = useMemoizedFn((r) => {
+        return {
+            showParentPacketCom: {
+                components: "HTTPFlowDetailMini",
+                props: {
+                    noHeader: true,
+                    id: r?.Id || 0,
+                    sendToWebFuzzer: true,
+                    selectedFlow: getHTTPFlowReqAndResToString(r),
+                    downstreamProxyStr: downstreamProxy,
+                    showEditTag: false,
+                    showJumpTree: false
+                } as HTTPFlowDetailProp
+            }
+        }
+    })
+    const onHTTPFlowFilterTableRowDoubleClick = useMemoizedFn((r) => {
+        openPacketNewWindow(getPacketNewWindow(r))
+    })
 
     const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
     const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
@@ -1375,6 +1407,15 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     }
                 ],
                 onClickBatch: () => {}
+            },
+            {
+                key: "新窗口打开",
+                label: "新窗口打开",
+                default: true,
+                webSocket: true,
+                onClickSingle: (v) => {
+                    onHTTPFlowFilterTableRowDoubleClick(v)
+                }
             }
         ]
     }, [data, compareState])
@@ -1989,6 +2030,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     ).run
 
     useUpdateEffect(() => {
+        if (executeStatus === "default" && inViewport) {
+            queyChangeUpdateData()
+        }
+    }, [inViewport, executeStatus])
+
+    useUpdateEffect(() => {
         queyChangeUpdateData()
     }, [query])
 
@@ -2234,6 +2281,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 onChange={onTableChange}
                 onRowContextMenu={onRowContextMenu}
                 onSetCurrentRow={onSetCurrentRow}
+                onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
             />
             {/* 高级筛选抽屉 */}
             {drawerFormVisible && (
