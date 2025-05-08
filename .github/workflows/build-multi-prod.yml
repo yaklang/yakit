@@ -13,11 +13,11 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
-            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+            # APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+            # TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+            # APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+            # CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+            # CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
         steps:
             - uses: actions/checkout@v4
@@ -37,6 +37,10 @@ jobs:
                       exit 1
                   }
                   wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+              shell: bash
+
+            - name: "Download MakeSelf"
+              run: brew install makeself
               shell: bash
 
             - name: "Fetch Latest Engine Version And Set To Env"
@@ -88,31 +92,31 @@ jobs:
               run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
               shell: bash
 
-            - name: Build Yakit Normal And Legacy (MultiPlatform)
-              env:
-                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
-              working-directory: ./
-              run: ./packageScript/script/electron-builder.sh ce || { exit 1; }
-              shell: bash
+            # - name: Build Yakit Normal And Legacy (MultiPlatform)
+            #   env:
+            #       GH_TOKEN: ${{ secrets.GH_TOKEN }}
+            #   working-directory: ./
+            #   run: ./packageScript/script/electron-builder.sh ce || { exit 1; }
+            #   shell: bash
 
-            - name: View Published Content
-              run:
-                  ls ./release
-                  # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+            # - name: View Published Content
+            #   run:
+            #       ls ./release
+            #       # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
-            - name: Check Yakit if the output is correct
-              run: (./packageScript/script/check-build-package.sh Yakit) || { exit 1; }
-              shell: bash
-            - name: Upload Yakit(CE) Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: Yakit-artifacts
-                  path: |
-                      ./release/Yakit-${{ env.ENV_TAG }}-*.exe
-                      ./release/Yakit-${{ env.ENV_TAG }}-*.dmg
-                      ./release/Yakit-${{ env.ENV_TAG }}-*.AppImage
-                  if-no-files-found: error
-                  retention-days: 1
+            # - name: Check Yakit if the output is correct
+            #   run: (./packageScript/script/check-build-package.sh Yakit) || { exit 1; }
+            #   shell: bash
+            # - name: Upload Yakit(CE) Artifacts
+            #   uses: actions/upload-artifact@v4
+            #   with:
+            #       name: Yakit-artifacts
+            #       path: |
+            #           ./release/Yakit-${{ env.ENV_TAG }}-*.exe
+            #           ./release/Yakit-${{ env.ENV_TAG }}-*.dmg
+            #           ./release/Yakit-${{ env.ENV_TAG }}-*.AppImage
+            #       if-no-files-found: error
+            #       retention-days: 1
 
             - name: Build EnpriTrace Normal And Legacy (MultiPlatform)
               env:
@@ -129,6 +133,27 @@ jobs:
             - name: Check EnpriTrace if the output is correct
               run: (./packageScript/script/check-build-package.sh EnpriTrace) || { exit 1; }
               shell: bash
+
+            - name: Generate MakeSelf Run File
+              run: |
+                  folder_amd64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-amd64"
+                  folder_arm64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-arm64"
+                  mkdir -p "release/${folder_amd64}" "release/${folder_arm64}"
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_amd64}"
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_arm64}"
+
+                  cd release
+                  cp -f "${folder_amd64}.AppImage" "${folder_amd64}"
+                  cp -f "${folder_arm64}.AppImage" "${folder_arm64}"
+                  chmod +rwx "${folder_amd64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_amd64}/${folder_amd64}.AppImage"
+                  chmod +rwx "${folder_arm64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_arm64}/${folder_arm64}.AppImage"
+
+                  makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
+                  makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
+              shell: bash
+
             - name: Upload Yakit(EE) Artifacts
               uses: actions/upload-artifact@v4
               with:
@@ -137,57 +162,58 @@ jobs:
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.exe
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.dmg
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.AppImage
+                      ./release/EnpriTrace-${{ env.ENV_TAG }}-*.run
                   if-no-files-found: error
                   retention-days: 1
 
-    publish_software_to_oss:
-        needs:
-            - build_yakit
-        strategy:
-            matrix:
-                artifact: [Yakit, EnpriTrace] # 需要发布的软件名前缀
-        runs-on: ubuntu-latest
-        steps:
-            - name: Echo Package Version To Env
-              run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
+    # publish_software_to_oss:
+    #     needs:
+    #         - build_yakit
+    #     strategy:
+    #         matrix:
+    #             artifact: [Yakit, EnpriTrace] # 需要发布的软件名前缀
+    #     runs-on: ubuntu-latest
+    #     steps:
+    #         - name: Echo Package Version To Env
+    #           run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
 
-            - name: Download Yakit And Legacy Yakit
-              uses: actions/download-artifact@v4
-              with:
-                  name: ${{ matrix.artifact }}-artifacts
-                  merge-multiple: true
+    #         - name: Download Yakit And Legacy Yakit
+    #           uses: actions/download-artifact@v4
+    #           with:
+    #               name: ${{ matrix.artifact }}-artifacts
+    #               merge-multiple: true
 
-            - run: ls
-              name: Ls Published Artifacts...
+    #         - run: ls
+    #           name: Ls Published Artifacts...
 
-            - name: Create Release and Upload Assets
-              if: ${{ matrix.artifact == 'Yakit' }}
-              uses: ncipollo/release-action@v1
-              with:
-                  artifacts: ./*
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  name: Release ${{ github.ref_name }}
-                  tag: ${{ github.ref_name }}
+    #         - name: Create Release and Upload Assets
+    #           if: ${{ matrix.artifact == 'Yakit' }}
+    #           uses: ncipollo/release-action@v1
+    #           with:
+    #               artifacts: ./*
+    #               token: ${{ secrets.GITHUB_TOKEN }}
+    #               name: Release ${{ github.ref_name }}
+    #               tag: ${{ github.ref_name }}
 
-            - name: Generate OSS File Path
-              run: |
-                  if [ "${{ matrix.artifact }}" = "Yakit" ]; then
-                    echo "FILE_PATH=yak" >> $GITHUB_ENV
-                  elif [ "${{ matrix.artifact }}" = "EnpriTrace" ]; then
-                    echo "FILE_PATH=vip" >> $GITHUB_ENV
-                  else
-                    echo "No corresponding file path" >&2
-                    exit 1
-                  fi
-            - name: Show ENV.FILE_PATH
-              run: echo "FILE_PATH： $FILE_PATH"
+    #         - name: Generate OSS File Path
+    #           run: |
+    #               if [ "${{ matrix.artifact }}" = "Yakit" ]; then
+    #                 echo "FILE_PATH=yak" >> $GITHUB_ENV
+    #               elif [ "${{ matrix.artifact }}" = "EnpriTrace" ]; then
+    #                 echo "FILE_PATH=vip" >> $GITHUB_ENV
+    #               else
+    #                 echo "No corresponding file path" >&2
+    #                 exit 1
+    #               fi
+    #         - name: Show ENV.FILE_PATH
+    #           run: echo "FILE_PATH： $FILE_PATH"
 
-            - name: Upload Yakit To OSS
-              uses: tvrcgo/upload-to-oss@master
-              with:
-                  key-id: ${{ secrets.OSS_KEY_ID }}
-                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
-                  region: oss-accelerate
-                  bucket: yaklang
-                  assets: |
-                      *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
+    #         - name: Upload Yakit To OSS
+    #           uses: tvrcgo/upload-to-oss@master
+    #           with:
+    #               key-id: ${{ secrets.OSS_KEY_ID }}
+    #               key-secret: ${{ secrets.OSS_KEY_SECRET }}
+    #               region: oss-accelerate
+    #               bucket: yaklang
+    #               assets: |
+    #                   *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
