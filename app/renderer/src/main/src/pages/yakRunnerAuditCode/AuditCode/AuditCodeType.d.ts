@@ -143,6 +143,8 @@ export interface AuditModalFormModalProps {
     title?: string
     // 绑定容器
     warrpId?: HTMLElement | null
+    // 默认值
+    initForm?: {[key: string]: any}
 }
 
 export interface AfreshAuditModalProps {
