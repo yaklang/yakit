@@ -42,7 +42,7 @@ export default ModifyNotepad
 
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {tabName, spinning} = props
+        const {tabName, spinning, listDom} = props
         //#region 目录
         const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
         const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
@@ -160,7 +160,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                                                 )}
                                             </>
                                         )}
-                                        {activeKey === "list" && <>列表</>}
+                                        {activeKey === "list" && listDom}
                                     </div>
                                 </div>
                             }
