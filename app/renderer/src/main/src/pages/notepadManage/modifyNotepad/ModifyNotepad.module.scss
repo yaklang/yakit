@@ -131,14 +131,14 @@
         }
     }
     .notepad-tab-content {
-        padding: 12px;
         flex: 1;
+        width: 100%;
+        overflow: hidden;
     }
     .notepad-catalogue-tree {
         overflow-y: auto;
         overflow-x: hidden;
-        padding-right: 8px;
-        padding-bottom: 8px;
+        padding: 12px;
         .catalogue-tree-node {
             @extend %display-flex-center;
             gap: 4px;
