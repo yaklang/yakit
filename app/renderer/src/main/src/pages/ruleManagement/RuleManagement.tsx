@@ -109,19 +109,21 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const [groupRefresh, setGroupRefresh] = useState<boolean>(false)
     const handleGroupChange = useMemoizedFn((groups: string[]) => {
         if (groups.length) {
-            setOnlineData({
-                data: [],
-                pagemeta: {
-                    page: 1,
-                    limit: 20,
-                    total: 0,
-                    total_page: 0
-                }
-            })
-            setOnlineFilters({
-                filterLibRuleKind: ""
-            })
-            onlineRuleGroupListRef.current?.handleReset()
+            if (onlineFilters.groupNames?.length) {
+                setOnlineData({
+                    data: [],
+                    pagemeta: {
+                        page: 1,
+                        limit: 20,
+                        total: 0,
+                        total_page: 0
+                    }
+                })
+                setOnlineFilters({
+                    filterLibRuleKind: ""
+                })
+                onlineRuleGroupListRef.current?.handleReset()
+            }
         }
         setFilters((filters) => {
             return {...filters, GroupNames: groups}
@@ -560,15 +562,17 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     const [groupOnlineRefresh, setGroupOnlineRefresh] = useState<boolean>(false)
     const handleOnlineGroupChange = useMemoizedFn((groups: string[]) => {
         if (groups.length) {
-            setData({
-                Rule: [],
-                Pagination: {...genDefaultPagination(20)},
-                Total: 0
-            })
-            setFilters({
-                FilterLibRuleKind: ""
-            })
-            localRuleGroupListRef.current?.handleReset()
+            if (filters.GroupNames?.length) {
+                setData({
+                    Rule: [],
+                    Pagination: {...genDefaultPagination(20)},
+                    Total: 0
+                })
+                setFilters({
+                    FilterLibRuleKind: ""
+                })
+                localRuleGroupListRef.current?.handleReset()
+            }
         } else {
             fetchList()
         }
