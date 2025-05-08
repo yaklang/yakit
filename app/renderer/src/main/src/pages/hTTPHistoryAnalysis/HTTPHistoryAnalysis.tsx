@@ -270,17 +270,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         // 切换到其他tab
         if (curTabKey !== item.key) {
             if (curTabKey === "hot-patch") {
-                const res = await judgmentHotPatchChange()
-                if (res) {
-                    yakitNotify("info", "检测到热加载内容发生变更，请保存")
-                    return
-                }
+                onSaveHotCode(false)
             } else if (curTabKey === "rule") {
-                const res = await judgmentRulesChange()
-                if (res) {
-                    yakitNotify("info", "检测到规则内容发生变更，请保存")
-                    return
-                }
+                mitmRuleRef.current?.onSaveToDataBase(() => {})
             }
         }
 
@@ -337,26 +329,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
         setRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave, JSON.stringify({code: getCurHotPatch()}))
         notifyFlag && yakitNotify("success", "保存成功")
     })
-    const judgmentHotPatchChange = useMemoizedFn(() => {
-        return new Promise((resolve) => {
-            getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave)
-                .then((res: string) => {
-                    try {
-                        const obj = JSON.parse(res) || {}
-                        if (obj.code !== getCurHotPatch()) {
-                            resolve(true)
-                        } else {
-                            resolve(false)
-                        }
-                    } catch (error) {
-                        resolve(false)
-                    }
-                })
-                .catch(() => {
-                    resolve(false)
-                })
-        })
-    })
     // #endregion
 
     // #region 规则配置
@@ -394,32 +366,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                 }))
             )
         }
-    })
-    const judgmentRulesChange = useMemoizedFn(() => {
-        return new Promise((resolve) => {
-            ipcRenderer
-                .invoke("GetCurrentRules", {})
-                .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
-                    const oldSaveRules = rsp.Rules.map((item) => ({
-                        ...item,
-                        Id: item.Index,
-                        ...rulesResetFieldsRef.current
-                    }))
-                    if (
-                        !isEqual(
-                            oldSaveRules,
-                            getCurRules().map((item) => ({...item, Id: item.Index, ...rulesResetFieldsRef.current}))
-                        )
-                    ) {
-                        resolve(true)
-                    } else {
-                        resolve(false)
-                    }
-                })
-                .catch(() => {
-                    resolve(false)
-                })
-        })
     })
     // #endregion
 
