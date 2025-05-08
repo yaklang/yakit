@@ -15,7 +15,7 @@ import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitSSProject from "@/assets/yakitFontSS.png"
 import yakitEEMiniProject from "@/assets/yakitEE.png"
 import yakitSEMiniProject from "@/assets/yakitSE.png"
-import yakitSSMiniProject from "@/assets/yakitSS.png"
+import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
 
 const ProjectManage = React.lazy(() => import("./ProjectManage"))
 

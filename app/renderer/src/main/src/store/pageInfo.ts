@@ -203,6 +203,8 @@ export interface AuditCodePageInfoProps {
     Query?: {Key: string; Value: number}[]
     // 文件与高亮信息
     CodeRange?: string
+    // 漏洞/规则 树所选中的下拉列表
+    runtimeId?: string
 }
 
 export interface CodeScanPageInfoProps {

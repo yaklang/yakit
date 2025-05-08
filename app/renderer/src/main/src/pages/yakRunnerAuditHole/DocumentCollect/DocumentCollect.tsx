@@ -5,7 +5,7 @@ import {useMemoizedFn, useSize} from "ahooks"
 import styles from "./DocumentCollect.module.scss"
 import {failed} from "@/utils/notification"
 import classNames from "classnames"
-import {DocumentCollectProps, DocumentCollectTreeProps, HoleResourceType, HoleTreeNode} from "./DocumentCollectType"
+import {DocumentCollectProps, HoleResourceType, HoleTreeNode} from "./DocumentCollectType"
 import {grpcFetchHoleTree} from "../utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OutlineDocumentIcon, OutlineLink2Icon, OutlineVariableIcon} from "@/assets/icon/outline"
@@ -14,9 +14,10 @@ import {RequestYakURLResponse} from "@/pages/yakURLTree/data"
 import {SolidFolderIcon, SolidFolderopenIcon} from "@/assets/icon/solid"
 import {SSARisksFilter} from "../YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
-import { RefreshIcon } from "@/assets/newIcon"
-import { YakitButton } from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import {RefreshIcon} from "@/assets/newIcon"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {RiskTree} from "@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree"
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     const iconsEle = {
@@ -27,68 +28,13 @@ const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     return iconsEle[treeNodeType] || <></>
 }
 
-const initHoleTreeData = (list: RequestYakURLResponse) => {
-    return list.Resources.sort((a, b) => {
-        // 将 ResourceType 为 'program'与'source' 的对象排在前面
-        if (["program", "source"].includes(a.ResourceType) && !["program", "source"].includes(b.ResourceType)) {
-            return -1 // a排在b前面
-        } else if (!["program", "source"].includes(a.ResourceType) && ["program", "source"].includes(b.ResourceType)) {
-            return 1 // b排在a前面
-        } else {
-            return 0 // 保持原有顺序
-        }
-    }).map((item) => {
-        const isLeaf = item.ResourceType === "function"
-        const count = item.Extra.find((item) => item.Key === "count")?.Value
-        const name = item.ResourceName.split("/").pop() || ""
-        return {
-            title: (
-                <>
-                    {name === item.ResourceName ? (
-                        <div className={styles["hole-item-title"]}>
-                            <div>{name}</div>
-                            <YakitTag size='small' color='info'>
-                                {count}
-                            </YakitTag>
-                        </div>
-                    ) : (
-                        <Tooltip title={item.ResourceName}>
-                            <div className={styles["hole-item-title"]}>
-                                <div>{name}</div>
-                                <YakitTag size='small' color='info'>
-                                    {count}
-                                </YakitTag>
-                            </div>
-                        </Tooltip>
-                    )}
-                </>
-            ),
-            key: item.Path,
-            isLeaf: isLeaf,
-            data: item,
-            icon: ({expanded}) => {
-                if (item.ResourceType === "program") {
-                    return expanded ? (
-                        <SolidFolderopenIcon className='yakitTreeNode-icon yakit-flolder-icon' />
-                    ) : (
-                        <SolidFolderIcon className='yakitTreeNode-icon yakit-flolder-icon' />
-                    )
-                }
-                return renderTreeNodeIcon(item.ResourceType as HoleResourceType)
-            }
-        } as HoleTreeNode
-    })
-}
-
 export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
     const {query, setQuery} = props
-    const [treeLoading, setTreeLoading] = useState<boolean>(false)
-    // 选中的文件或文件夹
-    const [selectedKeys, setSelectedKeys] = React.useState<TreeKey[]>([])
-    const [expandedKeys, setExpandedKeys] = React.useState<TreeKey[]>([])
-    const [selectedNodes, setSelectedNodes] = useState<HoleTreeNode[]>([]) // select树节点数据集合
     const [searchValue, setSearchValue] = useState<string>("")
-    const [holeTreeData, setHoleTreeData] = useState<HoleTreeNode[]>([])
+    // 真实搜索请求
+    const [realSearch,setRealSearch] = useState<string>("")
+    // 重置
+    const [init,setInit] = useState<boolean>(false)
 
     const refreshChildrenByParent = useMemoizedFn(
         (origin: HoleTreeNode[], parentKey: string, nodes: HoleTreeNode[]) => {
@@ -111,73 +57,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
         }
     )
 
-    const onLoadWebTreeData = useMemoizedFn(({key, children, data}: any) => {
-        return new Promise<void>((resolve, reject) => {
-            if (data === undefined) {
-                reject("node.data is empty")
-                return
-            }
-            grpcFetchHoleTree(data.Path, searchValue)
-                .then((result) => {
-                    const newNodes: HoleTreeNode[] = initHoleTreeData(result)
-                    setHoleTreeData((origin) => refreshChildrenByParent(origin, key, newNodes))
-                    resolve()
-                })
-                .catch((err) => {
-                    reject(err)
-                })
-        })
-    })
-
-    const onInitTreeFun = useMemoizedFn(async (rootPath: string, search: string = "") => {
-        try {
-            if (treeLoading) return
-            setTreeLoading(true)
-            const result = await grpcFetchHoleTree(rootPath, search)
-            const newNodes: HoleTreeNode[] = initHoleTreeData(result)
-
-            setHoleTreeData(newNodes)
-            setTimeout(() => {
-                setTreeLoading(false)
-            }, 50)
-        } catch (error: any) {
-            failed(`${error}`)
-            setTreeLoading(false)
-        }
-    })
-
-    useEffect(() => {
-        onInitTreeFun(`/`)
-    }, [])
-
     const cacheQueryRef = useRef<SSARisksFilter>({})
-    useEffect(() => {
-        const node = selectedNodes[0]
-        if (node) {
-            const filter = node.data?.Extra.find((item) => item.Key === "filter")?.Value
-            if (filter) {
-                try {
-                    const newParams = JSON.parse(filter)
-                    setQuery({...query, ...cacheQueryRef.current, ...newParams})
-                    // 缓存选中前所更改的参数内容 将其置为空用于还原
-                    let cache: SSARisksFilter = {}
-                    Object.keys(newParams).forEach((key) => {
-                        cache[key] = []
-                    })
-                    cacheQueryRef.current = cache
-                } catch (_) {
-                    setQuery({...query, ...cacheQueryRef.current})
-                    cacheQueryRef.current = {}
-                }
-            } else {
-                setQuery({...query, ...cacheQueryRef.current})
-                cacheQueryRef.current = {}
-            }
-        } else {
-            setQuery({...query, ...cacheQueryRef.current})
-            cacheQueryRef.current = {}
-        }
-    }, [selectedNodes])
 
     // 搜索框
     const onSearchChange = useMemoizedFn((e: {target: {value: string}}) => {
@@ -187,18 +67,15 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
 
     const reset = useMemoizedFn(() => {
         setSearchValue("")
-        setExpandedKeys([])
-        setSelectedKeys([])
-        setSelectedNodes([])
+        setRealSearch("")
+        setInit(!init)
     })
 
     // 搜索树
     const onSearchTree = useMemoizedFn((value: string) => {
-        setExpandedKeys([])
-        setSelectedKeys([])
-        setSelectedNodes([])
         setSearchValue(value)
-        onInitTreeFun(`/`, value)
+        setRealSearch(value)
+        setInit(!init)
     })
 
     // 刷新树
@@ -208,7 +85,6 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
             setQuery({...query, ...cacheQueryRef.current})
         }
         reset()
-        onInitTreeFun(`/`)
     })
 
     return (
@@ -225,55 +101,34 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                 <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshTreeFun} style={{marginBottom: 15}} />
             </div>
             <div className={styles["tree-wrap"]}>
-                {treeLoading ? (
-                    <YakitSpin style={{alignItems: "center"}} />
-                ) : (
-                    <DocumentCollectTree
-                        data={holeTreeData}
-                        selectedKeys={selectedKeys}
-                        setSelectedKeys={setSelectedKeys}
-                        expandedKeys={expandedKeys}
-                        setExpandedKeys={setExpandedKeys}
-                        onLoadData={onLoadWebTreeData}
-                        setSelectedNodes={setSelectedNodes}
-                    />
-                )}
+                <RiskTree
+                    type='risk'
+                    projectName='/'
+                    init={init}
+                    search={realSearch}
+                    onSelectedNodes={(node) => {
+                        const filter = node.data?.Extra.find((item) => item.Key === "filter")?.Value
+                        if (filter) {
+                            try {
+                                const newParams = JSON.parse(filter)
+                                setQuery({...query, ...cacheQueryRef.current, ...newParams})
+                                // 缓存选中前所更改的参数内容 将其置为空用于还原
+                                let cache: SSARisksFilter = {}
+                                Object.keys(newParams).forEach((key) => {
+                                    cache[key] = []
+                                })
+                                cacheQueryRef.current = cache
+                            } catch (_) {
+                                setQuery({...query, ...cacheQueryRef.current})
+                                cacheQueryRef.current = {}
+                            }
+                        } else {
+                            setQuery({...query, ...cacheQueryRef.current})
+                            cacheQueryRef.current = {}
+                        }
+                    }}
+                />
             </div>
         </div>
     )
 }
-
-const DocumentCollectTree: React.FC<DocumentCollectTreeProps> = memo((props) => {
-    const {
-        data,
-        selectedKeys,
-        expandedKeys,
-        onLoadData,
-        wrapClassName,
-        setSelectedKeys,
-        setExpandedKeys,
-        setSelectedNodes
-    } = props
-    const wrapper = useRef<HTMLDivElement>(null)
-    const size = useSize(wrapper)
-    // 点击Select选中树
-    const onSelectedKeys = useMemoizedFn((selectedKeys: TreeKey[], info) => {
-        setSelectedKeys(selectedKeys)
-        setSelectedNodes(info.selectedNodes)
-    })
-    return (
-        <div ref={wrapper} className={classNames(styles["document-collect-tree"], wrapClassName)}>
-            <YakitTree
-                height={size?.height}
-                multiple={false}
-                treeData={data}
-                loadData={onLoadData}
-                expandedKeys={expandedKeys}
-                onExpand={(expandedKeys: TreeKey[]) => setExpandedKeys(expandedKeys)}
-                selectedKeys={selectedKeys}
-                onSelect={onSelectedKeys}
-                blockNode={true}
-            />
-        </div>
-    )
-})

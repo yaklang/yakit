@@ -129,6 +129,12 @@ $keyColor: map-keys($tagColor);
                     font-weight: 600;
                     line-height: 24px;
                 }
+                .content-heard-body-title-click{
+                    cursor: pointer;
+                    &:hover{
+                        text-decoration: underline;
+                    }
+                }
                 .content-heard-body-description {
                     @extend %display-flex-center;
                     color: var(--yakit-header-color);
@@ -356,6 +362,8 @@ $keyColor: map-keys($tagColor);
 }
 .content-resize-second {
     @extend %display-column-center;
+}
+.content-resize-overflow {
     overflow-y: auto;
     height: 100%;
 }

@@ -68,6 +68,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     /** ---------- 审计规则 ---------- */
     const [auditRule, setAuditRule] = useState<string>("")
+    /** ---------- RuntimeID作用于全局，用于条件筛选 ---------- */
+    const [runtimeID,setRuntimeID] = useState<string>("")
     /** ---------- 审计运行状态 ---------- */
     const [auditExecuting, setAuditExecuting] = useState<boolean>(false)
 
@@ -647,26 +649,28 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     const store: YakRunnerContextStore = useMemo(() => {
         return {
-            pageInfo: pageInfo,
-            fileTree: fileTree,
-            projectName: projectName,
-            areaInfo: areaInfo,
-            activeFile: activeFile,
-            auditRule: auditRule,
-            auditExecuting: auditExecuting
+            pageInfo,
+            fileTree,
+            projectName,
+            areaInfo,
+            activeFile,
+            auditRule,
+            auditExecuting,
+            runtimeID
         }
-    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting])
+    }, [pageInfo, fileTree, projectName, areaInfo, activeFile, auditRule, auditExecuting,runtimeID])
 
     const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
         return {
-            setPageInfo: setPageInfo,
-            setFileTree: setFileTree,
-            setProjectName: setProjectName,
-            handleFileLoadData: handleFileLoadData,
-            setAreaInfo: setAreaInfo,
-            setActiveFile: setActiveFile,
-            setAuditRule: setAuditRule,
-            setAuditExecuting: setAuditExecuting
+            setPageInfo,
+            setFileTree,
+            setProjectName,
+            handleFileLoadData,
+            setAreaInfo,
+            setActiveFile,
+            setAuditRule,
+            setAuditExecuting,
+            setRuntimeID
         }
     }, [])
 
@@ -762,7 +766,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
                             firstRatio={isUnShow ? "25px" : "300px"}
                             firstNodeStyle={isUnShow ? {padding: 0, maxWidth: 25} : {padding: 0}}
                             lineDirection='right'
-                            firstMinSize={isUnShow ? 25 : 200}
+                            firstMinSize={isUnShow ? 25 : 252}
                             lineStyle={{width: 4}}
                             secondMinSize={480}
                             firstNode={

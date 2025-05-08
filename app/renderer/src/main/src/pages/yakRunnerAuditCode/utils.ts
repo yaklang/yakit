@@ -1,5 +1,5 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {RequestYakURLResponse} from "../yakURLTree/data"
+import {RequestYakURLResponse, YakURLResource} from "../yakURLTree/data"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
 import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
@@ -11,14 +11,17 @@ import {randomString} from "@/utils/randomUtil"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
-import {
-    ConvertYakStaticAnalyzeErrorToMarker,
-    IMonacoEditorMarker,
-    YakStaticAnalyzeErrorResult
-} from "@/utils/editorMarkers"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YaklangMonacoSpec} from "@/utils/monacoSpec/yakEditor"
+import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
+import {CodeRangeProps} from "./RightAuditDetail/RightAuditDetail"
+import {
+    QuerySyntaxFlowScanTaskRequest,
+    QuerySyntaxFlowScanTaskResponse
+} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import {genDefaultPagination} from "../invoker/schema"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -43,13 +46,76 @@ const initFileTreeData = (list, path) => {
             path: item.Path,
             isFolder: isFolder,
             icon: isFolder ? FolderDefault : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            isLeaf: isLeaf
+            isLeaf
+        }
+    })
+}
+
+const getLineFun = (info: YakURLResource) => {
+    try {
+        if (info.ResourceType === "risk") {
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
+                const {start_line} = item
+                return start_line
+            }
+        }
+        return undefined
+    } catch (error) {}
+}
+
+const initRiskOrRuleTreeData = (list: RequestYakURLResponse, path) => {
+    return list.Resources.sort((a, b) => {
+        // 将 ResourceType 为 'program'与'source' 的对象排在前面
+        if (["program", "source"].includes(a.ResourceType) && !["program", "source"].includes(b.ResourceType)) {
+            return -1 // a排在b前面
+        } else if (!["program", "source"].includes(a.ResourceType) && ["program", "source"].includes(b.ResourceType)) {
+            return 1 // b排在a前面
+        } else {
+            return 0 // 保持原有顺序
+        }
+    }).map((item) => {
+        const isFile = !item.HaveChildrenNodes
+        const isFolder = item.HaveChildrenNodes
+        let suffix = isFile && item.ResourceName.indexOf(".") > -1 ? item.ResourceName.split(".").pop() : ""
+        const count = item.Extra.find((item) => item.Key === "count")?.Value
+        const name = item.ResourceName.split("/").pop() || ""
+        const severity = item.Extra.find((item) => item.Key === "severity")?.Value
+        const severityValue = SeverityMapTag.find((item) => item.key.includes(severity || ""))?.value
+        let folderIcon = FolderDefault
+        let description: string | undefined = undefined
+        let line: number | undefined = undefined
+        if (item.ResourceType === "source") {
+            folderIcon = FileSuffix[item.ResourceName.split(".").pop() || ""]
+            description = path ? item.Path.replace(path, "") : item.Path
+        }
+        if (item.ResourceType === "function") {
+            folderIcon = FileSuffix["function"]
+        }
+        if (item.ResourceType === "risk") {
+            line = getLineFun(item)
+        }
+        if (item.ResourceType === "risk" && severityValue) {
+            suffix = severityValue
+        }
+        return {
+            parent: path || null,
+            name,
+            path: item.Path,
+            isFolder,
+            icon: isFolder ? folderIcon : suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+            isLeaf: isFile,
+            count,
+            description,
+            line,
+            data: item
         }
     })
 }
 
 /**
- * @name 审计树获取
+ * @name 审计完整树获取
  */
 export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
     path
@@ -64,6 +130,84 @@ export const grpcFetchAuditTree: (path: string) => Promise<{res: RequestYakURLRe
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
             const data: FileNodeMapProps[] = initFileTreeData(res, path)
             resolve({res, data})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 漏洞文件/规则汇总树获取
+ */
+export const grpcFetchRiskOrRuleTree: (
+    path: string,
+    Query: {
+        program: string
+        type: "risk" | "file" | "rule"
+        search?: string
+        task_id?: string
+        result_id?: string
+    }
+) => Promise<{res: RequestYakURLResponse; data: FileNodeMapProps[]}> = (
+    path,
+    {program, type, search, task_id, result_id}
+) => {
+    return new Promise(async (resolve, reject) => {
+        // ssadb path为/时 展示最近编译
+        const params = {
+            Method: "GET",
+            Url: {
+                Schema: "ssarisk",
+                Path: path,
+                Query: [
+                    {
+                        Key: "type",
+                        Value: type
+                    },
+                    {
+                        Key: "program",
+                        Value: type !== "risk" ? program : ""
+                    },
+                    {
+                        Key: "search",
+                        Value: search
+                    },
+                    {
+                        Key: "task_id",
+                        Value: task_id
+                    },
+                    {
+                        Key: "result_id",
+                        Value: result_id
+                    }
+                ]
+            }
+        }
+        try {
+            const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
+            const data: FileNodeMapProps[] = initRiskOrRuleTreeData(res, path === "/" ? program : path)
+            resolve({res, data})
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+/**
+ * @name 漏洞文件/规则汇树筛选列表获取
+ */
+export const grpcFetchRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (Programs) => {
+    return new Promise(async (resolve, reject) => {
+        const params: QuerySyntaxFlowScanTaskRequest = {
+            Pagination: genDefaultPagination(100, 1),
+            Filter: {
+                Programs: [Programs],
+                HaveRisk:true, 
+            }
+        }
+        try {
+            const res: QuerySyntaxFlowScanTaskResponse = await ipcRenderer.invoke("QuerySyntaxFlowScanTask", params)
+            resolve(res)
         } catch (error) {
             reject(error)
         }
@@ -145,7 +289,7 @@ export const loadAuditFromYakURLRaw = (
                 Url: params,
                 Body: body,
                 Page,
-                PageSize,
+                PageSize
             })
             .then((rsp: RequestYakURLResponse) => {
                 resolve(rsp)
@@ -525,21 +669,21 @@ export const removeAreaFileInfo = (areaInfo: AreaInfoProps[], info: FileDetailIn
 }
 
 /**
- * @name 语法检查
+ * @name 漏洞汇总
  */
-export const onSyntaxCheck = (code: string) => {
+export const onSyntaxRisk = ({ProgramName, CodeSourceUrl, RuntimeID}) => {
     return new Promise(async (resolve, reject) => {
-        // StaticAnalyzeError
         ipcRenderer
-            .invoke("StaticAnalyzeError", {Code: StringToUint8Array(code), PluginType: "yak"})
-            .then((e: {Result: YakStaticAnalyzeErrorResult[]}) => {
-                if (e && e.Result.length > 0) {
-                    const markers = e.Result.map(ConvertYakStaticAnalyzeErrorToMarker)
-                    // monaco.editor.setModelMarkers(model, "owner", markers)
-                    resolve(markers)
-                } else {
-                    resolve([])
+            .invoke("QuerySSARisks", {
+                Filter: {
+                    ProgramName,
+                    CodeSourceUrl,
+                    RuntimeID
                 }
+            })
+            .then((res: QuerySSARisksResponse) => {
+                const {Data} = res
+                resolve(Data)
             })
             .catch(() => {
                 resolve([])
@@ -548,13 +692,21 @@ export const onSyntaxCheck = (code: string) => {
 }
 
 /**
- * @name 注入语法检查结果
+ * @name 注入漏洞汇总结果
  */
-export const getDefaultActiveFile = async (info: FileDetailInfo) => {
+export const getDefaultActiveFile = async (
+    info: FileDetailInfo,
+    ProgramName: string[],
+    CodeSourceUrl: string[],
+    RuntimeID: string[]
+) => {
+    // if (info.syntaxCheck) {
+    //     return info
+    // }
     let newActiveFile = info
-    // 注入语法检查结果
-    if (newActiveFile.language === "yak") {
-        const syntaxCheck = (await onSyntaxCheck(newActiveFile.code)) as IMonacoEditorMarker[]
+    if (CodeSourceUrl.length > 0) {
+        // 注入漏洞汇总结果
+        const syntaxCheck = (await onSyntaxRisk({ProgramName, CodeSourceUrl, RuntimeID})) as SSARisk[]
         if (syntaxCheck) {
             newActiveFile = {...newActiveFile, syntaxCheck}
         }

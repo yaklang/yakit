@@ -810,7 +810,13 @@ export const FileSuffix: Record<string, string> = {
     "mocha.cjs": "_f_mocha",
     groovy: "_f_groovy",
     jenkinsfile: "_f_jenkinsfile",
-    yak: "_f_yak"
+    yak: "_f_yak",
+    function: "_f_function",
+    "title-info": "_f_title_info",
+    "title-low": "_f_title_low",
+    "title-middle": "_f_title_middle",
+    "title-high": "_f_title_high",
+    "title-fatal": "_f_title_fatal"
 }
 
 // 以下对象的设置暂未实现

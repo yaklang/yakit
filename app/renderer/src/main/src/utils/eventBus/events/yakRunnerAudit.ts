@@ -50,4 +50,6 @@ export type YakRunnerAuditEventProps = {
     onWidgetOpenAgain: string
     // 通知打开审计搜索
     onOpenSearchModal?: string
+    // 通知打开左边第二栏
+    onOpenLeftSecondNode: "result" | "history"
 }

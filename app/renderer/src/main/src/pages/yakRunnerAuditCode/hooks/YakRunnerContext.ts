@@ -1,8 +1,8 @@
 import {FileTreeListProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import {Dispatch, SetStateAction, createContext} from "react"
-import { FileDetailInfo } from "../RunnerTabs/RunnerTabsType"
-import { AreaInfoProps } from "../YakRunnerAuditCodeType"
+import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
+import {AreaInfoProps} from "../YakRunnerAuditCodeType"
 
 export interface YakRunnerContextStore {
     pageInfo?: AuditCodePageInfoProps
@@ -10,8 +10,9 @@ export interface YakRunnerContextStore {
     projectName: string | undefined
     areaInfo: AreaInfoProps[]
     activeFile: FileDetailInfo | undefined
-    auditRule: string,
+    auditRule: string
     auditExecuting: boolean
+    runtimeID: string
 }
 
 export interface YakRunnerContextDispatcher {
@@ -23,6 +24,7 @@ export interface YakRunnerContextDispatcher {
     setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
     setAuditRule?: Dispatch<SetStateAction<string>>
     setAuditExecuting?: Dispatch<SetStateAction<boolean>>
+    setRuntimeID?: Dispatch<SetStateAction<string>>
 }
 
 export interface YakRunnerContextValue {
@@ -38,7 +40,8 @@ export default createContext<YakRunnerContextValue>({
         areaInfo: [],
         activeFile: undefined,
         auditRule: "",
-        auditExecuting: false
+        auditExecuting: false,
+        runtimeID: ""
     },
     dispatcher: {
         setPageInfo: undefined,
@@ -48,6 +51,7 @@ export default createContext<YakRunnerContextValue>({
         setAreaInfo: undefined,
         setActiveFile: undefined,
         setAuditRule: undefined,
-        setAuditExecuting: undefined
+        setAuditExecuting: undefined,
+        setRuntimeID: undefined
     }
 })

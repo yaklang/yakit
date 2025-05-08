@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import styles from "./BottomEditorDetails.module.scss"
 import classNames from "classnames"
@@ -10,14 +10,13 @@ import emiter from "@/utils/eventBus/eventBus"
 import {PaperAirplaneIcon} from "@/assets/newIcon"
 import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
 import useDispatcher from "../hooks/useDispatcher"
-import {HoleBugDetail} from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import { HoleBugDetail } from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
-
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-    const {projectName, auditExecuting} = useStore()
+    const {projectName, auditExecuting, activeFile} = useStore()
     const {setAuditRule} = useDispatcher()
     // 不再重新加载的元素
     const [showType, setShowType] = useState<ShowItemType[]>([])
@@ -70,7 +69,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     }, [])
 
     const onAuditRuleSubmit = useMemoizedFn(() => {
-        if(!projectName || ruleEditor.length === 0) return
+        if (!projectName || ruleEditor.length === 0) return
         setAuditRule && setAuditRule(ruleEditor)
         emiter.emit("onAuditRuleSubmit", ruleEditor)
     })
@@ -79,6 +78,9 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         emiter.emit("onStopAuditRule")
     })
 
+    // useUpdateEffect(() => {
+    //     setBugHash("")
+    // }, [activeFile?.path])
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>

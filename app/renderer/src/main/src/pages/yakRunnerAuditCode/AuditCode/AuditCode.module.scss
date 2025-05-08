@@ -23,6 +23,7 @@
             display: flex;
             justify-content: flex-end;
             gap: 8px;
+            align-items: center;
         }
     }
     .textarea-box {
@@ -200,7 +201,7 @@
             .detail {
                 color: #31343f;
                 font-size: 12px;
-                font-weight: 400;
+                font-weight: 500;
                 line-height: 16px;
                 overflow: hidden;
 

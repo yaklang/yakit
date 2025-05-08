@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react"
-import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
+import React, {useEffect, useMemo, useState} from "react"
+import {RightBugAuditResult, SeverityMapTag, YakitRiskDetailContent} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 const {ipcRenderer} = window.require("electron")
 

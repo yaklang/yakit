@@ -28,10 +28,19 @@ import {
     OutlineSplitScreenIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {RuleManagementAuditIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import yakitSSMiniProject from "@/assets/yakitMiniSS.png"
 import {YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon} from "@/pages/yakRunner/icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdate, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useLongPress,
+    useMemoizedFn,
+    useSize,
+    useThrottleFn,
+    useUpdate,
+    useUpdateEffect
+} from "ahooks"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerAuditCodeType"
@@ -76,7 +85,7 @@ import {
     updateAreaFileInfo
 } from "../utils"
 import {editor as newEditor} from "monaco-editor"
-import {YakitIMonacoEditor} from "@/components/yakitUI/YakitEditor/YakitEditorType"
+import {YakitIMonacoEditor, YakitITextModel} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {createRoot} from "react-dom/client"
 import MonacoEditor, {monaco} from "react-monaco-editor"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
@@ -84,7 +93,8 @@ import {getMapAllResultKey, getMapResultDetail} from "../RightAuditDetail/Result
 import {GraphInfoProps, JumpSourceDataProps, onJumpRunnerFile} from "../RightAuditDetail/RightAuditDetail"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {CountDirectionProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-import { onSetSelectedSearchVal } from "../AuditSearchModal/AuditSearch"
+import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
+import {ConvertAuditStaticAnalyzeErrorToMarker, IMonacoEditorMarker} from "@/utils/editorMarkers"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -534,17 +544,17 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             {
                 label: "关闭所有",
                 key: "removeAll"
-            },
-            {type: "divider"},
-            {
-                label: "重命名",
-                key: "rename"
-            },
-            {
-                label: "在文件夹中显示",
-                key: "openFolder",
-                disabled: info.isUnSave
             }
+            // {type: "divider"},
+            // {
+            //     label: "重命名",
+            //     key: "rename"
+            // },
+            // {
+            //     label: "在文件夹中显示",
+            //     key: "openFolder",
+            //     disabled: info.isUnSave
+            // }
         ]
         if (splitDirection.length > 0) {
             let direction: YakitMenuItemType[] = splitDirection.map((item) => {
@@ -788,7 +798,7 @@ const RunnerTabBar: React.FC<RunnerTabBarProps> = memo((props) => {
 
 const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
     const {index, info, tabsId, handleContextMenu, onRemoveCurrent} = props
-    const {areaInfo, activeFile} = useStore()
+    const {areaInfo, activeFile, projectName} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const onActiveFile = useMemoizedFn(async () => {
         try {
@@ -808,8 +818,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
                 })
             })
             if (info.path !== activeFile?.path) {
-                const newActiveFile = await getDefaultActiveFile(info)
-                setActiveFile && setActiveFile(newActiveFile)
+                setActiveFile && setActiveFile(info)
                 if (info.parent || info.fileSourceType === "audit") {
                     emiter.emit("onCodeAuditScrollToFileTree", info.path)
                 }
@@ -880,7 +889,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const {tabsId} = props
-    const {areaInfo, activeFile, projectName} = useStore()
+    const {areaInfo, activeFile, projectName, runtimeID} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
     // 编辑器实例
@@ -958,10 +967,12 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     // 更新当前底部展示信息
     const updateBottomEditorDetails = useDebounceFn(
         async () => {
-            if (!editorInfo) return
+            if (!editorInfo || !projectName) return
             let newActiveFile = editorInfo
-            // 注入语法检查结果
-            newActiveFile = await getDefaultActiveFile(newActiveFile)
+            let ProgramName = [projectName]
+            let CodeSourceUrl = activeFile?.path ? [activeFile.path] : []
+            // 注入漏洞汇总结果
+            newActiveFile = await getDefaultActiveFile(newActiveFile, ProgramName, CodeSourceUrl, [runtimeID])
             // 如若文件检查结果出来时 文件已被切走 则不再更新
             if (newActiveFile.path !== nowPathRef.current) return
             // 更新位置信息
@@ -982,6 +993,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             wait: 200
         }
     ).run
+
+    useUpdateEffect(() => {
+        updateBottomEditorDetails()
+    }, [runtimeID])
 
     const [highLightFind, setHighLightFind] = useState<Selection[]>([])
     // 获取编辑器中关联字符
@@ -1056,9 +1071,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
             // console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
             selectionRef.current = {startLineNumber, startColumn, endLineNumber, endColumn}
             // 获取选中的字符内容 用于搜索代入
-            const selectedText = editor.getModel()?.getValueInRange(selection);
+            const selectedText = editor.getModel()?.getValueInRange(selection)
             onSetSelectedSearchVal(selectedText)
-            
+
             // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
             // updateBottomEditorDetails()
         })
@@ -1308,18 +1323,44 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }, 50)
     }, [editor, editorInfo])
 
-
-
     // 双击Shift
-    const [lastShiftTime, setLastShiftTime] = useState<number>(0);
+    const [lastShiftTime, setLastShiftTime] = useState<number>(0)
     const handleDoubleShift = useMemoizedFn(() => {
-        const now = Date.now();
-        if (now - lastShiftTime < 300 && editor) { // 300ms 内连点两次 Shift
+        const now = Date.now()
+        if (now - lastShiftTime < 300 && editor) {
+            // 300ms 内连点两次 Shift
             // 在这里处理连点两次 Shift 的逻辑
             emiter.emit("onOpenSearchModal")
         }
-        setLastShiftTime(now);
-    });
+        setLastShiftTime(now)
+    })
+
+    /** 代码审计 代码错误检查并显示提示标记 */
+    const auditStaticAnalyze = useDebounceFn(
+        useMemoizedFn((model: YakitITextModel) => {
+            if (activeFile?.syntaxCheck) {
+                const markers = activeFile.syntaxCheck
+                    .map(ConvertAuditStaticAnalyzeErrorToMarker)
+                    .filter((item) => item !== null) as IMonacoEditorMarker[]
+                monaco.editor.setModelMarkers(model, "audit", markers)
+            } else {
+                monaco.editor.setModelMarkers(model, "audit", [])
+            }
+        }),
+        {wait: 300}
+    )
+
+    useDebounceEffect(
+        () => {
+            if (editorInfo && editor) {
+                /** 代码审计 代码错误检查 */
+                const model = editor.getModel()
+                model && auditStaticAnalyze.run(model)
+            }
+        },
+        [activeFile, editorInfo?.code, editor],
+        {wait: 200}
+    )
 
     return (
         <div className={styles["runner-tab-pane"]}>
@@ -1343,10 +1384,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorDidMount={(editor) => {
                         setEditor(editor)
                     }}
-                    onKeyPress={(event:KeyboardEvent)=>{
-                        const {key,ctrlKey,altKey,metaKey,repeat} = event
+                    onKeyPress={(event: KeyboardEvent) => {
+                        const {key, ctrlKey, altKey, metaKey, repeat} = event
                         // 如若长按某个键时 后面激发的repeat会变为true
-                        if(key === 'Shift' && !ctrlKey && !altKey && !metaKey && !repeat){
+                        if (key === "Shift" && !ctrlKey && !altKey && !metaKey && !repeat) {
                             handleDoubleShift()
                         }
                     }}
@@ -1358,6 +1399,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
                     highLightFind={highLightFind}
+                    // renderValidationDecorations此项为on时可使只读模式下，显示下划线提示
+                    renderValidationDecorations='on'
                 />
             )}
         </div>
@@ -1392,7 +1435,7 @@ export const AuditCodeWelcomePage: React.FC<AuditCodeWelcomePageProps> = memo((p
         <div className={styles["yak-runner-welcome-page"]} ref={ref}>
             <div className={styles["title"]}>
                 <div className={styles["icon-style"]}>
-                    <RuleManagementAuditIcon />
+                    <img style={{height: "100%"}} src={yakitSSMiniProject} alt='暂无图片' />
                 </div>
                 <div className={styles["header-style"]}>欢迎使用SyntaxFlow代码审计</div>
             </div>

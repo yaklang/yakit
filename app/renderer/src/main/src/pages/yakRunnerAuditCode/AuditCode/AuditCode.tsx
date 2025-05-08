@@ -65,6 +65,7 @@ import {
     OutlineChevronrightIcon,
     OutlineDeprecatedIcon,
     OutlineDocumentduplicateIcon,
+    OutlineEyeIcon,
     OutlinePencilaltIcon,
     OutlineRefreshIcon,
     OutlineReloadScanIcon,
@@ -132,6 +133,7 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {FileDefault, FileSuffix, KeyToIcon} from "../FileTree/icon"
+import {RiskTree} from "../RunnerFileTree/RunnerFileTree"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -153,9 +155,9 @@ export const isBugFun = (info: AuditNodeProps) => {
 export const getDetailFun = (info: AuditNodeProps | AuditDetailItemProps) => {
     try {
         if (info.ResourceType === "value") {
-            const arr = info.Extra.filter((item) => item.Key === "code_range")
-            if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+            const result = info.Extra.find((item) => item.Key === "code_range")?.Value
+            if (result) {
+                const item: CodeRangeProps = JSON.parse(result)
                 const {url, start_line, start_column, end_line, end_column} = item
                 const lastSlashIndex = url.lastIndexOf("/")
                 const fileName = url.substring(lastSlashIndex + 1)
@@ -203,9 +205,9 @@ const showIcon = (severity) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, onJump, loadTreeMore} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore} = props
     const handleSelect = useMemoizedFn(() => {
-        onSelected(true, info, getDetail)
+        onSelected(info, getDetail)
     })
 
     const isExpanded = useMemo(() => {
@@ -235,7 +237,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
 
     const goBUGDetail = useMemoizedFn((e) => {
         e.stopPropagation()
-        onJump({...info, isBug: true})
+        onSelected({...info, isBug: true})
     })
 
     const dom = useMemo(() => {
@@ -385,23 +387,23 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
         wrapClassName,
         loadTreeMore
     } = props
-    // const {pageInfo} = useStore()
+    const {pageInfo} = useStore()
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
     const size = useSize(wrapper)
 
     // PS: 之前的逻辑是匹配到此项时打开对应文件，可能会造成卡在欢迎页的情况，因此改为根据参数直接打开对应文件
-    // const defaultOpenIdRef = useRef<string>()
-    // useEffect(() => {
-    //     if (pageInfo) {
-    //         const {Path, Variable, Value} = pageInfo
-    //         if (Variable && Value) {
-    //             defaultOpenIdRef.current = `${Path}${Variable}${Value}`
-    //         }
-    //     }
-    // }, [pageInfo])
+    const defaultOpenIdRef = useRef<string>()
+    useEffect(() => {
+        if (pageInfo) {
+            const {Path, Variable, Value} = pageInfo
+            if (Variable && Value) {
+                defaultOpenIdRef.current = `${Path}${Variable}${Value}`
+            }
+        }
+    }, [pageInfo])
 
-    const handleSelect = useMemoizedFn((selected: boolean, node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
+    const handleSelect = useMemoizedFn((node: AuditNodeProps, detail?: AuditNodeDetailProps) => {
         if (onlyJump) {
             onJump(node)
             return
@@ -475,10 +477,10 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                 // 解决重复打开一个节点时 能加载
                 loadedKeys={[]}
                 titleRender={(nodeData) => {
-                    // if (nodeData.id === defaultOpenIdRef.current) {
-                    //     defaultOpenIdRef.current = undefined
-                    //     handleSelect(true, nodeData, getDetailFun(nodeData))
-                    // }
+                    if (nodeData.id === defaultOpenIdRef.current) {
+                        defaultOpenIdRef.current = undefined
+                        handleSelect(nodeData, getDetailFun(nodeData))
+                    }
                     return (
                         <AuditTreeNode
                             info={nodeData}
@@ -486,7 +488,6 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             expandedKeys={expandedKeys}
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
-                            onJump={onJump}
                             loadTreeMore={loadTreeMore}
                         />
                     )
@@ -559,17 +560,20 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         const initTreeLeaf = initTree.filter((item) => item.isLeaf)
         const initTreeNoLeaf = initTree.filter((item) => !item.isLeaf)
         const newInitTree = [...initTreeNoLeaf, ...initTreeLeaf]
-        newInitTree.push({
-            parent: null,
-            name: "已经到底啦~",
-            id: "111",
-            depth: 1,
-            isBottom: true,
-            Extra: [],
-            ResourceType: "",
-            VerboseType: "",
-            Size: 0
-        })
+        if (newInitTree.length > 0) {
+            newInitTree.push({
+                parent: null,
+                name: "已经到底啦~",
+                id: "111",
+                depth: 1,
+                isBottom: true,
+                Extra: [],
+                ResourceType: "",
+                VerboseType: "",
+                Size: 0
+            })
+        }
+
         return newInitTree
     }, [refreshTree])
 
@@ -744,10 +748,12 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         setRefreshTree(!refreshTree)
     }, [projectName])
 
+    const [resultId, setResultId] = useState<string>()
     const onAuditRuleSubmitFun = useMemoizedFn(
         async (textArea: string = "", Query?: {Key: string; Value: number}[]) => {
             try {
                 resetMap()
+                setResultId(undefined)
                 setLoading(true)
                 setShowEmpty(false)
                 setOnlyFileTree(false)
@@ -831,6 +837,11 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                     setRefreshTree(!getRefreshTree())
                 } else {
                     setShowEmpty(true)
+                }
+                // 获取ID并展示
+                if (params.Query) {
+                    let showId = params.Query.find((item) => item.Key === "result_id")?.Value
+                    showId && setResultId(showId)
                 }
                 setLoading(false)
             } catch (error: any) {
@@ -947,12 +958,18 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         onCancelAuditStream()
     })
 
+    const onOpenLeftSecondNodeFun = useMemoizedFn((v: "result" | "history") => {
+        setOnlyFileTree(false)
+        setAuditType(v)
+    })
     useEffect(() => {
         emiter.on("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
         emiter.on("onStopAuditRule", onStopAuditRuleFun)
+        emiter.on("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         return () => {
             emiter.off("onAuditRuleSubmit", onAuditStreamRuleSubmitFun)
             emiter.off("onStopAuditRule", onStopAuditRuleFun)
+            emiter.off("onOpenLeftSecondNode", onOpenLeftSecondNodeFun)
         }
     }, [])
 
@@ -1004,6 +1021,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     })
 
     const [query, setQuery] = useState<QuerySyntaxFlowResultRequest>(defaultQuery)
+    const [isShowRiskTree, setShowRiskTree] = useState<boolean>(false)
 
     return (
         <YakitSpin spinning={loading}>
@@ -1026,8 +1044,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                 },
                                 {
                                     label: "审计历史",
-                                    value: "history",
-                                    disabled: !projectName
+                                    value: "history"
                                 }
                             ]}
                         />
@@ -1042,7 +1059,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                         </div>
                     ) : (
                         <>
-                            {auditType === "history" && (
+                            {auditType === "history" ? (
                                 <div className={styles["extra"]}>
                                     <YakitButton
                                         type='text'
@@ -1090,6 +1107,37 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                             icon={<DeleteOutlined />}
                                         />
                                     </YakitDropdownMenu>
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
+                                </div>
+                            ) : (
+                                <div className={styles["extra"]}>
+                                    {resultId && (
+                                        <>
+                                            <div style={{flex: 1}}>
+                                                <YakitTag color='info'>ID:{resultId}</YakitTag>
+                                            </div>
+                                            <Tooltip title={isShowRiskTree ? "隐藏漏洞树" : "查看漏洞树"}>
+                                                <YakitButton
+                                                    type='text'
+                                                    size={"small"}
+                                                    icon={<OutlineEyeIcon />}
+                                                    onClick={() => {
+                                                        setShowRiskTree(!isShowRiskTree)
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        </>
+                                    )}
+
+                                    <YakitButton
+                                        type='text'
+                                        icon={<OutlineXIcon />}
+                                        onClick={() => setOnlyFileTree(true)}
+                                    />
                                 </div>
                             )}
                         </>
@@ -1110,29 +1158,47 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                                         />
                                     </div>
                                 ) : (
-                                    <AuditTree
-                                        data={auditDetailTree}
-                                        expandedKeys={expandedKeys}
-                                        setExpandedKeys={setExpandedKeys}
-                                        onLoadData={onLoadData}
-                                        foucsedKey={foucsedKey}
-                                        setFoucsedKey={setFoucsedKey}
-                                        onJump={onJump}
-                                        loadTreeMore={loadTreeMore}
-                                    />
+                                    <>
+                                        {isShowRiskTree && resultId ? (
+                                            <RiskTree type='file' projectName={projectName} result_id={resultId} />
+                                        ) : (
+                                            <>
+                                                {auditDetailTree.length > 0 ? (
+                                                    <AuditTree
+                                                        data={auditDetailTree}
+                                                        expandedKeys={expandedKeys}
+                                                        setExpandedKeys={setExpandedKeys}
+                                                        onLoadData={onLoadData}
+                                                        foucsedKey={foucsedKey}
+                                                        setFoucsedKey={setFoucsedKey}
+                                                        onJump={onJump}
+                                                        loadTreeMore={loadTreeMore}
+                                                    />
+                                                ) : (
+                                                    <div className={styles["no-data"]}>暂无数据</div>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
                     </>
                 ) : (
-                    <AuditHistoryList
-                        ref={auditHistoryListRef}
-                        setAuditType={setAuditType}
-                        onAuditRuleSubmitFun={onAuditRuleSubmitFun}
-                        onOpenEditorDetails={onOpenEditorDetails}
-                        query={query}
-                        setQuery={setQuery}
-                    />
+                    <>
+                        {!projectName ? (
+                            <div className={styles["no-data"]}>暂无数据</div>
+                        ) : (
+                            <AuditHistoryList
+                                ref={auditHistoryListRef}
+                                setAuditType={setAuditType}
+                                onAuditRuleSubmitFun={onAuditRuleSubmitFun}
+                                onOpenEditorDetails={onOpenEditorDetails}
+                                query={query}
+                                setQuery={setQuery}
+                            />
+                        )}
+                    </>
                 )}
                 <YakitHint
                     visible={removeVisible}

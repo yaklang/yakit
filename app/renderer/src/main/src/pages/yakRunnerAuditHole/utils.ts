@@ -16,6 +16,10 @@ export const grpcFetchHoleTree: (path: string, search: string) => Promise<Reques
                     {
                         Key: "search",
                         Value: search
+                    },
+                    {
+                        Key: "type",
+                        Value: "risk"
                     }
                 ]
             }
