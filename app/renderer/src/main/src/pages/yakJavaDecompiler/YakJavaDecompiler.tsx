@@ -528,7 +528,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-java-decompiler"]} tabIndex={0} id='yakit-runnner-main-box-id'>
+            <div className={styles["yak-java-decompiler"]} tabIndex={0} id='yakit-decompiler-main-box-id'>
                 <div className={styles["yak-java-decompiler-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}

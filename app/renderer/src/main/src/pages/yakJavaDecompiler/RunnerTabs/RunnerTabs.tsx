@@ -873,6 +873,25 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         setAreaInfo && setAreaInfo(newAreaInfo)
     })
 
+       // 下载当前活动标签页的内容
+       const downloadDecompiledFile = useMemoizedFn(() => {
+        if (!activeFile) {
+            return
+        }
+        const fileName = activeFile.name
+        const a = document.createElement("a")
+        const blob = new Blob([activeFile.code], {type: "text/plain"})
+        a.href = URL.createObjectURL(blob)
+
+        // 如果是class文件，将下载的文件名改为.java
+        const downloadName = fileName.endsWith(".class") ? fileName.replace(".class", ".java") : fileName
+
+        a.download = downloadName
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+    })
+
     return (
         <div className={styles["runner-tab-pane"]}>
             {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -902,6 +921,16 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     }}
                     highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
                     highLightClass='hight-light-yak-runner-color'
+                    contextMenu={{
+                        download: {
+                            menu: [
+                                {key: "download", label: "下载"}
+                            ],
+                            onRun: (editor, key) => {
+                                downloadDecompiledFile()
+                            }
+                        },
+                    }}
                 />
             )}
         </div>

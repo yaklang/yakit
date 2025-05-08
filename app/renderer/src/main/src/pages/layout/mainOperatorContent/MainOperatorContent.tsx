@@ -554,10 +554,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Rule_Management:
                 addRuleManagement()
                 break
+            case YakitRoute.YakRunner_Project_Manager:
+                addProjectManager()
+                break
             default:
                 break
         }
     })
+    const addProjectManager = useMemoizedFn(() => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Project_Manager).length
+        if (isExist) {
+            emiter.emit("onRefreshProjectManager")
+        }
+        openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
+    })
+
 
     const addRuleManagement = useMemoizedFn(() => {
         openMenuPage({route: YakitRoute.Rule_Management})

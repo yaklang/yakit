@@ -1,8 +1,9 @@
-import React, {useMemo, useState} from "react"
+import React, {useEffect, useMemo, useState} from "react"
 import {YakRunnerProjectManagerProps} from "./YakRunnerProjectManagerType"
 import {useMemoizedFn} from "ahooks"
 import styles from "./YakRunnerProjectManager.module.scss"
 import {AuditHistoryTable, AuditModalFormModal} from "../yakRunnerAuditCode/AuditCode/AuditCode"
+import emiter from "@/utils/eventBus/eventBus"
 
 export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (props) => {
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
@@ -16,6 +17,17 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
         onCloseCompileModal()
         setRefresh(!refresh)
     }
+
+    const onRefreshProjectManagerFun = useMemoizedFn(()=>{
+        setRefresh(!refresh)
+    })
+
+    useEffect(()=>{
+        emiter.on("onRefreshProjectManager",onRefreshProjectManagerFun)
+        return () => {
+            emiter.off("onRefreshProjectManager", onRefreshProjectManagerFun)
+        }
+    },[])
 
     return (
         <div className={styles["yakrunner-project-manager"]} id='yakrunner-project-manager'>

@@ -25,6 +25,9 @@ import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
+import {AuditModalFormModal} from "@/pages/yakRunnerAuditCode/AuditCode/AuditCode"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import { YakitRoute } from "@/enums/yakitRoute"
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {boxHeight} = props
@@ -209,7 +212,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     })
 
     const importProjectAndCompile = useMemoizedFn(() => {
-        console.log("importProjectAndCompile")
+        setShowCompileModal(true)
     })
 
     // 打开历史
@@ -265,6 +268,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         }
     )
 
+    const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
+    const [isShowHint, setShowHint] = useState<boolean>(false)
+
+    const onCloseCompileModal = useMemoizedFn(() => {
+        setShowCompileModal(false)
+    })
+
+    const onSuccee = () => {
+        onCloseCompileModal()
+        setShowHint(true)
+    }
     return (
         <div className={styles["runner-file-tree"]}>
             <div className={styles["container"]}>
@@ -319,6 +333,34 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     </div>
                 </div>
             </div>
+            {isShowCompileModal && (
+                <AuditModalFormModal
+                    onCancel={onCloseCompileModal}
+                    onSuccee={onSuccee}
+                    warrpId={document.getElementById("yakit-decompiler-main-box-id")}
+                    initForm={{
+                        target: projectName || ""
+                    }}
+                />
+            )}
+            <YakitHint
+                visible={isShowHint}
+                title='编译完成'
+                content='当前项目编译完成，点击查看跳转查看编译项目'
+                onOk={() => {
+                    setShowHint(false)
+                    emiter.emit(
+                        "openPage",
+                        JSON.stringify({
+                            route: YakitRoute.YakRunner_Project_Manager,
+                        })
+                    )
+                }}
+                onCancel={() => {
+                    setShowHint(false)
+                }}
+                okButtonText={"查看"}
+            />
         </div>
     )
 })
