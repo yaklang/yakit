@@ -39,6 +39,8 @@ import {
     getEnvTypeByProjects,
     NewProjectAndFolder,
     ProjectDescription,
+    ProjectIOProgress,
+    ProjectParamsProp,
     TransferProject
 } from "@/pages/softwareSettings/ProjectManage"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
@@ -85,6 +87,15 @@ import {getEnginePortCacheKey} from "@/utils/localCache/engine"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
+import {
+    apiSplitUpload,
+    apiSystemConfig,
+    ExportProjectRequest,
+    grpcExportProject,
+    grpcGetProjects,
+    SplitUploadRequest
+} from "./utils"
+import moment from "moment"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -195,6 +206,99 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         [eeSystemConfig, userInfo],
         {wait: 300}
     )
+    //#region 企业版登录成功后根据配置信息看是否需要自动上传项目
+    const projectListRef = useRef<ProjectDescription[]>([])
+    useEffect(() => {
+        if (!isEnpriTrace()) return
+        // 登录根据配置参数判断是否自动上传项目
+        // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)
+        if (userInfo.isLogin) {
+            apiSystemConfig().then((config) => {
+                const data = config.data || []
+                let autoUploadProject = {
+                    isOpen: false,
+                    day: 10
+                }
+                const item = data.find((ele) => ele.configName === "autoUploadProject")
+                if (item) {
+                    autoUploadProject = {
+                        isOpen: item.isOpen,
+                        day: !Number.isNaN(+item.content) ? +item.content : 10
+                    }
+                }
+                //自动上传项目
+                if (autoUploadProject.isOpen && userInfo.isLogin) {
+                    onGetProjects(autoUploadProject.day)
+                }
+            })
+        }
+    }, [userInfo.isLogin])
+    const onGetProjects = useMemoizedFn((day) => {
+        const time = moment().subtract(day, "days").startOf("day")
+        const query: ProjectParamsProp = {
+            Type: "project",
+            FrontendType: "project",
+            AfterUpdatedAt: time.unix(),
+            Pagination: {
+                Page: 1,
+                Limit: -1,
+                Order: "desc",
+                OrderBy: "updated_at"
+            }
+        }
+        grpcGetProjects(query).then((res) => {
+            const {Projects} = res
+            const name = currentProject?.ProjectName || ""
+            projectListRef.current = [...(Projects || [])].filter((item) => item.ProjectName !== name) // 过滤当前打开的项目
+            if (projectListRef.current.length > 0) {
+                onExportProject()
+            }
+        })
+    })
+    const onExportProject = useMemoizedFn(() => {
+        if (!projectListRef.current.length) return
+        const value = projectListRef.current.shift()
+        if (!value) return
+        const token = `${value.Id}-${moment().valueOf()}`
+        let filePath = ""
+        let hasError = false
+        ipcRenderer.on(`${token}-data`, (e, data: ProjectIOProgress) => {
+            if (!!data.TargetPath) {
+                filePath = data.TargetPath.replace(/\\/g, "\\")
+            }
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            hasError = true
+            failed(`${value.ProjectName}项目数据同步失败,请手动上传`)
+        })
+        ipcRenderer.once(`${token}-end`, (e, data) => {
+            ipcRenderer.removeAllListeners(`${token}-error`)
+            ipcRenderer.removeAllListeners(`${token}-data`)
+            if (hasError) {
+                onExportProject()
+                return
+            }
+            const onlineToken = `${filePath}-${moment().valueOf()}`
+            const onlineParams: SplitUploadRequest = {
+                url: "fragment/upload",
+                path: filePath,
+                token: onlineToken,
+                type: "Project"
+            }
+            apiSplitUpload(onlineParams).then((TaskStatus) => {
+                if (!TaskStatus) {
+                    failed(`${projectName}项目数据同步失败,请手动上传`)
+                }
+                onExportProject()
+            })
+        })
+        const params: ExportProjectRequest = {
+            Id: value.Id,
+            token
+        }
+        grpcExportProject(params)
+    })
+    //#endregion
     useEffect(() => {
         if (engineLink && isEnpriTrace()) {
             NetWorkApi<any, API.SystemConfigResponse>({

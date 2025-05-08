@@ -67,11 +67,13 @@ const createMessageSender = (stream, options) => {
             processQueue() // 触发处理
         },
         destroy: () => {
-            count = 0
-            isProcessing = false
-            messageStreamRequest = []
+            count = null
+            isProcessing = null
+            messageStreamRequest = null
             retryMap.clear()
             stream.cancel()
+            retryMap = null
+            stream = null
         }
     }
 }
