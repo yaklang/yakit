@@ -181,6 +181,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     // 获取企业版配置信息
     const {eeSystemConfig, setEeSystemConfig} = useEeSystemConfig()
+    const isLoginFirstRef = useRef<boolean>(true) // 只是登录的那一下需要传login参数的标志
     useDebounceEffect(
         () => {
             let collectData = false
@@ -192,14 +193,21 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             let timer
             if (collectData && userInfo.isLogin) {
                 const token = userInfo.token
-                visitorsStatisticsFun(token)
+                if (isLoginFirstRef.current) {
+                    visitorsStatisticsFun(token, 'login')
+                    isLoginFirstRef.current = false
+                } else {
+                    visitorsStatisticsFun(token)
+                }
                 timer = setInterval(() => {
                     visitorsStatisticsFun(token)
                 }, 60000)
             } else {
+                isLoginFirstRef.current = true
                 timer && clearInterval(timer)
             }
             return () => {
+                isLoginFirstRef.current = true
                 timer && clearInterval(timer)
             }
         },

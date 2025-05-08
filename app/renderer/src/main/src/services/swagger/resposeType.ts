@@ -212,6 +212,7 @@ export declare namespace API {
     export interface TouristRequest {
         macCode: string
         token?: string
+        form?: string
     }
     export interface TouristIncrResponse {
         data: TouristIncrDetail[]
