@@ -331,16 +331,9 @@ jobs:
                   ls "${folder_amd64}"
                   ls "${folder_arm64}"
 
-                  extensionVersion=$(curl -sL https://api.github.com/repos/megastep/makeself/releases/latest | grep browser_download_url | cut -d'"' -f4) || {
-                      echo "Failed to download!" >&2
-                      exit 1
-                  }
-                  wget -O makeself.run ${extensionVersion}
-                  sh makeself.run
-                  rm -f makeself.run
-                  chmod +rwx makeself-*/makeself.sh
-                  ./makeself-*/makeself.sh --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
-                  ./makeself-*/makeself.sh --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
+                  brew install makeself
+                  makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
+                  makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
               shell: bash
 
             - name: View Published Content

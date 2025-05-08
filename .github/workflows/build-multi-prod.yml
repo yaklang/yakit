@@ -39,6 +39,10 @@ jobs:
                   wget -O bins/scripts/google-chrome-plugin.zip https://oss-qn.yaklang.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
               shell: bash
 
+            - name: "Download MakeSelf"
+              run: brew install makeself
+              shell: bash
+
             - name: "Fetch Latest Engine Version And Set To Env"
               run: |
                   wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
@@ -129,6 +133,27 @@ jobs:
             - name: Check EnpriTrace if the output is correct
               run: (./packageScript/script/check-build-package.sh EnpriTrace) || { exit 1; }
               shell: bash
+
+            - name: Generate MakeSelf Run File To Linux Legacy
+              run: |
+                  folder_amd64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-amd64"
+                  folder_arm64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-arm64"
+                  mkdir -p "release/${folder_amd64}" "release/${folder_arm64}"
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_amd64}"
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_arm64}"
+
+                  cd release
+                  cp -f "${folder_amd64}.AppImage" "${folder_amd64}"
+                  cp -f "${folder_arm64}.AppImage" "${folder_arm64}"
+                  chmod +rwx "${folder_amd64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_amd64}/${folder_amd64}.AppImage"
+                  chmod +rwx "${folder_arm64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_arm64}/${folder_arm64}.AppImage"
+
+                  makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
+                  makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
+              shell: bash
+
             - name: Upload Yakit(EE) Artifacts
               uses: actions/upload-artifact@v4
               with:
@@ -137,6 +162,7 @@ jobs:
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.exe
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.dmg
                       ./release/EnpriTrace-${{ env.ENV_TAG }}-*.AppImage
+                      ./release/EnpriTrace-${{ env.ENV_TAG }}-*.run
                   if-no-files-found: error
                   retention-days: 1
 
