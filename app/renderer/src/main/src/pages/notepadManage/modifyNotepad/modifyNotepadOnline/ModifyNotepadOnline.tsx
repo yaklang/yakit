@@ -484,6 +484,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         size='large'
                         bordered={false}
                         className={styles["notepad-input"]}
+                        wrapperStyle={{height: 40}}
                         value={tabName}
                         onChange={(e) => {
                             setTabName(e.target.value)
