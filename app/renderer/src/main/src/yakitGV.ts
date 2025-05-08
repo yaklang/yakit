@@ -121,7 +121,9 @@ export enum RemoteGV {
     /** @name historyTableYakitResizeBox比例缓存 */
     historyTableYakitResizeBox = "history_table_yakit_resize_box",
     /** @name mitm手动劫持:是否只看响应 */
-    MITMManualIsOnlyLookResponse = "mitm_manual_is_only_look_response"
+    MITMManualIsOnlyLookResponse = "mitm_manual_is_only_look_response",
+    /** @name 笔记本线上列表搜索关键词缓存 */
+    NotepadOnlineListSearch = "notepad-online-list-search"
 }
 
 /** 项目逻辑全局变量 */
