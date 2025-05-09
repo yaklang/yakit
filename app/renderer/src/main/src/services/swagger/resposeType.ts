@@ -1469,6 +1469,8 @@ export declare namespace API {
         tag?: string
         hash?: string
         groupName?: string[]
+        ruleId?: string
+        version?: string
     }
     export interface Fields {
         data: FieldName[]

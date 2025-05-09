@@ -5,6 +5,7 @@ import {
     CreateSyntaxFlowRuleRequest,
     DeleteSyntaxFlowRuleGroupRequest,
     DeleteSyntaxFlowRuleRequest,
+    DownloadSyntaxFlowRuleRequest,
     QuerySyntaxFlowRuleGroupRequest,
     QuerySyntaxFlowRuleGroupResponse,
     QuerySyntaxFlowRuleRequest,
@@ -28,7 +29,6 @@ export const grpcFetchLocalRuleGroupList: APIFunc<QuerySyntaxFlowRuleGroupReques
     hiddenError
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log('获取本地规则组数据：', request);
         ipcRenderer
             .invoke("QuerySyntaxFlowRuleGroup", request)
             .then(resolve)
@@ -176,7 +176,6 @@ export const grpcSyntaxFlowRuleToOnline: (params: SyntaxFlowRuleToOnlineRequest,
     token
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log("上传：", request)
         ipcRenderer
             .invoke("SyntaxFlowRuleToOnline", request, token)
             .then(resolve)
@@ -188,12 +187,11 @@ export const grpcSyntaxFlowRuleToOnline: (params: SyntaxFlowRuleToOnlineRequest,
 }
 
 /** @name 规则下载 */
-export const grpcDownloadSyntaxFlowRule: (params: QuerySyntaxFlowRuleRequest, token: string) => Promise<unknown> = (
+export const grpcDownloadSyntaxFlowRule: (params: DownloadSyntaxFlowRuleRequest, token: string) => Promise<unknown> = (
     request,
     token
 ) => {
     return new Promise(async (resolve, reject) => {
-        console.log("下载：", request)
         ipcRenderer
             .invoke("DownloadSyntaxFlowRule", request, token)
             .then(resolve)
@@ -207,7 +205,6 @@ export const grpcDownloadSyntaxFlowRule: (params: QuerySyntaxFlowRuleRequest, to
 /** @name 获取线上规则组列表数据 */
 export const httpFetchOnlineRuleGroupList: APIFunc<API.FlowRuleGroupRequest, API.FlowRuleGroupResponse> = (request) => {
     return new Promise((resolve, reject) => {
-        console.log("获取线上规则组列表：", request)
         NetWorkApi<API.FlowRuleGroupRequest, API.FlowRuleGroupResponse>({
             method: "post",
             url: "flow/rule/group",
@@ -224,7 +221,6 @@ export const httpFetchOnlineRuleGroupList: APIFunc<API.FlowRuleGroupRequest, API
 /** @name 删除线上规则组 */
 export const httpDeleteOnlineRuleGroup: APIFunc<API.FlowRuleGroupWhere, API.ActionSucceeded> = (request) => {
     return new Promise(async (resolve, reject) => {
-        console.log("删除线上规则组：", request)
         NetWorkApi<API.FlowRuleGroupWhere, API.ActionSucceeded>({
             method: "delete",
             url: "flow/rule/group",
@@ -241,7 +237,6 @@ export const httpDeleteOnlineRuleGroup: APIFunc<API.FlowRuleGroupWhere, API.Acti
 /** @name 获取线上规则列表数据 */
 export const httpFetchOnlineRuleList: APIFunc<API.FlowRuleRequest, API.FlowRuleResponse> = (request) => {
     return new Promise(async (resolve, reject) => {
-        console.log("获取线上规则列表：", request)
         NetWorkApi<API.FlowRuleRequest, API.FlowRuleResponse>({
             method: "post",
             url: "flow/rule",
@@ -257,7 +252,6 @@ export const httpFetchOnlineRuleList: APIFunc<API.FlowRuleRequest, API.FlowRuleR
 
 /** @name 线上删除本地规则 */
 export const httpDeleteOnlineRule: APIFunc<API.FlowRuleRequest, API.ActionSucceeded> = (request) => {
-    console.log("线上删除本地规则：", request)
     return new Promise(async (resolve, reject) => {
         NetWorkApi<API.FlowRuleRequest, API.ActionSucceeded>({
             method: "delete",

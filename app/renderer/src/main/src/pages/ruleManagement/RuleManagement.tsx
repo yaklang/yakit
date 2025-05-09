@@ -108,26 +108,25 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     const [groupRefresh, setGroupRefresh] = useState<boolean>(false)
     const handleGroupChange = useMemoizedFn((groups: string[]) => {
-        if (groups.length) {
-            if (onlineFilters.groupNames?.length) {
-                setOnlineData({
-                    data: [],
-                    pagemeta: {
-                        page: 1,
-                        limit: 20,
-                        total: 0,
-                        total_page: 0
-                    }
-                })
-                setOnlineFilters({
-                    filterLibRuleKind: ""
-                })
-                onlineRuleGroupListRef.current?.handleReset()
-            }
-        }
         setFilters((filters) => {
             return {...filters, GroupNames: groups}
         })
+        if (groups.length) {
+            // 重置线上列表查询条件 但不会查询数据
+            setOnlineData({
+                data: [],
+                pagemeta: {
+                    page: 1,
+                    limit: 20,
+                    total: 0,
+                    total_page: 0
+                }
+            })
+            setOnlineFilters({
+                filterLibRuleKind: ""
+            })
+            onlineRuleGroupListRef.current?.handleReset()
+        }
     })
 
     const tableHeaderTitle = useMemo(() => {
@@ -153,9 +152,8 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     })
 
     const fetchList = useDebounceFn(
-        (page?: number) => {
+        useMemoizedFn((page?: number) => {
             if (onlineFilters.groupNames?.length) return
-
             if (loading) return
 
             const pagination: Paging = {...DefaultPaging, Page: page || 1}
@@ -189,7 +187,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                         setLoading(false)
                     }, 200)
                 })
-        },
+        }),
         {wait: 300}
     ).run
 
@@ -527,7 +525,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                           FilterRuleKind: onlineFilters.filterRuleKind as FilterRuleKind,
                           FilterLibRuleKind: onlineFilters.filterLibRuleKind as FilterLibRuleKind
                       },
-                Pagination: {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}
+                Token: userInfo.token
             },
             tokenRef.current
         ).then((res) => {
@@ -561,24 +559,23 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
 
     const [groupOnlineRefresh, setGroupOnlineRefresh] = useState<boolean>(false)
     const handleOnlineGroupChange = useMemoizedFn((groups: string[]) => {
-        if (groups.length) {
-            if (filters.GroupNames?.length) {
-                setData({
-                    Rule: [],
-                    Pagination: {...genDefaultPagination(20)},
-                    Total: 0
-                })
-                setFilters({
-                    FilterLibRuleKind: ""
-                })
-                localRuleGroupListRef.current?.handleReset()
-            }
-        } else {
-            fetchList()
-        }
         setOnlineFilters((filters) => {
             return {...filters, groupNames: groups}
         })
+        if (groups.length) {
+            // 重置本地列表查询条件 但不会查询数据
+            setData({
+                Rule: [],
+                Pagination: {...genDefaultPagination(20)},
+                Total: 0
+            })
+            setFilters({
+                FilterLibRuleKind: ""
+            })
+            localRuleGroupListRef.current?.handleReset()
+        } else {
+            fetchList()
+        }
     })
 
     const onlineTableHeaderTitle = useMemo(() => {
@@ -600,10 +597,10 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     )
 
     const fetchOnlineList = useDebounceFn(
-        (page?: number) => {
-            // 线上选中了规则组 才查询规则列表
-            if (!onlineFilters.groupNames?.length) return
+        useMemoizedFn((page?: number) => {
+            if (!(isCommunityIRify() || eeIRifyIsLogin)) return
 
+            if (!onlineFilters.groupNames?.length) return
             if (onlineLoading) return
 
             const pagination: API.Pagination = {...DefaultOnlinePaging, page: page || 1}
@@ -637,7 +634,7 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                         setOnlineLoading(false)
                     }, 200)
                 })
-        },
+        }),
         {wait: 300}
     ).run
 
@@ -646,7 +643,8 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
     }, [onlineFilters])
 
     useUpdateEffect(() => {
-        if (!eeIRifyIsLogin && onlineFilters.groupNames?.length) {
+        // 选中线上 若账号退出登录
+        if (!isCommunityIRify() && !eeIRifyIsLogin && onlineFilters.groupNames?.length) {
             onlineRuleGroupListRef.current?.handleReset()
         }
     }, [eeIRifyIsLogin, onlineFilters])
@@ -880,24 +878,23 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                             线上规则
                             {isCommunityIRify() || eeIRifyIsLogin ? "（下载即可使用）" : "（登录即可下载使用）"}
                         </span>
-                        {isCommunityIRify() ||
-                            (eeIRifyIsLogin && (
-                                <YakitButton
-                                    type='text'
-                                    icon={<OutlineClouddownloadIcon />}
-                                    onClick={() => {
-                                        isDownloadOnlineRuleGroupRef.current = true
-                                        infoRef.current = {
-                                            type: "download",
-                                            title: "下载提示",
-                                            content: "如果存在相同id规则会直接覆盖，是否确认下载"
-                                        }
-                                        setInfoVisible(true)
-                                    }}
-                                >
-                                    一键下载
-                                </YakitButton>
-                            ))}
+                        {(isCommunityIRify() || eeIRifyIsLogin) && (
+                            <YakitButton
+                                type='text'
+                                icon={<OutlineClouddownloadIcon />}
+                                onClick={() => {
+                                    isDownloadOnlineRuleGroupRef.current = true
+                                    infoRef.current = {
+                                        type: "download",
+                                        title: "下载提示",
+                                        content: "如果存在相同id规则会直接覆盖，是否确认下载"
+                                    }
+                                    setInfoVisible(true)
+                                }}
+                            >
+                                一键下载
+                            </YakitButton>
+                        )}
                     </div>
                     <div className={styles["group-list"]}>
                         <OnlineRuleGroupList
