@@ -1,0 +1,41 @@
+.shortcut-key {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .header {
+        color: #31343f;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 30px;
+        padding: 10px 0 10px 20px;
+    }
+
+    .shortcut-key-content {
+        flex: 1;
+        overflow: hidden auto;
+        padding-left: 30px;
+        border-top: 1px solid #eaecf3;
+    }
+
+    .key-opt {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        .opt-name {
+            color: #31343f;
+            font-size: 14px;
+            line-height: 20px;
+            padding: 7px;
+        }
+        .opt-key {
+            cursor: pointer;
+            padding: 7px;
+            color: #85899e;
+            font-size: 14px;
+            line-height: 20px;
+            user-select: none;
+        }
+    }
+}

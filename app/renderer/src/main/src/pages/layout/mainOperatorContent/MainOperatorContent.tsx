@@ -158,6 +158,7 @@ import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -465,6 +466,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const {routeKeyToLabel} = props
 
     const [loading, setLoading] = useState(false)
+
+    useShortcutKeyTrigger("screenshot", () => {
+        ipcRenderer.invoke("activate-screenshot")
+    })
 
     const {
         setPagesData,
@@ -3964,7 +3969,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 content: (
                     <BatchAddNewGroup
                         initialValues={{
-                            groupName: '',
+                            groupName: "",
                             tabIds: [item.id]
                         }}
                         allGroup={collectGroupsWithChildren(cloneDeep(subPage))}

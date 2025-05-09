@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {PluginSourceType, PluginToDetailInfo} from "../type"
 import {PluginHubList} from "../pluginHubList/PluginHubList"
 import {PluginHubDetail, PluginHubDetailRefProps} from "../pluginHubDetail/PluginHubDetail"
@@ -7,6 +7,8 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RemotePluginGV} from "@/enums/plugin"
 import {YakitGetOnlinePlugin} from "@/pages/mitm/MITMServerHijacking/MITMPluginLocalList"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {YakitRoute} from "@/enums/yakitRoute"
 
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
@@ -21,6 +23,17 @@ interface PluginHubProps {}
 const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const {} = props
     const [active, setActive] = useState<PluginSourceType>()
+
+    const wrapper = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(wrapper)
+    useEffect(() => {
+        if (inViewport) {
+            registerShortcutKeyHandle(YakitRoute.Plugin_Hub)
+            return () => {
+                unregisterShortcutKeyHandle(YakitRoute.Plugin_Hub)
+            }
+        }
+    }, [inViewport])
 
     useEffect(() => {
         getRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI).then((val) => {
@@ -70,7 +83,7 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     /** ---------- 详情组件逻辑 End ---------- */
 
     return (
-        <div id={wrapperId} className={styles["yakit-plugin-hub"]}>
+        <div ref={wrapper} id={wrapperId} className={styles["yakit-plugin-hub"]}>
             <div className={classNames(styles["list"], {[styles["out-list"]]: hiddenDetail || !isDetail})}>
                 <PluginHubList
                     rootElementId={wrapperId}

@@ -59,11 +59,16 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import styles from "./PluginHubList.module.scss"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 interface HubListOnlineProps extends HubListBaseProps {}
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+
+    useShortcutKeyTrigger("newPlugin", () => {
+        onNewPlugin()
+    })
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)

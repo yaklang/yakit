@@ -152,6 +152,7 @@ import {YakRunnerAuditHole} from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
 import {Misstatement} from "@/pages/misstatement/Misstatement"
 import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
+import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -344,7 +345,11 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.YakScript
 ]
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+export const defaultFixedTabs: YakitRoute[] = [
+    YakitRoute.NewHome,
+    YakitRoute.DB_HTTPHistory,
+    YakitRoute.DB_HTTPHistoryAnalysis
+]
 /** 一级tab固定展示tab支持多开页面 */
 export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
@@ -467,7 +472,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            // return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            return <ShortcutKey page='global' />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
