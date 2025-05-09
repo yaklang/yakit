@@ -31,6 +31,7 @@
 
         .notepad-row-content {
             width: 100%;
+            cursor: pointer;
         }
     }
     .notepad-row:hover + .notepad-row {
