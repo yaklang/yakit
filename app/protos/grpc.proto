@@ -733,6 +733,10 @@ service Yak {
   rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage);
   rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage);
 
+  rpc CreateFingerprintGroup(FingerprintGroup) returns (DbOperateMessage);
+  rpc GetAllFingerprintGroup(Empty) returns (FingerprintGroups);
+  rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage);
+  rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage);
 
   // 反弹shell命令生成
   rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
@@ -5824,6 +5828,7 @@ message FingerprintRule {
   string WebPath = 4;
   string ExtInfo = 5;
   string MatchExpression = 6;
+  repeated string GroupName = 7;
 }
 
 
@@ -5831,6 +5836,7 @@ message FingerprintFilter {
   repeated string Vendor = 1;
   repeated string Product = 2;
   repeated int64 IncludeId = 3;
+  repeated string GroupName = 4;
 }
 
 message QueryFingerprintRequest {
@@ -5856,6 +5862,23 @@ message UpdateFingerprintRequest {
   int64 Id = 1;
   string RuleName = 2;
   FingerprintRule Rule = 3;
+}
+
+message FingerprintGroup {
+  string GroupName = 1;
+  int64  Count = 2;
+}
+message FingerprintGroups {
+  repeated FingerprintGroup Data = 1;
+}
+
+message RenameFingerprintGroupRequest {
+  string GroupName = 1;
+  string NewGroupName = 2;
+}
+
+message DeleteFingerprintGroupRequest {
+  repeated string GroupNames = 1;
 }
 
 
