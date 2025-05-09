@@ -1,100 +1,92 @@
 import React, {useEffect, useRef, useState} from "react"
-import {NotepadOnlineListProps} from "./NotepadOnlineListType"
-import styles from "./NotepadOnlineList.module.scss"
+import {NotepadLocalListProps} from "./NotepadLocalListType"
+import styles from "./NotepadLocalList.module.scss"
 import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {RemoteGV} from "@/yakitGV"
-import {API} from "@/services/swagger/resposeType"
 import {useInViewport, useMemoizedFn} from "ahooks"
-import {useStore} from "@/store"
-import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {
-    apiGetNotepadDetail,
-    apiGetNotepadList,
-    convertGetNotepadRequest,
-    GetNotepadRequestProps
+    grpcQueryNote,
+    grpcQueryNoteById,
+    Note,
+    QueryNoteRequest,
+    QueryNoteResponse,
+    SearchNoteContentRequest
 } from "@/pages/notepadManage/notepadManage/utils"
-import classNames from "classnames"
+import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
+import {genDefaultPagination} from "@/pages/invoker/schema"
+import {RemoteGV} from "@/yakitGV"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
+import classNames from "classnames"
+import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {usePageInfo} from "@/store/pageInfo"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {shallow} from "zustand/shallow"
-import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 
-const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) => {
-    const {notepadHash} = props
-    const userInfo = useStore((s) => s.userInfo)
+const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => {
+    const {noteId} = props
+
     const {notepadPageList} = usePageInfo(
         (s) => ({
             notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
         }),
         shallow
     )
+
     const [keyWord, setKeyWord] = useState<string>("")
     const [refresh, setRefresh] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
     const [spinning, setSpinning] = useState<boolean>(false)
     const [isRef, setIsRef] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
-    const [response, setResponse] = useState<API.GetNotepadResponse>({
-        data: [],
-        pagemeta: {
-            page: 1,
-            limit: 20,
-            total: 0,
-            total_page: 0
-        }
+    const [response, setResponse] = useState<QueryNoteResponse>({
+        Data: [],
+        Pagination: genDefaultPagination(20),
+        Total: 0
     })
 
     const searchKeywordsRef = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
-    const notepadOnlineListRef = useRef<HTMLDivElement>(null)
-    const [inViewPort = true] = useInViewport(notepadOnlineListRef)
+    const notepadLocalListRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(notepadLocalListRef)
 
     useEffect(() => {
-        if (!userInfo.isLogin) return
         getList()
-    }, [userInfo.isLogin, inViewPort, refresh])
-
+    }, [inViewPort, refresh])
     const getList = useMemoizedFn(async (page?: number) => {
         setLoading(true)
-        const params: PluginListPageMeta = !page
-            ? {page: 1, limit: 20, order_by: "updated_at", order: "desc"}
-            : {
-                  page: +response.pagemeta.page + 1,
-                  limit: +response.pagemeta.limit || 20,
-                  order: "desc",
-                  order_by: "updated_at"
-              }
-        const newQuery: GetNotepadRequestProps = convertGetNotepadRequest(
-            {keyword: keyWord, userName: "", type: "keyword"},
-            params
-        )
-        if (newQuery.page === 1) {
+        const newQuery: QueryNoteRequest = {
+            Filter: {
+                ...defaultNoteFilter,
+                Title: keyWord ? [keyWord] : []
+            },
+            Pagination: {
+                ...genDefaultPagination(20),
+                Page: page || 1
+            }
+        }
+        if (newQuery.Pagination.Page === 1) {
             setSpinning(true)
         }
         try {
-            const res = await apiGetNotepadList(newQuery)
-            if (!res.data) res.data = []
-            const newPage = +res.pagemeta.page
-            const length = newPage === 1 ? res.data.length : res.data.length + response.data.length
-            setHasMore(length < +res.pagemeta.total)
-            let newRes: API.GetNotepadResponse = {
-                data: newPage === 1 ? res?.data : [...response.data, ...(res?.data || [])],
-                pagemeta: res.pagemeta || {
-                    limit: 20,
-                    page: 1,
-                    total: 0,
-                    total_page: 1
-                }
+            const res = await grpcQueryNote(newQuery)
+            if (!res.Data) res.Data = []
+            const newPage = +res.Pagination.Page
+            const length = newPage === 1 ? res.Data.length : res.Data.length + response.Data.length
+            setHasMore(length < +res.Total)
+            let newRes: QueryNoteResponse = {
+                Data: newPage === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
+                Pagination: res?.Pagination || {
+                    ...genDefaultPagination(20)
+                },
+                Total: res.Total
             }
+            setResponse(newRes)
             if (newPage === 1) {
                 setIsRef(!isRef)
             }
-            setResponse(newRes)
         } catch (error) {}
         setTimeout(() => {
             setLoading(false)
@@ -103,7 +95,7 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
     })
     /**@description 列表加载更多 */
     const loadMoreData = useMemoizedFn(() => {
-        getList(+response.pagemeta.page + 1)
+        getList(+response.Pagination.Page + 1)
     })
     const onSearch = useMemoizedFn((value) => {
         if (value) {
@@ -122,13 +114,12 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
     const onPressEnter = useMemoizedFn((e) => {
         onSearch(e.target.value)
     })
-
-    const goNotepadDetail = useMemoizedFn((rowData: API.GetNotepadList) => {
-        if (notepadHash === rowData.hash) return
+    const goNotepadDetail = useMemoizedFn((rowData: Note) => {
+        if (noteId === rowData.Id) return
         setSpinning(true)
-        apiGetNotepadDetail(rowData.hash)
+        grpcQueryNoteById(rowData.Id)
             .then((res) => {
-                toEditNotepad({pageInfo: {notepadHash: res.hash, title: res.title}, notepadPageList})
+                toEditNotepad({pageInfo: {notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
             })
             .finally(() => {
                 setTimeout(() => {
@@ -137,11 +128,11 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
             })
     })
     return (
-        <div className={styles["notepad-online-list-body"]} ref={notepadOnlineListRef}>
+        <div className={styles["notepad-local-list-body"]} ref={notepadLocalListRef}>
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
-                cacheHistoryDataKey={RemoteGV.NotepadOnlineListSearch}
+                cacheHistoryDataKey={RemoteGV.NotepadLocalListSearch}
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1, paddingRight: 4}}
@@ -156,22 +147,22 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
                 />
             </YakitAutoComplete>
             <YakitSpin spinning={spinning}>
-                <RollingLoadList<API.GetNotepadList>
-                    data={response.data}
+                <RollingLoadList<Note>
+                    data={response.Data}
                     loadMoreData={loadMoreData}
-                    renderRow={(rowData: API.GetNotepadList, index: number) => {
+                    renderRow={(rowData: Note, index: number) => {
                         return (
                             <div
                                 className={classNames(styles["notepad-row-content"], "content-ellipsis")}
                                 onClick={() => goNotepadDetail(rowData)}
                             >
-                                {rowData.title}
+                                {rowData.Title}
                             </div>
                         )
                     }}
                     classNameRow={styles["notepad-row"]}
                     classNameList={styles["notepad-list"]}
-                    page={response.pagemeta.page}
+                    page={response.Pagination.Page}
                     hasMore={hasMore}
                     loading={loading}
                     defItemHeight={40}
@@ -183,4 +174,4 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
     )
 })
 
-export default NotepadOnlineList
+export default NotepadLocalList
