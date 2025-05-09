@@ -98,5 +98,7 @@ export enum YakitRoute {
     System_Config = "system-config",
 
     // 快捷键设置
-    ShortcutKey = "shortcut-key"
+    ShortcutKey = "shortcut-key",
+    // 指纹库
+    FingerprintManage = "fingerprint-manage"
 }
