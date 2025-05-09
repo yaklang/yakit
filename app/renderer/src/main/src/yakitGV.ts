@@ -123,7 +123,9 @@ export enum RemoteGV {
     /** @name mitm手动劫持:是否只看响应 */
     MITMManualIsOnlyLookResponse = "mitm_manual_is_only_look_response",
     /** @name 笔记本线上列表搜索关键词缓存 */
-    NotepadOnlineListSearch = "notepad-online-list-search"
+    NotepadOnlineListSearch = "notepad_online_list_search",
+    /** @name 笔记本本地列表搜索关键词缓存 */
+    NotepadLocalListSearch = "notepad_local_list_search"
 }
 
 /** 项目逻辑全局变量 */
