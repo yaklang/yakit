@@ -471,7 +471,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     <Tooltip title={userInfo.companyName}>{userAvatar}</Tooltip>
                 </div>
             }
-            listDom={<NotepadOnlineList />}
+            listDom={<NotepadOnlineList pageId={pageId} />}
         >
             <div className={styles["notepad-content"]} ref={notepadRef}>
                 <div className={styles["notepad-heard"]}>

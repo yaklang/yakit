@@ -1,3 +1,3 @@
-export interface NotepadOnlineListProps{
-    
+export interface NotepadOnlineListProps {
+    pageId: string
 }
