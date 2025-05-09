@@ -161,6 +161,7 @@ const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebF
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
 const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
+const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -252,7 +253,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "notepad-manage": {label: "记事本"},
     "modify-notepad": {label: "编辑记事本"},
     "yakrunner-audit-hole": {label: "审计漏洞"},
-    "system-config": {label: "系统配置"}
+    "system-config": {label: "系统配置"},
+    "fingerprint-manage": {label: "指纹库"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -293,7 +295,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Rule_Management,
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
-    YakitRoute.System_Config
+    YakitRoute.System_Config,
+    YakitRoute.FingerprintManage
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -334,7 +337,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Rule_Management,
     YakitRoute.Modify_Notepad,
     YakitRoute.Notepad_Manage,
-    YakitRoute.YakRunner_Audit_Hole
+    YakitRoute.YakRunner_Audit_Hole,
+    YakitRoute.FingerprintManage
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -344,7 +348,11 @@ export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.YakScript
 ]
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+export const defaultFixedTabs: YakitRoute[] = [
+    YakitRoute.NewHome,
+    YakitRoute.DB_HTTPHistory,
+    YakitRoute.DB_HTTPHistoryAnalysis
+]
 /** 一级tab固定展示tab支持多开页面 */
 export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
@@ -467,7 +475,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            // return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            return <FingerprintManage />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -605,6 +614,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:
             return <SystemConfig />
+        case YakitRoute.FingerprintManage:
+            return <FingerprintManage />
         default:
             return <div />
     }
