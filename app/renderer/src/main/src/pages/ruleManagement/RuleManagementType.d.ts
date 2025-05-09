@@ -241,5 +241,9 @@ export interface SyntaxFlowRuleOnlineProgress {
     Message: string
     MessageType: string
 }
+export interface DownloadSyntaxFlowRuleRequest {
+    Token: string
+    Filter: SyntaxFlowRuleFilter
+}
 // #endregion
 /** ---------- 线上规则相关接口定义 End ---------- */

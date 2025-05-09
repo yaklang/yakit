@@ -2460,7 +2460,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                 grpcDownloadSyntaxFlowRule(
                     {
                         Filter: {GroupNames: [ruleGroupItemRef.current.groupName]},
-                        Pagination: {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}
+                        Token: userInfo.token
                     },
                     downloadTokenRef.current
                 ).then((res) => {
