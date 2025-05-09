@@ -166,6 +166,7 @@ const WebFuzzerPage = React.lazy(() => import("@/pages/fuzzer/WebFuzzerPage/WebF
 const PluginHub = React.lazy(() => import("@/pages/pluginHub/pluginHub/PluginHub"))
 const ModifyNotepad = React.lazy(() => import("@/pages/notepadManage/modifyNotepad/ModifyNotepad"))
 const NotepadManage = React.lazy(() => import("@/pages/notepadManage/notepadManage/NotepadManage"))
+const FingerprintManage = React.lazy(() => import("@/pages/fingerprintManage/FingerprintManage"))
 
 /**
  * @description 页面路由对应的页面信息
@@ -259,7 +260,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-audit-hole": {label: "审计漏洞"},
     "system-config": {label: "系统配置"},
     "yak-java-decompiler": {label: "Java 反编译"},
-    "shortcut-key": {label: "快捷键设置"}
+    "shortcut-key": {label: "快捷键设置"},
+    "fingerprint-manage": {label: "指纹库"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -302,7 +304,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.System_Config,
     YakitRoute.Yak_Java_Decompiler,
-    YakitRoute.ShortcutKey
+    YakitRoute.ShortcutKey,
+    YakitRoute.FingerprintManage
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -345,7 +348,8 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.Yak_Java_Decompiler,
-    YakitRoute.ShortcutKey
+    YakitRoute.ShortcutKey,
+    YakitRoute.FingerprintManage
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
@@ -486,7 +490,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            // return <>{isIRify() ? <IRifyHome /> : <Home />}</>
+            return <FingerprintManage />
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>
@@ -628,6 +633,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakJavaDecompiler />
         case YakitRoute.ShortcutKey:
             return <ShortcutKeyList />
+        case YakitRoute.FingerprintManage:
+            return <FingerprintManage />
         default:
             return <div />
     }

@@ -100,5 +100,7 @@ export enum YakitRoute {
     // 快捷键设置
     ShortcutKey = "shortcut-key",
     /** Java 反编译 */
-    Yak_Java_Decompiler = "yak-java-decompiler"
+    Yak_Java_Decompiler = "yak-java-decompiler",
+    // 指纹库
+    FingerprintManage = "fingerprint-manage"
 }
