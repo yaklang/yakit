@@ -1,0 +1,2 @@
+@use "../../../modifyNotepad/modifyNotepadOnline/NotepadOnlineList/NotepadOnlineList.module.scss" as NotepadOnlineList;
+@include NotepadOnlineList.notepad-list-body("local");
