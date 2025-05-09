@@ -39,6 +39,8 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {toAddNotepad, toEditNotepad} from "../../notepadManage/NotepadManage"
 import {defaultNote} from "@/defaultConstants/Note"
 
+const NotepadLocalList = React.lazy(() => import("./NotepadLocalList/NotepadLocalList"))
+
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -362,6 +364,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                         />
                     </div>
                 }
+                listDom={<NotepadLocalList noteId={note.Id} />}
             >
                 <div className={styles["notepad-content"]} ref={notepadRef}>
                     <div className={styles["notepad-heard"]}>
