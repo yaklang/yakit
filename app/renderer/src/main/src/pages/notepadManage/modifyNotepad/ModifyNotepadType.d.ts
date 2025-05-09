@@ -17,11 +17,12 @@ export interface ModifyNotepadContentRefProps {
 export interface ModifyNotepadContentProps {
     ref?: React.Ref<ModifyNotepadContentRefProps>
     tabName: string
-    spinning?:boolean
+    spinning?: boolean
     children?: ReactNode
     titleExtra: ReactNode
     notepadDetailOnline?: API.GetNotepadList
     notepadDetailLocal?: NoteLocal
+    listDom: ReactNode
 }
 
 export interface MilkdownCatalogueProps {

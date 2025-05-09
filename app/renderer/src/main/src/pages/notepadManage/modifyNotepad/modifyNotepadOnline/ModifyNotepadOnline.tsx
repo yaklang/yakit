@@ -48,6 +48,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {formatTimestamp} from "@/utils/timeUtil"
 
 const NotepadShareModal = React.lazy(() => import("../../NotepadShareModal/NotepadShareModal"))
+const NotepadOnlineList = React.lazy(() => import("./NotepadOnlineList/NotepadOnlineList"))
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
     const {pageId} = props
@@ -470,6 +471,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     <Tooltip title={userInfo.companyName}>{userAvatar}</Tooltip>
                 </div>
             }
+            listDom={<NotepadOnlineList notepadHash={notepadDetail.hash} />}
         >
             <div className={styles["notepad-content"]} ref={notepadRef}>
                 <div className={styles["notepad-heard"]}>
@@ -484,6 +486,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         size='large'
                         bordered={false}
                         className={styles["notepad-input"]}
+                        wrapperStyle={{height: 40}}
                         value={tabName}
                         onChange={(e) => {
                             setTabName(e.target.value)
