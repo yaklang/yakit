@@ -12,6 +12,7 @@ on:
                     - darwin
                     - linux
                     - mwl
+                    - uos
             legacy:
                 description: "Legacy system version"
                 required: false
@@ -109,11 +110,11 @@ jobs:
               run: wget -O bins/yak_darwin_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
 
             - name: "Download Yak Engine via wget(Linux)"
-              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              if: ${{ inputs.engine && contains(fromJSON('["linux","uos","mwl"]'), inputs.platform) }}
               id: download-linux-engine
               run: wget -O bins/yak_linux_amd64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_amd64 && zip ./bins/yak_linux_amd64.zip ./bins/yak_linux_amd64 && rm ./bins/yak_linux_amd64
             - name: "Download Yak Engine via wget(Linux-arm64)"
-              if: ${{ inputs.engine && contains(fromJSON('["linux","mwl"]'), inputs.platform) }}
+              if: ${{ inputs.engine && contains(fromJSON('["linux","uos","mwl"]'), inputs.platform) }}
               id: download-linux-engine-arm64
               run: wget -O bins/yak_linux_arm64 https://oss-qn.yaklang.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_linux_arm64 && zip ./bins/yak_linux_arm64.zip ./bins/yak_linux_arm64 && rm ./bins/yak_linux_arm64
 
@@ -178,6 +179,25 @@ jobs:
               if: ${{ inputs.version == 'irifyee' }}
               working-directory: ./
               run: yarn build-render${{ inputs.devTool && '-test' || '' }}-irify-enterprise
+
+            - name: Generate software prefix name
+              run: |
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "ee" ]; then
+                    echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "se" ]; then
+                    echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
+                    echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
+                    echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
+                  else
+                    echo "No software version obtained" >&2
+                    exit 1
+                  fi
+            - name: Show ENV_Software_Name
+              run: echo "ENV_Software_Name： $ENV_Software_Name"
 
             - name: Build Yakit (MultiPlatform)
               if: ${{ inputs.platform == 'mwl' }}
@@ -264,6 +284,58 @@ jobs:
                     exit 1
                   fi
 
+            - name: Build Yakit (UOS)
+              if: ${{ inputs.platform == 'uos' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+                  LEGACY_SUFFIX: ${{ inputs.legacy && '-legacy' || '' }} # 处理 legacy 后缀逻辑
+              working-directory: ./
+              run: |
+                  if [ "${{ inputs.version }}" = "ce" ]; then
+                    yarn pack-linux${{ env.LEGACY_SUFFIX }}
+                  elif [ "${{ inputs.version }}" = "ee" ]; then
+                    yarn pack-linux-ee${{ env.LEGACY_SUFFIX }}
+                  elif [ "${{ inputs.version }}" = "se" ]; then
+                    yarn pack-linux-se${{ env.LEGACY_SUFFIX }}
+                  elif [ "${{ inputs.version }}" = "irify" ]; then
+                    yarn pack-linux-irify${{ env.LEGACY_SUFFIX }}
+                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
+                    yarn pack-linux-irify-ee${{ env.LEGACY_SUFFIX }}
+                  else
+                    echo "未知的输入值: ${{ inputs.version }}" >&2
+                    exit 1
+                  fi
+
+            - name: MakeSelf Yakit (UOS)
+              if: ${{ inputs.platform == 'uos' }}
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+                  LEGACY_SUFFIX: ${{ inputs.legacy && '-legacy' || '' }} # 处理 legacy 后缀逻辑
+              working-directory: ./
+              run: |
+                  folder_amd64="${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ env.LEGACY_SUFFIX }}-amd64"
+                  folder_arm64="${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ env.LEGACY_SUFFIX }}-arm64"
+                  mkdir -p "release/${folder_amd64}" "release/${folder_arm64}"
+
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_amd64}"
+                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_arm64}"
+
+                  cd release
+                  cp -f "${folder_amd64}.AppImage" "${folder_amd64}"
+                  cp -f "${folder_arm64}.AppImage" "${folder_arm64}"
+                  chmod +rwx "${folder_amd64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_amd64}/${folder_amd64}.AppImage"
+                  chmod +rwx "${folder_arm64}/uos-legacy-arm.sh"
+                  chmod +rwx "${folder_arm64}/${folder_arm64}.AppImage"
+
+                  ls "${folder_amd64}"
+                  ls "${folder_arm64}"
+
+                  brew install makeself
+                  makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
+                  makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
+              shell: bash
+
             - name: View Published Content
               run:
                   ls ./release
@@ -272,26 +344,7 @@ jobs:
                   # Yakit              -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRify           -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
-
-            - name: Generate software prefix name
-              run: |
-                  if [ "${{ inputs.version }}" = "ce" ]; then
-                    echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "se" ]; then
-                    echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "irify" ]; then
-                    echo "ENV_Software_Name=IRify" >> $GITHUB_ENV
-                  elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
-                  else
-                    echo "No software version obtained" >&2
-                    exit 1
-                  fi
-
-            - name: Show ENV_Software_Name
-              run: echo "ENV_Software_Name： $ENV_Software_Name"
+                  # EnpriTrace      -1.4.1-0426-linux-legacy-arm64.run
 
             - name: Upload Yakit(CE) Artifacts Windows
               if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
@@ -335,5 +388,23 @@ jobs:
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
                   path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.AppImage
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts UOS Amd
+              if: ${{ contains(fromJSON('["uos"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
+                  if-no-files-found: error
+                  retention-days: 7
+
+            - name: Upload Yakit(CE) Artifacts UOS Arm
+              if: ${{ contains(fromJSON('["uos"]'), inputs.platform) }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
+                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
                   if-no-files-found: error
                   retention-days: 7
