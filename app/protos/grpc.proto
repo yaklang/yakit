@@ -455,7 +455,7 @@ service Yak {
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement
+  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement 
 
   rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
@@ -599,13 +599,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -757,7 +757,7 @@ service Yak {
   rpc QuerySyntaxFlowSameGroup(QuerySyntaxFlowSameGroupRequest)returns (QuerySyntaxFlowSameGroupResponse);
 
   rpc SyntaxFlowRuleToOnline(SyntaxFlowRuleToOnlineRequest) returns (stream SyntaxFlowRuleOnlineProgress);
-  rpc DownloadSyntaxFlowRule(QuerySyntaxFlowRuleRequest) returns (stream SyntaxFlowRuleOnlineProgress);
+  rpc DownloadSyntaxFlowRule(DownloadSyntaxFlowRuleRequest) returns (stream SyntaxFlowRuleOnlineProgress);
 
   // syntaxflow scan
   rpc SyntaxFlowScan(stream SyntaxFlowScanRequest) returns (stream SyntaxFlowScanResponse);
@@ -1924,8 +1924,8 @@ message GetProjectsRequest {
   int64 FolderId = 4;
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
-  string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  string Type = 6; 
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -2805,7 +2805,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message Report {
@@ -6092,6 +6092,11 @@ message SyntaxFlowRuleOnlineProgress {
   string MessageType = 3;
 }
 
+message DownloadSyntaxFlowRuleRequest {
+  string Token = 1;
+  SyntaxFlowRuleFilter Filter = 2;
+}
+
 message SyntaxFlowScanRequest{
   string ControlMode = 1; // 控制模式 "start" "pause" "resume" "status"
 
@@ -6121,7 +6126,7 @@ message SyntaxFlowScanTaskFilter{
   int64  UntilId = 5;
   string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
-  bool HaveRisk = 17; // 只显示有风险的任务
+  bool HaveRisk = 17; // 是否有风险
 }
 
 message QuerySyntaxFlowScanTaskResponse{
@@ -6370,9 +6375,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -6769,3 +6774,6 @@ message SingleManualHijackInfoMessage{
 
   string Method = 16;
 }
+
+
+
