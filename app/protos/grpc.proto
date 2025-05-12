@@ -5837,6 +5837,7 @@ message FingerprintFilter {
   repeated string Product = 2;
   repeated int64 IncludeId = 3;
   repeated string GroupName = 4;
+  string Keyword = 5;
 }
 
 message QueryFingerprintRequest {
