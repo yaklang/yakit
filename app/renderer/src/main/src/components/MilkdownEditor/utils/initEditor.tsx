@@ -315,7 +315,6 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly
                         })
-                        console.log("defaultValue", defaultValue)
                         ctx.set(defaultValueCtx, defaultValue || "")
                         collabParams.onCollab(ctx)
                         diffProps?.onDiff(ctx)
