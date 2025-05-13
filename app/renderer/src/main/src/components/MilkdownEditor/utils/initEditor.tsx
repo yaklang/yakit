@@ -54,6 +54,8 @@ import {jumpToLinePlugin, jumpToLinePluginKey} from "./jumpLine"
 import {editorViewCtx} from "@milkdown/core"
 import {TextSelection} from "@milkdown/kit/prose/state"
 import type {EditorView} from "@milkdown/prose/view"
+import {mentionFactory, MentionView} from "../Mention/mention"
+
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
     onSaveHistory: (newValue: string) => void
@@ -310,6 +312,11 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                 component: TooltipView
                             })
                         })
+                        ctx.set(mentionFactory.key, {
+                            view: pluginViewFactory({
+                                component: MentionView
+                            })
+                        })
 
                         // 配置为只读
                         ctx.set(editorViewOptionsCtx, {
@@ -330,6 +337,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         })
                     })
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
+                    .use(mentionFactory) // 提及@
                     .use(gfm)
                     .use(cursor)
                     .use(tooltip)
