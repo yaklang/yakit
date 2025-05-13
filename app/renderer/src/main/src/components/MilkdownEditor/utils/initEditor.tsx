@@ -63,6 +63,7 @@ import {cursor} from "@milkdown/kit/plugin/cursor"
 import {trailing} from "@milkdown/kit/plugin/trailing"
 import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
+import {mentionFactory, MentionView} from "../Mention/mention"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -319,6 +320,11 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                 component: TooltipView
                             })
                         })
+                        ctx.set(mentionFactory.key, {
+                            view: pluginViewFactory({
+                                component: MentionView
+                            })
+                        })
 
                         // 配置为只读
                         ctx.set(editorViewOptionsCtx, {
@@ -337,6 +343,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         })
                     })
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
+                    .use(mentionFactory) // 提及@
                     .use(gfm)
                     .use(cursor)
                     .use(tooltip)
