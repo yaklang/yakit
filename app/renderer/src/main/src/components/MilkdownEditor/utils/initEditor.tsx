@@ -54,7 +54,8 @@ import {jumpToLinePlugin, jumpToLinePluginKey} from "./jumpLine"
 import {editorViewCtx} from "@milkdown/core"
 import {TextSelection} from "@milkdown/kit/prose/state"
 import type {EditorView} from "@milkdown/prose/view"
-import {mentionFactory, MentionView} from "../Mention/mention"
+import {mentionFactory, MentionListView} from "../Mention/MentionListView"
+import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -302,6 +303,15 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 )
             ].flat()
             const markPlugin = [...markCustomPlugin()].flat()
+            const mentionPlugin = [
+                mentionCustomPlugin(),
+                mentionFactory,
+                $view(mentionCustomSchema.node, () =>
+                    nodeViewFactory({
+                        component: ()=><div>@</div>
+                    })
+                )
+            ].flat()
             //#endregion
             return (
                 Editor.make()
@@ -314,7 +324,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         })
                         ctx.set(mentionFactory.key, {
                             view: pluginViewFactory({
-                                component: MentionView
+                                component: MentionListView
                             })
                         })
 
@@ -337,7 +347,6 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         })
                     })
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
-                    .use(mentionFactory) // 提及@
                     .use(gfm)
                     .use(cursor)
                     .use(tooltip)
@@ -381,6 +390,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     // trackDeletePlugin
                     .use(trackDeletePlugin())
                     // .use(jumpToLinePlugin(0))
+                    // mention 提及@
+                    .use(mentionPlugin)
                     .use(customPlugin || [])
             )
         },

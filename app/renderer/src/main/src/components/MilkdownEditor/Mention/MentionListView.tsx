@@ -3,7 +3,7 @@ import {Ctx} from "@milkdown/kit/ctx"
 import {slashFactory, SlashProvider} from "@milkdown/kit/plugin/slash"
 import {useInstance} from "@milkdown/react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
-import styles from "./mention.module.scss"
+import styles from "./MentionListView.module.scss"
 import {useDebounceEffect, useMemoizedFn} from "ahooks"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -12,13 +12,14 @@ import {apiGetUserSearch} from "@/pages/notepadManage/NotepadShareModal/utils"
 import {API} from "@/services/swagger/resposeType"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {yakitNotify} from "@/utils/notification"
-
+import {callCommand} from "@milkdown/kit/utils"
+import {mentionCommand} from "../utils/mentionPlugin"
 export const mentionFactory = slashFactory("Commands")
 
-interface MentionViewProps {}
+interface MentionListViewProps {}
 const mentionWidth = 240
 const mentionTarget = "@"
-export const MentionView: React.FC<MentionViewProps> = () => {
+export const MentionListView: React.FC<MentionListViewProps> = () => {
     const [isSendMessage, setIsSendMessage] = useState<boolean>(false)
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [keyWord, setKeyWord] = useState<string>("")
@@ -89,7 +90,7 @@ export const MentionView: React.FC<MentionViewProps> = () => {
 
     const onSelected = useMemoizedFn((row: API.UserList) => {
         setCurrentSelected(row)
-        // TODO: 这里需要在文档中插入用户
+        action(callCommand(mentionCommand.key, row.name))
         // 关闭窗口
         view.focus()
         slashProvider.current?.hide()

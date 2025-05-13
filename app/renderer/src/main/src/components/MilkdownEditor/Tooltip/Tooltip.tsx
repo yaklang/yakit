@@ -40,6 +40,7 @@ import {TextSelection, type EditorState} from "@milkdown/kit/prose/state"
 import type {VirtualElement} from "@floating-ui/dom"
 import {computePosition, flip, offset} from "@floating-ui/dom"
 import {posToDOMRect} from "@milkdown/prose"
+import {mentionCustomSchema} from "../utils/mentionPlugin"
 
 export const tooltip = tooltipFactory("Text")
 
@@ -110,7 +111,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
     useDebounceEffect(
         () => {
             if (loading || !tooltipProvider.current) return
-            if (isSelectFile() || isSelectImg()) {
+            if (isSelectFile() || isSelectImg() || isSelectMention()) {
                 tooltipProvider.current?.hide()
                 return
             }
@@ -209,6 +210,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             default:
                 return false
         }
+    })
+    /**判断选中节点是否为 @/提及 */
+    const isSelectMention = useMemoizedFn(() => {
+        const selectedNode = getSelectNode()
+        return selectedNode?.type.name === mentionCustomSchema.node.id
     })
     /**
      * 获取选中的节点

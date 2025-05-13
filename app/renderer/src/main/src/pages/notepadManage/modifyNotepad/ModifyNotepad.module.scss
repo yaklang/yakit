@@ -60,6 +60,10 @@
     flex-shrink: 0;
     overflow: hidden;
     margin: 0 auto;
+    padding: 0 48px 24px 96px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     .notepad-heard {
         @extend %display-column-center;
         margin-bottom: 20px;
