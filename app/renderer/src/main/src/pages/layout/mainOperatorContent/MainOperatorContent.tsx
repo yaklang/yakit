@@ -158,6 +158,8 @@ import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -466,6 +468,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     const [loading, setLoading] = useState(false)
 
+    useShortcutKeyTrigger("screenshot", () => {
+        ipcRenderer.invoke("activate-screenshot")
+    })
+
     const {
         setPagesData,
         setSelectGroupId,
@@ -651,9 +657,23 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.DB_HTTPHistoryAnalysis:
                 addHTTPHistoryAnalysis(params)
                 break
+            case YakitRoute.ShortcutKey:
+                addShortcutKey(params)
+                break
             default:
                 break
         }
+    })
+
+    const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
+        openMenuPage(
+            {route: YakitRoute.ShortcutKey},
+            {
+                pageParams: {
+                    shortcutKeyPage: data
+                }
+            }
+        )
     })
 
     const addRuleManagement = useMemoizedFn(() => {
@@ -3964,7 +3984,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 content: (
                     <BatchAddNewGroup
                         initialValues={{
-                            groupName: '',
+                            groupName: "",
                             tabIds: [item.id]
                         }}
                         allGroup={collectGroupsWithChildren(cloneDeep(subPage))}

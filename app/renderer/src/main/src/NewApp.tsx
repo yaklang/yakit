@@ -19,13 +19,12 @@ import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
+import {startShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
+import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
 const {ipcRenderer} = window.require("electron")
-
-/** 快捷键目录 */
-const InterceptKeyword = ["KeyR", "KeyW"]
 
 interface OnlineProfileProps {
     BaseUrl: string
@@ -38,6 +37,12 @@ function NewApp() {
     const [agreed, setAgreed] = useState(false)
     const {userInfo} = useStore()
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
+
+    // 快捷键注册+获取全局快捷键事件集合缓存
+    // useEffect(() => {
+    //     getStorageGlobalShortcutKeyEvents()
+    //     startShortcutKeyMonitor()
+    // }, [])
 
     // 软件初始化配置
     useEffect(() => {
@@ -208,27 +213,6 @@ function NewApp() {
             })
             .catch(() => setRemoteValue(TokenSource, ""))
     })
-
-    /**
-     * 拦截软件全局快捷键[(win:ctrl|mac:command) + 26字母]
-     * 通过 InterceptKeyword 变量进行拦截控制
-     */
-    const handlekey = useMemoizedFn((ev: KeyboardEvent) => {
-        let code = ev.code
-        // 屏蔽当前事件
-        if ((ev.metaKey || ev.ctrlKey) && InterceptKeyword.includes(code)) {
-            ev.stopPropagation()
-            ev.preventDefault()
-            return false
-        }
-        return
-    })
-    useEffect(() => {
-        document.addEventListener("keydown", handlekey)
-        return () => {
-            document.removeEventListener("keydown", handlekey)
-        }
-    }, [])
 
     const {temporaryProjectId, delTemporaryProject} = useTemporaryProjectStore()
     const temporaryProjectIdRef = useRef<string>("")

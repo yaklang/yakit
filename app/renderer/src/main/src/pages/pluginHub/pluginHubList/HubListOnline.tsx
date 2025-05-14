@@ -55,6 +55,7 @@ import {NoPromptHint} from "../utilsUI/UtilsTemplate"
 import {SolidYakOfficialPluginColorIcon} from "@/assets/icon/colors"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 import classNames from "classnames"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
@@ -64,6 +65,10 @@ interface HubListOnlineProps extends HubListBaseProps {}
 /** @name 插件商店 */
 export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+
+    useShortcutKeyTrigger("newPlugin", () => {
+        onNewPlugin()
+    })
 
     const divRef = useRef<HTMLDivElement>(null)
     const wrapperWidth = useListenWidth(divRef)
