@@ -27,7 +27,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
     toDOM: (node) => {
         const id = getMentionId()
         const className = `mention-custom`
-        console.log("toDOM-node", node)
         return [
             "div",
             {
@@ -48,7 +47,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         },
         runner: (state, node, type) => {
             if (type.name === mentionCustomId) {
-                console.log("parseMarkdown-node", node)
                 state
                     .openNode(type, {...(node.attributes as Attrs)})
                     .next(node.children)
@@ -62,7 +60,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
             return node.type.name === mentionCustomId
         },
         runner: (state, node) => {
-            console.log("toMarkdown-node", node)
             state
                 .openNode("textDirective", undefined, {
                     name: "mention",
@@ -90,7 +87,7 @@ export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (u
     if (!(selection instanceof TextSelection)) return false
     const {from} = selection
     tr.deleteRange(from - 1, from)
-    const fragment = state.schema.text(userName as string)
+    const fragment = state.schema.text(`@ ${userName}`)
     dispatch?.(
         tr
             .setMeta(mentionCustomId, true)

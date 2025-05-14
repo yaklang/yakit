@@ -1,0 +1,22 @@
+.mention-custom {
+    height: 24px;
+    padding: 4px 8px;
+
+    color: var(--yakit-header-color);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    background-color: var(--yakit-primary-2);
+    border-radius: 4px;
+    width: max-content;
+    cursor: default;
+    user-select: none;
+    display: inline-flex;
+    margin: 0 4px;
+}
+
+.mention-custom-selected {
+    background-color: var(--yakit-primary-5);
+}
