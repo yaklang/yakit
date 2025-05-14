@@ -65,6 +65,7 @@ import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
 import {mentionFactory, MentionListView} from "../Mention/MentionListView"
 import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
+import {CustomMention} from "../Mention/CustomMention"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -316,7 +317,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 mentionFactory,
                 $view(mentionCustomSchema.node, () =>
                     nodeViewFactory({
-                        component: ()=><div>@</div>
+                        component: CustomMention
                     })
                 )
             ].flat()
