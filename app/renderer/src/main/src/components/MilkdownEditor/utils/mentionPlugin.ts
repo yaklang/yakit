@@ -18,14 +18,13 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         {
             tag: `div[data-type='${mentionCustomId}']`,
             getAttrs: (dom) => {
-                return {mentionId: dom.getAttribute("data-mention-id"), userName: dom.getAttribute("data-user-name")}
+                return {mentionId: getMentionId(), userName: dom.getAttribute("data-user-name")}
             }
         }
     ],
 
     // 将节点转为 DOM 结构，动态设置样式
     toDOM: (node) => {
-        const id = getMentionId()
         const className = `mention-custom`
         return [
             "div",
@@ -33,7 +32,7 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
                 ...ctx.get(mentionCustomAttr.key)(node),
                 class: className,
                 contenteditable: false,
-                "data-mention-id": id,
+                "data-mention-id": node.attrs.mentionId,
                 "data-user-name": node.attrs.userName
             },
             0
@@ -64,7 +63,7 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
                 .openNode("textDirective", undefined, {
                     name: "mention",
                     attributes: {
-                        mentionId: node.attrs.mentionId,
+                        mentionId: getMentionId(),
                         userName: node.attrs.userName
                     }
                 })
