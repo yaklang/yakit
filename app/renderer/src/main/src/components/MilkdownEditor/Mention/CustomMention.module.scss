@@ -11,7 +11,7 @@
     background-color: var(--yakit-primary-2);
     border-radius: 4px;
     width: max-content;
-    cursor: default;
+    cursor: pointer;
     user-select: none;
     display: inline-flex;
     margin: 0 4px;
@@ -19,4 +19,21 @@
 
 .mention-custom-selected {
     background-color: var(--yakit-primary-5);
+}
+
+.mention-custom-popover {
+    :global {
+        .ant-popover-inner {
+            border-radius: 4px;
+        }
+        .ant-popover-inner-content {
+            padding: 8px 12px;
+        }
+    }
+}
+.mention-custom-popover-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }

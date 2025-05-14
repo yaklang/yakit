@@ -87,7 +87,7 @@ export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (u
     if (!(selection instanceof TextSelection)) return false
     const {from} = selection
     tr.deleteRange(from - 1, from)
-    const fragment = state.schema.text(`@ ${userName}`)
+    const fragment = state.schema.text(`@${userName}`)
     dispatch?.(
         tr
             .setMeta(mentionCustomId, true)

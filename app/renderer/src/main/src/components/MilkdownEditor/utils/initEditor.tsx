@@ -309,7 +309,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 mentionFactory,
                 $view(mentionCustomSchema.node, () =>
                     nodeViewFactory({
-                        component: CustomMention
+                        component: ()=><CustomMention notepadHash={collabParams?.milkdownHash}/>
                     })
                 )
             ].flat()
@@ -325,7 +325,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                         })
                         ctx.set(mentionFactory.key, {
                             view: pluginViewFactory({
-                                component: MentionListView
+                                component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
                             })
                         })
 
