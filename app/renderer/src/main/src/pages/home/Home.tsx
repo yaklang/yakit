@@ -1309,7 +1309,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 onClick={() =>
                                                     onMenuParams({
                                                         route: YakitRoute.DB_Risk,
-                                                        params: {SeverityList: ["严重"]}
+                                                        params: {SeverityList: ["critical"]}
                                                     })
                                                 }
                                             >
@@ -1323,7 +1323,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 onClick={() =>
                                                     onMenuParams({
                                                         route: YakitRoute.DB_Risk,
-                                                        params: {SeverityList: ["高危"]}
+                                                        params: {SeverityList: ["high"]}
                                                     })
                                                 }
                                             >
@@ -1337,7 +1337,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 onClick={() =>
                                                     onMenuParams({
                                                         route: YakitRoute.DB_Risk,
-                                                        params: {SeverityList: ["中危"]}
+                                                        params: {SeverityList: ['warning']}
                                                     })
                                                 }
                                             >
@@ -1351,7 +1351,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 onClick={() =>
                                                     onMenuParams({
                                                         route: YakitRoute.DB_Risk,
-                                                        params: {SeverityList: ["低危"]}
+                                                        params: {SeverityList: ["low"]}
                                                     })
                                                 }
                                             >

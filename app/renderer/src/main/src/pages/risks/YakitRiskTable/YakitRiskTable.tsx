@@ -340,6 +340,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         () => {
             // 初次不通过此处请求数据
             if (!isInitRequestRef.current) {
+                console.log(query);
                 onRefRiskList()
             }
         },

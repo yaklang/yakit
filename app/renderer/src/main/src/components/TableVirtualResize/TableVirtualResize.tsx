@@ -751,7 +751,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     useEffect(() => {
         setFilters(cloneDeep(query))
     }, [query])
-    useEffect(() => {
+    useUpdateEffect(() => {
         setFilters({})
         setSort({
             order: "none",
