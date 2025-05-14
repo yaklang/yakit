@@ -1,0 +1,90 @@
+.shortcut-key {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .header {
+        color: #31343f;
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 30px;
+        padding: 10px 0 10px 20px;
+    }
+
+    .shortcut-key-content {
+        flex: 1;
+        overflow: hidden auto;
+        padding-left: 30px;
+        border-top: 1px solid #eaecf3;
+    }
+
+    .key-opt {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        .opt-name {
+            color: #31343f;
+            font-size: 14px;
+            line-height: 20px;
+            padding: 7px;
+        }
+        .opt-key {
+            cursor: pointer;
+            padding: 7px;
+            color: #85899e;
+            font-size: 14px;
+            line-height: 20px;
+            user-select: none;
+        }
+    }
+}
+
+.set-shortcut-key-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    .title {
+        color: #b4bbca;
+        font-size: 14px;
+        line-height: 24px;
+    }
+
+    .input {
+        margin-top: 10px;
+        width: 100%;
+        height: 36px;
+        padding: 6px 10px;
+        border: 1px solid #f69c5d;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .empty::after {
+        display: inline-block;
+        content: "";
+        width: 2px;
+        height: 100%;
+        background-color: #f28b44;
+        animation: blink 1s infinite;
+    }
+    @keyframes blink {
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0;
+        }
+    }
+
+    .keys-ui {
+        margin-top: 16px;
+        color: #f28b44;
+        font-size: 14px;
+        line-height: 24px;
+        height: 24px;
+        text-align: center;
+    }
+}

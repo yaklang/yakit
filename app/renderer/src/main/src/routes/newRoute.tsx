@@ -152,6 +152,8 @@ import {YakRunnerAuditHole} from "@/pages/yakRunnerAuditHole/YakRunnerAuditHole"
 import {Misstatement} from "@/pages/misstatement/Misstatement"
 import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
+import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -252,7 +254,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "notepad-manage": {label: "记事本"},
     "modify-notepad": {label: "编辑记事本"},
     "yakrunner-audit-hole": {label: "审计漏洞"},
-    "system-config": {label: "系统配置"}
+    "system-config": {label: "系统配置"},
+    "shortcut-key": {label: "快捷键设置"}
 }
 /** 页面路由(无法多开的页面) */
 export const SingletonPageRoute: YakitRoute[] = [
@@ -293,7 +296,8 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Rule_Management,
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
-    YakitRoute.System_Config
+    YakitRoute.System_Config,
+    YakitRoute.ShortcutKey
 ]
 /** 不需要软件安全边距的页面路由 */
 export const NoPaddingRoute: YakitRoute[] = [
@@ -334,17 +338,23 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Rule_Management,
     YakitRoute.Modify_Notepad,
     YakitRoute.Notepad_Manage,
-    YakitRoute.YakRunner_Audit_Hole
+    YakitRoute.YakRunner_Audit_Hole,
+    YakitRoute.ShortcutKey
 ]
 /** 无滚动条的页面路由 */
 export const NoScrollRoutes: YakitRoute[] = [
     YakitRoute.HTTPHacker,
     YakitRoute.MITMHacker,
     YakitRoute.Mod_Brute,
-    YakitRoute.YakScript
+    YakitRoute.YakScript,
+    YakitRoute.ShortcutKey
 ]
 /** 一级tab固定展示tab  */
-export const defaultFixedTabs: YakitRoute[] = [YakitRoute.NewHome, YakitRoute.DB_HTTPHistory, YakitRoute.DB_HTTPHistoryAnalysis]
+export const defaultFixedTabs: YakitRoute[] = [
+    YakitRoute.NewHome,
+    YakitRoute.DB_HTTPHistory,
+    YakitRoute.DB_HTTPHistoryAnalysis
+]
 /** 一级tab固定展示tab支持多开页面 */
 export const defaultFixedTabsNoSinglPageRoute: YakitRoute[] = [YakitRoute.DB_HTTPHistoryAnalysis]
 /** 用户退出登录后，需自动关闭的页面 */
@@ -439,6 +449,9 @@ export interface ComponentParams {
     modifyNotepadPageInfo?: ModifyNotepadPageInfoProps
     /** hTTPHacker v2 新版 */
     mitmHackerPageInfo?: MITMHackerPageInfoProps
+
+    /** 快捷键配置页面信息 */
+    shortcutKeyPage?: ShortcutKeyPageName
 }
 
 function withRouteToPage(WrappedComponent) {
@@ -605,6 +618,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:
             return <SystemConfig />
+        case YakitRoute.ShortcutKey:
+            return <ShortcutKey page={params?.shortcutKeyPage || "global"} />
         default:
             return <div />
     }

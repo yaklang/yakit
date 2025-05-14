@@ -101,7 +101,6 @@ import {apiFetchMessageRead, apiFetchQueryMessage} from "../MessageCenter/utils"
 import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {randomString} from "@/utils/randomUtil"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {
@@ -109,12 +108,10 @@ import {
     apiQueryNewSSARisks,
     apiQuerySSARisks
 } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
-import {
-    QueryNewSSARisksResponse,
-    SSARisk
-} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import {QueryNewSSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import SelectUpload from "@/pages/SelectUpload"
+import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1017,7 +1014,9 @@ const GetUIOpSettingMenu = () => {
         {
             key: "refreshMenu",
             label: "刷新菜单"
-        }
+        },
+        // {type: "divider"},
+        // {key: "setShortcutKey", label: "快捷键设置"}
     ]
 }
 
@@ -1150,6 +1149,15 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "run-node":
                 setRunNodeModalVisible(true)
+                return
+            case "setShortcutKey":
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.ShortcutKey,
+                        params: "global" as ShortcutKeyPageName
+                    })
+                )
                 return
             default:
                 return
@@ -1901,11 +1909,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         setShow(false)
     })
     const onSubmitEdit = useMemoizedFn(() => {
-        if(editShow.type === "yakit" && yakitLastVersion.length === 0){
+        if (editShow.type === "yakit" && yakitLastVersion.length === 0) {
             warn(`未获取${getReleaseEditionName()}最新版本`)
             return
         }
-        if(editShow.type !== "yakit" && yaklangLastVersion.length === 0){
+        if (editShow.type !== "yakit" && yaklangLastVersion.length === 0) {
             warn(`未获取引擎最新版本`)
             return
         }
