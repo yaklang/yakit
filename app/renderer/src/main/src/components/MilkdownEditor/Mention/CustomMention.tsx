@@ -10,8 +10,7 @@ interface CustomMentionProps {
 }
 export const CustomMention: React.FC<CustomMentionProps> = (props) => {
     const {notepadHash} = props
-    const {selected, contentRef} = useNodeViewContext()
-
+    const {node, selected, contentRef} = useNodeViewContext()
     return (
         <YakitPopover
             content={
@@ -28,6 +27,7 @@ export const CustomMention: React.FC<CustomMentionProps> = (props) => {
                     [styles["mention-custom-selected"]]: selected
                 })}
                 ref={contentRef}
+                id={node.attrs?.mentionId}
                 contentEditable={false}
             ></div>
         </YakitPopover>
