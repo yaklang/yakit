@@ -16,10 +16,13 @@ import {callCommand} from "@milkdown/kit/utils"
 import {mentionCommand} from "../utils/mentionPlugin"
 export const mentionFactory = slashFactory("Commands")
 
-interface MentionListViewProps {}
+interface MentionListViewProps {
+    notepadHash: string
+}
 const mentionWidth = 240
 const mentionTarget = "@"
-export const MentionListView: React.FC<MentionListViewProps> = () => {
+export const MentionListView: React.FC<MentionListViewProps> = (props) => {
+    const {notepadHash} = props
     const [isSendMessage, setIsSendMessage] = useState<boolean>(false)
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [keyWord, setKeyWord] = useState<string>("")
@@ -94,6 +97,13 @@ export const MentionListView: React.FC<MentionListViewProps> = () => {
         // 关闭窗口
         view.focus()
         slashProvider.current?.hide()
+        // 发送通知
+        if (isSendMessage) {
+            const params = {
+                userId: row.id,
+                notepadHash
+            }
+        }
     })
 
     const onSure = useMemoizedFn(() => {
@@ -105,7 +115,13 @@ export const MentionListView: React.FC<MentionListViewProps> = () => {
     })
 
     return (
-        <div aria-expanded='false' className={styles["mention"]} style={{width: mentionWidth}} ref={ref}>
+        <div
+            aria-expanded='false'
+            data-show='false'
+            className={styles["mention"]}
+            style={{width: mentionWidth}}
+            ref={ref}
+        >
             <YakitInput.Search
                 value={keyWord}
                 onChange={(e) => setKeyWord(e.target.value)}
