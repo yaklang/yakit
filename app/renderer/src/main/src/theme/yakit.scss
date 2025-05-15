@@ -1,3 +1,6 @@
+@use "../yakit-colors-generator.scss" as generator;
+@use "../yakit-colors-component.scss" as components;
+
 html {
     // 各种颜色
     --yakit-color-purple: #8863f7;
@@ -51,6 +54,10 @@ html {
     --yakit-infoBlue-5: #4A94F8;
     --yakit-infoBlue-6: #3784EC;
 }
+
+$color-names: Main, Error, Warning, Success;
+$color-tag-names: "Purple", "Magenta", "Blue", "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow";
+
 html[data-theme="default"] {
     --ui-neutral-100: #31343f;
     --ui-neutral-90: #454750;
@@ -78,6 +85,16 @@ html[data-theme="default"] {
     --yakit-primary-6: #e27122;
 
     --antd-wave-shadow-color: #f28b44;
+
+    @include generator.generate-all-theme-colors(light);
+    @include components.generate-neutral-semantic-colors(light);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, light);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-semantic-colors($color, light);
+    }
 }
 html[data-theme="dark"] {
     --ui-neutral-100: #ffffff;
@@ -104,4 +121,14 @@ html[data-theme="dark"] {
     --yakit-primary-4: #f69c5d;
     --yakit-primary-5: #f28b44;
     --yakit-primary-6: #e27122;
+
+    @include generator.generate-all-theme-colors(dark);
+    @include components.generate-neutral-semantic-colors(dark);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, dark);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-semantic-colors($color, dark);
+    }
 }

@@ -1,0 +1,87 @@
+/// 混合主色和背景色的函数
+@function mix-color($main, $bg, $percentage) {
+    @return mix($bg, $main, $percentage);
+}
+
+// 底色
+$white-background-color: #ffffff;
+$black-background-color: #171717;
+
+// 混合比例和方向
+$yakit-light-mix-steps: (
+    10: (92%, light),
+    20: (88%, light),
+    30: (80%, light),
+    40: (55%, light),
+    50: (25%, light),
+    60: (10%, light),
+    70: (10%, dark),
+    80: (25%, dark),
+    90: (55%, dark),
+    100: (80%, dark)
+);
+
+$yakit-dark-mix-steps: (
+    10: (80%, light),
+    20: (55%, light),
+    30: (25%, light),
+    40: (5%, light),
+    50: (10%, dark),
+    60: (30%, dark),
+    70: (55%, dark),
+    80: (70%, dark),
+    90: (80%, dark),
+    100: (92%, dark)
+);
+
+$yakit-theme-colors: (
+    Main: #F17F30,
+    Success: #10B981,
+    Warning: #F59E0B,
+    Error: #EF4444,
+    Neutral: #ABB3C2,
+    Purple: #7B51F7,
+    Magenta: #D84ADB,
+    Blue: #2F87FF,
+    Lake-blue: #18B5CB,
+    Cyan: #26D4EB,
+    Green: #41C484,
+    Red: #F36259,
+    Orange: #FFAE4E,
+    Yellow: #FFC905
+);
+
+// 生成单个基础色变量
+@mixin generate-single-theme-color($name, $mode: light) {
+    $color: map-get($yakit-theme-colors, $name);
+
+    @if $color == null {
+        @error "Color `#{$name}` not found in \$yakit-theme-colors.";
+    }
+
+    $steps: if($mode == light, $yakit-light-mix-steps, $yakit-dark-mix-steps);
+    $prefix: --yakit-colors-#{$name}-;
+
+    @each $level, $info in $steps {
+        $percent: nth($info, 1);
+        $target-bg: if(nth($info, 2) == light, $white-background-color, $black-background-color);
+
+        #{$prefix}#{$level}: #{mix-color($color, $target-bg, $percent)};
+    }
+
+    // neutral 特殊极端值
+    @if $name == neutral {
+        @if $mode == light {
+            #{$prefix}0: #{$white-background-color};
+        } @else if $mode == dark {
+            #{$prefix}110: #{$black-background-color};
+        }
+    }
+}
+
+// 一次性生成所有主题基础色变量
+@mixin generate-all-theme-colors($mode: light) {
+    @each $name, $_ in $yakit-theme-colors {
+        @include generate-single-theme-color($name, $mode);
+    }
+}
