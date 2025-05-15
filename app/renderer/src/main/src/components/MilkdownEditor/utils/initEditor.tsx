@@ -22,7 +22,7 @@ import {insertImageBlockCommand} from "./imageBlock"
 import {listCustomPlugin} from "./listPlugin"
 import {trackDeletePlugin} from "./trackDeletePlugin"
 import {underlineCustomPlugin} from "./underline"
-import {useCreation} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {$view} from "@milkdown/kit/utils"
 import {CustomFile} from "../CustomFile/CustomFile"
 import {getBase64} from "../MilkdownEditor"
@@ -57,6 +57,7 @@ import type {EditorView} from "@milkdown/prose/view"
 import {mentionFactory, MentionListView} from "../Mention/MentionListView"
 import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
 import {CustomMention} from "../Mention/CustomMention"
+import {useEffect} from "react"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -76,7 +77,17 @@ interface InitEditorHooksProps
     localProps?: InitEditorHooksLocalProps
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
-    const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps, localProps} = props
+    const {
+        type,
+        readonly,
+        defaultValue,
+        collabProps,
+        customPlugin,
+        onMarkdownUpdated,
+        diffProps,
+        localProps,
+        positionElementId
+    } = props
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -309,7 +320,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 mentionFactory,
                 $view(mentionCustomSchema.node, () =>
                     nodeViewFactory({
-                        component: ()=><CustomMention notepadHash={collabParams?.milkdownHash}/>
+                        component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
                     })
                 )
             ].flat()
@@ -424,7 +435,22 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             return ""
         }
     }
-
+    //#region 位置定位
+    useEffect(() => {
+        if (loading || !positionElementId) return
+        const editor = get()
+        if (editor) {
+            jumpByElementId(positionElementId)
+        }
+    }, [loading, positionElementId])
+    /**根据id跳转到对应位置 */
+    const jumpByElementId = useMemoizedFn((targetId: string) => {
+        const element = document.getElementById(targetId)
+        if (element) {
+            element.scrollIntoView({behavior: "smooth"})
+        }
+    })
+    
     // 调用跳转到第五行
     const jumpToFifthLine = (line: number) => {
         if (!line) return
@@ -480,5 +506,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             // const targetNode = domPos.node
         }
     }
+
+    //#endregion
     return {get, loading, jumpToFifthLine} as const
 }
