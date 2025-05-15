@@ -1169,7 +1169,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 title='是否确认关闭节点'
                 content='确认后节点将会关闭，运行在节点上的任务也会停止'
                 footerExtra={
-                    <YakitCheckbox value={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
+                    <YakitCheckbox checked={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
                         下次不再提醒
                     </YakitCheckbox>
                 }

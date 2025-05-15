@@ -178,7 +178,7 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) =>
             title={props.title || "退出临时项目"}
             footerExtra={
                 <YakitCheckbox
-                    value={temporaryProjectNoPrompt}
+                    checked={temporaryProjectNoPrompt}
                     onChange={(e) => setTemporaryProjectNoPrompt(e.target.checked)}
                 >
                     下次不再提醒
