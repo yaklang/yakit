@@ -737,7 +737,10 @@ service Yak {
   rpc GetAllFingerprintGroup(Empty) returns (FingerprintGroups); // 获取所有指纹组
   rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage); // 重命名指纹组
   rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage); // 删除指纹组
-  rpc BatchAppendFingerprintToGroup(BatchAppendFingerprintToGroupRequest) returns (DbOperateMessage); // 批量添加指纹到组
+
+  // 指纹 与 组 工具接口
+  rpc BatchUpdateFingerprintToGroup(BatchUpdateFingerprintToGroupRequest) returns (DbOperateMessage); // 批量更新 规则与组关系表
+  rpc GetFingerprintGroupSetByFilter(GetFingerprintGroupSetRequest)returns (FingerprintGroups);
 
 
   // 导入导出指纹
@@ -5889,9 +5892,15 @@ message DeleteFingerprintGroupRequest {
   repeated string GroupNames = 1;
 }
 
-message BatchAppendFingerprintToGroupRequest{
-  string GroupName = 1;
-  FingerprintFilter Filter = 2;
+message BatchUpdateFingerprintToGroupRequest{
+  repeated string AppendGroupName = 1;
+  repeated string DeleteGroupName = 2;
+  FingerprintFilter Filter = 3;
+}
+
+message GetFingerprintGroupSetRequest {
+  FingerprintFilter Filter = 1;
+  bool Union = 2; // default intersect ,if set true return union
 }
 
 message ExportFingerprintRequest {
