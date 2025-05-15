@@ -1,13 +1,8 @@
-import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
+import {useEditor} from "@milkdown/react"
 import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {Ctx} from "@milkdown/kit/ctx"
 import {BlockView} from "../Block/Block"
-import {
-    ProsemirrorAdapterProvider,
-    useNodeViewContext,
-    useNodeViewFactory,
-    usePluginViewFactory
-} from "@prosemirror-adapter/react"
+import {useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
 import {CustomMilkdownProps, MilkdownCollabProps} from "../MilkdownEditorType"
 import {placeholderConfig, placeholderPlugin} from "../Placeholder"
 import {fileCustomSchema, uploadCustomPlugin} from "./uploadPlugin"
@@ -19,7 +14,7 @@ import {CustomCodeComponent} from "../CodeBlock/CodeBlock"
 import {ListItem} from "../ListItem/ListItem"
 import {MilkdownHr} from "../MilkdownHr/MilkdownHr"
 import {tooltip, TooltipView} from "../Tooltip/Tooltip"
-import {alterCustomPlugin, alterCustomSchema} from "./alertPlugin"
+import {alterCustomPlugin} from "./alertPlugin"
 import {codeCustomPlugin} from "./codePlugin"
 import {commentCustomPlugin} from "./commentPlugin"
 import {headingCustomPlugin} from "./headingPlugin"
@@ -27,13 +22,13 @@ import {insertImageBlockCommand} from "./imageBlock"
 import {listCustomPlugin} from "./listPlugin"
 import {trackDeletePlugin} from "./trackDeletePlugin"
 import {underlineCustomPlugin} from "./underline"
-import {useCreation} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {$view} from "@milkdown/kit/utils"
 import {CustomFile} from "../CustomFile/CustomFile"
 import {getBase64} from "../MilkdownEditor"
 import {httpUploadImgBase64} from "@/apiUtils/http"
-import {Node, NodeSpec, NodeType, Schema} from "@milkdown/kit/prose/model"
-import {imageBlockComponent, imageBlockConfig, imageBlockSchema} from "@milkdown/kit/component/image-block"
+import {Node} from "@milkdown/kit/prose/model"
+import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
 import {html} from "atomico"
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
@@ -42,30 +37,22 @@ import {
     codeBlockSchema,
     commonmark,
     hrSchema,
-    listItemAttr,
     listItemSchema,
     syncHeadingIdPlugin
 } from "@milkdown/kit/preset/commonmark"
-import {
-    defaultValueCtx,
-    Editor,
-    editorViewCtx,
-    editorViewOptionsCtx,
-    nodesCtx,
-    rootCtx,
-    schemaCtx
-} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 import {cursor} from "@milkdown/kit/plugin/cursor"
 import {trailing} from "@milkdown/kit/plugin/trailing"
-import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
+import {collab} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
 import {mentionFactory, MentionListView} from "../Mention/MentionListView"
 import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
 import {CustomMention} from "../Mention/CustomMention"
+import {useEffect} from "react"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -85,7 +72,17 @@ interface InitEditorHooksProps
     localProps?: InitEditorHooksLocalProps
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
-    const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps, localProps} = props
+    const {
+        type,
+        readonly,
+        defaultValue,
+        collabProps,
+        customPlugin,
+        onMarkdownUpdated,
+        diffProps,
+        localProps,
+        positionElementId
+    } = props
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -317,7 +314,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 mentionFactory,
                 $view(mentionCustomSchema.node, () =>
                     nodeViewFactory({
-                        component: ()=><CustomMention notepadHash={collabParams?.milkdownHash}/>
+                        component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
                     })
                 )
             ].flat()
@@ -427,6 +424,22 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             return ""
         }
     }
+    //#region 位置定位
+    useEffect(() => {
+        if (loading || !positionElementId) return
+        const editor = get()
+        if (editor) {
+            jumpByElementId(positionElementId)
+        }
+    }, [loading, positionElementId])
 
+    /**根据id跳转到对应位置 */
+    const jumpByElementId = useMemoizedFn((targetId: string) => {
+        const element = document.getElementById(targetId)
+        if (element) {
+            element.scrollIntoView({behavior: "smooth"})
+        }
+    })
+    //#endregion
     return {get, loading} as const
 }

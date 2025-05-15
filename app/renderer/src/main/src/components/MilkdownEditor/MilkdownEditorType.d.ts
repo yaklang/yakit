@@ -57,6 +57,8 @@ export interface CustomMilkdownProps {
     onMarkdownUpdated?: (next: string, per: string) => void
     /**卸载前，抛出去最新的内容 */
     onSaveContentBeforeDestroy?: (value: string) => void
+    /**定位 dom元素id */
+    positionElementId?: string
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
 

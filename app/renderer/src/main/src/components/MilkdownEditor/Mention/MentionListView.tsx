@@ -14,6 +14,7 @@ import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {yakitNotify} from "@/utils/notification"
 import {callCommand} from "@milkdown/kit/utils"
 import {mentionCommand} from "../utils/mentionPlugin"
+import {apiNotepadEit} from "./utils"
 export const mentionFactory = slashFactory("Commands")
 
 interface MentionListViewProps {
@@ -93,16 +94,19 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
 
     const onSelected = useMemoizedFn((row: API.UserList) => {
         setCurrentSelected(row)
-        action(callCommand(mentionCommand.key, row.name))
+        action(callCommand(mentionCommand.key, {userName: row.name, userId: row.id}))
         // 关闭窗口
         view.focus()
         slashProvider.current?.hide()
+        setKeyWord('')
+        setUserList([])
         // 发送通知
         if (isSendMessage) {
-            const params = {
-                userId: row.id,
+            const params: API.NotepadEitRequest = {
+                eitUser: row.id,
                 notepadHash
             }
+            apiNotepadEit(params)
         }
     })
 
@@ -135,7 +139,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
                     loadMoreData={() => {}}
                     renderRow={(row: API.UserList, i: number) => (
                         <div className={styles["mention-user-item"]} onClick={() => onSelected(row)}>
-                            {row.name}
+                            {row.name}({row.department})
                         </div>
                     )}
                     classNameRow={styles["mention-user-row"]}

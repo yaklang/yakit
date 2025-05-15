@@ -4,7 +4,7 @@ import {TextSelection} from "@milkdown/kit/prose/state"
 import {v4 as uuidv4} from "uuid"
 import moment from "moment"
 
-const mentionCustomId = "mention-custom"
+export const mentionCustomId = "mention-custom"
 
 const mentionCustomAttr = $nodeAttr("mention-custom", () => ({"data-type": mentionCustomId, "data-user-name": ""}))
 
@@ -18,7 +18,8 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         {
             tag: `div[data-type='${mentionCustomId}']`,
             getAttrs: (dom) => {
-                return {mentionId: getMentionId(), userName: dom.getAttribute("data-user-name")}
+                // console.log("parseDOM-getAttrs", dom)
+                return {mentionId: dom.getAttribute("data-mention-id"), userName: dom.getAttribute("data-user-name")}
             }
         }
     ],
@@ -26,6 +27,7 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
     // 将节点转为 DOM 结构，动态设置样式
     toDOM: (node) => {
         const className = `mention-custom`
+        // console.log("toDOM", node)
         return [
             "div",
             {
@@ -46,6 +48,7 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         },
         runner: (state, node, type) => {
             if (type.name === mentionCustomId) {
+                // console.log("parseMarkdown-runner", node)
                 state
                     .openNode(type, {...(node.attributes as Attrs)})
                     .next(node.children)
@@ -59,11 +62,12 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
             return node.type.name === mentionCustomId
         },
         runner: (state, node) => {
+            // console.log("toMarkdown-runner", node)
             state
                 .openNode("textDirective", undefined, {
                     name: "mention",
                     attributes: {
-                        mentionId: getMentionId(),
+                        mentionId: node.attrs.mentionId,
                         userName: node.attrs.userName
                     }
                 })
@@ -73,7 +77,8 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
     },
     attrs: {
         mentionId: {default: "0"},
-        userName: {default: ""}
+        userName: {default: ""},
+        userId: {default: ""}
     }
 }))
 
@@ -81,16 +86,19 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
 const getMentionId = () => {
     return `mention-${uuidv4()}-${moment().valueOf()}`
 }
-export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (userName) => (state, dispatch) => {
+export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (params) => (state, dispatch) => {
     const {selection, tr} = state
     if (!(selection instanceof TextSelection)) return false
+    const {userName, userId} = params as {userName: string; userId: string}
     const {from} = selection
     tr.deleteRange(from - 1, from)
     const fragment = state.schema.text(`@${userName}`)
     dispatch?.(
         tr
             .setMeta(mentionCustomId, true)
-            .replaceSelectionWith(mentionCustomSchema.type(ctx).create({mentionId: getMentionId(), userName}, fragment))
+            .replaceSelectionWith(
+                mentionCustomSchema.type(ctx).create({mentionId: getMentionId(), userName, userId}, fragment)
+            )
             .scrollIntoView()
     )
     return true
