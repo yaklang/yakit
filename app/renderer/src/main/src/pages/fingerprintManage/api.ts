@@ -86,7 +86,15 @@ export interface QueryFingerprintRequest {
     Filter: FingerprintFilter
     Pagination: Paging
 }
-interface CPE {}
+interface CPE {
+    Part: string
+    Vendor: string
+    Product: string
+    Version: string
+    Update: string
+    Edition: string
+    Language: string
+}
 export interface FingerprintRule {
     Id: number
     RuleName: string
