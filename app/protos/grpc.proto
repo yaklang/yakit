@@ -727,16 +727,22 @@ service Yak {
   rpc AddFingerprint(AddFingerprintRequest) returns (AddFingerprintResponse);
   rpc ModifyFingerprint(ModifyFingerprintRequest) returns (ModifyFingerprintResponse);
 
-  rpc QueryFingerprint(QueryFingerprintRequest) returns (QueryFingerprintResponse);
-  rpc DeleteFingerprint(DeleteFingerprintRequest) returns (DbOperateMessage);
-  rpc UpdateFingerprint(UpdateFingerprintRequest) returns (DbOperateMessage);
-  rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage);
-  rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage);
+  rpc QueryFingerprint(QueryFingerprintRequest) returns (QueryFingerprintResponse); // 查询指纹信息
+  rpc DeleteFingerprint(DeleteFingerprintRequest) returns (DbOperateMessage); // 删除指纹
+  rpc UpdateFingerprint(UpdateFingerprintRequest) returns (DbOperateMessage); // 更新单条指纹内容 指纹增改所属组信息使用此条
+  rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage); // 创建指纹
+  rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage); // 恢复内置指纹
 
-  rpc CreateFingerprintGroup(FingerprintGroup) returns (DbOperateMessage);
-  rpc GetAllFingerprintGroup(Empty) returns (FingerprintGroups);
-  rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage);
-  rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage);
+  rpc CreateFingerprintGroup(FingerprintGroup) returns (DbOperateMessage); // 创建指纹组
+  rpc GetAllFingerprintGroup(Empty) returns (FingerprintGroups); // 获取所有指纹组
+  rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage); // 重命名指纹组
+  rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage); // 删除指纹组
+  rpc BatchAppendFingerprintToGroup(BatchAppendFingerprintToGroupRequest) returns (DbOperateMessage); // 批量添加指纹到组
+
+
+  // 导入导出指纹
+  rpc ExportFingerprint(ExportFingerprintRequest) returns (stream DataTransferProgress);
+  rpc ImportFingerprint(ImportFingerprintRequest) returns (stream DataTransferProgress);
 
   // 反弹shell命令生成
   rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
@@ -5837,7 +5843,8 @@ message FingerprintFilter {
   repeated string Product = 2;
   repeated int64 IncludeId = 3;
   repeated string GroupName = 4;
-  string Keyword = 5;
+  repeated string RuleName = 5;
+  string Keyword = 6;
 }
 
 message QueryFingerprintRequest {
@@ -5882,6 +5889,25 @@ message DeleteFingerprintGroupRequest {
   repeated string GroupNames = 1;
 }
 
+message BatchAppendFingerprintToGroupRequest{
+  string GroupName = 1;
+  FingerprintFilter Filter = 2;
+}
+
+message ExportFingerprintRequest {
+  FingerprintFilter Filter = 1;
+  string Password = 2;
+  string TargetPath = 3;
+}
+message ImportFingerprintRequest {
+  string InputPath = 1;
+  string Password = 2;
+}
+
+message DataTransferProgress {
+  double Progress = 1;
+  string Verbose = 2;
+}
 
 message QuerySyntaxFlowRuleRequest{
   Paging Pagination = 1;
