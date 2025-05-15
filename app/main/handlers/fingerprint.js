@@ -1,4 +1,8 @@
 const { ipcMain } = require("electron")
+const fs = require("fs")
+const path = require("path")
+const { yakProjects } = require("../filePath")
+
 module.exports = (win, getClient) => {
   const asyncGetAllFingerprintGroup = (params) => {
     return new Promise((resolve, reject) => {
@@ -126,5 +130,29 @@ module.exports = (win, getClient) => {
   // 创建本地指纹
   ipcMain.handle("CreateFingerprint", async (e, params) => {
     return await asyncCreateFingerprint(params)
+  })
+
+  // 导出指纹
+  const handlerHelper = require("./handleStreamWithContext")
+  const exportFingerprintMap = new Map()
+  ipcMain.handle("cancel-ExportFingerprint", handlerHelper.cancelHandler(exportFingerprintMap))
+  ipcMain.handle("ExportFingerprint", (_, params, token) => {
+    const { TargetPath } = params
+    if (!fs.existsSync(yakProjects)) {
+      try {
+        fs.mkdirSync(yakProjects, { recursive: true })
+      } catch (error) { }
+    }
+    params.TargetPath = path.join(yakProjects, TargetPath)
+    let stream = getClient().ExportFingerprint(params)
+    handlerHelper.registerHandler(win, stream, exportFingerprintMap, token)
+  })
+
+  // 导入指纹
+  const importFingerprintMap = new Map()
+  ipcMain.handle("cancel-ImportFingerprint", handlerHelper.cancelHandler(importFingerprintMap))
+  ipcMain.handle("ImportFingerprint", (_, params, token) => {
+    let stream = getClient().ImportFingerprint(params)
+    handlerHelper.registerHandler(win, stream, importFingerprintMap, token)
   })
 }
