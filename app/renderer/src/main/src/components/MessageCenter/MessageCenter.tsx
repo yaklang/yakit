@@ -197,6 +197,12 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 )
             case "notepad":
                 return <>{data.description}</>
+            case "notepadEit":
+                return (
+                    <>
+                        {data.handlerUserName}在{data.notepadTitle}文档@你
+                    </>
+                )
             default:
                 return <></>
         }
@@ -265,15 +271,18 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             break
                         // 跳转到笔记本编辑页面
                         case "notepad":
+                        case "notepadEit":
                             if (!data.notepadHash) {
                                 yakitNotify("error", "未找到笔记本信息")
                                 break
                             }
+                            /**NOTE 已经打开得页面，在此点击不会更新页面数据；此逻辑在Luoluo/feature/notepad-local-jump分支中，待合并后，就可以了 */
                             apiGetNotepadDetail(data.notepadHash).then((res) => {
                                 toEditNotepad({
                                     pageInfo: {
                                         notepadHash: res.hash,
-                                        title: res.title
+                                        title: res.title,
+                                        domId: data.mentionId || ""
                                     },
                                     notepadPageList: notepadPageList || []
                                 })

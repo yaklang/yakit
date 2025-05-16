@@ -528,6 +528,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}
                             onSaveContentBeforeDestroy={onSaveNewContent}
+                            positionElementId={initPageInfo().domId}
                         />
                     </YakitSpin>
                 </div>
