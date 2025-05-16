@@ -11,6 +11,7 @@ import {ShortcutKeyProps} from "./type"
 
 import classNames from "classnames"
 import styles from "./ShortcutKey.module.scss"
+import { isConflictToYakEditor } from "@/utils/globalShortcutKey/events/page/yakEditor"
 
 export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     const {page} = props
@@ -60,6 +61,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     })
 
     const [inputKeys, setInputKeys] = useState<YakitKeyBoard[]>([])
+    const [warnInfo,setWarnInfo] = useState<string>()
     const handleShortcutKey = useMemoizedFn((name: string) => {
         if (name.indexOf("setShortcutKey") > -1) {
             const regex = /\(([^)]+)\)/
@@ -70,6 +72,8 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                 } else if (result[1] === YakitKeyBoard.Enter) {
                     handleCallbackKeyShow(true)
                 } else {
+                    let info = isConflictToYakEditor(result[1].split("|") as YakitKeyBoard[])
+                    setWarnInfo(info)
                     setInputKeys(result[1].split("|") as YakitKeyBoard[])
                 }
             }
@@ -118,12 +122,14 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
             >
                 <div className={styles["set-shortcut-key-wrapper"]}>
                     <div className={styles["title"]}>先按所需的组合键, 再按 Enter 键, 按 Esc 键取消</div>
-
+                    <div className={styles["title"]}>注：编辑器快捷键需以"Alt", "Shift", "Control", "Meta"进行组合使用</div>
                     <div className={classNames(styles["input"], {[styles["empty"]]: inputKeys.length === 0})}>
                         {inputKeys.join(" ")}
                     </div>
 
-                    <div className={styles["keys-ui"]}>{convertKeyboardToUIKey(inputKeys)}</div>
+                    <div className={styles["keys-ui"]}>{convertKeyboardToUIKey(inputKeys)}
+                        {warnInfo&&<span className={styles['warn']}>（{warnInfo}）</span>}
+                    </div>
                 </div>
             </YakitModal>
         </div>

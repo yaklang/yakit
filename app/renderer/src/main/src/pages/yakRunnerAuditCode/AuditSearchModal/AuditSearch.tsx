@@ -1,5 +1,13 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useDebounceEffect, useDebounceFn, useGetState, useMemoizedFn, useThrottleFn, useUpdateEffect} from "ahooks"
+import {
+    useDebounceEffect,
+    useDebounceFn,
+    useGetState,
+    useInViewport,
+    useMemoizedFn,
+    useThrottleFn,
+    useUpdateEffect
+} from "ahooks"
 import styles from "./AuditSearchModal.module.scss"
 import {failed, success, warn, info, yakitNotify} from "@/utils/notification"
 import classNames from "classnames"
@@ -28,6 +36,7 @@ import {Selection} from "../RunnerTabs/RunnerTabsType"
 import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetailsType"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 let selectedSearchVal: string = ""
 export const onSetSelectedSearchVal = (v: string = "") => {
@@ -240,41 +249,42 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
         }
     })
 
-    const handleKeyPress = useMemoizedFn((event) => {
-        const {key} = event
-        if (key === "Tab") {
+    const keyDownRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(keyDownRef)
+
+    useShortcutKeyTrigger("searchTab*aduit", () => {
+        if (inViewport) {
             if (getExecuting()) {
                 warn("当前已有搜索，请等待完毕后切换")
             } else {
                 onNextSearchTabFun()
             }
-            event.preventDefault()
-        } else if (key === "ArrowUp") {
-            onSetActiveInfo("last")
-            event.preventDefault()
-        } else if (key === "ArrowDown") {
-            onSetActiveInfo("next")
-            event.preventDefault()
-        } else if (key === "Escape") {
-            onClose && onClose()
-            event.preventDefault()
-        } else if (key === "Enter") {
-            activeInfo && onJump(activeInfo)
-            event.preventDefault()
         }
     })
-    const keyDownRef = useRef<HTMLDivElement>(null)
-    useEffect(() => {
-        if (keyDownRef.current) {
-            keyDownRef.current.addEventListener("keydown", handleKeyPress)
+
+    useShortcutKeyTrigger("searchArrowUp*aduit", () => {
+        if (inViewport) {
+            onSetActiveInfo("last")
         }
-        return () => {
-            // 在组件卸载时移除事件监听器
-            if (keyDownRef.current) {
-                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
-            }
+    })
+
+    useShortcutKeyTrigger("searchArrowDown*aduit", () => {
+        if (inViewport) {
+            onSetActiveInfo("next")
         }
-    }, [])
+    })
+
+    useShortcutKeyTrigger("searchEscape*aduit", () => {
+        if (inViewport) {
+            onClose && onClose()
+        }
+    })
+
+    useShortcutKeyTrigger("searchEnter*aduit", () => {
+        if (inViewport) {
+            activeInfo && onJump(activeInfo)
+        }
+    })
 
     const onStopExecute = useMemoizedFn(() => {
         keyDownRef.current?.focus()

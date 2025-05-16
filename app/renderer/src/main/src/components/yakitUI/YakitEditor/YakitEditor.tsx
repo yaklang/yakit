@@ -72,6 +72,8 @@ import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
+import { getStorageYakEditorShortcutKeyEvents, isPageOrGlobalShortcut, isYakEditorShortcut } from "@/utils/globalShortcutKey/events/page/yakEditor"
+import { handleShortcutKey } from "@/utils/globalShortcutKey/utils"
 
 export interface CodecTypeProps {
     key?: string
@@ -1611,6 +1613,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         })
     }
 
+    useEffect(()=>{
+       // 此处一个页面可能存在多个monaco
+       // 因此仅仅在monaco刚打开时获取最新的快捷键事件和对应按键
+       getStorageYakEditorShortcutKeyEvents()
+    },[])
+
     return (
         <div
             ref={ref}
@@ -1669,6 +1677,21 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 })
                             }
                         }
+
+                        editor.onKeyDown((e) => {
+                            // 判断当前输入是否激活 编辑器内部快捷键
+                            const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
+                            if(isActiveYakEditor){
+                                e.browserEvent.stopImmediatePropagation()
+                                return
+                            }
+                            // 判断当前输入是否激活 页面级或全局快捷键
+                            const isActive = isPageOrGlobalShortcut(e.browserEvent)
+                            if(isActive){
+                                e.browserEvent.stopImmediatePropagation()
+                                return
+                            }
+                        })
 
                         if (editorDidMount) editorDidMount(editor, monaco)
                     }}

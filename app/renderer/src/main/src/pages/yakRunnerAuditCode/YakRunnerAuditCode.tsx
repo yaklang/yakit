@@ -10,7 +10,7 @@ import {
 } from "./YakRunnerAuditCodeType"
 import {Progress} from "antd"
 import {AuditModalFormModal} from "./AuditCode/AuditCode"
-import {useGetState, useMemoizedFn} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn} from "ahooks"
 import {
     addAreaFileInfo,
     getCodeByPath,
@@ -55,6 +55,10 @@ import {Selection} from "./RunnerTabs/RunnerTabsType"
 import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { getStorageAuditCodeShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRuunerAuditCode"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
     const {auditCodePageInfo} = props
@@ -736,25 +740,20 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         setLastShiftTime(now);
     });
     const keyDownRef = useRef<HTMLDivElement>(null)
-    const handleKeyPress = (event) => {
-        const {key,ctrlKey,altKey,metaKey,repeat} = event
-        // 如若长按某个键时 后面激发的repeat会变为true
-        if (key === 'Shift' && !ctrlKey && !altKey && !metaKey && !repeat) {
-            handleDoubleShift()
-            event.preventDefault()
-        }
-    }
+    const [inViewport] = useInViewport(keyDownRef)
     useEffect(() => {
-        if (keyDownRef.current) {
-            keyDownRef.current.addEventListener("keydown", handleKeyPress)
-        }
-        return () => {
-            // 在组件卸载时移除事件监听器
-            if (keyDownRef.current) {
-                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.YakRunner_Audit_Code)
+            getStorageAuditCodeShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunner_Audit_Code)
             }
         }
-    }, [])
+    }, [inViewport])
+
+    useShortcutKeyTrigger("search*aduit", () => {
+        handleDoubleShift()
+    })
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
