@@ -185,7 +185,7 @@ jobs:
                   if [ "${{ inputs.version }}" = "ce" ]; then
                     echo "ENV_Software_Name=Yakit" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
-                    echo "ENV_Software_Name=四川公安专用版" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=PTK-Spec" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
                     echo "ENV_Software_Name=EnpriTraceAgent" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "irify" ]; then
@@ -344,7 +344,7 @@ jobs:
                   # Yakit              -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRify           -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
                   # IRifyEnpriTrace -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
-                  # EnpriTrace      -1.4.1-0426-linux-legacy-arm64.run
+                  # 四川公安专用版      -1.4.1-0426-linux-legacy-arm64.run
 
             - name: Upload Yakit(CE) Artifacts Windows
               if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
@@ -396,7 +396,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
+                  path: ./release/四川公安专用版-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-amd64.run
                   if-no-files-found: error
                   retention-days: 7
 
@@ -405,6 +405,6 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
-                  path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
+                  path: ./release/四川公安专用版-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
                   if-no-files-found: error
                   retention-days: 7
