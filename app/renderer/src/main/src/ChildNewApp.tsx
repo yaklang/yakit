@@ -53,10 +53,3 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
 }
 
 export default ChildNewApp
-
-export const minWinSendToChildWin = (params) => {
-    ipcRenderer.invoke("minWin-send-to-childWin", {
-        type: params.type,
-        data: params.data
-    })
-}

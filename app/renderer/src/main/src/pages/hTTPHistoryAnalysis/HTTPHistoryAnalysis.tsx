@@ -39,7 +39,7 @@ import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
-import {openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
 import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import {cloneDeep, isEqual} from "lodash"
 import emiter from "@/utils/eventBus/eventBus"
@@ -57,7 +57,6 @@ import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/edit
 import {YakitRoute} from "@/enums/yakitRoute"
 import {HTTPHistoryFilter} from "./HTTPHistory/HTTPHistoryFilter"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {minWinSendToChildWin} from "@/ChildNewApp"
 import styles from "./HTTPHistoryAnalysis.module.scss"
 
 const MITMRule = React.lazy(() => import("../mitm/MITMRule/MITMRule"))

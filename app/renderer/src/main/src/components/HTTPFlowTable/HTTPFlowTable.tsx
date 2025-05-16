@@ -46,7 +46,7 @@ import {
     SelectSearchProps,
     SortProps
 } from "../TableVirtualResize/TableVirtualResizeType"
-import {openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen} from "@/utils/openWebsite"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
@@ -103,7 +103,6 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import {minWinSendToChildWin} from "@/ChildNewApp"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
