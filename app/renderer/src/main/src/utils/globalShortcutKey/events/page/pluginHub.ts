@@ -1,13 +1,13 @@
 import {getLocalValue, setLocalValue} from "@/utils/kv"
-import {YakitKeyBoard, YakitKeyMod} from "../keyboard"
-import {ShortcutKeyEventInfo} from "./pageMaps"
+import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
+import {ShortcutKeyEventInfo} from "../pageMaps"
 
 export enum PluginHubShortcutKey {
     /** 新建插件 */
     NewPlugin = "newPlugin"
 }
 
-type EventsType = Record<PluginHubShortcutKey, ShortcutKeyEventInfo>
+type EventsType = Record<`${PluginHubShortcutKey}`, ShortcutKeyEventInfo>
 
 const PluginHubShortcutKeyEvents: EventsType = {
     newPlugin: {

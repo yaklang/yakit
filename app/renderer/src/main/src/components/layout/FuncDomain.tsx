@@ -967,6 +967,9 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "webshell-manager",
                     label: "网站管理"
+                },
+                {   key: "setShortcutKey", 
+                    label: "快捷键设置"
                 }
             ]
         },
@@ -1015,8 +1018,6 @@ const GetUIOpSettingMenu = () => {
             key: "refreshMenu",
             label: "刷新菜单"
         },
-        // {type: "divider"},
-        // {key: "setShortcutKey", label: "快捷键设置"}
     ]
 }
 

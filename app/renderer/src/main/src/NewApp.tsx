@@ -19,7 +19,7 @@ import {useRunNodeStore} from "./store/runNode"
 import {LocalGVS} from "./enums/localGlobal"
 import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
-import {startShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
+import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
 
 /** 部分页面懒加载 */
@@ -39,10 +39,13 @@ function NewApp() {
     const {setGoogleChromePluginPath} = useGoogleChromePluginPath()
 
     // 快捷键注册+获取全局快捷键事件集合缓存
-    // useEffect(() => {
-    //     getStorageGlobalShortcutKeyEvents()
-    //     startShortcutKeyMonitor()
-    // }, [])
+    useEffect(() => {
+        getStorageGlobalShortcutKeyEvents()
+        startShortcutKeyMonitor()
+        return () => {
+            stopShortcutKeyMonitor()
+        }
+    }, [])
 
     // 软件初始化配置
     useEffect(() => {

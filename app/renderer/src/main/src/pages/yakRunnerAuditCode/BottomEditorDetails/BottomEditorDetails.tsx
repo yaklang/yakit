@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import styles from "./BottomEditorDetails.module.scss"
 import classNames from "classnames"
 import {BottomEditorDetailsProps, ShowItemType} from "./BottomEditorDetailsType"
@@ -12,6 +12,7 @@ import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
 import useDispatcher from "../hooks/useDispatcher"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import { HoleBugDetail } from "@/pages/yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCodeDetailDrawer"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
@@ -81,6 +82,13 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // useUpdateEffect(() => {
     //     setBugHash("")
     // }, [activeFile?.path])
+
+    useShortcutKeyTrigger("submit*aduit", () => {
+        if (isShowEditorDetails && showItem === "ruleEditor") {
+            onAuditRuleSubmit()
+        }
+    })
+    
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
