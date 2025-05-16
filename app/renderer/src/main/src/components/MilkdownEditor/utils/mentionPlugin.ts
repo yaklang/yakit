@@ -78,13 +78,13 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
 }))
 
 /**生成提及单个组件id，用于跳转 */
-const getMentionId = () => {
+export const getMentionId = () => {
     return `mention-${uuidv4()}-${moment().valueOf()}`
 }
 export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (params) => (state, dispatch) => {
     const {selection, tr} = state
     if (!(selection instanceof TextSelection)) return false
-    const {userName, userId} = params as {userName: string; userId: string}
+    const {userName, userId, mentionId} = params as {userName: string; userId: string; mentionId?: string}
     const {from} = selection
     tr.deleteRange(from - 1, from)
     const fragment = state.schema.text(`@${userName}`)
@@ -92,7 +92,9 @@ export const mentionCommand = $command(`command-${mentionCustomId}`, (ctx) => (p
         tr
             .setMeta(mentionCustomId, true)
             .replaceSelectionWith(
-                mentionCustomSchema.type(ctx).create({mentionId: getMentionId(), userName, userId}, fragment)
+                mentionCustomSchema
+                    .type(ctx)
+                    .create({mentionId: mentionId || getMentionId(), userName, userId}, fragment)
             )
             .scrollIntoView()
     )

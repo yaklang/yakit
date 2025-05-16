@@ -1057,6 +1057,7 @@ export declare namespace API {
     export interface NotepadEitRequest {
         notepadHash?: string
         eitUser?: number
+        mentionId?: string
     }
     export interface NotepadDownloadWhere {
         hash?: string
@@ -1142,6 +1143,10 @@ export declare namespace API {
          * 协作文档标题
          */
         notepadTitle?: string
+        /**
+         * 定位艾特位置
+         */
+        mentionId?: string
     }
     export interface LogsRequest {
         uuid: string
