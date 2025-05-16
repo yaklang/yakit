@@ -18,7 +18,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         {
             tag: `div[data-type='${mentionCustomId}']`,
             getAttrs: (dom) => {
-                // console.log("parseDOM-getAttrs", dom)
                 return {mentionId: dom.getAttribute("data-mention-id"), userName: dom.getAttribute("data-user-name")}
             }
         }
@@ -27,14 +26,12 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
     // 将节点转为 DOM 结构，动态设置样式
     toDOM: (node) => {
         const className = `mention-custom`
-        // console.log("toDOM", node)
         return [
             "div",
             {
                 ...ctx.get(mentionCustomAttr.key)(node),
                 class: className,
-                contenteditable: false,
-                "data-mention-id": node.attrs.mentionId,
+                "data-mention-id": getMentionId(),
                 "data-user-name": node.attrs.userName
             },
             0
@@ -48,7 +45,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         },
         runner: (state, node, type) => {
             if (type.name === mentionCustomId) {
-                // console.log("parseMarkdown-runner", node)
                 state
                     .openNode(type, {...(node.attributes as Attrs)})
                     .next(node.children)
@@ -62,7 +58,6 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
             return node.type.name === mentionCustomId
         },
         runner: (state, node) => {
-            // console.log("toMarkdown-runner", node)
             state
                 .openNode("textDirective", undefined, {
                     name: "mention",
