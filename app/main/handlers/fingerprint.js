@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron")
 const fs = require("fs")
 const path = require("path")
+const https = require("https")
 const { yakProjects } = require("../filePath")
 
 module.exports = (win, getClient) => {
@@ -154,5 +155,62 @@ module.exports = (win, getClient) => {
   ipcMain.handle("ImportFingerprint", (_, params, token) => {
     let stream = getClient().ImportFingerprint(params)
     handlerHelper.registerHandler(win, stream, importFingerprintMap, token)
+  })
+
+  const asyncGetFingerprintGroupSetByFilter = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetFingerprintGroupSetByFilter(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 查询指纹集合的所属组交集
+  ipcMain.handle("GetFingerprintGroupSetByFilter", async (e, params) => {
+    return await asyncGetFingerprintGroupSetByFilter(params)
+  })
+
+  const asyncBatchUpdateFingerprintToGroup = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().BatchUpdateFingerprintToGroup(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 更新指纹里的本地组
+  ipcMain.handle("BatchUpdateFingerprintToGroup", async (e, params) => {
+    return await asyncBatchUpdateFingerprintToGroup(params)
+  })
+
+  const asyncDownloadFingerprint = (savePath) => {
+    return new Promise((resolve, reject) => {
+      const file = fs.createWriteStream(savePath)
+      https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/fingerprints.zip", (res) => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`Download failed with status ${res.statusCode}`))
+          return
+        }
+
+        res.pipe(file)
+
+        file.on('finish', () => {
+          file.close()
+          resolve('Download completed')
+        })
+      }).on('error', (err) => {
+        fs.unlink(savePath, () => { })
+        reject(err)
+      })
+    })
+  }
+  ipcMain.handle("DownloadFingerprint", async (e, savePath) => {
+    return await asyncDownloadFingerprint(savePath)
   })
 }

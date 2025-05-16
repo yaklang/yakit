@@ -12,7 +12,7 @@ import {
     OutlineSearchIcon,
     OutlineTrashIcon
 } from "@/assets/icon/outline"
-import {useDebounceEffect, useDebounceFn, useMemoizedFn, useSafeState, useUpdateEffect, useVirtualList} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect, useVirtualList} from "ahooks"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -23,6 +23,7 @@ import {yakitNotify} from "@/utils/notification"
 import {cloneDeep} from "lodash"
 import {Divider, Form, InputRef, Table, Tooltip} from "antd"
 import {
+    BatchUpdateFingerprintToGroupRequest,
     FingerprintFilter,
     FingerprintGroup,
     FingerprintRule,
@@ -36,9 +37,9 @@ import {
     grpcUpdateFingerprint,
     grpcUpdateFingerprintToGroup,
     grpcUpdateLocalFingerprintGroup,
+    httpDownloadFingerprint,
     QueryFingerprintRequest,
-    QueryFingerprintResponse,
-    UpdateFingerprintAndGroupRequest
+    QueryFingerprintResponse
 } from "./api"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
@@ -50,14 +51,11 @@ import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import {openABSFileLocated} from "@/utils/openWebsite"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
-import {randomString} from "@/utils/randomUtil"
-import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
+import ImportExportModal, {ImportExportModalExtra} from "./ImportExportModal/ImportExportModal"
 import styles from "./FingerprintManage.module.scss"
-const {ipcRenderer} = window.require("electron")
+import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 
 // #region 指纹管理入口
 interface FingerprintManageProp {}
@@ -91,27 +89,43 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
     const [rowSelectionKeys, setRowSelectionKeys] = useState<number[]>([])
     // #endregion
 
+    const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
     const downloadFingerprint = useMemoizedFn(() => {
-        // TODO 下载
-        setRefreshLocalGroup((prev) => !prev)
-        setLocalFilter({...localFilter})
+        handleSaveFileSystemDialog({
+            title: "保存文件",
+            defaultPath: "fingerprints.zip"
+        }).then((file) => {
+            if (!file.canceled) {
+                const filePath = file?.filePath?.toString()
+                if (filePath) {
+                    setDownloadLoading(true)
+                    httpDownloadFingerprint(filePath)
+                        .then(() => {
+                            yakitNotify("success", "下载成功")
+                        })
+                        .catch(() => {})
+                        .finally(() => {
+                            setDownloadLoading(false)
+                        })
+                }
+            }
+        })
     })
 
     // #region 指纹导入导出
     const importExportContainerRef = useRef<string>(currentPageTabRouteKey)
-    const [importExportExtra, setImportExportExtra] = useState<FingerprintImportExportModalProps["extra"]>({
+    const [importExportExtra, setImportExportExtra] = useState<ImportExportModalExtra>({
         hint: false,
         title: "导入指纹",
-        type: "import"
+        type: "import",
+        apiKey: "ImportFingerprint"
     })
     const includeIdRef = useRef<number[]>([])
-    const handleOpenImportExportHint = useMemoizedFn(
-        (extra: Omit<FingerprintImportExportModalProps["extra"], "hint">) => {
-            if (importExportExtra.hint) return
-            importExportContainerRef.current = currentPageTabRouteKey
-            setImportExportExtra({...extra, hint: true})
-        }
-    )
+    const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, "hint">) => {
+        if (importExportExtra.hint) return
+        importExportContainerRef.current = currentPageTabRouteKey
+        setImportExportExtra({...extra, hint: true})
+    })
     const handleCallbackImportExportHint = useMemoizedFn((result: boolean) => {
         if (result) {
             const type = importExportExtra.type
@@ -143,8 +157,14 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                                 onGroupChange={onLocalGroupChange}
                                 onSetLocalGroupLen={setLocalGroupLen}
                                 onImport={() => {
-                                    handleOpenImportExportHint({title: "导入指纹", type: "import"})
+                                    handleOpenImportExportHint({
+                                        title: "导入指纹",
+                                        type: "import",
+                                        apiKey: "ImportFingerprint"
+                                    })
                                 }}
+                                downloadLoading={downloadLoading}
+                                downloadFingerprint={downloadFingerprint}
                             />
                         </div>
                     </div>
@@ -157,11 +177,19 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                             onSetRefreshLocalGroup={setRefreshLocalGroup}
                             onSetLocalFingerprintLen={setLocalFingerprintLen}
                             onImport={() => {
-                                handleOpenImportExportHint({title: "导入指纹", type: "import"})
+                                handleOpenImportExportHint({
+                                    title: "导入指纹",
+                                    type: "import",
+                                    apiKey: "ImportFingerprint"
+                                })
                             }}
                             onExport={(includeId) => {
                                 includeIdRef.current = includeId
-                                handleOpenImportExportHint({title: "导出指纹", type: "export"})
+                                handleOpenImportExportHint({
+                                    title: "导出指纹",
+                                    type: "export",
+                                    apiKey: "ExportFingerprint"
+                                })
                             }}
                         />
                     </div>
@@ -177,14 +205,23 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                     className={styles["fingerprintManage-init-empty"]}
                 >
                     <div className={styles["fingerprintManage-init-btns"]}>
-                        <YakitButton type='outline1' icon={<OutlineClouddownloadIcon />} onClick={downloadFingerprint}>
+                        <YakitButton
+                            type='outline1'
+                            icon={<OutlineClouddownloadIcon />}
+                            onClick={downloadFingerprint}
+                            loading={downloadLoading}
+                        >
                             下载默认指纹库
                         </YakitButton>
                         <YakitButton
                             type='primary'
                             icon={<OutlineImportIcon />}
                             onClick={() => {
-                                handleOpenImportExportHint({title: "导入指纹", type: "import"})
+                                handleOpenImportExportHint({
+                                    title: "导入指纹",
+                                    type: "import",
+                                    apiKey: "ImportFingerprint"
+                                })
                             }}
                         >
                             导入指纹
@@ -192,11 +229,11 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                     </div>
                 </YakitEmpty>
             </div>
-
-            <FingerprintImportExportModal
+            <ImportExportModal<FingerprintFilter>
                 getContainer={
                     document.getElementById(`main-operator-page-body-${importExportContainerRef.current}`) || undefined
                 }
+                whichUse='fingerprint'
                 extra={importExportExtra}
                 onCallback={handleCallbackImportExportHint}
                 filterData={{
@@ -220,10 +257,12 @@ interface LocalFingerprintGroupListProps {
     onGroupChange: (groups: string[]) => void
     onSetLocalGroupLen: React.Dispatch<React.SetStateAction<number>>
     onImport: () => void
+    downloadLoading: boolean
+    downloadFingerprint: () => void
 }
 const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo(
     forwardRef((props, ref) => {
-        const {isrefresh, onGroupChange, onSetLocalGroupLen, onImport} = props
+        const {isrefresh, onGroupChange, onSetLocalGroupLen, onImport, downloadLoading, downloadFingerprint} = props
 
         const [data, setData] = useState<FingerprintGroup[]>([])
         const groupLength = useMemo(() => {
@@ -291,7 +330,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
             (type: "modify" | "delete", info: FingerprintGroup, newInfo?: FingerprintGroup) => {
                 if (type === "modify") {
                     if (!newInfo) {
-                        yakitNotify("error", "修改本地规则组名称错误")
+                        yakitNotify("error", "修改本地指纹组名称错误")
                         return
                     }
                     setData((arr) => {
@@ -385,9 +424,8 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
 
         /** ---------- 删除 ---------- */
         const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
-        const handleDelete = useMemoizedFn((info: any) => {
-            const {GroupName, IsBuildIn} = info
-            if (IsBuildIn) return
+        const handleDelete = useMemoizedFn((info: FingerprintGroup) => {
+            const {GroupName} = info
             const isExist = loadingDelKeys.includes(GroupName)
             if (isExist) return
 
@@ -415,7 +453,12 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
                         指纹库管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
                     </div>
                     <div className={styles["header-extra"]}>
-                        <YakitButton type='text' icon={<OutlineClouddownloadIcon />} onClick={() => {}}>
+                        <YakitButton
+                            type='text'
+                            icon={<OutlineClouddownloadIcon />}
+                            loading={downloadLoading}
+                            onClick={downloadFingerprint}
+                        >
                             下载默认指纹
                         </YakitButton>
                         <Divider type='vertical' />
@@ -806,57 +849,54 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
 
     const handleSave = (row: FingerprintRule, newRow: FingerprintRule) => {
         setEditingObj(undefined)
-        // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
-        if (data.Data.length && newRow.RuleName.length !== 0 && newRow.MatchExpression.length !== 0) {
-            setData((prev) => {
-                const newData = data.Data.map((item) => {
-                    if (item.Id === row.Id) {
-                        return newRow
-                    } else {
-                        return item
+        if (newRow.RuleName.length && newRow.MatchExpression.length) {
+            // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
+            if (data.Data.length) {
+                setData((prev) => {
+                    const newData = prev.Data.map((item) => {
+                        if (item.Id === row.Id) {
+                            return newRow
+                        } else {
+                            return item
+                        }
+                    })
+                    return {
+                        ...prev,
+                        Data: newData
                     }
                 })
-                return {
-                    ...prev,
-                    Data: newData
-                }
-            })
-        }
+            }
 
-        // 真正的更改与更新数据
-        const groupNameChangeFlag = JSON.stringify(row.GroupName) !== JSON.stringify(newRow.GroupName)
-        if (
-            (row.RuleName !== newRow.RuleName ||
+            // 真正的更改与更新数据
+            const groupNameChangeFlag = JSON.stringify(row.GroupName) !== JSON.stringify(newRow.GroupName)
+            if (
+                row.RuleName !== newRow.RuleName ||
                 row.MatchExpression !== newRow.MatchExpression ||
-                groupNameChangeFlag) &&
-            newRow.RuleName.length &&
-            newRow.MatchExpression.length
-        ) {
-            grpcUpdateFingerprint({
-                Id: row.Id,
-                Rule: {
-                    ...row,
-                    RuleName: newRow.RuleName,
-                    MatchExpression: newRow.MatchExpression,
-                    GroupName: newRow.GroupName
-                }
-            })
-                .then(() => {
-                    yakitNotify("success", "更新成功")
-                    if (groupNameChangeFlag) {
-                        onSetRefreshLocalGroup((prev) => !prev)
+                groupNameChangeFlag
+            ) {
+                grpcUpdateFingerprint({
+                    Id: row.Id,
+                    Rule: {
+                        ...row,
+                        RuleName: newRow.RuleName,
+                        MatchExpression: newRow.MatchExpression,
+                        GroupName: newRow.GroupName
                     }
                 })
-                .catch(() => {})
-                .finally(() => {
-                    update(data.Pagination.Page, data.Pagination.Limit)
-                })
-        }
-
-        if (newRow.RuleName.length === 0) {
+                    .then(() => {
+                        yakitNotify("success", "更新成功")
+                        if (groupNameChangeFlag) {
+                            onSetRefreshLocalGroup((prev) => !prev)
+                        }
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        update(data.Pagination.Page, data.Pagination.Limit)
+                    })
+            }
+        } else if (newRow.RuleName.length === 0) {
             yakitNotify("warning", "指纹名不能为空")
-        }
-        if (newRow.MatchExpression.length === 0) {
+        } else if (newRow.MatchExpression.length === 0) {
             yakitNotify("warning", "规则不能为空")
         }
     }
@@ -1273,7 +1313,7 @@ const EditableCell = <T,>({
                                 lineHeight: "16px",
                                 borderRadius: 0
                             }}
-                            rows={1}
+                            rows={2}
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
                             autoFocus
@@ -1286,7 +1326,6 @@ const EditableCell = <T,>({
                         <YakitSelect
                             wrapperClassName={styles["editableCell-select"]}
                             mode='tags'
-                            placeholder='请选择分组'
                             defaultOpen
                             allowClear
                             autoFocus
@@ -1366,9 +1405,9 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
             else request.IncludeId = rules
 
             grpcFetchFingerprintForSameGroup({Filter: request})
-                .then(({Group}) => {
+                .then(({Data}) => {
                     setOldGroup(
-                        (Group || []).map((item) => ({
+                        (Data || []).map((item) => ({
                             ...item,
                             isCreate: false
                         }))
@@ -1389,12 +1428,9 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
     })
 
     const loading = useRef<boolean>(false)
-    const handleReset = useMemoizedFn(() => {
-        setRemoveGroup([])
-        setAddGroup([])
-    })
     useEffect(() => {
         if (addGroupVisible) {
+            setAddGroup([])
             setRemoveGroup([...getOldGroup()])
             if (loading.current) return
             loading.current = true
@@ -1408,10 +1444,6 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                 .finally(() => {
                     loading.current = false
                 })
-
-            return () => {
-                handleReset()
-            }
         }
     }, [addGroupVisible])
     /** ---------- 获取规则所属组交集、全部规则组-逻辑 End ---------- */
@@ -1425,10 +1457,10 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
         if (isExist) return
 
         delGroups.current = [...delGroups.current, info.GroupName]
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: [info.GroupName]
+            AppendGroupName: [],
+            DeleteGroupName: [info.GroupName]
         }
         grpcUpdateFingerprintToGroup(request)
             .then(() => {
@@ -1443,10 +1475,10 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
 
     // 批量
     const handleAllRemove = useMemoizedFn(() => {
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: oldGroup.map((item) => item.GroupName)
+            AppendGroupName: [],
+            DeleteGroupName: oldGroup.map((item) => item.GroupName)
         }
         grpcUpdateFingerprintToGroup(request)
             .then(() => {
@@ -1513,15 +1545,15 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
     const handleSubmit = useMemoizedFn(() => {
         if (submitLoading) return
 
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: []
+            AppendGroupName: [],
+            DeleteGroupName: []
         }
-        request.RemoveGroups = oldGroup
+        request.DeleteGroupName = oldGroup
             .filter((item) => removeGroup.findIndex((i) => i.GroupName === item.GroupName) === -1)
             .map((item) => item.GroupName)
-        request.AddGroups = addGroup.map((item) => item.GroupName)
+        request.AppendGroupName = addGroup.map((item) => item.GroupName)
 
         setSubmitLoading(true)
         grpcUpdateFingerprintToGroup(request)
@@ -1539,6 +1571,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
 
     const handelCancel = useMemoizedFn(() => {
         setAddGroupVisible(false)
+        setConfirmVisible(false)
     })
     /** ---------- 新增规则组逻辑 End ---------- */
 
@@ -1627,13 +1660,17 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                         <div className={styles["group-list"]}>
                             {showGroup.length === 0 && search && (
                                 <div className={styles["group-list-item"]}>
-                                    <YakitCheckbox onChange={handleCheckboxCreate} />
-                                    <span
-                                        className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
-                                        title={search}
-                                    >
-                                        新增分组 "{search}"
-                                    </span>
+                                    <YakitCheckbox onChange={handleCheckboxCreate}>
+                                        <span
+                                            className={classNames(
+                                                styles["title-style"],
+                                                "yakit-content-single-ellipsis"
+                                            )}
+                                            title={search}
+                                        >
+                                            新增分组 "{search}"
+                                        </span>
+                                    </YakitCheckbox>
                                 </div>
                             )}
                             {showGroup.map((item) => {
@@ -1704,277 +1741,9 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                 onCancel={() => {
                     setConfirmVisible(false)
                 }}
-                onOk={() => {
-                    handleSubmit()
-                }}
+                onOk={handleSubmit}
             ></YakitHint>
         </div>
-    )
-})
-// #endregion
-
-// #region 指纹导入导出弹窗
-const FingerprintImportExportModalSize = {
-    export: {
-        width: 520,
-        labelCol: 5,
-        wrapperCol: 18
-    },
-    import: {
-        width: 680,
-        labelCol: 6,
-        wrapperCol: 17
-    }
-}
-interface ExportFingerprintRequest {
-    Filter: FingerprintFilter
-    Password: string
-    TargetPath: string
-}
-interface ImportFingerprintRequest {
-    InputPath: string
-    Password: string
-}
-interface FingerprintProgress {
-    Progress: number
-    Verbose: string
-}
-type FingerprintImportExportModalExtra = {
-    hint: boolean
-} & {
-    title: "导出指纹" | "导入指纹"
-    type: "export" | "import"
-}
-interface FingerprintImportExportModalProps {
-    /** 是否被dom节点包含 */
-    getContainer?: HTMLElement
-    width?: number
-    extra: FingerprintImportExportModalExtra
-    filterData: FingerprintFilter
-    onCallback: (result: boolean) => void
-}
-const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> = memo((props) => {
-    const {getContainer, extra, onCallback, filterData} = props
-
-    const [form] = Form.useForm()
-
-    const [token, setToken] = useSafeState("")
-    const [showProgressStream, setShowProgressStream] = useSafeState(false)
-    const [progressStream, setProgressStream] = useSafeState<FingerprintProgress>({
-        Progress: 0,
-        Verbose: ""
-    })
-
-    // 规则导出路径
-    const exportPath = useRef<string>("")
-
-    const onSubmit = useMemoizedFn(() => {
-        const formValue = form.getFieldsValue()
-
-        if (extra.type === "export") {
-            if (!formValue.TargetPath) {
-                yakitNotify("error", `请填写文件夹名`)
-                return
-            }
-            const request: ExportFingerprintRequest = {
-                Filter: filterData,
-                TargetPath: formValue?.TargetPath || "",
-                Password: formValue?.Password || undefined
-            }
-            if (!request.TargetPath.endsWith(".zip")) {
-                request.TargetPath = request.TargetPath + ".zip"
-            }
-            ipcRenderer
-                .invoke("GenerateProjectsFilePath", request.TargetPath)
-                .then((res) => {
-                    exportPath.current = res
-                    ipcRenderer.invoke("ExportFingerprint", request, token)
-                    setShowProgressStream(true)
-                })
-                .catch(() => {})
-        }
-
-        if (extra.type === "import") {
-            if (!formValue.InputPath) {
-                yakitNotify("error", `请输入本地指纹路径`)
-                return
-            }
-            const params: ImportFingerprintRequest = {
-                InputPath: formValue.InputPath,
-                Password: formValue.Password || undefined
-            }
-            ipcRenderer.invoke("ImportFingerprint", params, token)
-            setShowProgressStream(true)
-        }
-    })
-
-    const onCancelStream = useMemoizedFn(() => {
-        if (!token) return
-
-        if (extra.type === "export") {
-            ipcRenderer.invoke("cancel-ExportFingerprint", token)
-        }
-        if (extra.type === "import") {
-            ipcRenderer.invoke("cancel-ImportFingerprint", token)
-        }
-    })
-    const onSuccessStream = useMemoizedFn((isSuccess: boolean) => {
-        if (isSuccess) {
-            if (extra.type === "export") {
-                exportPath.current && openABSFileLocated(exportPath.current)
-            }
-            onCallback(true)
-        } else {
-            exportPath.current = ""
-        }
-    })
-
-    useEffect(() => {
-        if (!token) {
-            return
-        }
-        const typeTitle = extra.type === "export" ? "ExportFingerprint" : "ImportFingerprint"
-        let success = true
-        ipcRenderer.on(`${token}-data`, async (_, data: FingerprintProgress) => {
-            setProgressStream(data)
-        })
-        ipcRenderer.on(`${token}-error`, (_, error) => {
-            success = false
-            yakitNotify("error", `[${typeTitle}] error:  ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, () => {
-            yakitNotify("info", `[${typeTitle}] finished`)
-            setShowProgressStream(false)
-            onSuccessStream(success)
-            success = true
-        })
-        return () => {
-            if (token) {
-                onCancelStream()
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
-            }
-        }
-    }, [token])
-
-    const onCancel = useMemoizedFn(() => {
-        onCallback(false)
-    })
-
-    // modal header 描述文字
-    const exportDescribeMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <div className={styles["export-hint"]}>
-                        远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-                    </div>
-                )
-            case "import":
-                return (
-                    <div className={styles["import-hint"]}>
-                        导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
-                    </div>
-                )
-
-            default:
-                break
-        }
-    })
-
-    // 导入 / 导出 item 节点
-    const exportItemMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件名"}]} name={"TargetPath"}>
-                        <YakitInput />
-                    </Form.Item>
-                )
-            case "import":
-                return (
-                    <>
-                        <YakitFormDragger
-                            formItemProps={{
-                                name: "InputPath",
-                                label: "本地指纹路径",
-                                rules: [{required: true, message: "请输入本地指纹路径"}]
-                            }}
-                            multiple={false}
-                            selectType='file'
-                            fileExtensionIsExist={false}
-                        />
-                    </>
-                )
-
-            default:
-                break
-        }
-    })
-
-    useEffect(() => {
-        if (extra.hint) {
-            setToken(randomString(40))
-            form.resetFields()
-        }
-        // 关闭时重置所有数据
-        return () => {
-            if (extra.hint) {
-                setShowProgressStream(false)
-                setProgressStream({Progress: 0, Verbose: ""})
-                exportPath.current = ""
-            }
-        }
-    }, [extra.hint])
-
-    return (
-        <>
-            <YakitModal
-                getContainer={getContainer}
-                type='white'
-                width={FingerprintImportExportModalSize[extra.type].width}
-                centered={true}
-                keyboard={false}
-                maskClosable={false}
-                visible={extra.hint}
-                title={extra.title}
-                bodyStyle={{padding: 0}}
-                onOk={onSubmit}
-                onCancel={onCancel}
-                footerStyle={{justifyContent: "flex-end"}}
-                footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
-            >
-                {!showProgressStream ? (
-                    <div className={styles["fingerprint-import-export-modal"]}>
-                        {exportDescribeMemoizedFn(extra.type)}
-                        <Form
-                            form={form}
-                            layout={"horizontal"}
-                            labelCol={{span: FingerprintImportExportModalSize[extra.type].labelCol}}
-                            wrapperCol={{span: FingerprintImportExportModalSize[extra.type].wrapperCol}}
-                            onSubmitCapture={(e) => {
-                                e.preventDefault()
-                            }}
-                        >
-                            {exportItemMemoizedFn(extra.type)}
-                            <Form.Item label={"密码"} name={"Password"}>
-                                <YakitInput />
-                            </Form.Item>
-                        </Form>
-                    </div>
-                ) : (
-                    <div style={{padding: "0 16px"}}>
-                        <ImportAndExportStatusInfo
-                            title='导出中'
-                            showDownloadDetail={false}
-                            streamData={progressStream || {Progress: 0}}
-                            logListInfo={[]}
-                        />
-                    </div>
-                )}
-            </YakitModal>
-        </>
     )
 })
 // #endregion
