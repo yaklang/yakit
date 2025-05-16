@@ -13,8 +13,9 @@ import {API} from "@/services/swagger/resposeType"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {yakitNotify} from "@/utils/notification"
 import {callCommand} from "@milkdown/kit/utils"
-import {mentionCommand} from "../utils/mentionPlugin"
+import {getMentionId, mentionCommand} from "../utils/mentionPlugin"
 import {apiNotepadEit} from "./utils"
+import classNames from "classnames"
 export const mentionFactory = slashFactory("Commands")
 
 interface MentionListViewProps {
@@ -75,6 +76,9 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
         setListLoading(true)
         apiGetUserSearch({keywords: value})
             .then((res) => {
+                if (res.data.length > 0) {
+                    setCurrentSelected(res.data[0])
+                }
                 setUserList([...(res.data || [])])
             })
             .finally(() =>
@@ -94,17 +98,20 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
 
     const onSelected = useMemoizedFn((row: API.UserList) => {
         setCurrentSelected(row)
-        action(callCommand(mentionCommand.key, {userName: row.name, userId: row.id}))
+        const mentionId = getMentionId()
+        action(callCommand(mentionCommand.key, {userName: row.name, userId: row.id, mentionId}))
         // 关闭窗口
         view.focus()
         slashProvider.current?.hide()
-        setKeyWord('')
+        setKeyWord("")
         setUserList([])
+        setCurrentSelected(undefined)
         // 发送通知
         if (isSendMessage) {
             const params: API.NotepadEitRequest = {
                 eitUser: row.id,
-                notepadHash
+                notepadHash,
+                mentionId
             }
             apiNotepadEit(params)
         }
@@ -138,7 +145,12 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
                     data={userList}
                     loadMoreData={() => {}}
                     renderRow={(row: API.UserList, i: number) => (
-                        <div className={styles["mention-user-item"]} onClick={() => onSelected(row)}>
+                        <div
+                            className={classNames(styles["mention-user-item"], {
+                                [styles["mention-user-item-selected"]]: currentSelected?.id === row.id
+                            })}
+                            onClick={() => onSelected(row)}
+                        >
                             {row.name}({row.department})
                         </div>
                     )}

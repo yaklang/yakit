@@ -47,6 +47,13 @@
             overflow: hidden;
             word-break: break-all;
         }
+        .mention-user-item-selected {
+            background-color: var(--yakit-primary-1);
+            border-radius: 8px;
+        }
+        .mention-user-row:has(.mention-user-item-selected) + .mention-user-row {
+            border-top-color: transparent;
+        }
     }
     .mention-footer {
         position: absolute;
