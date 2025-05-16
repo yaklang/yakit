@@ -4,7 +4,10 @@ import {NoteFilter} from "@/pages/notepadManage/notepadManage/utils"
 export const defaultModifyNotepadPageInfo: ModifyNotepadPageInfoProps = {
     notepadHash: "",
     title: "",
-    keyWord: ""
+    keyWordInfo: {
+        keyWord: "",
+        position: 0
+    }
 }
 
 export const defaultNoteFilter: NoteFilter = {
