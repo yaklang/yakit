@@ -490,8 +490,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     const {routeKey, yakScriptId, params} = props
     switch (routeKey) {
         case YakitRoute.NewHome:
-            // return <>{isIRify() ? <IRifyHome /> : <Home />}</>
-            return <FingerprintManage />
+            return <>{isIRify() ? <IRifyHome /> : <Home />}</>
         case YakitRoute.HTTPHacker:
             return (
                 <Suspense fallback={<PageLoading />}>

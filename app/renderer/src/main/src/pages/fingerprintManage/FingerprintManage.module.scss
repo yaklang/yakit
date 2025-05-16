@@ -43,7 +43,6 @@
     width: 100%;
     height: 100%;
 
-    gap: 12px;
     .list-header {
         display: flex;
         justify-content: space-between;
@@ -464,20 +463,5 @@
                 gap: 8px;
             }
         }
-    }
-}
-
-.fingerprint-import-export-modal {
-    .export-hint {
-        background: rgba(86, 201, 145, 0.1);
-        color: #85899e;
-        padding: 8px 16px;
-        margin-bottom: 15px;
-    }
-    .import-hint {
-        background: #fff2f0;
-        color: #85899e;
-        padding: 8px 16px;
-        margin-bottom: 16px;
     }
 }

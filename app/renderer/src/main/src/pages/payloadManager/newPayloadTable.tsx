@@ -597,16 +597,6 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
     })
 
     const callCountRef = useRef<number>(0)
-    const handleMethod = (record, column) => {
-        if (callCountRef.current === 1) {
-            // console.log("Single click:", record, column)
-            setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
-        } else if (callCountRef.current >= 2) {
-            // console.log("Double click:", record, column)
-            setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
-        }
-        callCountRef.current = 0 // 重置计数器
-    }
     const handleRowClick = (record, column) => {
         if (record.Id === editingObj?.Id && column.dataIndex === editingObj?.dataIndex) {
             return
@@ -616,7 +606,16 @@ export const NewPayloadTable: React.FC<NewPayloadTableProps> = (props) => {
             setSelectObj(undefined)
         }
         callCountRef.current += 1
-        setTimeout(() => handleMethod(record, column), 200)
+        if (callCountRef.current >= 2) {
+            callCountRef.current = 0 // 重置计数器
+            setEditingObj({Id: record.Id, dataIndex: column.dataIndex})
+        } else if (callCountRef.current === 1) {
+            // 这里开启一个定时器，若在300ms内没有第二次点击，则重置计数器
+            setTimeout(() => {
+                callCountRef.current = 0
+            }, 300)
+            setSelectObj({Id: record.Id, dataIndex: column.dataIndex})
+        }
     }
 
     const handleRowDoubleClick = (record, column) => {}
