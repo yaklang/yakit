@@ -23,6 +23,7 @@ import {yakitNotify} from "@/utils/notification"
 import {cloneDeep} from "lodash"
 import {Divider, Form, InputRef, Table, Tooltip} from "antd"
 import {
+    BatchUpdateFingerprintToGroupRequest,
     FingerprintFilter,
     FingerprintGroup,
     FingerprintRule,
@@ -37,8 +38,7 @@ import {
     grpcUpdateFingerprintToGroup,
     grpcUpdateLocalFingerprintGroup,
     QueryFingerprintRequest,
-    QueryFingerprintResponse,
-    UpdateFingerprintAndGroupRequest
+    QueryFingerprintResponse
 } from "./api"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
@@ -291,7 +291,7 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
             (type: "modify" | "delete", info: FingerprintGroup, newInfo?: FingerprintGroup) => {
                 if (type === "modify") {
                     if (!newInfo) {
-                        yakitNotify("error", "修改本地规则组名称错误")
+                        yakitNotify("error", "修改本地指纹组名称错误")
                         return
                     }
                     setData((arr) => {
@@ -385,9 +385,8 @@ const LocalFingerprintGroupList: React.FC<LocalFingerprintGroupListProps> = memo
 
         /** ---------- 删除 ---------- */
         const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
-        const handleDelete = useMemoizedFn((info: any) => {
-            const {GroupName, IsBuildIn} = info
-            if (IsBuildIn) return
+        const handleDelete = useMemoizedFn((info: FingerprintGroup) => {
+            const {GroupName} = info
             const isExist = loadingDelKeys.includes(GroupName)
             if (isExist) return
 
@@ -806,57 +805,54 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
 
     const handleSave = (row: FingerprintRule, newRow: FingerprintRule) => {
         setEditingObj(undefined)
-        // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
-        if (data.Data.length && newRow.RuleName.length !== 0 && newRow.MatchExpression.length !== 0) {
-            setData((prev) => {
-                const newData = data.Data.map((item) => {
-                    if (item.Id === row.Id) {
-                        return newRow
-                    } else {
-                        return item
+        if (newRow.RuleName.length && newRow.MatchExpression.length) {
+            // 此处默认修改成功 优化交互闪烁(因此如若修改失败则会闪回)
+            if (data.Data.length) {
+                setData((prev) => {
+                    const newData = prev.Data.map((item) => {
+                        if (item.Id === row.Id) {
+                            return newRow
+                        } else {
+                            return item
+                        }
+                    })
+                    return {
+                        ...prev,
+                        Data: newData
                     }
                 })
-                return {
-                    ...prev,
-                    Data: newData
-                }
-            })
-        }
+            }
 
-        // 真正的更改与更新数据
-        const groupNameChangeFlag = JSON.stringify(row.GroupName) !== JSON.stringify(newRow.GroupName)
-        if (
-            (row.RuleName !== newRow.RuleName ||
+            // 真正的更改与更新数据
+            const groupNameChangeFlag = JSON.stringify(row.GroupName) !== JSON.stringify(newRow.GroupName)
+            if (
+                row.RuleName !== newRow.RuleName ||
                 row.MatchExpression !== newRow.MatchExpression ||
-                groupNameChangeFlag) &&
-            newRow.RuleName.length &&
-            newRow.MatchExpression.length
-        ) {
-            grpcUpdateFingerprint({
-                Id: row.Id,
-                Rule: {
-                    ...row,
-                    RuleName: newRow.RuleName,
-                    MatchExpression: newRow.MatchExpression,
-                    GroupName: newRow.GroupName
-                }
-            })
-                .then(() => {
-                    yakitNotify("success", "更新成功")
-                    if (groupNameChangeFlag) {
-                        onSetRefreshLocalGroup((prev) => !prev)
+                groupNameChangeFlag
+            ) {
+                grpcUpdateFingerprint({
+                    Id: row.Id,
+                    Rule: {
+                        ...row,
+                        RuleName: newRow.RuleName,
+                        MatchExpression: newRow.MatchExpression,
+                        GroupName: newRow.GroupName
                     }
                 })
-                .catch(() => {})
-                .finally(() => {
-                    update(data.Pagination.Page, data.Pagination.Limit)
-                })
-        }
-
-        if (newRow.RuleName.length === 0) {
+                    .then(() => {
+                        yakitNotify("success", "更新成功")
+                        if (groupNameChangeFlag) {
+                            onSetRefreshLocalGroup((prev) => !prev)
+                        }
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        update(data.Pagination.Page, data.Pagination.Limit)
+                    })
+            }
+        } else if (newRow.RuleName.length === 0) {
             yakitNotify("warning", "指纹名不能为空")
-        }
-        if (newRow.MatchExpression.length === 0) {
+        } else if (newRow.MatchExpression.length === 0) {
             yakitNotify("warning", "规则不能为空")
         }
     }
@@ -1366,9 +1362,9 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
             else request.IncludeId = rules
 
             grpcFetchFingerprintForSameGroup({Filter: request})
-                .then(({Group}) => {
+                .then(({Data}) => {
                     setOldGroup(
-                        (Group || []).map((item) => ({
+                        (Data || []).map((item) => ({
                             ...item,
                             isCreate: false
                         }))
@@ -1389,12 +1385,9 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
     })
 
     const loading = useRef<boolean>(false)
-    const handleReset = useMemoizedFn(() => {
-        setRemoveGroup([])
-        setAddGroup([])
-    })
     useEffect(() => {
         if (addGroupVisible) {
+            setAddGroup([])
             setRemoveGroup([...getOldGroup()])
             if (loading.current) return
             loading.current = true
@@ -1408,10 +1401,6 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                 .finally(() => {
                     loading.current = false
                 })
-
-            return () => {
-                handleReset()
-            }
         }
     }, [addGroupVisible])
     /** ---------- 获取规则所属组交集、全部规则组-逻辑 End ---------- */
@@ -1425,10 +1414,10 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
         if (isExist) return
 
         delGroups.current = [...delGroups.current, info.GroupName]
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: [info.GroupName]
+            AppendGroupName: [],
+            DeleteGroupName: [info.GroupName]
         }
         grpcUpdateFingerprintToGroup(request)
             .then(() => {
@@ -1443,10 +1432,10 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
 
     // 批量
     const handleAllRemove = useMemoizedFn(() => {
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: oldGroup.map((item) => item.GroupName)
+            AppendGroupName: [],
+            DeleteGroupName: oldGroup.map((item) => item.GroupName)
         }
         grpcUpdateFingerprintToGroup(request)
             .then(() => {
@@ -1513,15 +1502,15 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
     const handleSubmit = useMemoizedFn(() => {
         if (submitLoading) return
 
-        const request: UpdateFingerprintAndGroupRequest = {
+        const request: BatchUpdateFingerprintToGroupRequest = {
             Filter: ruleRequest(),
-            AddGroups: [],
-            RemoveGroups: []
+            AppendGroupName: [],
+            DeleteGroupName: []
         }
-        request.RemoveGroups = oldGroup
+        request.DeleteGroupName = oldGroup
             .filter((item) => removeGroup.findIndex((i) => i.GroupName === item.GroupName) === -1)
             .map((item) => item.GroupName)
-        request.AddGroups = addGroup.map((item) => item.GroupName)
+        request.AppendGroupName = addGroup.map((item) => item.GroupName)
 
         setSubmitLoading(true)
         grpcUpdateFingerprintToGroup(request)
@@ -1539,6 +1528,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
 
     const handelCancel = useMemoizedFn(() => {
         setAddGroupVisible(false)
+        setConfirmVisible(false)
     })
     /** ---------- 新增规则组逻辑 End ---------- */
 
@@ -1627,13 +1617,17 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                         <div className={styles["group-list"]}>
                             {showGroup.length === 0 && search && (
                                 <div className={styles["group-list-item"]}>
-                                    <YakitCheckbox onChange={handleCheckboxCreate} />
-                                    <span
-                                        className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
-                                        title={search}
-                                    >
-                                        新增分组 "{search}"
-                                    </span>
+                                    <YakitCheckbox onChange={handleCheckboxCreate}>
+                                        <span
+                                            className={classNames(
+                                                styles["title-style"],
+                                                "yakit-content-single-ellipsis"
+                                            )}
+                                            title={search}
+                                        >
+                                            新增分组 "{search}"
+                                        </span>
+                                    </YakitCheckbox>
                                 </div>
                             )}
                             {showGroup.map((item) => {
@@ -1704,9 +1698,7 @@ const UpdateFingerprintToGroup: React.FC<UpdateFingerprintToGroupProps> = memo((
                 onCancel={() => {
                     setConfirmVisible(false)
                 }}
-                onOk={() => {
-                    handleSubmit()
-                }}
+                onOk={handleSubmit}
             ></YakitHint>
         </div>
     )
@@ -1760,6 +1752,11 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
 
     const [token, setToken] = useSafeState("")
     const [showProgressStream, setShowProgressStream] = useSafeState(false)
+    const timeRef = useRef<ReturnType<typeof setTimeout>>()
+    const importExportStreamRef = useRef<FingerprintProgress>({
+        Progress: 0,
+        Verbose: ""
+    })
     const [progressStream, setProgressStream] = useSafeState<FingerprintProgress>({
         Progress: 0,
         Verbose: ""
@@ -1788,8 +1785,9 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
                 .invoke("GenerateProjectsFilePath", request.TargetPath)
                 .then((res) => {
                     exportPath.current = res
-                    ipcRenderer.invoke("ExportFingerprint", request, token)
-                    setShowProgressStream(true)
+                    ipcRenderer.invoke("ExportFingerprint", request, token).then(() => {
+                        setShowProgressStream(true)
+                    })
                 })
                 .catch(() => {})
         }
@@ -1803,8 +1801,9 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
                 InputPath: formValue.InputPath,
                 Password: formValue.Password || undefined
             }
-            ipcRenderer.invoke("ImportFingerprint", params, token)
-            setShowProgressStream(true)
+            ipcRenderer.invoke("ImportFingerprint", params, token).then(() => {
+                setShowProgressStream(true)
+            })
         }
     })
 
@@ -1817,43 +1816,44 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
         if (extra.type === "import") {
             ipcRenderer.invoke("cancel-ImportFingerprint", token)
         }
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+        clearInterval(timeRef.current)
     })
-    const onSuccessStream = useMemoizedFn((isSuccess: boolean) => {
-        if (isSuccess) {
-            if (extra.type === "export") {
-                exportPath.current && openABSFileLocated(exportPath.current)
-            }
-            onCallback(true)
-        } else {
-            exportPath.current = ""
+    const onSuccessStream = useMemoizedFn(() => {
+        if (extra.type === "export") {
+            exportPath.current && openABSFileLocated(exportPath.current)
         }
+        onCallback(true)
     })
+    useEffect(() => {
+        if (progressStream.Progress === 1) {
+            onSuccessStream()
+        }
+    }, [JSON.stringify(progressStream)])
 
     useEffect(() => {
         if (!token) {
             return
         }
         const typeTitle = extra.type === "export" ? "ExportFingerprint" : "ImportFingerprint"
-        let success = true
+        const updateImportExportHTTPFlowStream = () => {
+            setProgressStream({...importExportStreamRef.current})
+        }
+        timeRef.current = setInterval(updateImportExportHTTPFlowStream, 500)
         ipcRenderer.on(`${token}-data`, async (_, data: FingerprintProgress) => {
-            setProgressStream(data)
+            importExportStreamRef.current = data
         })
         ipcRenderer.on(`${token}-error`, (_, error) => {
-            success = false
             yakitNotify("error", `[${typeTitle}] error:  ${error}`)
         })
         ipcRenderer.on(`${token}-end`, () => {
             yakitNotify("info", `[${typeTitle}] finished`)
-            setShowProgressStream(false)
-            onSuccessStream(success)
-            success = true
         })
         return () => {
             if (token) {
                 onCancelStream()
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
             }
         }
     }, [token])
@@ -1888,7 +1888,11 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
         switch (type) {
             case "export":
                 return (
-                    <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件名"}]} name={"TargetPath"}>
+                    <Form.Item
+                        label={"文件夹名"}
+                        rules={[{required: true, message: "请填写文件夹名"}]}
+                        name={"TargetPath"}
+                    >
                         <YakitInput />
                     </Form.Item>
                 )
@@ -1923,7 +1927,9 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
             if (extra.hint) {
                 setShowProgressStream(false)
                 setProgressStream({Progress: 0, Verbose: ""})
+                importExportStreamRef.current = {Progress: 0, Verbose: ""}
                 exportPath.current = ""
+                clearInterval(timeRef.current)
             }
         }
     }, [extra.hint])
@@ -1940,10 +1946,37 @@ const FingerprintImportExportModal: React.FC<FingerprintImportExportModalProps> 
                 visible={extra.hint}
                 title={extra.title}
                 bodyStyle={{padding: 0}}
-                onOk={onSubmit}
-                onCancel={onCancel}
+                onCancel={() => {
+                    onCancelStream()
+                    onCancel()
+                }}
                 footerStyle={{justifyContent: "flex-end"}}
-                footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
+                footer={
+                    <>
+                        {!showProgressStream ? (
+                            <>
+                                {extra.type === "export" && (
+                                    <YakitButton type={"outline2"} onClick={onCancel} style={{marginRight: 8}}>
+                                        取消
+                                    </YakitButton>
+                                )}
+                                <YakitButton onClick={onSubmit}>
+                                    {extra.type === "import" ? "导入" : "确定"}
+                                </YakitButton>
+                            </>
+                        ) : (
+                            <YakitButton
+                                type={"outline2"}
+                                onClick={() => {
+                                    onCancelStream()
+                                    onCancel()
+                                }}
+                            >
+                                取消
+                            </YakitButton>
+                        )}
+                    </>
+                }
             >
                 {!showProgressStream ? (
                     <div className={styles["fingerprint-import-export-modal"]}>

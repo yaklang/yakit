@@ -155,4 +155,36 @@ module.exports = (win, getClient) => {
     let stream = getClient().ImportFingerprint(params)
     handlerHelper.registerHandler(win, stream, importFingerprintMap, token)
   })
+
+  const asyncGetFingerprintGroupSetByFilter = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetFingerprintGroupSetByFilter(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 查询指纹集合的所属组交集
+  ipcMain.handle("GetFingerprintGroupSetByFilter", async (e, params) => {
+    return await asyncGetFingerprintGroupSetByFilter(params)
+  })
+
+  const asyncBatchUpdateFingerprintToGroup = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().BatchUpdateFingerprintToGroup(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 更新指纹里的本地组
+  ipcMain.handle("BatchUpdateFingerprintToGroup", async (e, params) => {
+    return await asyncBatchUpdateFingerprintToGroup(params)
+  })
 }
