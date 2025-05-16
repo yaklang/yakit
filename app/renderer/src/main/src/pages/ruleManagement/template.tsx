@@ -11,24 +11,12 @@ import {
     UpdateSyntaxFlowRuleAndGroupRequest,
     RuleDebugAuditDetailProps,
     RuleDebugAuditListProps,
-    SyntaxflowsProgress,
-    ExportSyntaxFlowsRequest,
-    ImportSyntaxFlowsRequest,
-    SyntaxFlowRuleOnlineProgress,
     RuleUploadAndDownloadModalProps,
     OnlineRuleGroupListProps,
-    AlertMessage
+    AlertMessage,
+    SyntaxFlowRuleOnlineProgress,
 } from "./RuleManagementType"
-import {
-    useDebounceEffect,
-    useDebounceFn,
-    useMap,
-    useMemoizedFn,
-    useSafeState,
-    useSize,
-    useUpdateEffect,
-    useVirtualList
-} from "ahooks"
+import {useDebounceEffect, useDebounceFn, useMap, useMemoizedFn, useSize, useUpdateEffect, useVirtualList} from "ahooks"
 import {
     OutlineCloseIcon,
     OutlineClouddownloadIcon,
@@ -58,7 +46,6 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -79,14 +66,13 @@ import {
 import cloneDeep from "lodash/cloneDeep"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {failed, info, yakitNotify} from "@/utils/notification"
+import {failed, yakitNotify} from "@/utils/notification"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {
     DefaultRuleContent,
     DefaultRuleGroupFilterPageMeta,
-    RuleImportExportModalSize,
     RuleLanguageList
 } from "@/defaultConstants/RuleManagement"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -114,8 +100,6 @@ import {HoleBugDetail} from "../yakRunnerCodeScan/AuditCodeDetailDrawer/AuditCod
 import {RightAuditDetail} from "../yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-import {openABSFileLocated} from "@/utils/openWebsite"
-import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import NoPermissions from "@/assets/no_permissions.png"
 import {API} from "@/services/swagger/resposeType"
@@ -555,7 +539,7 @@ type FilterUndefinedAndEmptyArray<T> = {
     [K in keyof T]: T[K] extends undefined | [] ? never : T[K]
 }
 // 转换规则导出筛选参数数据
-const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
+export const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) => {
     if (!filter.allCheck && Array.isArray(filter.RuleNames) && filter.RuleNames.length > 0) {
         return {RuleNames: filter.RuleNames}
     } else {
@@ -569,238 +553,13 @@ const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) =
         }
     }
 }
-const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
+export const cleanObject = <T extends Record<string, any>>(obj: T): Partial<FilterUndefinedAndEmptyArray<T>> =>
     Object.entries(obj).reduce<Partial<FilterUndefinedAndEmptyArray<T>>>((acc, [key, value]) => {
         if (value !== undefined && !(Array.isArray(value) && value.length === 0)) {
             acc[key as keyof T] = value as T[keyof T]
         }
         return acc
     }, {})
-
-/** @name 规则导入导出弹窗 */
-export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo((props) => {
-    const {getContainer, extra, onCallback, filterData} = props
-
-    const [form] = Form.useForm()
-
-    const [token, setToken] = useSafeState("")
-    const [showProgressStream, setShowProgressStream] = useSafeState(false)
-    const [progressStream, setProgressStream] = useSafeState<SyntaxflowsProgress>({
-        Progress: 0,
-        Verbose: ""
-    })
-
-    // 规则导出路径
-    const exportPath = useRef<string>("")
-
-    const onSubmit = useMemoizedFn(() => {
-        const formValue = form.getFieldsValue()
-
-        const tragetFilter = cleanObject(transformFilterData(filterData))
-        if (extra.type === "export") {
-            if (!formValue.TargetPath) {
-                failed(`请填写文件夹名`)
-                return
-            }
-            const request: ExportSyntaxFlowsRequest = {
-                Filter: {...cloneDeep(tragetFilter)},
-                TargetPath: formValue?.TargetPath || "",
-                Password: formValue?.Password || undefined
-            }
-            if (!request.TargetPath.endsWith(".zip")) {
-                request.TargetPath = request.TargetPath + ".zip"
-            }
-            ipcRenderer
-                .invoke("GenerateProjectsFilePath", request.TargetPath)
-                .then((res) => {
-                    exportPath.current = res
-                    ipcRenderer.invoke("ExportSyntaxFlows", request, token)
-                    setShowProgressStream(true)
-                })
-                .catch(() => {})
-        }
-
-        if (extra.type === "import") {
-            if (!formValue.InputPath) {
-                failed(`请输入本地插件路径`)
-                return
-            }
-            const params: ImportSyntaxFlowsRequest = {
-                InputPath: formValue.InputPath,
-                Password: formValue.Password || undefined
-            }
-            ipcRenderer.invoke("ImportSyntaxFlows", params, token)
-            setShowProgressStream(true)
-        }
-    })
-
-    const onCancelStream = useMemoizedFn(() => {
-        if (!token) return
-
-        if (extra.type === "export") {
-            ipcRenderer.invoke("cancel-ExportSyntaxFlows", token)
-        }
-        if (extra.type === "import") {
-            ipcRenderer.invoke("cancel-ImportSyntaxFlows", token)
-        }
-    })
-    const onSuccessStream = useMemoizedFn((isSuccess: boolean) => {
-        if (isSuccess) {
-            if (extra.type === "export") {
-                exportPath.current && openABSFileLocated(exportPath.current)
-            }
-            onCallback(true)
-        } else {
-            exportPath.current = ""
-        }
-    })
-
-    useEffect(() => {
-        if (!token) {
-            return
-        }
-        const typeTitle = extra.type === "export" ? "ExportSyntaxFlows" : "ImportSyntaxFlows"
-        let success = true
-        ipcRenderer.on(`${token}-data`, async (_, data: SyntaxflowsProgress) => {
-            setProgressStream(data)
-        })
-        ipcRenderer.on(`${token}-error`, (_, error) => {
-            success = false
-            failed(`[${typeTitle}] error:  ${error}`)
-        })
-        ipcRenderer.on(`${token}-end`, () => {
-            info(`[${typeTitle}] finished`)
-            setShowProgressStream(false)
-            onSuccessStream(success)
-            success = true
-        })
-        return () => {
-            if (token) {
-                onCancelStream()
-                ipcRenderer.removeAllListeners(`${token}-data`)
-                ipcRenderer.removeAllListeners(`${token}-error`)
-                ipcRenderer.removeAllListeners(`${token}-end`)
-            }
-        }
-    }, [token])
-
-    const onCancel = useMemoizedFn(() => {
-        onCallback(false)
-    })
-
-    // modal header 描述文字
-    const exportDescribeMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <div className={styles["export-hint"]}>
-                        远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-                    </div>
-                )
-            case "import":
-                return (
-                    <div className={styles["import-hint"]}>
-                        导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
-                    </div>
-                )
-
-            default:
-                break
-        }
-    })
-
-    // 导入 / 导出 item 节点
-    const exportItemMemoizedFn = useMemoizedFn((type) => {
-        switch (type) {
-            case "export":
-                return (
-                    <Form.Item label={"文件名"} rules={[{required: true, message: "请填写文件名"}]} name={"TargetPath"}>
-                        <YakitInput />
-                    </Form.Item>
-                )
-            case "import":
-                return (
-                    <YakitFormDragger
-                        formItemProps={{
-                            name: "InputPath",
-                            label: "本地规则路径",
-                            rules: [{required: true, message: "请输入本地规则路径"}]
-                        }}
-                        multiple={false}
-                        selectType='file'
-                        fileExtensionIsExist={false}
-                    />
-                )
-
-            default:
-                break
-        }
-    })
-
-    useEffect(() => {
-        if (extra.hint) {
-            setToken(randomString(40))
-            form.resetFields()
-        }
-        // 关闭时重置所有数据
-        return () => {
-            if (extra.hint) {
-                setShowProgressStream(false)
-                setProgressStream({Progress: 0, Verbose: ""})
-                exportPath.current = ""
-            }
-        }
-    }, [extra.hint])
-
-    return (
-        <>
-            <YakitModal
-                getContainer={getContainer}
-                type='white'
-                width={RuleImportExportModalSize[extra.type].width}
-                centered={true}
-                keyboard={false}
-                maskClosable={false}
-                visible={extra.hint}
-                title={extra.title}
-                bodyStyle={{padding: 0}}
-                onOk={onSubmit}
-                onCancel={onCancel}
-                footerStyle={{justifyContent: "flex-end"}}
-                footer={extra.type === "import" ? <YakitButton onClick={onSubmit}>导入</YakitButton> : undefined}
-            >
-                {!showProgressStream ? (
-                    <div className={styles["rule-import-export-modal"]}>
-                        {exportDescribeMemoizedFn(extra.type)}
-                        <Form
-                            form={form}
-                            layout={"horizontal"}
-                            labelCol={{span: RuleImportExportModalSize[extra.type].labelCol}}
-                            wrapperCol={{span: RuleImportExportModalSize[extra.type].wrapperCol}}
-                            onSubmitCapture={(e) => {
-                                e.preventDefault()
-                            }}
-                        >
-                            {exportItemMemoizedFn(extra.type)}
-                            <Form.Item label={"密码"} name={"Password"}>
-                                <YakitInput />
-                            </Form.Item>
-                        </Form>
-                    </div>
-                ) : (
-                    <div style={{padding: "0 16px"}}>
-                        <ImportAndExportStatusInfo
-                            title='导出中'
-                            showDownloadDetail={false}
-                            streamData={progressStream || {Progress: 0}}
-                            logListInfo={[]}
-                        />
-                    </div>
-                )}
-            </YakitModal>
-        </>
-    )
-})
 
 /** @name 新建|编辑规则抽屉 */
 export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {

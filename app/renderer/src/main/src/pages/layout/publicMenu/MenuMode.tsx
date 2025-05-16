@@ -12,6 +12,7 @@ import {
     PublicDataCompareIcon,
     PublicDirectoryScanningIcon,
     PublicDomainIcon,
+    PublicFingerprintManageIcon,
     PublicHTTPHistoryIcon,
     PublicICMPSizeLogIcon,
     PublicMitmIcon,
@@ -487,6 +488,17 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                                         </div>
                                     </div>
                                     <div className={styles["title-style"]}>域名</div>
+                                </div>
+                                <div
+                                    className={styles["vertical-menu-wrapper"]}
+                                    onClick={() => onMenu(YakitRoute.FingerprintManage)}
+                                >
+                                    <div className={styles["menu-icon-wrapper"]}>
+                                        <div className={styles["icon-wrapper"]}>
+                                            <PublicFingerprintManageIcon />
+                                        </div>
+                                    </div>
+                                    <div className={styles["title-style"]}>指纹库</div>
                                 </div>
                             </div>
                             <div className={styles["divider-style"]}></div>

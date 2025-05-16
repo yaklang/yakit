@@ -1,6 +1,7 @@
 const { ipcMain } = require("electron")
 const fs = require("fs")
 const path = require("path")
+const https = require("https")
 const { yakProjects } = require("../filePath")
 
 module.exports = (win, getClient) => {
@@ -154,5 +155,105 @@ module.exports = (win, getClient) => {
   ipcMain.handle("ImportFingerprint", (_, params, token) => {
     let stream = getClient().ImportFingerprint(params)
     handlerHelper.registerHandler(win, stream, importFingerprintMap, token)
+  })
+
+  const asyncGetFingerprintGroupSetByFilter = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetFingerprintGroupSetByFilter(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 查询指纹集合的所属组交集
+  ipcMain.handle("GetFingerprintGroupSetByFilter", async (e, params) => {
+    return await asyncGetFingerprintGroupSetByFilter(params)
+  })
+
+  const asyncBatchUpdateFingerprintToGroup = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().BatchUpdateFingerprintToGroup(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 更新指纹里的本地组
+  ipcMain.handle("BatchUpdateFingerprintToGroup", async (e, params) => {
+    return await asyncBatchUpdateFingerprintToGroup(params)
+  })
+
+  const asyncDownloadFingerprint = (savePath) => {
+    return new Promise((resolve, reject) => {
+      // 判断是否有写入权限
+      const dir = path.dirname(savePath)
+      try {
+        fs.accessSync(dir, fs.constants.W_OK)
+      } catch (err) {
+        return reject(err)
+      }
+
+      let file
+      try {
+        file = fs.createWriteStream(savePath)
+      } catch (err) {
+        return reject(err)
+      }
+
+      // 关闭文件句柄
+      function safeUnlink(file, savePath, cb) {
+        if (file) {
+          try {
+            file.close(() => fs.unlink(savePath, cb))
+          } catch (e) {
+            fs.unlink(savePath, cb)
+          }
+        } else {
+          fs.unlink(savePath, cb)
+        }
+      }
+
+      const request = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/fingerprints.zip", (res) => {
+        if (res.statusCode !== 200) {
+          safeUnlink(file, savePath, () => { })
+          return reject(new Error(`Download failed with status ${res.statusCode}`))
+        }
+
+        res.pipe(file)
+
+        file.on('finish', () => {
+          file.close()
+          resolve(savePath)
+        })
+
+        // 文件写入失败
+        file.on('error', (err) => {
+          safeUnlink(file, savePath, () => { })
+          reject(err)
+        })
+
+        // 下载流错误
+        res.on('error', (err) => {
+          safeUnlink(file, savePath, () => { })
+          reject(err)
+        })
+      })
+
+      // 请求错误
+      request.on('error', (err) => {
+        safeUnlink(file, savePath, () => { })
+        reject(err)
+      })
+    })
+  }
+  // 下载默认指纹到指定路径
+  ipcMain.handle("DownloadFingerprint", async (e, savePath) => {
+    return await asyncDownloadFingerprint(savePath)
   })
 }

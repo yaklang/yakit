@@ -81,6 +81,8 @@ export interface FingerprintFilter {
     Product?: string[]
     IncludeId?: number[]
     GroupName?: string[]
+    RuleName?: string[]
+    Keyword?: string
 }
 export interface QueryFingerprintRequest {
     Filter: FingerprintFilter
@@ -176,20 +178,17 @@ export const grpcCreateFingerprint: APIFunc<CreateFingerprintRequest, DbOperateM
     })
 }
 
-interface QueryFingerprintSameGroupRequest {
+interface GetFingerprintGroupSetRequest {
     Filter: FingerprintFilter
-}
-interface QueryFingerprintSameGroupResponse {
-    Group: FingerprintGroup[]
+    Union?: boolean // 默认交集，如果设置为true，则返回联合
 }
 /** @name 查询指纹集合的所属组交集 */
-export const grpcFetchFingerprintForSameGroup: APIFunc<
-    QueryFingerprintSameGroupRequest,
-    QueryFingerprintSameGroupResponse
-> = (request) => {
+export const grpcFetchFingerprintForSameGroup: APIFunc<GetFingerprintGroupSetRequest, FingerprintGroups> = (
+    request
+) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("QuerySyntaxFlowSameGroup", request)
+            .invoke("GetFingerprintGroupSetByFilter", request)
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", "查询指纹所属于组交集失败：" + e)
@@ -198,19 +197,33 @@ export const grpcFetchFingerprintForSameGroup: APIFunc<
     })
 }
 
-export interface UpdateFingerprintAndGroupRequest {
+export interface BatchUpdateFingerprintToGroupRequest {
     Filter: FingerprintFilter
-    AddGroups: string[]
-    RemoveGroups: string[]
+    AppendGroupName: string[]
+    DeleteGroupName: string[]
 }
 /** @name 更新指纹里的本地组 */
-export const grpcUpdateFingerprintToGroup: APIFunc<UpdateFingerprintAndGroupRequest, unknown> = (request) => {
+export const grpcUpdateFingerprintToGroup: APIFunc<BatchUpdateFingerprintToGroupRequest, DbOperateMessage> = (
+    request
+) => {
     return new Promise(async (resolve, reject) => {
         ipcRenderer
-            .invoke("UpdateSyntaxFlowRuleAndGroup", request)
+            .invoke("BatchUpdateFingerprintToGroup", request)
             .then(resolve)
             .catch((e) => {
                 yakitNotify("error", "更新组失败：" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 下载默认指纹压缩包 */
+export const httpDownloadFingerprint: APIFunc<string, string> = (savePath) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("DownloadFingerprint", savePath)
+            .then(resolve)
+            .catch((e) => {
                 reject(e)
             })
     })
