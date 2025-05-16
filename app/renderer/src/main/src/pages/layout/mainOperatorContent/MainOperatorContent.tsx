@@ -348,7 +348,7 @@ const getColor = (subPage) => {
     return colorList[randNum] || "purple"
 }
 // 软件初始化时的默认打开页面数据
-export const getInitPageCache: () => PageCache[] = () => {
+export const getInitPageCache: (routeKeyToLabel: Map<string, string>) => PageCache[] = (routeKeyToLabel) => {
     if (isEnpriTraceAgent()) {
         return []
     }
@@ -379,6 +379,11 @@ export const getInitPageCache: () => PageCache[] = () => {
         ]
     }
 
+    const time = new Date().getTime().toString()
+    const tabId = `${YakitRoute.DB_HTTPHistoryAnalysis}-[${randomString(6)}]-${time}`
+    const menuName = YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis]?.label || ""
+    let tabName = routeKeyToLabel.get(YakitRoute.DB_HTTPHistoryAnalysis) || menuName
+    let verbose = `${tabName}-1`
     return [
         {
             routeKey: routeConvertKey(YakitRoute.NewHome, ""),
@@ -402,7 +407,16 @@ export const getInitPageCache: () => PageCache[] = () => {
             menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistoryAnalysis].label,
             route: YakitRoute.DB_HTTPHistoryAnalysis,
             singleNode: false,
-            multipleNode: []
+            multipleLength: 1,
+            multipleNode: [
+                {
+                    id: tabId,
+                    verbose,
+                    time,
+                    groupId: "0",
+                    sortFieId: 1
+                }
+            ]
         }
     ]
 }
@@ -496,7 +510,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     )
 
     // tab数据
-    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(_.cloneDeepWith(getInitPageCache()) || [])
+    const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
+        _.cloneDeepWith(getInitPageCache(routeKeyToLabel)) || []
+    )
     const [currentTabKey, setCurrentTabKey] = useState<YakitRoute | string>(getInitActiveTabKey())
     useEffect(() => {
         setCurrentPageTabRouteKey(currentTabKey)
@@ -1282,7 +1298,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         })
         ipcRenderer.on("fetch-close-all-tab", () => {
             // delFuzzerList(1)
-            setPageCache(getInitPageCache())
+            setPageCache(getInitPageCache(routeKeyToLabel))
             setCurrentTabKey(getInitActiveTabKey())
         })
         return () => {
@@ -3755,6 +3771,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         /** 关闭当前标签页 */
         const onRemoveSubPage = useMemoizedFn((removeItem: MultipleNodeInfo) => {
+            // 固定tab的多开页面，最后一个页面不能删除
+            if (defaultFixedTabsNoSinglPageRoute.includes(pageItem.route) && subPage.length === 1) return
+
             //  先更改当前选择item,在删除
             if (removeItem.id === selectSubMenu.id) onUpdateSelectSubPage(removeItem)
             const {index, subIndex} = getPageItemById(subPage, removeItem.id)
