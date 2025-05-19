@@ -469,7 +469,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
     const onSetRefreshPositionElement = useMemoizedFn((positionElementId) => {
         jumpByElementId(positionElementId)
     })
-    // 调用跳转到第五行
+    // 调用跳转到行
     const jumpToFifthLine = (line: number) => {
         if (!line) return
         get()?.action((ctx) => {

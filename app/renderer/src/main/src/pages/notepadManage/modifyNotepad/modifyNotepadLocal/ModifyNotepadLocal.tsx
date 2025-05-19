@@ -90,8 +90,10 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
     const [exportVisible, setExportVisible] = useState<boolean>(false)
 
-    const [totalMatches, setTotalMatches] = useState<number>(0) //匹配总数
-    const [currentMatchesIndex, setCurrentMatchesIndex] = useState<number>(0) // 匹配第几个
+    // const [totalMatches, setTotalMatches] = useState<number>(0) //匹配总数
+    // const [currentMatchesIndex, setCurrentMatchesIndex] = useState<number>(0) // 匹配第几个
+    // const [positionElementId, setPositionElementId] = useState<string>("") // 定位元素id
+
     const modifyNotepadContentRef = useRef<ModifyNotepadContentRefProps>({
         getCatalogue: () => {}
     })
@@ -191,15 +193,6 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         }
         isInitLoadingRef.current = false
 
-        // 进入页面时,如果当前搜索关键字和数据中心的不一样，需要更新关键字
-        // 如果一样，还需额外判断跳转位置是否有变化;位置变化也需要更新一下搜索
-        if (pageInfo.keyWordInfo?.keyWord && pageInfo.keyWordInfo?.keyWord !== keyWord) {
-            setKeyWord(pageInfo.keyWordInfo?.keyWord)
-        } else if (pageInfo.keyWordInfo?.position) {
-            onSearchByPageData()
-        }
-        setJumpLine(pageInfo.keyWordInfo?.line || 0)
-
         // 标题
         emiter.on("secondMenuTabDataChange", onSecondMenuDataChange)
         return () => {
@@ -266,95 +259,79 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         emiter.emit("onCloseCurrentPage", pageId)
     })
     //#endregion
-    //#region 搜索高亮
-    useDebounceEffect(
-        () => {
-            const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
-            onSearchHighlight(keyWord, pageInfo.keyWordInfo?.position)
-            if (pageInfo.keyWordInfo?.position) {
-                onUpdatePageInfo({
-                    keyWordInfo: {
-                        keyWord: "",
-                        position: 0
-                    }
-                })
-            }
-        },
-        [keyWord],
-        {wait: 200}
-    )
+    // //#region 搜索高亮
+    // // NOTE 笔记本中存在代码块时，搜索会不正常
+    // useEffect(() => {
+    //     const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
+    //     onSearchHighlightJump({
+    //         keyWord: pageInfo.keyWordInfo?.keyWord || "",
+    //         position: pageInfo.keyWordInfo?.position || 0,
+    //         line: pageInfo.keyWordInfo?.line || 0
+    //     })
+    // }, [initPageInfo()])
 
-    /**
-     * inViewport变化,例如:数据中心的数据变化引起的搜索
-     */
-    const onSearchByPageData = useMemoizedFn(() => {
-        const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
-        if (pageInfo.keyWordInfo?.position) {
-            onSearchHighlight(pageInfo.keyWordInfo.keyWord, pageInfo.keyWordInfo?.position)
-            onUpdatePageInfo({
-                keyWordInfo: {
-                    keyWord: "",
-                    position: 0
-                }
-            })
-        }
-    })
+    // const onSearchHighlightJump = useMemoizedFn((value) => {
+    //     if (value.keyWord !== keyWord) {
+    //         setKeyWord(value.keyWord)
+    //     }
+    //     setTimeout(() => {
+    //         onSearchHighlight(value?.keyWord || "", value?.position)
+    //     }, 200)
+    // })
 
-    const onSearchHighlight = useMemoizedFn((value: string, position?: number) => {
-        // 先清除之前的高亮
-        markInstanceRef.current?.unmark({
-            done: () => {
-                resultsIdsRef.current = []
-                setCurrentMatchesIndex(0)
-                if (value.trim() !== "") {
-                    markInstanceRef.current?.mark(value, {
-                        separateWordSearch: false,
-                        done: (total) => {
-                            perTargetIdRef.current = ""
-                            setTotalMatches(total)
-                            setTimeout(() => {
-                                jumpToMatch(position || 1, total)
-                            }, 200)
-                        },
-                        exclude: [".milkdown-code,.milkdown-code *"], // 排除自身及所有子元素
-                        each: (ele) => {
-                            const id = uuidv4()
-                            ele.setAttribute("id", id)
-                            resultsIdsRef.current.push(id)
-                        }
-                    })
-                } else {
-                    setTotalMatches(0)
-                }
-            }
-        })
-    })
+    // const onSearchHighlight = useMemoizedFn((value: string, position?: number) => {
+    //     // 先清除之前的高亮
+    //     markInstanceRef.current?.unmark({
+    //         done: () => {
+    //             resultsIdsRef.current = []
+    //             perTargetIdRef.current = ""
+    //             setCurrentMatchesIndex(0)
+    //             if (value.trim() !== "") {
+    //                 markInstanceRef.current?.mark(value, {
+    //                     separateWordSearch: false,
+    //                     done: (total) => {
+    //                         perTargetIdRef.current = ""
+    //                         setTotalMatches(total)
+    //                         setTimeout(() => {
+    //                             jumpToMatch(position || 1, total)
+    //                         }, 200)
+    //                     },
+    //                     exclude: [".milkdown-code,.milkdown-code *"], // 排除自身及所有子元素
+    //                     each: (ele) => {
+    //                         const id = uuidv4()
+    //                         ele.setAttribute("id", id)
+    //                         resultsIdsRef.current.push(id)
+    //                     }
+    //                 })
+    //             } else {
+    //                 setTotalMatches(0)
+    //             }
+    //         }
+    //     })
+    // })
 
-    // 跳转到指定匹配项
-    const jumpToMatch = (index: number, total?: number) => {
-        if (index < 1 || index > (total || totalMatches)) {
-            return
-        }
+    // // 跳转到指定匹配项
+    // const jumpToMatch = (index: number, total?: number) => {
+    //     if (index < 1 || index > (total || totalMatches)) {
+    //         return
+    //     }
 
-        let targetId = resultsIdsRef.current[index - 1]
-        if (!targetId) return
-        const target = document.getElementById(targetId)!
-        if (target) {
-            if (perTargetIdRef.current) {
-                const perTarget = document.getElementById(perTargetIdRef.current)!
-                if (perTarget.classList.contains(highlightPulseClass)) perTarget.classList.remove(highlightPulseClass)
-            }
-            // 添加临时视觉反馈
-            target.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            })
-            if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
-            perTargetIdRef.current = targetId
-        }
-        setCurrentMatchesIndex(index)
-    }
-    //#endregion
+    //     let targetId = resultsIdsRef.current[index - 1]
+    //     if (!targetId) return
+    //     const target = document.getElementById(targetId)!
+    //     if (target) {
+    //         if (perTargetIdRef.current) {
+    //             const perTarget = document.getElementById(perTargetIdRef.current)!
+    //             if (perTarget.classList.contains(highlightPulseClass)) perTarget.classList.remove(highlightPulseClass)
+    //         }
+    //         // 添加临时视觉反馈
+    //         setPositionElementId(targetId)
+    //         if (!target.classList.contains(highlightPulseClass)) target.classList.add(highlightPulseClass)
+    //         perTargetIdRef.current = targetId
+    //     }
+    //     setCurrentMatchesIndex(index)
+    // }
+    // //#endregion
     //#region 保存最新的文档内容
     /**保存最新的文档内容 */
     const onSaveNewContent: APIFunc<string, DbOperateMessage> = useMemoizedFn((markdownContent) => {
@@ -457,7 +434,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 spinning={notepadLoading}
                 titleExtra={
                     <div className={styles["modify-notepad-local-heard-extra"]}>
-                        <YakitInput.Search
+                        {/* <YakitInput.Search
                             value={keyWord}
                             onChange={(e) => setKeyWord(e.target.value)}
                             onSearch={(val) => onSearchHighlight(val)}
@@ -487,7 +464,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             </div>
                         </>
 
-                        <Divider type='vertical' />
+                        <Divider type='vertical' /> */}
                         <YakitButton type='outline2' icon={<OutlineExportIcon />} size='large' onClick={onExport}>
                             导出
                         </YakitButton>
@@ -550,6 +527,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}
                             onSaveContentBeforeDestroy={onSaveNewContent}
+                            // positionElementId={positionElementId}
                         />
                     </div>
                 </div>
