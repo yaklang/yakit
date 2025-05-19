@@ -35,18 +35,24 @@ export interface UserSearchQuery {
 export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse> = (query) => {
     return new Promise((resolve, reject) => {
         try {
-            NetWorkApi<UserSearchQuery, API.UserOrdinaryResponse>({
-                method: "get",
-                url: "user/search",
-                params: {
-                    ...query
-                }
-            })
-                .then(resolve)
-                .catch((err) => {
-                    yakitNotify("error", "apiGetUserSearch获取普通用户失败:" + err)
-                    reject(err)
+            if (!query.keywords) {
+                resolve({
+                    data: []
                 })
+            } else {
+                NetWorkApi<UserSearchQuery, API.UserOrdinaryResponse>({
+                    method: "get",
+                    url: "user/search",
+                    params: {
+                        ...query
+                    }
+                })
+                    .then(resolve)
+                    .catch((err) => {
+                        yakitNotify("error", "apiGetUserSearch获取普通用户失败:" + err)
+                        reject(err)
+                    })
+            }
         } catch (error) {
             reject(error)
         }
