@@ -154,6 +154,7 @@ import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
+import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -251,8 +252,8 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "yakrunner-audit-code": {label: "代码审计"},
     "yakrunner-project-manager": {label: "项目管理"},
     "rule-management": {label: "规则管理"},
-    "notepad-manage": {label: "记事本"},
-    "modify-notepad": {label: "编辑记事本"},
+    "notepad-manage": {label: `${getNotepadNameByEdition()}`},
+    "modify-notepad": {label: `编辑${getNotepadNameByEdition()}`},
     "yakrunner-audit-hole": {label: "审计漏洞"},
     "system-config": {label: "系统配置"},
     "shortcut-key": {label: "快捷键设置"}

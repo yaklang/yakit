@@ -18,7 +18,7 @@ import {ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import emiter from "@/utils/eventBus/eventBus"
 import styles from "./ExtraMenu.module.scss"
 import {isIRify} from "@/utils/envfile"
-import {NotepadMenu} from "../HeardMenu/HeardMenu"
+import {NotepadMenu} from "../NotepadMenu/NotepadMenu"
 
 const {ipcRenderer} = window.require("electron")
 interface ExtraMenuProps {

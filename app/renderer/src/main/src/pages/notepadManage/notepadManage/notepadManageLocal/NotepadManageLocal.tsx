@@ -45,6 +45,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 
 const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
 
@@ -333,13 +334,15 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
     const onBatchImport = useMemoizedFn(() => {
         setImportVisible(true)
     })
-
+    const name = useCreation(() => {
+        return getNotepadNameByEdition()
+    }, [])
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
                 <div className={styles["notepad-manage-heard"]}>
                     <div className={styles["heard-title"]}>
-                        <span className='content-ellipsis'>记事本管理</span>
+                        <span className='content-ellipsis'>{name}管理</span>
                         <TableTotalAndSelectNumber total={response.Total} selectNum={selectNumber} />
                     </div>
                     <div className={styles["heard-extra"]}>
