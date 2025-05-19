@@ -16,6 +16,7 @@ import {callCommand} from "@milkdown/kit/utils"
 import {getMentionId, mentionCommand} from "../utils/mentionPlugin"
 import {apiNotepadEit} from "./utils"
 import classNames from "classnames"
+import {InputRef} from "antd"
 export const mentionFactory = slashFactory("Commands")
 
 interface MentionListViewProps {
@@ -34,6 +35,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
 
     const ref = useRef<HTMLDivElement>(null)
     const slashProvider = useRef<SlashProvider>()
+    const searchRef = useRef<InputRef>(null)
 
     const {view, prevState} = usePluginViewContext()
     const [loading, get] = useInstance()
@@ -67,10 +69,26 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
         () => {
             if (loading || !slashProvider.current) return
             slashProvider.current?.update(view, prevState)
+            if (shouldShow()) {
+                searchRef.current?.focus()
+            }
         },
         [loading, view, prevState],
         {wait: 200, leading: true}
     )
+
+    const shouldShow = useMemoizedFn(() => {
+        if (!slashProvider.current) return false
+        const currentTextBlockContent = slashProvider.current.getContent(view)
+
+        if (!currentTextBlockContent) return false
+
+        const target = currentTextBlockContent.at(-1)
+
+        if (!target) return false
+
+        return mentionTarget === target
+    })
 
     const getUserList = useMemoizedFn((value) => {
         setListLoading(true)
@@ -134,6 +152,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
             ref={ref}
         >
             <YakitInput.Search
+                ref={searchRef}
                 value={keyWord}
                 onChange={(e) => setKeyWord(e.target.value)}
                 onSearch={onSearch}
