@@ -38,6 +38,7 @@ import styles from "./NotepadManageOnline.module.scss"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
+import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
@@ -314,12 +315,15 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             return selectedRowKeys.length
         }
     }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
+    const name = useCreation(() => {
+        return getNotepadNameByEdition()
+    }, [])
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
                 <div className={styles["notepad-manage-heard"]}>
                     <div className={styles["heard-title"]}>
-                        <span>记事本管理</span>
+                        <span>{name}管理</span>
                         <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectNumber} />
                     </div>
                     <div className={styles["heard-extra"]}>

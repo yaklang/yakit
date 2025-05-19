@@ -8,9 +8,7 @@ import {
     EnhancedPrivateRouteMenuProps,
     privateExchangeProps,
     privateConvertDatabase,
-    jsonDataConvertMenus,
-    NotepadMenuProps
-} from "./HeardMenuType"
+    jsonDataConvertMenus} from "./HeardMenuType"
 import {
     AcademicCapIcon,
     CheckIcon,
@@ -36,7 +34,9 @@ import {failed, yakitNotify} from "@/utils/notification"
 import {YakScript} from "@/pages/invoker/schema"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useStore} from "@/store"
-import {isEnpriTraceAgent, isIRify} from "@/utils/envfile"
+import {
+    isEnpriTraceAgent,
+    isIRify} from "@/utils/envfile"
 import {CodeGV, RemoteGV} from "@/yakitGV"
 import {
     DatabaseFirstMenuProps,
@@ -62,8 +62,7 @@ import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 import classNames from "classnames"
 import style from "./HeardMenu.module.scss"
 import {ExtraMenu} from "../publicMenu/ExtraMenu"
-import emiter from "@/utils/eventBus/eventBus"
-import {SolidClipboardlistIcon, SolidPayloadIcon} from "@/assets/icon/solid"
+import {SolidPayloadIcon} from "@/assets/icon/solid"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 
@@ -1007,63 +1006,5 @@ const CollapseMenu: React.FC<CollapseMenuProp> = React.memo((props) => {
                 </div>
             </YakitPopover>
         </div>
-    )
-})
-
-export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
-    const {isExpand, onRouteMenuSelect} = props
-    const [notepadVisible, setNotepadVisible] = useState<boolean>(false)
-    const onNotepad = useMemoizedFn((item) => {
-        switch (item.key) {
-            case "list":
-                onRouteMenuSelect({
-                    route: YakitRoute.Notepad_Manage
-                })
-                break
-            case "add":
-                onRouteMenuSelect({
-                    route: YakitRoute.Modify_Notepad
-                })
-                break
-            default:
-                break
-        }
-    })
-    return (
-        <>
-            <Dropdown
-                overlayClassName={style["notepad-drop-menu"]}
-                overlay={
-                    <>
-                        {[
-                            {key: "list", label: "记事本管理"},
-                            {key: "add", label: "新建记事本"}
-                        ].map((item) => (
-                            <div
-                                key={item.key}
-                                className={classNames(style["notepad-item"])}
-                                onClick={() => onNotepad(item)}
-                            >
-                                <div className={style["notepad-item-left"]}>{item.label}</div>
-                            </div>
-                        ))}
-                    </>
-                }
-                onVisibleChange={setNotepadVisible}
-            >
-                <YakitButton
-                    type='secondary2'
-                    className={classNames(style["heard-menu-customize"], {
-                        [style["margin-right-0"]]: isExpand,
-                        [style["heard-menu-customize-menu"]]: notepadVisible
-                    })}
-                    icon={<SolidClipboardlistIcon />}
-                >
-                    <div className={style["heard-menu-customize-content"]}>
-                        记事本{(notepadVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
-                    </div>
-                </YakitButton>
-            </Dropdown>
-        </>
     )
 })

@@ -12,7 +12,7 @@ export const apiNotepadEit: APIFunc<API.NotepadEitRequest, API.ActionSucceeded> 
         })
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "获取记事本列表失败:" + err)
+                if (!hiddenError) yakitNotify("error", "apiNotepadEit 失败:" + err)
                 reject(err)
             })
     })
