@@ -315,15 +315,18 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                 )
             ].flat()
             const markPlugin = [...markCustomPlugin()].flat()
-            const mentionPlugin = [
-                mentionCustomPlugin(),
-                mentionFactory,
-                $view(mentionCustomSchema.node, () =>
-                    nodeViewFactory({
-                        component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
-                    })
-                )
-            ].flat()
+            /**启动了在线协作才有 @ 提及 相关逻辑 */
+            const mentionPlugin = !!collabParams?.enableCollab
+                ? [
+                      mentionCustomPlugin(),
+                      mentionFactory,
+                      $view(mentionCustomSchema.node, () =>
+                          nodeViewFactory({
+                              component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
+                          })
+                      )
+                  ].flat()
+                : []
             //#endregion
             return (
                 Editor.make()
@@ -334,12 +337,13 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                 component: TooltipView
                             })
                         })
-                        ctx.set(mentionFactory.key, {
-                            view: pluginViewFactory({
-                                component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
+                        if (!!collabParams?.enableCollab) {
+                            ctx.set(mentionFactory.key, {
+                                view: pluginViewFactory({
+                                    component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
+                                })
                             })
-                        })
-
+                        }
                         // 配置为只读
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly
@@ -450,7 +454,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             element.scrollIntoView({behavior: "smooth"})
         }
     })
-    
+
     // 调用跳转到第五行
     const jumpToFifthLine = (line: number) => {
         if (!line) return
