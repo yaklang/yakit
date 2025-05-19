@@ -80,6 +80,7 @@ export const useGoEditNotepad = (props?: GoEditNotepadProps) => {
             }
         }
         updatePagesDataCacheById(YakitRoute.Modify_Notepad, {...newCurrentItem})
+        emiter.emit("refreshPositionElement", value?.domId || "")
     })
 
     const goEditNotepad = useMemoizedFn((params: ModifyNotepadPageInfoProps) => {

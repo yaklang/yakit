@@ -275,7 +275,6 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                                 yakitNotify("error", "未找到笔记本信息")
                                 break
                             }
-                            /**NOTE 已经打开得页面，在此点击不会更新页面数据；此逻辑在Luoluo/feature/notepad-local-jump分支中，待合并后，就可以了 */
                             apiGetNotepadDetail(data.notepadHash).then((res) => {
                                 goEditNotepad({
                                     notepadHash: res.hash,

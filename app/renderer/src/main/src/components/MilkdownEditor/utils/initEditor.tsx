@@ -58,6 +58,7 @@ import {mentionFactory, MentionListView} from "../Mention/MentionListView"
 import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
 import {CustomMention} from "../Mention/CustomMention"
 import {useEffect} from "react"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -75,6 +76,7 @@ interface InitEditorHooksProps
     collabProps?: InitEditorHooksCollabProps
     diffProps?: InitEditorHooksDiffProps
     localProps?: InitEditorHooksLocalProps
+    inViewport?: boolean
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
     const {
@@ -86,6 +88,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         onMarkdownUpdated,
         diffProps,
         localProps,
+        inViewport,
         positionElementId
     } = props
 
@@ -318,7 +321,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             /**启动了在线协作才有 @ 提及 相关逻辑 */
             const mentionPlugin = !!collabParams?.enableCollab
                 ? [
-                      mentionCustomPlugin(),
+                      ...mentionCustomPlugin(),
                       mentionFactory,
                       $view(mentionCustomSchema.node, () =>
                           nodeViewFactory({
@@ -441,6 +444,13 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
     }
     //#region 位置定位
     useEffect(() => {
+        if (!inViewport) return
+        emiter.on("refreshPositionElement", onSetRefreshPositionElement)
+        return () => {
+            emiter.off("refreshPositionElement", onSetRefreshPositionElement)
+        }
+    }, [inViewport])
+    useEffect(() => {
         if (loading || !positionElementId) return
         const editor = get()
         if (editor) {
@@ -449,12 +459,16 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
     }, [loading, positionElementId])
     /**根据id跳转到对应位置 */
     const jumpByElementId = useMemoizedFn((targetId: string) => {
-        const element = document.getElementById(targetId)
-        if (element) {
-            element.scrollIntoView({behavior: "smooth"})
-        }
+        setTimeout(() => {
+            const element = document.getElementById(targetId)
+            if (element) {
+                element.scrollIntoView({behavior: "smooth"})
+            }
+        }, 200)
     })
-
+    const onSetRefreshPositionElement = useMemoizedFn((positionElementId) => {
+        jumpByElementId(positionElementId)
+    })
     // 调用跳转到第五行
     const jumpToFifthLine = (line: number) => {
         if (!line) return
@@ -469,7 +483,6 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         const doc = view.state.doc
         let currentLine = 1 // 当前行号（从 1 开始）
         let targetPos = 0 // 目标行的起始位置
-        debugger
         let isBreak = false
         // 遍历文档节点，计算行号
         doc.descendants((node, pos) => {

@@ -121,6 +121,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     }, [collabProps])
     const {get, loading} = useInitEditorHooks({
         ...props,
+        inViewport,
         collabProps: collabParams
     })
     /**更新最新的editor */
