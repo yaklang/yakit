@@ -62,9 +62,7 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         props
     const treeRef = useRef<any>(null)
     const wrapper = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(wrapper)
     const size = useSize(wrapper)
-    const getInViewport = useMemoizedFn(() => inViewport)
 
     const [isDownCtrlCmd, setIsDownCtrlCmd] = useState<boolean>(false)
 
@@ -76,38 +74,6 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         emiter.on("onScrollToFileTree", onScrollToFileTreeFun)
         return () => {
             emiter.off("onScrollToFileTree", onScrollToFileTreeFun)
-        }
-    }, [])
-
-    useEffect(() => {
-        let system = SystemInfo.system
-        if (!system) {
-        }
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            return
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            // console.log("down", e, SystemInfo)
-            setIsDownCtrlCmd(true)
-        }
-        const handleKeyUp = (e: KeyboardEvent) => {
-            return
-            // console.log("up", e, SystemInfo)
-            if (!getInViewport()) {
-                setIsDownCtrlCmd(false)
-                return
-            }
-            setIsDownCtrlCmd(false)
-        }
-
-        document.addEventListener("keydown", handleKeyDown)
-        document.addEventListener("keyup", handleKeyUp)
-        return () => {
-            document.removeEventListener("keydown", handleKeyDown)
-            document.removeEventListener("keyup", handleKeyUp)
         }
     }, [])
 

@@ -57,7 +57,7 @@ import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import { onSetSelectedSearchVal } from "./AuditSearchModal/AuditSearch"
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
-import { getStorageAuditCodeShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRuunerAuditCode"
+import { getStorageAuditCodeShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRunnerAuditCode"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {

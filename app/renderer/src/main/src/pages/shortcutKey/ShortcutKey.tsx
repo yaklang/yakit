@@ -58,6 +58,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
         setKeyShow(false)
         editInfo.current = ""
         setInputKeys([])
+        setWarnInfo(undefined)
     })
 
     const [inputKeys, setInputKeys] = useState<YakitKeyBoard[]>([])

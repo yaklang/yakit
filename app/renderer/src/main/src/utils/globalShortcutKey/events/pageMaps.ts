@@ -9,7 +9,8 @@ import {
     setStoragePluginHubShortcutKeyEvents
 } from "./page/pluginHub"
 import {YakitRoute} from "@/enums/yakitRoute"
-import { getAuditCodeShortcutKeyEvents, getStorageAuditCodeShortcutKeyEvents, setStorageAuditCodeShortcutKeyEvents } from "./page/yakRuunerAuditCode"
+import { getAuditCodeShortcutKeyEvents, getStorageAuditCodeShortcutKeyEvents, setStorageAuditCodeShortcutKeyEvents } from "./page/yakRunnerAuditCode"
+import { getStorageYakRunnerShortcutKeyEvents, getYakRunnerShortcutKeyEvents, setStorageYakRunnerShortcutKeyEvents } from "./page/yakRunner"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -34,7 +35,9 @@ export enum ShortcutKeyPage {
     // 插件仓库
     PluginHub = YakitRoute.Plugin_Hub,
     // 代码审计
-    YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code
+    YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
+    // YakRunner
+    YakRunner = YakitRoute.YakScript
 }
 export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
@@ -54,5 +57,10 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         getEvents: getAuditCodeShortcutKeyEvents,
         getStorage: getStorageAuditCodeShortcutKeyEvents,
         setStorage: setStorageAuditCodeShortcutKeyEvents
+    },
+    "yakScript": {
+        getEvents: getYakRunnerShortcutKeyEvents,
+        getStorage: getStorageYakRunnerShortcutKeyEvents,
+        setStorage: setStorageYakRunnerShortcutKeyEvents
     }
 }

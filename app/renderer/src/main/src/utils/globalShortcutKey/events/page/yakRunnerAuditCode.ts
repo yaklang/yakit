@@ -55,7 +55,7 @@ const AuditCodeShortcutKeyEvents: EventsType = {
 let currentKeyEvents: EventsType | null = null
 const LocalStorageKey = "audit-code-shortcut-key-events"
 
-/** 获取快捷键事件和对应按键-全局 */
+/** 获取快捷键事件和对应按键-页面级 */
 export const getStorageAuditCodeShortcutKeyEvents = () => {
     getLocalValue(LocalStorageKey)
         .then((res) => {
@@ -67,7 +67,7 @@ export const getStorageAuditCodeShortcutKeyEvents = () => {
         })
         .catch(() => {})
 }
-/** 设置快捷键事件和对应按键-全局 */
+/** 设置快捷键事件和对应按键-页面级 */
 export const setStorageAuditCodeShortcutKeyEvents = (events: Record<string, ShortcutKeyEventInfo>) => {
     if (!events) return
     currentKeyEvents = events as EventsType
