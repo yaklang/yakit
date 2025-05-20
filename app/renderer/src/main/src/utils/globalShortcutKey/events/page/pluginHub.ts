@@ -19,7 +19,7 @@ const PluginHubShortcutKeyEvents: EventsType = {
 let currentKeyEvents: EventsType | null = null
 const LocalStorageKey = "plugin-hub-shortcut-key-events"
 
-/** 获取快捷键事件和对应按键-全局 */
+/** 获取快捷键事件和对应按键-页面级 */
 export const getStoragePluginHubShortcutKeyEvents = () => {
     getLocalValue(LocalStorageKey)
         .then((res) => {
@@ -31,7 +31,7 @@ export const getStoragePluginHubShortcutKeyEvents = () => {
         })
         .catch(() => {})
 }
-/** 设置快捷键事件和对应按键-全局 */
+/** 设置快捷键事件和对应按键-页面级 */
 export const setStoragePluginHubShortcutKeyEvents = (events: Record<string, ShortcutKeyEventInfo>) => {
     if (!events) return
     currentKeyEvents = events as EventsType

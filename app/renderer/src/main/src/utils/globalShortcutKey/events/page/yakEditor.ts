@@ -209,12 +209,12 @@ export const isConflictToYakEditor = (Shortcut: string[]) => {
             let newKeys = item.keys.filter((item) => item !== YakitKeyMod.CtrlCmd)
             let newShortcut = Shortcut.filter((item) => item !== YakitKeyMod.Control && item !== YakitKeyMod.Meta)
             if (JSON.stringify(sortKeysCombination(newKeys)) === JSON.stringify(sortKeysCombination(newShortcut))) {
-                result = `编辑器冲突：${item.name}`
+                result = `编辑器冲突：${item.name} - 此快捷键设置将会在编辑器中被覆盖`
             }
         } else {
             if (JSON.stringify(sortKeysCombination(item.keys)) === JSON.stringify(sortKeysCombination(Shortcut))) {
                 console.log("item.keys", item.keys, Shortcut)
-                result = `编辑器冲突：${item.name}`
+                result = `编辑器冲突：${item.name} - 此快捷键设置将会在编辑器中被覆盖`
             }
         }
     })
@@ -233,7 +233,7 @@ const YakEditorShortcutKeyEvents: EventsType = {}
 let currentKeyEvents: EventsType | null = null
 const LocalStorageKey = "yakit-editor-shortcut-key-events"
 
-/** 获取快捷键事件和对应按键-全局 */
+/** 获取快捷键事件和对应按键-组件级 */
 export const getStorageYakEditorShortcutKeyEvents = () => {
     getLocalValue(LocalStorageKey)
         .then((res) => {
@@ -245,7 +245,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
         })
         .catch(() => {})
 }
-/** 设置快捷键事件和对应按键-全局 */
+/** 设置快捷键事件和对应按键-组件级 */
 export const setStorageYakEditorShortcutKeyEvents = (events: Record<string, ShortcutKeyEventInfo>) => {
     if (!events) return
     currentKeyEvents = events as EventsType
@@ -263,12 +263,27 @@ const isAllowPass = (arr: string[]) => {
     return ["Alt", "Shift", "Control", "Meta"].some((item) => arr.includes(item))
 }
 
+/** 判断当前输入是否直接使用编辑器默认内部快捷键 */
+export const isYakEditorDefaultShortcut = (ev: KeyboardEvent): boolean => {
+    const keys = convertKeyEventToKeyCombination(ev)
+    if (!keys) return true
+    // 非组合快捷键不拦截monaco正常输入
+    if (!isAllowPass(keys)) return true
+    let nowKey = sortKeysCombination(keys).join("")
+    let has = false
+    YakEditorDefaultShortcut.forEach((item) => {
+        let itemKey = sortKeysCombination(item.keys).join("")
+        if (nowKey === itemKey) {
+            has = true
+        }
+    })
+    return has
+}
+
 /** 判断当前输入是否激活编辑器自定义内部快捷键 */
 export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return false
-    // 非组合快捷键不拦截monaco正常输入
-    if (!isAllowPass(keys)) return false
     let nowKey = sortKeysCombination(keys).join("")
     let has = false
     Object.keys(YakEditorShortcutKeyEvents).forEach((key) => {
@@ -287,8 +302,6 @@ export const isYakEditorShortcut = (ev: KeyboardEvent): boolean => {
 export const isPageOrGlobalShortcut = (ev: KeyboardEvent): boolean => {
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return false
-    // 非组合快捷键不拦截monaco正常输入
-    if (!isAllowPass(keys)) return false
     const eventName = parseShortcutKeyEvent(keys)
     if (!eventName) return false
     handleShortcutKey(ev)

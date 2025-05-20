@@ -72,8 +72,12 @@ import {CloudDownloadIcon} from "@/assets/newIcon"
 import {IconSolidAIIcon, IconSolidAIWhiteIcon} from "@/assets/icon/colors"
 import {PluginSwitchToTag} from "@/pages/pluginEditor/defaultconstants"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
-import { getStorageYakEditorShortcutKeyEvents, isPageOrGlobalShortcut, isYakEditorShortcut } from "@/utils/globalShortcutKey/events/page/yakEditor"
-import { handleShortcutKey } from "@/utils/globalShortcutKey/utils"
+import {
+    getStorageYakEditorShortcutKeyEvents,
+    isPageOrGlobalShortcut,
+    isYakEditorDefaultShortcut,
+    isYakEditorShortcut
+} from "@/utils/globalShortcutKey/events/page/yakEditor"
 
 export interface CodecTypeProps {
     key?: string
@@ -279,7 +283,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
     })
 
-    const ref = useRef(null)
+    const ref = useRef<any>(null)
     const [inViewport] = useInViewport(ref)
 
     useEffect(() => {
@@ -1613,12 +1617,26 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         })
     }
 
-    useEffect(()=>{
-       // 此处一个页面可能存在多个monaco
-       // 因此仅仅在monaco刚打开时获取最新的快捷键事件和对应按键
-       getStorageYakEditorShortcutKeyEvents()
-    },[])
+    useEffect(() => {
+        // 此处一个页面可能存在多个monaco
+        // 因此仅仅在monaco刚打开时获取最新的快捷键事件和对应按键
+        getStorageYakEditorShortcutKeyEvents()
+    }, [])
 
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            // 阻止事件冒泡
+            event.stopPropagation()
+        }
+        const inputElement = ref.current
+        inputElement && inputElement.addEventListener("keydown", handleKeyDown)
+        // 清理函数
+        return () => {
+            if (inputElement) {
+                inputElement.removeEventListener("keydown", handleKeyDown)
+            }
+        }
+    }, [])
     return (
         <div
             ref={ref}
@@ -1679,17 +1697,22 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
 
                         editor.onKeyDown((e) => {
-                            // 判断当前输入是否激活 编辑器内部快捷键
-                            const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
-                            if(isActiveYakEditor){
-                                e.browserEvent.stopImmediatePropagation()
-                                return
-                            }
-                            // 判断当前输入是否激活 页面级或全局快捷键
-                            const isActive = isPageOrGlobalShortcut(e.browserEvent)
-                            if(isActive){
-                                e.browserEvent.stopImmediatePropagation()
-                                return
+                            console.log("eee---", e.browserEvent)
+                            // 是否直接使用编辑器快捷键 不走自定义逻辑
+                            const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
+                            if (!isUseDefaultShortcut) {
+                                // 判断当前输入是否激活 编辑器内部快捷键
+                                const isActiveYakEditor = isYakEditorShortcut(e.browserEvent)
+                                if (isActiveYakEditor) {
+                                    e.browserEvent.stopImmediatePropagation()
+                                    return
+                                }
+                                // 判断当前输入是否激活 页面级或全局快捷键
+                                const isActive = isPageOrGlobalShortcut(e.browserEvent)
+                                if (isActive) {
+                                    e.browserEvent.stopImmediatePropagation()
+                                    return
+                                }
                             }
                         })
 

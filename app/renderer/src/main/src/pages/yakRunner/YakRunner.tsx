@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {useGetState, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
+import {useGetState, useInViewport, useMemoizedFn, useThrottleEffect, useThrottleFn, useUpdateEffect} from "ahooks"
 import {LeftSideBar} from "./LeftSideBar/LeftSideBar"
 import {BottomSideBar} from "./BottomSideBar/BottomSideBar"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps, FileTreeNodeProps} from "./FileTree/FileTreeType"
@@ -50,7 +50,6 @@ import styles from "./YakRunner.module.scss"
 import {SplitView} from "./SplitView/SplitView"
 import {BottomEditorDetails} from "./BottomEditorDetails/BottomEditorDetails"
 import {ShowItemType} from "./BottomEditorDetails/BottomEditorDetailsType"
-import {getKeyboard, clearKeyboard, setKeyboard} from "./keyDown/keyDown"
 import {FileDetailInfo} from "./RunnerTabs/RunnerTabsType"
 import cloneDeep from "lodash/cloneDeep"
 import {v4 as uuidv4} from "uuid"
@@ -68,6 +67,10 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Progress} from "antd"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import { YakitRoute } from "@/enums/yakitRoute"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { getStorageYakRunnerShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRunner"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -474,6 +477,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }, [])
 
     const keyDownRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(keyDownRef)
     const unTitleCountRef = useRef<number>(1)
 
     const addFileTab = useThrottleFn(
@@ -586,9 +590,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     })
 
     // 关闭文件
-    const ctrl_w = useMemoizedFn((event) => {
+    const ctrl_w = useMemoizedFn(() => {
         if (activeFile) {
-            event.stopPropagation()
             emiter.emit("onCloseFile", activeFile.path)
         }
     })
@@ -618,76 +621,63 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         emiter.emit("onOperationFileTree", "paste")
     })
 
-    // yakrunner全局事件(monaca中也需生效)
-    const entiretyEvent = ["17-192", "17-83", "17-87", "17-78"]
-    // 仅在文件树显示时生效的事件
-    const fileTreeEvent = ["113", "46", "17-67", "17-86"]
-    // 注入默认键盘事件
-    const defaultKeyDown = useMemoizedFn(() => {
-        // ctrl_n 新建临时文件
-        setKeyboard("17-78", {onlyid: uuidv4(), callback: addFileTab})
-        // 保存
-        setKeyboard("17-83", {onlyid: uuidv4(), callback: ctrl_s})
-        setKeyboard("17-87", {onlyid: uuidv4(), callback: ctrl_w})
-        // 打开终端
-        setKeyboard("17-192", {onlyid: uuidv4(), callback: onOpenTermina})
-        // 文件树重命名
-        setKeyboard("113", {onlyid: uuidv4(), callback: onTreeRename})
-        // 文件树删除
-        setKeyboard("46", {onlyid: uuidv4(), callback: onTreeDelete})
-        // 文件树复制
-        setKeyboard("17-67", {onlyid: uuidv4(), callback: onTreeCopy})
-        // 文件树粘贴
-        setKeyboard("17-86", {onlyid: uuidv4(), callback: onTreePaste})
-    })
-
     useEffect(() => {
-        clearKeyboard()
-        defaultKeyDown()
-    }, [])
-
-    const handleKeyPress = (event) => {
-        // 此处的event.stopPropagation会导致文件树重命名回车失效
-        // event.stopPropagation()
-        // console.log("Key keydown:", event)
-        // 此处在使用key时发现字母竟区分大小写-故使用which替换
-        const {shiftKey, ctrlKey, altKey, metaKey, key, which} = event
-        let activeKey: number[] = []
-        if (shiftKey) activeKey.push(16)
-        if (ctrlKey) activeKey.push(17)
-        if (altKey) activeKey.push(18)
-        if (metaKey) activeKey.push(93)
-        activeKey.push(which)
-        const newkey = keySortHandle(activeKey).join("-")
-        let arr = getKeyboard(newkey)
-        // console.log("newkey---", newkey, arr)
-        if (!arr) return
-        // 屏蔽所有Input输入框引起的快捷键 PS:monaca/xterm 除外
-        if (
-            ["textarea", "input"].includes(event.target.localName) &&
-            event.target?.ariaRoleDescription !== "editor" &&
-            event.target?.className !== "xterm-helper-textarea"
-        )
-            return
-        // 文件树相关快捷键只在文件树控件展示时生效
-        if (fileTreeEvent.includes(newkey) && getActive() !== "file-tree") return
-        // 在这里处理全局键盘事件(如若是monaca诱发的事件则拦截) PS:部分特殊事件除外
-        if (event.target?.ariaRoleDescription === "editor" && !entiretyEvent.includes(newkey)) return
-        arr.forEach((item) => {
-            item.callback(event)
-        })
-    }
-    useEffect(() => {
-        if (keyDownRef.current) {
-            keyDownRef.current.addEventListener("keydown", handleKeyPress)
-        }
-        return () => {
-            // 在组件卸载时移除事件监听器
-            if (keyDownRef.current) {
-                keyDownRef.current.removeEventListener("keydown", handleKeyPress)
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.YakRunner)
+            getStorageYakRunnerShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunner)
             }
         }
-    }, [])
+    }, [inViewport])
+
+    useShortcutKeyTrigger("create*yakRunner", () => {
+        // 新建临时文件
+        addFileTab()
+    })
+
+    useShortcutKeyTrigger("save*yakRunner", () => {
+        // 保存
+        ctrl_s()
+    })
+
+    useShortcutKeyTrigger("close*yakRunner", () => {
+        // 关闭
+        ctrl_w()
+    })
+
+    useShortcutKeyTrigger("openTermina*yakRunner", () => {
+        // 打开终端
+        onOpenTermina()
+    })
+
+    useShortcutKeyTrigger("rename*yakRunner", () => {
+        // 文件树相关快捷键只在文件树控件展示时生效
+        if(getActive() !== "file-tree") return
+        // 文件树重命名
+        onTreeRename()
+    })
+
+    useShortcutKeyTrigger("delete*yakRunner", () => {
+        // 文件树相关快捷键只在文件树控件展示时生效
+        if(getActive() !== "file-tree") return
+        // 文件树删除
+        onTreeDelete()
+    })
+
+    useShortcutKeyTrigger("copy*yakRunner", () => {
+        // 文件树相关快捷键只在文件树控件展示时生效
+        if(getActive() !== "file-tree") return
+        // 文件树复制
+        onTreeCopy()
+    })
+
+    useShortcutKeyTrigger("paste*yakRunner", () => {
+        // 文件树相关快捷键只在文件树控件展示时生效
+        if(getActive() !== "file-tree") return
+        // 文件树粘贴
+        onTreePaste()
+    })
 
     const [isShowEditorDetails, setEditorDetails] = useState<boolean>(false)
     // 当前展示项

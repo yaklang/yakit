@@ -144,6 +144,8 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
 }
 
 export const handleShortcutKey = (ev: KeyboardEvent) => {
+    console.log("handleShortcutKey---",ev);
+    
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return
     if (getIsActiveShortcutKeyPage()) {
