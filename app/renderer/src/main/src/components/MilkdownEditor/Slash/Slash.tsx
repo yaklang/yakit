@@ -6,7 +6,14 @@ import React, {useCallback, useEffect, useRef} from "react"
 import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
 import {HttpUploadImgBaseRequest} from "@/apiUtils/http"
 import {InitEditorHooksLocalProps} from "../utils/initEditor"
-import {SlashType, SlashKeyEnum, localSlashList, onlineSlashList} from "../constants"
+import {
+    MilkdownMenuType,
+    MilkdownMenuKeyEnum,
+    createMilkdownMenuListByKey,
+    baseSlashKey,
+    onlineCommonSlashKey,
+    localCommonSlashKey
+} from "../constants"
 import styles from "./Slash.module.scss"
 import {EditorView} from "@milkdown/kit/prose/view"
 import {EditorState} from "@milkdown/kit/prose/state"
@@ -61,8 +68,15 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
                 const {selection} = view.state
                 const {$from} = selection
                 const node = $from.node()
+                const parentNode = $from.node(-1)
+
                 // 段落开头并含有/才显示
-                if (node.type.name === "paragraph" && node.content.size === 1 && node.textContent === "/") {
+                if (
+                    parentNode.type.name === "doc" &&
+                    node.type.name === "paragraph" &&
+                    node.content.size === 1 &&
+                    node.textContent === "/"
+                ) {
                     return true
                 }
                 return false
@@ -85,47 +99,53 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
 
     const slashList = useCreation(() => {
         if (!!localProps?.local) {
-            return localSlashList
+            return {
+                基础: createMilkdownMenuListByKey(baseSlashKey),
+                常用: createMilkdownMenuListByKey(localCommonSlashKey)
+            }
         } else {
-            return onlineSlashList
+            return {
+                基础: createMilkdownMenuListByKey(baseSlashKey),
+                常用: createMilkdownMenuListByKey(onlineCommonSlashKey)
+            }
         }
     }, [localProps?.local])
 
-    const onSelect = useMemoizedFn((key: SlashType) => {
+    const onSelect = useMemoizedFn((key: MilkdownMenuType) => {
         switch (key) {
-            case SlashKeyEnum.Text:
+            case MilkdownMenuKeyEnum.Text:
                 break
-            case SlashKeyEnum.Heading1:
+            case MilkdownMenuKeyEnum.Heading1:
                 createBlankHeading1(action, view)
                 break
-            case SlashKeyEnum.Heading2:
+            case MilkdownMenuKeyEnum.Heading2:
                 createBlankHeading2(action, view)
                 break
-            case SlashKeyEnum.Heading3:
+            case MilkdownMenuKeyEnum.Heading3:
                 createBlankHeading3(action, view)
                 break
-            case SlashKeyEnum.OrderedList:
+            case MilkdownMenuKeyEnum.OrderedList:
                 createBlankOrderedList(action, view)
                 break
-            case SlashKeyEnum.UnorderedList:
+            case MilkdownMenuKeyEnum.UnorderedList:
                 createBlankUnorderedList(action, view)
                 break
-            case SlashKeyEnum.CodeBlock:
+            case MilkdownMenuKeyEnum.CodeBlock:
                 createBlankCodeBlock(action, view)
                 break
-            case SlashKeyEnum.Quote:
+            case MilkdownMenuKeyEnum.Quote:
                 createBlankQuote(action, view)
                 break
-            case SlashKeyEnum.Divider:
+            case MilkdownMenuKeyEnum.Divider:
                 createDivider(action, view)
                 break
-            case SlashKeyEnum.Task:
+            case MilkdownMenuKeyEnum.Task:
                 createBlankTask(action, view)
                 break
-            case SlashKeyEnum.HighLight:
+            case MilkdownMenuKeyEnum.HighLight:
                 createBlankHighLight(action, view)
                 break
-            case SlashKeyEnum.File:
+            case MilkdownMenuKeyEnum.File:
                 uploadFileInMilkdown(action, {
                     type,
                     notepadHash: notepadHash || "",
@@ -135,12 +155,11 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
             default:
                 break
         }
-        if (key !== SlashKeyEnum.CodeBlock) {
+        if (key !== MilkdownMenuKeyEnum.CodeBlock) {
             view.focus()
         }
         slashProvider.current?.hide()
     })
-
     return (
         <div aria-expanded='false' data-show='false' className={styles["slash"]} ref={ref}>
             {Object.entries(slashList).map(([key, data]) => {
@@ -148,7 +167,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
                     <div key={key}>
                         <div className={styles["slash-title"]}>{key}</div>
                         {data.map((ele) => (
-                            <div key={ele.id} className={styles["slash-item"]} onClick={() => onSelect(ele.id)}>
+                            <div key={ele.key} className={styles["slash-item"]} onClick={() => onSelect(ele.key)}>
                                 {ele.icon}
                                 {ele.label}
                             </div>

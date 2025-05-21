@@ -62,15 +62,6 @@ export interface CustomMilkdownProps {
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
 
-export interface MilkdownBaseUtilProps {
-    id: number
-    icon: ReactNode
-    label: string
-    description: string
-}
-export interface BlockListProps extends MilkdownBaseUtilProps {}
-export type TooltipListProps = MilkdownBaseUtilProps | {id: number; label: string}
-
 export interface DeleteOSSFileItem {
     fileName: string
     time: number
