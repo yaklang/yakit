@@ -1353,7 +1353,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                                           }
                                                       }
                                                       const text: string = fun(newSelectedText)
-                                                      editor.trigger("keyboard", "type", {text})
+                                                      //   editor.trigger("keyboard", "type", {text})// 选择范围大会卡死
+                                                      monacoEditorWrite(editor, text)
                                                   })
                                           }
                                       }
