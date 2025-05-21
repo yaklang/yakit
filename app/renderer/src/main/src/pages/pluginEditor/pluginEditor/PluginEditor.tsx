@@ -71,6 +71,7 @@ export interface PluginEditorRefProps {
     setNewPlugin: (value: AddYakitScriptPageInfoProps) => void
     onCheckUnSaved: () => Promise<boolean>
     onSaveAndExit: (onEnd?: (flag?: ModifyPluginCallback) => void) => void
+    onBtnLocalSave: () => void
 }
 
 export interface ModifyPluginCallback {
@@ -106,7 +107,8 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 setEditPlugin: handleFetchPluginDetail,
                 setNewPlugin: handleNewPluginInitValue,
                 onCheckUnSaved: handleCheckUnSaved,
-                onSaveAndExit: onHintLocalSaveAndExit
+                onSaveAndExit: onHintLocalSaveAndExit,
+                onBtnLocalSave: onBtnLocalSave
             }),
             []
         )
@@ -373,38 +375,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             {wait: 300}
         ).run
 
-        // 获取操作系统
-        const system = useRef<YakitSystem>("Windows_NT")
-        const handleFetchSystem = useMemoizedFn(async () => {
-            const systemName: YakitSystem = await ipcRenderer.invoke("fetch-system-name")
-            system.current = systemName
-        })
-        // 注册保存快捷键
         const wrapperRef = useRef<HTMLDivElement>(null)
-        useEffect(() => {
-            handleFetchSystem()
-            const onKeydownSave = (e: KeyboardEvent) => {
-                const {code, ctrlKey, metaKey} = e
-                if (system.current === "Darwin") {
-                    if (code === "KeyS" && metaKey) {
-                        onBtnLocalSave()
-                    }
-                } else {
-                    if (code === "KeyS" && ctrlKey) {
-                        onBtnLocalSave()
-                    }
-                }
-            }
-
-            if (wrapperRef.current) {
-                wrapperRef.current.addEventListener("keydown", onKeydownSave)
-            }
-            return () => {
-                if (wrapperRef.current) {
-                    wrapperRef.current.removeEventListener("keydown", onKeydownSave)
-                }
-            }
-        }, [])
         /** ---------- 全局基础逻辑 End ---------- */
 
         // 插件基础信息组件 ref

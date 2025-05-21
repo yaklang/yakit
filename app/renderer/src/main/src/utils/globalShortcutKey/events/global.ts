@@ -4,7 +4,11 @@ import {ShortcutKeyEventInfo} from "./pageMaps"
 
 export enum GlobalShortcutKey {
     /** 截图 */
-    Screenshot = "screenshot"
+    Screenshot = "screenshot",
+    /** 关闭当前页面及二级页面 */
+    RemovePage = "removePage",
+    /** 新增二级页面 */
+    AddSubPage = "addSubPage"
 }
 
 type EventsType = Record<GlobalShortcutKey, ShortcutKeyEventInfo>
@@ -13,6 +17,14 @@ const globalShortcutKeyEvents: EventsType = {
     screenshot: {
         name: "截图",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_B]
+    },
+    removePage: {
+        name: "关闭当前页面及二级页面",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_W]
+    },
+    addSubPage: {
+        name: "新增二级页面",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_T]
     }
 }
 

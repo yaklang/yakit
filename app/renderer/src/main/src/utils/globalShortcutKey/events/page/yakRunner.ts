@@ -60,7 +60,7 @@ const YakRunnerShortcutKeyEvents: EventsType = {
 }
 
 let currentKeyEvents: EventsType | null = null
-const LocalStorageKey = "audit-code-shortcut-key-events"
+const LocalStorageKey = "yak-runner-shortcut-key-events"
 
 /** 获取快捷键事件和对应按键-页面级 */
 export const getStorageYakRunnerShortcutKeyEvents = () => {

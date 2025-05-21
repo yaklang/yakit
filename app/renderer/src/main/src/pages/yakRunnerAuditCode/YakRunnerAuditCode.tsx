@@ -739,8 +739,8 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         }
         setLastShiftTime(now);
     });
-    const keyDownRef = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(keyDownRef)
+    const shortcutRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(shortcutRef)
     useEffect(() => {
         if (inViewport) {
             registerShortcutKeyHandle(ShortcutKeyPage.YakRunner_Audit_Code)
@@ -757,7 +757,7 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["audit-code"]} id='audit-code' tabIndex={0} ref={keyDownRef}>
+            <div className={styles["audit-code"]} id='audit-code' tabIndex={0} ref={shortcutRef}>
                 <div className={styles["audit-code-page"]}>
                     <div className={styles["audit-code-body"]}>
                         <YakitResizeBox
