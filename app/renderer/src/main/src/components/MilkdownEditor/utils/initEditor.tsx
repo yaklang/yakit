@@ -59,6 +59,7 @@ import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
 import {CustomMention} from "../Mention/CustomMention"
 import {useEffect} from "react"
 import emiter from "@/utils/eventBus/eventBus"
+import {slash, SlashView} from "../Slash/Slash"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -337,6 +338,22 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     }
                 }
             ].flat()
+            const slashPlugin = [
+                slash,
+                (ctx: Ctx) => () => {
+                    ctx.set(slash.key, {
+                        view: pluginViewFactory({
+                            component: () => (
+                                <SlashView
+                                    localProps={localProps}
+                                    type={type}
+                                    notepadHash={collabParams?.milkdownHash}
+                                />
+                            )
+                        })
+                    })
+                }
+            ].flat()
             //#endregion
             return (
                 Editor.make()
@@ -407,6 +424,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(hrPlugin)
                     // markPlugin
                     .use(markPlugin)
+                    // slash
+                    .use(slashPlugin)
                     // trackDeletePlugin
                     .use(trackDeletePlugin())
                     // .use(jumpToLinePlugin(0))
