@@ -7,7 +7,8 @@ import {
     headingSchema,
     hrSchema,
     listItemSchema,
-    orderedListSchema
+    orderedListSchema,
+    paragraphSchema
 } from "@milkdown/kit/preset/commonmark"
 import {NodeType, Attrs} from "@milkdown/kit/prose/model"
 import {Command, Transaction} from "@milkdown/kit/prose/state"
@@ -139,6 +140,15 @@ export const convertSelectionByNode = (nodeType: NodeType, attrs: Attrs | null =
             return false
         }
     }
+}
+
+/**生成空白 正文 */
+export const createBlankText = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndSetBlockType(paragraphSchema.type(ctx))
+        command(state, dispatch)
+    })
 }
 
 /**生成空白 一级标题 */
