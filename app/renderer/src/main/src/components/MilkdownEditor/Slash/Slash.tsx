@@ -28,7 +28,8 @@ import {
     createBlankQuote,
     createBlankHighLight,
     uploadFileInMilkdown,
-    createDivider
+    createDivider,
+    createBlankText
 } from "../utils/utils"
 import {useStore} from "@/store"
 
@@ -114,6 +115,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
     const onSelect = useMemoizedFn((key: MilkdownMenuType) => {
         switch (key) {
             case MilkdownMenuKeyEnum.Text:
+                createBlankText(action, view)
                 break
             case MilkdownMenuKeyEnum.Heading1:
                 createBlankHeading1(action, view)
