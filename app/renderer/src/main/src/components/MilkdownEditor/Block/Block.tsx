@@ -25,14 +25,16 @@ import {
     createDivider
 } from "../utils/utils"
 import {Tooltip} from "antd"
-import {defaultBlockList} from "../constants"
-import {cloneDeep} from "lodash"
-import {BlockListProps} from "../MilkdownEditorType"
+import {
+    BlockListProps,
+    createMilkdownMenuListByKey,
+    localBlockKey,
+    MilkdownMenuKeyEnum,
+    onlineBlockKey
+} from "../constants"
 import {HttpUploadImgBaseRequest} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {InitEditorHooksLocalProps} from "../utils/initEditor"
-
-const {ipcRenderer} = window.require("electron")
 
 interface BlockViewProps {
     type: HttpUploadImgBaseRequest["type"]
@@ -48,7 +50,9 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
     const blockProvider = useRef<BlockProvider>()
 
     const [visibleAdd, setVisibleAdd] = useState(false)
-    const [blockList, setBlockList] = useState<BlockListProps[]>(cloneDeep(defaultBlockList)) // 后期选中某个类型的组件可能不会显示一些操作
+    const [blockList, setBlockList] = useState<BlockListProps[]>(
+        !!localProps?.local ? createMilkdownMenuListByKey(localBlockKey) : createMilkdownMenuListByKey(onlineBlockKey)
+    ) // 后期选中某个类型的组件可能不会显示一些操作
 
     const {view, prevState} = usePluginViewContext()
 
@@ -60,12 +64,6 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         },
         [loading]
     )
-
-    useEffect(() => {
-        if (localProps?.local) {
-            setBlockList(defaultBlockList.filter((ele) => ele.label !== "上传文件"))
-        }
-    }, [localProps])
 
     useEffect(() => {
         const div = ref.current
@@ -91,39 +89,39 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
         }
     }, [])
 
-    const onAddContent = useMemoizedFn(({label}) => {
-        switch (label) {
-            case "一级标题":
+    const onAddContent = useMemoizedFn(({key}) => {
+        switch (key) {
+            case MilkdownMenuKeyEnum.Heading1:
                 createBlankHeading1(action, view)
                 break
-            case "二级标题":
+            case MilkdownMenuKeyEnum.Heading2:
                 createBlankHeading2(action, view)
                 break
 
-            case "三级标题":
+            case MilkdownMenuKeyEnum.Heading3:
                 createBlankHeading3(action, view)
                 break
 
-            case "有序列表":
+            case MilkdownMenuKeyEnum.OrderedList:
                 createBlankOrderedList(action, view)
                 break
 
-            case "无序列表":
+            case MilkdownMenuKeyEnum.UnorderedList:
                 createBlankUnorderedList(action, view)
                 break
-            case "任务":
+            case MilkdownMenuKeyEnum.Task:
                 createBlankTask(action, view)
                 break
-            case "代码块":
+            case MilkdownMenuKeyEnum.CodeBlock:
                 createBlankCodeBlock(action, view)
                 break
-            case "引用":
+            case MilkdownMenuKeyEnum.Quote:
                 createBlankQuote(action, view)
                 break
-            case "高亮":
+            case MilkdownMenuKeyEnum.HighLight:
                 createBlankHighLight(action, view)
                 break
-            case "上传文件":
+            case MilkdownMenuKeyEnum.File:
                 uploadFileInMilkdown(action, {
                     type,
                     notepadHash: notepadHash || "",
@@ -131,14 +129,16 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
                 })
 
                 break
-            case "分割线":
+            case MilkdownMenuKeyEnum.Divider:
                 createDivider(action, view)
                 break
 
             default:
                 break
         }
-        view.focus()
+        if (key !== MilkdownMenuKeyEnum.CodeBlock) {
+            view.focus()
+        }
         setVisibleAdd(false)
         blockProvider.current?.hide()
     })
@@ -166,9 +166,9 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
                 content={
                     <div className={styles["tooltip-popover-content"]}>
                         {blockList.map((ele) => (
-                            <Tooltip key={ele.id} title={ele.description}>
+                            <Tooltip key={ele.key} title={ele.description}>
                                 <YakitButton
-                                    key={ele.id}
+                                    key={ele.key}
                                     size='large'
                                     type='text2'
                                     icon={ele.icon}
