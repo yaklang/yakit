@@ -1,7 +1,27 @@
 import {yakitNotify} from "@/utils/notification"
+import {Ctx} from "@milkdown/kit/ctx"
+import {
+    blockquoteSchema,
+    bulletListSchema,
+    codeBlockSchema,
+    headingSchema,
+    hrSchema,
+    listItemSchema,
+    orderedListSchema
+} from "@milkdown/kit/preset/commonmark"
 import {NodeType, Attrs} from "@milkdown/kit/prose/model"
 import {Command, Transaction} from "@milkdown/kit/prose/state"
 import {findWrapping} from "@milkdown/kit/prose/transform"
+import {EditorView} from "@milkdown/kit/prose/view"
+import {alterCustomSchema} from "./alertPlugin"
+import {getLocalFileLinkInfo} from "../CustomFile/utils"
+import {ImgMaxSize} from "@/pages/pluginEditor/pluginImageTextarea/PluginImageTextarea"
+import {HttpUploadImgBaseRequest, httpUploadImgPath} from "@/apiUtils/http"
+import {callCommand} from "@milkdown/kit/utils"
+import {insertImageBlockCommand} from "./imageBlock"
+import {fileCommand} from "./uploadPlugin"
+
+const {ipcRenderer} = window.require("electron")
 
 export const clearContentAndSetBlockType = (nodeType: NodeType, attrs: Attrs | null = null): Command => {
     return (state, dispatch) => {
@@ -119,4 +139,152 @@ export const convertSelectionByNode = (nodeType: NodeType, attrs: Attrs | null =
             return false
         }
     }
+}
+
+/**生成空白 一级标题 */
+export const createBlankHeading1 = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {level: 1})
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 二级标题 */
+export const createBlankHeading2 = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {level: 2})
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 三级标题 */
+export const createBlankHeading3 = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndSetBlockType(headingSchema.type(ctx), {level: 3})
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 有序列表 */
+export const createBlankOrderedList = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndWrapInBlockType(orderedListSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 无序列表 */
+export const createBlankUnorderedList = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndWrapInBlockType(bulletListSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 任务/可勾选框列表 */
+export const createBlankTask = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndWrapInBlockType(listItemSchema.type(ctx), {checked: false})
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 代码块 */
+export const createBlankCodeBlock = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndAddBlockType(codeBlockSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 引用 */
+export const createBlankQuote = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndWrapInBlockType(blockquoteSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+/**生成空白 高亮 */
+export const createBlankHighLight = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndWrapInBlockType(alterCustomSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+/**生成 分割线 */
+export const createDivider = (action: (fn: (ctx: Ctx) => void) => void, view: EditorView) => {
+    const {dispatch, state} = view
+    action((ctx) => {
+        const command = clearContentAndAddBlockType(hrSchema.type(ctx))
+        command(state, dispatch)
+    })
+}
+
+const FileMaxSize = 1024 * 1024 * 1024
+const imgTypes = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp", ".svg"]
+
+/**上传图片和文件 */
+export const uploadFileInMilkdown = (
+    action: (fn: (ctx: Ctx) => void) => void,
+    option: {type: HttpUploadImgBaseRequest["type"]; notepadHash: string; userId: number}
+) => {
+    const {type, notepadHash, userId} = option
+    ipcRenderer
+        .invoke("openDialog", {
+            title: "请选择文件",
+            properties: ["openFile"]
+        })
+        .then((data: {filePaths: string[]}) => {
+            const filesLength = data.filePaths.length
+            if (filesLength) {
+                const path = data.filePaths[0].replace(/\\/g, "\\")
+                getLocalFileLinkInfo(path).then((res) => {
+                    if (res.size > FileMaxSize) {
+                        yakitNotify("error", "文件大小不能超过1G")
+                        return
+                    }
+                    const index = path.lastIndexOf(".")
+                    const fileType = path.substring(index, path.length)
+                    if (imgTypes.includes(fileType)) {
+                        if (res.size > ImgMaxSize) {
+                            yakitNotify("error", "图片大小不能超过1M")
+                            return
+                        }
+                        httpUploadImgPath({path, type, filedHash: notepadHash})
+                            .then((src) => {
+                                action(
+                                    callCommand(insertImageBlockCommand.key, {
+                                        src,
+                                        alt: path,
+                                        title: ""
+                                    })
+                                )
+                            })
+                            .catch((e) => {
+                                yakitNotify("error", `上传图片失败:${e}`)
+                            })
+                    } else {
+                        action(
+                            callCommand(fileCommand.key, {
+                                fileId: "0",
+                                path,
+                                notepadHash,
+                                uploadUserId: userId
+                            })
+                        )
+                    }
+                })
+            }
+        })
 }
