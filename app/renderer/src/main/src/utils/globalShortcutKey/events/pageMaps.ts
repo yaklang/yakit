@@ -11,6 +11,8 @@ import {
 import {YakitRoute} from "@/enums/yakitRoute"
 import { getAuditCodeShortcutKeyEvents, getStorageAuditCodeShortcutKeyEvents, setStorageAuditCodeShortcutKeyEvents } from "./page/yakRunnerAuditCode"
 import { getStorageYakRunnerShortcutKeyEvents, getYakRunnerShortcutKeyEvents, setStorageYakRunnerShortcutKeyEvents } from "./page/yakRunner"
+import { getAddYakitScriptShortcutKeyEvents, getStorageAddYakitScriptShortcutKeyEvents, setStorageAddYakitScriptShortcutKeyEvents } from "./page/addYakitScript"
+import { getStorageYakitScriptFocusShortcutKeyEvents, getYakitScriptFocusShortcutKeyEvents, setStorageYakitScriptFocusShortcutKeyEvents } from "./focus/yakitScriptFocus"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -30,14 +32,20 @@ export enum ShortcutKeyPage {
     // 全局快捷键
     Global = "global",
 
-    // 页面快捷键`
-
+    /* 页面快捷键 */
     // 插件仓库
     PluginHub = YakitRoute.Plugin_Hub,
+    
+    // 新建插件
+    AddYakitScript = YakitRoute.AddYakitScript,
     // 代码审计
     YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
     // YakRunner
-    YakRunner = YakitRoute.YakScript
+    YakRunner = YakitRoute.YakScript,
+
+    /* 焦点快捷键（焦点与页面属于同级绑定） */
+    // 插件相关焦点事件
+    YakitScriptFocus = "yakit-script-focus",
 }
 export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
@@ -53,6 +61,11 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         getStorage: getStoragePluginHubShortcutKeyEvents,
         setStorage: setStoragePluginHubShortcutKeyEvents
     },
+    "add-yakit-script" : {
+        getEvents: getAddYakitScriptShortcutKeyEvents,
+        getStorage: getStorageAddYakitScriptShortcutKeyEvents,
+        setStorage: setStorageAddYakitScriptShortcutKeyEvents
+    },
     "yakrunner-audit-code": {
         getEvents: getAuditCodeShortcutKeyEvents,
         getStorage: getStorageAuditCodeShortcutKeyEvents,
@@ -62,5 +75,10 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         getEvents: getYakRunnerShortcutKeyEvents,
         getStorage: getStorageYakRunnerShortcutKeyEvents,
         setStorage: setStorageYakRunnerShortcutKeyEvents
+    },
+    "yakit-script-focus": {
+        getEvents: getYakitScriptFocusShortcutKeyEvents,
+        getStorage: getStorageYakitScriptFocusShortcutKeyEvents,
+        setStorage: setStorageYakitScriptFocusShortcutKeyEvents
     }
 }

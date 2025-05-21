@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useRef} from "react"
-import {useMemoizedFn} from "ahooks"
+import {useInViewport, useMemoizedFn} from "ahooks"
 import {PluginEditor, PluginEditorRefProps} from "../pluginEditor/PluginEditor"
 import {shallow} from "zustand/shallow"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
@@ -7,6 +7,10 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {YakitRoute} from "@/enums/yakitRoute"
 
 import styles from "./AddYakitPlugin.module.scss"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { getStorageAddYakitScriptShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/addYakitScript"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 interface AddYakitPluginProps {}
 
@@ -39,8 +43,26 @@ export const AddYakitPlugin: React.FC<AddYakitPluginProps> = memo((props) => {
         }
     }, [])
 
+    const shortcutRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(shortcutRef)
+    useEffect(() => {
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.AddYakitScript)
+            getStorageAddYakitScriptShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.AddYakitScript)
+            }
+        }
+    }, [inViewport])
+
+    useShortcutKeyTrigger("save*newPlugin", () => {
+        if (editorRef.current) {
+            editorRef.current.onBtnLocalSave()
+        }
+    })
+
     return (
-        <div className={styles["add-yakit-plugin"]}>
+        <div className={styles["add-yakit-plugin"]} ref={shortcutRef}>
             <PluginEditor ref={editorRef} />
         </div>
     )

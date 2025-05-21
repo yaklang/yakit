@@ -66,10 +66,10 @@ import {LeftSideType} from "./LeftSideBar/LeftSideBarType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Progress} from "antd"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
-import { YakitRoute } from "@/enums/yakitRoute"
-import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
-import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { getStorageYakRunnerShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/yakRunner"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import {getStorageYakRunnerShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/yakRunner"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
@@ -347,16 +347,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     })
 
-    const onCloseYakRunnerFun = useMemoizedFn(async()=>{
-        if(activeFile?.isUnSave){
+    const onCloseYakRunnerFun = useMemoizedFn(async () => {
+        if (activeFile?.isUnSave) {
             emiter.emit("onCloseFile", activeFile.path)
             return
         }
         const unSaveArr = await judgeAreaExistFileUnSave(areaInfo)
-        if(unSaveArr.length > 0){
+        if (unSaveArr.length > 0) {
             emiter.emit("onCloseFile", unSaveArr[0])
-        }
-        else{
+        } else {
             emiter.emit("closePage", JSON.stringify({route: YakitRoute.YakScript}))
         }
     })
@@ -476,8 +475,8 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         }
     }, [])
 
-    const keyDownRef = useRef<HTMLDivElement>(null)
-    const [inViewport] = useInViewport(keyDownRef)
+    const shortcutRef = useRef<HTMLDivElement>(null)
+    const [inViewport] = useInViewport(shortcutRef)
     const unTitleCountRef = useRef<number>(1)
 
     const addFileTab = useThrottleFn(
@@ -593,6 +592,10 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const ctrl_w = useMemoizedFn(() => {
         if (activeFile) {
             emiter.emit("onCloseFile", activeFile.path)
+        } else {
+            ipcRenderer.invoke("send-close-tab", {
+                router: YakitRoute.YakScript
+            })
         }
     })
 
@@ -653,28 +656,28 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     useShortcutKeyTrigger("rename*yakRunner", () => {
         // 文件树相关快捷键只在文件树控件展示时生效
-        if(getActive() !== "file-tree") return
+        if (getActive() !== "file-tree") return
         // 文件树重命名
         onTreeRename()
     })
 
     useShortcutKeyTrigger("delete*yakRunner", () => {
         // 文件树相关快捷键只在文件树控件展示时生效
-        if(getActive() !== "file-tree") return
+        if (getActive() !== "file-tree") return
         // 文件树删除
         onTreeDelete()
     })
 
     useShortcutKeyTrigger("copy*yakRunner", () => {
         // 文件树相关快捷键只在文件树控件展示时生效
-        if(getActive() !== "file-tree") return
+        if (getActive() !== "file-tree") return
         // 文件树复制
         onTreeCopy()
     })
 
     useShortcutKeyTrigger("paste*yakRunner", () => {
         // 文件树相关快捷键只在文件树控件展示时生效
-        if(getActive() !== "file-tree") return
+        if (getActive() !== "file-tree") return
         // 文件树粘贴
         onTreePaste()
     })
@@ -892,7 +895,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
     return (
         <YakRunnerContext.Provider value={{store, dispatcher}}>
-            <div className={styles["yak-runner"]} ref={keyDownRef} tabIndex={0} id='yakit-runnner-main-box-id'>
+            <div className={styles["yak-runner"]} ref={shortcutRef} tabIndex={0} id='yakit-runnner-main-box-id'>
                 <div className={styles["yak-runner-body"]}>
                     <YakitResizeBox
                         freeze={!isUnShow}

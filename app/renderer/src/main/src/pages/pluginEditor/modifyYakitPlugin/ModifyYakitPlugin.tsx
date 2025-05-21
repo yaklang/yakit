@@ -10,6 +10,10 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"
 import styles from "./ModifyYakitPlugin.module.scss"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { getStorageYakitScriptFocusShortcutKeyEvents } from "@/utils/globalShortcutKey/events/focus/yakitScriptFocus"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 interface ModifyYakitPluginProps {
     getContainer?: HTMLElement
@@ -84,6 +88,21 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
         setUnSavedHint(false)
     })
 
+    useEffect(() => {
+        if (visible) {
+            registerShortcutKeyHandle(ShortcutKeyPage.YakitScriptFocus)
+            getStorageYakitScriptFocusShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.YakitScriptFocus)
+            }
+        }
+    }, [visible])
+
+    useShortcutKeyTrigger("save*pluginEditor", () => {
+        if (editorRef.current) {
+            editorRef.current.onBtnLocalSave()
+        }
+    })
     return (
         <>
             <YakitDrawer
