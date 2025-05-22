@@ -12,7 +12,6 @@ import "./yakitLib.scss"
 import "./assets/global.scss"
 import {useEffect, useState} from "react"
 import ChildNewApp from "./ChildNewApp"
-const {ipcRenderer} = window.require("electron")
 
 const getQueryParam = (param) => {
     return new URLSearchParams(window.location.search).get(param)
