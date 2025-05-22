@@ -319,17 +319,15 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             ].flat()
             const markPlugin = [...markCustomPlugin()].flat()
             /**启动了在线协作才有 @ 提及 相关逻辑 */
-            const mentionPlugin = !!collabParams?.enableCollab
-                ? [
-                      ...mentionCustomPlugin(),
-                      mentionFactory,
-                      $view(mentionCustomSchema.node, () =>
-                          nodeViewFactory({
-                              component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
-                          })
-                      )
-                  ].flat()
-                : []
+            const mentionPlugin = [
+                ...mentionCustomPlugin(),
+                mentionFactory,
+                $view(mentionCustomSchema.node, () =>
+                    nodeViewFactory({
+                        component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
+                    })
+                )
+            ].flat()
             //#endregion
             return (
                 Editor.make()

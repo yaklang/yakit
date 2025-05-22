@@ -17,6 +17,7 @@ import {getMentionId, mentionCommand} from "../utils/mentionPlugin"
 import {apiNotepadEit} from "./utils"
 import classNames from "classnames"
 import {InputRef} from "antd"
+import {useStore} from "@/store"
 export const mentionFactory = slashFactory("Commands")
 
 interface MentionListViewProps {
@@ -26,6 +27,7 @@ const mentionWidth = 240
 const mentionTarget = "@"
 export const MentionListView: React.FC<MentionListViewProps> = (props) => {
     const {notepadHash} = props
+    const userInfo = useStore((s) => s.userInfo)
     const [isSendMessage, setIsSendMessage] = useState<boolean>(false)
     const [listLoading, setListLoading] = useState<boolean>(false)
     const [keyWord, setKeyWord] = useState<string>("")
@@ -94,10 +96,12 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
         setListLoading(true)
         apiGetUserSearch({keywords: value})
             .then((res) => {
-                if (res.data.length > 0) {
-                    setCurrentSelected(res.data[0])
+                // 需要过滤当前登录人
+                const newData = [...(res.data || [])].filter((ele) => ele.id !== userInfo.user_id)
+                if (newData.length > 0) {
+                    setCurrentSelected(newData[0])
                 }
-                setUserList([...(res.data || [])])
+                setUserList(newData)
             })
             .finally(() =>
                 setTimeout(() => {

@@ -73,6 +73,27 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
     // 判断是否大于30秒（10秒 = 10000毫秒）
     return difference > 1000 * 30
 }
+/**笔记本错误弹窗 */
+export const showOnlineErrorNotification = (event: {code: number; reason: string; onOk: () => void}) => {
+    const m = showYakitModal({
+        title: "异常",
+        content: (
+            <span>
+                错误原因:{event.code}:{event.reason}
+            </span>
+        ),
+        maskClosable: false,
+        closable: false,
+        onOkText: "关闭页面",
+        cancelButtonProps: {style: {display: "none"}},
+        onOk: () => {
+            event.onOk()
+            m.destroy()
+        },
+        bodyStyle: {padding: 24}
+    })
+}
+
 const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
 
@@ -360,22 +381,12 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     })
     const onShowErrorModal = useMemoizedFn((event: CloseEvent) => {
         // 弹出框，显示网络异常，关闭/保存按钮
-        const m = showYakitModal({
-            title: "网络异常",
-            content: (
-                <span>
-                    错误原因:{event.code}:{event.reason}
-                </span>
-            ),
-            maskClosable: false,
-            closable: false,
-            onOkText: "关闭页面",
-            cancelButtonProps: {style: {display: "none"}},
+        showOnlineErrorNotification({
+            code: event.code,
+            reason: event.reason,
             onOk: () => {
                 onCloseCurrentPage()
-                m.destroy()
-            },
-            bodyStyle: {padding: 24}
+            }
         })
         yakitNotify("error", event.reason)
     })
