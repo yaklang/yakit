@@ -64,6 +64,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             },
             Pagination: {
                 ...genDefaultPagination(20),
+                OrderBy: "created_at",
                 Page: page || 1
             }
         }
