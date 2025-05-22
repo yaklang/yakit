@@ -514,6 +514,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         ipcRenderer.on("child-window-hash", (event, {hash}) => {
             childWindowHash = hash
         })
+        return () => {
+            ipcRenderer.removeAllListeners("child-window-hash")
+        }
     }, [])
 
     // tab数据
