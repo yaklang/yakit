@@ -5898,12 +5898,15 @@ message SSAProgram{
 
   // need re-compile
   bool Recompile = 8;
-  // risk number
-  int64 HighRiskNumber = 9;
-  int64 CriticalRiskNumber = 10;
-  int64 WarnRiskNumber = 11;
-  int64 LowRiskNumber = 12;
+
+
   uint32 Id = 13;
+  // risk number
+  int64 CriticalRiskNumber = 10;
+  int64 HighRiskNumber = 9;    
+  int64 WarnRiskNumber = 11;   
+  int64 LowRiskNumber = 12;    
+  int64 InfoRiskNumber = 14; 
 }
 
 message SSAProgramInput {
