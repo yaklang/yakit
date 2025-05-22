@@ -18,20 +18,12 @@ import {
 } from "@/pages/notepadManage/notepadManage/utils"
 import classNames from "classnames"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {usePageInfo} from "@/store/pageInfo"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {shallow} from "zustand/shallow"
-import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 
 const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) => {
     const {notepadHash} = props
     const userInfo = useStore((s) => s.userInfo)
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
+    const {goEditNotepad} = useGoEditNotepad()
     const [keyWord, setKeyWord] = useState<string>("")
     const [refresh, setRefresh] = useState<boolean>(true)
     const [loading, setLoading] = useState<boolean>(false)
@@ -128,7 +120,10 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
         setSpinning(true)
         apiGetNotepadDetail(rowData.hash)
             .then((res) => {
-                toEditNotepad({pageInfo: {notepadHash: res.hash, title: res.title}, notepadPageList})
+                goEditNotepad({
+                    notepadHash: res.hash,
+                    title: res.title
+                })
             })
             .finally(() => {
                 setTimeout(() => {

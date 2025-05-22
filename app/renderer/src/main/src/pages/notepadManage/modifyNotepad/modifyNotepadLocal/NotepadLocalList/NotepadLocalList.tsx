@@ -9,9 +9,7 @@ import {
     grpcQueryNoteById,
     Note,
     QueryNoteRequest,
-    QueryNoteResponse,
-    SearchNoteContentRequest
-} from "@/pages/notepadManage/notepadManage/utils"
+    QueryNoteResponse} from "@/pages/notepadManage/notepadManage/utils"
 import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
 import {genDefaultPagination} from "@/pages/invoker/schema"
 import {RemoteGV} from "@/yakitGV"
@@ -19,20 +17,12 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import classNames from "classnames"
-import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
-import {usePageInfo} from "@/store/pageInfo"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {shallow} from "zustand/shallow"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 
 const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => {
     const {noteId} = props
 
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
+    const {goEditNotepad} = useGoEditNotepad()
 
     const [keyWord, setKeyWord] = useState<string>("")
     const [refresh, setRefresh] = useState<boolean>(true)
@@ -120,7 +110,10 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
         setSpinning(true)
         grpcQueryNoteById(rowData.Id)
             .then((res) => {
-                toEditNotepad({pageInfo: {notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
+                goEditNotepad({
+                    notepadHash: `${res.Id}`,
+                    title: res.Title
+                })
             })
             .finally(() => {
                 setTimeout(() => {
