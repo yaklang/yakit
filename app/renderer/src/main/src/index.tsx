@@ -18,14 +18,10 @@ const getQueryParam = (param) => {
     return new URLSearchParams(window.location.search).get(param)
 }
 
-export let childWindowHash = ""
 const App = () => {
     const [windowType, setWindowType] = useState(getQueryParam("window"))
 
     useEffect(() => {
-        ipcRenderer.on("child-window-hash", (event, {hash}) => {
-            childWindowHash = hash
-        })
         const onPopState = () => {
             setWindowType(getQueryParam("window"))
         }

@@ -1,7 +1,7 @@
 import React from "react"
 import {success, yakitFailed, yakitNotify} from "./notification"
 import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
-import {childWindowHash} from ".."
+import {childWindowHash} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 
 const {ipcRenderer} = window.require("electron")
 
