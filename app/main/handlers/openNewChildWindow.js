@@ -2,15 +2,29 @@
 const { ipcMain, BrowserWindow } = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
+const crypto = require("crypto")
+
+// 子窗口集合
+const childWindows = new Map() // key: hash, value: BrowserWindow
+
 module.exports = {
   register: (win, getClient) => {
+    // 只注册一次全局 handler
+    ipcMain.handle("minWin-send-to-childWin", async (e, params) => {
+      const targetWin = childWindows.get(params.hash)
+      if (targetWin && !targetWin.isDestroyed()) {
+        targetWin.webContents.send('get-parent-window-data', params)
+      }
+    })
+
     ipcMain.on('open-new-child-window', (event, data) => {
-      childWindow = new BrowserWindow({
+      const windowHash = crypto.randomUUID()
+      let childWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         minWidth: 900,
         minHeight: 500,
-        parent: win,
+        titleBarStyle: 'default', // 确保 macOS 有标题栏按钮
         webPreferences: {
           preload: path.join(__dirname, '../preload.js'),
           nodeIntegration: true,
@@ -19,6 +33,12 @@ module.exports = {
         },
         show: false
       })
+
+      // 绑定 hash 到 Map
+      childWindows.set(windowHash, childWindow)
+
+      // 通知父窗口：带上 hash
+      win.send('child-window-hash', { hash: windowHash })
 
       // 移除子窗口的菜单
       childWindow.setMenu(null)
@@ -37,13 +57,18 @@ module.exports = {
         childWindow.webContents.send('get-parent-window-data', data)
       })
 
+      childWindow.on('close', (e) => {
+        e.preventDefault()
+        childWindow.destroy()
+      })
       childWindow.on('closed', () => {
+        childWindows.delete(windowHash)
         childWindow = null
       })
 
-      // 从父窗口发送新数据到已打开的子窗口
-      ipcMain.handle("minWin-send-to-childWin", async (e, params) => {
-        childWindow.webContents.send('get-parent-window-data', params)
+      childWindow.on("focus", () => {
+        // 通知父窗口：带上 hash
+        win.send('child-window-hash', { hash: windowHash })
       })
     })
   }

@@ -1,6 +1,7 @@
 import React from "react"
 import {success, yakitFailed, yakitNotify} from "./notification"
 import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
+import {childWindowHash} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -13,6 +14,13 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
     ipcRenderer.send("open-new-child-window", {
         type: "openPacketNewWindow",
         data: data
+    })
+}
+export const minWinSendToChildWin = (params) => {
+    ipcRenderer.invoke("minWin-send-to-childWin", {
+        type: params.type,
+        hash: childWindowHash,
+        data: params.data
     })
 }
 

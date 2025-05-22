@@ -477,6 +477,7 @@ const getSubPageTotal = (subPage) => {
     return total
 }
 
+export let childWindowHash = ""
 export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.memo((props) => {
     const {routeKeyToLabel} = props
 
@@ -508,6 +509,15 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }),
         shallow
     )
+
+    useEffect(() => {
+        ipcRenderer.on("child-window-hash", (event, {hash}) => {
+            childWindowHash = hash
+        })
+        return () => {
+            ipcRenderer.removeAllListeners("child-window-hash")
+        }
+    }, [])
 
     // tab数据
     const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
