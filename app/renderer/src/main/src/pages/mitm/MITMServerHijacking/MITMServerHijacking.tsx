@@ -191,6 +191,29 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 
     const [downStreamAgentModalVisible, setDownStreamAgentModalVisible] = useState<boolean>(false)
 
+    const downStreamTagClose = useMemoizedFn(() => {
+        const tipStr = tip
+            .split("|")
+            .filter((item) => !item.startsWith("下游代理"))
+            .join("|")
+        onSetTip(tipStr)
+        setDownstreamProxyStr("")
+        // 更新下拉缓存数据
+        onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+            const cacheData = {
+                options: res.options || [],
+                defaultValue: ""
+            }
+            setRemoteValue(MITMConsts.MITMDefaultDownstreamProxyHistory, JSON.stringify(cacheData))
+        })
+
+        const proxyValue: MITMSetDownstreamProxyRequest = {
+            downstreamProxy: "",
+            version: mitmVersion
+        }
+        grpcMITMSetDownstreamProxy(proxyValue)
+    })
+
     return (
         <div className={style["mitm-server"]}>
             <div className={style["mitm-server-heard"]}>
@@ -203,38 +226,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             .filter((item) => item)
                             .map((item) =>
                                 !item.startsWith("下游代理") ? (
-                                    <YakitTag color='success'>{item}</YakitTag>
+                                    <YakitTag color='success' key={item}>{item}</YakitTag>
                                 ) : (
-                                    <YakitTag
-                                        closable={true}
-                                        onClose={() => {
-                                            const tipStr = tip
-                                                .split("|")
-                                                .filter((item) => !item.startsWith("下游代理"))
-                                                .join("|")
-                                            onSetTip(tipStr)
-                                            setDownstreamProxyStr("")
-                                            // 更新下拉缓存数据
-                                            onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then(
-                                                (res) => {
-                                                    const cacheData = {
-                                                        options: res.options || [],
-                                                        defaultValue: ""
-                                                    }
-                                                    setRemoteValue(
-                                                        MITMConsts.MITMDefaultDownstreamProxyHistory,
-                                                        JSON.stringify(cacheData)
-                                                    )
-                                                }
-                                            )
-
-                                            const proxyValue: MITMSetDownstreamProxyRequest = {
-                                                downstreamProxy: "",
-                                                version: mitmVersion
-                                            }
-                                            grpcMITMSetDownstreamProxy(proxyValue)
-                                        }}
-                                    >
+                                    <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
                                         {item}
                                     </YakitTag>
                                 )
