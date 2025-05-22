@@ -865,15 +865,12 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                             [filterKey]: val
                         })
                     }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.stopPropagation()
-                            setOpensPopover({
-                                ...opensPopover,
-                                [filterKey]: false
-                            })
-                            if (onChangTable) onChangTable()
-                        }
+                    onPressEnter={()=>{
+                        setOpensPopover({
+                            ...opensPopover,
+                            [filterKey]: false
+                        })
+                        if (onChangTable) onChangTable()
                     }}
                 />
             </div>

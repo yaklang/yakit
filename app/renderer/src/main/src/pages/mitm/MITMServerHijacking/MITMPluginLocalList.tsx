@@ -1118,11 +1118,9 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
                                     onEditInputBlur(item, newName)
                                     setEditGroup("")
                                 }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        onEditInputBlur(item, newName)
-                                        setEditGroup("")
-                                    }
+                                onPressEnter={()=>{
+                                    onEditInputBlur(item, newName)
+                                    setEditGroup("") 
                                 }}
                                 autoFocus={true}
                                 value={newName}

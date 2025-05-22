@@ -149,7 +149,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rangeNode,
         overLine = 3,
         editorId,
-        onKeyPress,
         highLightText = [],
         highLightClass,
         highLightFind = [],
@@ -1113,7 +1112,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     useKeyPress(
         (e) => true,
         (e) => {
-            onKeyPress && onKeyPress(e)
             const filterKey = [16, 17, 18, 93]
             if (filterKey.includes(e.keyCode)) return
 
@@ -1697,7 +1695,6 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                         }
 
                         editor.onKeyDown((e) => {
-                            console.log("eee---", e.browserEvent)
                             // 是否直接使用编辑器快捷键 不走自定义逻辑
                             const isUseDefaultShortcut = isYakEditorDefaultShortcut(e.browserEvent)
                             if (!isUseDefaultShortcut) {

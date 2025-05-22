@@ -259,7 +259,8 @@ export const getYakEditorShortcutKeyEvents = () => {
 }
 
 const isAllowPass = (arr: string[]) => {
-    if (arr.length <= 1) return false
+    // PS：由于编辑器中存在双击Shift的特殊情况（暂时屏蔽单键Shift情况，等待后期优化）
+    if (arr.length <= 1 && !arr.includes("Shift")) return false
     return ["Alt", "Shift", "Control", "Meta"].some((item) => arr.includes(item))
 }
 

@@ -49,10 +49,8 @@ export const PluginGroupList: React.FC<PluginGroupListProps> = (props) => {
                                         onBlur={() => {
                                             onEditInputBlur(item, newName)
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                onEditInputBlur(item, newName)
-                                            }
+                                        onPressEnter={()=>{
+                                            onEditInputBlur(item, newName)
                                         }}
                                         autoFocus={true}
                                         value={newName}
