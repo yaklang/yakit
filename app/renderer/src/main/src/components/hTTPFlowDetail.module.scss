@@ -4,10 +4,19 @@
     }
 }
 
-.http-history-box{
-    display: flex;
-    flex-direction: row;
+.http-history-box {
     height: 100%;
+    &-header {
+        margin-bottom: 8px;
+        :global {
+            .ant-descriptions-item-content {
+                max-width: 90px;
+            }
+            .ant-descriptions-item-label {
+                background-color: var(--yakit-background-color);
+            }
+        }
+    }
     .http-history-detail-wrapper {
         flex: 1;
         height: 100%;
@@ -18,18 +27,18 @@
             }
             .ant-col-5 {
                 height: 100%;
-                .ant-table-wrapper{
+                .ant-table-wrapper {
                     height: 100%;
-                    .ant-spin-nested-loading{
+                    .ant-spin-nested-loading {
                         height: 100%;
-                        .ant-table{
+                        .ant-table {
                             height: 100%;
                             display: flex;
                             flex-direction: column;
-                            .ant-table-container{
+                            .ant-table-container {
                                 flex: 1;
                                 overflow: hidden;
-                                .ant-table-content{
+                                .ant-table-content {
                                     height: 100%;
                                     overflow: auto !important;
                                 }
@@ -48,23 +57,23 @@
         }
     }
 }
-.empty-box{
+.empty-box {
     display: flex;
     flex-direction: column;
     height: 100%;
     border: 1px solid #f0f0f0;
     border-radius: 4px 0 0 4px;
-    .empty-box-fold-box{
+    .empty-box-fold-box {
         height: 33px;
         border-bottom: 1px solid var(--yakit-border-color);
         padding: 0 12px;
-        .empty-box-icon-box{
+        .empty-box-icon-box {
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            .fold-icon{
-                color: #85899E;
+            .fold-icon {
+                color: #85899e;
                 cursor: pointer;
                 border-radius: 4px;
                 width: 24px;
@@ -78,24 +87,24 @@
                 }
             }
         }
-        .fold-icon:hover{
+        .fold-icon:hover {
             background-color: var(--yakit-background-color);
-            color: var(--yakit-primary-5);;
+            color: var(--yakit-primary-5);
         }
     }
 }
 
-.http-history-fold-box{
+.http-history-fold-box {
     width: 22px;
     height: 100%;
-    
-    .http-history-icon-box{
+
+    .http-history-icon-box {
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        .fold-icon{
-            color: #85899E;
+        .fold-icon {
+            color: #85899e;
             cursor: pointer;
             border-radius: 4px;
             width: 24px;
@@ -109,12 +118,12 @@
             }
         }
     }
-    .fold-icon:hover{
+    .fold-icon:hover {
         background-color: var(--yakit-background-color);
-        color: var(--yakit-primary-5);;
+        color: var(--yakit-primary-5);
     }
 }
-.http-history-fold-border-box{
+.http-history-fold-border-box {
     width: 32px;
     border-radius: 2px;
     border: 1px solid #f0f0f0;
@@ -131,11 +140,11 @@
         .ant-table {
             overflow: hidden;
         }
-        .ant-table-pagination.ant-pagination{
+        .ant-table-pagination.ant-pagination {
             margin-bottom: 0;
             margin-top: 12px;
         }
-        .ant-table.ant-table-bordered > .ant-table-title{
+        .ant-table.ant-table-bordered > .ant-table-title {
             height: 33px;
             min-height: 33px;
             padding: 0 12px;
@@ -172,20 +181,20 @@
         color: var(--yakit-primary-5);
     }
 }
-.render-html-box{
+.render-html-box {
     height: 100%;
     overflow: auto;
     :global {
-        img{
+        img {
             max-width: 100%;
         }
     }
 }
 
-.type-options-checkable-tag{
+.type-options-checkable-tag {
     display: flex;
     :global {
-        .ant-tag{
+        .ant-tag {
             margin-right: 2px;
         }
     }

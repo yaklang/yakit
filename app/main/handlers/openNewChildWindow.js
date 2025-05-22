@@ -4,7 +4,7 @@ const isDev = require("electron-is-dev")
 const path = require("path")
 const crypto = require("crypto")
 
-// 子窗口集合
+// 子窗口集合（注：现在其实只能打开一个子窗口）
 const childWindows = new Map() // key: hash, value: BrowserWindow
 
 module.exports = {
@@ -64,6 +64,8 @@ module.exports = {
       childWindow.on('closed', () => {
         childWindows.delete(windowHash)
         childWindow = null
+        // 由于目前需求只能打开一个新的子窗口，所以子窗口关闭就删除hash
+        win.send('child-window-hash', { hash: "" })
       })
 
       childWindow.on("focus", () => {

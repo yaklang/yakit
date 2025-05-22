@@ -10,11 +10,15 @@ export const openExternalWebsite = (u: string) => {
 }
 
 export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
-    yakitNotify("info", "新窗口打开中...")
-    ipcRenderer.send("open-new-child-window", {
-        type: "openPacketNewWindow",
-        data: data
-    })
+    if (childWindowHash) {
+        minWinSendToChildWin({type: "openPacketNewWindow", data})
+    } else {
+        yakitNotify("info", "新窗口打开中...")
+        ipcRenderer.send("open-new-child-window", {
+            type: "openPacketNewWindow",
+            data: data
+        })
+    }
 }
 export const minWinSendToChildWin = (params) => {
     ipcRenderer.invoke("minWin-send-to-childWin", {

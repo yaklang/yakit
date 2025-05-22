@@ -518,6 +518,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     noModeTag?: boolean
 
     noPacketModifier?: boolean
+    noOpenPacketNewWindow?: boolean
     noTitle?: boolean
     title?: React.ReactNode
     titleStyle?: React.CSSProperties
@@ -1195,6 +1196,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                             showLineBreaks={showLineBreaks}
                             contextMenu={props.contextMenu}
                             noPacketModifier={props.noPacketModifier}
+                            noOpenPacketNewWindow={props.noOpenPacketNewWindow}
                             editorDidMount={handleEditorMount}
                             editorOperationRecord={editorOperationRecord}
                             defaultHttps={props.defaultHttps}
