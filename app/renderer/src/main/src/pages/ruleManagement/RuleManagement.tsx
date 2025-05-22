@@ -975,7 +975,6 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                                                         <YakitButton
                                                             type='outline2'
                                                             icon={<OutlineClouduploadIcon />}
-                                                            disabled={selectList.some((i) => i.IsBuildInRule)}
                                                             onClick={() => {
                                                                 infoRef.current = {
                                                                     type: "upload",
