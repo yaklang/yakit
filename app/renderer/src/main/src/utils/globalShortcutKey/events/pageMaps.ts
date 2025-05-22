@@ -13,6 +13,7 @@ import { getAuditCodeShortcutKeyEvents, getStorageAuditCodeShortcutKeyEvents, se
 import { getStorageYakRunnerShortcutKeyEvents, getYakRunnerShortcutKeyEvents, setStorageYakRunnerShortcutKeyEvents } from "./page/yakRunner"
 import { getAddYakitScriptShortcutKeyEvents, getStorageAddYakitScriptShortcutKeyEvents, setStorageAddYakitScriptShortcutKeyEvents } from "./page/addYakitScript"
 import { getStorageYakitScriptFocusShortcutKeyEvents, getYakitScriptFocusShortcutKeyEvents, setStorageYakitScriptFocusShortcutKeyEvents } from "./focus/yakitScriptFocus"
+import { getChatCSShortcutKeyEvents, getStorageChatCSShortcutKeyEvents, setStorageChatCSShortcutKeyEvents } from "./page/chatCS"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -42,6 +43,8 @@ export enum ShortcutKeyPage {
     YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
     // YakRunner
     YakRunner = YakitRoute.YakScript,
+    // ChatCS
+    ChatCS = "chat-cs",
 
     /* 焦点快捷键（焦点与页面属于同级绑定） */
     // 插件相关焦点事件
@@ -80,5 +83,10 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         getEvents: getYakitScriptFocusShortcutKeyEvents,
         getStorage: getStorageYakitScriptFocusShortcutKeyEvents,
         setStorage: setStorageYakitScriptFocusShortcutKeyEvents
+    },
+    "chat-cs": {
+        getEvents: getChatCSShortcutKeyEvents,
+        getStorage: getStorageChatCSShortcutKeyEvents,
+        setStorage: setStorageChatCSShortcutKeyEvents
     }
 }

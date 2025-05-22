@@ -116,6 +116,10 @@ import {defPluginBatchExecuteExtraFormValue} from "@/defaultConstants/PluginBatc
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitResizeBox} from "../yakitUI/YakitResizeBox/YakitResizeBox"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
+import { convertKeyboardToUIKey, registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { getChatCSShortcutKeyEvents, getStorageChatCSShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/chatCS"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -1055,6 +1059,32 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
         }
     }, [isShowPrompt])
 
+    useEffect(() => {
+        if (visible) {
+            registerShortcutKeyHandle(ShortcutKeyPage.ChatCS)
+            getStorageChatCSShortcutKeyEvents()
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.ChatCS)
+            }
+        }
+    }, [visible])
+
+    useShortcutKeyTrigger("exit*chatCS", () => {
+        setVisible(false)
+    })
+
+    const isSubmitFocusRef = useRef<boolean>(false)
+    useShortcutKeyTrigger("nextLine*chatCS", () => {
+        if(isSubmitFocusRef.current){
+            setQuestion(`${question}\n`)
+        }
+    })
+
+    useShortcutKeyTrigger("submit*chatCS", () => {
+        if(isSubmitFocusRef.current){
+            onBtnSubmit()
+        }
+    })
     return (
         <Resizable
             style={{position: "absolute"}}
@@ -1085,14 +1115,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 ref={divRef}
                 className={styles["yak-chat-layout"]}
                 tabIndex={0}
-                onKeyDown={(e) => {
-                    const keyCode = e.keyCode ? e.keyCode : e.key
-                    if (keyCode === 27) {
-                        e.stopPropagation()
-                        e.preventDefault()
-                        setVisible(false)
-                    }
-                }}
             >
                 <div className={styles["layout-header"]}>
                     <div className={styles["header-title"]}>
@@ -1299,23 +1321,21 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <Input.TextArea
                                         className={styles["text-area-wrapper"]}
                                         bordered={false}
-                                        placeholder='问我任何问题...(shift + enter 换行)'
+                                        placeholder={`问我任何问题...(${convertKeyboardToUIKey(getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys)} 换行)`}
                                         value={question}
                                         autoSize={true}
                                         onChange={(e) => setQuestion(e.target.value)}
                                         onKeyDown={(e) => {
                                             const keyCode = e.keyCode ? e.keyCode : e.key
-                                            const shiftKey = e.shiftKey
-                                            if (keyCode === 13 && shiftKey) {
-                                                e.stopPropagation()
+                                            if (keyCode === 13) {
                                                 e.preventDefault()
-                                                setQuestion(`${question}\n`)
                                             }
-                                            if (keyCode === 13 && !shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                onBtnSubmit()
-                                            }
+                                        }}
+                                        onFocus={()=>{
+                                            isSubmitFocusRef.current = true
+                                        }}
+                                        onBlur={()=>{
+                                            isSubmitFocusRef.current = false
                                         }}
                                     />
                                     <div className={styles["input-footer"]}>

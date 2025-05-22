@@ -925,16 +925,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setParams({...params, MaxContentLength: value})
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                let value = parseInt(params.MaxContentLength + "" || "0", 10)
-                                                if (!value || value === 0) {
-                                                    value = 10
-                                                } else if (value > 50) {
-                                                    value = 50
-                                                }
-                                                setParams({...params, MaxContentLength: value})
+                                        onPressEnter={()=>{
+                                            let value = parseInt(params.MaxContentLength + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 10
+                                            } else if (value > 50) {
+                                                value = 50
                                             }
+                                            setParams({...params, MaxContentLength: value})
                                         }}
                                         onBlur={() => {
                                             let value = parseInt(params.MaxContentLength + "" || "0", 10)
@@ -974,14 +972,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                             }
                                             setSecondaryTabsNum(value)
                                         }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                let value = parseInt(secondaryTabsNum + "" || "0", 10)
-                                                if (!value || value === 0) {
-                                                    value = 100
-                                                }
-                                                setSecondaryTabsNum(value)
+                                        onPressEnter={()=>{
+                                            let value = parseInt(secondaryTabsNum + "" || "0", 10)
+                                            if (!value || value === 0) {
+                                                value = 100
                                             }
+                                            setSecondaryTabsNum(value)
                                         }}
                                         onBlur={() => {
                                             let value = parseInt(secondaryTabsNum + "" || "0", 10)

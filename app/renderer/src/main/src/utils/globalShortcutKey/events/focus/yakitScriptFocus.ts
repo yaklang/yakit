@@ -19,7 +19,7 @@ const YakitScriptFocusShortcutKeyEvents: EventsType = {
 let currentKeyEvents: EventsType | null = null
 const LocalStorageKey = "yakit-script-focus-shortcut-key-events"
 
-/** 获取快捷键事件和对应按键-页面级 */
+/** 获取快捷键事件和对应按键-焦点级 */
 export const getStorageYakitScriptFocusShortcutKeyEvents = () => {
     getLocalValue(LocalStorageKey)
         .then((res) => {
@@ -31,7 +31,7 @@ export const getStorageYakitScriptFocusShortcutKeyEvents = () => {
         })
         .catch(() => {})
 }
-/** 设置快捷键事件和对应按键-页面级 */
+/** 设置快捷键事件和对应按键-焦点级 */
 export const setStorageYakitScriptFocusShortcutKeyEvents = (events: Record<string, ShortcutKeyEventInfo>) => {
     if (!events) return
     currentKeyEvents = events as EventsType
