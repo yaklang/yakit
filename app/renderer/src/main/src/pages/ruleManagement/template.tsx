@@ -554,7 +554,9 @@ const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) =
             Language: filter?.Language,
             GroupNames: filter?.GroupNames,
             Purpose: filter?.Purpose,
-            Keyword: filter?.Keyword
+            Keyword: filter?.Keyword,
+            FilterRuleKind: filter?.FilterRuleKind,
+            FilterLibRuleKind: filter?.FilterLibRuleKind,
         }
     }
 }
@@ -592,7 +594,7 @@ export const RuleImportExportModal: React.FC<RuleImportExportModalProps> = memo(
                 return
             }
             const request: ExportSyntaxFlowsRequest = {
-                Filter: {...cloneDeep(tragetFilter), FilterRuleKind: "unBuildIn"},
+                Filter: {...cloneDeep(tragetFilter)},
                 TargetPath: formValue?.TargetPath || "",
                 Password: formValue?.Password || undefined
             }

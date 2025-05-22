@@ -28,7 +28,7 @@ export interface RuleImportExportModalProps {
     getContainer?: HTMLElement
     width?: number
     extra: RuleImportExportModalExtra
-    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword"> & {
+    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword" | "FilterRuleKind" | "FilterLibRuleKind"> & {
         allCheck: boolean
     }
     onCallback: (result: boolean) => void
@@ -144,11 +144,6 @@ export interface SyntaxFlowRuleFilter {
     Purpose?: string[]
     Tag?: string[]
     Keyword?: string
-    // 是否包含作为库的规则  这些规则只提供相关数据并被其他规则引用 默认不包含
-    includeLibraryRule?: boolean
-
-    FromId?: number // 废弃
-    UntilId?: number // 废弃
 
     AfterId?: number
     BeforeId?: number
