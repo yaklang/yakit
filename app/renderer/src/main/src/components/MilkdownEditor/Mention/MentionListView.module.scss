@@ -51,6 +51,7 @@
             background-color: var(--yakit-primary-1);
             border-radius: 8px;
         }
+        .mention-user-row + .mention-user-row:has(.mention-user-item-selected),
         .mention-user-row:has(.mention-user-item-selected) + .mention-user-row {
             border-top-color: transparent;
         }

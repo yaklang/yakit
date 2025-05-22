@@ -118,8 +118,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
         onSearch(e.target.value)
     })
 
-    const onSelected = useMemoizedFn((row: API.UserList) => {
-        setCurrentSelected(row)
+    const onNotepadEit = useMemoizedFn((row: API.UserList) => {
         const mentionId = getMentionId()
         action(callCommand(mentionCommand.key, {userName: row.name, userId: row.id, mentionId}))
         // 关闭窗口
@@ -144,7 +143,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
             yakitNotify("info", "请选择用户")
             return
         }
-        onSelected(currentSelected)
+        onNotepadEit(currentSelected)
     })
 
     return (
@@ -158,31 +157,40 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
             <YakitInput.Search
                 ref={searchRef}
                 value={keyWord}
-                onChange={(e) => setKeyWord(e.target.value)}
+                onChange={(e) => {
+                    setKeyWord(e.target.value)
+                    if (userList.length > 0) {
+                        setUserList([])
+                    }
+                }}
                 onSearch={onSearch}
                 onPressEnter={onPressEnter}
                 wrapperStyle={{marginTop: 12}}
             />
             <div className={styles["mention-user-list"]}>
-                <RollingLoadList<API.UserList>
-                    data={userList}
-                    loadMoreData={() => {}}
-                    renderRow={(row: API.UserList, i: number) => (
-                        <div
-                            className={classNames(styles["mention-user-item"], {
-                                [styles["mention-user-item-selected"]]: currentSelected?.id === row.id
-                            })}
-                            onClick={() => onSelected(row)}
-                        >
-                            {row.name}({row.department})
-                        </div>
-                    )}
-                    classNameRow={styles["mention-user-row"]}
-                    page={1}
-                    hasMore={false}
-                    loading={listLoading}
-                    defItemHeight={32}
-                />
+                {keyWord ? (
+                    <RollingLoadList<API.UserList>
+                        data={userList}
+                        loadMoreData={() => {}}
+                        renderRow={(row: API.UserList, i: number) => (
+                            <div
+                                className={classNames(styles["mention-user-item"], {
+                                    [styles["mention-user-item-selected"]]: currentSelected?.id === row.id
+                                })}
+                                onClick={() => setCurrentSelected(row)}
+                            >
+                                {row.name}({row.department})
+                            </div>
+                        )}
+                        classNameRow={styles["mention-user-row"]}
+                        page={1}
+                        hasMore={false}
+                        loading={listLoading}
+                        defItemHeight={32}
+                    />
+                ) : (
+                    <div className='grid-block text-center no-more-text'>请搜索后选择@用户</div>
+                )}
             </div>
             <div className={styles["mention-footer"]}>
                 <div className={styles["checkbox"]}>

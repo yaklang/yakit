@@ -39,7 +39,7 @@ export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
                 overlay={
                     <>
                         {[
-                            {key: "list", label: `${name}本管理`},
+                            {key: "list", label: `${name}管理`},
                             {key: "add", label: `新建${name}`}
                         ].map((item) => (
                             <div

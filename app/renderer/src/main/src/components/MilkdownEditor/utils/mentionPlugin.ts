@@ -18,7 +18,11 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
         {
             tag: `div[data-type='${mentionCustomId}']`,
             getAttrs: (dom) => {
-                return {mentionId: dom.getAttribute("data-mention-id"), userName: dom.getAttribute("data-user-name")}
+                return {
+                    mentionId: dom.getAttribute("data-mention-id"),
+                    userName: dom.getAttribute("data-user-name"),
+                    userId: dom.getAttribute("data-user-id")
+                }
             }
         }
     ],
@@ -32,7 +36,8 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
                 ...ctx.get(mentionCustomAttr.key)(node),
                 class: className,
                 "data-mention-id": getMentionId(),
-                "data-user-name": node.attrs.userName
+                "data-user-name": node.attrs.userName,
+                "data-user-id": node.attrs.userId
             },
             0
         ]
@@ -63,7 +68,8 @@ export const mentionCustomSchema = $nodeSchema(mentionCustomId, (ctx) => ({
                     name: "mention",
                     attributes: {
                         mentionId: node.attrs.mentionId,
-                        userName: node.attrs.userName
+                        userName: node.attrs.userName,
+                        userId: node.attrs.userId
                     }
                 })
                 .next(node.content)

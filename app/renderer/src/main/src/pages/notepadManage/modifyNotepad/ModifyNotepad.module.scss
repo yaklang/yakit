@@ -58,12 +58,14 @@
 .notepad-content {
     width: 820px;
     flex-shrink: 0;
-    overflow: hidden;
+    /* overflow: hidden; */
     margin: 0 auto;
     padding: 0 48px 24px 96px;
     display: flex;
     flex-direction: column;
-    min-height: 400px;
+    height: 100%;
+    /* min-height: 400px; */
+
     .notepad-heard {
         @extend %display-column-center;
         margin-bottom: 20px;

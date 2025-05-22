@@ -1,5 +1,5 @@
 import {useNodeViewContext} from "@prosemirror-adapter/react"
-import React from "react"
+import React, {useState} from "react"
 import styles from "./CustomMention.module.scss"
 import classNames from "classnames"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -8,23 +8,32 @@ import {useMemoizedFn} from "ahooks"
 import {API} from "@/services/swagger/resposeType"
 import {apiNotepadEit} from "./utils"
 import {yakitNotify} from "@/utils/notification"
+import {getMentionId} from "../utils/mentionPlugin"
 
 interface CustomMentionProps {
     notepadHash: string
 }
 export const CustomMention: React.FC<CustomMentionProps> = (props) => {
     const {notepadHash} = props
-    const {node, selected, contentRef} = useNodeViewContext()
+    const {node, setAttrs, selected, contentRef} = useNodeViewContext()
+    const [visible, setVisible] = useState<boolean>(false)
     const onSendMessage = useMemoizedFn(() => {
         if (!node.attrs?.userId) {
             yakitNotify("error", "用户id不存在")
             return
         }
+        let mentionId = node.attrs?.mentionId
+        if (!mentionId) {
+            const id = getMentionId()
+            setAttrs({mentionId: id})
+            mentionId = id
+        }
         const params: API.NotepadEitRequest = {
             eitUser: node.attrs?.userId,
-            notepadHash
+            notepadHash,
+            mentionId
         }
-        apiNotepadEit(params)
+        apiNotepadEit(params).finally(() => setVisible(false))
     })
     return (
         <YakitPopover
@@ -36,6 +45,8 @@ export const CustomMention: React.FC<CustomMentionProps> = (props) => {
                     </YakitButton>
                 </div>
             }
+            visible={visible}
+            onVisibleChange={setVisible}
             trigger='click'
             overlayClassName={styles["mention-custom-popover"]}
         >
