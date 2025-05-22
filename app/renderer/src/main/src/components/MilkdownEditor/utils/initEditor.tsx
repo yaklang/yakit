@@ -475,7 +475,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             jumpToLine(view, +line)
         })
     }
-    // 跳转到指定行的逻辑
+    //NOTE - 跳转到指定行的逻辑,暂未使用
     const jumpToLine = (view: EditorView, lineNumber: number) => {
         if (!lineNumber) return
         const doc = view.state.doc

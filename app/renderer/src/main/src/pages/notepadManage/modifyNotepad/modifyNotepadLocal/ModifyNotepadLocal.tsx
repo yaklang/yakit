@@ -263,11 +263,13 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     // // NOTE 笔记本中存在代码块时，搜索会不正常
     // useEffect(() => {
     //     const pageInfo: ModifyNotepadPageInfoProps = initPageInfo()
-    //     onSearchHighlightJump({
-    //         keyWord: pageInfo.keyWordInfo?.keyWord || "",
-    //         position: pageInfo.keyWordInfo?.position || 0,
-    //         line: pageInfo.keyWordInfo?.line || 0
-    //     })
+    //     if (pageInfo.keyWordInfo?.keyWord || pageInfo.keyWordInfo?.position) {
+    //         onSearchHighlightJump({
+    //             keyWord: pageInfo.keyWordInfo?.keyWord || "",
+    //             position: pageInfo.keyWordInfo?.position || 0,
+    //             line: pageInfo.keyWordInfo?.line || 0
+    //         })
+    //     }
     // }, [initPageInfo()])
 
     // const onSearchHighlightJump = useMemoizedFn((value) => {

@@ -7,7 +7,7 @@ import {getMarkdown} from "@milkdown/kit/utils"
 import {useCreation} from "ahooks"
 
 const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
-    const {setEditor, onSaveContentBeforeDestroy,line} = props
+    const {setEditor, onSaveContentBeforeDestroy, line} = props
     //#region 编辑器初始
     const localParams: InitEditorHooksLocalProps = useCreation(() => {
         return {
@@ -15,7 +15,7 @@ const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
             upload: (path) => {}
         }
     }, [])
-    const {get, loading,jumpToFifthLine} = useInitEditorHooks({
+    const {get, loading, jumpToFifthLine} = useInitEditorHooks({
         ...props,
         localProps: localParams
     })
@@ -34,9 +34,9 @@ const LocalMilkdown: React.FC<LocalMilkdownProps> = React.memo((props, ref) => {
         }
     }, [])
     //#endregion
-    useEffect(()=>{
-        jumpToFifthLine(line)
-    },[line])
+    useEffect(() => {
+        if (line) jumpToFifthLine(line)
+    }, [line])
     return (
         <div>
             <Milkdown />
