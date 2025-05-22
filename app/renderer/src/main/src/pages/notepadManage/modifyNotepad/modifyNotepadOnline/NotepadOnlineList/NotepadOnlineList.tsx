@@ -54,12 +54,12 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
     const getList = useMemoizedFn(async (page?: number) => {
         setLoading(true)
         const params: PluginListPageMeta = !page
-            ? {page: 1, limit: 20, order_by: "updated_at", order: "desc"}
+            ? {page: 1, limit: 20, order_by: "created_at", order: "desc"}
             : {
                   page: +response.pagemeta.page + 1,
                   limit: +response.pagemeta.limit || 20,
                   order: "desc",
-                  order_by: "updated_at"
+                  order_by: "created_at"
               }
         const newQuery: GetNotepadRequestProps = convertGetNotepadRequest(
             {keyword: keyWord, userName: "", type: "keyword"},
