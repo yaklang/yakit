@@ -326,7 +326,16 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     nodeViewFactory({
                         component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
                     })
-                )
+                ),
+                (ctx: Ctx) => () => {
+                    if (!!collabParams?.enableCollab) {
+                        ctx.set(mentionFactory.key, {
+                            view: pluginViewFactory({
+                                component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
+                            })
+                        })
+                    }
+                }
             ].flat()
             //#endregion
             return (
@@ -338,13 +347,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                 component: TooltipView
                             })
                         })
-                        if (!!collabParams?.enableCollab) {
-                            ctx.set(mentionFactory.key, {
-                                view: pluginViewFactory({
-                                    component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
-                                })
-                            })
-                        }
+
                         // 配置为只读
                         ctx.set(editorViewOptionsCtx, {
                             editable: () => !readonly

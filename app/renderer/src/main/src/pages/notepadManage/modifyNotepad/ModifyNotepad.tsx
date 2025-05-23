@@ -1,4 +1,4 @@
-import React, {forwardRef, useImperativeHandle, useRef, useState} from "react"
+import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
 import styles from "./ModifyNotepad.module.scss"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {
@@ -24,6 +24,8 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {RemoteGV} from "@/yakitGV"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 
 const ModifyNotepadOnline = React.lazy(() => import("./modifyNotepadOnline/ModifyNotepadOnline"))
 const ModifyNotepadLocal = React.lazy(() => import("./modifyNotepadLocal/ModifyNotepadLocal"))
@@ -107,9 +109,20 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                 show: true
             }
         ])
+        useEffect(() => {
+            getRemoteValue(RemoteGV.NotepadDetailsTabKey).then((res) => {
+                if (!!res) {
+                    setActiveKey(res)
+                }
+            })
+        }, [])
         const show = useCreation(() => {
             return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
         }, [yakitTab, activeKey])
+        const onActiveKey = useMemoizedFn((key) => {
+            setActiveKey(key)
+            setRemoteValue(RemoteGV.NotepadDetailsTabKey, key)
+        })
         //#endregion
         return (
             <div className={styles["modify-notepad"]}>
@@ -132,7 +145,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                                         yakitTabs={yakitTab}
                                         setYakitTabs={setYakitTab}
                                         activeKey={activeKey}
-                                        onActiveKey={setActiveKey}
+                                        onActiveKey={onActiveKey}
                                     />
                                     <div className={styles["notepad-tab-content"]}>
                                         {activeKey === "catalogue" && (
