@@ -749,7 +749,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const [filters, setFilters] = useState<any>(query || {})
     const [opensPopover, setOpensPopover] = useState<any>({})
     useEffect(() => {
-        setFilters(cloneDeep(query))
+        if (query) {
+            setFilters(cloneDeep(query))
+        } else {
+            setFilters({})
+        }
     }, [query])
     useUpdateEffect(() => {
         setFilters({})
