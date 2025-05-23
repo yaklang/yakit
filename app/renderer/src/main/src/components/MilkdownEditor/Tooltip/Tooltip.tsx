@@ -28,9 +28,7 @@ import {underlineCommand} from "../utils/underline"
 import {commentCommand} from "../utils/commentPlugin"
 import {setWrapInBlockType} from "../utils/utils"
 import {Tooltip} from "antd"
-import {MilkdownBaseUtilProps} from "../MilkdownEditorType"
-import {cloneDeep} from "lodash"
-import {defaultTooltipList} from "../constants"
+import {MilkdownBaseUtilProps, MilkdownMenu, MilkdownMenuKeyEnum, tooltipKey, TooltipListProps} from "../constants"
 import {convertToListBullet, listToParagraphCommand} from "../utils/listPlugin"
 import {headingToParagraphCommand, listToHeadingCommand} from "../utils/headingPlugin"
 import {listToCodeCommand} from "../utils/codePlugin"
@@ -87,8 +85,20 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         [loading]
     )
 
-    const tooltipTextList = useCreation(() => {
-        return cloneDeep(defaultTooltipList)
+    const tooltipTextList: TooltipListProps[] = useCreation(() => {
+        return tooltipKey.map((ele, index) => {
+            if (ele === "key-divider") {
+                return {
+                    key: `${index}-divider`,
+                    label: "divider"
+                }
+            } else {
+                return {
+                    ...MilkdownMenu[ele],
+                    key: ele
+                }
+            }
+        })
     }, [])
 
     useEffect(() => {
@@ -250,33 +260,33 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
         e.preventDefault()
         action(callCommand(commentCommand.key, "111"))
     })
-    const onText = useMemoizedFn(({label}) => {
-        switch (label) {
-            case "正文":
+    const onText = useMemoizedFn(({key}) => {
+        switch (key) {
+            case MilkdownMenuKeyEnum.Text:
                 convertToParagraph()
                 break
-            case "一级标题":
+            case MilkdownMenuKeyEnum.Heading1:
                 convertToHeading(1)
                 break
-            case "二级标题":
+            case MilkdownMenuKeyEnum.Heading2:
                 convertToHeading(2)
                 break
-            case "三级标题":
+            case MilkdownMenuKeyEnum.Heading3:
                 convertToHeading(3)
                 break
-            case "有序列表":
+            case MilkdownMenuKeyEnum.OrderedList:
                 action(callCommand(wrapInOrderedListCommand.key))
                 break
-            case "无序列表":
+            case MilkdownMenuKeyEnum.UnorderedList:
                 action(callCommand(wrapInBulletListCommand.key))
                 break
-            case "任务":
+            case MilkdownMenuKeyEnum.Task:
                 action(callCommand(convertToListBullet.key))
                 break
-            case "代码块":
+            case MilkdownMenuKeyEnum.CodeBlock:
                 convertToCode()
                 break
-            case "引用":
+            case MilkdownMenuKeyEnum.Quote:
                 action(callCommand(wrapInBlockquoteCommand.key))
                 break
             default:
@@ -393,13 +403,13 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                     <div className={styles["tooltip-popover-content"]}>
                         {tooltipTextList.map((ele) => {
                             if (ele.label === "divider") {
-                                return <div key={ele.id} className={styles["tooltip-divider-horizontal"]} />
+                                return <div key={ele.key} className={styles["tooltip-divider-horizontal"]} />
                             }
                             const item = ele as MilkdownBaseUtilProps
                             return (
-                                <Tooltip key={item.id} title={item.description} placement='right'>
+                                <Tooltip key={item.key} title={item.description} placement='right'>
                                     <div
-                                        key={item.id}
+                                        key={item.key}
                                         className={styles["tooltip-list-item"]}
                                         onClick={() => onText(item)}
                                     >
