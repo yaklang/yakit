@@ -258,6 +258,7 @@
                 cursor: pointer;
             }
             .encode-box,
+            .decodeLabel-box,
             .decode-box {
                 padding: 4px 8px;
                 display: flex;
@@ -305,7 +306,8 @@
     .menu-content {
         flex: 1;
         overflow: auto;
-        .encode-box {
+        .encode-box,
+        .decodeLabel-box {
             .encode-item {
                 cursor: pointer;
                 display: flex;
