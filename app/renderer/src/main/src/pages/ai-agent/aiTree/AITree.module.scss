@@ -1,0 +1,38 @@
+.ai-tree {
+    min-height: 100%;
+    .root-node {
+        height: 16px;
+        display: flex;
+        .node-empty {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            .header {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background-color: #c0c6d1;
+            }
+            .line {
+                width: 2px;
+                height: 100%;
+                background-color: #c0c6d1;
+            }
+        }
+    }
+
+    .node-wrapper {
+        height: 16px;
+        display: flex;
+    }
+
+    .node-empty {
+        width: 28px;
+        height: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}

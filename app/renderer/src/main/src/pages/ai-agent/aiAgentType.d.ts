@@ -5,7 +5,7 @@ import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AI
 export interface AIAgentProps {}
 
 // #region 页面全局变量
-/** ai-agent-chat 全局配置 */
+// 全局配置信息
 export interface AIAgentSetting {
     /** 是否自动执行AI任务 */
     AutoExecute?: boolean
@@ -16,19 +16,21 @@ export interface AIAgentSetting {
     /** 任务模板 */
     ForgeName?: string
 }
+
+// 触发事件通信
+export interface AIAgentTriggerEventInfo {
+    type: string
+    params?: Record<string, any>
+}
 // #endregion
 
-export interface AIAgentSideListProps {}
-/** tab 类型 */
-export type AIAgentTab = "history" | "setting" //  | "mcp"
-
 // #region mcp 服务器组件相关定义
-/** resourcesTemplates */
+// resourcesTemplates
 export interface RenderResourcesTemplates {
     name: string
     uriTemplate: string
 }
-/** tool-param */
+// tool-param
 export interface RenderToolsParam {
     key: string
     type: string
@@ -39,13 +41,13 @@ export interface RenderToolsParam {
     children?: RenderToolsParam[]
     substructure?: string
 }
-/** tools */
+// tools
 export interface RenderTools {
     name: string
     description: string
     params: RenderToolsParam[]
 }
-/** 客户端配置信息 */
+// 客户端配置信息
 export interface RenderMCPClientInfo extends MCPClientInfo {
     /** 是否是默认服务器 */
     isDefault: boolean
@@ -59,28 +61,22 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
     /** 前端展示数据 */
     resourceTemplates?: RenderResourcesTemplates[]
 }
-
-export interface MCPServerProps {
-    servers?: RenderMCPClientInfo[]
-    setServers?: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
-}
 // #endregion
 
+// #region UI左侧组件定义
+export interface AIAgentSideListProps {}
+// 侧边栏 tab 类型
+export type AIAgentTab = "history" | "setting" //  | "mcp"
+
+// 全局配置
 export interface AIChatSettingProps {}
-export interface HistoryChatProps {}
 
-export interface ServerChatProps {}
-
-export interface AIChatLogsProps {
-    logs: AIChatMessage.Log[]
+// 历史对话
+export interface HistoryChatProps {
+    /** 新开对话框 */
+    onNewChat: () => void
 }
-
-export interface AddServerModalProps {
-    info?: RenderMCPClientInfo
-    visible: boolean
-    onCallback: (result: boolean, info?: RenderMCPClientInfo) => viod
-}
-
+// 编辑对话名字
 export interface EditChatNameModalProps {
     getContainer?: HTMLElement
     info: AIChatInfo
@@ -88,13 +84,58 @@ export interface EditChatNameModalProps {
     onCallback: (result: boolean, info?: AIChatInfo) => viod
 }
 
+// MCP服务器
+export interface MCPServerProps {
+    servers?: RenderMCPClientInfo[]
+    setServers?: Dispatch<SetStateAction<RenderMCPClientInfo[]>>
+}
+// 添加|编辑MCP服务器
+export interface AddServerModalProps {
+    info?: RenderMCPClientInfo
+    visible: boolean
+    onCallback: (result: boolean, info?: RenderMCPClientInfo) => viod
+}
+// 查看MCP服务器信息
 export interface ServerInfoModalProps {
     info: RenderMCPClientInfo
     visible: boolean
     onCancel: () => viod
 }
+// #endregion
 
-export interface AIAgentEmptyProps {}
+// #region UI右侧组件定义
+// 对话框
+export interface ServerChatProps {}
+
+// 欢迎页
+export interface AIAgentEmptyProps {
+    question: string
+    setQuestion: Dispatch<SetStateAction<string>>
+    onSearch: () => void
+}
+
+// 对话框任务列表
+export interface AIChatTaskListProps {}
+
+// 对话框回答
+export interface AIAgentChatBodyProps {
+    info: AIChatInfo
+    consumption: AIChatMessage.Consumption
+}
+
+// 审阅内容
+export interface AIAgentChatReviewProps {
+    expand: boolean
+    setExpand: Dispatch<SetStateAction<boolean>>
+}
+
+// 对话框日志
+export interface AIChatLogsProps {
+    logs: AIChatMessage.Log[]
+    onClose: () => void
+}
+// #endregion
+
 export interface AIAgentChatProps extends AIAgentChatStreamProps {
     chatInfo: AIChatInfo
     consumption: AIChatMessage.Consumption
