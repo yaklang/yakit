@@ -148,6 +148,10 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
                 createBlankHighLight(action, view)
                 break
             case MilkdownMenuKeyEnum.File:
+                const {dispatch, state} = view
+                const {tr, selection} = state
+                const {from} = selection
+                dispatch(tr.deleteRange(from - 1, from))
                 uploadFileInMilkdown(action, {
                     type,
                     notepadHash: notepadHash || "",
