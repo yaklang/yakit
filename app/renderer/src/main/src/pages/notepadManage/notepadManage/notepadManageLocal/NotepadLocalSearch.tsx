@@ -13,25 +13,17 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import styles from "./NotepadLocalSearch.module.scss"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {toEditNotepad} from "../NotepadManage"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
 import {yakitNotify} from "@/utils/notification"
 import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {DataNode} from "antd/lib/tree"
 import Highlighter from "react-highlight-words"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {RemoteGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
+import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props) => {
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
+    const {goEditNotepad} = useGoEditNotepad()
 
     const [vlistHeigth, setVListHeight] = useState<number>(200)
 
@@ -49,7 +41,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
     const searchKeywordsRef = useRef<YakitAutoCompleteRefProps>({
         ...defYakitAutoCompleteRef
     })
-    const notepadLocalSearchRef = useRef<HTMLElement>()
+    const notepadLocalSearchRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(notepadLocalSearchRef)
 
     useUpdateEffect(() => {
@@ -101,10 +93,18 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
         onSearch(e.target.value)
     })
     const onEdit = useMemoizedFn((data: NoteContent) => {
+        const text = data?.Note?.Content || ""
+        const lines = text.split(/\r?\n/).slice(0, +data.Line - 1) || []
+        const position = lines.reduce((acc, line) => acc + (line.split(keyWord).length - 1), 0)
         setSpinning(true)
         grpcQueryNoteById(data.Note.Id)
             .then((res) => {
-                toEditNotepad({pageInfo: {keyWord, notepadHash: `${res.Id}`, title: res.Title}, notepadPageList})
+                const pageInfo = {
+                    keyWordInfo: {keyWord, position: position + 1, line: data.Line},
+                    notepadHash: `${res.Id}`,
+                    title: res.Title
+                }
+                goEditNotepad(pageInfo)
             })
             .finally(() => {
                 setTimeout(() => {
@@ -112,7 +112,6 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
                 }, 200)
             })
     })
-
     const onTreeSelect = useMemoizedFn((selectedKeys: React.Key[], info: any) => {
         const {node} = info
         if (node?.children) {
@@ -158,11 +157,11 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
     }, [keyWord, response.Data])
 
     return (
-        <div className={styles["note-local-search"]}>
+        <div className={styles["note-local-search"]} ref={notepadLocalSearchRef}>
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
-                cacheHistoryDataKey={RemoteGV.NotepadLocalSearch}
+                cacheHistoryDataKey={NotepadRemoteGV.NotepadLocalSearch}
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1}}

@@ -655,29 +655,3 @@
     }
 }
 
-.notepad-drop-menu {
-    padding: 6px 4px;
-    border-radius: 4px;
-
-    .notepad-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 8px;
-        cursor: pointer;
-        color: var(--yakit-header-color);
-        border-radius: 4px;
-        font-size: 12px;
-        height: 28px;
-        &:hover {
-            background-color: var(--yakit-primary-5);
-            color: #fff;
-        }
-
-        .notepad-item-left {
-            display: flex;
-            align-items: center;
-            height: 16px;
-        }
-    }
-}

@@ -215,12 +215,14 @@ export interface CodeScanPageInfoProps {
 }
 
 export interface ModifyNotepadPageInfoProps {
+    /**需要跳转定位的dom元素id */
+    domId?: string
     /**笔记本 线上:hash(string) 本地:Id(number)*/
     notepadHash?: string | number
     /**笔记本标题 */
     title?: string
     /**搜索关键词 */
-    keyWord?: string
+    keyWordInfo?: {keyWord: string; position: number; line?: number}
 }
 interface PageInfoStoreProps {
     pages: Map<string, PageProps>

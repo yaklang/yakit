@@ -108,8 +108,6 @@ export enum RemoteGV {
     AuditHoleShow = "audit-hole-show",
     /**@name 专项漏洞左侧tabs */
     YakPocTabs = "yakpoc-tabs",
-    /**@name 笔记本本地全文搜索:缓存搜索的关键词列表 */
-    NotepadLocalSearch = "notepad-local-search",
     /**@name mitm中启用插件,需要缓存noParamsCheckList的插件数据 */
     CheckCacheListData = "CHECK_CACHE_LIST_DATA",
     /** @name mitm手动劫持编辑器响应美化&渲染 */

@@ -1,13 +1,8 @@
-import {Milkdown, MilkdownProvider, useEditor} from "@milkdown/react"
+import {useEditor} from "@milkdown/react"
 import {block, blockConfig} from "@milkdown/plugin-block" // 引入block插件
 import {Ctx} from "@milkdown/kit/ctx"
 import {BlockView} from "../Block/Block"
-import {
-    ProsemirrorAdapterProvider,
-    useNodeViewContext,
-    useNodeViewFactory,
-    usePluginViewFactory
-} from "@prosemirror-adapter/react"
+import {useNodeViewFactory, usePluginViewFactory} from "@prosemirror-adapter/react"
 import {CustomMilkdownProps, MilkdownCollabProps} from "../MilkdownEditorType"
 import {placeholderConfig, placeholderPlugin} from "../Placeholder"
 import {fileCustomSchema, uploadCustomPlugin} from "./uploadPlugin"
@@ -19,7 +14,7 @@ import {CustomCodeComponent} from "../CodeBlock/CodeBlock"
 import {ListItem} from "../ListItem/ListItem"
 import {MilkdownHr} from "../MilkdownHr/MilkdownHr"
 import {tooltip, TooltipView} from "../Tooltip/Tooltip"
-import {alterCustomPlugin, alterCustomSchema} from "./alertPlugin"
+import {alterCustomPlugin} from "./alertPlugin"
 import {codeCustomPlugin} from "./codePlugin"
 import {commentCustomPlugin} from "./commentPlugin"
 import {headingCustomPlugin} from "./headingPlugin"
@@ -27,13 +22,13 @@ import {insertImageBlockCommand} from "./imageBlock"
 import {listCustomPlugin} from "./listPlugin"
 import {trackDeletePlugin} from "./trackDeletePlugin"
 import {underlineCustomPlugin} from "./underline"
-import {useCreation} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {$view} from "@milkdown/kit/utils"
 import {CustomFile} from "../CustomFile/CustomFile"
 import {getBase64} from "../MilkdownEditor"
 import {httpUploadImgBase64} from "@/apiUtils/http"
-import {Node, NodeSpec, NodeType, Schema} from "@milkdown/kit/prose/model"
-import {imageBlockComponent, imageBlockConfig, imageBlockSchema} from "@milkdown/kit/component/image-block"
+import {Node} from "@milkdown/kit/prose/model"
+import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/image-block"
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
 import {html} from "atomico"
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
@@ -42,27 +37,28 @@ import {
     codeBlockSchema,
     commonmark,
     hrSchema,
-    listItemAttr,
     listItemSchema,
     syncHeadingIdPlugin
 } from "@milkdown/kit/preset/commonmark"
-import {
-    defaultValueCtx,
-    Editor,
-    editorViewCtx,
-    editorViewOptionsCtx,
-    nodesCtx,
-    rootCtx,
-    schemaCtx
-} from "@milkdown/kit/core"
+import {defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
 import {cursor} from "@milkdown/kit/plugin/cursor"
 import {trailing} from "@milkdown/kit/plugin/trailing"
-import {collab, collabServiceCtx} from "@milkdown/plugin-collab"
+import {collab} from "@milkdown/plugin-collab"
 import {tableBlock} from "@milkdown/kit/component/table-block"
+import {markCustomPlugin} from "./markPlugin"
+import {jumpToLinePlugin, jumpToLinePluginKey} from "./jumpLine"
+import {editorViewCtx} from "@milkdown/core"
+import {TextSelection} from "@milkdown/kit/prose/state"
+import type {EditorView} from "@milkdown/prose/view"
+import {mentionFactory, MentionListView} from "../Mention/MentionListView"
+import {mentionCustomPlugin, mentionCustomSchema} from "./mentionPlugin"
+import {CustomMention} from "../Mention/CustomMention"
+import {useEffect} from "react"
+import emiter from "@/utils/eventBus/eventBus"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -80,9 +76,21 @@ interface InitEditorHooksProps
     collabProps?: InitEditorHooksCollabProps
     diffProps?: InitEditorHooksDiffProps
     localProps?: InitEditorHooksLocalProps
+    inViewport?: boolean
 }
 export default function useInitEditorHooks(props: InitEditorHooksProps) {
-    const {type, readonly, defaultValue, collabProps, customPlugin, onMarkdownUpdated, diffProps, localProps} = props
+    const {
+        type,
+        readonly,
+        defaultValue,
+        collabProps,
+        customPlugin,
+        onMarkdownUpdated,
+        diffProps,
+        localProps,
+        inViewport,
+        positionElementId
+    } = props
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -309,6 +317,26 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     })
                 )
             ].flat()
+            const markPlugin = [...markCustomPlugin()].flat()
+            /**启动了在线协作才有 @ 提及 相关逻辑 */
+            const mentionPlugin = [
+                ...mentionCustomPlugin(),
+                mentionFactory,
+                $view(mentionCustomSchema.node, () =>
+                    nodeViewFactory({
+                        component: () => <CustomMention notepadHash={collabParams?.milkdownHash} />
+                    })
+                ),
+                (ctx: Ctx) => () => {
+                    if (!!collabParams?.enableCollab) {
+                        ctx.set(mentionFactory.key, {
+                            view: pluginViewFactory({
+                                component: () => <MentionListView notepadHash={collabParams?.milkdownHash} />
+                            })
+                        })
+                    }
+                }
+            ].flat()
             //#endregion
             return (
                 Editor.make()
@@ -333,7 +361,9 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                             if (collabParams.enableCollab && isSave) {
                                 collabParams.onSaveHistory(nextMarkdown)
                             }
-                            onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                            if (isSave) {
+                                onMarkdownUpdated && onMarkdownUpdated(nextMarkdown, prevMarkdown)
+                            }
                         })
                     })
                     .use(commonmark.filter((x) => x !== syncHeadingIdPlugin))
@@ -375,8 +405,13 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(commentPlugin)
                     // hrPlugin
                     .use(hrPlugin)
+                    // markPlugin
+                    .use(markPlugin)
                     // trackDeletePlugin
                     .use(trackDeletePlugin())
+                    // .use(jumpToLinePlugin(0))
+                    // mention 提及@
+                    .use(mentionPlugin)
                     .use(customPlugin || [])
             )
         },
@@ -408,6 +443,88 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             return ""
         }
     }
+    //#region 位置定位
+    useEffect(() => {
+        if (!inViewport) return
+        emiter.on("refreshPositionElement", onSetRefreshPositionElement)
+        return () => {
+            emiter.off("refreshPositionElement", onSetRefreshPositionElement)
+        }
+    }, [inViewport])
+    useEffect(() => {
+        if (loading || !positionElementId) return
+        const editor = get()
+        if (editor) {
+            jumpByElementId(positionElementId)
+        }
+    }, [loading, positionElementId])
+    /**根据id跳转到对应位置 */
+    const jumpByElementId = useMemoizedFn((targetId: string) => {
+        setTimeout(() => {
+            const element = document.getElementById(targetId)
+            if (element) {
+                element.scrollIntoView({behavior: "smooth"})
+            }
+        }, 200)
+    })
+    const onSetRefreshPositionElement = useMemoizedFn((positionElementId) => {
+        jumpByElementId(positionElementId)
+    })
+    // 调用跳转到行
+    const jumpToFifthLine = (line: number) => {
+        if (!line) return
+        get()?.action((ctx) => {
+            const view = ctx.get(editorViewCtx)
+            jumpToLine(view, +line)
+        })
+    }
+    //NOTE - 跳转到指定行的逻辑,暂未使用
+    const jumpToLine = (view: EditorView, lineNumber: number) => {
+        if (!lineNumber) return
+        const doc = view.state.doc
+        let currentLine = 1 // 当前行号（从 1 开始）
+        let targetPos = 0 // 目标行的起始位置
+        let isBreak = false
+        // 遍历文档节点，计算行号
+        doc.descendants((node, pos) => {
+            if (currentLine > lineNumber || isBreak) return false // 提前终止遍历
+            if (node.isText) {
+                const text = node.text || ""
+                const lines = text.split("\n")
+                for (let i = 0; i < lines.length; i++) {
+                    if (currentLine === lineNumber) {
+                        targetPos = pos + lines.slice(0, i).join("\n").length
+                        if (i > 0) targetPos += 1 // 跳过换行符
+                        isBreak = true
+                        break // 找到目标行，终止遍历
+                    }
+                    currentLine++
+                }
+            } else if (node.isBlock) {
+                // 块级节点（如段落、标题）默认占一行
+                if (currentLine === lineNumber) {
+                    targetPos = pos + 1 // 跳过节点开始位置
+                    isBreak = true
+                    return false
+                }
+                currentLine++
+            }
+            return true // 继续遍历子节点
+        })
 
-    return {get, loading} as const
+        // 设置光标位置
+        if (targetPos > 0 && targetPos <= doc.content.size) {
+            const tr = view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(targetPos)))
+            tr.scrollIntoView()
+            view.dispatch(tr)
+            view.focus()
+
+            // // 获取目标位置的 DOM 节点
+            // const domPos = view.domAtPos(targetPos)
+            // const targetNode = domPos.node
+        }
+    }
+
+    //#endregion
+    return {get, loading, jumpToFifthLine} as const
 }

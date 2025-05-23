@@ -28,21 +28,20 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {pluginSupplementJSONConvertToData} from "@/pages/pluginEditor/utils/convert"
 import IconNoLoginMessage from "@/assets/no_login_message.png"
 import LoginMessage from "@/assets/login_message.png"
-import {toEditNotepad} from "@/pages/notepadManage/notepadManage/NotepadManage"
 import {shallow} from "zustand/shallow"
 import {apiGetNotepadDetail} from "@/pages/notepadManage/notepadManage/utils"
+import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 const {ipcRenderer} = window.require("electron")
 
 export interface MessageItemProps {
     onClose: () => void
     data: API.MessageLogDetail
     isEllipsis?: boolean
-    notepadPageList?: PageNodeItemProps[]
 }
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
-    const {onClose, data, isEllipsis, notepadPageList} = props
-
+    const {onClose, data, isEllipsis} = props
+    const {goEditNotepad} = useGoEditNotepad()
     const getDescription = useMemo(() => {
         switch (data.upPluginType) {
             case "delete":
@@ -197,6 +196,12 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 )
             case "notepad":
                 return <>{data.description}</>
+            case "notepadEit":
+                return (
+                    <>
+                        {data.handlerUserName}在{data.notepadTitle}文档@你
+                    </>
+                )
             default:
                 return <></>
         }
@@ -265,17 +270,16 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             break
                         // 跳转到笔记本编辑页面
                         case "notepad":
+                        case "notepadEit":
                             if (!data.notepadHash) {
                                 yakitNotify("error", "未找到笔记本信息")
                                 break
                             }
                             apiGetNotepadDetail(data.notepadHash).then((res) => {
-                                toEditNotepad({
-                                    pageInfo: {
-                                        notepadHash: res.hash,
-                                        title: res.title
-                                    },
-                                    notepadPageList: notepadPageList || []
+                                goEditNotepad({
+                                    notepadHash: res.hash,
+                                    title: res.title,
+                                    domId: data.mentionId || ""
                                 })
                             })
 
@@ -342,12 +346,6 @@ export interface MessageCenterProps {
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
     const {messageList, getAllMessage, onLogin, onClose} = props
     const {userInfo} = useStore()
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
     return (
         <>
             {userInfo.isLogin ? (
@@ -355,12 +353,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                     {messageList.length > 0 ? (
                         <div className={styles["message-center"]}>
                             {messageList.map((item) => (
-                                <MessageItem
-                                    data={item}
-                                    key={item.hash}
-                                    onClose={onClose}
-                                    notepadPageList={notepadPageList}
-                                />
+                                <MessageItem data={item} key={item.hash} onClose={onClose} />
                             ))}
 
                             <div className={styles["footer-btn"]}>

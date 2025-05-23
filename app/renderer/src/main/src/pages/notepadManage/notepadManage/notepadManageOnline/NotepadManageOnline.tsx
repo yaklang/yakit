@@ -1,7 +1,6 @@
 import React, {useEffect, useRef, useState} from "react"
 import {NotepadOnlineProps} from "./NotepadManageOnlineType"
 import {useStore} from "@/store"
-import {usePageInfo} from "@/store/pageInfo"
 import {
     OutlineChevronupIcon,
     OutlineChevrondownIcon,
@@ -19,15 +18,12 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
 import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {YakitRoute} from "@/enums/yakitRoute"
 import {PluginListPageMeta} from "@/pages/plugins/baseTemplateType"
 import {FuncSearch} from "@/pages/plugins/funcTemplate"
 import {API} from "@/services/swagger/resposeType"
 import {useInViewport, useCreation, useMemoizedFn, useDebounceFn} from "ahooks"
 import {Divider} from "antd"
-import moment from "moment"
-import {shallow} from "zustand/shallow"
-import {NotepadAction, timeMap, toAddNotepad} from "../NotepadManage"
+import {NotepadAction, timeMap} from "../NotepadManage"
 import {
     SaveDialogResponse,
     SearchParamsProps,
@@ -41,16 +37,12 @@ import {
 import styles from "./NotepadManageOnline.module.scss"
 import SearchResultEmpty from "@/assets/search_result_empty.png"
 import {formatTimestamp} from "@/utils/timeUtil"
+import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
+import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
 
 const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
-    const {notepadPageList} = usePageInfo(
-        (s) => ({
-            notepadPageList: s.pages.get(YakitRoute.Modify_Notepad)?.pageList || []
-        }),
-        shallow
-    )
-
+    const {goAddNotepad} = useGoEditNotepad()
     const [listLoading, setListLoading] = useState<boolean>(true)
     const [pageLoading, setPageLoading] = useState<boolean>(false)
 
@@ -161,7 +153,6 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                     return (
                         <NotepadAction
                             record={record}
-                            notepadPageList={notepadPageList}
                             userInfo={userInfo}
                             onSingleDownAfter={setBatchDownInfo}
                             onShareAfter={() => {
@@ -182,7 +173,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 }
             }
         ]
-    }, [actionHashMapRef.current, sorterKey, timeSortVisible, notepadPageList])
+    }, [actionHashMapRef.current, sorterKey, timeSortVisible])
     useEffect(() => {
         if (!userInfo.isLogin) return
         getList()
@@ -324,12 +315,15 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
             return selectedRowKeys.length
         }
     }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
+    const name = useCreation(() => {
+        return getNotepadNameByEdition()
+    }, [])
     return (
         <YakitSpin spinning={pageLoading}>
             <div className={styles["notepad-manage"]} ref={notepadRef}>
                 <div className={styles["notepad-manage-heard"]}>
                     <div className={styles["heard-title"]}>
-                        <span>记事本管理</span>
+                        <span>{name}管理</span>
                         <TableTotalAndSelectNumber total={response.pagemeta.total} selectNum={selectNumber} />
                     </div>
                     <div className={styles["heard-extra"]}>
@@ -367,7 +361,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                             批量下载
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
-                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={toAddNotepad}>
+                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
                             新建
                         </YakitButton>
                     </div>

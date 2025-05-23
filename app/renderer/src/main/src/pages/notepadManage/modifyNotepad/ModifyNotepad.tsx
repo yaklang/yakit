@@ -7,23 +7,28 @@ import {
     ModifyNotepadContentProps,
     ModifyNotepadProps
 } from "./ModifyNotepadType"
-import {Tooltip, Tree} from "antd"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineCloseIcon, OutlineOpenIcon} from "@/assets/icon/outline"
+import {Tree} from "antd"
+import {
+    OutlineChevrondownIcon,
+    OutlineChevronrightIcon,
+    OutlineListOneIcon,
+    OutlineListTwoIcon
+} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {buildTOCTree} from "./utils"
-import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
-import {useMenuHeight} from "@/store/menuHeight"
-import {shallow} from "zustand/shallow"
 import {isEqual} from "lodash"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {OnlineJudgment} from "@/pages/plugins/onlineJudgment/OnlineJudgment"
 import {isCommunityEdition} from "@/utils/envfile"
+import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
+import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const ModifyNotepadOnline = React.lazy(() => import("./modifyNotepadOnline/ModifyNotepadOnline"))
 const ModifyNotepadLocal = React.lazy(() => import("./modifyNotepadLocal/ModifyNotepadLocal"))
-
-const notepadMixWidth = 1200
 
 const ModifyNotepad: React.FC<ModifyNotepadProps> = React.memo((props) => {
     const {pageId} = props
@@ -39,24 +44,12 @@ export default ModifyNotepad
 
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
     forwardRef((props, ref) => {
-        const {tabName, spinning} = props
-        const {menuBodyHeight} = useMenuHeight(
-            (s) => ({
-                menuBodyHeight: s.menuBodyHeight
-            }),
-            shallow
-        )
-
+        const {tabName, spinning, listDom} = props
+        //#region 目录
         const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
-        const [expand, setExpand] = useState<boolean>(true)
         const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
-
-        const notepadRef = useRef<HTMLDivElement>(null)
         const treeKeysRef = useRef<string[]>([])
 
-        const notepadWidth = useListenWidth(notepadRef)
-        const clientWidthRef = useRef(document.body.clientWidth)
-        const clientHeightRef = useRef(document.body.clientHeight)
         const perHeadings = useRef<MilkdownCatalogueProps[]>([])
 
         useImperativeHandle(
@@ -69,12 +62,6 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
             []
         )
 
-        //#region 目录
-        useEffect(() => {
-            clientWidthRef.current = document.body.clientWidth
-            clientHeightRef.current = document.body.clientHeight
-            setExpand(notepadWidth > notepadMixWidth)
-        }, [notepadWidth])
         const getCatalogue = useDebounceFn(
             (headings: MilkdownCatalogueProps[]) => {
                 if (isEqual(perHeadings.current, headings)) return
@@ -101,38 +88,42 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                 setExcludeExpandedKeys((k) => [...k, key])
             }
         })
-        const onCatalogueMouseEnter = useMemoizedFn(() => {
-            if (notepadWidth < notepadMixWidth) {
-                setExpand(true)
-            }
-        })
-        const onCatalogueMouseLeave = useMemoizedFn(() => {
-            if (notepadWidth < notepadMixWidth) {
-                setExpand(false)
-            }
-        })
-        const onExpandIcon = useMemoizedFn(() => {
-            setExpand(!expand)
-        })
-
         const expandedKeys = useCreation(() => {
             return treeKeysRef.current.filter((ele) => !excludeExpandedKeys.includes(ele))
         }, [excludeExpandedKeys, treeKeysRef.current])
-        const treeMaxHeight = useCreation(() => {
-            return menuBodyHeight.firstTabMenuBodyHeight - 24 - 32 - 53 - 24 - 24 // 一级菜单+二级菜单+头部+编辑底部padding+padding-top
-        }, [menuBodyHeight.firstTabMenuBodyHeight])
-        const catalogueTop = useCreation(() => {
-            const currentHeight = clientHeightRef.current
-            const t = currentHeight - menuBodyHeight.firstTabMenuBodyHeight + 24 + 32 + 53 + 24 // 一级菜单+二级菜单+头部+padding-top
-            if (notepadWidth < notepadMixWidth) return t
-            return 0
-        }, [expand, notepadWidth, menuBodyHeight.firstTabMenuBodyHeight, clientHeightRef.current])
-        const treeMaxWidth = useCreation(() => {
-            if ((notepadWidth || clientWidthRef.current) < notepadMixWidth) return 300
-            return (notepadWidth - 820 - 32) / 2
-        }, [notepadWidth, clientWidthRef.current])
-        //#endregion
 
+        //#endregion
+        //#region 侧边栏
+        const [activeKey, setActiveKey] = useState<string>("catalogue")
+        const [yakitTab, setYakitTab] = useState<YakitTabsProps[]>([
+            {
+                icon: <OutlineListOneIcon />,
+                label: "目录",
+                value: "catalogue",
+                show: true
+            },
+            {
+                icon: <OutlineListTwoIcon />,
+                label: "列表",
+                value: "list",
+                show: true
+            }
+        ])
+        useEffect(() => {
+            getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((res) => {
+                if (!!res) {
+                    setActiveKey(res)
+                }
+            })
+        }, [])
+        const show = useCreation(() => {
+            return yakitTab.find((ele) => ele.value === activeKey)?.show !== false
+        }, [yakitTab, activeKey])
+        const onActiveKey = useMemoizedFn((key) => {
+            setActiveKey(key)
+            setRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey, key)
+        })
+        //#endregion
         return (
             <div className={styles["modify-notepad"]}>
                 <YakitSpin spinning={spinning}>
@@ -140,60 +131,59 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                         <div className={styles["modify-notepad-heard-title"]}>{tabName}</div>
                         {props.titleExtra}
                     </div>
-                    <div className={classNames(styles["notepad"])} ref={notepadRef}>
-                        <div
-                            className={classNames(styles["notepad-catalogue-wrapper"], {
-                                [styles["notepad-catalogue-wrapper-hidden"]]: !catalogue.length
-                            })}
-                        >
-                            <div
-                                className={classNames(styles["notepad-catalogue"], {
-                                    [styles["notepad-catalogue-hover"]]: notepadWidth < notepadMixWidth,
-                                    [styles["notepad-catalogue-overflow-hidden"]]: !expand
-                                })}
-                                style={{
-                                    top: catalogueTop,
-                                    maxWidth: expand ? treeMaxWidth : 26,
-                                    maxHeight: expand ? treeMaxHeight : 24
-                                }}
-                                onMouseEnter={onCatalogueMouseEnter}
-                                onMouseLeave={onCatalogueMouseLeave}
-                            >
-                                <div className={styles["notepad-button"]}>
-                                    <Tooltip title={expand ? "收起" : "展开"}>
-                                        <YakitButton
-                                            type='text2'
-                                            icon={expand ? <OutlineCloseIcon /> : <OutlineOpenIcon />}
-                                            onClick={onExpandIcon}
-                                        />
-                                    </Tooltip>
+                    <div className={classNames(styles["notepad"])}>
+                        <YakitResizeBox
+                            freeze={show}
+                            lineDirection='right'
+                            firstRatio={show ? "300px" : "25px"}
+                            firstNodeStyle={show ? {padding: 0} : {padding: 0, maxWidth: 25}}
+                            firstMinSize={show ? 300 : 25}
+                            secondMinSize={830}
+                            firstNode={
+                                <div className={styles["notepad-tab-body"]}>
+                                    <YakitSideTab
+                                        yakitTabs={yakitTab}
+                                        setYakitTabs={setYakitTab}
+                                        activeKey={activeKey}
+                                        onActiveKey={onActiveKey}
+                                    />
+                                    <div className={styles["notepad-tab-content"]}>
+                                        {activeKey === "catalogue" && (
+                                            <>
+                                                {catalogue.length > 0 ? (
+                                                    <Tree
+                                                        treeData={catalogue}
+                                                        expandedKeys={expandedKeys}
+                                                        switcherIcon={<></>}
+                                                        showIcon={true}
+                                                        className={classNames(styles["notepad-catalogue-tree"])}
+                                                        titleRender={(nodeData) => (
+                                                            <React.Fragment key={nodeData.key}>
+                                                                <CatalogueTreeNode
+                                                                    info={nodeData}
+                                                                    isExpanded={expandedKeys.includes(nodeData.key)}
+                                                                    onClick={onCatalogueClick}
+                                                                    onExpand={onExpand}
+                                                                />
+                                                            </React.Fragment>
+                                                        )}
+                                                    />
+                                                ) : (
+                                                    <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
+                                                )}
+                                            </>
+                                        )}
+                                        {activeKey === "list" && listDom}
+                                    </div>
                                 </div>
-                                <Tree
-                                    treeData={catalogue}
-                                    expandedKeys={expandedKeys}
-                                    switcherIcon={<></>}
-                                    showIcon={true}
-                                    className={classNames(styles["notepad-catalogue-tree"], {
-                                        [styles["notepad-catalogue-tree-hidden"]]:
-                                            !expand || notepadWidth < notepadMixWidth
-                                    })}
-                                    style={{
-                                        maxHeight: expand ? treeMaxHeight - 24 : 0
-                                    }}
-                                    titleRender={(nodeData) => (
-                                        <React.Fragment key={nodeData.key}>
-                                            <CatalogueTreeNode
-                                                info={nodeData}
-                                                isExpanded={expandedKeys.includes(nodeData.key)}
-                                                onClick={onCatalogueClick}
-                                                onExpand={onExpand}
-                                            />
-                                        </React.Fragment>
-                                    )}
-                                />
-                            </div>
-                        </div>
-                        {props.children}
+                            }
+                            secondNodeStyle={
+                                show
+                                    ? {overflow: "auto", padding: "24px 16px 24px 12px"}
+                                    : {padding: "24px 16px 24px 12px", minWidth: "calc(100% - 25px)"}
+                            }
+                            secondNode={<>{props.children}</>}
+                        />
                     </div>
                 </YakitSpin>
             </div>

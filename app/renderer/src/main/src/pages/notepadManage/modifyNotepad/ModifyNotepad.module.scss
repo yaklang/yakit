@@ -25,7 +25,6 @@
     @extend %display-column-center;
     position: relative;
     height: 100%;
-    padding-bottom: 24px;
     .modify-notepad-heard {
         @extend %display-flex-center;
         justify-content: space-between;
@@ -48,112 +47,10 @@
         }
     }
 }
-.notepad-catalogue-wrapper {
-    position: sticky;
-    top: 0;
-    height: 0;
-    width: 0;
-    z-index: 2;
-    .notepad-catalogue {
-        width: fit-content;
-        position: sticky;
-        left: 16px;
-        top: 0;
-        overflow-y: hidden;
-        overflow-x: hidden;
-        transition: max-width 0.2s ease;
-        z-index: 2;
-        background-color: rgba($color: #fff, $alpha: 0.8);
-        backdrop-filter: blur(10px);
-        border-radius: 8px;
-        :global {
-            .ant-tree-switcher {
-                width: 0;
-            }
-            .ant-tree-treenode {
-                padding: 0;
-                width: 100%;
-            }
-            .ant-tree {
-                background-color: transparent;
-                .ant-tree-node-content-wrapper {
-                    overflow: hidden;
-                    padding: 0;
-                    width: 100%;
-                    &:hover {
-                        background-color: initial;
-                    }
-                }
-                .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: initial;
-                }
-            }
-        }
-        .notepad-button {
-            display: block;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-        .notepad-catalogue-tree {
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding-right: 8px;
-            padding-bottom: 8px;
-            .catalogue-tree-node {
-                @extend %display-flex-center;
-                gap: 4px;
-                padding: 3px 4px;
-                border-radius: 4px;
-                height: 26px;
-                width: 100%;
-                &:hover {
-                    background-color: #f8f8f8;
-                    svg {
-                        color: var(--yakit-primary-5);
-                    }
-                }
-            }
-            .tree-node-title {
-                color: var(--yakit-body-text-color);
-                font-size: 14px;
-                font-style: normal;
-                font-weight: 400;
-                line-height: 20px;
-                width: 100%;
-
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-            .tree-node-title-level-one {
-                font-weight: 600;
-            }
-        }
-        .notepad-catalogue-tree-hidden {
-            display: none;
-        }
-    }
-    .notepad-catalogue-hover {
-        &:hover {
-            .notepad-catalogue-tree-hidden {
-                display: flex;
-            }
-        }
-    }
-    .notepad-catalogue-overflow-hidden {
-        overflow-y: hidden;
-    }
-}
-.notepad-catalogue-wrapper-hidden {
-    display: none;
-}
 .notepad {
     @extend %display-flex-center;
     justify-content: center;
     align-items: flex-start;
-    padding: 24px 16px 0 12px;
     position: relative;
     overflow: hidden auto;
     flex: 1;
@@ -161,9 +58,14 @@
 .notepad-content {
     width: 820px;
     flex-shrink: 0;
-    overflow: hidden;
+    /* overflow: hidden; */
     margin: 0 auto;
     padding: 0 48px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* min-height: 400px; */
+
     .notepad-heard {
         @extend %display-column-center;
         margin-bottom: 20px;
@@ -204,6 +106,74 @@
         }
         .ant-popover-arrow-content {
             background-color: var(--yakit-card-background-color) !important;
+        }
+    }
+}
+
+.notepad-tab-body {
+    display: flex;
+    height: 100%;
+    :global {
+        .ant-tree-switcher {
+            width: 0;
+        }
+        .ant-tree-treenode {
+            padding: 0;
+            width: 100%;
+        }
+        .ant-tree {
+            background-color: transparent;
+            .ant-tree-node-content-wrapper {
+                overflow: hidden;
+                padding: 0;
+                width: 100%;
+                &:hover {
+                    background-color: initial;
+                }
+            }
+            .ant-tree-node-content-wrapper.ant-tree-node-selected {
+                background-color: initial;
+            }
+        }
+    }
+    .notepad-tab-content {
+        flex: 1;
+        width: 100%;
+        overflow: hidden;
+    }
+    .notepad-catalogue-tree {
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 12px;
+        .catalogue-tree-node {
+            @extend %display-flex-center;
+            gap: 4px;
+            padding: 3px 4px;
+            border-radius: 4px;
+            height: 26px;
+            width: 100%;
+            &:hover {
+                background-color: #f8f8f8;
+                svg {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+        .tree-node-title {
+            color: var(--yakit-body-text-color);
+            font-size: 14px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px;
+            width: 100%;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        .tree-node-title-level-one {
+            font-weight: 600;
         }
     }
 }

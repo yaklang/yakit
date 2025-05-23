@@ -77,6 +77,10 @@ export declare namespace API {
         head_img: string
         role: string
         uid?: string
+        /**
+         * 所属组织
+         */
+        department?: string
     }
     export interface UserInfoByToken {
         token: string
@@ -1050,6 +1054,11 @@ export declare namespace API {
         data: Operation[]
     }
     export interface Operation extends GormBaseModel, NewOperation {}
+    export interface NotepadEitRequest {
+        notepadHash?: string
+        eitUser?: number
+        mentionId?: string
+    }
     export interface NotepadDownloadWhere {
         hash?: string
     }
@@ -1134,6 +1143,10 @@ export declare namespace API {
          * 协作文档标题
          */
         notepadTitle?: string
+        /**
+         * 定位艾特位置
+         */
+        mentionId?: string
     }
     export interface LogsRequest {
         uuid: string

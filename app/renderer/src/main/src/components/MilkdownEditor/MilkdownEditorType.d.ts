@@ -40,7 +40,7 @@ export interface MilkdownCollabProps {
     onSetTitle: (s: string) => void
 }
 export interface CustomMilkdownProps {
-    /**编辑器使用的模块名称，目前只有记事本中使用 */
+    /**编辑器使用的模块名称，目前只有记事本(企业版叫云文档)中使用 */
     type: "notepad"
     /**设置为只读 */
     readonly?: boolean
@@ -57,6 +57,8 @@ export interface CustomMilkdownProps {
     onMarkdownUpdated?: (next: string, per: string) => void
     /**卸载前，抛出去最新的内容 */
     onSaveContentBeforeDestroy?: (value: string) => void
+    /**定位 dom元素id */
+    positionElementId?: string
 }
 export interface MilkdownEditorProps extends CustomMilkdownProps {}
 

@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from "react"
 import {ModifyNotepadOnlineProps} from "./ModifyNotepadOnlineType"
 import {ModifyNotepadContent} from "../ModifyNotepad"
 import styles from "./ModifyNotepadOnline.module.scss"
-import {MilkdownEditor} from "@/components/MilkdownEditor/MilkdownEditor"
+import {MilkdownEditor, showOnlineErrorNotification} from "@/components/MilkdownEditor/MilkdownEditor"
 import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
@@ -48,6 +48,7 @@ import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {formatTimestamp} from "@/utils/timeUtil"
 
 const NotepadShareModal = React.lazy(() => import("../../NotepadShareModal/NotepadShareModal"))
+const NotepadOnlineList = React.lazy(() => import("./NotepadOnlineList/NotepadOnlineList"))
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
     const {pageId} = props
@@ -121,9 +122,21 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             setNotepadLoading(true)
             apiGetNotepadDetail(`${pageInfo.notepadHash}`)
                 .then((res) => {
-                    perTabName.current = res.title
-                    notepadContentRef.current = res.content
-                    setNotepadDetail(res)
+                    const isCollaborator = res.collaborator?.find((ele) => ele.user_id === userInfo.user_id)
+                    if (userInfo.user_id !== res.notepadUserId && !isCollaborator) {
+                        // 当前登录人不是文档的协作者也不是作者，应该弹窗错误提示
+                        showOnlineErrorNotification({
+                            code: 403,
+                            reason: `没有阅读和编辑权限,请联系作者${res.userName}`,
+                            onOk: () => {
+                                emiter.emit("onCloseCurrentPage", pageId)
+                            }
+                        })
+                    } else {
+                        perTabName.current = res.title
+                        notepadContentRef.current = res.content
+                        setNotepadDetail(res)
+                    }
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -168,7 +181,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             ...currentItem,
             pageParamsInfo: {
                 modifyNotepadPageInfo: {
-                    ...defaultModifyNotepadPageInfo,
+                    ...(currentItem.pageParamsInfo.modifyNotepadPageInfo || defaultModifyNotepadPageInfo),
                     ...value
                 }
             }
@@ -470,6 +483,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     <Tooltip title={userInfo.companyName}>{userAvatar}</Tooltip>
                 </div>
             }
+            listDom={<NotepadOnlineList notepadHash={notepadDetail.hash} />}
         >
             <div className={styles["notepad-content"]} ref={notepadRef}>
                 <div className={styles["notepad-heard"]}>
@@ -484,6 +498,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         size='large'
                         bordered={false}
                         className={styles["notepad-input"]}
+                        wrapperStyle={{height: 40}}
                         value={tabName}
                         onChange={(e) => {
                             setTabName(e.target.value)
@@ -528,6 +543,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                             onMarkdownUpdated={onMarkdownUpdated}
                             setEditor={setEditor}
                             onSaveContentBeforeDestroy={onSaveNewContent}
+                            positionElementId={initPageInfo().domId}
                         />
                     </YakitSpin>
                 </div>
