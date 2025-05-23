@@ -108,8 +108,6 @@ export enum RemoteGV {
     AuditHoleShow = "audit-hole-show",
     /**@name 专项漏洞左侧tabs */
     YakPocTabs = "yakpoc-tabs",
-    /**@name 笔记本本地全文搜索:缓存搜索的关键词列表 */
-    NotepadLocalSearch = "notepad-local-search",
     /**@name mitm中启用插件,需要缓存noParamsCheckList的插件数据 */
     CheckCacheListData = "CHECK_CACHE_LIST_DATA",
     /** @name mitm手动劫持编辑器响应美化&渲染 */
@@ -121,13 +119,7 @@ export enum RemoteGV {
     /** @name historyTableYakitResizeBox比例缓存 */
     historyTableYakitResizeBox = "history_table_yakit_resize_box",
     /** @name mitm手动劫持:是否只看响应 */
-    MITMManualIsOnlyLookResponse = "mitm_manual_is_only_look_response",
-    /** @name 笔记本线上列表搜索关键词缓存 */
-    NotepadOnlineListSearch = "notepad_online_list_search",
-    /** @name 笔记本本地列表搜索关键词缓存 */
-    NotepadLocalListSearch = "notepad_local_list_search",
-    /**@name  笔记本详情页面tab切换缓存*/
-    NotepadDetailsTabKey = "notepad_details_tab_key",
+    MITMManualIsOnlyLookResponse = "mitm_manual_is_only_look_response"
 }
 
 /** 项目逻辑全局变量 */

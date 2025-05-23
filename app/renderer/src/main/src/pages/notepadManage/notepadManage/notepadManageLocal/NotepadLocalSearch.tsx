@@ -18,9 +18,9 @@ import YakitTree from "@/components/yakitUI/YakitTree/YakitTree"
 import {DataNode} from "antd/lib/tree"
 import Highlighter from "react-highlight-words"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {RemoteGV} from "@/yakitGV"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
 import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props) => {
     const {goEditNotepad} = useGoEditNotepad()
@@ -161,7 +161,7 @@ const NotepadLocalSearch: React.FC<NotepadLocalSearchProps> = React.memo((props)
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
-                cacheHistoryDataKey={RemoteGV.NotepadLocalSearch}
+                cacheHistoryDataKey={NotepadRemoteGV.NotepadLocalSearch}
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1}}

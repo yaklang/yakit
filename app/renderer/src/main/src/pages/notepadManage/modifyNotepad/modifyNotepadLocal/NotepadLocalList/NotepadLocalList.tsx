@@ -9,15 +9,16 @@ import {
     grpcQueryNoteById,
     Note,
     QueryNoteRequest,
-    QueryNoteResponse} from "@/pages/notepadManage/notepadManage/utils"
+    QueryNoteResponse
+} from "@/pages/notepadManage/notepadManage/utils"
 import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
 import {genDefaultPagination} from "@/pages/invoker/schema"
-import {RemoteGV} from "@/yakitGV"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import classNames from "classnames"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => {
     const {noteId} = props
@@ -126,7 +127,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
-                cacheHistoryDataKey={RemoteGV.NotepadLocalListSearch}
+                cacheHistoryDataKey={NotepadRemoteGV.NotepadLocalListSearch}
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1, paddingRight: 4}}

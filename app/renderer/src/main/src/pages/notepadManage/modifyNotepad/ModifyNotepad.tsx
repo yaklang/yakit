@@ -24,8 +24,8 @@ import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {RemoteGV} from "@/yakitGV"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const ModifyNotepadOnline = React.lazy(() => import("./modifyNotepadOnline/ModifyNotepadOnline"))
 const ModifyNotepadLocal = React.lazy(() => import("./modifyNotepadLocal/ModifyNotepadLocal"))
@@ -110,7 +110,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
             }
         ])
         useEffect(() => {
-            getRemoteValue(RemoteGV.NotepadDetailsTabKey).then((res) => {
+            getRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey).then((res) => {
                 if (!!res) {
                     setActiveKey(res)
                 }
@@ -121,7 +121,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
         }, [yakitTab, activeKey])
         const onActiveKey = useMemoizedFn((key) => {
             setActiveKey(key)
-            setRemoteValue(RemoteGV.NotepadDetailsTabKey, key)
+            setRemoteValue(NotepadRemoteGV.NotepadDetailsTabKey, key)
         })
         //#endregion
         return (

@@ -1,5 +1,4 @@
 import {SolidClipboardlistIcon} from "@/assets/icon/solid"
-import {ChevronUpIcon, ChevronDownIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useMemoizedFn, useCreation} from "ahooks"
@@ -9,6 +8,7 @@ import React, {useState} from "react"
 import {NotepadMenuProps} from "../HeardMenu/HeardMenuType"
 import style from "./NotepadMenu.module.scss"
 import {getNotepadNameByEdition} from "./utils"
+import {OutlineChevrondownIcon, OutlineChevronupIcon} from "@/assets/icon/outline"
 
 export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
     const {isExpand, onRouteMenuSelect} = props
@@ -64,7 +64,7 @@ export const NotepadMenu: React.FC<NotepadMenuProps> = React.memo((props) => {
                 >
                     <div className={style["heard-menu-customize-content"]}>
                         {name}
-                        {(notepadVisible && <ChevronUpIcon />) || <ChevronDownIcon />}
+                        {(notepadVisible && <OutlineChevronupIcon />) || <OutlineChevrondownIcon />}
                     </div>
                 </YakitButton>
             </Dropdown>

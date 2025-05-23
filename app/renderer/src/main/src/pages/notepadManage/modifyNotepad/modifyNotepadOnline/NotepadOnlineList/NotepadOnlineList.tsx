@@ -5,7 +5,6 @@ import {defYakitAutoCompleteRef, YakitAutoComplete} from "@/components/yakitUI/Y
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {YakitAutoCompleteRefProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
-import {RemoteGV} from "@/yakitGV"
 import {API} from "@/services/swagger/resposeType"
 import {useInViewport, useMemoizedFn} from "ahooks"
 import {useStore} from "@/store"
@@ -19,6 +18,7 @@ import {
 import classNames from "classnames"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import {NotepadRemoteGV} from "@/enums/notepad"
 
 const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) => {
     const {notepadHash} = props
@@ -136,7 +136,7 @@ const NotepadOnlineList: React.FC<NotepadOnlineListProps> = React.memo((props) =
             <YakitAutoComplete
                 ref={searchKeywordsRef}
                 isCacheDefaultValue={false}
-                cacheHistoryDataKey={RemoteGV.NotepadOnlineListSearch}
+                cacheHistoryDataKey={NotepadRemoteGV.NotepadOnlineListSearch}
                 onSelect={onSelectKeywords}
                 value={keyWord}
                 style={{flex: 1, paddingRight: 4}}
