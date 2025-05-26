@@ -62,7 +62,6 @@ export interface PluginResultUIProp {
     debugMode?: boolean
 
     cardStyleType?: number
-    runtimeId?: string
     fromPlugin?: string
     defaultActive?: string
 
@@ -324,16 +323,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
                         </TabPane>
                     )
                 })}
-                {!!props.runtimeId && (
-                    <TabPane tab={"本次执行 HTTP 流量"} key={"current-http-flow"}>
-                        <CurrentHttpFlow
-                            pageType='Plugin'
-                            runtimeId={props.runtimeId}
-                            isOnlyTable={onlyShowFirstNode}
-                            onIsOnlyTable={setOnlyShowFirstNode}
-                        ></CurrentHttpFlow>
-                    </TabPane>
-                )}
                 <TabPane tab={"日志"} key={finalFeatures.length > 0 ? "log" : "feature-0"}>
                     {
                         <>

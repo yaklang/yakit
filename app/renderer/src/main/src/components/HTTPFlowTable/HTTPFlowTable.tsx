@@ -103,6 +103,10 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
+import {minWinSendToChildWin} from "@/ChildNewApp"
+import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
+import { convertKeyboardToUIKey } from "@/utils/globalShortcutKey/utils"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -805,38 +809,27 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const refreshTabsContRef = useRef<boolean>(false)
 
-    useHotkeys(
-        "ctrl+r",
-        (e) => {
+    useShortcutKeyTrigger("sendAndJump*common", () => {
+        if(inViewport){
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
                     ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
                     : onSendToTab(selected, true, downstreamProxyStr)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [ref]
-    )
+        }
+    })
 
-    useHotkeys(
-        "ctrl+shift+r",
-        (e) => {
-            e.stopPropagation()
+    useShortcutKeyTrigger("send*common", () => {
+        if(inViewport){
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
                     ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
                     : onSendToTab(selected, false, downstreamProxyStr)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [ref]
-    )
+        }
+    })
 
     const size = useSize(ref)
 
@@ -2708,13 +2701,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         openPacketNewWindow(getPacketNewWindow(r))
     })
 
-    const systemRef = useRef<YakitSystem>("Darwin")
-    useEffect(() => {
-        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
-            systemRef.current = systemType
-        })
-    }, [])
-
     // 插件扩展(单选)
     const [codecSingleHistoryPlugin, setCodecSingleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
     const searchCodecSingleHistoryPlugin = useMemoizedFn((): any => {
@@ -2926,12 +2912,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     key: "sendAndJumpToWebFuzzer",
                     label: "发送并跳转",
-                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                    keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
                 },
                 {
                     key: "sendToWebFuzzer",
                     label: "仅发送",
-                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                    keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
                 }
             ],
             onClickBatch: () => {}
@@ -2946,12 +2932,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     key: "sendAndJumpToWS",
                     label: "发送并跳转",
-                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                    keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
                 },
                 {
                     key: "sendToWS",
                     label: "仅发送",
-                    keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                    keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
                 }
             ],
             onClickBatch: () => {}
@@ -3249,7 +3235,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 info.children = contextMenuKeybindingHandle(info.children)
             } else {
                 if (info.keybindings && info.keybindings.length > 0) {
-                    const keysContent = convertKeyboard(systemRef.current, info.keybindings)
+                    const keysContent = convertKeyboardToUIKey(info.keybindings)
 
                     info.label = keysContent ? (
                         <div className={style["editor-context-menu-keybind-wrapper"]}>

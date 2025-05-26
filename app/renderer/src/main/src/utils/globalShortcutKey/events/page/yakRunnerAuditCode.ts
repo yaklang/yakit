@@ -23,7 +23,7 @@ type EventsType = Record<`${AuditCodeShortcutKey}`, ShortcutKeyEventInfo>
 
 const AuditCodeShortcutKeyEvents: EventsType = {
     "search*aduit": {
-        name: "搜索",
+        name: "呼出搜索",
         keys: [YakitKeyMod.Shift]
     },
     "searchTab*aduit": {
@@ -47,7 +47,7 @@ const AuditCodeShortcutKeyEvents: EventsType = {
         keys: [YakitKeyBoard.Enter]
     },
     "submit*aduit": {
-        name: "搜索跳转",
+        name: "开始审计",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.Enter]
     }
 }

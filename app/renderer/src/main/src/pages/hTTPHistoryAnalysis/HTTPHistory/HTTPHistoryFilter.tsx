@@ -91,6 +91,9 @@ import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import styles from "./HTTPHistoryFilter.module.scss"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { convertKeyboardToUIKey } from "@/utils/globalShortcutKey/utils"
+import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -1248,12 +1251,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     {
                         key: "sendAndJumpToWebFuzzer",
                         label: "发送并跳转",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                        keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
                     },
                     {
                         key: "sendToWebFuzzer",
                         label: "仅发送",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                        keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
                     }
                 ],
                 onClickBatch: () => {}
@@ -1268,12 +1271,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     {
                         key: "sendAndJumpToWS",
                         label: "发送并跳转",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.KEY_R]
+                        keybindings: getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
                     },
                     {
                         key: "sendToWS",
                         label: "仅发送",
-                        keybindings: [YakitEditorKeyCode.Control, YakitEditorKeyCode.Shift, YakitEditorKeyCode.KEY_R]
+                        keybindings: getGlobalShortcutKeyEvents()["send*common"].keys
                     }
                 ],
                 onClickBatch: () => {}
@@ -1426,13 +1429,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         ]
     }, [data, compareState])
 
-    /** 菜单自定义快捷键渲染处理事件 */
-    const systemRef = useRef<YakitSystem>("Darwin")
-    useEffect(() => {
-        ipcRenderer.invoke("fetch-system-name").then((systemType: YakitSystem) => {
-            systemRef.current = systemType
-        })
-    }, [])
     const contextMenuKeybindingHandle = useMemoizedFn((data) => {
         const menus: any = []
         for (let item of data) {
@@ -1442,7 +1438,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 info.children = contextMenuKeybindingHandle(info.children)
             } else {
                 if (info.keybindings && info.keybindings.length > 0) {
-                    const keysContent = convertKeyboard(systemRef.current, info.keybindings)
+                    const keysContent = convertKeyboardToUIKey(info.keybindings)
                     info.label = keysContent ? (
                         <div className={styles["editor-context-menu-keybind-wrapper"]}>
                             <div className={styles["content-style"]}>{info.label}</div>
@@ -1644,37 +1640,25 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     })
 
-    // 右键菜单 发送到 Web Fuzzer、发送到 WS Fuzzer、快捷键发送
-    useHotkeys(
-        "ctrl+r",
-        (e) => {
+    useShortcutKeyTrigger("sendAndJump*common", () => {
+        if(inViewport){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request)
                     : onSendToTab(clickRow, true, downstreamProxy)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [hTTPFlowFilterTableRef, clickRow, downstreamProxy]
-    )
+        }
+    })
 
-    useHotkeys(
-        "ctrl+shift+r",
-        (e) => {
-            e.stopPropagation()
+    useShortcutKeyTrigger("send*common", () => {
+        if(inViewport){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)
                     : onSendToTab(clickRow, false, downstreamProxy)
             }
-        },
-        {
-            enabled: inViewport
-        },
-        [hTTPFlowFilterTableRef, clickRow, downstreamProxy]
-    )
+        }
+    })
 
     // 数据包 PoC 模版
     const onPocMould = useMemoizedFn((v: HTTPFlow) => {
