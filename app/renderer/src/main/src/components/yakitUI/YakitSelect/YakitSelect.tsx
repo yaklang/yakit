@@ -54,7 +54,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         ref,
         () => ({
             onSetRemoteValues: (value: string[]) => {
-                const newValue = value.length > 0 ? value : props.value
+                const newValue = value.length > 0 ? value : props.value || []
                 onSetRemoteValues(newValue)
             },
             onGetRemoteValues: () => {
@@ -191,11 +191,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
                     setMouseEnterItem("")
                 }}
             >
-                <div
-                    className={styles["yakit-option-item-label"]}
-                >
-                    {copyItem.label}
-                </div>
+                <div className={styles["yakit-option-item-label"]}>{copyItem.label}</div>
                 <OutlineXIcon
                     style={{
                         display: showClose ? "block" : "none"
