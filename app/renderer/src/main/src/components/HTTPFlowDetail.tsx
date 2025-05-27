@@ -441,8 +441,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
-                                                hideSearch={true}
-                                                noHex={true}
                                                 noHeader={true}
                                                 originValue={flow.RequestString}
                                                 defaultHttps={flow?.IsHTTPS}
@@ -498,8 +496,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
-                                                hideSearch={true}
-                                                noHex={true}
                                                 noHeader={true}
                                                 originValue={flow.ResponseString}
                                                 defaultHttps={flow?.IsHTTPS}
@@ -1024,8 +1020,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 readOnly={true}
                                                 noLineNumber={true}
                                                 noMinimap={true}
-                                                noHex={true}
-                                                hideSearch={true}
                                                 refreshTrigger={infoType}
                                                 loading={infoTypeLoading}
                                                 extraEnd={
@@ -1570,6 +1564,11 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [isShowBeforeData, beforeResValue, resType, highLightItem])
 
+    const [refreshHighLightFind, setRefreshHighLightFind] = useState(true)
+    useEffect(() => {
+        setRefreshHighLightFind((prev) => !prev)
+    }, [highLightItem])
+
     const getPacketNewWindow = () => {
         openPacketNewWindow({
             showParentPacketCom: {
@@ -1687,8 +1686,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHeight={defaultHeight}
                         loading={flowRequestLoad}
                         defaultHttps={flow.IsHTTPS}
-                        hideSearch={true}
-                        noHex={true}
                         noMinimap={true}
                         contextMenu={{
                             ...sendCodeCompareMenuItem("request")
@@ -1712,7 +1709,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         typeOptionVal={reqTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
-                            if (typeOptionVal === "beautify") {
+                            if (typeOptionVal !== undefined) {
                                 setReqTypeOptionVal(typeOptionVal)
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)
                             } else {
@@ -1722,6 +1719,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={realReqHighLightText}
                         highLightFind={realReqHighLightFind}
+                        refreshHighLightFind={refreshHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
@@ -1835,14 +1833,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             </>
                         }
                         isResponse={true}
-                        noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
                         loading={resEditorLoading}
                         originValue={codeKey === "utf-8" ? originRspValue : codeValue}
                         originalPackage={flow.Response}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
-                        hideSearch={true}
                         defaultSearchKeyword={props.search}
                         defaultHttps={flow.IsHTTPS}
                         webFuzzerValue={flow?.RequestString || ""}
@@ -1861,6 +1857,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
                         highLightFind={highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []}
+                        refreshHighLightFind={refreshHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
                         url={flow.Url}

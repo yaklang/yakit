@@ -108,6 +108,7 @@ import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import {filterColorTag} from "@/components/TableVirtualResize/utils"
 import {FuzzerConcurrentLoad, FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const ResponseCard = React.lazy(() => import("./ResponseCard"))
 const FuzzerPageSetting = React.lazy(() => import("./FuzzerPageSetting"))
@@ -1987,6 +1988,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
             return p
         }, [firstFull, secondFull])
 
+        const [hex, setHex] = useState<boolean>(false)
         const firstNodeExtra = () => (
             <>
                 <YakitButton
@@ -1998,9 +2000,13 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                         onSetRequestHttp(Uint8ArrayToString(beautifyValue as Uint8Array, "utf8"))
                         setRefreshTrigger(!refreshTrigger)
                     }}
+                    style={{marginRight: 8}}
                 >
                     美化
                 </YakitButton>
+                <YakitCheckableTag checked={hex} onChange={setHex}>
+                    HEX
+                </YakitCheckableTag>
                 <YakitButton
                     size='small'
                     type='primary'
@@ -2135,6 +2141,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                       }
                                     : undefined
                             }
+                            hex={hex}
                         />
                     }
                     secondNode={

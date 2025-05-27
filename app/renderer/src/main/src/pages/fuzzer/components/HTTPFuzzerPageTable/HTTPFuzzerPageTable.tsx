@@ -1047,8 +1047,6 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                             defaultHttps={currentSelectItem?.IsHTTPS}
                             isResponse={true}
                             readOnly={true}
-                            hideSearch={true}
-                            noHex={true}
                             loading={codeLoading}
                             // noHeader={true}
                             originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
