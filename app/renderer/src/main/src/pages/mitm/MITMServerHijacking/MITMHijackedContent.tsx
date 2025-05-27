@@ -33,12 +33,14 @@ import {Tooltip} from "antd"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     ClientMITMHijackedResponse,
+    MITMContentReplacersRequest,
     MITMForwardModifiedRequest,
     MITMForwardModifiedResponseRequest,
     MITMHijackGetFilterRequest,
     grpcClientMITMHijacked,
     grpcMITMAutoForward,
     grpcMITMCancelHijackedCurrentResponseById,
+    grpcMITMContentReplacers,
     grpcMITMForwardModifiedRequest,
     grpcMITMForwardModifiedResponse,
     grpcMITMForwardRequestById,
@@ -221,10 +223,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 newRules.push({...item, NoReplace: true})
             }
         })
-        ipcRenderer
-            .invoke("mitm-content-replacers", {
-                replacers: newRules
-            })
+        const value: MITMContentReplacersRequest = {
+            replacers: newRules,
+            version: mitmVersion
+        }
+        grpcMITMContentReplacers(value, true)
             .then((val) => {
                 getRules()
                 yakitNotify("success", "已成功开启规则“全部不替换”按钮")
