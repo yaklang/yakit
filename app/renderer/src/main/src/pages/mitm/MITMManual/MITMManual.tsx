@@ -1252,9 +1252,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     return (
         <NewHTTPPacketEditor
             noMinimap={!isResponse}
-            noHex={true}
             noHeader={false}
-            hideSearch={true}
             isShowBeautifyRender={true}
             noPacketModifier={true}
             readOnly={disabled}

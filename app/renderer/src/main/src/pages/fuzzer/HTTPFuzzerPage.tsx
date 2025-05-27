@@ -3321,14 +3321,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
-                            system={props.system}
                             originValue={codeKey === "utf-8" ? responseRawString : codeValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
-                            hideSearch={true}
                             isResponse={true}
-                            noHex={true}
-                            // noHeader={true}
                             loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}

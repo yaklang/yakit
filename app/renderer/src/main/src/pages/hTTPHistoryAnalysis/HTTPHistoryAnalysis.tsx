@@ -772,10 +772,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                     </YakitButton>
                                                                 </>
                                                             }
-                                                            simpleMode={true}
-                                                            noHex={true}
-                                                            noModeTag={true}
-                                                            hideSearch={true}
                                                             noMinimap={true}
                                                             onChange={setRawRequest}
                                                             refreshTrigger={refreshTriggerReqEditor}
@@ -793,6 +789,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             editorOperationRecord='HTTP_FLOW_ANALYSIS_REQUEST_Record'
                                                             onlyBasicMenu
                                                             noLineNumber
+                                                            noHex
                                                         />
                                                     </>
                                                 }
@@ -824,10 +821,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                 </>
                                                             }
                                                             isResponse={true}
-                                                            simpleMode={true}
-                                                            noHex={true}
-                                                            noModeTag={true}
-                                                            hideSearch={true}
                                                             noMinimap={true}
                                                             onChange={setRawResponse}
                                                             refreshTrigger={refreshTriggerResEditor}
@@ -835,6 +828,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                             editorOperationRecord='HTTP_FLOW_ANALYSIS_RESPONSE_Record'
                                                             onlyBasicMenu
                                                             noLineNumber
+                                                            noHex
                                                         />
                                                     </>
                                                 }
