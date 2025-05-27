@@ -772,10 +772,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                     </YakitButton>
                                                                 </>
                                                             }
-                                                            simpleMode={true}
-                                                            noHex={true}
-                                                            noModeTag={true}
-                                                            hideSearch={true}
                                                             noMinimap={true}
                                                             onChange={setRawRequest}
                                                             refreshTrigger={refreshTriggerReqEditor}
@@ -824,10 +820,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                                 </>
                                                             }
                                                             isResponse={true}
-                                                            simpleMode={true}
-                                                            noHex={true}
-                                                            noModeTag={true}
-                                                            hideSearch={true}
                                                             noMinimap={true}
                                                             onChange={setRawResponse}
                                                             refreshTrigger={refreshTriggerResEditor}

@@ -43,6 +43,9 @@ import emiter from "./eventBus/eventBus"
 import {v4 as uuidv4} from "uuid"
 import {GetPluginLanguage} from "@/pages/plugins/builtInData"
 import {Selection} from "@/pages/yakRunner/RunnerTabs/RunnerTabsType"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
+import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -76,28 +79,6 @@ export interface EditorProps {
     triggerId?: any
 
     full?: boolean
-}
-
-export interface YakHTTPPacketViewer {
-    value: Uint8Array
-    isRequest?: boolean
-    isResponse?: boolean
-    raw?: EditorProps
-}
-
-export const YakHTTPPacketViewer: React.FC<YakHTTPPacketViewer> = (props) => {
-    return (
-        <YakEditor
-            {...props.raw}
-            type={props.isRequest ? "http" : props.isResponse ? "html" : "http"}
-            readOnly={true}
-            value={new Buffer(props.value).toString("utf8")}
-        />
-    )
-}
-
-export interface YakInteractiveEditorProp {
-    yakEditorProp: EditorProps
 }
 
 export const YakEditor: React.FC<EditorProps> = (props) => {
@@ -447,23 +428,6 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
         </>
     )
 }
-
-export const YakInteractiveEditor: React.FC<YakInteractiveEditorProp> = React.memo(
-    (props: YakInteractiveEditorProp) => {
-        return (
-            <>
-                <Row style={{height: "100%"}}>
-                    <Col span={16}>
-                        <YakEditor {...{...props.yakEditorProp, noMiniMap: true}} />
-                    </Col>
-                    <Col span={8}>
-                        <div style={{flex: 1}}>变量预览</div>
-                    </Col>
-                </Row>
-            </>
-        )
-    }
-)
 /**@name 字体大小 */
 export const HTTP_PACKET_EDITOR_FONT_SIZE = "HTTP_PACKET_EDITOR_FONT_SIZE"
 /**@name 获取换行符是否显示 */
@@ -492,6 +456,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     highLightText?: HighLightText[] | Selection[]
     highLightFind?: HighLightText[] | Selection[]
+    refreshHighLightFind?: boolean
     highLightFindClass?: string
     // 是否定位高亮光标位置
     isPositionHighLightCursor?: boolean
@@ -500,33 +465,27 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     originValue: string
     // 接口返回原始包
     originalPackage?: Uint8Array
-    defaultStringValue?: string
     onChange?: (i: string) => any
     disableFullscreen?: boolean
     defaultHeight?: number
     bordered?: boolean
     onEditor?: (editor: IMonacoEditor) => any
-    hideSearch?: boolean
     extra?: React.ReactNode
     extraEnd?: React.ReactNode
     emptyOr?: React.ReactNode
 
     refreshTrigger?: boolean | any
-    simpleMode?: boolean
     noHeader?: boolean
     loading?: boolean
-    noModeTag?: boolean
 
     noPacketModifier?: boolean
     noTitle?: boolean
     title?: React.ReactNode
     titleStyle?: React.CSSProperties
-    noHex?: boolean
 
     // lang
     language?: "html" | "http" | "yak" | any
 
-    system?: string
     isResponse?: boolean
     utf8?: boolean
     theme?: string
@@ -553,8 +512,12 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     webFuzzerCallBack?: () => void
     /**@name 是否显示美化/渲染TYPE(默认显示) */
     isShowBeautifyRender?: boolean
+    /**@name 是否隐藏Hex编辑器（默认显示） */
+    noHex?: boolean
     /**@name 是否显示显示Extra默认项 */
     showDefaultExtra?: boolean
+    /**@name 是否显示配置编辑器（默认显示） */
+    noSetIngEditor?: boolean
     /**@name 数据对比(默认无对比) */
     dataCompare?: DataCompareProps
     /**默认选中美化或渲染 */
@@ -563,7 +526,6 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
     /** 编码按钮 */
     AfterBeautifyRenderBtn?: ReactElement
     url?: string
-    pageId?: string
     downbodyParams?: HTTPFlowBodyByIdRequest
     onlyBasicMenu?: boolean
     showDownBodyMenu?: boolean
@@ -604,14 +566,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         isPositionHighLightCursor,
         downstreamProxyStr = ""
     } = props
-    const [mode, setMode] = useState("text")
+    const [mode, setMode, getMode] = useGetSetState("text")
     const [strValue, setStrValue] = useState(originValue)
     const [hexValue, setHexValue] = useState<Uint8Array>(new Uint8Array()) // 只有切换到hex时才会用这个值，目前切换得时候会把最新得编辑器中得值赋值到该变量里面
-    const [searchValue, setSearchValue] = useState("")
     const [monacoEditor, setMonacoEditor] = useState<IMonacoEditor>()
     const [fontSize, setFontSize] = useState<undefined | number>(12)
     const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
-    const [highlightDecorations, setHighlightDecorations] = useState<any[]>([])
     const [noWordwrap, setNoWordwrap] = useState(false)
     const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
@@ -623,6 +583,13 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         return type === undefined ? highLightFind || [] : []
     }, [type, highLightFind])
 
+    const highLightFindCom = useCampare(highLightFind)
+    useEffect(() => {
+        if ((highLightFind || []).length > 0) {
+            setMode("text")
+        }
+    }, [highLightFindCom, props.refreshHighLightFind])
+
     const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
     const [showValue, setShowValue] = useState<string>(originValue)
     const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
@@ -630,9 +597,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
     // 对比loading
     const [compareLoading, setCompareLoading] = useState<boolean>(false)
-
-    // 操作系统类型
-    const [system, setSystem] = useState<string>()
 
     // 编辑器Id 用于区分每个编辑器
     const [editorId, setEditorId] = useState<string>(uuidv4())
@@ -687,7 +651,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     }, [props.showLineBreaksState])
 
     useEffect(() => {
-        ipcRenderer.invoke("fetch-system-name").then((res) => setSystem(res))
         getRemoteValue(HTTP_PACKET_EDITOR_Line_Breaks)
             .then((data) => {
                 setShowLineBreaks(data === "true")
@@ -696,12 +659,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                 setShowLineBreaks(true)
             })
     }, [])
-
-    const highlightActive = useMemoizedFn((search: string, regexp?: boolean) => {
-        if (!monacoEditor) {
-            return
-        }
-    })
 
     /*如何实现 monaco editor 高亮？*/
     // https://microsoft.github.io/monaco-editor/playground.html#interacting-with-the-editor-line-and-inline-decorations
@@ -745,21 +702,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     })
 
     useEffect(() => {
-        if (!props.defaultHeight) {
-            return
-        }
-
-        setStrValue(props.defaultStringValue || "")
-        if (mode === "hex") setHexValue(StringToUint8Array(props.defaultStringValue || ""))
-    }, [props.defaultStringValue, mode])
-
-    useEffect(() => {
         if (monacoEditor) {
             props.onEditor && props.onEditor(monacoEditor)
             monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
-        }
-        if (!props.simpleMode && !props.hideSearch && monacoEditor) {
-            setHighlightDecorations(monacoEditor.deltaDecorations(highlightDecorations, []))
         }
     }, [monacoEditor])
     useEffect(() => {
@@ -767,37 +712,29 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             props.onAddOverlayWidget && props.onAddOverlayWidget(monacoEditor, props.isAddOverlayWidget)
         }
     }, [monacoEditor, props.isAddOverlayWidget])
-    useEffect(() => {
-        if (props.readOnly) {
-            setStrValue(showValue)
-            if (mode === "hex") setHexValue(StringToUint8Array(showValue))
-        }
-        if (props.readOnly && monacoEditor) {
-            monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
-        }
-    }, [
-        showValue,
-        props.readOnly,
-        mode
-        // monacoEditor,
-    ])
 
     useEffect(() => {
         if (props.readOnly) {
-            return
+            setStrValue(showValue)
+            if (monacoEditor) {
+                monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+            }
+            if (mode === "hex") setHexValue(StringToUint8Array(showValue))
         }
-        setStrValue(originValue)
-        if (mode === "hex") setHexValue(StringToUint8Array(originValue))
-    }, [props.refreshTrigger, mode, props.readOnly])
+    }, [showValue, props.readOnly, mode, monacoEditor])
+    useEffect(() => {
+        if (!props.readOnly) {
+            setStrValue(originValue)
+            if (monacoEditor) {
+                monacoEditor.setSelection({startColumn: 0, startLineNumber: 0, endLineNumber: 0, endColumn: 0})
+            }
+            if (getMode() === "hex") setHexValue(StringToUint8Array(originValue))
+        }
+    }, [props.refreshTrigger, originValue, props.readOnly])
 
     useEffect(() => {
         props.onChange && props.onChange(strValue)
     }, [strValue])
-
-    // hexValue 暂时没有用，后续添加hexValue，请不要使用onChange方法，单独用一个事件去处理
-    // useEffect(() => {
-    //     props.onChange && props.onChange(Uint8ArrayToString(hexValue))
-    // }, [hexValue])
 
     const empty = !!props.emptyOr && originValue.length == 0
 
@@ -945,6 +882,10 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         } else if (originValue && type === "render") {
             renderCode()
         }
+
+        if (type === "render") {
+            setMode("text")
+        }
     }, [type])
 
     const handleEditorMount = useMemoizedFn((editor: YakitIMonacoEditor) => {
@@ -968,50 +909,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 ) : (
                                     <span style={{fontSize: 12}}>{isResponse ? "Response" : "Request"}</span>
                                 ))}
-                            {!props.simpleMode
-                                ? !props.noHex && (
-                                      <SelectOne
-                                          label={" "}
-                                          colon={false}
-                                          value={mode}
-                                          setValue={(e) => {
-                                              if (mode === "text" && e === "hex") {
-                                                  console.info("切换到 HEX 模式")
-                                                  setHexValue(StringToUint8Array(strValue))
-                                              }
-
-                                              if (mode === "hex" && e === "text") {
-                                                  console.info("切换到 TEXT 模式")
-                                                  setStrValue(Uint8ArrayToString(hexValue))
-                                              }
-                                              setMode(e)
-                                          }}
-                                          data={[
-                                              {text: "TEXT", value: "text"},
-                                              {text: "HEX", value: "hex"}
-                                          ]}
-                                          size={"small"}
-                                          formItemStyle={{marginBottom: 0}}
-                                      />
-                                  )
-                                : !props.noModeTag && (
-                                      <Form.Item style={{marginBottom: 0}}>
-                                          <Tag color={"geekblue"}>{mode.toUpperCase()}</Tag>
-                                      </Form.Item>
-                                  )}
-                            {mode === "text" && !props.hideSearch && !props.simpleMode && (
-                                <Input.Search
-                                    size={"small"}
-                                    value={searchValue}
-                                    onChange={(e) => {
-                                        setSearchValue(e.target.value)
-                                    }}
-                                    enterButton={true}
-                                    onSearch={(e) => {
-                                        highlightActive(searchValue)
-                                    }}
-                                />
-                            )}
                         </div>
                     )
                 }
@@ -1040,6 +937,26 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                 </div>
                             )}
                             {props.AfterBeautifyRenderBtn}
+                            {!props.noHex && (
+                                <YakitCheckableTag
+                                    checked={mode === "hex"}
+                                    onChange={(checked) => {
+                                        if (checked) {
+                                            if (!props.readOnly) {
+                                                setHexValue(StringToUint8Array(strValue))
+                                            }
+                                            if (type === "render") {
+                                                setType(undefined)
+                                            }
+                                            setMode("hex")
+                                        } else {
+                                            setMode("text")
+                                        }
+                                    }}
+                                >
+                                    HEX
+                                </YakitCheckableTag>
+                            )}
                             {dataCompare && dataCompare.rightCode.length > 0 && (
                                 <YakitButton
                                     size={"small"}
@@ -1084,7 +1001,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                             }}
                                         />
                                     </Tooltip>
-                                    {!props.simpleMode && (
+                                    {!props.noSetIngEditor && (
                                         <Popover
                                             title={"配置编辑器"}
                                             content={
@@ -1119,13 +1036,17 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                                                 size={"small"}
                                                                 type={"text"}
                                                                 icon={<FullscreenOutlined />}
+                                                                disabled={props.disableFullscreen}
                                                                 onClick={() => {
-                                                                    showDrawer({
+                                                                    showYakitDrawer({
                                                                         title: "全屏",
                                                                         width: "100%",
                                                                         content: (
                                                                             <div
-                                                                                style={{height: "100%", width: "100%"}}
+                                                                                style={{
+                                                                                    height: "100%",
+                                                                                    width: "100%"
+                                                                                }}
                                                                             >
                                                                                 <NewHTTPPacketEditor
                                                                                     {...props}
@@ -1224,13 +1145,15 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     )}
                     {mode === "hex" && !empty && !renderHtml && (
                         <HexEditor
-                            className={classNames({[styles["hex-editor-style"]]: props.system === "Windows_NT"})}
-                            showAscii={true}
+                            style={{fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20}}
+                            readOnly={true}
+                            asciiWidth={18}
                             data={hexValue}
-                            showRowLabels={true}
+                            overscanCount={0x03}
+                            showAscii={true}
                             showColumnLabels={false}
-                            nonce={nonce}
-                            onSetValue={props.readOnly ? undefined : handleSetValue}
+                            showRowLabels={true}
+                            highlightColumn={true}
                         />
                     )}
                 </div>

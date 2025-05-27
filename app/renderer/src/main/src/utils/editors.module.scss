@@ -1,18 +1,18 @@
-.hex-editor-style {
-    :global {
-        .byteValue {
-            .nybbleHighValue {
-                word-spacing: -0.5em;
-            }
-            .nybbleLowValue {
-                word-spacing: -0.5em;
-            }
-        }
-        .asciiValue {
-            word-spacing: -0.5em;
-        }
-    }
-}
+// .hex-editor-style {
+//     :global {
+//         .byteValue {
+//             .nybbleHighValue {
+//                 word-spacing: -0.5em;
+//             }
+//             .nybbleLowValue {
+//                 word-spacing: -0.5em;
+//             }
+//         }
+//         .asciiValue {
+//             word-spacing: -0.5em;
+//         }
+//     }
+// }
 .monaco-editor-style {
     :global {
         .crlf::before {
