@@ -121,9 +121,9 @@ module.exports = (win, getClient) => {
     // MITM 转发 - HTTP 响应
     ipcMain.handle("mitm-forward-modified-response", (e, params) => {
         if (stream) {
-            const {response, id} = params
+            const {response, responseId} = params
             stream.write({
-                responseId: id,
+                responseId: responseId,
                 response: response
             })
         }
