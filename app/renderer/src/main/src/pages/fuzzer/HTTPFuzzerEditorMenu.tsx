@@ -1000,7 +1000,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         <div className={styles["line"]}></div>
                         <div
                             className={styles["decodeLabel-box"]}
-                            style={{width: right - left > 550 ? 110 : undefined}}
+                            style={{width: right - left > 550 ? 80 : undefined}}
                             onClick={() => {
                                 if (segmentedType === "decodeLabel") {
                                     setSegmentedType(undefined)
@@ -1010,7 +1010,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             }}
                         >
                             <IconSolidSparklesIcon />
-                            {right - left < 550 ? <></> : <div className={styles["content"]}>解码标签</div>}
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>解码</div>}
                             {segmentedType === "decodeLabel" ? (
                                 <ChevronUpIcon className={styles["up"]} />
                             ) : (
