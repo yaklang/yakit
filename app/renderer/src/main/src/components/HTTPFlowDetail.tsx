@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback} from "react"
 import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
@@ -79,7 +79,9 @@ export interface HTTPFlowDetailProp extends HTTPPacketFuzzable {
 
     showEditTag?: boolean
     showJumpTree?: boolean
+    noOpenPacketNewWindow?: boolean
     noPacketModifier?: boolean
+    showHeaderInfo?: boolean
 }
 
 export interface FuzzerResponseToHTTPFlowDetail extends HTTPPacketFuzzable {
@@ -660,7 +662,7 @@ export interface HistoryHighLightText extends HighLightText {
 }
 
 export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
-    const {id, selectedFlow, refresh, analyzedIds} = props
+    const {id, selectedFlow, refresh, analyzedIds, showHeaderInfo = false} = props
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
     const [flow, setFlow, getFlow] = useGetSetState<HTTPFlow>()
@@ -902,125 +904,106 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [flow, currId, extractedData])
 
+    const extractTagsAndTypes = useCallback((str: string, splitters: string, startsWith: string) => {
+        if (!str) return []
+        const splitterReg = new RegExp(`["\\" + ${splitters}]`)
+        return str
+            .split(splitterReg)
+            .map((s) => s.trim())
+            .filter((s) => !!s && !s.startsWith(startsWith))
+    }, [])
+    const tagsFixed = useMemo(() => {
+        if (!flow?.Tags) return ""
+        return extractTagsAndTypes(flow?.Tags, "|", "YAKIT_COLOR_").join(", ")
+    }, [flow?.Tags])
+    const contentTypeFixed = useMemo(() => {
+        if (!flow?.ContentType) return ""
+        // 先过滤掉 charset
+        let arr = extractTagsAndTypes(flow.ContentType, ";", "charset")
+        // 只取主类型最后的部分（如 text/html -> html）
+        let type = arr.length > 0 ? arr[0] : "-"
+        if (type.includes("/")) {
+            type = type.split("/").pop() || type
+        }
+        return type === "null" ? "" : type
+    }, [flow?.ContentType])
+
     return isSelect ? (
         <div className={styles["http-history-box"]} ref={ref}>
-            <YakitResizeBox
-                key={isFold + "" + flow?.Id + flow?.HiddenIndex}
-                freeze={!isFold}
-                isRecalculateWH={!isFold}
-                firstNode={
-                    flow && (
-                        <HTTPFlowDetailRequestAndResponse
-                            flow={flow}
-                            flowRequestLoad={flowRequestLoad}
-                            flowResponseLoad={flowResponseLoad}
-                            highLightText={highLightText}
-                            highLightItem={highLightItem}
-                            {...props}
-                        />
-                    )
-                }
-                firstMinSize='650px'
-                firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
-                secondNode={
-                    <div style={{paddingRight: 2, height: "100%"}}>
-                        {isFold ? (
-                            <div
-                                className={classNames(
-                                    styles["http-history-fold-box"],
-                                    styles["http-history-fold-border-box"]
-                                )}
-                            >
-                                <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
-                                    <Tooltip placement='top' title='向左展开'>
-                                        <SideBarCloseIcon
-                                            className={styles["fold-icon"]}
-                                            onClick={() => {
-                                                setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
-                                                setFold(false)
-                                            }}
-                                        />
-                                    </Tooltip>
+            {showHeaderInfo && (
+                <Descriptions
+                    column={3}
+                    bordered={true}
+                    size={"small"}
+                    labelStyle={{width: 120}}
+                    className={classNames(styles["http-history-box-header"], "yakit-descriptions")}
+                >
+                    <Descriptions.Item key={"URL"} span={1} label={"URL"}>
+                        <div style={{display: "flex", alignItems: "center"}}>
+                            <Tooltip title={flow?.Url} overlayInnerStyle={{maxHeight: 300, overflowY: "auto"}}>
+                                <span className='content-ellipsis'>{flow?.Url}</span>
+                            </Tooltip>
+                            <CopyComponents copyText={flow?.Url || ""} />
+                        </div>
+                    </Descriptions.Item>
+                    <Descriptions.Item key={"Tags"} span={1} label={"Tags"}>
+                        <div style={{display: "flex", alignItems: "center"}}>
+                            <Tooltip title={tagsFixed}>
+                                <span className='content-ellipsis'>{tagsFixed}</span>
+                            </Tooltip>
+                        </div>
+                    </Descriptions.Item>
+                    <Descriptions.Item key={"ContentType"} span={1} label={"响应类型"}>
+                        {contentTypeFixed}
+                    </Descriptions.Item>
+                </Descriptions>
+            )}
+            <div style={{height: showHeaderInfo ? "calc(100% - 50px)" : "100%"}}>
+                <YakitResizeBox
+                    key={isFold + "" + flow?.Id + flow?.HiddenIndex}
+                    freeze={!isFold}
+                    isRecalculateWH={!isFold}
+                    firstNode={
+                        flow && (
+                            <HTTPFlowDetailRequestAndResponse
+                                flow={flow}
+                                flowRequestLoad={flowRequestLoad}
+                                flowResponseLoad={flowResponseLoad}
+                                highLightText={highLightText}
+                                highLightItem={highLightItem}
+                                {...props}
+                            />
+                        )
+                    }
+                    firstMinSize='650px'
+                    firstRatio={isFold ? "calc(100% - 36px)" : "80%"}
+                    secondNode={
+                        <div style={{paddingRight: 2, height: "100%"}}>
+                            {isFold ? (
+                                <div
+                                    className={classNames(
+                                        styles["http-history-fold-box"],
+                                        styles["http-history-fold-border-box"]
+                                    )}
+                                >
+                                    <div className={classNames(styles["http-history-icon-box"])} style={{height: 32}}>
+                                        <Tooltip placement='top' title='向左展开'>
+                                            <SideBarCloseIcon
+                                                className={styles["fold-icon"]}
+                                                onClick={() => {
+                                                    setRemoteValue("IsFoldValue", JSON.stringify({is: false, id}))
+                                                    setFold(false)
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className={styles["http-history-detail-wrapper"]}>
-                                {infoType !== "rules" && existedInfoType.filter((i) => i !== "rules").length > 0 && (
-                                    <NewHTTPPacketEditor
-                                        title={
-                                            <Button.Group size={"small"}>
-                                                {existedInfoType.map((i) => {
-                                                    return (
-                                                        <YakitButton
-                                                            size='small'
-                                                            type={infoType === i ? "primary" : "outline2"}
-                                                            onClick={() => {
-                                                                setInfoType(i)
-                                                            }}
-                                                            key={i}
-                                                        >
-                                                            {infoTypeVerbose(i)}
-                                                        </YakitButton>
-                                                    )
-                                                })}
-                                            </Button.Group>
-                                        }
-                                        readOnly={true}
-                                        noLineNumber={true}
-                                        noMinimap={true}
-                                        noHex={true}
-                                        hideSearch={true}
-                                        refreshTrigger={infoType}
-                                        loading={infoTypeLoading}
-                                        extraEnd={
-                                            <div className={classNames(styles["http-history-fold-box"])}>
-                                                <div className={styles["http-history-icon-box"]}>
-                                                    <Tooltip placement='top' title='向右收起'>
-                                                        <SideBarOpenIcon
-                                                            className={styles["fold-icon"]}
-                                                            onClick={() => {
-                                                                setRemoteValue(
-                                                                    "IsFoldValue",
-                                                                    JSON.stringify({is: true, id})
-                                                                )
-                                                                setFold(true)
-                                                            }}
-                                                        />
-                                                    </Tooltip>
-                                                </div>
-                                            </div>
-                                        }
-                                        originValue={(() => {
-                                            switch (infoType) {
-                                                case "domains":
-                                                    return (
-                                                        "# 根域 (Root-Domains)\r\n" +
-                                                        (flow?.RootDomains || []).join("\r\n") +
-                                                        "\r\n\r\n# 域名 (Domain) \r\n" +
-                                                        (flow?.Domains || []).join("\r\n")
-                                                    )
-                                                case "json":
-                                                    return (flow?.JsonObjects || []).join("\r\n")
-                                                default:
-                                                    return ""
-                                            }
-                                        })()}
-                                        editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
-                                        isShowBeautifyRender={false}
-                                        onlyBasicMenu={true}
-                                    />
-                                )}
-                                {infoType === "rules" && existedInfoType.filter((i) => i === "rules").length > 0 && (
-                                    <HTTPFlowExtractedDataTable
-                                        ref={httpFlowTableRef}
-                                        hiddenIndex={flow?.HiddenIndex || ""}
-                                        analyzedIds={analyzedIds}
-                                        invalidForUTF8Request={!!flow?.InvalidForUTF8Request}
-                                        InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
-                                        onSetExportMITMRuleFilter={setExportMITMRuleFilter}
-                                        title={
-                                            <div className={styles["table-header"]}>
-                                                <Space>
+                            ) : (
+                                <div className={styles["http-history-detail-wrapper"]}>
+                                    {infoType !== "rules" &&
+                                        existedInfoType.filter((i) => i !== "rules").length > 0 && (
+                                            <NewHTTPPacketEditor
+                                                title={
                                                     <Button.Group size={"small"}>
                                                         {existedInfoType.map((i) => {
                                                             return (
@@ -1037,42 +1020,15 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             )
                                                         })}
                                                     </Button.Group>
-                                                    <Tooltip title={"上一个规则"}>
-                                                        <YakitButton
-                                                            type='text'
-                                                            size='small'
-                                                            icon={<LeftOutlined />}
-                                                            disabled={disablePrev}
-                                                            onClick={() => {
-                                                                httpFlowTableRef.current?.jumpDataProjectHighLight(
-                                                                    "prev"
-                                                                )
-                                                            }}
-                                                        ></YakitButton>
-                                                    </Tooltip>
-                                                    <Tooltip title={"下一个规则"}>
-                                                        <YakitButton
-                                                            type='text'
-                                                            size='small'
-                                                            icon={<RightOutlined />}
-                                                            disabled={disableNext}
-                                                            onClick={() => {
-                                                                httpFlowTableRef.current?.jumpDataProjectHighLight(
-                                                                    "next"
-                                                                )
-                                                            }}
-                                                        ></YakitButton>
-                                                    </Tooltip>
-                                                </Space>
-
-                                                <Space>
-                                                    <YakitButton
-                                                        type='primary'
-                                                        size='small'
-                                                        onClick={exportMITMRuleExtractedData}
-                                                    >
-                                                        导出
-                                                    </YakitButton>
+                                                }
+                                                readOnly={true}
+                                                noLineNumber={true}
+                                                noMinimap={true}
+                                                noHex={true}
+                                                hideSearch={true}
+                                                refreshTrigger={infoType}
+                                                loading={infoTypeLoading}
+                                                extraEnd={
                                                     <div className={classNames(styles["http-history-fold-box"])}>
                                                         <div className={styles["http-history-icon-box"]}>
                                                             <Tooltip placement='top' title='向右收起'>
@@ -1089,41 +1045,150 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                             </Tooltip>
                                                         </div>
                                                     </div>
-                                                </Space>
+                                                }
+                                                originValue={(() => {
+                                                    switch (infoType) {
+                                                        case "domains":
+                                                            return (
+                                                                "# 根域 (Root-Domains)\r\n" +
+                                                                (flow?.RootDomains || []).join("\r\n") +
+                                                                "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                                (flow?.Domains || []).join("\r\n")
+                                                            )
+                                                        case "json":
+                                                            return (flow?.JsonObjects || []).join("\r\n")
+                                                        default:
+                                                            return ""
+                                                    }
+                                                })()}
+                                                editorOperationRecord='HTTP_FLOW_DETAIL_MINI'
+                                                isShowBeautifyRender={false}
+                                                onlyBasicMenu={true}
+                                            />
+                                        )}
+                                    {infoType === "rules" &&
+                                        existedInfoType.filter((i) => i === "rules").length > 0 && (
+                                            <HTTPFlowExtractedDataTable
+                                                ref={httpFlowTableRef}
+                                                hiddenIndex={flow?.HiddenIndex || ""}
+                                                analyzedIds={analyzedIds}
+                                                invalidForUTF8Request={!!flow?.InvalidForUTF8Request}
+                                                InvalidForUTF8Response={!!flow?.InvalidForUTF8Response}
+                                                onSetExportMITMRuleFilter={setExportMITMRuleFilter}
+                                                title={
+                                                    <div className={styles["table-header"]}>
+                                                        <Space>
+                                                            <Button.Group size={"small"}>
+                                                                {existedInfoType.map((i) => {
+                                                                    return (
+                                                                        <YakitButton
+                                                                            size='small'
+                                                                            type={
+                                                                                infoType === i ? "primary" : "outline2"
+                                                                            }
+                                                                            onClick={() => {
+                                                                                setInfoType(i)
+                                                                            }}
+                                                                            key={i}
+                                                                        >
+                                                                            {infoTypeVerbose(i)}
+                                                                        </YakitButton>
+                                                                    )
+                                                                })}
+                                                            </Button.Group>
+                                                            <Tooltip title={"上一个规则"}>
+                                                                <YakitButton
+                                                                    type='text'
+                                                                    size='small'
+                                                                    icon={<LeftOutlined />}
+                                                                    disabled={disablePrev}
+                                                                    onClick={() => {
+                                                                        httpFlowTableRef.current?.jumpDataProjectHighLight(
+                                                                            "prev"
+                                                                        )
+                                                                    }}
+                                                                ></YakitButton>
+                                                            </Tooltip>
+                                                            <Tooltip title={"下一个规则"}>
+                                                                <YakitButton
+                                                                    type='text'
+                                                                    size='small'
+                                                                    icon={<RightOutlined />}
+                                                                    disabled={disableNext}
+                                                                    onClick={() => {
+                                                                        httpFlowTableRef.current?.jumpDataProjectHighLight(
+                                                                            "next"
+                                                                        )
+                                                                    }}
+                                                                ></YakitButton>
+                                                            </Tooltip>
+                                                        </Space>
+
+                                                        <Space>
+                                                            <YakitButton
+                                                                type='primary'
+                                                                size='small'
+                                                                onClick={exportMITMRuleExtractedData}
+                                                            >
+                                                                导出
+                                                            </YakitButton>
+                                                            <div
+                                                                className={classNames(styles["http-history-fold-box"])}
+                                                            >
+                                                                <div className={styles["http-history-icon-box"]}>
+                                                                    <Tooltip placement='top' title='向右收起'>
+                                                                        <SideBarOpenIcon
+                                                                            className={styles["fold-icon"]}
+                                                                            onClick={() => {
+                                                                                setRemoteValue(
+                                                                                    "IsFoldValue",
+                                                                                    JSON.stringify({is: true, id})
+                                                                                )
+                                                                                setFold(true)
+                                                                            }}
+                                                                        />
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </div>
+                                                        </Space>
+                                                    </div>
+                                                }
+                                                onSetHighLightText={setHighLightText}
+                                                onSetHighLightItem={setHighLightItem}
+                                                currId={currId}
+                                                onSetCurrId={setCurrId}
+                                                onSetExtractedData={setExtractedData}
+                                            />
+                                        )}
+                                    {existedInfoType.length === 0 && (
+                                        <div className={styles["empty-box"]}>
+                                            <div className={classNames(styles["empty-box-fold-box"])}>
+                                                <div className={styles["empty-box-icon-box"]}>
+                                                    <Tooltip placement='top' title='向右收起'>
+                                                        <SideBarOpenIcon
+                                                            className={styles["fold-icon"]}
+                                                            onClick={() => {
+                                                                setRemoteValue(
+                                                                    "IsFoldValue",
+                                                                    JSON.stringify({is: true})
+                                                                )
+                                                                setFold(true)
+                                                            }}
+                                                        />
+                                                    </Tooltip>
+                                                </div>
                                             </div>
-                                        }
-                                        onSetHighLightText={setHighLightText}
-                                        onSetHighLightItem={setHighLightItem}
-                                        currId={currId}
-                                        onSetCurrId={setCurrId}
-                                        onSetExtractedData={setExtractedData}
-                                    />
-                                )}
-                                {existedInfoType.length === 0 && (
-                                    <div className={styles["empty-box"]}>
-                                        <div className={classNames(styles["empty-box-fold-box"])}>
-                                            <div className={styles["empty-box-icon-box"]}>
-                                                <Tooltip placement='top' title='向右收起'>
-                                                    <SideBarOpenIcon
-                                                        className={styles["fold-icon"]}
-                                                        onClick={() => {
-                                                            setRemoteValue("IsFoldValue", JSON.stringify({is: true}))
-                                                            setFold(true)
-                                                        }}
-                                                    />
-                                                </Tooltip>
-                                            </div>
+                                            <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
                                         </div>
-                                        <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                }
-                secondRatio={isFold ? "36px" : "20%"}
-                secondMinSize={isFold ? "36px" : "350px"}
-            ></YakitResizeBox>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    }
+                    secondRatio={isFold ? "36px" : "20%"}
+                    secondMinSize={isFold ? "36px" : "350px"}
+                ></YakitResizeBox>
+            </div>
         </div>
     ) : null
 }
@@ -1160,7 +1225,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         scrollID,
         showEditTag = true,
         showJumpTree = true,
-        noPacketModifier = false
+        noPacketModifier = false,
+        noOpenPacketNewWindow = false
     } = props
 
     // 编辑器发送到对比器
@@ -1662,6 +1728,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         downbodyParams={{Id: flow.Id, IsRequest: true}}
                         onClickOpenPacketNewWindowMenu={getPacketNewWindow}
                         noPacketModifier={noPacketModifier}
+                        noOpenPacketNewWindow={noOpenPacketNewWindow}
                     />
                 )
             }}
@@ -1800,6 +1867,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         downbodyParams={{Id: flow.Id, IsRequest: false}}
                         onClickOpenPacketNewWindowMenu={getPacketNewWindow}
                         noPacketModifier={noPacketModifier}
+                        noOpenPacketNewWindow={noOpenPacketNewWindow}
                     />
                 )
             }}

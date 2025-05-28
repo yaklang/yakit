@@ -63,6 +63,8 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
                     <HTTPFlowDetailMini
                         {...(data.showParentPacketCom.props as HTTPFlowDetailProp)}
                         noPacketModifier={true}
+                        noOpenPacketNewWindow={true}
+                        showHeaderInfo={true}
                     />
                 )
             default:

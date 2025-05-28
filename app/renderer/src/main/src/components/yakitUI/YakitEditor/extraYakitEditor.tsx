@@ -35,6 +35,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, "menuType"> {
     defaultHttps?: boolean
     originValue: string
     noPacketModifier?: boolean
+    noOpenPacketNewWindow?: boolean
     extraEditorProps?: YakitEditorProps | any
     isWebSocket?: boolean
     webSocketValue?: string
@@ -57,6 +58,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         defaultHttps = false,
         originValue,
         noPacketModifier = false,
+        noOpenPacketNewWindow = false,
         extraEditorProps,
         contextMenu,
         readOnly,
@@ -206,10 +208,14 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                     }
                 ],
                 onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    if (onClickOpenPacketNewWindowMenu) {
-                        onClickOpenPacketNewWindowMenu()
+                    if (noOpenPacketNewWindow) {
+                        yakitNotify("info", "展示原始编辑器内部")
                     } else {
-                        console.log("展示原始编辑器内部")
+                        if (onClickOpenPacketNewWindowMenu) {
+                            onClickOpenPacketNewWindowMenu()
+                        } else {
+                            yakitNotify("info", "展示原始编辑器内部")
+                        }
                     }
                 }
             },
@@ -519,7 +525,8 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         disableUnicodeDecode,
         JSON.stringify(downbodyParams),
         onClickUrlMenu,
-        onClickOpenBrowserMenu
+        onClickOpenBrowserMenu,
+        noOpenPacketNewWindow
     ])
 
     return (
