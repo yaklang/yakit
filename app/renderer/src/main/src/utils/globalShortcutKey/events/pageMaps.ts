@@ -9,15 +9,38 @@ import {
     setStoragePluginHubShortcutKeyEvents
 } from "./page/pluginHub"
 import {YakitRoute} from "@/enums/yakitRoute"
-import { getAuditCodeShortcutKeyEvents, getStorageAuditCodeShortcutKeyEvents, setStorageAuditCodeShortcutKeyEvents } from "./page/yakRunnerAuditCode"
-import { getStorageYakRunnerShortcutKeyEvents, getYakRunnerShortcutKeyEvents, setStorageYakRunnerShortcutKeyEvents } from "./page/yakRunner"
-import { getAddYakitScriptShortcutKeyEvents, getStorageAddYakitScriptShortcutKeyEvents, setStorageAddYakitScriptShortcutKeyEvents } from "./page/addYakitScript"
-import { getStorageYakitScriptFocusShortcutKeyEvents, getYakitScriptFocusShortcutKeyEvents, setStorageYakitScriptFocusShortcutKeyEvents } from "./focus/yakitScriptFocus"
-import { getChatCSShortcutKeyEvents, getStorageChatCSShortcutKeyEvents, setStorageChatCSShortcutKeyEvents } from "./page/chatCS"
+import {
+    getAuditCodeShortcutKeyEvents,
+    getStorageAuditCodeShortcutKeyEvents,
+    setStorageAuditCodeShortcutKeyEvents
+} from "./page/yakRunnerAuditCode"
+import {
+    getStorageYakRunnerShortcutKeyEvents,
+    getYakRunnerShortcutKeyEvents,
+    setStorageYakRunnerShortcutKeyEvents
+} from "./page/yakRunner"
+import {
+    getAddYakitScriptShortcutKeyEvents,
+    getStorageAddYakitScriptShortcutKeyEvents,
+    setStorageAddYakitScriptShortcutKeyEvents
+} from "./page/addYakitScript"
+import {
+    getStorageYakitScriptFocusShortcutKeyEvents,
+    getYakitScriptFocusShortcutKeyEvents,
+    setStorageYakitScriptFocusShortcutKeyEvents
+} from "./focus/yakitScriptFocus"
+import {
+    getChatCSShortcutKeyEvents,
+    getStorageChatCSShortcutKeyEvents,
+    setStorageChatCSShortcutKeyEvents
+} from "./page/chatCS"
+import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 
 export interface ShortcutKeyEventInfo {
     name: string
     keys: string[]
+    /** 单个快捷键显示范围（Yakit? IRify? ...） */
+    scopeShow?: PRODUCT_RELEASE_EDITION[]
 }
 interface PageToEventInfo {
     /** 获取快捷键事件集合 */
@@ -26,6 +49,9 @@ interface PageToEventInfo {
     getStorage: () => void
     /** 缓存用户自定义的快捷键 */
     setStorage: (events: Record<string, ShortcutKeyEventInfo>) => void
+
+    /** 非页面快捷键出现的场景（Yakit? IRify? ...） 无限制则默认显示*/
+    scopeShow?: PRODUCT_RELEASE_EDITION[]
 }
 
 /** 可配置快捷键的页面 */
@@ -36,7 +62,7 @@ export enum ShortcutKeyPage {
     /* 页面快捷键 */
     // 插件仓库
     PluginHub = YakitRoute.Plugin_Hub,
-    
+
     // 新建插件
     AddYakitScript = YakitRoute.AddYakitScript,
     // 代码审计
@@ -48,10 +74,11 @@ export enum ShortcutKeyPage {
 
     /* 焦点快捷键（焦点与页面属于同级绑定） */
     // 插件相关焦点事件
-    YakitScriptFocus = "yakit-script-focus",
+    YakitScriptFocus = "yakit-script-focus"
 }
 export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
+const {Yakit, EnpriTrace,IRify} = PRODUCT_RELEASE_EDITION
 /** 存放全局和所有页面的快捷键映射事件集合 */
 export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
     global: {
@@ -62,31 +89,37 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
     "plugin-hub": {
         getEvents: getPluginHubShortcutKeyEvents,
         getStorage: getStoragePluginHubShortcutKeyEvents,
-        setStorage: setStoragePluginHubShortcutKeyEvents
+        setStorage: setStoragePluginHubShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
     },
-    "add-yakit-script" : {
+    "add-yakit-script": {
         getEvents: getAddYakitScriptShortcutKeyEvents,
         getStorage: getStorageAddYakitScriptShortcutKeyEvents,
-        setStorage: setStorageAddYakitScriptShortcutKeyEvents
+        setStorage: setStorageAddYakitScriptShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
     },
     "yakrunner-audit-code": {
         getEvents: getAuditCodeShortcutKeyEvents,
         getStorage: getStorageAuditCodeShortcutKeyEvents,
-        setStorage: setStorageAuditCodeShortcutKeyEvents
+        setStorage: setStorageAuditCodeShortcutKeyEvents,
+        scopeShow: [IRify]
     },
-    "yakScript": {
+    yakScript: {
         getEvents: getYakRunnerShortcutKeyEvents,
         getStorage: getStorageYakRunnerShortcutKeyEvents,
-        setStorage: setStorageYakRunnerShortcutKeyEvents
-    },
-    "yakit-script-focus": {
-        getEvents: getYakitScriptFocusShortcutKeyEvents,
-        getStorage: getStorageYakitScriptFocusShortcutKeyEvents,
-        setStorage: setStorageYakitScriptFocusShortcutKeyEvents
+        setStorage: setStorageYakRunnerShortcutKeyEvents,
+        scopeShow: [IRify]
     },
     "chat-cs": {
         getEvents: getChatCSShortcutKeyEvents,
         getStorage: getStorageChatCSShortcutKeyEvents,
-        setStorage: setStorageChatCSShortcutKeyEvents
+        setStorage: setStorageChatCSShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
+    },
+    "yakit-script-focus": {
+        getEvents: getYakitScriptFocusShortcutKeyEvents,
+        getStorage: getStorageYakitScriptFocusShortcutKeyEvents,
+        setStorage: setStorageYakitScriptFocusShortcutKeyEvents,
+        scopeShow: [Yakit, EnpriTrace]
     }
 }
