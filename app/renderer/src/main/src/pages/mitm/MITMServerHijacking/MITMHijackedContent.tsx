@@ -207,7 +207,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 version: mitmVersion
             })
                 .then(() => {
-                    getMITMFilter()
+                    setTimeout(() => {
+                        getMITMFilter()
+                    }, 500)
                 })
                 .catch((err) => {
                     yakitFailed("删除过滤器中包含项的所有内容失败：" + err)
@@ -229,7 +231,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
         grpcMITMContentReplacers(value, true)
             .then((val) => {
-                getRules()
+                setTimeout(() => {
+                    getRules()
+                }, 500)
                 yakitNotify("success", "已成功开启规则“全部不替换”按钮")
             })
             .catch((e) => {
