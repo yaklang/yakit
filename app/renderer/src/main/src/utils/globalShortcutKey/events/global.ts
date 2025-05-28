@@ -1,6 +1,18 @@
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../keyboard"
 import {ShortcutKeyEventInfo} from "./pageMaps"
+import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
+
+export const addScopeShow = (newEvent, oldEvent) => {
+    // 每次获取快捷键需更新其作用域
+    Object.keys(newEvent).forEach((key) => {
+        if (oldEvent[key].scopeShow) {
+            newEvent[key] = {...newEvent[key], scopeShow: oldEvent[key].scopeShow}
+        }
+    })
+
+    return newEvent
+}
 
 /** 全局快捷键 与 公共组件快捷键 合并  */
 export enum GlobalShortcutKey {
@@ -17,6 +29,7 @@ export enum GlobalShortcutKey {
     /** 仅发送 */
     CommonSendToWebFuzzer = "send*common"
 }
+const {Yakit, EnpriTrace} = PRODUCT_RELEASE_EDITION
 
 type EventsType = Record<GlobalShortcutKey, ShortcutKeyEventInfo>
 
@@ -36,12 +49,14 @@ const globalShortcutKeyEvents: EventsType = {
     // 公共组件快捷键
     "sendAndJump*common": {
         name: "发送并跳转",
-        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_R]
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_R],
+        scopeShow: [Yakit, EnpriTrace]
     },
     "send*common": {
         name: "仅发送",
-        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R]
-    },
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R],
+        scopeShow: [Yakit, EnpriTrace]
+    }
 }
 
 let currentKeyEvents: EventsType | null = null
@@ -54,7 +69,7 @@ export const getStorageGlobalShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = data
+                currentKeyEvents = addScopeShow(data,globalShortcutKeyEvents)
             } catch (error) {}
         })
         .catch(() => {})

@@ -8,6 +8,7 @@ import {
     sortKeysCombination
 } from "../../utils"
 import {System, SystemInfo} from "@/constants/hardware"
+import { addScopeShow } from "../global"
 
 interface MonacoShortcutKeyEventInfo extends ShortcutKeyEventInfo {
     type?: System
@@ -240,7 +241,7 @@ export const getStorageYakEditorShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = data
+                currentKeyEvents = addScopeShow(data,YakEditorDefaultShortcut)
             } catch (error) {}
         })
         .catch(() => {})

@@ -1,6 +1,7 @@
 import {getLocalValue, setLocalValue} from "@/utils/kv"
 import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
+import { addScopeShow } from "../global"
 
 export enum AddYakitScriptShortcutKey {
     /** 新建插件 */
@@ -26,7 +27,7 @@ export const getStorageAddYakitScriptShortcutKeyEvents = () => {
             if (!res) return
             try {
                 const data: EventsType = JSON.parse(res)
-                currentKeyEvents = data
+                currentKeyEvents = addScopeShow(data,AddYakitScriptShortcutKeyEvents)
             } catch (error) {}
         })
         .catch(() => {})

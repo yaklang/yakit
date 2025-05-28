@@ -153,7 +153,7 @@ import {Misstatement} from "@/pages/misstatement/Misstatement"
 import {SystemConfig} from "@/pages/systemConfig/SystemConfig"
 import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
-import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
+import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -619,7 +619,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.System_Config:
             return <SystemConfig />
         case YakitRoute.ShortcutKey:
-            return <ShortcutKey page={params?.shortcutKeyPage || "global"} />
+            return <ShortcutKeyList />
         default:
             return <div />
     }
