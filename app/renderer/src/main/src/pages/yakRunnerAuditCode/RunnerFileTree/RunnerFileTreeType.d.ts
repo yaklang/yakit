@@ -5,7 +5,7 @@ export interface RunnerFileTreeProps {
 
 export interface OpenedFileProps {}
 
-export type ActiveProps = "all" | "file" | "rule"
+export type ActiveProps = "all" | "file" | "rule" | "global-filtering-function"
 
 export interface RiskTreeProps {
     type: "file" | "rule" | "risk"

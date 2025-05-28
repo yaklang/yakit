@@ -53,6 +53,8 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
+const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
+
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const {fileTreeLoad, boxHeight} = props
     const {fileTree, activeFile, projectName, pageInfo} = useStore()
@@ -299,6 +301,8 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 return "漏洞文件"
             case "rule":
                 return "规则汇总"
+            case "global-filtering-function":
+                return "全局过滤函数"
             default:
                 return "文件列表"
         }
@@ -389,6 +393,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                     }}
                 >
                     <span className={styles["item-text"]}>规则汇总</span>
+                </div>
+                <div
+                    className={classNames(styles["left-side-bar-item"], {
+                        [styles["left-side-bar-item-active"]]: active === "global-filtering-function"
+                    })}
+                    onClick={() => {
+                        onSetActive("global-filtering-function")
+                    }}
+                >
+                    <span className={styles["item-text"]}>全局过滤函数</span>
                 </div>
             </div>
 
@@ -498,6 +512,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         init={ruleRefresh}
                                         task_id={checkItem}
                                     />
+                                </div>
+                            )}
+                            {rendered.current.has("global-filtering-function") && (
+                                <div
+                                    className={classNames(styles["tree-body"], {
+                                        [styles["hidden-tree-body"]]: active !== "global-filtering-function"
+                                    })}
+                                >
+                                    <GlobalFilterFunction projectName={projectName} />
                                 </div>
                             )}
                         </div>
