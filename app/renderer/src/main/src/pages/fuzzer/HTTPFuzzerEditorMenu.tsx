@@ -189,10 +189,10 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             let width: number = Math.floor((right - left) / 2)
             setMenuWidth(width)
         }
-     
+
         let height: number = Math.floor((bottom - top) / 2 - 30)
         setMenuHeight(height)
-        
+
         getData()
     }, [])
 
@@ -276,7 +276,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                 <div className={styles["show-box"]}>
                     <div
                         className={styles["insert-box"]}
-                        style={{width: right - left < 500 ? undefined : 104}}
+                        style={{width: right - left < 550 ? undefined : 104}}
                         onClick={() => {
                             if (segmentedType === "insert-tag") {
                                 setSegmentedType(undefined)
@@ -286,7 +286,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         }}
                     >
                         <IconSolidTagIcon className={styles["tag"]} />
-                        {right - left < 500 ? <></> : <div className={styles["content"]}>插入标签</div>}
+                        {right - left < 550 ? <></> : <div className={styles["content"]}>插入标签</div>}
                         {segmentedType === "insert-tag" ? (
                             <ChevronUpIcon className={styles["up"]} />
                         ) : (
@@ -296,7 +296,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     <div className={styles["line"]}></div>
                     <div
                         className={styles["aiplugin-box"]}
-                        style={{width: right - left < 500 ? undefined : 95}}
+                        style={{width: right - left < 550 ? undefined : 95}}
                         onClick={() => {
                             if (segmentedType === "aiplugin") {
                                 setSegmentedType(undefined)
@@ -306,7 +306,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                         }}
                     >
                         <IconSolidAIIcon className={styles["tag"]} />
-                        {right - left < 500 ? <></> : <div className={styles["content"]}>AI工具</div>}
+                        {right - left < 550 ? <></> : <div className={styles["content"]}>AI工具</div>}
                         {segmentedType === "aiplugin" ? (
                             <ChevronUpIcon className={styles["up"]} />
                         ) : (
@@ -518,7 +518,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
                     style={{
                         ...directionStyle(editorInfo),
                         left: ["left"].includes(editorInfo?.direction.x || "")
-                            ? right - left < 500
+                            ? right - left < 550
                                 ? 50
                                 : 105
                             : undefined,
@@ -616,7 +616,7 @@ interface decodeDataProps {
     sub_title: string
     encode: (v: string) => string
 }
-export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
+const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
     const {insert} = props
     const decodeData = useRef<decodeDataProps[]>([
         {
@@ -674,7 +674,76 @@ export const EncodeComponent: React.FC<EncodeComponentProps> = (props) => {
             {decodeData.current.map((item) => {
                 return (
                     <div key={item.title} className={styles["encode-item"]} onClick={() => insert(item.encode)}>
-                        <Avatar size={16} style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color, flexShrink: 0}}>
+                        <Avatar
+                            size={16}
+                            style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color, flexShrink: 0}}
+                        >
+                            {item.avatar}
+                        </Avatar>
+                        <div className={styles["title"]}>{item.title}</div>
+                        <div className={styles["sub-title"]}>{item.sub_title}</div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+const DecodeLableComponent: React.FC<EncodeComponentProps> = (props) => {
+    const {insert} = props
+    const decodeData = useRef<decodeDataProps[]>([
+        {
+            color: "rgba(136, 99, 247, 0.6)",
+            avatar: "b",
+            title: "Base64解码",
+            sub_title: "base64dec",
+            encode: (v: string) => `{{base64dec(${v})}}`
+        },
+        {
+            color: "rgba(74, 148, 248, 0.6)",
+            avatar: "d",
+            title: "双重URL解码",
+            sub_title: "doubleurldec",
+            encode: (v: string) => `{{doubleurldec(${v})}}`
+        },
+        {
+            color: "rgba(74, 148, 248, 0.6)",
+            avatar: "h",
+            title: "十六进制解码",
+            sub_title: "hexdec",
+            encode: (v: string) => `{{hexdec(${v})}}`
+        },
+        {
+            color: "rgba(86, 201, 145, 0.6)",
+            avatar: "h",
+            title: "HTML解码",
+            sub_title: "htmldec",
+            encode: (v: string) => `{{htmldec(${v})}}`
+        },
+        {
+            color: "rgba(244, 115, 107, 0.6)",
+            avatar: "u",
+            title: "URL强制解码",
+            sub_title: "urldec",
+            encode: (v: string) => `{{urldec(${v})}}`
+        },
+        {
+            color: "rgba(255, 182, 96, 0.6)",
+            avatar: "u",
+            title: "Unicode中文解码",
+            sub_title: "unicode:decode",
+            encode: (v: string) => `{{unicode:decode(${v})}}`
+        }
+    ])
+    return (
+        <div className={styles["decodeLabel-box"]}>
+            {decodeData.current.map((item) => {
+                return (
+                    <div key={item.title} className={styles["encode-item"]} onClick={() => insert(item.encode)}>
+                        <Avatar
+                            size={16}
+                            style={{color: "rgba(49, 52, 63, 1)", backgroundColor: item.color, flexShrink: 0}}
+                        >
                             {item.avatar}
                         </Avatar>
                         <div className={styles["title"]}>{item.title}</div>
@@ -854,7 +923,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         let height: number = Math.floor((bottom - top) / 2 - 30)
         setMenuHeight(height)
     }, [])
-    const [segmentedType, setSegmentedType] = useState<"decode" | "encode">()
+    const [segmentedType, setSegmentedType] = useState<"decode" | "encode" | "decodeLabel">()
     const [clickSegmentedType, setClickSegmentedType] = useState<"insert-tag" | "aiplugin">()
 
     const [boxHidden, setBoxHidden] = useState<boolean>(true)
@@ -881,6 +950,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
         }
     }, [clickSegmentedType])
 
+    // right - left 为编辑器宽度
     return (
         <div
             className={classNames(styles["http-fuzzer-range-editor-body"], {
@@ -904,14 +974,13 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                     {...hTTPFuzzerClickEditorMenuProps}
                 />
             )}
-
             <div className={styles["http-fuzzer-range-editor"]}>
                 <div className={styles["http-fuzzer-range-editor-simple"]}>
                     <div className={styles["show-box"]}>
                         <div className={styles["line"]}></div>
                         <div
                             className={styles["encode-box"]}
-                            style={{width: right - left < 500 ? undefined : 80}}
+                            style={{width: right - left > 550 ? 80 : undefined}}
                             onClick={() => {
                                 if (segmentedType === "encode") {
                                     setSegmentedType(undefined)
@@ -921,7 +990,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                             }}
                         >
                             <IconSolidCodeIcon className={styles["tag"]} />
-                            {right - left < 500 ? <></> : <div className={styles["content"]}>编码</div>}
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>编码</div>}
                             {segmentedType === "encode" ? (
                                 <ChevronUpIcon className={styles["up"]} />
                             ) : (
@@ -930,8 +999,28 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                         </div>
                         <div className={styles["line"]}></div>
                         <div
+                            className={styles["decodeLabel-box"]}
+                            style={{width: right - left > 550 ? 80 : undefined}}
+                            onClick={() => {
+                                if (segmentedType === "decodeLabel") {
+                                    setSegmentedType(undefined)
+                                } else {
+                                    setSegmentedType("decodeLabel")
+                                }
+                            }}
+                        >
+                            <IconSolidSparklesIcon />
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>解码</div>}
+                            {segmentedType === "decodeLabel" ? (
+                                <ChevronUpIcon className={styles["up"]} />
+                            ) : (
+                                <ChevronDownIcon className={styles["down"]} />
+                            )}
+                        </div>
+                        <div className={styles["line"]}></div>
+                        <div
                             className={styles["decode-box"]}
-                            style={{width: right - left < 500 ? undefined : 80}}
+                            style={{width: right - left > 550 ? 100 : undefined}}
                             onClick={() => {
                                 if (segmentedType === "decode") {
                                     setSegmentedType(undefined)
@@ -940,8 +1029,8 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                                 }
                             }}
                         >
-                            <IconSolidSparklesIcon className={styles[""]} />
-                            {right - left < 500 ? <></> : <div className={styles["content"]}>解码</div>}
+                            <IconSolidSparklesIcon />
+                            {right - left < 550 ? <></> : <div className={styles["content"]}>智能解码</div>}
                         </div>
                     </div>
                 </div>
@@ -968,6 +1057,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
                     >
                         <div className={styles["menu-content"]}>
                             {segmentedType === "encode" && <EncodeComponent insert={insert} />}
+                            {segmentedType === "decodeLabel" && <DecodeLableComponent insert={insert} />}
                             {segmentedType === "decode" && (
                                 <DecodeComponent rangeValue={rangeValue} replace={replace} />
                             )}
