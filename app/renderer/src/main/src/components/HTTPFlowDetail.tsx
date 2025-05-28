@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement} from "react"
+import React, {useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback} from "react"
 import {Button, Card, Col, Descriptions, Empty, PageHeader, Row, Space, Tag, Tooltip} from "antd"
 import {LeftOutlined, RightOutlined} from "@ant-design/icons"
 import {HTTPFlow} from "./HTTPFlowTable/HTTPFlowTable"
@@ -904,22 +904,26 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         }
     }, [flow, currId, extractedData])
 
+    const extractTagsAndTypes = useCallback((str: string, splitters: string, startsWith: string) => {
+        if (!str) return []
+        const splitterReg = new RegExp(`["\\" + ${splitters}]`)
+        return str
+            .split(splitterReg)
+            .map((s) => s.trim())
+            .filter((s) => !!s && !s.startsWith(startsWith))
+    }, [])
     const tagsFixed = useMemo(() => {
-        return flow?.Tags
-            ? `${flow?.Tags}`
-                  .split("|")
-                  .filter((i) => !i.startsWith("YAKIT_COLOR_"))
-                  .join(", ")
-            : ""
+        if (!flow?.Tags) return ""
+        return extractTagsAndTypes(flow?.Tags, "|", "YAKIT_COLOR_").join(", ")
     }, [flow?.Tags])
     const contentTypeFixed = useMemo(() => {
         if (!flow?.ContentType) return ""
-        // 去掉 ; 后的 charset=xxx
-        let type = flow.ContentType.replace(/;\s*charset=[^;]+/gi, "").trim()
-        // 只取最后一个 / 后的部分
-        const match = type.match(/\/([^\/]+)$/)
-        if (match) {
-            type = match[1]
+        // 先过滤掉 charset
+        let arr = extractTagsAndTypes(flow.ContentType, ";", "charset")
+        // 只取主类型最后的部分（如 text/html -> html）
+        let type = arr.length > 0 ? arr[0] : "-"
+        if (type.includes("/")) {
+            type = type.split("/").pop() || type
         }
         return type === "null" ? "" : type
     }, [flow?.ContentType])
