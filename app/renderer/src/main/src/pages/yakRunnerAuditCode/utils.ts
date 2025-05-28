@@ -1,15 +1,15 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {RequestYakURLResponse, YakURLResource} from "../yakURLTree/data"
 import {FileDefault, FileSuffix, FolderDefault} from "../yakRunner/FileTree/icon"
-import {AuditYakUrlProps} from "./AuditCode/AuditCodeType"
+import {AuditDetailItemProps, AuditYakUrlProps} from "./AuditCode/AuditCodeType"
 
 import emiter from "@/utils/eventBus/eventBus"
 import {failed, warn} from "@/utils/notification"
-import {AreaInfoProps, TabFileProps, YakRunnerHistoryProps} from "./YakRunnerAuditCodeType"
+import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "./YakRunnerAuditCodeType"
 import cloneDeep from "lodash/cloneDeep"
 import {randomString} from "@/utils/randomUtil"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import {FileDetailInfo, OptionalFileDetailInfo} from "./RunnerTabs/RunnerTabsType"
+import {FileDetailInfo, OptionalFileDetailInfo, Selection} from "./RunnerTabs/RunnerTabsType"
 import {v4 as uuidv4} from "uuid"
 import {FileNodeMapProps, FileNodeProps} from "./FileTree/FileTreeType"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
@@ -22,7 +22,8 @@ import {
     QuerySyntaxFlowScanTaskResponse
 } from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
 import {genDefaultPagination} from "../invoker/schema"
-
+import {APIFunc} from "@/apiUtils/type"
+import {JumpToAuditEditorProps} from "./BottomEditorDetails/BottomEditorDetailsType"
 const {ipcRenderer} = window.require("electron")
 
 const initFileTreeData = (list, path) => {
@@ -881,4 +882,46 @@ export const monacaLanguageType = (suffix?: string) => {
         default:
             return undefined
     }
+}
+/**Extra找到code_range，根据其进行跳转到文件对应的位置 */
+export const onJumpByCodeRange: APIFunc<AuditDetailItemProps, null> = (data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const arr = data.Extra.filter((item) => item.Key === "code_range")
+            if (arr.length > 0) {
+                const item: CodeRangeProps = JSON.parse(arr[0].Value)
+                const {url, start_line, start_column, end_line, end_column} = item
+                const name = await getNameByPath(url)
+                // console.log("monaca跳转", item, name)
+                const highLightRange: Selection = {
+                    startLineNumber: start_line,
+                    startColumn: start_column,
+                    endLineNumber: end_line,
+                    endColumn: end_column
+                }
+                const OpenFileByPathParams: OpenFileByPathProps = {
+                    params: {
+                        path: url,
+                        name,
+                        highLightRange
+                    }
+                }
+                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
+                // 纯跳转行号
+                setTimeout(() => {
+                    const obj: JumpToAuditEditorProps = {
+                        selections: highLightRange,
+                        path: url,
+                        isSelect: false
+                    }
+                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
+                }, 100)
+                resolve(null)
+            } else {
+                reject("未找到code_range字段,无法跳转")
+            }
+        } catch (error) {
+            reject(error)
+        }
+    })
 }
