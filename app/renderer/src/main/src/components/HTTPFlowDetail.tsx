@@ -913,21 +913,15 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
             : ""
     }, [flow?.Tags])
     const contentTypeFixed = useMemo(() => {
-        if (flow?.ContentType === undefined) {
-            return ""
+        if (!flow?.ContentType) return ""
+        // 去掉 ; 后的 charset=xxx
+        let type = flow.ContentType.replace(/;\s*charset=[^;]+/gi, "").trim()
+        // 只取最后一个 / 后的部分
+        const match = type.match(/\/([^\/]+)$/)
+        if (match) {
+            type = match[1]
         }
-        let contentTypeFixed =
-            flow?.ContentType.split(";")
-                .map((el: any) => el.trim())
-                .filter((i: any) => !i.startsWith("charset"))
-                .join(",") || "-"
-        if (contentTypeFixed.includes("/")) {
-            const contentTypeFixedNew = contentTypeFixed.split("/").pop()
-            if (!!contentTypeFixedNew) {
-                contentTypeFixed = contentTypeFixedNew
-            }
-        }
-        return contentTypeFixed === "null" ? "" : contentTypeFixed
+        return type === "null" ? "" : type
     }, [flow?.ContentType])
 
     return isSelect ? (
