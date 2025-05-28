@@ -3,7 +3,7 @@ import {slashFactory, SlashProvider} from "@milkdown/kit/plugin/slash"
 import {useInstance} from "@milkdown/react"
 import {usePluginViewContext} from "@prosemirror-adapter/react"
 import React, {useCallback, useEffect, useRef} from "react"
-import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn} from "ahooks"
 import {HttpUploadImgBaseRequest} from "@/apiUtils/http"
 import {InitEditorHooksLocalProps} from "../utils/initEditor"
 import {
@@ -32,6 +32,9 @@ import {
     createBlankText
 } from "../utils/utils"
 import {useStore} from "@/store"
+import type {VirtualElement} from "@floating-ui/dom"
+import {computePosition, flip, offset} from "@floating-ui/dom"
+import {posToDOMRect} from "@milkdown/prose"
 
 export const slash = slashFactory("Commands")
 
@@ -45,6 +48,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
     const {type, notepadHash, localProps} = props
     const ref = useRef<HTMLDivElement>(null)
     const slashProvider = useRef<SlashProvider>()
+    const initializedRef = useRef<boolean>(false)
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -66,21 +70,7 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
         slashProvider.current = new SlashProvider({
             content: div,
             shouldShow: (view: EditorView, prevState?: EditorState | undefined) => {
-                const {selection} = view.state
-                const {$from} = selection
-                const node = $from.node()
-                const parentNode = $from.node(-1)
-
-                // 段落开头并含有/才显示
-                if (
-                    parentNode.type.name === "doc" &&
-                    node.type.name === "paragraph" &&
-                    node.content.size === 1 &&
-                    node.textContent === "/"
-                ) {
-                    return true
-                }
-                return false
+                return onShouldShow(view)
             }
         })
 
@@ -92,11 +82,73 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
     useDebounceEffect(
         () => {
             if (loading || !slashProvider.current) return
-            slashProvider.current?.update(view, prevState)
+            slashUpdate(view, prevState)
         },
         [loading, view, prevState],
         {wait: 200, leading: true}
     )
+
+    /**根据编辑器选中得变化更新 slash 得位置 */
+    const slashUpdate = useDebounceFn(
+        (view: EditorView, prevState?: EditorState) => {
+            if (!ref.current) return
+            const {state, composing} = view
+            const {selection, doc} = state
+            const {ranges} = selection
+            const from = Math.min(...ranges.map((range) => range.$from.pos))
+            const to = Math.max(...ranges.map((range) => range.$to.pos))
+            const isSame = prevState && prevState.doc.eq(doc) && prevState.selection.eq(selection)
+
+            if (!initializedRef.current) {
+                view.dom.parentElement?.appendChild(ref.current)
+                initializedRef.current = true
+            }
+
+            if (composing || isSame) return
+            if (!onShouldShow(view)) {
+                slashProvider.current?.hide()
+                return
+            }
+            const virtualEl: VirtualElement = {
+                getBoundingClientRect: () => posToDOMRect(view, from, to)
+            }
+            computePosition(virtualEl, ref.current, {
+                placement: "top",
+                middleware: [flip()]
+            }).then(({x, y}) => {
+                if (!ref.current) return
+                let styleObj: {left: null | string; top: null | string} = {
+                    left: `12px`, // 目前只有空段落才会显示,left为12;
+                    top: `${y > 0 ? y : 0}px`
+                }
+                Object.assign(ref.current.style, styleObj)
+            })
+
+            slashProvider.current?.show()
+        },
+        {wait: 200}
+    ).run
+    /**判断 slash 是否显示 */
+    const onShouldShow = (view: EditorView): boolean => {
+        if (!ref.current) {
+            return false
+        }
+        const {selection} = view.state
+        const {$from} = selection
+        const node = $from.node()
+        const parentNode = $from.node(-1)
+
+        // 段落开头并含有/才显示
+        if (
+            parentNode.type.name === "doc" &&
+            node.type.name === "paragraph" &&
+            node.content.size === 1 &&
+            node.textContent === "/"
+        ) {
+            return true
+        }
+        return false
+    }
 
     const slashList = useCreation(() => {
         if (!!localProps?.local) {
