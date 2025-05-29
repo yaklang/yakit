@@ -1,6 +1,7 @@
 import {YakURLResource} from "@/pages/yakURLTree/data"
 import {AuditEmiterYakUrlProps} from "../YakRunnerAuditCodeType"
 import {ShowItemType} from "../BottomEditorDetails/BottomEditorDetailsType"
+import {ReactNode} from "react"
 export interface YakURLKVPair {
     Key: string
     Value: string
@@ -37,6 +38,8 @@ export interface AuditTreeNodeProps {
     onExpanded: (expanded: boolean, node: AuditNodeProps) => void
     foucsedKey: string
     loadTreeMore: (info: AuditNodeProps) => void
+    /**自定义节点显示内容 */
+    customizeContent: (info: AuditNodeProps) => ReactNode
 }
 
 // Map存储列表详情
