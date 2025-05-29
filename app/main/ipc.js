@@ -219,6 +219,7 @@ module.exports = {
         require("./handlers/webshell")(win, getClient)
         require("./handlers/syntaxFlow")(win, getClient)
         require("./handlers/auditRisk")(win, getClient)
+        require("./handlers/mcp")(win, getClient)
 
         // start chrome manager
         try {
