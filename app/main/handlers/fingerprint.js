@@ -206,13 +206,11 @@ module.exports = (win, getClient) => {
         return reject(err)
       }
 
-      // 确保文件句柄已关闭
+      // 关闭文件句柄
       function safeUnlink(file, savePath, cb) {
-        if (file && !file.closed) {
+        if (file) {
           try {
-            file.close(() => {
-              fs.unlink(savePath, cb)
-            })
+            file.close(() => fs.unlink(savePath, cb))
           } catch (e) {
             fs.unlink(savePath, cb)
           }
