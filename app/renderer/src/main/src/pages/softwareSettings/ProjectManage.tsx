@@ -77,6 +77,7 @@ export interface ProjectParamsProps {
     Type: string
     FolderId?: number
     ChildFolderId?: number
+    Database?: string 
 }
 /** 项目列表查询条件 */
 export interface ProjectParamsProp extends QueryGeneralRequest {
@@ -788,6 +789,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                         Description: projectInfo.Description || "",
                         FolderId: projectInfo.FolderId ? +projectInfo.FolderId : 0,
                         ChildFolderId: projectInfo.ChildFolderId ? +projectInfo.ChildFolderId : 0,
+                        Database:projectInfo.Database, 
                         Type: getEnvTypeByProjects()
                     }
                     if (projectInfo.Id) {
@@ -1564,6 +1566,7 @@ interface ProjectFolderInfoProps {
     FolderId?: number
     ChildFolderId?: number
     parent?: ProjectDescription
+    Database?: string 
 }
 export interface ExportProjectProps {
     Id: number
@@ -2064,6 +2067,24 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                     suffixIcon={<ChevronDownIcon style={{color: "var(--yakit-body-text-color)"}} />}
                                 />
                             </Form.Item>
+                        )} 
+                        {!isFolder && isIRify() && (
+                            <Form.Item
+                                label={
+                                    <div>
+                                        {`数据库路径`}{" "}
+                                    </div>
+                                }
+                            >
+                                <YakitInput
+                                    size='large'
+                                className={classNames({
+                                    [styles["required-form-item-wrapper"]]: isCheck && !info.Database
+                                })}
+                                value={info.Database}
+                                onChange={(e) => setInfo({...info, Database: e.target.value})}
+                            />
+                        </Form.Item>
                         )}
                         <>
                             {isCommunityEdition() ? (

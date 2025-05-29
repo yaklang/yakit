@@ -1878,6 +1878,7 @@ message NewProjectRequest {
   int64 ChildFolderId = 4;
   string Type = 5;
   int64  Id = 6;
+  string Database = 7;
 }
 
 message NewProjectResponse {
