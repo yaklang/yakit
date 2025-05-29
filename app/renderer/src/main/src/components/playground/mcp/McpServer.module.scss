@@ -1,0 +1,96 @@
+@use "../../../pages/securityTool/securityTool.scss" as securityTool;
+
+.mcp-server-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.divider-style {
+    width: 1px;
+    height: 12px;
+    background-color: #eaecf3;
+}
+
+.tool-list-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+    flex: 1;
+    overflow: hidden;
+    max-width: 300px;
+    border-right: 1px solid var(--yakit-border-color);
+    padding: 12px;
+    :global {
+        .ant-tree-switcher {
+            height: 24px;
+        }
+    }
+    .tool-heard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &-title {
+            color: var(--yakit-header-color);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+        }
+    }
+    .tool-list {
+        display: flex;
+        flex: 1;
+        overflow: auto;
+        .tool-root {
+            flex: 1;
+            padding-right: 12px;
+        }
+    }
+}
+
+.tool-list-wrapper-hidden {
+    display: none;
+}
+
+.mcp-server-execute-wrapper {
+    @include securityTool.execute-title("mcp-server");
+}
+
+.mcp-server-form-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: all 0.3s ease;
+    padding-top: 16px;
+    :global {
+        .ant-form {
+            overflow: hidden;
+        }
+    }
+    .mcp-server-form-item {
+        width: 100%;
+    }
+    .mcp-server-form-operate {
+        display: flex;
+        align-items: center;
+        .mcp-server-form-operate-start {
+            margin-right: 8px;
+        }
+    }
+    .form-extra {
+        display: flex;
+        align-items: center;
+        gap: 8px 0;
+        flex-wrap: wrap;
+    }
+}
+
+.mcp-server-form-wrapper-hidden {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+}
+
+.mcp-server-result-wrapper {
+    // padding: 12px;
+} 

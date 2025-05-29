@@ -455,7 +455,7 @@ service Yak {
   rpc QueryReports(QueryReportsRequest) returns(QueryReportsResponse);
   rpc QueryReport(QueryReportRequest) returns (Report);
   rpc DeleteReport(DeleteReportRequest) returns (Empty);
-  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement
+  rpc QueryAvailableReportFrom(Empty) returns (Fields); // no implement 
 
   rpc DownloadReport(DownloadReportRequest) returns (Empty);
 
@@ -599,13 +599,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -823,6 +823,21 @@ service Yak {
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+  rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
+  rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
+}
+
+message GetToolSetListResponse {
+  repeated ToolSetInfo ToolSetList = 1;
+  repeated ResourceSetInfo ResourceSetList = 2;
+}
+
+message ToolSetInfo {
+  string Name = 1;
+}
+
+message ResourceSetInfo {
+  string Name = 1;
 }
 
 message AIOutputEvent {
@@ -836,6 +851,7 @@ message AIOutputEvent {
   bool IsJson = 8;
   bytes Content = 9;
   int64 Timestamp = 10;
+  string TaskIndex = 11;
 }
 
 message AIInputEvent {
@@ -857,16 +873,97 @@ message McpConfig {
 }
 
 message AIStartParams {
+  // if set will try recovery
+  string CoordinatorId = 17;
+  int64  Sequence = 18;
+
   repeated McpConfig McpServers = 1;
 
   string UserQuery = 2;
+
   // allow ai to use the fs
   bool EnableSystemFileSystemOperator = 3;
   bool UseDefaultAIConfig = 4;
 
+  // Forge 就是 AI 模版
   string ForgeName = 5;
+  repeated ExecParamItem ForgeParams = 6;
+
+  // 是否禁用人机交互（AI 可能会主动问人问题）
+  bool DisallowRequireForUserPrompt = 7;
+
+  // Review 政策
+  // 一般来说，如果 Review Handler 被 Forge 接管了，这个就不应该可以设置。
+  // 普通的 Forge 并不会设置 Review 政策
+  // ReviewPolicy 可选的选项如下：
+  // 1. manual (全手动，大事小事所有的事情都由人来决策)
+  // 2. yolo (全自动，所有的事情，都直接执行，无需参与 - 效果差，危险程度高)
+  // 3. ai (AI 来进行初步决策，如果AI觉得风险程度比较高，则转交给人)
+  string ReviewPolicy = 8;
+  // 如果 Review 交给 AI 来做的话，那么就会涉及到一个风险打分
+  // AIReviewRiskControlScore 就是低于这个分数，AI 自动同意。
+  // 如果高于这个分数，转成手动。
+  double AIReviewRiskControlScore = 81;
+
+  // 禁用任何外部工具，这就是一个纯聊天机器了，一般没啥用了
+  bool DisableToolUse = 9;
+
+  // 默认是3，一般是说如果远端AI不稳定（网络原因）的时候，某一次对话重试几次？
+  int64 AICallAutoRetry = 10;
+
+  // 默认5，AI如果回答质量不高的时候，调大AITransactionRetry可以有效重试回答。
+  int64 AITransactionRetry = 11;
+
+  // 是否启用AI搜索本地工具的功能？
+  bool EnableAISearchTool = 12;
+
+  // 是否启用AI搜索互联网搜索引擎的功能？
+  bool EnableAISearchInternet = 13;
+
+  repeated string IncludeSuggestedToolNames = 14;
+  repeated string IncludeSuggestedToolKeywords = 16;
+  repeated string ExcludeToolNames = 15;
+
+  // ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式
+  bool EnableQwenNoThinkMode = 19;
+
+  // 在任务规划的时候，AI 是否被允许主动问用户问题
+  bool AllowPlanUserInteract = 20;
+
+  // 在任务规划的时候，如果AI允许问用户问题，那么最多问几次？
+  int64 PlanUserInteractMaxCount = 23;
+
+  // 是否允许生成报告，默认不允许
+  bool AllowGenerateReport = 24;
 }
 
+message StartMcpServerRequest {
+  // listen host
+  string Host = 1;
+  // listen port
+  int32 Port = 2;
+  // enable tool sets, split by ','
+  repeated string Tool = 3;
+  // disable tool sets, split by ','
+  repeated string DisableTool = 4;
+  // enable resource sets, split by ','
+  repeated string Resource = 5;
+  // disable resource sets, split by ','
+  repeated string DisableResource = 6;
+  // add the dynamic Yak script as a tool to the MCP server
+  repeated string Script = 7;
+  // enable all tool sets
+  bool EnableAll = 8;
+}
+
+message StartMcpServerResponse {
+  // server status: "starting", "running", "stopped", "error"
+  string Status = 1;
+  // server message or error message
+  string Message = 2;
+  // server URL
+  string ServerUrl = 3;
+}
 
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;
@@ -1893,7 +1990,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -2773,7 +2870,7 @@ message QueryReportsRequest {
   string From = 3;
   string Keyword = 4;
   string Title = 5;
-  string Type = 6;  // "project"(yakit) | "ssa_project"(irify) 
+  string Type = 6;  // "project"(yakit) | "ssa_project"(irify)
 }
 
 message Report {
@@ -4609,7 +4706,7 @@ message FuzzerRequests {
   int64 Concurrent = 2;
 }
 
-message FuzzerRequest { // last index 63
+message FuzzerRequest {// last index 63
   string Request = 1;
   bytes RequestRaw = 16;  // 这里是因为麻将块儿的问题，还是需要处理一下类型
   repeated FuzzerParamItem Params = 2;
@@ -4974,7 +5071,7 @@ message HTTPFlowsToOnlineRequest {
 message AnalyzeHTTPFlowRequest{
   string HotPatchCode = 1;
   repeated MITMContentReplacer Replacers = 2;
-  AnalyzeHTTPFlowConfig Config =3 ;
+  AnalyzeHTTPFlowConfig Config = 3 ;
   // 分析数据源
   AnalyzedDataSource Source = 4;
 }
@@ -4990,7 +5087,7 @@ message AnalyzedDataSource {
 
 message AnalyzeHTTPFlowConfig {
   int64 Concurrency = 1; // 并发数量，不传默认为10
-  bool  EnableDeduplicate =2; // 是否进行单条数据去重
+  bool  EnableDeduplicate = 2; // 是否进行单条数据去重
 }
 
 
@@ -5011,9 +5108,9 @@ message AnalyzedHTTPFlowFilter{
 // 规则数据
 message HTTPFlowRuleData{
   int64 Id = 1;
-  int64 HTTPFlowId =2;
+  int64 HTTPFlowId = 2;
   string RuleVerboseName = 3;
-  string Rule =4;
+  string Rule = 4;
 }
 
 message ExportHTTPFlowsRequest {
@@ -5517,11 +5614,11 @@ message EchoResposne {
 
 // handshake 
 message HandshakeRequest {
-  string Name = 1; 
+  string Name = 1;
 }
 
 message HandshakeResponse {
-  bool Success = 1; 
+  bool Success = 1;
 }
 
 // 开启一个端口，对接 GRPC 服务器
@@ -6075,7 +6172,7 @@ message SyntaxFlowScanTaskFilter{
   int64  UntilId = 5;
   string Keyword = 6; // fuzz search program-name
   repeated string Kind = 7; // "debug" | "scan";
-  bool HaveRisk = 17; // 只显示有风险的任务
+  bool HaveRisk = 17; // 是否有风险
 }
 
 message QuerySyntaxFlowScanTaskResponse{
@@ -6324,9 +6421,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 
@@ -6556,8 +6653,11 @@ message ListAiModelRequest{
 }
 
 message ListAiModelResponse{
-  repeated string ModelName =1;
+  repeated string ModelName = 1;
 }
+
+
+
 
 message MITMV2Request{
   /*
@@ -6720,3 +6820,6 @@ message SingleManualHijackInfoMessage{
 
   string Method = 16;
 }
+
+
+
