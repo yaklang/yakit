@@ -205,7 +205,7 @@ const showIcon = (severity) => {
 }
 
 export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
-    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore} = props
+    const {info, foucsedKey, onSelected, onExpanded, expandedKeys, loadTreeMore, customizeContent} = props
     const handleSelect = useMemoizedFn(() => {
         onSelected(info, getDetail)
     })
@@ -234,11 +234,6 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
     const getDetail = useMemo(() => {
         return getDetailFun(info)
     }, [info])
-
-    const goBUGDetail = useMemoizedFn((e) => {
-        e.stopPropagation()
-        onSelected({...info, isBug: true})
-    })
 
     const dom = useMemo(() => {
         if (info.isBottom) {
@@ -269,40 +264,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
                         <LoadingOutlined />
                     </div>
 
-                    <div className={styles["node-content"]}>
-                        <div className={classNames(styles["content-body"])}>
-                            {getDetail && (
-                                <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
-                                    <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
-                                        {getDetail.fileName}
-                                        <YakitTag className={styles["detail-tag"]} size='small' color='info'>
-                                            {getDetail.start_line}
-                                        </YakitTag>
-                                    </div>
-                                </Tooltip>
-                            )}
-
-                            <div
-                                className={classNames("yakit-content-single-ellipsis", styles["name"], {
-                                    [styles["name-active"]]: !info.isLeaf
-                                })}
-                            >
-                                {info.name}
-                            </div>
-                        </div>
-                        {isBugFun(info) && (
-                            <div
-                                className={classNames(styles["bug"], {
-                                    [styles["active-bug"]]:
-                                        info.Extra.filter((item) => item.Key === "risk_hash").length > 0
-                                })}
-                                onClick={goBUGDetail}
-                            >
-                                <OutlineBugIcon />
-                            </div>
-                        )}
-                        {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
-                    </div>
+                    <div className={styles["node-content"]}>{customizeContent(info)}</div>
                 </div>
             )
         }
@@ -461,7 +423,52 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
             }
         } catch (error) {}
     })
+    const goBUGDetail = useMemoizedFn((info) => {
+        handleSelect({...info, isBug: true})
+    })
+    const customizeContent = useMemoizedFn((info) => {
+        // 获取详情
+        const getDetail = getDetailFun(info)
 
+        return (
+            <>
+                <div className={classNames(styles["content-body"])}>
+                    {getDetail && (
+                        <Tooltip title={`${getDetail.url}:${getDetail.start_line}`}>
+                            <div className={classNames(styles["detail"], "yakit-content-single-ellipsis")}>
+                                {getDetail.fileName}
+                                <YakitTag className={styles["detail-tag"]} size='small' color='info'>
+                                    {getDetail.start_line}
+                                </YakitTag>
+                            </div>
+                        </Tooltip>
+                    )}
+
+                    <div
+                        className={classNames("yakit-content-single-ellipsis", styles["name"], {
+                            [styles["name-active"]]: !info.isLeaf
+                        })}
+                    >
+                        {info.name}
+                    </div>
+                </div>
+                {isBugFun(info) && (
+                    <div
+                        className={classNames(styles["bug"], {
+                            [styles["active-bug"]]: info.Extra.filter((item) => item.Key === "risk_hash").length > 0
+                        })}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            goBUGDetail(info)
+                        }}
+                    >
+                        <OutlineBugIcon />
+                    </div>
+                )}
+                {info.ResourceType === "variable" && <div className={styles["count"]}>{info.Size}</div>}
+            </>
+        )
+    })
     return (
         <div ref={wrapper} className={classNames(styles["audit-tree"], wrapClassName)}>
             <Tree
@@ -489,6 +496,7 @@ export const AuditTree: React.FC<AuditTreeProps> = memo((props) => {
                             onSelected={handleSelect}
                             onExpanded={handleExpand}
                             loadTreeMore={loadTreeMore}
+                            customizeContent={customizeContent}
                         />
                     )
                 }}
@@ -2254,7 +2262,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                     parseInt(CriticalRiskNumber + "") +
                     parseInt(HighRiskNumber + "") +
                     parseInt(WarnRiskNumber + "") +
-                    parseInt(LowRiskNumber + "") + 
+                    parseInt(LowRiskNumber + "") +
                     parseInt(InfoRiskNumber + "")
                 return <>{countNum !== 0 ? <YakitTag color='info'>{countNum}</YakitTag> : "-"}</>
             },

@@ -135,7 +135,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         AdviceVerbose: string
     }>({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
     /** 获取网卡操作权限 */
-    const updatePcap = useMemoizedFn(() => {
+    const updatePcap = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("IsPrivilegedForNetRaw", {})
@@ -150,7 +150,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const [pluginTotal, setPluginTotal] = useState<number>(0)
 
     /** 获取本地插件数量 */
-    const updatePluginTotal = useMemoizedFn(() => {
+    const updatePluginTotal = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("QueryYakScript", {
@@ -176,7 +176,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     // IRify在初次进入页面时如若没有规则则弹窗提示
     const isShowRuleUpdateModal = useRef<boolean>(true)
     const [openFristRuleUpdateModal, setFristRuleUpdateModal] = useState<boolean>(false)
-    const onRuleUpdate = useMemoizedFn(() => {
+    const onRuleUpdate = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("CheckSyntaxFlowRuleUpdate")
@@ -205,7 +205,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         return reverseState && !!reverseDetails.PublicReverseIP && !!reverseDetails.PublicReversePort
     }, [reverseState, reverseDetails])
     /** 获取全局反连状态和配置信息 */
-    const updateGlobalReverse = useMemoizedFn(() => {
+    const updateGlobalReverse = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("get-global-reverse-server-status")
@@ -234,7 +234,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         CurrentProxy: string
     }>({Enable: false, CurrentProxy: ""})
     /** 获取系统代理 */
-    const updateSystemProxy = useMemoizedFn(() => {
+    const updateSystemProxy = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetSystemProxy", {})
@@ -247,7 +247,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
     const [showChromeWarn, setShowChromeWarn] = useState<boolean>(false)
     /** 获取Chrome启动路径 */
-    const updateChromePath = useMemoizedFn(() => {
+    const updateChromePath = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("GetChromePath")
@@ -265,7 +265,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     })
     const [showMITMCertWarn, setShowMITMCertWarn] = useState<boolean>(false)
 
-    const updateMITMCert = useMemoizedFn(() => {
+    const updateMITMCert = useMemoizedFn((): Promise<string> => {
         return new Promise((resolve, reject) => {
             ipcRenderer
                 .invoke("VerifySystemCertificate")
@@ -288,7 +288,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
     // 校验引擎是否为官方发布版本
     const [showCheckEngine, setShowCheckEngine] = useState<boolean>(false)
-    const getCurrentYak = () => {
+    const getCurrentYak = (): Promise<string> => {
         return new Promise((resolve, reject) => {
             grpcFetchLocalYakVersion(true)
                 .then((res: string) => {
@@ -306,7 +306,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 })
         })
     }
-    const checkEngineSource = async (localYaklang: string, resolve, reject) => {
+    const checkEngineSource = async (
+        localYaklang: string,
+        resolve: (value: string | PromiseLike<string>) => void,
+        reject
+    ) => {
         try {
             const [res1, res2] = await Promise.all([
                 // 远端
@@ -324,7 +328,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     setShowCheckEngine(true)
                 }
             }
-            resolve()
+            resolve("")
         } catch (error) {
             setShowCheckEngine(false)
             reject()
@@ -407,21 +411,23 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     const updateAllInfo = useMemoizedFn(() => {
         if (isRunRef.current) return
         isRunRef.current = true
-        let settledArr = [
-            updateSystemProxy(),
-            updateGlobalReverse(),
-            updatePcap(),
-            updateChromePath(),
-            updateMITMCert(),
-            getCurrentYak()
-        ]
-        if (serverPushStatus) {
-            settledArr.push(updatePluginTotal())
-        }
+        let settledArr: (() => Promise<string>)[] = []
         if (isIRify()) {
-            settledArr = [onRuleUpdate(), getCurrentYak()]
+            settledArr = [onRuleUpdate, getCurrentYak]
+        } else {
+            settledArr = [
+                updateSystemProxy,
+                updateGlobalReverse,
+                updatePcap,
+                updateChromePath,
+                updateMITMCert,
+                getCurrentYak
+            ]
         }
-        Promise.allSettled(settledArr)
+        if (serverPushStatus) {
+            settledArr.push(updatePluginTotal)
+        }
+        Promise.allSettled(settledArr.map((promiseFunc) => promiseFunc()))
             .then((values) => {
                 isRunRef.current = false
                 setTimeout(() => (isIRify() ? updateIRifyState() : updateState()), 100)
