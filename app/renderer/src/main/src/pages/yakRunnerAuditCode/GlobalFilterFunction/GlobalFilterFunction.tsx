@@ -182,7 +182,7 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
                         childData.push({
                             parent: null,
                             name: "已经到底啦~",
-                            id: "111",
+                            id: `${id}/111`,
                             depth: 1,
                             isBottom: true,
                             Extra: [],
@@ -215,6 +215,7 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
     })
 
     const onLoadData = useMemoizedFn((node) => {
+        if (node.parent === null) return Promise.reject()
         return getChildData(1, node.id)
     })
     const loadTreeMore = useMemoizedFn(async (node: AuditNodeProps) => {
@@ -282,7 +283,8 @@ const GlobalFilterFunctionTree: React.FC<GlobalFilterFunctionTreeProps> = React.
         setFoucsedKey(node.id)
         onJumpByCodeRange(node)
     })
-    const onSearch = useMemoizedFn((info) => {
+    const onSearch = useMemoizedFn((info: AuditNodeProps) => {
+        setFoucsedKey(info.id)
         onSetSelectedSearchVal(info.name)
         emiter.emit("onOpenSearchModal")
     })
