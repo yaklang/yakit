@@ -1,3 +1,5 @@
+import {KVPair} from "@/models/kv"
+
 export interface McpConfig {
     Type: string
     Key: string
@@ -5,14 +7,42 @@ export interface McpConfig {
 }
 
 export interface AIStartParams {
+    CoordinatorId?: string
+    Sequence?: number
+
     McpServers?: McpConfig[]
 
+    /** 问题 */
     UserQuery: string
     /** allow ai to use the fs */
     EnableSystemFileSystemOperator?: boolean
     UseDefaultAIConfig?: boolean
+
     /** 模板名 */
     ForgeName?: string
+    /** 模板参数 */
+    ForgeParams?: KVPair[]
+
+    /** 是否禁用人机交互（AI 可能会主动问人问题） */
+    DisallowRequireForUserPrompt?: boolean
+
+    /**
+     * - Review 政策
+     * - 一般来说，如果 Review Handler 被 Forge 接管了，这个就不应该可以设置。
+     * - 普通的 Forge 并不会设置 Review 政策
+     * - ReviewPolicy 可选的选项如下：
+     * - 1. manual (全手动，大事小事所有的事情都由人来决策)
+     * - 2. yolo (全自动，所有的事情，都直接执行，无需参与 - 效果差，危险程度高)
+     * - 3. ai (AI 来进行初步决策，如果AI觉得风险程度比较高，则转交给人)
+     */
+    ReviewPolicy?: "manual" | "yolo" | "ai"
+
+    /**
+     * - 如果 Review 交给 AI 来做的话，那么就会涉及到一个风险打分
+     * - AIReviewRiskControlScore 就是低于这个分数，AI 自动同意。
+     * - 如果高于这个分数，转成手动。
+     */
+    AIReviewRiskControlScore?: number
 }
 export interface AIInputEvent {
     IsStart?: boolean
@@ -21,6 +51,9 @@ export interface AIInputEvent {
     IsInteractiveMessage?: boolean // 是否为交互消息(review)
     InteractiveId?: string // id
     InteractiveJSONInput?: string // {suggestion:"continue"}|{suggestion:"adjust_plan",extra_prompt:"xxx"}
+
+    IsSyncMessage?: boolean
+    SyncType?: string
 }
 export interface AIOutputEvent {
     CoordinatorId: string
@@ -36,13 +69,21 @@ export interface AIOutputEvent {
     IsJson: boolean
     Content: Uint8Array
     Timestamp: number
+    // 任务索引
+    TaskIndex: string
 }
 
 /** UI 渲染, 计划相关信息 */
 export interface AIChatReview {
-    type: "plan_review_require" | "tool_use_review_require" | "task_review_require"
-    data: AIChatMessage.PlanReviewRequire | AIChatMessage.ToolUseReviewRequire | AIChatMessage.TaskReviewRequire
+    type: "plan_review_require" | "tool_use_review_require" | "task_review_require" | "require_user_interactive"
+    data:
+        | AIChatMessage.PlanReviewRequire
+        | AIChatMessage.ToolUseReviewRequire
+        | AIChatMessage.TaskReviewRequire
+        | AIChatMessage.AIReviewRequire
 }
+/** 非 AI 交互型的review 选项 */
+export type NoAIChatReviewSelector = Exclude<AIChatReview["data"], AIChatMessage.AIReviewRequire>
 /** UI 渲染, 信息流相关信息 */
 export interface AIChatStreams {
     type: string
@@ -61,11 +102,14 @@ export interface AIChatInfo {
     time: number
     /** 回答 */
     answer?: {
+        pressure: AIChatMessage.Pressure[]
+        firstCost: AIChatMessage.AICostMS[]
+        totalCost: AIChatMessage.AICostMS[]
         consumption: AIChatMessage.Consumption
+        plans?: AIChatMessage.PlanTask
+        taskList: AIChatMessage.PlanTask[]
         logs: AIChatMessage.Log[]
-        plan: AIChatMessage.PlanTask | undefined
-        review: AIChatReview | undefined
-        streams: AIChatStreams[]
+        streams: Record<string, AIChatStreams[]>
     }
 }
 
@@ -76,6 +120,24 @@ export declare namespace AIChatMessage {
         output_consumption: number
     }
 
+    /** 上下文压力 */
+    export interface Pressure {
+        current_cost_token_size: number
+        pressure_token_size: number
+    }
+
+    /**  (首字符响应|总对话)耗时 */
+    export interface AICostMS {
+        ms: number
+        second: number
+    }
+
+    /** 审阅自动执行后的通知 */
+    export interface ReviewRelease {
+        id: string
+        params: any
+    }
+
     /** 日志 */
     export interface Log {
         level: string
@@ -84,14 +146,16 @@ export declare namespace AIChatMessage {
 
     /** 计划 */
     export interface PlanTask {
+        index: string
         name: string
         goal: string
         /** 前端渲染专属属性, proto 上不存在 */
-        state?: "exec" | "end" | "error" | ""
+        state?: "success" | "error" | "wait" | "in-progress"
         subtasks?: PlanTask[]
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
+        id: string
         value: string
         prompt: string
         prompt_english: string
@@ -147,5 +211,19 @@ export declare namespace AIChatMessage {
         selectors: ReviewSelector[]
         short_summary: string
         task: PlanTask
+    }
+
+    /** AI交互审阅请求的选项 */
+    export interface AIRequireOption {
+        index: number
+        prompt_title: string
+        prompt: string
+    }
+
+    /** AI交互审阅请求 */
+    export interface AIReviewRequire {
+        id: string
+        prompt: string
+        options: AIRequireOption[]
     }
 }

@@ -17,7 +17,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
     // ai-agent-chat 全局配置
     const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>({
-        AutoExecute: false,
+        DisallowRequireForUserPrompt: false,
+        ReviewPolicy: "manual",
         EnableSystemFileSystemOperator: true,
         UseDefaultAIConfig: true
     })

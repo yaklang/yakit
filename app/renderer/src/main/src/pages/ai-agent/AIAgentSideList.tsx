@@ -1,11 +1,12 @@
 import React, {useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {AIAgentTabList} from "./defaultConstant"
-import {AIAgentSideListProps, AIAgentTab} from "./aiAgentType"
+import {AIAgentSideListProps, AIAgentTab, AIAgentTriggerEventInfo} from "./aiAgentType"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 // import {MCPServer} from "./MCPServer"
 import {AIChatSetting} from "./AIChatSetting"
 import {HistoryChat} from "./HistoryChat"
+import emiter from "@/utils/eventBus/eventBus"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -29,6 +30,20 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         }
     })
 
+    /** 向对话框组件进行事件触发的通信 */
+    const onEmiter = useMemoizedFn((key: string) => {
+        const info: AIAgentTriggerEventInfo = {type: ""}
+        switch (key) {
+            case "new-chat":
+                info.type = "new-chat"
+
+                break
+            default:
+                break
+        }
+        if (info.type) emiter.emit("onServerChatEvent", JSON.stringify(info))
+    })
+
     return (
         <div className={styles["ai-agent-side-list"]}>
             <div className={styles["side-list-bar"]}>
@@ -43,7 +58,8 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                             })}
                             onClick={() => handleSetActive(item.key)}
                         >
-                            {item.title}
+                            <span className={styles["item-title"]}>{item.title}</span>
+                            {item.icon}
                         </div>
                     )
                 })}
@@ -75,7 +91,11 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
                     })}
                     tabIndex={active !== "history" ? -1 : 1}
                 >
-                    <HistoryChat />
+                    <HistoryChat
+                        onNewChat={() => {
+                            onEmiter("new-chat")
+                        }}
+                    />
                 </div>
             </div>
         </div>
