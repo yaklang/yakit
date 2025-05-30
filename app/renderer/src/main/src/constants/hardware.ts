@@ -23,12 +23,15 @@ interface SystemInfoProps {
     architecture?: Architecture
     /** 是否为开发环境 */
     isDev?: boolean
+    /** 本地模式或者远程模式 */
+    mode?: "local" | "remote" | undefined
 }
 
 export const SystemInfo: SystemInfoProps = {
     system: undefined,
     architecture: undefined,
-    isDev: undefined
+    isDev: undefined,
+    mode: undefined
 }
 
 export const handleFetchSystemInfo = async () => {

@@ -147,6 +147,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     const onSetEngineMode = useMemoizedFn((v?: YaklangEngineMode) => {
         setYakitEngineMode(v)
         setEngineMode(v)
+        SystemInfo.mode = v
     })
     /** 是否为远程模式 */
     const isRemoteEngine = useMemo(() => engineMode === "remote", [engineMode])

@@ -823,6 +823,7 @@ service Yak {
   rpc ExportNote(ExportNoteRequest) returns (stream ExportNoteResponse);
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
+  rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
 }
 
 message AIOutputEvent {
@@ -867,6 +868,33 @@ message AIStartParams {
   string ForgeName = 5;
 }
 
+message StartMcpServerRequest {
+  // listen host
+  string Host = 1;
+  // listen port
+  int32 Port = 2;
+  // enable tool sets, split by ','
+  repeated string Tool = 3;
+  // disable tool sets, split by ','
+  repeated string DisableTool = 4;
+  // enable resource sets, split by ','
+  repeated string Resource = 5;
+  // disable resource sets, split by ','
+  repeated string DisableResource = 6;
+  // add the dynamic Yak script as a tool to the MCP server
+  repeated string Script = 7;
+  // enable all tool sets
+  bool EnableAll = 8;
+}
+
+message StartMcpServerResponse {
+  // server status: "starting", "running", "stopped", "error"
+  string Status = 1;
+  // server message or error message
+  string Message = 2;
+  // server URL
+  string ServerUrl = 3;
+}
 
 message GetSpaceEngineAccountStatusRequest {
   string Type = 1;

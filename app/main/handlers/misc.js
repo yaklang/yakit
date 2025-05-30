@@ -781,4 +781,12 @@ module.exports = (win, getClient) => {
             }
         })
     })
+
+    // StartMcpServer 启动 MCP 服务器
+    const streamStartMcpServerMap = new Map()
+    ipcMain.handle("cancel-StartMcpServer", handlerHelper.cancelHandler(streamStartMcpServerMap))
+    ipcMain.handle("StartMcpServer", (e, params, token) => {
+        const stream = getClient().StartMcpServer(params)
+        handlerHelper.registerHandler(win, stream, streamStartMcpServerMap, token)
+    })
 }
