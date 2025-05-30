@@ -112,6 +112,8 @@ import {QueryNewSSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/Yaki
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import SelectUpload from "@/pages/SelectUpload"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import {showConfigMcpForm, StartMcpServerResponse} from "@/utils/ConfigSystemMcp"
+import {useMcpStore} from "@/store/mcp"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -502,6 +504,44 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             ipcRenderer.removeAllListeners("reset-password-callback")
         }
     }, [])
+
+    // 启动mcp 后面写成hook
+    const {mcpToken, setMcpToken, mcpCurrent, setMcpCurrent, setMcpServerUrl} = useMcpStore()
+    useEffect(() => {
+        if (!mcpToken) {
+            return
+        }
+        ipcRenderer.on(`${mcpToken}-data`, async (_, data: StartMcpServerResponse) => {
+            setMcpCurrent(data)
+            // 后端只在running状态返回地址，此处单独存
+            if (data.Status === "running" && data.ServerUrl) {
+                setMcpServerUrl(data.ServerUrl)
+                yakitNotify("success", `MCP 服务已启动: ${data.ServerUrl}`)
+            } else if (data.Status === "error") {
+                yakitNotify("error", `MCP 服务错误: ${data.Message}`)
+            } else if (data.Status === "stopped") {
+                yakitNotify("info", `MCP 服务已停止: ${data.Message}`)
+            }
+        })
+
+        ipcRenderer.on(`${mcpToken}-error`, (_, error) => {
+            if (mcpCurrent) {
+                setMcpServerUrl("")
+                setMcpToken("")
+                setMcpCurrent({Status: "error", Message: error + "", ServerUrl: ""})
+            }
+            yakitNotify("error", `[StartMcpServer] error: ${error}`)
+        })
+
+        ipcRenderer.on(`${mcpToken}-end`, () => {
+            if (mcpCurrent) {
+                setMcpServerUrl("")
+                setMcpToken("")
+                setMcpCurrent({Status: "stopped", Message: "服务已停止", ServerUrl: ""})
+            }
+            yakitNotify("info", `[StartMcpServer] finished`)
+        })
+    }, [mcpToken])
 
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
@@ -967,7 +1007,8 @@ const GetUIOpSettingMenu = () => {
                 {
                     key: "webshell-manager",
                     label: "网站管理"
-                }
+                },
+                {key: "mcp", label: "Yak Mcp"}
             ]
         },
         {type: "divider"},
@@ -1014,7 +1055,7 @@ const GetUIOpSettingMenu = () => {
         {
             key: "refreshMenu",
             label: "刷新菜单"
-        },
+        }
         // {type: "divider"},
         // {key: "setShortcutKey", label: "快捷键设置"}
     ]
@@ -1084,6 +1125,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "agent":
                 showConfigSystemProxyForm()
+                return
+            case "mcp":
+                showConfigMcpForm()
                 return
             case "engineVar":
                 showConfigYaklangEnvironment()
