@@ -211,13 +211,15 @@ export const formatTimeUnix = (time: number): string => {
     return moment.unix(time).format("YYYY-MM-DD HH:mm:ss")
 }
 
-/** @name 将数字转换为 k/m 等带单位字符 */
+// #region chat相关工具
+/** @name 将Token转换为K/M等带单位字符 */
 export const formatNumberUnits = (num: number) => {
-    if (num >= 1_000_000) {
-        return (num / 1_000_000).toFixed(1) + "m"
-    } else if (num >= 1_000) {
-        return (num / 1_000).toFixed(1) + "k"
+    if (num >= 1048576) {
+        return (num / 1048576).toFixed(1) + "M"
+    } else if (num >= 1024) {
+        return (num / 1024).toFixed(1) + "K"
     } else {
         return num.toString()
     }
 }
+// #endregion

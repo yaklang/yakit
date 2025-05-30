@@ -1,33 +1,28 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import {AIChatLogsProps, ServerChatProps} from "./aiAgentType"
-import {
-    OutlineCheckcircleIcon,
-    OutlineChevrondoubleleftIcon,
-    OutlineChevrondoublerightIcon,
-    OutlineClipboardlistIcon,
-    OutlineInformationcircleIcon,
-    OutlineLoadingIcon,
-    OutlineMenualt2Icon,
-    OutlinePlusIcon,
-    OutlineXcircleIcon
-} from "@/assets/icon/outline"
+import {useMemoizedFn, useThrottleFn} from "ahooks"
+import {AIAgentTriggerEventInfo, ServerChatProps} from "./aiAgentType"
+import {OutlineLoadingIcon, OutlineNewspaperIcon, OutlineOpenIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import cloneDeep from "lodash/cloneDeep"
-import {Input, Tooltip} from "antd"
-import {SolidPaperairplaneIcon, SolidStopIcon} from "@/assets/icon/solid"
 import useChatData from "./useChatData"
 import useStore from "./useContext/useStore"
 import useDispatcher from "./useContext/useDispatcher"
-import {AIAgentChat, AIAgentEmpty} from "./AIAgentChat"
-import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent} from "./type/aiChat"
+import {
+    AIAgentChatBody,
+    AIAgentChatReview,
+    AIAgentEmpty,
+    AIChatLeftSide,
+    AIChatLogs
+} from "./chatTemplate/AIAgentChatTemplate"
+import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {randomString} from "@/utils/randomUtil"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import emiter from "@/utils/eventBus/eventBus"
+import {yakitNotify} from "@/utils/notification"
+import useListenHeight from "../pluginHub/hooks/useListenHeight"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const {} = props
@@ -37,91 +32,177 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const {setting, activeChat} = useStore()
     const {setSetting, setChats, setActiveChat} = useDispatcher()
 
-    /** 当前激活的对话唯一 ID */
+    /** 当前激活的对话唯一ID */
     const activeID = useMemo(() => {
         return activeChat?.id
     }, [activeChat])
 
-    // #region chat-相关配置功能
-    const [autoExec, setAutoExec] = useState(false)
-    useEffect(() => {
-        setAutoExec(!!setting.AutoExecute)
-    }, [setting])
-    const handleSetAutoExec = useMemoizedFn(() => {
-        setAutoExec((old) => {
-            setSetting && setSetting((oldValue) => ({...oldValue, AutoExecute: !old}))
-            return !old
-        })
-    })
+    // #region chat-左侧侧边栏
+    const [leftExpand, setLeftExpand] = useState(true)
     // #endregion
 
-    // #region chat-对话相关信息和逻辑
-    // 对话出现review是，先出现弹框，用户可以选择隐藏弹框，看下面的review信息，也可直接点击弹框的选项
+    // #region chat-审阅相关数据和逻辑
+    const chatBody = useRef<HTMLDivElement>(null)
+    // 用来控制审阅框的高度
+    const chatBodyHeight = useListenHeight(chatBody)
+
+    // review数据
+    const reviewInfo = useRef<AIChatReview | undefined>()
     const [showReview, setShowReview] = useState(false)
+
+    const [reviewExpand, setReviewExpand] = useState(true)
+
+    // 展示review
     const handleShowReview = useMemoizedFn((info: AIChatReview) => {
         if (showReview) return
+        setReviewExpand(true)
+        reviewInfo.current = cloneDeep(info)
         setShowReview(true)
     })
-
-    const [{execute, consumption, logs, plan, review, activeStream, streams}, events] = useChatData({
-        onReview: handleShowReview
-    })
-
-    // ui实际渲染数据-logs
-    const uiLogs = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.logs) return activeChat.answer.logs
-        return logs
-    }, [activeChat, logs])
-    // ui实际渲染数据-plan
-    const uiPlan = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.plan) return activeChat.answer.plan
-        return plan
-    }, [activeChat, plan])
-    // ui实际渲染数据-review
-    const uiReview = useMemo(() => {
-        if (activeChat && activeChat.answer) return activeChat.answer.review
-        return review
-    }, [activeChat, review])
-    // ui实际渲染数据-streams
-    const uiStreams = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.streams) return activeChat.answer.streams
-        return streams
-    }, [activeChat, streams])
-
-    const [question, setQuestion] = useState("")
-    const isQuestion = useMemo(() => {
-        return !!(question && question.trim())
-    }, [question])
-
-    /** 每次新对话开始时, 上次对话信息保存 */
-    const handleSaveChatInfo = useMemoizedFn(() => {
-        const oldID = activeID
-        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
-        if (oldID && events.fetchToken() && oldID === events.fetchToken()) {
-            const answer: AIChatInfo["answer"] = {
-                consumption: cloneDeep(consumption),
-                logs: cloneDeep(logs),
-                plan: cloneDeep(plan),
-                review: cloneDeep(review),
-                streams: cloneDeep(streams)
-            }
-
-            setChats &&
-                setChats((old) => {
-                    const newValue = cloneDeep(old)
-                    const findIndex = newValue.findIndex((item) => item.id === oldID)
-                    if (findIndex !== -1) {
-                        newValue[findIndex].time = Date.now()
-                        newValue[findIndex].answer = {...(answer || {})}
-                    }
-                    return newValue
-                })
+    // 释放review
+    const handleReleaseReview = useMemoizedFn((id: string) => {
+        if (!reviewInfo.current) return
+        if (reviewInfo.current.data.id === id) {
+            reviewInfo.current = undefined
+            setShowReview(false)
+            setReviewExpand(true)
         }
     })
 
-    const [btnLoading, setBtnLoading] = useState(false)
-    const handleNewChat = useMemoizedFn((question: string) => {
-        setBtnLoading(true)
+    const sendLoading = useRef(false)
+    /** 中途补充问题 */
+    const handleSend = useMemoizedFn((item: AIChatMessage.ReviewSelector, qs?: string) => {
+        if (sendLoading.current) return
+        if (!reviewInfo.current) return
+        if (!activeID) return
+
+        sendLoading.current = true
+        const {value, allow_extra_prompt} = item
+        const jsonInput: Record<string, string> = {suggestion: value}
+        if (allow_extra_prompt && qs) jsonInput.extra_prompt = qs
+        const info: AIInputEvent = {
+            IsInteractiveMessage: true,
+            InteractiveId: reviewInfo.current.data.id,
+            InteractiveJSONInput: JSON.stringify(jsonInput)
+        }
+        setShowReview(false)
+        setTimeout(() => {
+            reviewInfo.current && events.onSend(activeID, reviewInfo.current, info)
+            reviewInfo.current = undefined
+            sendLoading.current = false
+        }, 50)
+    })
+
+    /** AI交互补充策略 */
+    const handleSendAIRequire = useMemoizedFn((value: string) => {
+        if (sendLoading.current) return
+        if (!reviewInfo.current) return
+        if (!activeID) return
+
+        sendLoading.current = true
+        const jsonInput: Record<string, string> = {suggestion: value}
+        const info: AIInputEvent = {
+            IsInteractiveMessage: true,
+            InteractiveId: reviewInfo.current.data.id,
+            InteractiveJSONInput: JSON.stringify(jsonInput)
+        }
+        setShowReview(false)
+        setTimeout(() => {
+            reviewInfo.current && events.onSend(activeID, reviewInfo.current, info)
+            reviewInfo.current = undefined
+            sendLoading.current = false
+        }, 50)
+    })
+    // #endregion
+
+    // #region chat-意外情况
+    const hintID = useRef("")
+    const oldRequest = useRef<AIStartParams>()
+    const forgeName = useRef("")
+    const [redirectForgeShow, setRedirectForgeShow] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const handleOpenHintShow = useMemoizedFn((old: AIStartParams, request: AIStartParams) => {
+        if (!activeID) return
+        if (redirectForgeShow) return
+        if (!old) return
+        hintID.current = activeID || ""
+        oldRequest.current = old
+        forgeName.current = request.ForgeName || ""
+        setRedirectForgeShow(true)
+    })
+    const handleHintShowCallback = useMemoizedFn((result: boolean) => {
+        if (loading) return
+        if (result) {
+            setSetting && setSetting((old) => ({...old, ForgeName: forgeName.current}))
+            setLoading(true)
+            handleStopChat()
+            setTimeout(() => {
+                yakitNotify("info", "准备打开新对话中...")
+                handleNewChat(() => {
+                    if (!oldRequest.current) return
+                    requestLoading.current = true
+                    const info: AIChatInfo = {
+                        id: randomString(10),
+                        name: oldRequest.current?.UserQuery,
+                        question: oldRequest.current.UserQuery,
+                        time: Date.now()
+                    }
+                    setQuestion("")
+                    setChats && setChats((old) => old.concat([info]))
+                    setActiveChat && setActiveChat(info)
+                    events.onStart(info.id, {
+                        IsStart: true,
+                        Params: {
+                            ...oldRequest.current,
+                            ForgeName: forgeName.current || undefined
+                        }
+                    })
+                    handleSubmitAfterChangState()
+
+                    setTimeout(() => {
+                        requestLoading.current = false
+                    }, 300)
+                })
+            }, 500)
+        }
+        hintID.current = ""
+        oldRequest.current = undefined
+        forgeName.current = ""
+        setRedirectForgeShow(false)
+        setLoading(false)
+    })
+    // #endregion
+
+    // #region chat-对话相关问题和回答数据
+    const [question, setQuestion] = useState("")
+
+    const [
+        {execute, pressure, firstCost, totalCost, consumption, logs, fetchPlan, plan, streams, activeStream},
+        events
+    ] = useChatData({
+        onReview: handleShowReview,
+        onReviewRelease: handleReleaseReview,
+        onRedirectForge: handleOpenHintShow
+    })
+    // #endregion
+
+    // #region chat-对话相关方法和逻辑处理
+    // 是否在构建发送请求参数中
+    const requestLoading = useRef(false)
+
+    // 开始提问
+    const handleStartChat = useThrottleFn(
+        () => {
+            if (!question || !question.trim() || execute) return
+            if (requestLoading.current) return
+            handleRequestParams(question.trim())
+        },
+        {wait: 500, trailing: false}
+    ).run
+
+    // 构建提问参数并执行
+    const handleRequestParams = useMemoizedFn((qs: string) => {
+        requestLoading.current = true
         const info: AIChatInfo = {
             id: randomString(10),
             name: question,
@@ -135,619 +216,278 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             IsStart: true,
             Params: {
                 UserQuery: question,
+                ReviewPolicy: setting.ReviewPolicy || "manual",
+                DisallowRequireForUserPrompt: setting.DisallowRequireForUserPrompt || false,
                 EnableSystemFileSystemOperator: !!setting.EnableSystemFileSystemOperator || true,
                 UseDefaultAIConfig: !!setting.UseDefaultAIConfig || true,
                 ForgeName: setting.ForgeName || undefined
             }
         })
+        handleSubmitAfterChangState()
+
         setTimeout(() => {
-            setBtnLoading(false)
+            requestLoading.current = false
         }, 300)
     })
 
-    /** 自定义问题提问 */
-    const onBtnSubmit = useMemoizedFn(() => {
-        if (execute || !isQuestion) return
-        handleNewChat(question)
-    })
-
-    // 中途 review 时，存在补充问题的情况，补充问题内容
-    const [reviewQuestion, setReviewQuestion] = useState("")
-    const [reviewShow, setReviewShow] = useState("")
-    const [reviewLoading, setReviewLoading] = useState(false)
-
-    /** 中途补充问题 */
-    const onSend = useMemoizedFn((item: AIChatMessage.ReviewSelector) => {
-        if (!review) return
-        if (reviewLoading) return
-        if (!activeID) return
-        setReviewLoading(true)
-        setReviewShow("")
-        const {value, allow_extra_prompt} = item
-        const jsonInput: Record<string, string> = {suggestion: value}
-        if (allow_extra_prompt && reviewQuestion) jsonInput.extra_prompt = reviewQuestion
-        const info: AIInputEvent = {
-            IsInteractiveMessage: true,
-            InteractiveId: review.data.id,
-            InteractiveJSONInput: JSON.stringify(jsonInput)
-        }
-        setReviewQuestion("")
-        console.log("onSend", JSON.stringify(info))
-        setTimeout(() => {
-            setShowReview(false)
-            events.onSend(activeID, review, info)
-            setReviewLoading(false)
-        }, 300)
-    })
-    /** 停止回答 */
-    const onBtnStop = useMemoizedFn(() => {
+    // 停止提问
+    const handleStopChat = useMemoizedFn(() => {
         if (execute && activeID) {
             events.onClose(activeID)
+            handleStopAfterChangeState()
         }
     })
 
-    /** 开启新对话 */
-    const handleNew = useMemoizedFn(() => {
-        if (execute) return
-        handleSaveChatInfo()
-        events.handleReset()
-        setActiveChat && setActiveChat(undefined)
+    // 保存上次对话信息
+    const handleSaveChatInfo = useMemoizedFn(() => {
+        const showID = activeID
+        // 如果是历史对话，只是查看，怎么实现点击新对话的功能呢
+        if (showID && events.fetchToken() && showID === events.fetchToken()) {
+            const answer: AIChatInfo["answer"] = {
+                pressure: cloneDeep(pressure),
+                firstCost: cloneDeep(firstCost),
+                totalCost: cloneDeep(totalCost),
+                consumption: cloneDeep(consumption),
+                plans: fetchPlan(),
+                taskList: cloneDeep(plan),
+                logs: cloneDeep(logs),
+                streams: cloneDeep(streams)
+            }
+
+            setChats &&
+                setChats((old) => {
+                    const newValue = cloneDeep(old)
+                    const findIndex = newValue.findIndex((item) => item.id === showID)
+                    if (findIndex !== -1) {
+                        newValue[findIndex].answer = {...(answer || {})}
+                    }
+                    return newValue
+                })
+        }
+    })
+
+    // 开启新对话框
+    const handleNewChat = useMemoizedFn((cb?: () => void) => {
+        if (execute) {
+            yakitNotify("warning", "请先停止当前对话")
+            return
+        }
+        if (activeID) {
+            handleSaveChatInfo()
+            events.handleReset()
+            setActiveChat && setActiveChat(undefined)
+            handleResetState()
+            cb && cb()
+        }
+    })
+
+    useEffect(() => {
+        const onEvents = (res: string) => {
+            try {
+                const data = JSON.parse(res) as AIAgentTriggerEventInfo
+                if (!data.type) return
+
+                if (data.type === "new-chat") {
+                    handleNewChat()
+                }
+            } catch (error) {}
+        }
+        emiter.on("onServerChatEvent", onEvents)
+        return () => {
+            emiter.off("onServerChatEvent", onEvents)
+        }
+    }, [])
+
+    /** 新开窗口后需要重置的状态 */
+    const handleResetState = useMemoizedFn(() => {
+        // 隐藏日志
+        setLogExpand(false)
+        // 清空问题
+        setQuestion("")
+        // 打开左侧侧边栏
+        setLeftExpand(true)
+    })
+
+    /** 开始提问后的状态调整 */
+    const handleSubmitAfterChangState = useMemoizedFn(() => {
+        // 打开左侧侧边栏
+        setLeftExpand(true)
+    })
+
+    /** 停止回答后的状态调整 */
+    const handleStopAfterChangeState = useMemoizedFn(() => {
+        // 清空review信息
+        reviewInfo.current = undefined
+        setShowReview(false)
+        setReviewExpand(true)
     })
     // #endregion
 
-    // #region chat-计划相关
-    const [planExpand, setPlanExpand] = useState(true)
-    const handlePlanShow = useMemoizedFn(() => {
-        noPlanHint.current = true
-        setPlanHintCancel(false)
-        setPlanHintOpen(false)
-        setTimeout(() => {
-            setPlanExpand((old) => !old)
-        }, 100)
-        setTimeout(() => {
-            noPlanHint.current = false
-        }, 600)
-    })
-
-    // 用来防止展开时，同位置不同 icon 的提示内容替换闪烁，在开展时，禁止提示300ms
-    const noPlanHint = useRef(false)
-    const handleChangePlanHintOpen = useMemoizedFn((visible: boolean) => {
-        if (noPlanHint.current) return
-        setPlanHintOpen(visible)
-    })
-    const handleChangePlanHintCancel = useMemoizedFn((visible: boolean) => {
-        if (noPlanHint.current) return
-        setPlanHintCancel(visible)
-    })
-
-    const [planHintOpen, setPlanHintOpen] = useState(false)
-    const [planHintCancel, setPlanHintCancel] = useState(false)
+    // #region chat-UI实际展示数据
+    // ui实际渲染数据-pressure
+    const uiPressure = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.pressure) return activeChat.answer.pressure
+        return pressure
+    }, [activeChat, pressure])
+    // ui实际渲染数据-firstCost
+    const uiFirstCost = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.firstCost) return activeChat.answer.firstCost
+        return firstCost
+    }, [activeChat, firstCost])
+    // ui实际渲染数据-consumption
+    const uiConsumption = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.consumption) return activeChat.answer.consumption
+        return consumption
+    }, [activeChat, consumption])
+    // ui实际渲染数据-plan
+    const uiPlan = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.taskList) return activeChat.answer.taskList
+        return plan
+    }, [activeChat, plan])
+    // ui实际渲染数据-streams
+    const uiStreams = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.streams) return activeChat.answer.streams
+        return streams
+    }, [activeChat, streams])
+    // ui实际渲染数据-logs
+    const uiLogs = useMemo(() => {
+        if (activeChat && activeChat.answer && activeChat.answer.logs) return activeChat.answer.logs
+        return logs
+    }, [activeChat, logs])
     // #endregion
 
     // #region chat-日志相关
-    const [logExpand, setLogExpand] = useState(true)
+    const [logExpand, setLogExpand] = useState(false)
     const hadnleLogShow = useMemoizedFn(() => {
-        noLogHint.current = true
-        setLogHintOpen(false)
-        setLogHintCancel(false)
-        setTimeout(() => {
-            setLogExpand((old) => !old)
-        }, 100)
-        setTimeout(() => {
-            noLogHint.current = false
-        }, 600)
+        setLogExpand((old) => !old)
     })
-
-    // 用来防止展开时，同位置不同 icon 的提示内容替换闪烁，在开展时，禁止提示300ms
-    const noLogHint = useRef(false)
-    const handleChangeLogHintOpen = useMemoizedFn((visible: boolean) => {
-        if (noLogHint.current) return
-        setLogHintOpen(visible)
-    })
-    const handleChangeLogHintCancel = useMemoizedFn((visible: boolean) => {
-        if (noLogHint.current) return
-        setLogHintCancel(visible)
-    })
-    const [logHintOpen, setLogHintOpen] = useState(false)
-    const [logHintCancel, setLogHintCancel] = useState(false)
     // #endregion
-
-    // 生成任务树列表
-    const handleGenerateTaskList = useMemoizedFn(
-        (infos: AIChatMessage.PlanTask[], isStart: boolean, showState?: boolean) => {
-            return (
-                <div className={classNames({[styles["list-indent"]]: !isStart})}>
-                    {infos.map((item) => {
-                        const {name, goal, state, subtasks} = item
-                        return (
-                            <>
-                                <div key={item.name} className={classNames(styles["list-item"])}>
-                                    <div className={styles["state"]}>
-                                        {showState && !state && <div className={classNames(styles["wait"])}></div>}
-                                        {showState && state === "exec" && (
-                                            <OutlineLoadingIcon
-                                                className={classNames(styles["exec"], "icon-rotate-animation")}
-                                            />
-                                        )}
-                                        {showState && state === "end" && (
-                                            <OutlineCheckcircleIcon className={styles["end"]} />
-                                        )}
-                                        {showState && state === "error" && (
-                                            <OutlineXcircleIcon className={styles["error"]} />
-                                        )}
-                                    </div>
-
-                                    <div
-                                        className={classNames(styles["name"], "yakit-content-single-ellipsis")}
-                                        title={name}
-                                    >
-                                        {name}
-                                    </div>
-
-                                    <YakitPopover
-                                        overlayClassName={styles["task-info-popover"]}
-                                        trigger={"click"}
-                                        placement='right'
-                                        content={
-                                            <div className={styles["task-detail"]}>
-                                                <div className={styles["detail-title"]}>任务名: </div>
-                                                <div className={styles["detail-content"]}>{name}</div>
-                                                <div className={styles["detail-title"]}>任务描述: </div>
-                                                <div className={styles["detail-content"]}>{goal}</div>
-                                            </div>
-                                        }
-                                    >
-                                        <div className={styles["info"]}>
-                                            <OutlineInformationcircleIcon />
-                                        </div>
-                                    </YakitPopover>
-                                </div>
-                                {subtasks && subtasks.length > 0 && handleGenerateTaskList(subtasks, false, showState)}
-                            </>
-                        )
-                    })}
-                </div>
-            )
-        }
-    )
-
-    const planContent = useMemo(() => {
-        if (!uiPlan) return null
-        return <div className={styles["task-list"]}>{handleGenerateTaskList([uiPlan], true, true)}</div>
-    }, [uiPlan])
-
-    // 审阅元素
-    const reviewElement = useMemo(() => {
-        if (!uiReview) return null
-
-        const {type, data} = uiReview
-
-        if (type === "plan_review_require") {
-            const {
-                plans: {root_task}
-            } = data as AIChatMessage.PlanReviewRequire
-
-            return (
-                <>
-                    <div className={styles["list-header"]}>计划审阅: </div>
-                    {handleGenerateTaskList([root_task], false, false)}
-                </>
-            )
-        }
-
-        if (type === "tool_use_review_require") {
-            const {params, tool, tool_description} = data as AIChatMessage.ToolUseReviewRequire
-            return (
-                <>
-                    <div className={styles["list-header"]}>工具审阅: </div>
-                    <div className={styles["content-review"]}>
-                        <div className={styles["tool-title"]}>tool: {tool}</div>
-                        <div className={styles["tool-content"]}>{tool_description}</div>
-
-                        <div className={styles["tool-title"]}>参数:</div>
-                        <div className={styles["tool-content"]}>{JSON.stringify(params)}</div>
-                    </div>
-                </>
-            )
-        }
-
-        if (type === "task_review_require") {
-            const {long_summary, short_summary, task} = data as AIChatMessage.TaskReviewRequire
-            return (
-                <>
-                    <div className={styles["list-header"]}>任务审阅: </div>
-                    <div className={styles["content-review"]}>
-                        <div className={styles["tool-title"]}>任务名: {task.name}</div>
-                        <div className={styles["tool-title"]}>任务内容: {task.goal}</div>
-                        <div className={styles["tool-title"]}>short_summary:</div>
-                        <div className={styles["tool-content"]}>{short_summary}</div>
-                        <div className={styles["tool-title"]}>long_summary:</div>
-                        <div className={styles["tool-content"]}>{long_summary}</div>
-                    </div>
-                </>
-            )
-        }
-
-        return null
-    }, [uiReview])
-
-    // 审阅操作列表
-    // 这里的(review)信息只能是从通信数据里获取, 历史对话不展示(review)操作按钮
-    const reviewOperations = useMemo(() => {
-        if (!review || !review.data || !review.data.selectors || review.data.selectors.length === 0) return null
-        return (
-            <div className={styles["review-selectors"]}>
-                <div className={styles["selectors-header"]}>选项: </div>
-                {review.data.selectors.map((el) => {
-                    const {value, prompt, allow_extra_prompt} = el
-                    const showKey = `${review.data.id}-${value}`
-                    const isShow = reviewShow === showKey
-                    return (
-                        <React.Fragment key={value}>
-                            {!allow_extra_prompt ? (
-                                <YakitButton
-                                    type={value === "continue" ? "primary" : "outline2"}
-                                    className={styles["selectors-btn"]}
-                                    size='small'
-                                    onClick={() => onSend(el)}
-                                >
-                                    {prompt}
-                                </YakitButton>
-                            ) : (
-                                <YakitPopover
-                                    trigger='click'
-                                    overlayClassName={styles["review-input-popover"]}
-                                    placement='top'
-                                    content={
-                                        <div className={styles["review-input"]}>
-                                            <YakitInput
-                                                value={reviewQuestion}
-                                                onChange={(e) => setReviewQuestion(e.target.value)}
-                                            />
-                                            <div className={styles["input-btn"]}>
-                                                <YakitButton onClick={() => onSend(el)}>确定</YakitButton>
-                                            </div>
-                                        </div>
-                                    }
-                                    visible={isShow}
-                                    onVisibleChange={(visible) => {
-                                        setReviewShow(visible ? showKey : "")
-                                    }}
-                                >
-                                    <YakitButton type='outline2' className={styles["selectors-btn"]} size='small'>
-                                        {prompt}
-                                    </YakitButton>
-                                </YakitPopover>
-                            )}
-                        </React.Fragment>
-                    )
-                })}
-            </div>
-        )
-    }, [review, reviewShow, reviewQuestion])
-
-    // 弹框里的审阅操作列表
-    // 这里的(review)信息只能是从通信数据里获取, 历史对话不展示(review)操作按钮
-    const hintReviewOperations = useMemo(() => {
-        if (!review || !review.data || !review.data.selectors || review.data.selectors.length === 0) return null
-        return (
-            <div className={styles["review-selectors"]}>
-                <div className={styles["selectors-header"]}>选项: </div>
-                {review.data.selectors.map((el) => {
-                    const {value, prompt, allow_extra_prompt} = el
-                    const showKey = `hint-${review.data.id}-${value}`
-                    const isShow = reviewShow === showKey
-                    return (
-                        <React.Fragment key={value}>
-                            {!allow_extra_prompt ? (
-                                <YakitButton
-                                    type={value === "continue" ? "primary" : "outline2"}
-                                    className={styles["selectors-btn"]}
-                                    size='small'
-                                    onClick={() => onSend(el)}
-                                >
-                                    {prompt}
-                                </YakitButton>
-                            ) : (
-                                <YakitPopover
-                                    trigger='click'
-                                    overlayClassName={styles["review-input-popover"]}
-                                    placement='top'
-                                    content={
-                                        <div className={styles["review-input"]}>
-                                            <YakitInput
-                                                value={reviewQuestion}
-                                                onChange={(e) => setReviewQuestion(e.target.value)}
-                                            />
-                                            <div className={styles["input-btn"]}>
-                                                <YakitButton onClick={() => onSend(el)}>确定</YakitButton>
-                                            </div>
-                                        </div>
-                                    }
-                                    visible={isShow}
-                                    onVisibleChange={(visible) => {
-                                        setReviewShow(visible ? showKey : "")
-                                    }}
-                                >
-                                    <YakitButton type='outline2' className={styles["selectors-btn"]} size='small'>
-                                        {prompt}
-                                    </YakitButton>
-                                </YakitPopover>
-                            )}
-                        </React.Fragment>
-                    )
-                })}
-            </div>
-        )
-    }, [review, reviewShow, reviewQuestion])
-
+    console.log("hintID.current", hintID.current, activeID, redirectForgeShow)
     return (
         <div ref={wrapper} className={styles["server-chat"]}>
-            <div className={styles["server-chat-header"]}>
-                <div className={styles["header-title"]}>AI-Agent</div>
-                <div className={styles["header-extra"]}></div>
-            </div>
-
             <div className={styles["server-chat-body"]}>
-                {activeID && (
-                    <div className={classNames(styles["chat-plan"], {[styles["chat-plan-hidden"]]: !planExpand})}>
-                        <div className={styles["header-wrapper"]}>
+                {activeChat && activeID ? (
+                    <div className={styles["server-chat-executing"]}>
+                        <div className={styles["chat-executing-header"]}>
+                            <div className={styles["header-title"]}>AI-Agent</div>
+
+                            <div className={styles["header-extra"]}>
+                                <YakitButton
+                                    size='large'
+                                    type='secondary2'
+                                    isHover={logExpand}
+                                    icon={<OutlineNewspaperIcon />}
+                                    onClick={hadnleLogShow}
+                                >
+                                    日志
+                                </YakitButton>
+                            </div>
+                        </div>
+
+                        <div className={styles["chat-executing-content"]}>
                             <div
-                                className={classNames(styles["header-title"], {
-                                    [styles["header-title-hidden"]]: !planExpand
+                                className={classNames(styles["content-left-side"], {
+                                    [styles["content-left-side-hidden"]]: !leftExpand
                                 })}
                             >
-                                任务列表
-                            </div>
-                            <div className={styles["icon-btn"]} onClick={handlePlanShow}>
-                                {planExpand ? (
-                                    <Tooltip
-                                        overlayStyle={{paddingLeft: 8}}
-                                        title={"收起任务列表"}
-                                        placement='right'
-                                        visible={planHintCancel}
-                                        onVisibleChange={handleChangePlanHintCancel}
-                                    >
-                                        <OutlineChevrondoubleleftIcon />
-                                    </Tooltip>
-                                ) : (
-                                    <Tooltip
-                                        overlayStyle={{paddingLeft: 8}}
-                                        title={"展开任务列表"}
-                                        placement='right'
-                                        visible={planHintOpen}
-                                        onVisibleChange={handleChangePlanHintOpen}
-                                    >
-                                        <OutlineMenualt2Icon />
-                                    </Tooltip>
-                                )}
-                            </div>
-                        </div>
-
-                        <div
-                            className={classNames(styles["plan-content"], {
-                                [styles["plan-content-hidden"]]: !planExpand
-                            })}
-                        >
-                            {uiPlan ? (
-                                planContent
-                            ) : (
-                                <div className={styles["loading"]}>{execute ? "获取任务列表中..." : "无任务列表"}</div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                <div className={styles["chat-wrapper"]}>
-                    <div className={styles["chat-answer"]}>
-                        {!activeID ? (
-                            <AIAgentEmpty />
-                        ) : (
-                            activeChat && (
-                                <AIAgentChat
-                                    chatInfo={activeChat}
-                                    consumption={consumption}
-                                    activeStream={activeStream}
-                                    streams={uiStreams}
+                                <AIChatLeftSide
+                                    expand={leftExpand}
+                                    setExpand={setLeftExpand}
+                                    tasks={uiPlan}
+                                    pressure={uiPressure}
+                                    cost={uiFirstCost}
                                 />
-                            )
-                        )}
-                    </div>
+                                <div className={styles["open-wrapper"]}>
+                                    <YakitButton
+                                        type='text2'
+                                        icon={<OutlineOpenIcon />}
+                                        onClick={() => setLeftExpand(true)}
+                                    />
+                                </div>
+                            </div>
 
-                    <div className={styles["chat-bottom"]}>
-                        <div className={styles["bottom-box"]}>
-                            {execute || activeID ? (
-                                <div className={styles["review-wrapper"]}>
-                                    <div className={styles["review-content"]}>
-                                        {uiReview ? (
-                                            <div className={styles["task-list"]}>
-                                                {reviewElement}
-                                                {reviewOperations}
-                                            </div>
-                                        ) : (
-                                            <div className={styles["review-loading"]}>
-                                                {execute ? "思考中..." : "任务已完成, 请点击右下角+号创建新任务"}
-                                            </div>
-                                        )}
+                            <div className={styles["content-list"]}>
+                                <div ref={chatBody} className={styles["chat-wrapper"]}>
+                                    {activeChat && (
+                                        <AIAgentChatBody
+                                            info={activeChat}
+                                            consumption={uiConsumption}
+                                            tasks={uiPlan}
+                                            activeStream={activeStream}
+                                            streams={uiStreams}
+                                        />
+                                    )}
+                                </div>
 
-                                        {/* <div className={styles["list-item"]}>
-                                            <div className={styles["item-header"]}>任务更新: </div>
-                                            <div className={classNames(styles["item-task-li"], styles["li-style"])}>
-                                                <div className={styles["name"]}>任务名: {task.name}</div>
-                                                <div className={styles["goal"]}>任务内容: {task.goal}</div>
-                                            </div>
-                                            <div className={classNames(styles["item-task-li"], styles["li-style"])}>
-                                                <div className={styles["name"]}>
-                                                    状态: {task.executed ? "结束" : "进行中"}
+                                <div className={styles["content-review"]}>
+                                    {showReview && (
+                                        <div className={styles["review-box"]} style={{maxHeight: chatBodyHeight - 60}}>
+                                            <div
+                                                className={classNames(styles["review-border-shadow"], {
+                                                    [styles["review-mini"]]: !reviewExpand
+                                                })}
+                                            >
+                                                <div className={styles["review-wrapper"]}>
+                                                    {reviewInfo.current && (
+                                                        <AIAgentChatReview
+                                                            expand={reviewExpand}
+                                                            setExpand={setReviewExpand}
+                                                            review={reviewInfo.current}
+                                                            onSend={handleSend}
+                                                            onSendAIRequire={handleSendAIRequire}
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
-                                        </div> */}
-                                    </div>
-
-                                    <div className={styles["review-stop"]}>
-                                        {execute ? (
-                                            <YakitButton
-                                                loading={btnLoading}
-                                                icon={<SolidStopIcon />}
-                                                colors='danger'
-                                                onClick={onBtnStop}
-                                            />
-                                        ) : (
-                                            <YakitButton icon={<OutlinePlusIcon />} onClick={handleNew} />
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className={styles["question-wrapper"]}>
-                                    <Input.TextArea
-                                        className={styles["question-textArea"]}
-                                        bordered={false}
-                                        placeholder='请下发任务, AI-Agent将执行(shift + enter 换行)'
-                                        value={question}
-                                        autoSize={true}
-                                        onChange={(e) => setQuestion(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            const keyCode = e.keyCode ? e.keyCode : e.key
-                                            const shiftKey = e.shiftKey
-                                            if (keyCode === 13 && shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                setQuestion(`${question}\n`)
-                                            }
-                                            if (keyCode === 13 && !shiftKey) {
-                                                e.stopPropagation()
-                                                e.preventDefault()
-                                                onBtnSubmit()
-                                            }
-                                        }}
-                                    />
-
-                                    <div className={styles["question-footer"]}>
-                                        {/* <div
-                                            className={classNames(styles["single-btn"], {
-                                                [styles["single-btn-active"]]: autoExec
-                                            })}
-                                            onClick={handleSetAutoExec}
-                                        >
-                                            直接执行,不询问
                                         </div>
-                                        <div className={styles["footer-divider"]}></div> */}
-                                        <YakitButton
-                                            disabled={!execute && !isQuestion}
-                                            loading={btnLoading}
-                                            icon={<SolidPaperairplaneIcon />}
-                                            onClick={onBtnSubmit}
-                                        />
-                                    </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
 
-                {activeID && (
-                    <div className={styles["chat-log-wrapper"]}>
-                        <Tooltip
-                            overlayStyle={{paddingRight: 8}}
-                            title={"展开日志"}
-                            placement='left'
-                            visible={logHintOpen}
-                            onVisibleChange={handleChangeLogHintOpen}
-                        >
-                            <div
-                                className={classNames(styles["expand-btn"], {[styles["expand-btn-hidden"]]: logExpand})}
-                                onClick={hadnleLogShow}
-                            >
-                                <OutlineClipboardlistIcon />
-                            </div>
-                        </Tooltip>
-
-                        <div className={classNames(styles["chat-log"], {[styles["chat-log-hidden"]]: !logExpand})}>
-                            <div className={styles["header-wrapper"]}>
-                                <div className={styles["header-title"]}>日志</div>
-
-                                <Tooltip
-                                    overlayStyle={{paddingRight: 8}}
-                                    title={"收起日志"}
-                                    placement='left'
-                                    visible={logHintCancel}
-                                    onVisibleChange={handleChangeLogHintCancel}
-                                >
-                                    <div
-                                        className={styles["icon-btn"]}
-                                        onClick={(e) => {
-                                            e.stopPropagation()
-                                            hadnleLogShow()
-                                        }}
-                                    >
-                                        <OutlineChevrondoublerightIcon />
-                                    </div>
-                                </Tooltip>
-                            </div>
-
-                            <div className={styles["log-content"]}>
-                                <AIChatLogs logs={uiLogs} />
+                                <div className={styles["chat-footer"]}>
+                                    {execute ? (
+                                        <YakitButton
+                                            className={styles["rounded-btn"]}
+                                            colors='danger'
+                                            icon={<OutlineLoadingIcon className='icon-rotate-animation' />}
+                                            onClick={handleStopChat}
+                                        >
+                                            中止
+                                        </YakitButton>
+                                    ) : (
+                                        <YakitButton
+                                            className={styles["rounded-btn"]}
+                                            icon={<OutlinePlusIcon />}
+                                            onClick={() => handleNewChat()}
+                                        >
+                                            新开对话
+                                        </YakitButton>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                ) : (
+                    <AIAgentEmpty question={question} setQuestion={setQuestion} onSearch={handleStartChat} />
                 )}
             </div>
 
-            <YakitModal
+            <div className={classNames(styles["server-chat-log"], {[styles["server-chat-log-hidden"]]: !logExpand})}>
+                <AIChatLogs logs={uiLogs} onClose={hadnleLogShow} />
+            </div>
+
+            <YakitHint
                 getContainer={wrapper.current || undefined}
-                style={{bottom: 0, right: 10, top: "unset", position: "absolute"}}
-                maskStyle={{backgroundColor: "rgba(0, 0, 0, 0.15)"}}
-                type='white'
-                title='审阅'
-                closable={false}
-                keyboard={false}
-                maskClosable={false}
-                okButtonProps={{style: {display: "none"}}}
-                cancelText='隐藏'
-                visible={showReview}
-                onCancel={() => setShowReview(false)}
-            >
-                <div className={styles["task-list"]}>
-                    {reviewElement}
-                    {hintReviewOperations}
-                </div>
-            </YakitModal>
-        </div>
-    )
-})
-
-/** chat-日志 */
-export const AIChatLogs: React.FC<AIChatLogsProps> = memo((props) => {
-    const {logs} = props
-
-    const wrapper = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        if (wrapper.current) {
-            const {scrollHeight} = wrapper.current
-            const {height} = wrapper.current.getBoundingClientRect()
-            if (height < scrollHeight) {
-                wrapper.current.scrollTop = scrollHeight
-            }
-        }
-    }, [logs])
-
-    return (
-        <div ref={wrapper} className={styles["ai-chat-logs"]}>
-            {logs.map((item, index) => {
-                const {level, message} = item
-                return (
-                    <div
-                        key={index}
-                        className={classNames(styles["log-item"], {
-                            [styles["warning-log"]]: level === "warning",
-                            [styles["error-log"]]: level === "error"
-                        })}
-                    >
-                        • {message}
-                    </div>
-                )
-            })}
+                wrapClassName={styles["server-chat-hint"]}
+                title={"打开新的 AIAgent 对话"}
+                content={`forgeName : ${forgeName.current}`}
+                visible={hintID.current === activeID && redirectForgeShow}
+                okButtonText='立即停止'
+                okButtonProps={{loading: loading}}
+                onOk={() => handleHintShowCallback(true)}
+                cancelButtonText='忽略'
+                cancelButtonProps={{loading: loading}}
+                onCancel={() => handleHintShowCallback(false)}
+            />
         </div>
     )
 })

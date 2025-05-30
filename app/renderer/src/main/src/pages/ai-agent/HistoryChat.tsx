@@ -8,22 +8,32 @@ import {AIChatInfo} from "./type/aiChat"
 import {EditChatNameModal} from "./UtilModals"
 import {YakitAIAgentPageID} from "./defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
-import {OutlinePencilaltIcon, OutlineTrashIcon} from "@/assets/icon/outline"
-import {formatTime} from "./utils"
+import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
 export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
-    const {} = props
+    const {onNewChat} = props
 
     const {chats, activeChat} = useStore()
     const {setChats, setActiveChat} = useDispatcher()
     const activeID = useMemo(() => {
         return activeChat?.id || ""
     }, [activeChat])
+
+    const [searchShow, setSearchShow] = useState(false)
+    const [search, setSearch] = useState("")
+
+    const showHistory = useMemo(() => {
+        if (!search) return chats
+        return chats.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+    }, [chats, search])
 
     const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
         setActiveChat && setActiveChat(info)
@@ -76,75 +86,100 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
 
     return (
         <div className={styles["history-chat"]}>
-            {chats.map((item) => {
-                const {id, name, time} = item
-                const delStatus = delLoading.includes(id)
-                return (
-                    <div
-                        key={id}
-                        className={classNames(styles["history-item"], {
-                            [styles["history-item-active"]]: activeID === id
-                        })}
-                        onClick={() => handleSetActiveChat(item)}
+            <div className={styles["header"]}>
+                <div className={styles["header-title"]}>
+                    历史会话
+                    <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
+                </div>
+
+                <div className={styles["header-extra"]}>
+                    <YakitPopover
+                        trigger='click'
+                        overlayStyle={{paddingTop: 2}}
+                        placement='bottom'
+                        content={
+                            <YakitInput.Search allowClear={true} placeholder='请输入关键词' onSearch={setSearch} />
+                        }
+                        visible={searchShow}
+                        onVisibleChange={setSearchShow}
                     >
-                        <div className={styles["item-info"]}>
-                            <div className={styles["item-icon"]}>
-                                <SolidChatalt2Icon />
-                            </div>
-                            <div className={styles["info-wrapper"]}>
-                                <div
-                                    className={classNames(styles["info-title"], "yakit-content-single-ellipsis")}
-                                    title={name}
-                                >
-                                    {name}
+                        <YakitButton type='text2' icon={<OutlineSearchIcon />} />
+                    </YakitPopover>
+
+                    <YakitButton icon={<OutlinePlussmIcon />} onClick={onNewChat} />
+                </div>
+            </div>
+
+            <div className={styles["content"]}>
+                <div className={styles["history-chat-list"]}>
+                    {showHistory.map((item) => {
+                        const {id, name, time} = item
+                        const delStatus = delLoading.includes(id)
+                        return (
+                            <div
+                                key={id}
+                                className={classNames(styles["history-item"], {
+                                    [styles["history-item-active"]]: activeID === id
+                                })}
+                                onClick={() => handleSetActiveChat(item)}
+                            >
+                                <div className={styles["item-info"]}>
+                                    <div className={styles["item-icon"]}>
+                                        <SolidChatalt2Icon />
+                                    </div>
+                                    <div
+                                        className={classNames(styles["info-title"], "yakit-content-single-ellipsis")}
+                                        title={name}
+                                    >
+                                        {name}
+                                    </div>
                                 </div>
-                                <div className={styles["info-time"]}>{formatTime(time)}</div>
+
+                                <div className={styles["item-extra"]}>
+                                    <Tooltip
+                                        title={"编辑对话标题"}
+                                        placement='topRight'
+                                        overlayClassName={styles["history-item-extra-tooltip"]}
+                                    >
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlinePencilaltIcon />}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleOpenEditName(item)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                    <Tooltip
+                                        title={"删除任务"}
+                                        placement='topRight'
+                                        overlayClassName={styles["history-item-extra-tooltip"]}
+                                    >
+                                        <YakitButton
+                                            loading={delStatus}
+                                            type='text2'
+                                            icon={<OutlineTrashIcon className={styles["del-icon"]} />}
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                handleDeleteChat(item)
+                                            }}
+                                        />
+                                    </Tooltip>
+                                </div>
                             </div>
-                        </div>
+                        )
+                    })}
 
-                        <div className={styles["item-extra"]}>
-                            <Tooltip
-                                title={"编辑对话标题"}
-                                placement='topRight'
-                                overlayClassName={styles["history-item-extra-tooltip"]}
-                            >
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlinePencilaltIcon />}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleOpenEditName(item)
-                                    }}
-                                />
-                            </Tooltip>
-                            <Tooltip
-                                title={"删除任务"}
-                                placement='topRight'
-                                overlayClassName={styles["history-item-extra-tooltip"]}
-                            >
-                                <YakitButton
-                                    loading={delStatus}
-                                    type='text2'
-                                    icon={<OutlineTrashIcon />}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleDeleteChat(item)
-                                    }}
-                                />
-                            </Tooltip>
-                        </div>
-                    </div>
-                )
-            })}
-
-            {editInfo.current && (
-                <EditChatNameModal
-                    getContainer={document.getElementById(YakitAIAgentPageID) || undefined}
-                    info={editInfo.current}
-                    visible={editShow}
-                    onCallback={handleCallbackEditName}
-                />
-            )}
+                    {editInfo.current && (
+                        <EditChatNameModal
+                            getContainer={document.getElementById(YakitAIAgentPageID) || undefined}
+                            info={editInfo.current}
+                            visible={editShow}
+                            onCallback={handleCallbackEditName}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
     )
 })
