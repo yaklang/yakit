@@ -51,7 +51,7 @@ const initFileTreeData = (list: RequestYakURLResponse, path) => {
         return {
             parent: path,
             name: item.VerboseName,
-            path: `${path.replace(/\/+$/, "")}\\${item.VerboseName}`,
+            path: item.Path,
             isFolder,
             icon,
             isLeaf,
@@ -63,25 +63,31 @@ const initFileTreeData = (list: RequestYakURLResponse, path) => {
 /**
  * @name 文件树获取
  */
-export const grpcFetchFileTree: (path: string) => Promise<FileNodeMapProps[]> = (path) => {
+export const grpcFetchFileTree: (obj: {jarPath: string; innerPath: string}) => Promise<FileNodeMapProps[]> = ({
+    jarPath,
+    innerPath
+}) => {
     return new Promise(async (resolve, reject) => {
         // local
         const params = {
             Method: "GET",
             Url: {
-                FromRaw: path,
-                Schema: "",
+                FromRaw: "",
+                Schema: "javadec",
                 User: "",
                 Pass: "",
                 Location: "",
-                Path: "",
-                Query: []
+                Path: "/jar-aifix",
+                Query: [
+                    {Key: "jar", Value: jarPath},
+                    {Key: "dir", Value: innerPath}
+                ]
             }
         }
 
         try {
             const res: RequestYakURLResponse = await ipcRenderer.invoke("RequestYakURL", params)
-            const data: FileNodeMapProps[] = initFileTreeData(res, path)
+            const data: FileNodeMapProps[] = initFileTreeData(res, innerPath)
             // console.log("文件树获取---", path, res)
             resolve(data)
         } catch (error) {

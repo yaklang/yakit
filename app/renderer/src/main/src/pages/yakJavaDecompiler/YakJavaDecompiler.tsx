@@ -43,7 +43,7 @@ export interface YakJavaDecompilerProps {}
 export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
-    const [projectName, setProjectName] = useState<string>()
+    const [projectName, setProjectName,getProjectName] = useGetState<string>()
     const [areaInfo, setAreaInfo] = useState<AreaInfoProps[]>([])
     const [activeFile, setActiveFile] = useState<FileDetailInfo>()
     const [runnerTabsId, setRunnerTabsId] = useState<string>()
@@ -51,20 +51,27 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
     const [isUnShow, setUnShow] = useState<boolean>(false)
     const [active, setActive] = useGetState<LeftSideType>("file-tree")
 
-    const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
-        grpcFetchFileTree(path)
+    const handleFetchFileList = useMemoizedFn((path, callback: (value: FileNodeMapProps[]) => any) => {
+        const rootPath = getProjectName()
+        if(!rootPath) {
+            callback([])
+            return
+        }
+        grpcFetchFileTree({
+            jarPath:rootPath,
+            innerPath:path
+        })
             .then((res) => {
-                if (callback) callback(res)
+                callback(res)
             })
             .catch((error) => {
                 yakitNotify("error", `获取文件项目失败: ${error}`)
-                if (callback) callback([])
+                callback([])
             })
     })
 
     // 加载下一层
     const handleFileLoadData = useMemoizedFn((path: string) => {
-        const childArr = getMapFolderDetail(path)
         return new Promise((resolve, reject) => {
             // 校验其子项是否存在
             const childArr = getMapFolderDetail(path)
@@ -151,6 +158,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
         // 接口运行中 暂时拦截下一个接口请求
         if (isFetchRef.current) return
         if (fileTree.length === 0) return
+        if (!projectName) return
         const keys = getMapAllFileKey()
         const index = loadIndexRef.current
         if (!keys[index]) return
@@ -199,7 +207,7 @@ export const YakJavaDecompiler: React.FC<YakJavaDecompilerProps> = (props) => {
                 icon: FolderDefault
             }
 
-            handleFetchFileList(`javadec:///jar-aifix?jar=${rootPath}&dir=/`, (list) => {
+            handleFetchFileList("/", (list) => {
                 // 如若打开空文件夹 则不可展开
                 if (list.length === 0) {
                     node.isLeaf = true
