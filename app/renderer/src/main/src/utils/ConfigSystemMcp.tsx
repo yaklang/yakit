@@ -50,6 +50,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
             closable={false}
             centered={true}
             hiddenHeader={true}
+            bodyStyle={{padding: 0}}
         >
             <div className={styles["config-system-proxy"]}>
                 <div className={styles["config-system-proxy-heard"]}>
