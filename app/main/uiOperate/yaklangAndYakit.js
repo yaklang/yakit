@@ -1,7 +1,7 @@
-const {ipcMain, app} = require("electron")
+const { ipcMain, app } = require("electron")
 const fs = require("fs")
 const https = require("https")
-const {getLocalYaklangEngine} = require("../filePath")
+const { getLocalYaklangEngine } = require("../filePath")
 const {
     fetchLatestYakEngineVersion,
     fetchLatestYakitEEVersion,
@@ -12,8 +12,8 @@ const {
     fetchSpecifiedYakVersionHash
 } = require("../handlers/utils/network")
 const childProcess = require("child_process")
-const {testEngineAvaiableVersion} = require("../ipc")
-const {engineLogOutputFileAndUI} = require("../logFile")
+const { testEngineAvaiableVersion } = require("../ipc")
+const { engineLogOutputFileAndUI } = require("../logFile")
 
 module.exports = (win, getClient) => {
     ipcMain.handle("get-available-oss-domain", async () => {
@@ -45,7 +45,7 @@ module.exports = (win, getClient) => {
 
     /** 获取Yakit最新版本号 */
     const asyncFetchLatestYakitVersion = (params) => {
-        const {config, releaseEditionName} = params
+        const { config, releaseEditionName } = params
         return new Promise((resolve, reject) => {
             const versionFetchers = {
                 Yakit: fetchLatestYakitVersion,
@@ -109,28 +109,31 @@ module.exports = (win, getClient) => {
             const commandParams = ["get-random-port", "-type", "tcp", "-json"]
             engineLogOutputFileAndUI(win, "----- 获取启动引擎可用端口号 -----")
             engineLogOutputFileAndUI(win, `执行命令: ${getLocalYaklangEngine()} ${commandParams.join(" ")}`)
-            childProcess.execFile(getLocalYaklangEngine(), commandParams, {timeout: 5000}, (err, stdout, stderr) => {
+            childProcess.execFile(getLocalYaklangEngine(), commandParams, { timeout: 5000 }, (err, stdout, stderr) => {
                 engineLogOutputFileAndUI(win, stdout.toString("utf-8"))
                 if (err) {
-                    engineLogOutputFileAndUI(win, err.toString("utf-8"))
-                    const arr = stdout
-                        .split("\n")
-                        .map((item) => item.trim())
-                        .map((item) => {
-                            try {
-                                const match = item.match(/\[FTAL\]\s*(.*)/)[1]
-                                return match
-                            } catch (error) {
-                                return ""
+                    engineLogOutputFileAndUI(win, `err: ${stderr.toString("utf-8")}`)
+                    if (stderr) {
+                        engineLogOutputFileAndUI(win, `stderr: ${stderr.toString("utf-8")}`)
+                    }
+                    const errorTags = [/\[FTAL\]\s*(.*)/];
+                    const errors = stdout
+                        .split('\n')
+                        .map(line => line.trim())
+                        .flatMap(line => {
+                            for (const reg of errorTags) {
+                                const match = line.match(reg)
+                                if (match && match[1]) return [match[1]]
                             }
+                            return []
                         })
                         .filter(Boolean)
-                    const {name, message} = err
-                    reject(`${name}: ${message}${arr.join("\n")}`)
+                    const { name, message } = err
+                    reject(`[YakEnginePort] ${name}: ${message}${errors.join("\n")}`)
                     return
                 }
                 if (stderr) {
-                    engineLogOutputFileAndUI(win, stderr.toString("utf-8"))
+                    engineLogOutputFileAndUI(win, `stderr: ${stderr.toString("utf-8")}`)
                     reject(stderr)
                     return
                 }
@@ -140,15 +143,12 @@ module.exports = (win, getClient) => {
                         .split("\n")
                         .map((item) => item.trim())
                         .map((item) => {
-                            try {
-                                // 后端定义的封装格式，修改需与后端确认
-                                const match = item.match(
-                                    /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
-                                )[1]
-                                return match
-                            } catch (error) {
-                                return ""
-                            }
+                            // 后端定义的封装格式，修改需与后端确认
+                            const val = item.match(
+                                /^<f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>({.*})<\/f345213fb48cc9370b2abc97429f8e6e98d07fa0bad8577626af6bc8067c1d18>$/
+                            ) || []
+                            const match = val[1]
+                            return match
                         })
                         .filter(Boolean)
                     if (arr.length === 0) {
@@ -162,6 +162,7 @@ module.exports = (win, getClient) => {
                     engineLogOutputFileAndUI(win, `----- 获取启动引擎可用端口成功: ${result.port} -----`)
                     resolve(result.port)
                 } catch (parseError) {
+                    engineLogOutputFileAndUI(win, '[YakEnginePort] 解析stdout异常: ' + parseError)
                     reject(parseError)
                 }
             })

@@ -80,20 +80,25 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
                     ])
                     setYakitStatus("engine-error")
-                }
-                // 缓存端口存在
-                if (!!cachePort) {
-                    await grpcDetermineAdaptedVersionEngine(cachePort, true)
-                        .then((res) => {
-                            localPort.current = res ? cachePort : avaPort
-                        })
-                        .catch(() => {
-                            localPort.current = cachePort
-                        })
-                }
-                // 缓存端口不存在，可用端口存在
-                if (!cachePort && !!avaPort) {
+                } else if (cachePort) {
+                    try {
+                        const res = await grpcDetermineAdaptedVersionEngine(cachePort, true)
+                        localPort.current = res ? cachePort : avaPort
+                    } catch {
+                        localPort.current = cachePort
+                    }
+                } else if (avaPort) {
                     localPort.current = avaPort
+                }
+
+                // grpcDetermineAdaptedVersionEngine res 为 false -》取随机端口，但是随机端口没有获取到的情况
+                if (localPort.current === 0) {
+                    continueExe = false
+                    setLog([
+                        `获取可用端口失败: ${err}`,
+                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
+                    ])
+                    setYakitStatus("engine-error")
                 }
             } catch (error) {
                 if (avaPort) {
@@ -428,7 +433,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             setVersionAbnormalLoading(true)
             if (buildInYak.current) {
                 ipcRenderer
-                    .invoke("InitBuildInEngine", {})
+                    .invoke("RestoreEngineAndPlugin", {})
                     .then(() => {
                         info(`解压内置引擎成功`)
                         setVersionAbnormalVisible(false)

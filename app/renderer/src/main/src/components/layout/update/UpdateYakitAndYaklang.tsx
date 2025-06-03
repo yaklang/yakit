@@ -297,7 +297,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
 
         setUpdateLoading(true)
         ipcRenderer
-            .invoke("InitBuildInEngine", {})
+            .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 info(`解压内置引擎成功`)
                 onCallback(true)

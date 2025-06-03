@@ -1,4 +1,4 @@
-const {ipcMain, shell} = require("electron")
+const { ipcMain, shell } = require("electron")
 const childProcess = require("child_process")
 const process = require("process")
 const path = require("path")
@@ -20,10 +20,10 @@ const {
     loadExtraFilePath,
     yakitInstallDir
 } = require("../filePath")
-const {downloadYakitEE, downloadYakitCommunity, downloadYakEngine, getDownloadUrl} = require("./utils/network")
-const {engineCancelRequestWithProgress, yakitCancelRequestWithProgress} = require("./utils/requestWithProgress")
-const {getCheckTextUrl} = require("../handlers/utils/network")
-const {engineLogOutputFileAndUI} = require("../logFile")
+const { downloadYakitEE, downloadYakitCommunity, downloadYakEngine, getDownloadUrl } = require("./utils/network")
+const { engineCancelRequestWithProgress, yakitCancelRequestWithProgress } = require("./utils/requestWithProgress")
+const { getCheckTextUrl } = require("../handlers/utils/network")
+const { engineLogOutputFileAndUI } = require("../logFile")
 
 const userChromeDataDir = path.join(YakitProjectPath, "chrome-profile")
 const authMeta = []
@@ -31,11 +31,11 @@ const authMeta = []
 const initMkbaseDir = async () => {
     return new Promise((resolve, reject) => {
         try {
-            fs.mkdirSync(remoteLinkDir, {recursive: true})
-            fs.mkdirSync(basicDir, {recursive: true})
-            fs.mkdirSync(userChromeDataDir, {recursive: true})
-            fs.mkdirSync(yaklangEngineDir, {recursive: true})
-            fs.mkdirSync(codeDir, {recursive: true})
+            fs.mkdirSync(remoteLinkDir, { recursive: true })
+            fs.mkdirSync(basicDir, { recursive: true })
+            fs.mkdirSync(userChromeDataDir, { recursive: true })
+            fs.mkdirSync(yaklangEngineDir, { recursive: true })
+            fs.mkdirSync(codeDir, { recursive: true })
 
             try {
                 console.info("Start checking bins/resources")
@@ -82,7 +82,7 @@ const loadSecrets = () => {
                 caPem: i["caPem"] || ""
             })
         })
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function saveSecret(name, host, port, tls, password, caPem) {
@@ -106,7 +106,7 @@ const isWindows = process.platform === "win32"
 const saveAllSecret = (authInfos) => {
     try {
         fs.unlinkSync(remoteLinkFile)
-    } catch (e) {}
+    } catch (e) { }
 
     const authFileStr = JSON.stringify([
         ...authInfos.filter((v, i, arr) => {
@@ -149,7 +149,7 @@ module.exports = {
     },
     register: (win, getClient) => {
         ipcMain.handle("save-yakit-remote-auth", async (e, params) => {
-            let {name, host, port, tls, caPem, password} = params
+            let { name, host, port, tls, caPem, password } = params
             name = name || `${host}:${port}`
             saveAllSecret([
                 ...authMeta.filter((i) => {
@@ -175,7 +175,7 @@ module.exports = {
             return remoteLinkDir
         })
 
-        class YakVersionEmitter extends EventEmitter {}
+        class YakVersionEmitter extends EventEmitter { }
 
         const yakVersionEmitter = new YakVersionEmitter()
         let isFetchingVersion = false
@@ -221,12 +221,19 @@ module.exports = {
 
                 console.info("YAK-VERSION process is executing...")
                 isFetchingVersion = true
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout) => {
+                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], { timeout: 5000 }, (err, stdout, stderr) => {
                     engineLogOutputFileAndUI(win, `${stdout.toString("utf-8")}`)
                     if (err) {
                         engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
+                        if (stderr) {
+                            engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
+                        }
                         yakVersionEmitter.emit("version", err, null)
                         isFetchingVersion = false
+                        return
+                    }
+                    if (stderr) {
+                        engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
                         return
                     }
                     // const version = stdout.replaceAll("yak version ()", "").trim();
@@ -268,22 +275,28 @@ module.exports = {
                         return
                     }
 
-                    childProcess.execFile(commandPath, ["-v"], {timeout: 20000}, (error, stdout, stderr) => {
+                    childProcess.execFile(commandPath, ["-v"], { timeout: 20000 }, (error, stdout, stderr) => {
                         if (error) {
                             let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
                             if (error.code === "ENOENT") {
-                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`
+                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
                             } else if (error.killed) {
-                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`
+                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
                             } else if (error.signal) {
                                 errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
                             } else if (error.code === "ETIMEDOUT") {
-                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nerror: ${error.message}\nStderr: ${stderr}`
                             }
 
                             engineLogOutputFileAndUI(win, `${errorMessage}`)
 
                             reject(new Error(errorMessage))
+                            return
+                        }
+
+                        if (stderr) {
+                            engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
+                            reject(stderr)
                             return
                         }
 
@@ -304,7 +317,7 @@ module.exports = {
                 )
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {}
+                } catch (e) { }
                 await downloadYakEngine(
                     version,
                     dest,
@@ -372,7 +385,7 @@ module.exports = {
         // asyncDownloadLatestYakit wrapper
         async function asyncDownloadLatestYakit(version, type) {
             return new Promise(async (resolve, reject) => {
-                const {isEnterprise, isIRify} = type
+                const { isEnterprise, isIRify } = type
                 const IRifyCE = isIRify && !isEnterprise
                 const IRifyEE = isIRify && isEnterprise
                 const YakitCE = !isIRify && !isEnterprise
@@ -394,11 +407,11 @@ module.exports = {
                     downloadUrl = await getDownloadUrl(version, "YakitCE")
                 }
                 // 可能存在中文的下载文件夹，就判断下Downloads文件夹是否存在，不存在则新建一个
-                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, {recursive: true})
+                if (!fs.existsSync(yakitInstallDir)) fs.mkdirSync(yakitInstallDir, { recursive: true })
                 const dest = path.join(yakitInstallDir, path.basename(downloadUrl))
                 try {
                     fs.unlinkSync(dest)
-                } catch (e) {}
+                } catch (e) { }
 
                 console.info(`start to download yakit from ${downloadUrl} to ${dest}`)
                 // 企业版下载
@@ -448,7 +461,7 @@ module.exports = {
         })
 
         ipcMain.handle("update-enpritrace-info", async () => {
-            return await {version: getYakitPlatform()}
+            return await { version: getYakitPlatform() }
         })
 
         ipcMain.handle("get-windows-install-dir", async (e) => {
@@ -653,9 +666,6 @@ module.exports = {
                 })
             })
         }
-        ipcMain.handle("InitBuildInEngine", async (e, params) => {
-            return await asyncInitBuildInEngine(params)
-        })
 
         // 尝试初始化数据库
         ipcMain.handle("InitCVEDatabase", async (e) => {
@@ -789,7 +799,7 @@ module.exports = {
 
                 // 确保输出文件夹存在，不存在则进行创建
                 if (!fs.existsSync(targetPath)) {
-                    fs.mkdirSync(targetPath, {recursive: true})
+                    fs.mkdirSync(targetPath, { recursive: true })
                 }
 
                 const zipHandler = new zip({

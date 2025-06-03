@@ -863,7 +863,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
     const initBuildInEngine = () => {
         ipcRenderer
-            .invoke("InitBuildInEngine", {})
+            .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 yakitNotify("info", "解压内置引擎成功")
                 showYakitModal({
