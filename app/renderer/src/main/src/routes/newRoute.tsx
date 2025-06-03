@@ -21,7 +21,6 @@ import {TrustListPage} from "@/pages/loginOperationMenu/TrustListPage"
 import {ChaosMakerPage} from "@/pages/chaosmaker/ChaosMaker"
 import {ScreenRecorderPage} from "@/pages/screenRecorder/ScreenRecorderPage"
 import {CVEViewer} from "@/pages/cve/CVEViewer"
-import {JavaDecompiler} from "@/pages/javaDecompiler/JavaDecompiler"
 import { YakJavaDecompiler } from "@/pages/yakJavaDecompiler/YakJavaDecompiler";
 import {PageLoading} from "./PageLoading"
 import {
@@ -258,7 +257,6 @@ export const YakitRouteToPageInfo: Record<YakitRoute, {label: string; describe?:
     "modify-notepad": {label: `编辑${getNotepadNameByEdition()}`},
     "yakrunner-audit-hole": {label: "审计漏洞"},
     "system-config": {label: "系统配置"},
-    "java-decompiler": {label: "Java 反编译"},
     "yak-java-decompiler": {label: "Java 反编译"},
     "shortcut-key": {label: "快捷键设置"}
 }
@@ -302,7 +300,6 @@ export const SingletonPageRoute: YakitRoute[] = [
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
     YakitRoute.System_Config,
-    YakitRoute.Java_Decompiler,
     YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey
 ]
@@ -346,7 +343,6 @@ export const NoPaddingRoute: YakitRoute[] = [
     YakitRoute.Modify_Notepad,
     YakitRoute.Notepad_Manage,
     YakitRoute.YakRunner_Audit_Hole,
-    YakitRoute.Java_Decompiler,
     YakitRoute.Yak_Java_Decompiler,
     YakitRoute.ShortcutKey
 ]
@@ -627,8 +623,6 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
             return <YakRunnerAuditHole />
         case YakitRoute.System_Config:
             return <SystemConfig />
-        case YakitRoute.Java_Decompiler:
-            return <JavaDecompiler />
         case YakitRoute.Yak_Java_Decompiler:
             return <YakJavaDecompiler />
         case YakitRoute.ShortcutKey:
@@ -773,6 +767,10 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {
                       page: YakitRoute.YakRunner_Audit_Hole,
                       ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]
+                  },
+                  {
+                      page: YakitRoute.Yak_Java_Decompiler,
+                      ...YakitRouteToPageInfo[YakitRoute.Yak_Java_Decompiler]
                   }
               ]
           },

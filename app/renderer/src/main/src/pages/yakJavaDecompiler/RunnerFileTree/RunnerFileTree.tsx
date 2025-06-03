@@ -2,7 +2,7 @@ import React, {memo, useEffect, useMemo, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {OpenedFileProps, RunnerFileTreeProps} from "./RunnerFileTreeType"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlinePluscircleIcon, OutlinePositionIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon} from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import classNames from "classnames"
@@ -21,8 +21,6 @@ import {FileTree} from "../FileTree/FileTree"
 import {FileDetailInfo} from "../RunnerTabs/RunnerTabsType"
 import {FileNodeProps, FileTreeListProps} from "../FileTree/FileTreeType"
 import {failed, yakitNotify} from "@/utils/notification"
-import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
-import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {AuditModalFormModal} from "@/pages/yakRunnerAuditCode/AuditCode/AuditCode"
@@ -133,16 +131,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 label: "关闭 JAR",
                 disabled: !projectName
             },
-            {
-                key: "downloadZip",
-                label: "下载为 ZIP",
-                disabled: !projectName
-            },
-            {
-                key: "importPorject",
-                label: "导入为项目",
-                disabled: !projectName
-            },
+            // {
+            //     key: "downloadZip",
+            //     label: "下载为 ZIP",
+            //     disabled: !projectName
+            // },
             {
                 key: "importPorjectAndCompile",
                 label: "导入并编译",
@@ -188,28 +181,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             // setRuntimeId(rId)
         }
     })
-    const importProject = useMemoizedFn(() => {
-        if (!projectName) {
-            failed("没有选择 JAR 文件")
-            return
-        }
-        const requestParams: DebugPluginRequest = {
-            Code: "",
-            PluginType: "yak",
-            Input: "",
-            HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-            ExecParams: [
-                {
-                    Key: "programName",
-                    Value: projectName
-                }
-            ],
-            PluginName: "SSA 项目重编译"
-        }
-        apiDebugPlugin({params: requestParams, token: tokenRef.current}).then(() => {
-            debugPluginStreamEvent.start()
-        })
-    })
 
     const importProjectAndCompile = useMemoizedFn(() => {
         setShowCompileModal(true)
@@ -232,9 +203,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 break
             case "downloadZip":
                 downloadAsZipFun()
-                break
-            case "importPorject":
-                importProject()
                 break
             case "importPorjectAndCompile":
                 importProjectAndCompile()

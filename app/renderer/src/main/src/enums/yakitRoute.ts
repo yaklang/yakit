@@ -99,8 +99,6 @@ export enum YakitRoute {
 
     // 快捷键设置
     ShortcutKey = "shortcut-key",
-    /** Java 反编译 */
-    Java_Decompiler = "java-decompiler",
     /** 新Java 反编译 */
     Yak_Java_Decompiler = "yak-java-decompiler"
 }
