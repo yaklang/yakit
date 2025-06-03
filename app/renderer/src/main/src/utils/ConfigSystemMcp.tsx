@@ -6,8 +6,9 @@ import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineXIcon} from "@/assets/icon/outline"
-import {mcpStreamHooks} from "@/hook/useMcp/useMcp"
+import {localMcpDefalutUrl, mcpStreamHooks, remoteMcpDefalutUrl} from "@/hook/useMcp/useMcp"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import {SystemInfo} from "@/constants/hardware"
 import styles from "./ConfigSystemProxy.module.scss"
 interface ConfigMcpModalProps {
     onClose: () => void
@@ -33,6 +34,13 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         mcpStreamEvent.onStart()
     })
 
+    const onCloseModal = useMemoizedFn(() => {
+        if (!enableMcp) {
+            mcpStreamEvent.onSetMcpUrl(SystemInfo.mode === "remote" ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+        }
+        onClose()
+    })
+
     return (
         <YakitModal
             visible={true}
@@ -46,7 +54,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
             <div className={styles["config-system-proxy"]}>
                 <div className={styles["config-system-proxy-heard"]}>
                     <div className={styles["config-system-proxy-title"]}>Yak Mcp</div>
-                    <OutlineXIcon className={styles["close-icon"]} onClick={onClose} />
+                    <OutlineXIcon className={styles["close-icon"]} onClick={onCloseModal} />
                 </div>
                 <div
                     className={classNames(styles["config-system-proxy-status-success"], {
@@ -77,7 +85,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                         )}
                     </Form.Item>
                     <div className={styles["config-system-proxy-btns"]}>
-                        <YakitButton type='outline2' size='large' onClick={onClose}>
+                        <YakitButton type='outline2' size='large' onClick={onCloseModal}>
                             取消
                         </YakitButton>
                         {enableMcp ? (

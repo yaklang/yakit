@@ -33,12 +33,17 @@ export interface StartMcpServerResponse {
     ServerUrl: string
 }
 
+export const remoteMcpDefalutUrl = "0.0.0.0:11432"
+export const localMcpDefalutUrl = "127.0.0.1:11432"
+
 interface useMcpHooks {}
 export default function useMcpStream(props: useMcpHooks) {
     const [mcpToken, setMcpToken] = useState<string>(randomString(40))
     const [mcpCurrent, setMcpCurrent] = useState<StartMcpServerResponse | undefined>(undefined)
     const [mcpServerUrl, setMcpServerUrl] = useState<string>("")
-    const [mcpUrl, setMcpUrl] = useState<string>(SystemInfo.mode === "remote" ? "0.0.0.0:11432" : "127.0.0.1:11432")
+    const [mcpUrl, setMcpUrl] = useState<string>(
+        SystemInfo.mode === "remote" ? remoteMcpDefalutUrl : localMcpDefalutUrl
+    )
 
     useEffect(() => {
         ipcRenderer.on(`${mcpToken}-data`, async (_, data: StartMcpServerResponse) => {
@@ -100,7 +105,7 @@ export default function useMcpStream(props: useMcpHooks) {
             Port: port,
             EnableAll: true
         }
-        
+
         const token = randomString(40)
         setMcpToken(token)
         ipcRenderer.invoke("StartMcpServer", params, token).catch((err) => {
