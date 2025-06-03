@@ -67,6 +67,7 @@ import {shallow} from "zustand/shallow"
 import {useMenuHeight} from "@/store/menuHeight"
 import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {openPacketNewWindow} from "@/utils/openWebsite"
+import {useCampare} from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -154,6 +155,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         useEffect(() => {
             setType(defActiveType)
         }, [defActiveType])
+
+        const matcherValueCom = useCampare(matcherValue)
         useEffect(() => {
             setMatcher({
                 ..._.cloneDeepWith(matcherValue),
@@ -162,7 +165,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                         ? [_.cloneDeepWith(defaultMatcherItem)]
                         : _.cloneDeepWith(matcherValue.matchersList)
             })
-        }, [matcherValue, defActiveType])
+        }, [matcherValueCom, defActiveType])
         useEffect(() => {
             setExtractor({
                 ..._.cloneDeepWith(extractorValue),
