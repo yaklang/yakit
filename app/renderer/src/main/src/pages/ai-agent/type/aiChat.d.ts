@@ -43,6 +43,37 @@ export interface AIStartParams {
      * - 如果高于这个分数，转成手动。
      */
     AIReviewRiskControlScore?: number
+
+    /** 禁用任何外部工具，这就是一个纯聊天机器了 */
+    DisableToolUse?: boolean
+
+    /** 默认是3，一般是说如果远端AI不稳定（网络原因）的时候，某一次对话重试几次？ */
+    AICallAutoRetry?: number
+
+    /** 默认5，AI如果回答质量不高的时候，调大AITransactionRetry可以有效重试回答 */
+    AITransactionRetry?: number
+
+    /** 是否启用AI搜索本地工具的功能 */
+    EnableAISearchTool?: boolean
+
+    /** 是否启用AI搜索互联网搜索引擎的功能 */
+    EnableAISearchInternet?: boolean
+
+    IncludeSuggestedToolNames?: string[]
+    IncludeSuggestedToolKeywords?: string[]
+    ExcludeToolNames?: string[]
+
+    /** ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式 */
+    EnableQwenNoThinkMode?: boolean
+
+    /** 在任务规划的时候，AI 是否被允许主动问用户问题 */
+    AllowPlanUserInteract?: boolean
+
+    /** 在任务规划的时候，如果AI允许问用户问题，那么最多问几次 */
+    PlanUserInteractMaxCount?: number
+
+    /** 是否允许生成报告，默认不允许 */
+    AllowGenerateReport?: boolean
 }
 export interface AIInputEvent {
     IsStart?: boolean

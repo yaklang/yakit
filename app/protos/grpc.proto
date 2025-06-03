@@ -841,6 +841,20 @@ service Yak {
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
+  rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
+}
+
+message GetToolSetListResponse {
+  repeated ToolSetInfo ToolSetList = 1;
+  repeated ResourceSetInfo ResourceSetList = 2;
+}
+
+message ToolSetInfo {
+  string Name = 1;
+}
+
+message ResourceSetInfo {
+  string Name = 1;
 }
 
 message AIOutputEvent {
@@ -926,6 +940,18 @@ message AIStartParams {
   repeated string IncludeSuggestedToolNames = 14;
   repeated string IncludeSuggestedToolKeywords = 16;
   repeated string ExcludeToolNames = 15;
+
+  // ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式
+  bool EnableQwenNoThinkMode = 19;
+
+  // 在任务规划的时候，AI 是否被允许主动问用户问题
+  bool AllowPlanUserInteract = 20;
+
+  // 在任务规划的时候，如果AI允许问用户问题，那么最多问几次？
+  int64 PlanUserInteractMaxCount = 23;
+
+  // 是否允许生成报告，默认不允许
+  bool AllowGenerateReport = 24;
 }
 
 message StartMcpServerRequest {
