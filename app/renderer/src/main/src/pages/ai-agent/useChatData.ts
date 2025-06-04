@@ -30,6 +30,9 @@ function useChatData(params?: UseChatDataParams) {
     const {onReview, onReviewRelease, onRedirectForge} = params || {}
 
     const chatID = useRef<string>("")
+    const fetchToken = useMemoizedFn(() => {
+        return chatID.current
+    })
     const chatRequest = useRef<AIStartParams>()
     const [execute, setExecute, getExecute] = useGetSetState(false)
 
@@ -41,11 +44,12 @@ function useChatData(params?: UseChatDataParams) {
         output_consumption: 0
     })
 
-    const planData = useRef<AIChatMessage.PlanTask>()
-    const fetchPlan = useMemoizedFn(() => {
-        return cloneDeep(planData.current)
+    const planTree = useRef<AIChatMessage.PlanTask>()
+    const fetchPlanTree = useMemoizedFn(() => {
+        return cloneDeep(planTree.current)
     })
     const [plan, setPlan] = useState<AIChatMessage.PlanTask[]>([])
+
     const review = useRef<AIChatReview>()
 
     const [logs, setLogs] = useState<AIChatMessage.Log[]>([])
@@ -53,7 +57,7 @@ function useChatData(params?: UseChatDataParams) {
     const [streams, setStreams] = useState<Record<string, AIChatStreams[]>>({})
     const [activeStream, setActiveStream] = useState("")
 
-    // #region chat-任务相关方法
+    // #region 改变任务状态相关方法
     /** 更新任务状态 */
     const handleUpdateTaskState = useMemoizedFn((index: string, state: AIChatMessage.PlanTask["state"]) => {
         setPlan((old) => {
@@ -80,7 +84,7 @@ function useChatData(params?: UseChatDataParams) {
     })
     // #endregion
 
-    // #region chat-回答信息流相关方法
+    // #region 更新回答信息数据流
     const handleUpdateStream = useMemoizedFn(
         (params: {
             type: string
@@ -133,13 +137,87 @@ function useChatData(params?: UseChatDataParams) {
     )
     // #endregion
 
+    // #region review事件相关方法
+    /** 不跳过 release 的 review 类型 */
+    const noSkipReviewReleaseTypes = useRef<string[]>(["require_user_interactive"])
+    /** 是否向外触发 review 事件 */
+    const handleIsTriggerReview = useMemoizedFn(() => {
+        if (chatRequest.current && chatRequest.current.ReviewPolicy === "yolo") return false
+        return true
+    })
+
+    /** 触发review事件 */
+    const handleTriggerReview = useMemoizedFn((data: AIChatReview) => {
+        console.log(`${data.type}-----\n`, JSON.stringify(data.data))
+        review.current = cloneDeep(data)
+        const isTrigger = handleIsTriggerReview() || noSkipReviewReleaseTypes.current.includes(data.type)
+        if (isTrigger) {
+            onReview && onReview(data)
+        }
+    })
+
+    /** 自动处理 review 里的信息数据 */
+    const handleAutoRviewData = useMemoizedFn((data: AIChatReview) => {
+        if (data.type === "plan_review_require") {
+            // 如果是计划的审阅，继续执行代表任务列表已确认，可以进行数据保存
+            const tasks = data.data as AIChatMessage.PlanReviewRequire
+            planTree.current = cloneDeep(tasks.plans.root_task)
+            const sum: AIChatMessage.PlanTask[] = []
+            handleFlatAITree(sum, tasks.plans.root_task)
+            console.log("sum", sum)
+            setPlan([...sum])
+        }
+    })
+
+    /** review 自动释放逻辑 */
+    const handleReviewRelease = useMemoizedFn((id: string) => {
+        console.log("review.current", review.current, id)
+
+        if (!review.current || review.current.data.id !== id) return
+        const isTrigger = handleIsTriggerReview() || noSkipReviewReleaseTypes.current.includes(review.current.type)
+
+        handleAutoRviewData(review.current)
+        review.current = undefined
+
+        if (isTrigger) {
+            onReviewRelease && onReviewRelease(id)
+        }
+    })
+
+    /** review 界面选项触发事件 */
+    const onSend = useMemoizedFn((token: string, info: AIChatReview, params: AIInputEvent) => {
+        if (!review.current) {
+            yakitNotify("error", " 未获取到审阅信息，请停止对话并重试")
+            return
+        }
+        if (!execute) {
+            yakitNotify("warning", "AI 未执行任务，无法发送选项")
+            return
+        }
+        if (!chatID || chatID.current !== token) {
+            yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
+            return
+        }
+        if (
+            info.type === "plan_review_require" &&
+            params.InteractiveJSONInput === JSON.stringify({suggestion: "continue"})
+        ) {
+            handleAutoRviewData(info)
+        }
+        console.log("send-ai---\n", token, params)
+
+        review.current = undefined
+        ipcRenderer.invoke("send-ai-agent-chat", token, params)
+    })
+    // #endregion
+
     /** 重置所有数据 */
     const handleReset = useMemoizedFn(() => {
         setPressure([])
         setFirstCost([])
         setTotalCost([])
         setConsumption({input_consumption: 0, output_consumption: 0})
-        planData.current = undefined
+        planTree.current = undefined
         setPlan([])
         review.current = undefined
         setLogs([])
@@ -148,31 +226,6 @@ function useChatData(params?: UseChatDataParams) {
         setExecute(false)
         chatID.current = ""
         chatRequest.current = undefined
-    })
-
-    /** 是否向外触发 review 事件 */
-    const handleIsTriigerReview = useMemoizedFn(() => {
-        if (chatRequest.current && chatRequest.current.ReviewPolicy === "yolo") return false
-        return true
-    })
-    /** review 自动释放逻辑 */
-    const handleReviewRelease = useMemoizedFn((id: string) => {
-        console.log("handleReviewRelease-flag", review.current && review.current.data.id === id)
-
-        if (review.current && review.current.data.id === id) {
-            console.log('review.current.type === "plan_review_require"', review.current.type === "plan_review_require")
-
-            if (review.current.type === "plan_review_require") {
-                // 如果是计划的审阅，继续执行代表任务列表已确认，可以进行数据保存
-                const data = review.current.data as AIChatMessage.PlanReviewRequire
-                planData.current = cloneDeep(data.plans.root_task)
-                const sum: AIChatMessage.PlanTask[] = []
-                handleFlatAITree(sum, data.plans.root_task)
-                console.log("sum", sum)
-
-                setPlan([...sum])
-            }
-        }
     })
 
     const onStart = useMemoizedFn((token: string, params: AIInputEvent) => {
@@ -237,13 +290,8 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.ReviewRelease
-                    console.log("review-release", data)
-
-                    if (handleIsTriigerReview()) {
-                        onReviewRelease && onReviewRelease(data.id)
-                    } else {
-                        handleReviewRelease(data.id)
-                    }
+                    handleReviewRelease(data.id)
+                    console.log("review-release---\n", data)
                 } catch (error) {}
                 return
             }
@@ -281,52 +329,40 @@ function useChatData(params?: UseChatDataParams) {
                 } catch (error) {}
                 return
             }
+
             if (res.Type === "plan_review_require") {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.PlanReviewRequire
-                    review.current = {type: "plan_review_require", data: data}
-                    if (handleIsTriigerReview()) {
-                        onReview && onReview({type: "plan_review_require", data: data})
-                    }
+                    handleTriggerReview({type: "plan_review_require", data: data})
                 } catch (error) {}
-                console.log("plan_review_require---\n", ipcContent)
                 return
             }
             if (res.Type === "tool_use_review_require") {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.ToolUseReviewRequire
-                    review.current = {type: "tool_use_review_require", data: data}
-                    if (handleIsTriigerReview()) {
-                        onReview && onReview({type: "tool_use_review_require", data: data})
-                    }
+                    handleTriggerReview({type: "tool_use_review_require", data: data})
                 } catch (error) {}
-                console.log("tool_use_review_require---\n", ipcContent)
                 return
             }
             if (res.Type === "task_review_require") {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.TaskReviewRequire
-                    review.current = {type: "task_review_require", data: data}
-                    if (handleIsTriigerReview()) {
-                        onReview && onReview({type: "task_review_require", data: data})
-                    }
+                    handleTriggerReview({type: "task_review_require", data: data})
                 } catch (error) {}
-                console.log("task_review_require---\n", ipcContent)
                 return
             }
             if (res.Type === "require_user_interactive") {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIReviewRequire
-                    review.current = {type: "require_user_interactive", data: data}
-                    onReview && onReview({type: "require_user_interactive", data: data})
+                    handleTriggerReview({type: "require_user_interactive", data: data})
                 } catch (error) {}
-                console.log("require_user_interactive---\n", ipcContent)
                 return
             }
+
             if (res.Type === "stream") {
                 const type = res.IsSystem ? "systemStream" : res.IsReason ? "reasonStream" : "stream"
                 const nodeID = res.NodeId
@@ -367,33 +403,6 @@ function useChatData(params?: UseChatDataParams) {
         ipcRenderer.invoke("start-ai-agent-chat", token, params)
     })
 
-    /** 审阅选项的发送 */
-    const onSend = useMemoizedFn((token: string, info: AIChatReview, params: AIInputEvent) => {
-        if (!execute) {
-            yakitNotify("warning", "AI 未执行任务，无法发送选项")
-            return
-        }
-        if (!chatID || chatID.current !== token) {
-            yakitNotify("warning", "该选项非本次 AI 执行的回答选项")
-            return
-        }
-        if (
-            info.type === "plan_review_require" &&
-            params.InteractiveJSONInput === JSON.stringify({suggestion: "continue"})
-        ) {
-            // 如果是计划的审阅，继续执行代表任务列表已确认，可以进行数据保存
-            const data = info.data as AIChatMessage.PlanReviewRequire
-            planData.current = cloneDeep(data.plans.root_task)
-            const sum: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(sum, data.plans.root_task)
-            setPlan([...sum])
-        }
-        console.log("send-ai", token, params)
-
-        review.current = undefined
-        ipcRenderer.invoke("send-ai-agent-chat", token, params)
-    })
-
     const onClose = useMemoizedFn((token: string) => {
         ipcRenderer.invoke("cancel-ai-agent-chat", token).catch(() => {})
         yakitNotify("info", "AI 任务已取消")
@@ -402,11 +411,6 @@ function useChatData(params?: UseChatDataParams) {
             ipcRenderer.removeAllListeners(`${token}-end`)
             ipcRenderer.removeAllListeners(`${token}-error`)
         }, 1000)
-    })
-
-    /** 获取当前数据信息的对应唯一ID */
-    const fetchToken = useMemoizedFn(() => {
-        return chatID.current
     })
 
     useEffect(() => {
@@ -419,8 +423,8 @@ function useChatData(params?: UseChatDataParams) {
     }, [])
 
     return [
-        {execute, pressure, firstCost, totalCost, consumption, logs, fetchPlan, plan, streams, activeStream},
-        {onStart, onSend, onClose, handleReset, fetchToken}
+        {execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream},
+        {onStart, onSend, onClose, handleReset, fetchToken, fetchPlanTree}
     ] as const
 }
 

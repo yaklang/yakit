@@ -19,10 +19,11 @@ import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import useListenHeight from "../pluginHub/hooks/useListenHeight"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import useGetSetState from "../pluginHub/hooks/useGetSetState"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const {} = props
@@ -47,34 +48,50 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     const chatBodyHeight = useListenHeight(chatBody)
 
     // review数据
-    const reviewInfo = useRef<AIChatReview | undefined>()
-    const [showReview, setShowReview] = useState(false)
+    const [reviewInfo, setReviewInfo, getReviewInfo] = useGetSetState<AIChatReview>()
+    // 接受到 review 后的1秒 loading 状态
+    const [delayLoading, setDelayLoading] = useGetSetState(false)
+    const delayLoadingTime = useRef<any>(null)
+    // 清除定时器
+    const handleResetDelayLoadingTime = useMemoizedFn(() => {
+        if (delayLoadingTime.current) {
+            clearTimeout(delayLoadingTime.current)
+            delayLoadingTime.current = null
+        }
+    })
 
     const [reviewExpand, setReviewExpand] = useState(true)
 
     // 展示review
     const handleShowReview = useMemoizedFn((info: AIChatReview) => {
-        if (showReview) return
         setReviewExpand(true)
-        reviewInfo.current = cloneDeep(info)
-        setShowReview(true)
+        setDelayLoading(true)
+        setReviewInfo(cloneDeep(info))
+        handleResetDelayLoadingTime()
+        delayLoadingTime.current = setTimeout(() => {
+            setDelayLoading(false)
+        }, 1000)
     })
     // 释放review
     const handleReleaseReview = useMemoizedFn((id: string) => {
-        if (!reviewInfo.current) return
-        if (reviewInfo.current.data.id === id) {
-            reviewInfo.current = undefined
-            setShowReview(false)
+        const info = getReviewInfo()
+        if (!info) return
+        if (info.data.id === id) {
+            if (!delayLoading) yakitNotify("warning", "审阅自动执行，弹框将自动关闭")
+            setReviewInfo(undefined)
             setReviewExpand(true)
+            handleResetDelayLoadingTime()
+            setDelayLoading(false)
         }
     })
 
     const sendLoading = useRef(false)
     /** 中途补充问题 */
     const handleSend = useMemoizedFn((item: AIChatMessage.ReviewSelector, qs?: string) => {
-        if (sendLoading.current) return
-        if (!reviewInfo.current) return
         if (!activeID) return
+        if (sendLoading.current) return
+        const reviewData = getReviewInfo()
+        if (!reviewData) return
 
         sendLoading.current = true
         const {value, allow_extra_prompt} = item
@@ -82,34 +99,33 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         if (allow_extra_prompt && qs) jsonInput.extra_prompt = qs
         const info: AIInputEvent = {
             IsInteractiveMessage: true,
-            InteractiveId: reviewInfo.current.data.id,
+            InteractiveId: reviewData.data.id,
             InteractiveJSONInput: JSON.stringify(jsonInput)
         }
-        setShowReview(false)
         setTimeout(() => {
-            reviewInfo.current && events.onSend(activeID, reviewInfo.current, info)
-            reviewInfo.current = undefined
+            events.onSend(activeID, reviewData, info)
+            setReviewInfo(undefined)
             sendLoading.current = false
         }, 50)
     })
 
     /** AI交互补充策略 */
     const handleSendAIRequire = useMemoizedFn((value: string) => {
-        if (sendLoading.current) return
-        if (!reviewInfo.current) return
         if (!activeID) return
+        if (sendLoading.current) return
+        const reviewData = getReviewInfo()
+        if (!reviewData) return
 
         sendLoading.current = true
         const jsonInput: Record<string, string> = {suggestion: value}
         const info: AIInputEvent = {
             IsInteractiveMessage: true,
-            InteractiveId: reviewInfo.current.data.id,
+            InteractiveId: reviewData.data.id,
             InteractiveJSONInput: JSON.stringify(jsonInput)
         }
-        setShowReview(false)
         setTimeout(() => {
-            reviewInfo.current && events.onSend(activeID, reviewInfo.current, info)
-            reviewInfo.current = undefined
+            events.onSend(activeID, reviewData, info)
+            setReviewInfo(undefined)
             sendLoading.current = false
         }, 50)
     })
@@ -176,14 +192,12 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     // #region chat-对话相关问题和回答数据
     const [question, setQuestion] = useState("")
 
-    const [
-        {execute, pressure, firstCost, totalCost, consumption, logs, fetchPlan, plan, streams, activeStream},
-        events
-    ] = useChatData({
-        onReview: handleShowReview,
-        onReviewRelease: handleReleaseReview,
-        onRedirectForge: handleOpenHintShow
-    })
+    const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
+        useChatData({
+            onReview: handleShowReview,
+            onReviewRelease: handleReleaseReview,
+            onRedirectForge: handleOpenHintShow
+        })
     // #endregion
 
     // #region chat-对话相关方法和逻辑处理
@@ -248,7 +262,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                 firstCost: cloneDeep(firstCost),
                 totalCost: cloneDeep(totalCost),
                 consumption: cloneDeep(consumption),
-                plans: fetchPlan(),
+                plans: events.fetchPlanTree(),
                 taskList: cloneDeep(plan),
                 logs: cloneDeep(logs),
                 streams: cloneDeep(streams)
@@ -317,8 +331,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     /** 停止回答后的状态调整 */
     const handleStopAfterChangeState = useMemoizedFn(() => {
         // 清空review信息
-        reviewInfo.current = undefined
-        setShowReview(false)
+        setReviewInfo(undefined)
         setReviewExpand(true)
     })
     // #endregion
@@ -326,13 +339,19 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     // #region chat-UI实际展示数据
     // ui实际渲染数据-pressure
     const uiPressure = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.pressure) return activeChat.answer.pressure
-        return pressure
+        const showPressure =
+            activeChat && activeChat.answer && activeChat.answer.pressure ? activeChat.answer.pressure : pressure
+        const length = showPressure.length
+        return {
+            current_cost_token_size: showPressure.map((item) => item.current_cost_token_size),
+            pressure_token_size: length > 0 ? showPressure[length - 1].pressure_token_size : 0
+        }
     }, [activeChat, pressure])
     // ui实际渲染数据-firstCost
     const uiFirstCost = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.firstCost) return activeChat.answer.firstCost
-        return firstCost
+        if (activeChat && activeChat.answer && activeChat.answer.firstCost)
+            return activeChat.answer.firstCost.map((item) => item.ms)
+        return firstCost.map((item) => item.ms)
     }, [activeChat, firstCost])
     // ui实际渲染数据-consumption
     const uiConsumption = useMemo(() => {
@@ -362,7 +381,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         setLogExpand((old) => !old)
     })
     // #endregion
-    console.log("hintID.current", hintID.current, activeID, redirectForgeShow)
+
     return (
         <div ref={wrapper} className={styles["server-chat"]}>
             <div className={styles["server-chat-body"]}>
@@ -420,7 +439,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                 </div>
 
                                 <div className={styles["content-review"]}>
-                                    {showReview && (
+                                    {!!reviewInfo && (
                                         <div className={styles["review-box"]} style={{maxHeight: chatBodyHeight - 60}}>
                                             <div
                                                 className={classNames(styles["review-border-shadow"], {
@@ -428,15 +447,14 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                                 })}
                                             >
                                                 <div className={styles["review-wrapper"]}>
-                                                    {reviewInfo.current && (
-                                                        <AIAgentChatReview
-                                                            expand={reviewExpand}
-                                                            setExpand={setReviewExpand}
-                                                            review={reviewInfo.current}
-                                                            onSend={handleSend}
-                                                            onSendAIRequire={handleSendAIRequire}
-                                                        />
-                                                    )}
+                                                    <AIAgentChatReview
+                                                        expand={reviewExpand}
+                                                        setExpand={setReviewExpand}
+                                                        delayLoading={delayLoading}
+                                                        review={reviewInfo}
+                                                        onSend={handleSend}
+                                                        onSendAIRequire={handleSendAIRequire}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

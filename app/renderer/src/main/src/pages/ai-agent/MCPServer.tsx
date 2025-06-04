@@ -2,14 +2,7 @@ import React, {memo, useEffect, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
 import {RenderMCPClientInfo, MCPServerProps} from "./aiAgentType"
 import {formatMCPResourceTemplates, formatMCPTools} from "./utils"
-import {
-    grpcCancelYakMcp,
-    grpcCloseMCPClient,
-    grpcConnectMCPClient,
-    grpcDeleteMCPClient,
-    grpcMCPClientCallTool,
-    grpcStartYakMcp
-} from "./grpc"
+import {grpcCloseMCPClient, grpcConnectMCPClient, grpcDeleteMCPClient, grpcMCPClientCallTool} from "./grpc"
 import {MCPTransportTypeList} from "./defaultConstant"
 import {OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -56,31 +49,6 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
      * 监听已启动的 MCP 客户端异常退出情况
      */
     // useEffect(() => {
-    //     ipcRenderer.on("yak-mcp-server-send", async (e, res: {URL: string}) => {
-    //         if (res && res.URL) {
-    //             try {
-    //                 const data: RenderMCPClientInfo = {
-    //                     isDefault: true,
-    //                     id: randomString(16),
-    //                     type: "sse",
-    //                     url: res.URL,
-    //                     status: false
-    //                 }
-    //                 setMCPServers &&
-    //                     setMCPServers((old) => {
-    //                         const newList = [...old.filter((item) => !item.isDefault), data]
-    //                         return newList
-    //                     })
-    //                 setTimeout(() => {
-    //                     handleConnectServer(data)
-    //                 }, 2000)
-    //             } catch (error) {
-    //                 yakitNotify("error", "获取默认MCP服务器失败: " + error)
-    //             }
-    //         }
-    //     })
-    //     grpcStartYakMcp().catch(() => {})
-
     //     ipcRenderer.on("mcp-client-error", (e, id: string, error: string) => {
     //         yakitNotify("error", `MCP(id:${id})异常退出: ${error}`)
     //         setMCPServers &&
@@ -93,9 +61,7 @@ export const MCPServer: React.FC<MCPServerProps> = memo((props) => {
     //     })
 
     //     return () => {
-    //         ipcRenderer.removeAllListeners("yak-mcp-server-send")
     //         ipcRenderer.removeAllListeners("mcp-client-error")
-    //         grpcCancelYakMcp().catch(() => {})
     //         handleCacheClientSetting()
     //     }
     // }, [])
