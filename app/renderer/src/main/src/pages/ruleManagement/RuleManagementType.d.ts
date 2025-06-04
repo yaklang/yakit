@@ -1,11 +1,20 @@
 import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
+import {UserInfoProps} from "@/store"
 
 export interface RuleManagementProps {}
 
+export interface LocalRuleGroupListPropsRefProps {
+    handleReset: () => void
+}
 export interface LocalRuleGroupListProps {
+    ref?: ForwardedRef<LocalRuleGroupListPropsRefProps>
     isrefresh?: boolean
     onGroupChange: (groups: string[]) => void
+    currentPageTabRouteKey: string
+    canUpload: boolean
+    userInfo: UserInfoProps
+    onRefreshOnlienRuleManagement: () => void
 }
 
 type RuleImportExportModalExtra = {
@@ -50,6 +59,29 @@ export interface RuleDebugAuditListProps {
     auditData: SyntaxFlowResult[]
     onDetail: (info: SyntaxFlowResult) => void
 }
+
+export interface RuleUploadAndDownloadModalProps {
+    getContainer?: string | HTMLElement | getContainerFunc | false
+    type: string
+    apiKey: string
+    token: string
+    onCancel: () => void
+    onSuccess: () => void
+}
+
+interface OnlineRuleGroupListPropsRefProps {
+    handleReset: () => void
+}
+export interface OnlineRuleGroupListProps {
+    ref?: ForwardedRef<OnlineRuleGroupListPropsRefProps>
+    isrefresh?: boolean
+    onGroupChange: (groups: string[]) => void
+    currentPageTabRouteKey: string
+    canDel: boolean
+    userInfo: UserInfoProps
+    onRefreshRuleManagement: () => void
+}
+
 /** ---------- 规则组相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleGroupFilter {
@@ -102,6 +134,8 @@ export interface QuerySyntaxFlowSameGroupResponse {
 
 /** ---------- 规则相关接口定义 Start ---------- */
 // #region
+export type FilterRuleKind = "buildIn" | "unBuildIn"
+export type FilterLibRuleKind = "lib" | "noLib" | ""
 export interface SyntaxFlowRuleFilter {
     RuleNames?: string[]
     Language?: string[]
@@ -119,8 +153,8 @@ export interface SyntaxFlowRuleFilter {
     AfterId?: number
     BeforeId?: number
 
-    FilterRuleKind?: "buildIn" | "unBuildIn" // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
-    FilterLibRuleKind?: "lib" | "noLib" | "" // 是否显示Lib规则
+    FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
+    FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
 }
 export interface QuerySyntaxFlowRuleRequest {
     Filter?: SyntaxFlowRuleFilter
@@ -194,3 +228,22 @@ export interface SyntaxflowsProgress {
 }
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */
+
+/** ---------- 线上规则相关接口定义 Start ---------- */
+// #region
+export interface SyntaxFlowRuleToOnlineRequest {
+    Pagination?: Paging
+    Filter: SyntaxFlowRuleFilter
+    Token: string
+}
+export interface SyntaxFlowRuleOnlineProgress {
+    Progress: number
+    Message: string
+    MessageType: string
+}
+export interface DownloadSyntaxFlowRuleRequest {
+    Token: string
+    Filter: SyntaxFlowRuleFilter
+}
+// #endregion
+/** ---------- 线上规则相关接口定义 End ---------- */

@@ -1,4 +1,4 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
+import React, {memo, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     EditRuleDrawerProps,
     QuerySyntaxFlowRuleGroupRequest,
@@ -13,7 +13,10 @@ import {
     RuleDebugAuditListProps,
     SyntaxflowsProgress,
     ExportSyntaxFlowsRequest,
-    ImportSyntaxFlowsRequest
+    ImportSyntaxFlowsRequest,
+    SyntaxFlowRuleOnlineProgress,
+    RuleUploadAndDownloadModalProps,
+    OnlineRuleGroupListProps
 } from "./RuleManagementType"
 import {
     useDebounceEffect,
@@ -27,6 +30,7 @@ import {
 } from "ahooks"
 import {
     OutlineCloseIcon,
+    OutlineClouddownloadIcon,
     OutlineClouduploadIcon,
     OutlineExclamationcircleIcon,
     OutlineLightbulbIcon,
@@ -38,8 +42,14 @@ import {
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
-import {SolidFolderopenIcon, SolidPlayIcon, SolidReplyIcon} from "@/assets/icon/solid"
-import {Form, InputRef, Modal, Tooltip} from "antd"
+import {
+    SolidClouddownloadIcon,
+    SolidClouduploadIcon,
+    SolidFolderopenIcon,
+    SolidPlayIcon,
+    SolidReplyIcon
+} from "@/assets/icon/solid"
+import {Form, InputRef, Modal, Progress, Tooltip} from "antd"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
@@ -52,11 +62,15 @@ import {
     grpcCreateLocalRule,
     grpcCreateLocalRuleGroup,
     grpcDeleteLocalRuleGroup,
+    grpcDownloadSyntaxFlowRule,
     grpcFetchLocalRuleGroupList,
     grpcFetchRulesForSameGroup,
+    grpcSyntaxFlowRuleToOnline,
     grpcUpdateLocalRule,
     grpcUpdateLocalRuleGroup,
-    grpcUpdateRuleToGroup
+    grpcUpdateRuleToGroup,
+    httpDeleteOnlineRuleGroup,
+    httpFetchOnlineRuleGroupList
 } from "./api"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -98,6 +112,11 @@ import {SeverityMapTag} from "../risks/YakitRiskTable/YakitRiskTable"
 import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
 import {openABSFileLocated} from "@/utils/openWebsite"
 import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import NoPermissions from "@/assets/no_permissions.png"
+import {API} from "@/services/swagger/resposeType"
+import Login from "../Login"
+import {isEnpriTraceIRify} from "@/utils/envfile"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -105,359 +124,423 @@ import styles from "./RuleManagement.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 /** @name 规则组列表组件 */
-export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo((props) => {
-    const {isrefresh, onGroupChange} = props
+export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
+    React.forwardRef((props, ref) => {
+        const {isrefresh, onGroupChange, currentPageTabRouteKey, canUpload, userInfo, onRefreshOnlienRuleManagement} =
+            props
 
-    const [data, setData] = useState<SyntaxFlowGroup[]>([])
-    const groupLength = useMemo(() => {
-        return data.length
-    }, [data])
+        useImperativeHandle(ref, () => ({
+            handleReset
+        }))
 
-    const wrapperRef = useRef<HTMLDivElement>(null)
-    const bodyRef = useRef<HTMLDivElement>(null)
-    const [list] = useVirtualList(data, {
-        containerTarget: wrapperRef,
-        wrapperTarget: bodyRef,
-        itemHeight: 40,
-        overscan: 5
-    })
+        const [data, setData] = useState<SyntaxFlowGroup[]>([])
+        const groupLength = useMemo(() => {
+            return data.length
+        }, [data])
 
-    /** ---------- 获取数据 ---------- */
-    const [loading, setLoading] = useState<boolean>(false)
-    const fetchList = useMemoizedFn(() => {
-        if (loading) return
-
-        const request: QuerySyntaxFlowRuleGroupRequest = {Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}}
-        if (search.current) {
-            request.Filter = {KeyWord: search.current || ""}
-        }
-
-        setLoading(true)
-        grpcFetchLocalRuleGroupList(request)
-            .then(({Group}) => {
-                setData(Group || [])
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setLoading(false)
-                }, 200)
-            })
-    })
-
-    useEffect(() => {
-        fetchList()
-    }, [isrefresh])
-
-    // 搜索
-    const search = useRef<string>("")
-    const handleSearch = useDebounceFn(
-        (val: string) => {
-            search.current = val
-            fetchList()
-        },
-        {wait: 200}
-    ).run
-
-    /** ---------- 多选逻辑 ---------- */
-    const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
-    const selectGroups = useMemo(() => {
-        return select.map((item) => item.GroupName)
-    }, [select])
-    useUpdateEffect(() => {
-        // 这里的延时触发搜索由外层去控制
-        onGroupChange(select.map((item) => item.GroupName))
-    }, [select])
-    const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const isExist = select.find((el) => el.GroupName === info.GroupName)
-        if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
-        else setSelect((arr) => [...arr, info])
-    })
-    const handleReset = useMemoizedFn(() => {
-        setSelect([])
-    })
-
-    // 更新数据
-    const handleUpdateData = useMemoizedFn(
-        (type: "modify" | "delete", info: SyntaxFlowGroup, newInfo?: SyntaxFlowGroup) => {
-            if (type === "modify") {
-                if (!newInfo) {
-                    yakitNotify("error", "修改本地规则组名称错误")
-                    return
-                }
-                setData((arr) => {
-                    return arr.map((ele) => {
-                        if (ele.GroupName === info.GroupName) return cloneDeep(newInfo)
-                        return ele
-                    })
-                })
-            }
-            if (type === "delete") {
-                setData((arr) => {
-                    return arr.filter((ele) => ele.GroupName !== info.GroupName)
-                })
-            }
-        }
-    )
-
-    /** ---------- 新建 ---------- */
-    const [activeAdd, setActiveAdd] = useState<boolean>(false)
-    const [groupName, setGroupName] = useState<string>("")
-    const addInputRef = useRef<InputRef>(null)
-    const handleAddGroup = useMemoizedFn(() => {
-        if (activeAdd) return
-        setGroupName("")
-        setActiveAdd(true)
-        setTimeout(() => {
-            // 输入框聚焦
-            addInputRef.current?.focus()
-        }, 10)
-    })
-    const handleAddGroupBlur = useMemoizedFn(() => {
-        if (!groupName) {
-            setActiveAdd(false)
-            setGroupName("")
-            return
-        }
-
-        grpcCreateLocalRuleGroup({GroupName: groupName})
-            .then(() => {
-                setData((arr) => [{GroupName: groupName, Count: 0, IsBuildIn: false}].concat([...arr]))
-                setTimeout(() => {
-                    setActiveAdd(false)
-                    setGroupName("")
-                }, 200)
-            })
-            .catch(() => {})
-    })
-
-    /** ---------- 编辑 ---------- */
-    const [editGroups, setEditGroup] = useState<string[]>([])
-    const editInputRef = useRef<InputRef>(null)
-    const [editInfo, setEditInfo] = useState<SyntaxFlowGroup>()
-    const [editName, setEditName] = useState<string>("")
-    const initEdit = useMemoizedFn(() => {
-        setEditInfo(undefined)
-        setEditName("")
-    })
-    const handleEdit = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const {GroupName, IsBuildIn} = info
-        if (IsBuildIn) return
-        const isExist = editGroups.includes(GroupName)
-        if (isExist) return
-
-        setEditInfo(info)
-        setEditName(GroupName)
-        setTimeout(() => {
-            // 输入框聚焦
-            editInputRef.current?.focus()
-        }, 10)
-    })
-    const handleDoubleEditBlur = useMemoizedFn(() => {
-        if (!editInfo || editInfo.GroupName === editName) {
-            initEdit()
-            return
-        }
-
-        setEditGroup((arr) => [...arr, editInfo.GroupName])
-        grpcUpdateLocalRuleGroup({OldGroupName: editInfo.GroupName, NewGroupName: editName})
-            .then(() => {
-                // 改名后自动把选中里的该条去掉
-                setSelect((arr) => arr.filter((item) => item.GroupName !== editInfo.GroupName))
-                handleUpdateData("modify", editInfo, {...editInfo, GroupName: editName})
-                initEdit()
-            })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setEditGroup((arr) => arr.filter((ele) => ele !== editInfo.GroupName))
-                }, 200)
-            })
-    })
-    /** ---------- 上传 ---------- */
-    // const [loadingUploadKeys, setLoadingUploadKeys] = useState<string[]>([])
-    // const handleUpload = useMemoizedFn((info: number) => {
-    //     const isExist = loadingUploadKeys.includes(`${info}`)
-    //     if (isExist) return
-
-    //     setLoadingUploadKeys((arr) => {
-    //         return [...arr, `${info}`]
-    //     })
-    //     grpcDeleteRuleGroup({Key: info})
-    //         .then(() => {
-    //             handleUpdateData("delete", info)
-    //         })
-    //         .catch(() => {})
-    //         .finally(() => {
-    //             setTimeout(() => {
-    //                 setLoadingUploadKeys((arr) => arr.filter((ele) => ele !== `${info}`))
-    //             }, 200)
-    //         })
-    // })
-    /** ---------- 删除 ---------- */
-    const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
-    const handleDelete = useMemoizedFn((info: SyntaxFlowGroup) => {
-        const {GroupName, IsBuildIn} = info
-        if (IsBuildIn) return
-        const isExist = loadingDelKeys.includes(GroupName)
-        if (isExist) return
-
-        setLoadingDelKeys((arr) => {
-            return [...arr, GroupName]
+        const wrapperRef = useRef<HTMLDivElement>(null)
+        const bodyRef = useRef<HTMLDivElement>(null)
+        const [list] = useVirtualList(data, {
+            containerTarget: wrapperRef,
+            wrapperTarget: bodyRef,
+            itemHeight: 40,
+            overscan: 5
         })
-        grpcDeleteLocalRuleGroup({Filter: {GroupNames: [GroupName]}})
-            .then(() => {
-                // 删除后自动把选中里的该条去掉
-                setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
-                handleUpdateData("delete", info)
+
+        /** ---------- 获取数据 ---------- */
+        const [loading, setLoading] = useState<boolean>(false)
+        const fetchList = useMemoizedFn(() => {
+            if (loading) return
+
+            const request: QuerySyntaxFlowRuleGroupRequest = {Pagination: DefaultRuleGroupFilterPageMeta, Filter: {}}
+            if (search.current) {
+                request.Filter = {KeyWord: search.current || ""}
+            }
+
+            setLoading(true)
+            grpcFetchLocalRuleGroupList(request)
+                .then(({Group}) => {
+                    setData(Group || [])
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        })
+
+        useEffect(() => {
+            fetchList()
+        }, [isrefresh])
+
+        // 搜索
+        const search = useRef<string>("")
+        const handleSearch = useDebounceFn(
+            (val: string) => {
+                search.current = val
+                fetchList()
+            },
+            {wait: 200}
+        ).run
+
+        /** ---------- 多选逻辑 ---------- */
+        const [select, setSelect] = useState<SyntaxFlowGroup[]>([])
+        const selectGroups = useMemo(() => {
+            return select.map((item) => item.GroupName)
+        }, [select])
+        useUpdateEffect(() => {
+            // 这里的延时触发搜索由外层去控制
+            onGroupChange(select.map((item) => item.GroupName))
+        }, [select])
+        const handleSelect = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const isExist = select.find((el) => el.GroupName === info.GroupName)
+            if (isExist) setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+            else setSelect((arr) => [...arr, info])
+        })
+        const handleReset = useMemoizedFn(() => {
+            setSelect([])
+        })
+
+        // 更新数据
+        const handleUpdateData = useMemoizedFn(
+            (type: "modify" | "delete", info: SyntaxFlowGroup, newInfo?: SyntaxFlowGroup) => {
+                if (type === "modify") {
+                    if (!newInfo) {
+                        yakitNotify("error", "修改本地规则组名称错误")
+                        return
+                    }
+                    setData((arr) => {
+                        return arr.map((ele) => {
+                            if (ele.GroupName === info.GroupName) return cloneDeep(newInfo)
+                            return ele
+                        })
+                    })
+                }
+                if (type === "delete") {
+                    setData((arr) => {
+                        return arr.filter((ele) => ele.GroupName !== info.GroupName)
+                    })
+                }
+            }
+        )
+
+        /** ---------- 新建 ---------- */
+        const [activeAdd, setActiveAdd] = useState<boolean>(false)
+        const [groupName, setGroupName] = useState<string>("")
+        const addInputRef = useRef<InputRef>(null)
+        const handleAddGroup = useMemoizedFn(() => {
+            if (activeAdd) return
+            setGroupName("")
+            setActiveAdd(true)
+            setTimeout(() => {
+                // 输入框聚焦
+                addInputRef.current?.focus()
+            }, 10)
+        })
+        const handleAddGroupBlur = useMemoizedFn(() => {
+            if (!groupName) {
+                setActiveAdd(false)
+                setGroupName("")
+                return
+            }
+
+            grpcCreateLocalRuleGroup({GroupName: groupName})
+                .then(() => {
+                    setData((arr) => [{GroupName: groupName, Count: 0, IsBuildIn: false}].concat([...arr]))
+                    setTimeout(() => {
+                        setActiveAdd(false)
+                        setGroupName("")
+                    }, 200)
+                })
+                .catch(() => {})
+        })
+
+        /** ---------- 编辑 ---------- */
+        const [editGroups, setEditGroup] = useState<string[]>([])
+        const editInputRef = useRef<InputRef>(null)
+        const [editInfo, setEditInfo] = useState<SyntaxFlowGroup>()
+        const [editName, setEditName] = useState<string>("")
+        const initEdit = useMemoizedFn(() => {
+            setEditInfo(undefined)
+            setEditName("")
+        })
+        const handleEdit = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const {GroupName, IsBuildIn} = info
+            if (IsBuildIn) return
+            const isExist = editGroups.includes(GroupName)
+            if (isExist) return
+
+            setEditInfo(info)
+            setEditName(GroupName)
+            setTimeout(() => {
+                // 输入框聚焦
+                editInputRef.current?.focus()
+            }, 10)
+        })
+        const handleDoubleEditBlur = useMemoizedFn(() => {
+            if (!editInfo || editInfo.GroupName === editName) {
+                initEdit()
+                return
+            }
+
+            setEditGroup((arr) => [...arr, editInfo.GroupName])
+            grpcUpdateLocalRuleGroup({OldGroupName: editInfo.GroupName, NewGroupName: editName})
+                .then(() => {
+                    // 改名后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.GroupName !== editInfo.GroupName))
+                    handleUpdateData("modify", editInfo, {...editInfo, GroupName: editName})
+                    initEdit()
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setEditGroup((arr) => arr.filter((ele) => ele !== editInfo.GroupName))
+                    }, 200)
+                })
+        })
+        /** ---------- 上传 ---------- */
+        const [uploadInfoVisible, setUploadInfoVisible] = useState<boolean>(false)
+        const [uploadPercentShow, setUploadPercentShow] = useState<boolean>(false)
+        const uploadTokenRef = useRef<string>(randomString(40))
+        const uploadContainerRef = useRef<string>(currentPageTabRouteKey)
+        const ruleGroupItemRef = useRef<SyntaxFlowGroup>()
+        const handleUpload = useMemoizedFn(() => {
+            if (ruleGroupItemRef.current) {
+                uploadTokenRef.current = randomString(40)
+                grpcSyntaxFlowRuleToOnline(
+                    {Filter: {GroupNames: [ruleGroupItemRef.current.GroupName]}, Token: userInfo.token},
+                    uploadTokenRef.current
+                ).then((res) => {
+                    setUploadInfoVisible(false)
+                    uploadContainerRef.current = currentPageTabRouteKey
+                    setUploadPercentShow(true)
+                })
+            }
+        })
+
+        /** ---------- 删除 ---------- */
+        const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
+        const handleDelete = useMemoizedFn((info: SyntaxFlowGroup) => {
+            const {GroupName, IsBuildIn} = info
+            if (IsBuildIn) return
+            const isExist = loadingDelKeys.includes(GroupName)
+            if (isExist) return
+
+            setLoadingDelKeys((arr) => {
+                return [...arr, GroupName]
             })
-            .catch(() => {})
-            .finally(() => {
-                setTimeout(() => {
-                    setLoadingDelKeys((arr) => arr.filter((ele) => ele !== GroupName))
-                }, 200)
-            })
-    })
+            grpcDeleteLocalRuleGroup({Filter: {GroupNames: [GroupName]}})
+                .then(() => {
+                    // 删除后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.GroupName !== info.GroupName))
+                    handleUpdateData("delete", info)
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoadingDelKeys((arr) => arr.filter((ele) => ele !== GroupName))
+                    }, 200)
+                })
+        })
 
-    return (
-        <div className={styles["rule-group-list"]}>
-            <div className={styles["list-header"]}>
-                <div className={styles["title-body"]}>
-                    规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
-                </div>
-                <div className={styles["header-extra"]}>
-                    <YakitButton type='text' onClick={handleReset}>
-                        重置
-                    </YakitButton>
-                    <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
-                </div>
-            </div>
-
-            <div className={styles["list-search-and-add"]}>
-                <YakitInput.Search size='large' allowClear={true} placeholder='请输入组名' onSearch={handleSearch} />
-
-                {/* 新建规则组输入框 */}
-                <YakitInput
-                    ref={addInputRef}
-                    wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
-                    showCount
-                    maxLength={50}
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    onBlur={handleAddGroupBlur}
-                    onPressEnter={handleAddGroupBlur}
-                />
-            </div>
-
-            <div className={styles["list-container"]}>
-                <YakitSpin spinning={loading}>
-                    <div ref={wrapperRef} className={styles["list-body"]}>
-                        <div ref={bodyRef}>
-                            {list.map((item) => {
-                                const {data} = item
-                                const {GroupName: name, IsBuildIn} = data
-
-                                const isCheck = selectGroups.includes(name)
-                                const activeEdit = editInfo?.GroupName === name
-                                const isEditLoading = editGroups.includes(name)
-                                // const isUpload = loadingUploadKeys.includes(name)
-                                const isDelLoading = loadingDelKeys.includes(name)
-
-                                return (
-                                    <div
-                                        key={name}
-                                        className={classNames(styles["list-local-opt"], {
-                                            [styles["list-local-opt-active"]]: isCheck
-                                        })}
-                                        onClick={() => {
-                                            handleSelect(data)
-                                        }}
-                                    >
-                                        {activeEdit ? (
-                                            <YakitInput
-                                                ref={editInputRef}
-                                                allowClear={true}
-                                                showCount
-                                                maxLength={50}
-                                                value={editName}
-                                                onChange={(e) => {
-                                                    setEditName(e.target.value)
-                                                }}
-                                                onBlur={handleDoubleEditBlur}
-                                                onPressEnter={handleDoubleEditBlur}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                }}
-                                            />
-                                        ) : (
-                                            <>
-                                                <div className={styles["info-wrapper"]}>
-                                                    <YakitCheckbox
-                                                        checked={isCheck}
-                                                        onChange={() => {
-                                                            handleSelect(data)
-                                                        }}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                    <SolidFolderopenIcon />
-                                                    <span
-                                                        className={classNames(
-                                                            styles["title-style"],
-                                                            "yakit-content-single-ellipsis"
-                                                        )}
-                                                        title={data.GroupName}
-                                                    >
-                                                        {data.GroupName}
-                                                    </span>
-                                                </div>
-
-                                                <div className={styles["total-style"]}>{data.Count}</div>
-                                                {!IsBuildIn && (
-                                                    <div
-                                                        className={styles["btns-wrapper"]}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                        }}
-                                                    >
-                                                        <YakitButton
-                                                            type='secondary2'
-                                                            icon={<OutlinePencilaltIcon />}
-                                                            loading={isEditLoading}
-                                                            onClick={() => {
-                                                                handleEdit(data)
-                                                            }}
-                                                        />
-                                                        {/* <YakitButton
-                                                        type='secondary2'
-                                                        icon={<OutlineClouduploadIcon />}
-                                                        loading={isUpload}
-                                                        onClick={() => {
-                                                            handleUpload(data)
-                                                        }}
-                                                    /> */}
-                                                        <YakitButton
-                                                            type='secondary2'
-                                                            colors='danger'
-                                                            icon={<OutlineTrashIcon />}
-                                                            loading={isDelLoading}
-                                                            onClick={() => {
-                                                                handleDelete(data)
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                )
-                            })}
-                        </div>
+        return (
+            <div className={styles["rule-group-list"]}>
+                <div className={styles["list-header"]}>
+                    <div className={styles["title-body"]}>
+                        规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
                     </div>
-                </YakitSpin>
+                    <div className={styles["header-extra"]}>
+                        <YakitButton type='text' onClick={handleReset}>
+                            重置
+                        </YakitButton>
+                        <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
+                    </div>
+                </div>
+
+                <div className={styles["list-search-and-add"]}>
+                    <YakitInput.Search
+                        size='large'
+                        allowClear={true}
+                        placeholder='请输入组名'
+                        onSearch={handleSearch}
+                    />
+
+                    {/* 新建规则组输入框 */}
+                    <YakitInput
+                        ref={addInputRef}
+                        wrapperClassName={activeAdd ? styles["show-add-input"] : styles["hidden-add-input"]}
+                        showCount
+                        maxLength={50}
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        onBlur={handleAddGroupBlur}
+                        onPressEnter={handleAddGroupBlur}
+                    />
+                </div>
+
+                <div className={styles["list-container"]}>
+                    <YakitSpin spinning={loading}>
+                        <div ref={wrapperRef} className={styles["list-body"]}>
+                            <div ref={bodyRef}>
+                                {list.map((item) => {
+                                    const {data} = item
+                                    const {GroupName: name, IsBuildIn} = data
+
+                                    const isCheck = selectGroups.includes(name)
+                                    const activeEdit = editInfo?.GroupName === name
+                                    const isEditLoading = editGroups.includes(name)
+                                    const isDelLoading = loadingDelKeys.includes(name)
+
+                                    return (
+                                        <div
+                                            key={name}
+                                            className={classNames(styles["list-local-opt"], {
+                                                [styles["list-local-opt-active"]]: isCheck
+                                            })}
+                                            onClick={() => {
+                                                handleSelect(data)
+                                            }}
+                                        >
+                                            {activeEdit ? (
+                                                <YakitInput
+                                                    ref={editInputRef}
+                                                    allowClear={true}
+                                                    showCount
+                                                    maxLength={50}
+                                                    value={editName}
+                                                    onChange={(e) => {
+                                                        setEditName(e.target.value)
+                                                    }}
+                                                    onBlur={handleDoubleEditBlur}
+                                                    onPressEnter={handleDoubleEditBlur}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                    }}
+                                                />
+                                            ) : (
+                                                <>
+                                                    <div className={styles["info-wrapper"]}>
+                                                        <YakitCheckbox
+                                                            checked={isCheck}
+                                                            onChange={() => {
+                                                                handleSelect(data)
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        />
+                                                        <SolidFolderopenIcon />
+                                                        <span
+                                                            className={classNames(
+                                                                styles["title-style"],
+                                                                "yakit-content-single-ellipsis"
+                                                            )}
+                                                            title={data.GroupName}
+                                                        >
+                                                            {data.GroupName}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className={styles["total-style"]}>{data.Count}</div>
+                                                    {!IsBuildIn ? (
+                                                        <div
+                                                            className={styles["btns-wrapper"]}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            <YakitButton
+                                                                type='secondary2'
+                                                                icon={<OutlinePencilaltIcon />}
+                                                                loading={isEditLoading}
+                                                                onClick={() => {
+                                                                    handleEdit(data)
+                                                                }}
+                                                            />
+                                                            {canUpload && (
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouduploadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = data
+                                                                        setUploadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            <YakitButton
+                                                                type='secondary2'
+                                                                colors='danger'
+                                                                icon={<OutlineTrashIcon />}
+                                                                loading={isDelLoading}
+                                                                onClick={() => {
+                                                                    handleDelete(data)
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            className={styles["btns-wrapper"]}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                            }}
+                                                        >
+                                                            {canUpload && (
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouduploadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = data
+                                                                        setUploadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </YakitSpin>
+
+                    {/* 上传 */}
+                    <YakitHint
+                        visible={uploadInfoVisible}
+                        title='上传提示'
+                        content='如果存在同名规则库，会直接覆盖'
+                        okButtonText='确认上传'
+                        mask={true}
+                        onOk={() => {
+                            handleUpload()
+                        }}
+                        onCancel={() => {
+                            ruleGroupItemRef.current = undefined
+                            setUploadInfoVisible(false)
+                        }}
+                    ></YakitHint>
+                    {uploadPercentShow && (
+                        <RuleUploadAndDownloadModal
+                            getContainer={
+                                document.getElementById(`main-operator-page-body-${uploadContainerRef.current}`) ||
+                                undefined
+                            }
+                            type='upload'
+                            apiKey='SyntaxFlowRuleToOnline'
+                            token={uploadTokenRef.current}
+                            onCancel={() => {
+                                setUploadPercentShow(false)
+                            }}
+                            onSuccess={() => {
+                                onRefreshOnlienRuleManagement()
+                            }}
+                        ></RuleUploadAndDownloadModal>
+                    )}
+                </div>
             </div>
-        </div>
-    )
-})
+        )
+    })
+)
 
 type FilterUndefinedAndEmptyArray<T> = {
     [K in keyof T]: T[K] extends undefined | [] ? never : T[K]
@@ -2172,3 +2255,390 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
         </div>
     )
 })
+
+/** @name 规则上传下载进度弹窗 */
+export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProps> = memo((props) => {
+    const {getContainer, onCancel, type, apiKey, token, onSuccess} = props
+
+    const timeRef = useRef<any>(null)
+    const streamRef = useRef<SyntaxFlowRuleOnlineProgress[]>([])
+    const [stream, setStream] = useState<SyntaxFlowRuleOnlineProgress[]>([])
+
+    const onStreamCancel = useMemoizedFn(() => {
+        ipcRenderer.invoke(`cancel-${apiKey}`, token)
+        ipcRenderer.removeAllListeners(`${token}-data`)
+        ipcRenderer.removeAllListeners(`${token}-error`)
+        ipcRenderer.removeAllListeners(`${token}-end`)
+        clearInterval(timeRef.current)
+
+        onCancel()
+    })
+
+    useEffect(() => {
+        const updateStream = () => {
+            const data = streamRef.current.slice()
+            setStream(data)
+        }
+        timeRef.current = setInterval(updateStream, 300)
+        ipcRenderer.on(`${token}-data`, async (e, data: SyntaxFlowRuleOnlineProgress) => {
+            streamRef.current.unshift(data)
+        })
+        ipcRenderer.on(`${token}-error`, (e, error) => {
+            yakitNotify("error", `error: ${error}`)
+        })
+        return () => {
+            onStreamCancel()
+        }
+    }, [token])
+
+    useEffect(() => {
+        const data = stream[0] || {}
+        const isError = stream.some((item) => item.MessageType === "error")
+        if (data.Progress === 1 && data.MessageType === "success" && !isError) {
+            setTimeout(() => {
+                yakitNotify("success", data.Message)
+                onStreamCancel()
+                onSuccess()
+            }, 300)
+        }
+    }, [JSON.stringify(stream)])
+
+    return (
+        <YakitModal
+            className={styles["RuleUploadAndDownloadModal"]}
+            getContainer={getContainer}
+            visible={true}
+            width={650}
+            type='white'
+            closable={false}
+            footerStyle={{justifyContent: "flex-end"}}
+            footer={
+                <YakitButton type={"outline2"} onClick={onStreamCancel}>
+                    {stream[0]?.Progress === 1 ? "完成" : "取消"}
+                </YakitButton>
+            }
+        >
+            <div className={styles["progressTitle"]}>
+                {type === "upload" ? (
+                    <SolidClouduploadIcon style={{color: "var(--yakit-warning-5)"}} />
+                ) : (
+                    <SolidClouddownloadIcon style={{color: "var(--yakit-warning-5)"}} />
+                )}
+                <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
+            </div>
+            <Progress
+                strokeColor='#F28B44'
+                trailColor='#F0F2F5'
+                percent={Math.trunc(stream[0]?.Progress * 100)}
+                format={(percent) => `进度 ${percent}%`}
+            />
+            <div className={styles["log-info"]}>
+                {stream.map((item, index) => (
+                    <div
+                        key={index}
+                        className={styles["log-item"]}
+                        style={{color: item.MessageType === "error" ? "#f00" : "#85899e"}}
+                    >
+                        {item.Message}
+                    </div>
+                ))}
+            </div>
+        </YakitModal>
+    )
+})
+
+export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
+    React.forwardRef((props, ref) => {
+        const {isrefresh, onGroupChange, currentPageTabRouteKey, canDel, userInfo, onRefreshRuleManagement} = props
+
+        useImperativeHandle(ref, () => ({
+            handleReset
+        }))
+
+        const [loginShow, setLoginShow] = useState<boolean>(false)
+        const onLogin = useMemoizedFn(() => {
+            setLoginShow(true)
+        })
+        const onLoadCancel = useMemoizedFn(() => {
+            setLoginShow(false)
+        })
+        useEffect(() => {
+            if (isEnpriTraceIRify()) {
+                fetchList()
+            }
+        }, [userInfo])
+
+        const [data, setData] = useState<API.FlowRuleGroupDetail[]>([])
+
+        const wrapperRef = useRef<HTMLDivElement>(null)
+        const bodyRef = useRef<HTMLDivElement>(null)
+
+        /** ---------- 获取数据 ---------- */
+        const [loading, setLoading] = useState<boolean>(false)
+        const canFetchList = useMemo(() => {
+            if (isEnpriTraceIRify()) {
+                return userInfo.isLogin && userInfo.token
+            } else {
+                return true
+            }
+        }, [userInfo])
+        const fetchList = useMemoizedFn(() => {
+            if (!canFetchList) return
+
+            if (loading) return
+
+            const request: API.FlowRuleGroupRequest = {page: 1, limit: 1000, order_by: "created_at", order: "desc"}
+            if (search.current) {
+                request.keyword = search.current
+            }
+
+            setLoading(true)
+            httpFetchOnlineRuleGroupList(request)
+                .then(({data}) => {
+                    setData(data || [])
+                })
+                .catch(() => {})
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoading(false)
+                    }, 200)
+                })
+        })
+
+        useEffect(() => {
+            fetchList()
+        }, [isrefresh])
+
+        // 搜索
+        const search = useRef<string>("")
+        const handleSearch = useDebounceFn(
+            (val: string) => {
+                search.current = val
+                fetchList()
+            },
+            {wait: 200}
+        ).run
+
+        /** ---------- 多选逻辑 ---------- */
+        const [select, setSelect] = useState<API.FlowRuleGroupDetail[]>([])
+        const selectGroups = useMemo(() => {
+            return select.map((item) => item.groupName)
+        }, [select])
+        useUpdateEffect(() => {
+            // 这里的延时触发搜索由外层去控制
+            onGroupChange(select.map((item) => item.groupName || ""))
+        }, [select])
+        const handleSelect = useMemoizedFn((info: API.FlowRuleGroupDetail) => {
+            const isExist = select.find((el) => el.groupName === info.groupName)
+            if (isExist) setSelect((arr) => arr.filter((item) => item.groupName !== info.groupName))
+            else setSelect((arr) => [...arr, info])
+        })
+        const handleReset = useMemoizedFn(() => {
+            setSelect([])
+        })
+
+        // 更新数据
+        const handleUpdateData = useMemoizedFn(
+            (type: "delete", info: API.FlowRuleGroupDetail, newInfo?: API.FlowRuleGroupDetail) => {
+                if (type === "delete") {
+                    setData((arr) => {
+                        return arr.filter((ele) => ele.groupName !== info.groupName)
+                    })
+                }
+            }
+        )
+
+        /** ---------- 下载 ---------- */
+        const [downloadInfoVisible, setDownloadInfoVisible] = useState<boolean>(false)
+        const [downloadPercentShow, setDownloadPercentShow] = useState<boolean>(false)
+        const downloadTokenRef = useRef<string>(randomString(40))
+        const downloadContainerRef = useRef<string>(currentPageTabRouteKey)
+        const ruleGroupItemRef = useRef<API.FlowRuleGroupDetail>()
+        const handleDownload = useMemoizedFn(() => {
+            if (ruleGroupItemRef.current?.groupName) {
+                downloadTokenRef.current = randomString(40)
+                grpcDownloadSyntaxFlowRule(
+                    {
+                        Filter: {GroupNames: [ruleGroupItemRef.current.groupName]},
+                        Token: userInfo.token
+                    },
+                    downloadTokenRef.current
+                ).then((res) => {
+                    setDownloadInfoVisible(false)
+                    downloadContainerRef.current = currentPageTabRouteKey
+                    setDownloadPercentShow(true)
+                })
+            }
+        })
+
+        /** ---------- 删除 ---------- */
+        const [loadingDelKeys, setLoadingDelKeys] = useState<string[]>([])
+        const handleDelete = useMemoizedFn((info: API.FlowRuleGroupDetail) => {
+            const {groupName = "", isBuildIn} = info
+            if (isBuildIn) return
+            const isExist = loadingDelKeys.includes(groupName)
+            if (isExist) return
+
+            setLoadingDelKeys((arr) => {
+                return [...arr, groupName]
+            })
+            httpDeleteOnlineRuleGroup({groupNames: [groupName]})
+                .then(() => {
+                    // 删除后自动把选中里的该条去掉
+                    setSelect((arr) => arr.filter((item) => item.groupName !== info.groupName))
+                    handleUpdateData("delete", info)
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setLoadingDelKeys((arr) => arr.filter((ele) => ele !== groupName))
+                    }, 200)
+                })
+        })
+
+        return (
+            <div className={styles["rule-group-list"]}>
+                {!canFetchList ? (
+                    <>
+                        <YakitEmpty
+                            image={<img src={NoPermissions} alt='' />}
+                            imageStyle={{width: 220, height: 150, margin: "auto"}}
+                            title='暂无查看权限'
+                            description='登录后即可查看'
+                        />
+                        <YakitButton style={{width: 200, marginLeft: 50}} type='outline1' onClick={() => onLogin()}>
+                            立即登录
+                        </YakitButton>
+                        {loginShow && <Login visible={loginShow} onCancel={onLoadCancel} />}
+                    </>
+                ) : (
+                    <>
+                        {data.length === 0 ? (
+                            <YakitSpin spinning={loading}>
+                                <YakitEmpty title='暂无数据' />
+                            </YakitSpin>
+                        ) : (
+                            <>
+                                <div className={styles["list-search-and-add"]}>
+                                    <YakitInput.Search
+                                        size='large'
+                                        allowClear={true}
+                                        placeholder='请输入组名'
+                                        onSearch={handleSearch}
+                                    />
+                                </div>
+
+                                <div className={styles["list-container"]}>
+                                    <YakitSpin spinning={loading}>
+                                        <div ref={wrapperRef} className={styles["list-body"]}>
+                                            <div ref={bodyRef}>
+                                                {data.map((item) => {
+                                                    const {groupName: name = ""} = item
+
+                                                    const isCheck = selectGroups.includes(name)
+                                                    const isDelLoading = loadingDelKeys.includes(name)
+
+                                                    return (
+                                                        <div
+                                                            key={name}
+                                                            className={classNames(styles["list-local-opt"], {
+                                                                [styles["list-local-opt-active"]]: isCheck
+                                                            })}
+                                                            onClick={() => {
+                                                                handleSelect(item)
+                                                            }}
+                                                        >
+                                                            <div className={styles["info-wrapper"]}>
+                                                                <YakitCheckbox
+                                                                    checked={isCheck}
+                                                                    onChange={() => {
+                                                                        handleSelect(item)
+                                                                    }}
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                />
+                                                                <SolidFolderopenIcon />
+                                                                <span
+                                                                    className={classNames(
+                                                                        styles["title-style"],
+                                                                        "yakit-content-single-ellipsis"
+                                                                    )}
+                                                                    title={item.groupName}
+                                                                >
+                                                                    {item.groupName}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className={styles["total-style"]}>{item.count}</div>
+                                                            <div
+                                                                className={styles["btns-wrapper"]}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                }}
+                                                            >
+                                                                <YakitButton
+                                                                    type='secondary2'
+                                                                    icon={<OutlineClouddownloadIcon />}
+                                                                    onClick={() => {
+                                                                        ruleGroupItemRef.current = item
+                                                                        setDownloadInfoVisible(true)
+                                                                    }}
+                                                                />
+                                                                {canDel && (
+                                                                    <YakitButton
+                                                                        type='secondary2'
+                                                                        colors='danger'
+                                                                        icon={<OutlineTrashIcon />}
+                                                                        loading={isDelLoading}
+                                                                        onClick={() => {
+                                                                            handleDelete(item)
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    </YakitSpin>
+                                    {/* 下载提示 */}
+                                    <YakitHint
+                                        visible={downloadInfoVisible}
+                                        title='下载提示'
+                                        content='如果规则id相同则会直接覆盖，是否确认下载'
+                                        okButtonText='确认'
+                                        mask={true}
+                                        onOk={() => {
+                                            handleDownload()
+                                        }}
+                                        onCancel={() => {
+                                            ruleGroupItemRef.current = undefined
+                                            setDownloadInfoVisible(false)
+                                        }}
+                                    ></YakitHint>
+                                    {downloadPercentShow && (
+                                        <RuleUploadAndDownloadModal
+                                            getContainer={
+                                                document.getElementById(
+                                                    `main-operator-page-body-${downloadContainerRef.current}`
+                                                ) || undefined
+                                            }
+                                            type='download'
+                                            apiKey='DownloadSyntaxFlowRule'
+                                            token={downloadTokenRef.current}
+                                            onCancel={() => {
+                                                setDownloadPercentShow(false)
+                                            }}
+                                            onSuccess={() => {
+                                                onRefreshRuleManagement()
+                                            }}
+                                        ></RuleUploadAndDownloadModal>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </>
+                )}
+            </div>
+        )
+    })
+)
