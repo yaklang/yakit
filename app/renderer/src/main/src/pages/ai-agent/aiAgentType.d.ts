@@ -1,23 +1,14 @@
 import {Dispatch, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
+import {SliderSingleProps} from "antd"
 
 export interface AIAgentProps {}
 
 // #region 页面全局变量
 // 全局配置信息
-export interface AIAgentSetting {
-    /** 是否禁用人机交互 */
-    DisallowRequireForUserPrompt?: AIStartParams["DisallowRequireForUserPrompt"]
-    /** Review 政策 */
-    ReviewPolicy?: AIStartParams["ReviewPolicy"]
-    /** 是否激活系统文件操作权限 */
-    EnableSystemFileSystemOperator?: AIStartParams["EnableSystemFileSystemOperator"]
-    /** 是否使用默认系统配置AI */
-    UseDefaultAIConfig?: AIStartParams["UseDefaultAIConfig"]
-    /** 任务模板 */
-    ForgeName?: string
-}
+export interface AIAgentSetting
+    extends Omit<AIStartParams, "CoordinatorId" | "Sequence" | "McpServers" | "UserQuery"> {}
 
 // 触发事件通信
 export interface AIAgentTriggerEventInfo {
@@ -72,6 +63,8 @@ export type AIAgentTab = "history" | "setting" //  | "mcp"
 
 // 全局配置
 export interface AIChatSettingProps {}
+// 表单组件-滑动输入条
+export type FormItemSliderProps = SliderSingleProps & {init?: boolean}
 
 // 历史对话
 export interface HistoryChatProps {
@@ -121,8 +114,11 @@ export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    pressure: AIChatMessage.Pressure[]
-    cost: AIChatMessage.AICostMS[]
+    pressure: {
+        current_cost_token_size: number[]
+        pressure_token_size: number
+    }
+    cost: number[]
 }
 
 // 对话框回答
@@ -141,6 +137,7 @@ export interface AIAgentChatStreamProps {
 export interface AIAgentChatReviewProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
+    delayLoading: boolean
     review: AIChatReview
     onSend: (info: AIChatMessage.ReviewSelector, qs?: string) => void
     onSendAIRequire: (value: string) => void

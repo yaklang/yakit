@@ -427,6 +427,14 @@
         }
     }
 
+    .review-delay-loading {
+        height: 100px;
+        .spin-wrapper {
+            justify-content: center;
+            align-items: center;
+        }
+    }
+
     .review-btns {
         min-height: 100px;
         overflow-y: auto;

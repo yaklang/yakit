@@ -32,33 +32,39 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
 
     const [infoShow, setInfoShow] = React.useState(false)
 
-    const setting: AITreeNodeInfo = useMemo(() => {
+    const setting: AITreeNodeInfo | null = useMemo(() => {
         if (order === 0) return {empty: {}, node: {}}
         else {
-            const indexList = index.trim().split("-").filter(Boolean)
-            const preIndexList = preIndex.trim().split("-").filter(Boolean)
+            try {
+                const indexList = index.trim().split("-").filter(Boolean)
+                const preIndexList = preIndex.trim().split("-").filter(Boolean)
 
-            if (indexList.length - preIndexList.length === 1) {
-                return {
-                    empty: {lineNum: indexList.length - 1, isStartEnd: "start"},
-                    node: {lineNum: indexList.length - 1}
+                if (indexList.length - preIndexList.length === 1) {
+                    return {
+                        empty: {lineNum: indexList.length - 1, isStartEnd: "start"},
+                        node: {lineNum: indexList.length - 1}
+                    }
                 }
-            }
-            if (preIndexList.length - indexList.length === 1) {
-                return {
-                    empty: {lineNum: indexList.length, isStartEnd: "end"},
-                    node: {lineNum: indexList.length - 1}
+                if (preIndexList.length - indexList.length === 1) {
+                    return {
+                        empty: {lineNum: indexList.length, isStartEnd: "end"},
+                        node: {lineNum: indexList.length - 1}
+                    }
                 }
-            }
-            if (indexList.length === preIndexList.length) {
-                return {
-                    empty: {lineNum: indexList.length},
-                    node: {lineNum: indexList.length - 1, isSibling: true}
+                if (indexList.length === preIndexList.length) {
+                    return {
+                        empty: {lineNum: indexList.length},
+                        node: {lineNum: indexList.length - 1, isSibling: true}
+                    }
                 }
+                return {empty: {}, node: {}}
+            } catch (error) {
+                return null
             }
-            return {empty: {}, node: {}}
         }
     }, [order, index, preIndex])
+
+    if (setting === null) return null
 
     return (
         <div className={styles["ai-tree-node"]}>
