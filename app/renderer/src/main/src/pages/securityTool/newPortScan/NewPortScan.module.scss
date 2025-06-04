@@ -43,6 +43,16 @@
     padding: 12px;
     border-radius: 4px;
     background: var(--yakit-card-background-color);
+    
+    .template-checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        
+        :global(.ant-checkbox-wrapper) {
+            flex: 1;
+        }
+    }
 }
 
 .ports-form-extra {
