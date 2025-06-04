@@ -47,17 +47,16 @@
     user-select: none;
     &:hover {
         background-color: var(--yakit-card-background-color);
-        .search-icon {
-            display: flex;
-        }
     }
     .search-icon {
-        &:hover {
-            color: var(--yakit-primary-5);
-        }
+        cursor: pointer;
+
         svg {
             width: 16px;
             height: 16px;
+            &:hover {
+                color: var(--yakit-primary-5);
+            }
         }
     }
     .item-left {
