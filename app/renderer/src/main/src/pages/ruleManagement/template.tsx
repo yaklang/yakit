@@ -2604,7 +2604,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                     <YakitHint
                                         visible={downloadInfoVisible}
                                         title='下载提示'
-                                        content='如果存在相同id规则会直接覆盖，是否确认下载'
+                                        content='如果规则id相同则会直接覆盖，是否确认下载'
                                         okButtonText='确认'
                                         mask={true}
                                         onOk={() => {

@@ -37,6 +37,7 @@
     .online-group-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 8px;
         padding: 0 12px;
         .online-group-desc {
