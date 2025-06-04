@@ -247,32 +247,8 @@ module.exports = (win, getClient) => {
         return await handleCancelCallTool(token)
     })
 
-    let yakMCPStream = null
-    ipcMain.handle("cancel-yak-mcp-server", async () => {
-        if (yakMCPStream) {
-            yakMCPStream.cancel()
-            yakMCPStream = null
-        }
-    })
-    ipcMain.handle("start-yak-mcp-server", async (e) => {
-        if (yakMCPStream) {
-            return Promise.reject("stream already exist")
-        }
-        yakMCPStream = getClient().StartSSEMCP({Tools: [], Resources: [], DisableTools: [], DisableResources: []})
-        yakMCPStream.on("data", (e) => {
-            if (win) {
-                win.webContents.send("yak-mcp-server-send", e)
-            }
-        })
-        yakMCPStream.on("end", () => {
-            if (yakMCPStream) {
-                yakMCPStream.cancel()
-                yakMCPStream = null
-            }
-        })
-    })
-
     let aiChatStreamPool = new Map()
+    // 开始执行 AI Agent 聊天
     ipcMain.handle("start-ai-agent-chat", async (e, token, params) => {
         let stream = getClient().StartAITask()
         handlerHelper.registerHandler(win, stream, aiChatStreamPool, token)
@@ -282,6 +258,7 @@ module.exports = (win, getClient) => {
             throw new Error(error)
         }
     })
+    // 聊天过程发送 AI Agent 聊天消息
     ipcMain.handle("send-ai-agent-chat", async (e, token, params) => {
         const currentStream = aiChatStreamPool.get(token)
         if (!currentStream) {
@@ -293,5 +270,6 @@ module.exports = (win, getClient) => {
             throw new Error(error)
         }
     })
+    // 取消 AI Agent 聊天F
     ipcMain.handle("cancel-ai-agent-chat", handlerHelper.cancelHandler(aiChatStreamPool))
 }

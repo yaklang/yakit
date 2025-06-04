@@ -178,7 +178,9 @@ export declare namespace AIChatMessage {
     /** 计划 */
     export interface PlanTask {
         index: string
+        /** 任务名 */
         name: string
+        /** 正文 */
         goal: string
         /** 前端渲染专属属性, proto 上不存在 */
         state?: "success" | "error" | "wait" | "in-progress"

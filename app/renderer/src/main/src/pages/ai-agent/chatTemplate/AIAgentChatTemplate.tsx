@@ -34,7 +34,8 @@ import {AIChatMessage, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {Sparklines, SparklinesCurve, SparklinesReferenceLine, SparklinesSpots} from "react-sparklines"
+import {Sparklines, SparklinesCurve, SparklinesSpots} from "react-sparklines"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
@@ -107,14 +108,15 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         setExpand(false)
     })
 
-    const pressureInfo = useMemo(() => {
-        const infos = pressure.map((item) => item.current_cost_token_size)
-        return infos
+    const lastPressure = useMemo(() => {
+        const length = pressure.current_cost_token_size.length
+        if (length === 0) return 0
+        return pressure.current_cost_token_size[length - 1]
     }, [pressure])
 
     const costInfo = useMemo(() => {
         if (cost.length === 0) return -1
-        return cost[cost.length - 1].ms
+        return cost[cost.length - 1]
     }, [cost])
 
     return (
@@ -142,20 +144,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         <div className={styles["header-title"]}>上下文压力</div>
                         <div className={classNames(styles["tag-last"], styles["pressure-wrapper"])}>
                             <OutlineEngineIcon />
-                            {formatNumberUnits(pressureInfo[pressureInfo.length - 1] || 0)}/
-                            {formatNumberUnits(pressure[0]?.pressure_token_size || 0)}
+                            {formatNumberUnits(lastPressure)}
                         </div>
                     </div>
 
                     <div>
                         <Sparklines
-                            data={pressureInfo}
+                            data={pressure.current_cost_token_size}
                             // width={50}
                             height={30}
                             // max={50}
                         >
                             <SparklinesCurve color='#85899E' />
-                            {/* <SparklinesReferenceLine type='custom' value={29} /> */}
                             <SparklinesSpots />
                         </Sparklines>
                     </div>
@@ -388,7 +388,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
 /** @name 审阅内容 */
 export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) => {
-    const {review, onSend, onSendAIRequire} = props
+    const {delayLoading, review, onSend, onSendAIRequire} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -400,7 +400,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     })
 
     const reviewTitle = useMemo(() => {
-        const {type} = review
+        const {type} = review || {}
 
         if (type === "plan_review_require") {
             return {title: "计划审阅", subTitle: "请审核是否要按以下计划继续执行？"}
@@ -419,12 +419,13 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     }, [review])
 
     const isContinue = useMemo(() => {
+        if (delayLoading) return false
         if (review.type === "require_user_interactive") return false
         const findIndex = (review.data as NoAIChatReviewSelector).selectors?.findIndex(
             (item) => item.value === "continue"
         )
         return findIndex !== -1
-    }, [review])
+    }, [delayLoading, review])
 
     // #region 审阅-选项相关
     const [editShow, setEditShow] = useState(false)
@@ -450,6 +451,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
     /** 继续执行 */
     const handleContinue = useMemoizedFn(() => {
+        if (delayLoading) return
         if (!isContinue) return
         if (review.type === "require_user_interactive") return
         const find = (review.data as NoAIChatReviewSelector).selectors.find((item) => item.value === "continue")
@@ -592,48 +594,56 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                     <div className={styles["sub-title-style"]}>{reviewTitle.subTitle || ""}</div>
                 </div>
 
-                {review.type !== "require_user_interactive" && (
-                    <div className={styles["review-body"]}>
-                        {planReview}
-                        {taskReview}
-                        {toolReview}
+                {delayLoading ? (
+                    <div className={styles["review-delay-loading"]}>
+                        <YakitSpin wrapperClassName={styles["spin-wrapper"]} spinning={true} tip='加载中...' />
                     </div>
-                )}
-
-                <div className={styles["review-btns"]}>
-                    {review.type === "require_user_interactive" ? (
-                        aiOptions
-                    ) : editShow ? (
-                        <div className={styles["review-input"]}>
-                            <Input.TextArea
-                                bordered={false}
-                                placeholder={editInfo.current?.prompt || "请输入..."}
-                                value={question}
-                                autoSize={{minRows: 4, maxRows: 4}}
-                                onChange={(e) => setQuestion(e.target.value)}
-                            />
-
-                            <div className={styles["question-footer"]}>
-                                <div></div>
-                                <div className={styles["extra-btns"]}>
-                                    <YakitButton
-                                        className={styles["btn-style"]}
-                                        type='outline2'
-                                        icon={<OutlineXIcon />}
-                                        onClick={() => handleCallbackEdit(false)}
-                                    />
-                                    <YakitButton
-                                        className={styles["btn-style"]}
-                                        icon={<OutlineArrowrightIcon />}
-                                        onClick={() => handleCallbackEdit(true)}
-                                    />
-                                </div>
+                ) : (
+                    <>
+                        {review.type !== "require_user_interactive" && (
+                            <div className={styles["review-body"]}>
+                                {planReview}
+                                {taskReview}
+                                {toolReview}
                             </div>
+                        )}
+
+                        <div className={styles["review-btns"]}>
+                            {review.type === "require_user_interactive" ? (
+                                aiOptions
+                            ) : editShow ? (
+                                <div className={styles["review-input"]}>
+                                    <Input.TextArea
+                                        bordered={false}
+                                        placeholder={editInfo.current?.prompt || "请输入..."}
+                                        value={question}
+                                        autoSize={{minRows: 4, maxRows: 4}}
+                                        onChange={(e) => setQuestion(e.target.value)}
+                                    />
+
+                                    <div className={styles["question-footer"]}>
+                                        <div></div>
+                                        <div className={styles["extra-btns"]}>
+                                            <YakitButton
+                                                className={styles["btn-style"]}
+                                                type='outline2'
+                                                icon={<OutlineXIcon />}
+                                                onClick={() => handleCallbackEdit(false)}
+                                            />
+                                            <YakitButton
+                                                className={styles["btn-style"]}
+                                                icon={<OutlineArrowrightIcon />}
+                                                onClick={() => handleCallbackEdit(true)}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                noAIOptions
+                            )}
                         </div>
-                    ) : (
-                        noAIOptions
-                    )}
-                </div>
+                    </>
+                )}
             </div>
 
             <div className={styles["review-footer"]}>

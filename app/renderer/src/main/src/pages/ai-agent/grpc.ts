@@ -70,29 +70,3 @@ export const grpcMCPClientCancelCallTool: APIFunc<string, string> = (token, hidd
             })
     })
 }
-
-/** @name 启动默认mcp服务器 */
-export const grpcStartYakMcp: APINoRequestFunc<string> = (hiddenError) => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("start-yak-mcp-server")
-            .then(resolve)
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "启动引擎内置 mcp 服务器失败:" + e)
-                reject(e)
-            })
-    })
-}
-
-/** @name 断开默认mcp服务器 */
-export const grpcCancelYakMcp: APINoRequestFunc<string> = (hiddenError) => {
-    return new Promise(async (resolve, reject) => {
-        ipcRenderer
-            .invoke("cancel-yak-mcp-server")
-            .then(resolve)
-            .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "关闭引擎内置 mcp 服务器失败:" + e)
-                reject(e)
-            })
-    })
-}

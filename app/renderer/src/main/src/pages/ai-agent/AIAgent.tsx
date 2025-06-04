@@ -8,22 +8,18 @@ import {ServerChat} from "./ServerChat"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {AIChatInfo} from "./type/aiChat"
 import {useSize, useThrottleEffect, useUpdateEffect} from "ahooks"
-import {YakitAIAgentPageID} from "./defaultConstant"
+import {AIAgentSettingDefault, YakitAIAgentPageID} from "./defaultConstant"
+import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
     // #region ai-agent页面全局缓存
-    // ai-agent-chat 全局配置
-    const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>({
-        DisallowRequireForUserPrompt: false,
-        ReviewPolicy: "manual",
-        EnableSystemFileSystemOperator: true,
-        UseDefaultAIConfig: true
-    })
     // mcp 服务器列表
     const [servers, setServers, getServers] = useGetSetState<RenderMCPClientInfo[]>([])
+    // ai-agent-chat 全局配置
+    const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
     // 历史对话
     const [chats, setChats, getChats] = useGetSetState<AIChatInfo[]>([])
     // 当前展示对话

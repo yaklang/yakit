@@ -1,5 +1,5 @@
 import {ReactNode} from "react"
-import {AIAgentTab} from "./aiAgentType"
+import {AIAgentSetting, AIAgentTab} from "./aiAgentType"
 import {MCPTransportType} from "./type/mcpClient"
 import {OutlineCogIcon, OutlineSparklesIcon} from "@/assets/icon/outline"
 
@@ -12,6 +12,20 @@ export const AIAgentTabList: {key: AIAgentTab; title: string; icon: ReactNode}[]
     {key: "setting", title: "配置", icon: <OutlineCogIcon />}
 ]
 
+/** ai-agent 聊天全局配置参数默认值 */
+export const AIAgentSettingDefault: AIAgentSetting = {
+    EnableSystemFileSystemOperator: true,
+    UseDefaultAIConfig: true,
+    ForgeName: "",
+    DisallowRequireForUserPrompt: false,
+    ReviewPolicy: "manual",
+    AIReviewRiskControlScore: 0.5,
+    AITransactionRetry: 0,
+    EnableAISearchTool: true,
+    EnableAISearchInternet: true
+}
+
+/** mcp 自定义服务器配置类型选项 */
 export const MCPTransportTypeList: {value: MCPTransportType; label: string}[] = [
     {label: "SSE", value: "sse"},
     {label: "STDIO", value: "stdio"}

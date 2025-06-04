@@ -2,7 +2,7 @@ import React, {memo, useMemo, useRef, useState} from "react"
 import {HistoryChatProps} from "./aiAgentType"
 import useStore from "./useContext/useStore"
 import useDispatcher from "./useContext/useDispatcher"
-import {useMemoizedFn} from "ahooks"
+import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
 import {AIChatInfo} from "./type/aiChat"
 import {EditChatNameModal} from "./UtilModals"
@@ -12,7 +12,6 @@ import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrash
 import {Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
@@ -27,13 +26,13 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
         return activeChat?.id || ""
     }, [activeChat])
 
-    const [searchShow, setSearchShow] = useState(false)
     const [search, setSearch] = useState("")
+    const searchDebounce = useDebounce(search, {wait: 500})
 
     const showHistory = useMemo(() => {
         if (!search) return chats
         return chats.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-    }, [chats, search])
+    }, [chats, searchDebounce])
 
     const handleSetActiveChat = useMemoizedFn((info: AIChatInfo) => {
         setActiveChat && setActiveChat(info)
@@ -86,27 +85,23 @@ export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
 
     return (
         <div className={styles["history-chat"]}>
-            <div className={styles["header"]}>
-                <div className={styles["header-title"]}>
-                    历史会话
-                    <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
+            <div className={styles["header-wrapper"]}>
+                <div className={styles["haeder-first"]}>
+                    <div className={styles["first-title"]}>
+                        历史会话
+                        <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
+                    </div>
+                    <YakitButton icon={<OutlinePlussmIcon />} onClick={onNewChat} />
                 </div>
 
-                <div className={styles["header-extra"]}>
-                    <YakitPopover
-                        trigger='click'
-                        overlayStyle={{paddingTop: 2}}
-                        placement='bottom'
-                        content={
-                            <YakitInput.Search allowClear={true} placeholder='请输入关键词' onSearch={setSearch} />
-                        }
-                        visible={searchShow}
-                        onVisibleChange={setSearchShow}
-                    >
-                        <YakitButton type='text2' icon={<OutlineSearchIcon />} />
-                    </YakitPopover>
-
-                    <YakitButton icon={<OutlinePlussmIcon />} onClick={onNewChat} />
+                <div className={styles["header-second"]}>
+                    <YakitInput
+                        prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
+                        allowClear={true}
+                        placeholder='请输入关键词搜索'
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
                 </div>
             </div>
 
