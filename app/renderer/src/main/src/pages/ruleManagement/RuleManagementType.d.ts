@@ -175,12 +175,28 @@ export interface SyntaxFlowRule {
     AllowIncluded: boolean
     IncludedName: string
     Tag: string
-    AlertDesc: string
 
     Hash: string
 
     GroupName: string[]
+
+    AlertMsg: {[key: string]: AlertMessage}
 }
+
+export interface AlertMessage {
+    Title: string
+    TitleZh: string
+    Description: string
+    Solution: string
+    Severity: string
+    Purpose: string
+    Msg: string
+    Cve: string
+    RiskType: string
+    Tag: string
+    Extra: {[key: string]: string}
+}
+
 export interface QuerySyntaxFlowRuleResponse {
     Pagination: Paging
     Rule: SyntaxFlowRule[]
@@ -194,6 +210,7 @@ export interface SyntaxFlowRuleInput {
     Tags?: string[] // 无效，不知道后端是否有用
     GroupNames: string[]
     Description: string
+    AlertMsg: {[key: string]: AlertMessage}
 }
 export interface CreateSyntaxFlowRuleRequest {
     SyntaxFlowInput: SyntaxFlowRuleInput
