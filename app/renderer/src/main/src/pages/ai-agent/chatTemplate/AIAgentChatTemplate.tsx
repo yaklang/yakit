@@ -39,7 +39,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 
-import {ContextPressureEcharts} from "./AIEcharts"
+import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -164,8 +164,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                             {`${costInfo < 0 ? "-" : costInfo}ms`}
                         </div>
                     </div>
-
-                    <div></div>
+                    {cost.length > 0 && <ResponseSpeedEcharts data={cost} />}
                 </div>
             </div>
         </div>
