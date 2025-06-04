@@ -37,7 +37,7 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
 
-import {ContextPressureEcharts} from "./AIEcharts"
+import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -113,8 +113,15 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     }, [pressure])
 
     const costInfo = useMemo(() => {
-        if (cost.length === 0) return -1
-        return cost[cost.length - 1].ms
+        if (cost.length === 0)
+            return {
+                latestValue: -1,
+                list: []
+            }
+        return {
+            latestValue: cost[cost.length - 1].ms,
+            list: cost.map((item) => item.ms)
+        }
     }, [cost])
 
     return (
@@ -158,11 +165,10 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         <div className={styles["header-title"]}>响应速度</div>
                         <div className={classNames(styles["tag-last"], styles["cost-wrapper"])}>
                             <OutlineRocketLaunchIcon />
-                            {`${costInfo < 0 ? "-" : costInfo}ms`}
+                            {`${costInfo.latestValue < 0 ? "-" : costInfo.latestValue}ms`}
                         </div>
                     </div>
-
-                    <div></div>
+                    {costInfo.list.length > 0 && <ResponseSpeedEcharts data={costInfo.list} />}
                 </div>
             </div>
         </div>
