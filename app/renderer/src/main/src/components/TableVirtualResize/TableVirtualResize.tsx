@@ -51,7 +51,9 @@ import locale from "antd/es/date-picker/locale/zh_CN"
 import {YakitDatePicker} from "@/components/yakitUI/YakitDatePicker/YakitDatePicker"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {parseColorTag} from "./utils"
-
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
+import {v4 as uuidv4} from "uuid"
 const {RangePicker} = YakitDatePicker
 
 /**
@@ -255,10 +257,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
 
     const [inViewport] = useInViewport(containerRef)
     const [mouseEnter, setMouseEnter] = useState<boolean>(false)
-    // 使用上箭头
-    useHotkeys(
-        "up",
-        () => {
+
+    const focusIdRef = useRef<string>(uuidv4())
+    useShortcutKeyTrigger("tableVirtualUP*common", (focus) => {
+        if(focus === focusIdRef.current && useUpAndDown){
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -292,36 +294,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     upKey(index)
                 }, 50)
             }
-        },
-        {enabled: inViewport && useUpAndDown},
-        [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
-    )
-    const upKey = useDebounceFn(
-        (index: number) => {
-            if (!currentRow) {
-                return
-            }
-            const currentDom = document.getElementById(currentRow[renderKey])
-            if (!currentDom) {
-                const dom = containerRef.current
-                //  长按up
-                // scrollTo(index) // 缓慢滑到
-                if (dom) dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
-                return
-            }
-            const currentPosition: tablePosition = currentDom.getBoundingClientRect()
-            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
-            const inViewport =
-                currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+        }
+    })
 
-            if (!inViewport) scrollTo(index)
-        },
-        {wait: 100, leading: true}
-    ).run
-    // 使用下箭头
-    useHotkeys(
-        "down",
-        () => {
+    useShortcutKeyTrigger("tableVirtualDown*common", (focus) => {
+        if(focus === focusIdRef.current && useUpAndDown){
             if (!mouseEnter && inMouseEnterTable) return
             if (!setCurrentRow) return
             const dataLength = data.length
@@ -356,10 +333,32 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     downKey(index)
                 }, 50)
             }
+        }
+    })
+
+    const upKey = useDebounceFn(
+        (index: number) => {
+            if (!currentRow) {
+                return
+            }
+            const currentDom = document.getElementById(currentRow[renderKey])
+            if (!currentDom) {
+                const dom = containerRef.current
+                //  长按up
+                // scrollTo(index) // 缓慢滑到
+                if (dom) dom.scrollTop = index * defItemHeight //滑动方式：马上滑到
+                return
+            }
+            const currentPosition: tablePosition = currentDom.getBoundingClientRect()
+            const top = containerRefPosition.current.top + (containerRefPosition.current.height || 0)
+            const inViewport =
+                currentPosition.top - 28 <= top && currentPosition.top - 28 >= containerRefPosition.current.top
+
+            if (!inViewport) scrollTo(index)
         },
-        {enabled: inViewport && useUpAndDown},
-        [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
-    )
+        {wait: 100, leading: true}
+    ).run
+
     const downKey = useDebounceFn(
         (index: number) => {
             if (!currentRow) {
@@ -976,6 +975,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     })
 
     return (
+        <ShortcutKeyFocusHook style={{height:"100%"}} focusId={focusIdRef.current}>
         <div
             className={classNames(styles["virtual-table"])}
             ref={tableRef}
@@ -1177,6 +1177,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </YakitSpin>
             )}
         </div>
+        </ShortcutKeyFocusHook>
     )
 }
 

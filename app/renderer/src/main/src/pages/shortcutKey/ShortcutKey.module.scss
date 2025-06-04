@@ -15,8 +15,17 @@
     .shortcut-key-content {
         flex: 1;
         overflow: hidden auto;
+        padding-top: 20px;
         padding-left: 30px;
         border-top: 1px solid #eaecf3;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .option {
+        padding-top: 20px;
+        padding-left: 250px;
     }
 
     .key-opt {
@@ -24,6 +33,7 @@
         align-items: center;
         gap: 20px;
         .opt-name {
+            width: 200px;
             color: #31343f;
             font-size: 14px;
             line-height: 20px;
@@ -31,11 +41,15 @@
         }
         .opt-key {
             cursor: pointer;
-            padding: 7px;
-            color: #85899e;
+            padding: 4px 10px;
+            color: black;
             font-size: 14px;
             line-height: 20px;
             user-select: none;
+            border: 1px solid var(--yakit-border-color);
+            &:hover {
+                border: 1px solid var(--yakit-primary-4);
+            }
         }
     }
 }
@@ -118,14 +132,14 @@
             font-size: 12px;
             line-height: 16px;
             cursor: pointer;
-            &:hover{
+            &:hover {
                 background-color: #f0f1f3;
             }
         }
-        .list-item-active{
+        .list-item-active {
             background-color: #f28b44;
             color: #ffffff;
-            &:hover{
+            &:hover {
                 background-color: #f28b44;
             }
         }

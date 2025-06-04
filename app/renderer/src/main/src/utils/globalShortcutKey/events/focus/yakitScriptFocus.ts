@@ -44,3 +44,11 @@ export const getYakitScriptFocusShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return YakitScriptFocusShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetYakitScriptFocusShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(YakitScriptFocusShortcutKeyEvents))
+}
+
+

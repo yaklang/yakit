@@ -10,7 +10,12 @@ export const addScopeShow = (newEvent, oldEvent) => {
             newEvent[key] = {...newEvent[key], scopeShow: oldEvent[key].scopeShow}
         }
     })
-
+    // 如果旧事件的key在新事件中没有，则将旧事件中此key添入新事件
+    Object.keys(oldEvent).forEach((key) => {
+        if (!newEvent[key]) {
+            newEvent[key] = oldEvent[key]
+        }
+    })
     return newEvent
 }
 
@@ -27,7 +32,11 @@ export enum GlobalShortcutKey {
     /** 发送并跳转 */
     CommonSendAndJumpToWebFuzzer = "sendAndJump*common",
     /** 仅发送 */
-    CommonSendToWebFuzzer = "send*common"
+    CommonSendToWebFuzzer = "send*common",
+
+    /** --- 公共组件快捷键（带焦点） --- */
+    TableVirtualUP= "tableVirtualUP*common",
+    TableVirtualDown= "tableVirtualDown*common"
 }
 const {Yakit, EnpriTrace} = PRODUCT_RELEASE_EDITION
 
@@ -56,6 +65,15 @@ const globalShortcutKeyEvents: EventsType = {
         name: "仅发送",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R],
         scopeShow: [Yakit, EnpriTrace]
+    },
+    // 公共组件快捷键 + 焦点校验 ShortcutKeyFocusHook?
+    "tableVirtualUP*common":{
+        name: "Table表格向上选",
+        keys: [YakitKeyBoard.UpArrow],
+    },
+    "tableVirtualDown*common":{
+        name: "Table表格向下选",
+        keys: [YakitKeyBoard.DownArrow],
     }
 }
 
@@ -86,3 +104,11 @@ export const getGlobalShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return globalShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetGlobalShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(globalShortcutKeyEvents))
+}
+
+

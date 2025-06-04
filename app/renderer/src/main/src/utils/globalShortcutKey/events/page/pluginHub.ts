@@ -44,3 +44,11 @@ export const getPluginHubShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return PluginHubShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetPluginHubShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(PluginHubShortcutKeyEvents))
+}
+
+

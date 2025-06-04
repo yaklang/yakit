@@ -80,3 +80,11 @@ export const getAuditCodeShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return AuditCodeShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetAuditCodeShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(AuditCodeShortcutKeyEvents))
+}
+
+
