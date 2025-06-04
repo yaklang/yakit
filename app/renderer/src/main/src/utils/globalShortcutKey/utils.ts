@@ -107,8 +107,8 @@ export const registerShortcutFocusHandle = (page: string) => {
     currentFocus = page
 }
 /** 注销聚焦监听事件 */
-export const unregisterShortcutFocusHandle = () => {
-    currentFocus = null
+export const unregisterShortcutFocusHandle = (page: string) => {
+    if (currentFocus === page) currentFocus = null
 }
 
 /** 是否激活了快捷键设置页面 */
@@ -126,6 +126,7 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
     try {
         const triggerKeys = sortKeysCombination(keys).join("")
         const pageKeyInfo = pageEventMaps[currentPageHandler || "global"]
+        
         if (!pageKeyInfo) return null
         const pageEvents = pageKeyInfo.getEvents()
         const pageEventKeys = Object.keys(pageEvents)
@@ -154,17 +155,18 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
 }
 
 export const handleShortcutKey = (ev: KeyboardEvent) => {
-    console.log("handleShortcutKey---",ev);
-    
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return
     if (getIsActiveShortcutKeyPage()) {
-        emiter.emit("onGlobalShortcutKey", `setShortcutKey(${keys.join("|")})`)
+        emiter.emit("onGlobalShortcutKey",  `setShortcutKey(${keys.join("|")})`)
         return
     } else {
         const eventName = parseShortcutKeyEvent(keys)
         if (!eventName) return
-        emiter.emit("onGlobalShortcutKey", eventName)
+        emiter.emit("onGlobalShortcutKey", JSON.stringify({
+            eventName,
+            currentFocus
+        }) )
         return
     }
 }

@@ -14,8 +14,8 @@ import styles from "./ShortcutKey.module.scss"
 import {isConflictToYakEditor} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {Spin} from "antd"
 import {GetReleaseEdition} from "@/utils/envfile"
-import {isArray} from "lodash"
 import {GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
+import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 
 const getShortcutPageName = (page) => {
     if (page === "global") {
@@ -37,13 +37,17 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     const [loading, setLoading] = useState<boolean>(false)
     const [data, setData] = useState<Record<string, ShortcutKeyEventInfo>>(pageEventMaps["global"].getEvents())
 
-    useEffect(() => {
+    const getData = useMemoizedFn((key) => {
         setLoading(true)
-        pageEventMaps[page].getStorage()
+        pageEventMaps[key].getStorage()
         setTimeout(() => {
-            setData(pageEventMaps[page].getEvents())
+            setData(pageEventMaps[key].getEvents())
             setLoading(false)
         }, 200)
+    })
+
+    useEffect(() => {
+        getData(page)
     }, [page])
 
     const eventKeys = useMemo(() => {
@@ -51,8 +55,6 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
             const key = item as GlobalShortcutKey
             return !data[key].scopeShow || (data[key].scopeShow || []).includes(GetReleaseEdition())
         })
-        console.log("newEventKeys---",newEventKeys,data);
-        
         return newEventKeys
     }, [data])
 
@@ -118,15 +120,27 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                     {eventKeys.map((key) => {
                         const {name, keys} = data[key]
                         return (
-                            <div key={name} className={styles["key-opt"]}>
+                            <div key={key} className={styles["key-opt"]}>
                                 <div className={styles["opt-name"]}>{name}</div>
 
-                                <div className={styles["opt-key"]} onDoubleClick={() => handleOpenKeyShow(key)}>
+                                <div className={styles["opt-key"]} onClick={() => handleOpenKeyShow(key)}>
                                     {convertKeyboardToUIKey(keys)}
                                 </div>
                             </div>
                         )
                     })}
+                </div>
+
+                <div className={styles["option"]}>
+                    <YakitButton
+                        size="large"
+                        onClick={() => {
+                            pageEventMaps[page].resetEvents()
+                            getData(page)
+                        }}
+                    >
+                        恢复默认设置
+                    </YakitButton>
                 </div>
 
                 <YakitModal
@@ -135,7 +149,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                     title='编辑快捷键'
                     centered={true}
                     keyboard={false}
-                    closable={false}
+                    // closable={false}
                     footer={null}
                     maskClosable={false}
                     maskStyle={{backgroundColor: "transparent"}}

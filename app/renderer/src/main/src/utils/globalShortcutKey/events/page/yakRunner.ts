@@ -87,3 +87,11 @@ export const getYakRunnerShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return YakRunnerShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetYakRunnerShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(YakRunnerShortcutKeyEvents))
+}
+
+

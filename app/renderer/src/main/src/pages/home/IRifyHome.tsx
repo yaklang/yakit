@@ -21,7 +21,6 @@ import {FieldName, Fields} from "../risks/RiskTable"
 import {QueryGeneralResponse} from "../invoker/schema"
 import {SSAProgramResponse} from "../yakRunnerAuditCode/AuditCode/AuditCodeType"
 import {apiGetSSARiskFieldGroup} from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
-import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
 const {ipcRenderer} = window.require("electron")
 interface IRifyHomeProps {}
 const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
@@ -86,7 +85,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
     }
 
     return (
-        <ShortcutKeyFocusHook style={{height:"100%"}}>
         <div className={styles["irify-home"]} ref={homeRef}>
             <div className={styles["main"]}>
                 <div className={styles["header"]}>代码千万行 安全第一行</div>
@@ -165,7 +163,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                     </div>
                 </div>
             </div>
-<ShortcutKeyFocusHook>
             <div className={styles["footer"]}>
                 <div className={styles["main"]}>
                     <div className={styles["data-preview-item"]}>
@@ -259,9 +256,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                     </div>
                 </div>
             </div>
-            </ShortcutKeyFocusHook>
         </div>
-        </ShortcutKeyFocusHook>
     )
 }
 

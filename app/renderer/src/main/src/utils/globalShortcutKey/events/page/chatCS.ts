@@ -56,3 +56,11 @@ export const getChatCSShortcutKeyEvents = () => {
     if (currentKeyEvents) return currentKeyEvents
     return ChatCSShortcutKeyEvents
 }
+
+/** 重置快捷键 */
+export const resetChatCSShortcutKeyEvents = () => {
+    currentKeyEvents = null
+    setLocalValue(LocalStorageKey, JSON.stringify(ChatCSShortcutKeyEvents))
+}
+
+
