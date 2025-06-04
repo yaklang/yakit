@@ -34,10 +34,10 @@ import {AIChatMessage, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {Sparklines, SparklinesCurve, SparklinesReferenceLine, SparklinesSpots} from "react-sparklines"
-
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+
+import {ContextPressureEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -142,23 +142,13 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         <div className={styles["header-title"]}>上下文压力</div>
                         <div className={classNames(styles["tag-last"], styles["pressure-wrapper"])}>
                             <OutlineEngineIcon />
-                            {formatNumberUnits(pressureInfo[pressureInfo.length - 1] || 0)}/
-                            {formatNumberUnits(pressure[0]?.pressure_token_size || 0)}
+                            {formatNumberUnits(pressureInfo[pressureInfo.length - 1] || 0)}
                         </div>
                     </div>
 
-                    <div>
-                        <Sparklines
-                            data={pressureInfo}
-                            // width={50}
-                            height={30}
-                            // max={50}
-                        >
-                            <SparklinesCurve color='#85899E' />
-                            {/* <SparklinesReferenceLine type='custom' value={29} /> */}
-                            <SparklinesSpots />
-                        </Sparklines>
-                    </div>
+                    {pressureInfo.length > 0 && (
+                        <ContextPressureEcharts data={pressureInfo} threshold={pressure[0]?.pressure_token_size || 0} />
+                    )}
                 </div>
 
                 <div className={styles["divder-style"]}></div>
