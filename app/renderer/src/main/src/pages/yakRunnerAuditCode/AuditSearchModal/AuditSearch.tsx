@@ -18,7 +18,7 @@ import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {HTTPRequestBuilderParams} from "@/models/HTTPRequestBuilder"
 import {Progress} from "antd"
 import {AuditDetailItemProps, AuditYakUrlProps} from "../AuditCode/AuditCodeType"
-import {getNameByPath, loadAuditFromYakURLRaw} from "../utils"
+import {getNameByPath, loadAuditFromYakURLRaw, onJumpByCodeRange} from "../utils"
 import {RollingLoadList} from "@/components/RollingLoadList/RollingLoadList"
 import {AuditNodeSearchItem} from "../AuditCode/AuditCode"
 import {YakRiskCodemirror} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
@@ -85,7 +85,6 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             ]
         }
         const result = await loadAuditFromYakURLRaw(params, undefined, page, pageSize)
-
         if (result) {
             const initAuditDetail = result.Resources.filter((item) => item.VerboseType !== "result_id").map(
                 (item, index) => {
@@ -309,39 +308,9 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
     }, [activeInfo])
 
     const onJump = useMemoizedFn(async (data: AuditDetailItemProps) => {
-        try {
-            const arr = data.Extra.filter((item) => item.Key === "code_range")
-            if (arr.length > 0) {
-                const item: CodeRangeProps = JSON.parse(arr[0].Value)
-                const {url, start_line, start_column, end_line, end_column} = item
-                const name = await getNameByPath(url)
-                // console.log("monaca跳转", item, name)
-                const highLightRange: Selection = {
-                    startLineNumber: start_line,
-                    startColumn: start_column,
-                    endLineNumber: end_line,
-                    endColumn: end_column
-                }
-                const OpenFileByPathParams: OpenFileByPathProps = {
-                    params: {
-                        path: url,
-                        name,
-                        highLightRange
-                    }
-                }
-                emiter.emit("onCodeAuditOpenFileByPath", JSON.stringify(OpenFileByPathParams))
-                // 纯跳转行号
-                setTimeout(() => {
-                    const obj: JumpToAuditEditorProps = {
-                        selections: highLightRange,
-                        path: url,
-                        isSelect: false
-                    }
-                    emiter.emit("onCodeAuditJumpEditorDetail", JSON.stringify(obj))
-                }, 100)
-                onClose && onClose()
-            }
-        } catch (error) {}
+        onJumpByCodeRange(data).then(() => {
+            onClose && onClose()
+        })
     })
 
     const rightContextRef = useRef<any>()
