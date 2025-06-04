@@ -34,11 +34,12 @@ import {AIChatMessage, NoAIChatReviewSelector} from "../type/aiChat"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {Sparklines, SparklinesCurve, SparklinesSpots} from "react-sparklines"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+
+import {ContextPressureEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -148,17 +149,9 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         </div>
                     </div>
 
-                    <div>
-                        <Sparklines
-                            data={pressure.current_cost_token_size}
-                            // width={50}
-                            height={30}
-                            // max={50}
-                        >
-                            <SparklinesCurve color='#85899E' />
-                            <SparklinesSpots />
-                        </Sparklines>
-                    </div>
+                    {pressure?.current_cost_token_size?.length > 0 && (
+                        <ContextPressureEcharts data={pressure?.current_cost_token_size} threshold={lastPressure} />
+                    )}
                 </div>
 
                 <div className={styles["divder-style"]}></div>
