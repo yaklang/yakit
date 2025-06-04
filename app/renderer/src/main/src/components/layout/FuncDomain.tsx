@@ -112,8 +112,8 @@ import {QueryNewSSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/Yaki
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import SelectUpload from "@/pages/SelectUpload"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
-import {showConfigMcpForm, StartMcpServerResponse} from "@/utils/ConfigSystemMcp"
-import {useMcpStore} from "@/store/mcp"
+import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
+import useMcpStream, {mcpStreamHooks} from "@/hook/useMcp/useMcp"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -505,43 +505,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         }
     }, [])
 
-    // 启动mcp 后面写成hook
-    const {mcpToken, setMcpToken, mcpCurrent, setMcpCurrent, setMcpServerUrl} = useMcpStore()
-    useEffect(() => {
-        if (!mcpToken) {
-            return
-        }
-        ipcRenderer.on(`${mcpToken}-data`, async (_, data: StartMcpServerResponse) => {
-            setMcpCurrent(data)
-            // 后端只在running状态返回地址，此处单独存
-            if (data.Status === "running" && data.ServerUrl) {
-                setMcpServerUrl(data.ServerUrl)
-                yakitNotify("success", `MCP 服务已启动: ${data.ServerUrl}`)
-            } else if (data.Status === "error") {
-                yakitNotify("error", `MCP 服务错误: ${data.Message}`)
-            } else if (data.Status === "stopped") {
-                yakitNotify("info", `MCP 服务已停止: ${data.Message}`)
-            }
-        })
-
-        ipcRenderer.on(`${mcpToken}-error`, (_, error) => {
-            if (mcpCurrent) {
-                setMcpServerUrl("")
-                setMcpToken("")
-                setMcpCurrent({Status: "error", Message: error + "", ServerUrl: ""})
-            }
-            yakitNotify("error", `[StartMcpServer] error: ${error}`)
-        })
-
-        ipcRenderer.on(`${mcpToken}-end`, () => {
-            if (mcpCurrent) {
-                setMcpServerUrl("")
-                setMcpToken("")
-                setMcpCurrent({Status: "stopped", Message: "服务已停止", ServerUrl: ""})
-            }
-            yakitNotify("info", `[StartMcpServer] finished`)
-        })
-    }, [mcpToken])
+    // mcp 全局监听
+    const [mcpStreamInfo, mcpStreamEvent] = useMcpStream({})
 
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
@@ -591,6 +556,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                             engineMode={engineMode}
                             onEngineModeChange={onEngineModeChange}
                             typeCallback={typeCallback}
+                            mcp={{
+                                mcpStreamInfo,
+                                mcpStreamEvent
+                            }}
                         />
                     )}
                 </div>
@@ -931,6 +900,7 @@ interface UIOpSettingProp {
     /** yaklang引擎切换启动模式 */
     onEngineModeChange: (type: YaklangEngineMode) => any
     typeCallback: (type: YakitSettingCallbackType) => any
+    mcp: mcpStreamHooks
 }
 
 const GetUIOpSettingMenu = () => {
@@ -1062,7 +1032,7 @@ const GetUIOpSettingMenu = () => {
 }
 
 const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
-    const {engineMode, onEngineModeChange, typeCallback} = props
+    const {engineMode, onEngineModeChange, typeCallback, mcp} = props
 
     const [runNodeModalVisible, setRunNodeModalVisible] = useState<boolean>(false)
     const [show, setShow] = useState<boolean>(false)
@@ -1071,6 +1041,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
     const [isDiffUpdate, setIsDiffUpdate] = useState(false)
     const {dynamicStatus} = yakitDynamicStatus()
     const {delTemporaryProject} = useTemporaryProjectStore()
+    const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
 
     useEffect(() => {
         onIsCVEDatabaseReady()
@@ -1127,7 +1098,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 showConfigSystemProxyForm()
                 return
             case "mcp":
-                showConfigMcpForm()
+                setConfigMcpModalVisible(true)
                 return
             case "engineVar":
                 showConfigYaklangEnvironment()
@@ -1241,6 +1212,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 latestMode={isDiffUpdate}
             />
             <RunNodeModal runNodeModalVisible={runNodeModalVisible} onClose={() => setRunNodeModalVisible(false)} />
+            {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
         </>
     )
 })
