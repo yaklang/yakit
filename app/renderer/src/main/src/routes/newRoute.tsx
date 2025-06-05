@@ -786,8 +786,8 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
               label: "渗透测试",
               children: [
                   {
-                      page: YakitRoute.HTTPHacker,
-                      ...YakitRouteToPageInfo[YakitRoute.HTTPHacker]
+                      page: YakitRoute.MITMHacker,
+                      ...YakitRouteToPageInfo[YakitRoute.MITMHacker]
                   },
                   {
                       page: undefined,
@@ -1006,11 +1006,11 @@ export const getFixedPluginDescribe = (name: string) => {
  * @description 主要使用-编辑菜单中的系统功能列表
  */
 export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
-    [YakitRoute.HTTPHacker]: {
-        page: YakitRoute.HTTPHacker,
+    [YakitRoute.MITMHacker]: {
+        page: YakitRoute.MITMHacker,
         icon: <PrivateOutlineMitmIcon />,
         hoverIcon: <PrivateSolidMitmIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.HTTPHacker]
+        ...YakitRouteToPageInfo[YakitRoute.MITMHacker]
     },
     [YakitRoute.HTTPFuzzer]: {
         page: YakitRoute.HTTPFuzzer,
@@ -1225,7 +1225,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
           {
               page: undefined,
               label: "手工渗透",
-              children: routeToChildren([YakitRoute.HTTPHacker, YakitRoute.HTTPFuzzer, YakitRoute.WebsocketFuzzer])
+              children: routeToChildren([YakitRoute.MITMHacker, YakitRoute.HTTPFuzzer, YakitRoute.WebsocketFuzzer])
           },
           {
               page: undefined,

@@ -40,15 +40,6 @@ export const ManualHijackListStatusMap: Record<string, string> = {
     "hijacking ws": "WS 劫持"
 }
 
-/**mitm v2 版本页面数据中心默认数据 */
-export const defaultMITMHackerPageInfo: MITMHackerPageInfoProps = {
-    immediatelyLaunchedInfo: {
-        host: "",
-        port: "",
-        enableInitialPlugin: false
-    }
-}
-
 export const defaultSingleManualHijack: SingleManualHijackControlMessage = {
     TaskID: "",
     Request: new Uint8Array(),

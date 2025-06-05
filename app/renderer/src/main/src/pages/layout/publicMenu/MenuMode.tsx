@@ -70,7 +70,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
         <div className={styles["menu-mode-wrapper"]}>
             {mode === "渗透测试" && (
                 <>
-                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.HTTPHacker)}>
+                    <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.MITMHacker)}>
                         <div className={styles["menu-icon-wrapper"]}>
                             <div className={styles["icon-wrapper"]}>
                                 <PublicMitmIcon />

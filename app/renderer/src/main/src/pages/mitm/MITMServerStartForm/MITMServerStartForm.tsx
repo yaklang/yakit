@@ -13,7 +13,7 @@ import {yakitFailed} from "@/utils/notification"
 import {CogIcon, RefreshIcon} from "@/assets/newIcon"
 import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {useCreation, useMemoizedFn, useUpdateEffect} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
@@ -80,6 +80,15 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         )
         if (currentItem && currentItem.pageParamsInfo.hTTPHackerPageInfo) {
             return currentItem.pageParamsInfo.hTTPHackerPageInfo
+        }
+    })
+    const initV2PageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.MITMHacker,
+            YakitRoute.MITMHacker
+        )
+        if (currentItem && currentItem.pageParamsInfo.mitmHackerPageInfo) {
+            return currentItem.pageParamsInfo.mitmHackerPageInfo
         }
     })
     const [rules, setRules] = useState<MITMContentReplacerRule[]>([])
@@ -243,14 +252,25 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setRemoteValue(MITMConsts.MITMStartTimeStamp, nowTime)
     })
 
-    useEffect(() => {
-        const info = initPageInfo()?.immediatelyLaunchedInfo
-        if (info && props.status === "idle") {
-            removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
-            form.setFieldsValue({host: info.host, port: info.port, enableInitialPlugin: info.enableInitialPlugin})
-            execStartMITM(form.getFieldsValue())
-        }
-    }, [initPageInfo()?.immediatelyLaunchedInfo, props.status])
+    useDebounceEffect(
+        () => {
+            const info =
+                mitmVersion === MITMVersion.V2
+                    ? initV2PageInfo()?.immediatelyLaunchedInfo
+                    : initPageInfo()?.immediatelyLaunchedInfo
+            if (info && props.status === "idle") {
+                if (mitmVersion === MITMVersion.V2) {
+                    removePagesDataCacheById(YakitRoute.MITMHacker, YakitRoute.MITMHacker)
+                } else {
+                    removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
+                }
+                form.setFieldsValue({host: info.host, port: info.port, enableInitialPlugin: info.enableInitialPlugin})
+                execStartMITM(form.getFieldsValue())
+            }
+        },
+        [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, props.status, mitmVersion],
+        {wait: 100}
+    )
 
     const [width, setWidth] = useState<number>(0)
 
