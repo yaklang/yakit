@@ -37,6 +37,7 @@ import {
     PrivateOutlineDefaultPluginIcon,
     PrivateOutlineDirectoryScanningIcon,
     PrivateOutlineDomainIcon,
+    PrivateOutlineFingerprintManageIcon,
     PrivateOutlineHTTPHistoryIcon,
     PrivateOutlineICMPSizeLogIcon,
     PrivateOutlineMitmIcon,
@@ -69,6 +70,7 @@ import {
     PrivateSolidDefaultPluginIcon,
     PrivateSolidDirectoryScanningIcon,
     PrivateSolidDomainIcon,
+    PrivateSolidFingerprintManageIcon,
     PrivateSolidHTTPHistoryIcon,
     PrivateSolidICMPSizeLogIcon,
     PrivateSolidMitmIcon,
@@ -924,6 +926,7 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {page: YakitRoute.DB_Risk, ...YakitRouteToPageInfo[YakitRoute.DB_Risk]},
                   {page: YakitRoute.DB_Ports, ...YakitRouteToPageInfo[YakitRoute.DB_Ports]},
                   {page: YakitRoute.DB_Domain, ...YakitRouteToPageInfo[YakitRoute.DB_Domain]},
+                  {page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]},
                   {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
               ]
           }
@@ -1169,6 +1172,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidHTTPHistoryIcon />,
         ...YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory]
     },
+    [YakitRoute.FingerprintManage]: {
+        page: YakitRoute.FingerprintManage,
+        icon: <PrivateOutlineFingerprintManageIcon />,
+        hoverIcon: <PrivateSolidFingerprintManageIcon />,
+        ...YakitRouteToPageInfo[YakitRoute.FingerprintManage]
+    },
     [YakitRoute.DB_CVE]: {
         page: YakitRoute.DB_CVE,
         icon: <PrivateOutlineCVEIcon />,
@@ -1303,6 +1312,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
                   YakitRoute.DB_Risk,
                   YakitRoute.DB_Domain,
                   YakitRoute.DB_HTTPHistory,
+                  YakitRoute.FingerprintManage,
                   YakitRoute.DB_CVE
               ])
           }
@@ -1370,6 +1380,7 @@ export const PrivateScanRouteMenu: PrivateRouteMenuProps[] = [
             YakitRoute.DB_Risk,
             YakitRoute.DB_Domain,
             YakitRoute.DB_HTTPHistory,
+            YakitRoute.FingerprintManage,
             YakitRoute.DB_CVE
         ])
     }
