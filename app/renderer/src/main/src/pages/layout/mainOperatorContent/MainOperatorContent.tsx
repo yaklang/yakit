@@ -34,7 +34,9 @@ import {
     isBreachTrace,
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
-    isIRify
+    isIRify,
+    isCommunityIRify,
+    isEnpriTraceIRify
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -1917,7 +1919,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent()) {
+        if (!isEnpriTraceAgent()&&!isCommunityIRify()&&!isEnpriTraceIRify()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存
