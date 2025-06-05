@@ -53,6 +53,7 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         Total: 0
     })
     const hasMore = useRef<boolean>(true)
+    const requestSequence = useRef<number>(0)
 
     const wrapperRef = useRef<HTMLDivElement>(null)
     const bodyRef = useRef<HTMLDivElement>(null)
@@ -61,6 +62,11 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
         wrapperTarget: bodyRef,
         itemHeight: 33,
         overscan: 5
+    })
+
+    const deduplicateData = useMemoizedFn((existingData: WebsocketFlow[], newData: WebsocketFlow[]) => {
+        const existingFrameIndexes = new Set(existingData.map(item => item.FrameIndex))
+        return newData.filter(item => !existingFrameIndexes.has(item.FrameIndex))
     })
 
     const fetchList = useMemoizedFn((isInit?: boolean) => {
@@ -73,30 +79,50 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
 
         setLoading(true)
         const pageNum = isInit ? 1 : Number(response.Pagination.Page) + 1
+        
+        const currentSequence = ++requestSequence.current
+        
         ipcRenderer
             .invoke("QueryWebsocketFlowByHTTPFlowWebsocketHash", {
                 WebsocketRequestHash: websocketHash,
                 Pagination: {Page: pageNum, Limit: 20}
             })
             .then((r: QueryGeneralResponse<WebsocketFlow>) => {
+                if (currentSequence !== requestSequence.current) {
+                    return
+                }
+
                 const newData = r.Data.map((item) => {
                     item.cellClassName = filterColorTag(item.Tags)
                     return item
                 })
-                const length = isInit ? newData.length : response.Data.length + newData.length
-                hasMore.current = length < Number(r.Total)
 
                 if (isInit) {
+                    const length = newData.length
+                    hasMore.current = length < Number(r.Total)
                     scrollTo(0)
                     setResponse({...r, Data: newData})
                 } else {
-                    setResponse((old) => ({...r, Data: old.Data.concat(newData)}))
+                    const deduplicatedNewData = deduplicateData(response.Data, newData)
+                    const combinedData = response.Data.concat(deduplicatedNewData)
+                    const length = combinedData.length
+                    hasMore.current = length < Number(r.Total)
+                    
+                    setResponse((old) => ({
+                        ...r, 
+                        Data: combinedData
+                    }))
                 }
+            })
+            .catch((error) => {
+                console.error("Failed to fetch websocket flow data:", error)
             })
             .finally(() =>
                 setTimeout(() => {
-                    initLoading.current = false
-                    setLoading(false)
+                    if (currentSequence === requestSequence.current) {
+                        initLoading.current = false
+                        setLoading(false)
+                    }
                 }, 300)
             )
     })
@@ -186,7 +212,8 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
                                     const onlyRed = isCellRedSingleColor(cellClassName)
                                     return (
                                         <div
-                                            key={FrameIndex}
+                                            key={`${websocketHash}-${FrameIndex}`}
+                                            // key={FrameIndex}
                                             className={classNames(styles["table-tr"], {
                                                 [styles[`table-row-${colorClassName}`]]: !!colorClassName
                                             })}
