@@ -109,6 +109,7 @@ import {openPacketNewWindow} from "@/utils/openWebsite"
 import {CodeRangeProps} from "@/pages/yakRunnerAuditCode/RightAuditDetail/RightAuditDetail"
 import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDetails/BottomEditorDetailsType"
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
+import MDEditor from "@uiw/react-md-editor"
 
 export const isShowCodeScanDetail = (selectItem: Risk) => {
     const {ResultID, SyntaxFlowVariable, ProgramName} = selectItem
@@ -2045,10 +2046,10 @@ export const AuditResultDescribe: React.FC<AuditResultDescribeProps> = React.mem
                 <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                 <>
                     <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Description || "-"}
+                        {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
                     </Descriptions.Item>
                     <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                        {info.Solution || "-"}
+                        {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
                     </Descriptions.Item>
                 </>
             </Descriptions>
