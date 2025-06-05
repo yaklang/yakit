@@ -810,3 +810,10 @@
         }
     }
 }
+.icon-question {
+    color: var(--yakit-body-text-color);
+
+    :hover {
+        color: var(--yakit-primary-4);
+    }
+}
