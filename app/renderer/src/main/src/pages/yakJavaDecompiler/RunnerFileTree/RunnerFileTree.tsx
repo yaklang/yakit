@@ -111,9 +111,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     useEffect(() => {
         getHistoryList()
         // 通知历史记录发生改变
-        emiter.on("onRefreshRunnerHistory", getHistoryList)
+        emiter.on("onRefreshDecompilerHistory", getHistoryList)
         return () => {
-            emiter.off("onRefreshRunnerHistory", getHistoryList)
+            emiter.off("onRefreshDecompilerHistory", getHistoryList)
         }
     }, [])
 

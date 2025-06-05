@@ -5,7 +5,6 @@ export type YakRunnerEventProps = {
     onOpenBottomDetail: string
     onOpenTerminaDetail?: string
     onRefreshRunnerHistory: string
-    onRefreshAduitHistory?: string
     // 打开文件树
     onOpenFileTree: string
     // 刷新文件树
