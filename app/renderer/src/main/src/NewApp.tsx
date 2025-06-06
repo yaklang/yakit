@@ -22,6 +22,8 @@ import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor, stopShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
 import { useUploadInfoByEnpriTrace } from "./components/layout/utils"
+// GRPC日志监控器
+import {startGRPCLogMonitor, stopGRPCLogMonitor} from "./utils/grpcLogMonitor"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -62,6 +64,14 @@ function NewApp() {
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
         ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
+        
+        // 启动GRPC日志监控器（仅在开发模式下有效）
+        startGRPCLogMonitor()
+        
+        return () => {
+            // 停止GRPC日志监控器
+            stopGRPCLogMonitor()
+        }
     }, [])
 
     // 全局记录鼠标坐标位置(为右键菜单提供定位)

@@ -10,73 +10,92 @@ let nsisUninstallerIcon = null
 
 // 生成构建包的自定义配置
 const platform = process.env.PLATFORM
-switch (platform) {
-    case "ee":
-        appInfoOption = {
-            appId: "io.yaklang.enpritrace",
-            extraMetadata: {name: "enpritrace"},
-            productName: "EnpriTrace",
-            copyright: "Copyright © 2021 v1ll4n"
-        }
-        macIcon = "app/assets/yakiteelogo.icns"
-        linuxIcon = "app/assets/yakiteelogo.icns"
-        winIcon = "app/assets/yakiteelogo.ico"
-        nsisInstallerIcon = "app/assets/yakiteelogo.ico"
-        nsisUninstallerIcon = "app/assets/yakiteelogo.ico"
-        break
-    case "se":
-        appInfoOption = {
-            appId: "io.yaklang.enpritraceagent",
-            extraMetadata: {name: "enpritraceagent"},
-            productName: "EnpriTraceAgent",
-            copyright: "Copyright © 2021 v1ll4n"
-        }
-        macIcon = "app/assets/yakitselogo.icns"
-        linuxIcon = "app/assets/yakitselogo.icns"
-        winIcon = "app/assets/yakitselogo.ico"
-        nsisInstallerIcon = "app/assets/yakitselogo.ico"
-        nsisUninstallerIcon = "app/assets/yakitselogo.ico"
-        break
-    case "irify":
-        appInfoOption = {
-            appId: "io.yaklang.irify",
-            extraMetadata: {name: "irify"},
-            productName: "IRify",
-            copyright: "Copyright © 2021 v1ll4n"
-        }
-        macIcon = "app/assets/yakitsslogo.icns"
-        linuxIcon = "app/assets/yakitsslogo.icns"
-        winIcon = "app/assets/yakitsslogo.ico"
-        nsisInstallerIcon = "app/assets/yakitsslogo.ico"
-        nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
-        break
-    case "irifyee":
-        appInfoOption = {
-            appId: "io.yaklang.irifyee",
-            extraMetadata: {name: "irifyee"},
-            productName: "IRifyEnpriTrace",
-            copyright: "Copyright © 2021 v1ll4n"
-        }
-        macIcon = "app/assets/yakitsslogo.icns"
-        linuxIcon = "app/assets/yakitsslogo.icns"
-        winIcon = "app/assets/yakitsslogo.ico"
-        nsisInstallerIcon = "app/assets/yakitsslogo.ico"
-        nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
-        break
+const isDevMode = process.env.YAKIT_DEV_MODE === "true"
 
-    default:
-        // ce
-        appInfoOption = {
-            appId: "io.yaklang.yakit",
-            productName: "Yakit",
-            copyright: "Copyright © 2024 yaklang.io"
-        }
-        macIcon = "app/assets/yakitlogo.icns"
-        linuxIcon = "app/assets/yakitlogo.icns"
-        winIcon = "app/assets/yakitlogo.ico"
-        nsisInstallerIcon = "app/assets/yakitlogo.ico"
-        nsisUninstallerIcon = "app/assets/yakitlogo.ico"
-        break
+// 如果是开发模式，则忽略其他平台设置，直接使用开发版配置
+if (isDevMode) {
+    appInfoOption = {
+        appId: "io.yaklang.yakit.dev",
+        extraMetadata: {name: "yakit-dev"},
+        productName: "Yakit-Dev",
+        copyright: "Copyright © 2024 yaklang.io"
+    }
+    macIcon = "app/assets/yakitlogo.icns"
+    linuxIcon = "app/assets/yakitlogo.icns"
+    winIcon = "app/assets/yakitlogo.ico"
+    nsisInstallerIcon = "app/assets/yakitlogo.ico"
+    nsisUninstallerIcon = "app/assets/yakitlogo.ico"
+} else {
+    // 非开发模式，按平台类型选择配置
+    switch (platform) {
+        case "ee":
+            appInfoOption = {
+                appId: "io.yaklang.enpritrace",
+                extraMetadata: {name: "enpritrace"},
+                productName: "EnpriTrace",
+                copyright: "Copyright © 2021 v1ll4n"
+            }
+            macIcon = "app/assets/yakiteelogo.icns"
+            linuxIcon = "app/assets/yakiteelogo.icns"
+            winIcon = "app/assets/yakiteelogo.ico"
+            nsisInstallerIcon = "app/assets/yakiteelogo.ico"
+            nsisUninstallerIcon = "app/assets/yakiteelogo.ico"
+            break
+        case "se":
+            appInfoOption = {
+                appId: "io.yaklang.enpritraceagent",
+                extraMetadata: {name: "enpritraceagent"},
+                productName: "EnpriTraceAgent",
+                copyright: "Copyright © 2021 v1ll4n"
+            }
+            macIcon = "app/assets/yakitselogo.icns"
+            linuxIcon = "app/assets/yakitselogo.icns"
+            winIcon = "app/assets/yakitselogo.ico"
+            nsisInstallerIcon = "app/assets/yakitselogo.ico"
+            nsisUninstallerIcon = "app/assets/yakitselogo.ico"
+            break
+        case "irify":
+            appInfoOption = {
+                appId: "io.yaklang.irify",
+                extraMetadata: {name: "irify"},
+                productName: "IRify",
+                copyright: "Copyright © 2021 v1ll4n"
+            }
+            macIcon = "app/assets/yakitsslogo.icns"
+            linuxIcon = "app/assets/yakitsslogo.icns"
+            winIcon = "app/assets/yakitsslogo.ico"
+            nsisInstallerIcon = "app/assets/yakitsslogo.ico"
+            nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
+            break
+        case "irifyee":
+            appInfoOption = {
+                appId: "io.yaklang.irifyee",
+                extraMetadata: {name: "irifyee"},
+                productName: "IRifyEnpriTrace",
+                copyright: "Copyright © 2021 v1ll4n"
+            }
+            macIcon = "app/assets/yakitsslogo.icns"
+            linuxIcon = "app/assets/yakitsslogo.icns"
+            winIcon = "app/assets/yakitsslogo.ico"
+            nsisInstallerIcon = "app/assets/yakitsslogo.ico"
+            nsisUninstallerIcon = "app/assets/yakitsslogo.ico"
+            break
+
+        default:
+            // ce
+            appInfoOption = {
+                appId: "io.yaklang.yakit",
+                extraMetadata: {name: "yakit"},
+                productName: "Yakit",
+                copyright: "Copyright © 2024 yaklang.io"
+            }
+            macIcon = "app/assets/yakitlogo.icns"
+            linuxIcon = "app/assets/yakitlogo.icns"
+            winIcon = "app/assets/yakitlogo.ico"
+            nsisInstallerIcon = "app/assets/yakitlogo.ico"
+            nsisUninstallerIcon = "app/assets/yakitlogo.ico"
+            break
+    }
 }
 
 const configOption = {

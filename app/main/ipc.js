@@ -14,6 +14,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 const protoDescriptor = grpc.loadPackageDefinition(packageDefinition)
 const {ypb} = protoDescriptor
 const {Yak} = ypb
+// Import the grpcProxy module
+const {createGRPCClientProxy, setupStreamHandlers} = require("./handlers/grpcProxy")
 
 const global = {
     defaultYakGRPCAddr: "127.0.0.1:8087",
@@ -28,7 +30,17 @@ const options = {
     "grpc.max_send_message_length": 1024 * 1024 * 1000,
     "grpc.enable_http_proxy": 0
 }
-
+function newClientWithProxy() {
+    const client = newClient()
+    // 检查是否开启了开发模式
+    if (process.env.YAKIT_DEV_MODE === "true") {
+        console.log("[DEV MODE] Using GRPC client proxy for development")
+        return createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle)
+    } else {
+        // 在非开发模式下直接返回原始客户端
+        return client
+    }
+}
 function newClient() {
     const md = new grpc.Metadata()
     md.set("authorization", `bearer ${global.password}`)
@@ -54,16 +66,66 @@ function newClient() {
     }
 }
 
+// Define request and response handler functions
+function grpcReqHandle(methodName, params, callId) {
+    // Create a structured log object for the request
+    const logEntry = {
+        type: "request",
+        isStream: false, // Initially set as non-stream
+        methodName,
+        params,
+        timestamp: Date.now(),
+        callId
+    }
+    
+    // Send log to renderer process
+    if (mainWindow) {
+        mainWindow.webContents.send("grpc-invoke-log", logEntry)
+    }    
+}
+
+// Initially set mainWindow to null
+let mainWindow = null
+
+function grpcRspHandle(methodName, params, err, response, isStream = false, callId) {
+    // Create a structured log object for the response
+    const logEntry = {
+        type: "response",
+        isStream,
+        methodName,
+        params,
+        response: isStream ? (response || {}) : response,
+        error: err ? (err.message || err.toString()) : null,
+        timestamp: Date.now(),
+        callId
+    }
+    
+    // Send log to renderer process
+    if (mainWindow) {
+        mainWindow.webContents.send("grpc-invoke-log", logEntry)
+        
+        // For stream data, also send via the dedicated stream data channel
+        if (isStream && callId && response) {
+            mainWindow.webContents.send("grpc-stream-data", {
+                methodName,
+                params,
+                data: response,
+                callId
+            })
+        }
+    }
+}
+
 function getClient(createNew) {
     if (!!createNew) {
-        return newClient()
+        return newClientWithProxy()
     }
 
     if (_client) {
         return _client
     }
 
-    _client = newClient()
+    _client = newClientWithProxy()
     return getClient()
 }
 
@@ -140,9 +202,16 @@ module.exports = {
         require("./handlers/yakLocal").clearing()
     },
     registerIPC: (win) => {
+        // Store reference to main window
+        mainWindow = win
+        
         ipcMain.handle("relaunch", () => {
             app.relaunch({})
             app.exit(0)
+        })
+
+        ipcMain.handle("is-dev-mode", () => {
+            return process.env.YAKIT_DEV_MODE === "true"
         })
 
         ipcMain.handle("yakit-connect-status", () => {
@@ -314,6 +383,12 @@ module.exports = {
         utils.forEach((item) => {
             require(path.join(__dirname, `./utils/${item}`)).register(win, getClient)
         })
+
+        // 仅在开发模式下设置GRPC流处理器
+        if (process.env.YAKIT_DEV_MODE === "true") {
+            console.log("[DEV MODE] Setting up GRPC stream handlers")
+            setupStreamHandlers(win)
+        }
 
         // new plugins store
         require("./handlers/plugins")(win, getClient)
