@@ -10,7 +10,13 @@ import {
     useUpdateEffect
 } from "ahooks"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {OutlineLog2Icon, OutlineRefreshIcon, OutlineSearchIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondownIcon,
+    OutlineLog2Icon,
+    OutlineRefreshIcon,
+    OutlineSearchIcon,
+    OutlineTerminalIcon
+} from "@/assets/icon/outline"
 import classNames from "classnames"
 import {RemoteHistoryGV} from "@/enums/history"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
@@ -83,6 +89,7 @@ import {useHttpFlowStore} from "@/store/httpFlow"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
+import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import styles from "./HTTPHistoryFilter.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -2247,6 +2254,32 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                         </YakitButton>
                                     </YakitPopover>
                                 </div>
+                                <YakitPopover
+                                    overlayClassName={styles["http-history-table-drop-down-popover"]}
+                                    content={
+                                        <YakitMenu
+                                            width={150}
+                                            selectedKeys={[]}
+                                            data={getBatchContextMenu()}
+                                            onClick={({key, keyPath}) => {
+                                                onMultipleClick(key, keyPath)
+                                            }}
+                                        />
+                                    }
+                                    trigger='click'
+                                    placement='bottomLeft'
+                                >
+                                    <YakitButton
+                                        type='outline2'
+                                        disabled={selectedRowKeys.length === 0}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                        }}
+                                    >
+                                        批量操作
+                                        <OutlineChevrondownIcon />
+                                    </YakitButton>
+                                </YakitPopover>
                                 <YakitButton
                                     type='text2'
                                     icon={<OutlineRefreshIcon />}
