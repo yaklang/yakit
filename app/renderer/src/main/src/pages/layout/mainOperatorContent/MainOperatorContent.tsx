@@ -1892,6 +1892,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             unFuzzerCacheData.current = usePageInfo.subscribe(
                 (state) => state.pages.get(YakitRoute.HTTPFuzzer) || [],
                 (selectedState, previousSelectedState) => {
+                    if (Array.isArray(selectedState) && Array.isArray(previousSelectedState)) return
                     saveFuzzerCache(selectedState as PageProps)
                 }
             )
@@ -2893,8 +2894,6 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     const [inViewport = true] = useInViewport(tabsRef)
 
     useEffect(() => {
-        // 切换一级页面时,缓存当前选择的key
-        onSetSelectFirstMenuTabKey(currentTabKey)
         // 切换一级页面时聚焦
         const key = routeConvertKey(pageItem.route, pageItem.pluginName)
         if (currentTabKey === key) {
@@ -2910,6 +2909,10 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             emiter.off("switchSubMenuItem", onSelectSubMenuById)
             ipcRenderer.removeListener("fetch-add-group", onAddGroup)
         }
+    }, [currentTabKey])
+    useUpdateEffect(() => {
+        // 切换一级页面时,缓存当前选择的key
+        onSetSelectFirstMenuTabKey(currentTabKey)
     }, [currentTabKey])
 
     useEffect(() => {
