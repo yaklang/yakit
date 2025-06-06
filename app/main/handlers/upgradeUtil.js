@@ -699,6 +699,7 @@ module.exports = {
 
         // asyncRestoreEngineAndPlugin wrapper
         ipcMain.handle("RestoreEngineAndPlugin", async (e, params) => {
+            latestVersionCache = null
             const engineTarget = isWindows ? path.join(yaklangEngineDir, "yak.exe") : path.join(yaklangEngineDir, "yak")
             const buidinEngine = path.join(yaklangEngineDir, "yak.build-in")
             const cacheFlagLock = path.join(basicDir, "flag.txt")
