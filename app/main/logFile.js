@@ -1,6 +1,7 @@
 const path = require("path")
 const fs = require("fs")
-const {engineLog} = require("./filePath")
+const {engineLog, renderLog} = require("./filePath")
+const {shell} = require("electron")
 
 /** 生成时间字符 (YYYYMMDDHHMMSS) */
 const getFormattedDateTime = () => {
@@ -82,6 +83,60 @@ const engineLogOutputFileAndUI = (win, message, isTitle) => {
     engineLogOutputFile(message)
     engineLogOutputUI(win, message, isTitle)
 }
+
+/** 打开渲染端错误信息日志文件所在文件夹 */
+const openEngineLogFilePath = () => {
+    shell.openPath(engineLog)
+    return
+}
+// #endregion
+
+// #region 渲染端日志
+/** 渲染端日志文件句柄 */
+let renderLogFile = null
+
+/** 打开渲染端日志文件，并获取文件句柄 */
+const fetchRenderLogFile = () => {
+    const renderLogPath = path.join(renderLog, `render-log-${getFormattedDateTime()}.txt`)
+    fs.open(renderLogPath, "a", (err, fd) => {
+        if (err) {
+            console.error("打开渲染端日志错误: ", err)
+            return
+        } else {
+            renderLogFile = fd
+            fs.write(renderLogFile, `---------- 开始记录渲染端相关日志 ----------\n`, (err) => {})
+        }
+    })
+}
+
+/** 关闭渲染端日志文件 */
+const closeRenderLogFile = () => {
+    if (renderLogFile) {
+        fs.close(renderLogFile, (err) => {
+            if (err) {
+                console.error("关闭渲染端日志错误: ", err)
+            }
+        })
+        renderLogFile = null
+    }
+}
+
+/** 渲染端日志-往文件里输出信息 */
+const renderLogOutputFile = (message) => {
+    if (renderLogFile) {
+        fs.write(renderLogFile, `${message}\n`, (err) => {
+            if (err) {
+                console.error("写入渲染端日志错误: ", err)
+            }
+        })
+    }
+}
+
+/** 打开渲染端错误信息日志文件所在文件夹 */
+const openRenderLogFilePath = () => {
+    shell.openPath(renderLog)
+    return
+}
 // #endregion
 
 module.exports = {
@@ -91,5 +146,12 @@ module.exports = {
     closeEngineLogFile,
     engineLogOutputFile,
     engineLogOutputUI,
-    engineLogOutputFileAndUI
+    engineLogOutputFileAndUI,
+    openEngineLogFilePath,
+
+    renderLogFile,
+    fetchRenderLogFile,
+    closeRenderLogFile,
+    renderLogOutputFile,
+    openRenderLogFilePath
 }

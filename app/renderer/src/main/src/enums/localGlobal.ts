@@ -20,5 +20,8 @@ export enum LocalGVS {
     NoAutobootLatestVersionCheck = "no-autoboot-latest-version-check",
 
     /** @name 退出登陆是否删除账号的私密插件 */
-    IsDeletePrivatePluginsOnLogout = "is-delete-private-plugins-on-logout"
+    IsDeletePrivatePluginsOnLogout = "is-delete-private-plugins-on-logout",
+
+    /** @name 软件是否白屏崩溃过 */
+    RenderCrashScreen = "render-crash-screen"
 }

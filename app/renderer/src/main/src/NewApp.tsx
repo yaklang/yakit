@@ -60,30 +60,6 @@ function NewApp() {
         ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
     }, [])
 
-    /**
-     * 渲染端全局错误监听，并收集到错误信息文件里
-     */
-    useEffect(() => {
-        const unhandledrejectionError = (e) => {
-            const content = e?.reason?.stack || ""
-            if (content) ipcRenderer.invoke("render-error-log", content)
-        }
-        const errorLog = (err) => {
-            const content = err?.error?.stack || ""
-            if (content) ipcRenderer.invoke("render-error-log", content)
-        }
-        ipcRenderer.invoke("is-dev").then((flag: boolean) => {
-            if (!flag) {
-                window.addEventListener("unhandledrejection", unhandledrejectionError)
-                window.addEventListener("error", errorLog)
-            }
-        })
-        return () => {
-            window.removeEventListener("unhandledrejection", unhandledrejectionError)
-            window.removeEventListener("error", errorLog)
-        }
-    }, [])
-
     // 全局记录鼠标坐标位置(为右键菜单提供定位)
     const handleMouseMove = useDebounceFn(
         useMemoizedFn((e: MouseEvent) => {

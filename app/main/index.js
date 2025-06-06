@@ -4,7 +4,13 @@ const path = require("path")
 const url = require("url")
 const {registerIPC, clearing} = require("./ipc")
 const process = require("process")
-const {initExtraLocalCache, getExtraLocalCacheValue, initLocalCache, setCloeseExtraLocalCache} = require("./localCache")
+const {
+    initExtraLocalCache,
+    getExtraLocalCacheValue,
+    initLocalCache,
+    setCloeseExtraLocalCache,
+    setLocalCache
+} = require("./localCache")
 const {asyncKillDynamicControl} = require("./handlers/dynamicControlFun")
 const {windowStatePatch, engineLog, renderLog, printLog} = require("./filePath")
 const fs = require("fs")
@@ -12,7 +18,7 @@ const Screenshots = require("./screenshots")
 const windowStateKeeper = require("electron-window-state")
 const {clearFolder} = require("./toolsFunc")
 const {MenuTemplate} = require("./menu")
-const {fetchEngineLogFile, closeEngineLogFile} = require("./logFile")
+const {fetchEngineLogFile, closeEngineLogFile, fetchRenderLogFile, renderLogOutputFile} = require("./logFile")
 
 /** 获取缓存数据-软件是否需要展示关闭二次确认弹框 */
 const UICloseFlag = "windows-close-flag"
@@ -59,6 +65,17 @@ const createWindow = () => {
         frame: false,
         titleBarStyle: "hidden"
     })
+    // 监听渲染端的崩溃事件
+    win.webContents.on("render-process-gone", (event, details) => {
+        // 发送渲染端崩溃事件
+        renderLogOutputFile(`----- Render process is gone ------`)
+        renderLogOutputFile(`Render process: ${details.reason}, exitcode: ${details.exitCode}`)
+        if (details.reason === "crashed") {
+            // 如果渲染端崩溃了，设置渲染端崩溃标记位
+            setLocalCache("render-crash-screen", true)
+        }
+    })
+
     win.setSize(mainWindowState.width, mainWindowState.height)
     mainWindowState.manage(win)
     if (isDev) {
@@ -74,6 +91,11 @@ const createWindow = () => {
     win.setMenu(null)
     win.setMenuBarVisibility(false)
     if (process.platform === "darwin") win.setWindowButtonVisibility(false)
+
+    // 监听主进程所有错误信息
+    // process.on("uncaughtException", (err, origin) => {
+    //     console.log(`Caught exception: ${err}\n` + `Exception origin: ${origin}`)
+    // })
 
     win.on("close", async (e) => {
         e.preventDefault()
@@ -226,6 +248,7 @@ app.whenReady().then(() => {
     try {
         registerIPC(win)
         fetchEngineLogFile()
+        fetchRenderLogFile()
     } catch (e) {}
 
     //
