@@ -931,6 +931,15 @@ const GetUIOpSettingMenu = () => {
                     {label: "本地", key: "local"},
                     {label: "远程", key: "remote"}
                 ]
+            },
+            {type: "divider"},
+            {
+                key: "logs",
+                label: " 日志收集",
+                children: [
+                    {label: "渲染端日志", key: "renderLog"},
+                    {label: "引擎日志", key: "engineLog"}
+                ]
             }
         ]
     }
@@ -1025,8 +1034,16 @@ const GetUIOpSettingMenu = () => {
         {
             key: "refreshMenu",
             label: "刷新菜单"
+        },
+        {type: "divider"},
+        {
+            key: "logs",
+            label: " 日志收集",
+            children: [
+                {label: "渲染端日志", key: "renderLog"},
+                {label: "引擎日志", key: "engineLog"}
+            ]
         }
-        // {type: "divider"},
         // {key: "setShortcutKey", label: "快捷键设置"}
     ]
 }
@@ -1173,6 +1190,12 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                         params: "global" as ShortcutKeyPageName
                     })
                 )
+                return
+            case "renderLog":
+                ipcRenderer.invoke("open-render-log")
+                return
+            case "engineLog":
+                ipcRenderer.invoke("open-engine-log")
                 return
             default:
                 return

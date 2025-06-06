@@ -17,7 +17,7 @@ import SetPassword from "./SetPassword"
 import {useEeSystemConfig, UserInfoProps, useStore, yakitDynamicStatus} from "@/store"
 import {SimpleQueryYakScriptSchema} from "./invoker/batch/QueryYakScriptParam"
 import {refreshToken} from "@/utils/login"
-import {getRemoteValue, setLocalValue} from "@/utils/kv"
+import {getLocalValue, getRemoteValue, setLocalValue} from "@/utils/kv"
 import {NetWorkApi} from "@/services/fetch"
 import {API} from "@/services/swagger/resposeType"
 import {
@@ -52,6 +52,8 @@ import "./GlobalClass.scss"
 import {setUpSyntaxFlowMonaco} from "@/utils/monacoSpec/syntaxflowEditor"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {MessageCenterModal} from "@/components/MessageCenter/MessageCenter"
+import {LocalGVS} from "@/enums/localGlobal"
+import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -232,6 +234,22 @@ export interface fuzzerInfoProp {
 }
 
 const Main: React.FC<MainProp> = React.memo((props) => {
+    const [showRenderCrash, setShowRenderCrash] = useState(false)
+    useEffect(() => {
+        getLocalValue(LocalGVS.RenderCrashScreen)
+            .then((value) => {
+                setShowRenderCrash(!!value)
+            })
+            .catch(() => {})
+    }, [])
+    const handleShowRenderCrashCallback = useMemoizedFn((result: boolean) => {
+        if (result) {
+            ipcRenderer.invoke("open-render-log")
+        }
+        setLocalValue(LocalGVS.RenderCrashScreen, false)
+        setShowRenderCrash(false)
+    })
+
     const [loading, setLoading] = useState(false)
 
     // 修改密码弹框
@@ -441,10 +459,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
             return ""
         }
         // IRify社区版有水印
-        else if (isCommunityIRify()){
+        else if (isCommunityIRify()) {
             return "IRify技术浏览版仅供技术交流使用"
-        }
-        else if (userInfo.isLogin) {
+        } else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
@@ -628,6 +645,17 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                     {messageCenterShow && (
                         <MessageCenterModal visible={messageCenterShow} setVisible={setMessageCenterShow} />
                     )}
+
+                    <YakitHint
+                        getContainer={chartCSDragAreaRef.current || undefined}
+                        visible={showRenderCrash}
+                        title='渲染端崩溃提示'
+                        content='检测到渲染端有崩溃情况，点击查看日志即可查看崩溃日志，忽略后可在系统设置中进行查看'
+                        okButtonText='查看日志'
+                        onOk={() => handleShowRenderCrashCallback(true)}
+                        cancelButtonText='忽略'
+                        onCancel={() => handleShowRenderCrashCallback(false)}
+                    />
                 </Layout>
             </WaterMark>
             {controlShow && <ControlOperation controlName={controlName} />}
@@ -657,50 +685,3 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 })
 
 export default Main
-
-// interface UpdateForwardProsp {
-//     visible: boolean
-//     onCancel: () => any
-//     onOk: () => any
-//     onIgnore: () => any
-// }
-// const UpdateForward: React.FC<UpdateForwardProsp> = memo((props) => {
-//     const {visible, onCancel, onOk, onIgnore} = props
-
-//     return (
-//         <YakitModal
-//             type='white'
-//             maskClosable={false}
-//             keyboard={false}
-//             centered={true}
-//             closable={false}
-//             visible={visible}
-//             title='重要更新内容前瞻'
-//             okText='已知道!'
-//             cancelText='关闭'
-//             cancelButtonProps={{style: {display: "none"}}}
-//             onCancel={onCancel}
-//             onOk={onOk}
-//             footerExtra={
-//                 <YakitButton type='text' onClick={onIgnore}>
-//                     不再提示
-//                 </YakitButton>
-//             }
-//         >
-//             <div className='update-forward-wrapper'>
-//                 <div className='title-style'>Windows自定义安装上线预告!!!</div>
-//                 <div className='content-style'>
-//                     下一个版本即将上线自定义安装，安装涉及到旧数据迁移，为避免出现意外情况，建议安装前将yakit-project文件夹进行备份。
-//                 </div>
-
-//                 <div className='content-style'>
-//                     <span className='highlight-style'>注意事项!!</span>
-//                     <div>1、安装前需先将引擎进行更新</div>
-//                     <div>
-//                         2、迁移会将用户文件夹下的yakit-project文件复制到安装路径，并删除。如安装后打开发现没有引擎或数据，可能是用户文件夹下的yakit-project由于被占用无法删除，导致读取的还是用户文件下的内容。如已经迁移完可直接将用户文件夹下的yakit-project删除即可正常读取
-//                     </div>
-//                 </div>
-//             </div>
-//         </YakitModal>
-//     )
-// })
