@@ -19,12 +19,16 @@ import {OutlineSearchIcon} from "@/assets/icon/outline"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {onSetSelectedSearchVal} from "../AuditSearchModal/AuditSearch"
 import classNames from "classnames"
+import {grpcFetchLocalPluginDetail} from "@/pages/pluginHub/utils/grpc"
 
 const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((props) => {
     const {projectName} = props
     const [data, setData] = useState<AuditNodeProps[]>([])
 
     const [executing, setExecuting] = useState<boolean>(false)
+
+    const [queryPluginError, setQueryPluginError] = useState<string>("")
+
     const tokenRef = useRef<string>(randomString(40))
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         taskName: "debug-plugin",
@@ -35,7 +39,7 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
             setExecuting(false)
         },
         onError: () => {},
-        setRuntimeId: (rId) => {},
+        setRuntimeId: () => {},
         isShowEnd: false
     })
 
@@ -49,6 +53,16 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
     })
 
     const onInit = useMemoizedFn(() => {
+        grpcFetchLocalPluginDetail({Name: "SyntaxFlow 查询项目信息"}, true)
+            .then(() => {
+                getList()
+            })
+            .catch((err) => {
+                setQueryPluginError(`${err}`)
+            })
+    })
+
+    const getList = useMemoizedFn(() => {
         if (!projectName) {
             yakitNotify("warning", "请先选择项目")
             return
@@ -241,17 +255,25 @@ const GlobalFilterFunction: React.FC<GlobalFilterFunctionProps> = React.memo((pr
                 </div>
             ) : (
                 <>
-                    {data.length > 0 ? (
-                        <GlobalFilterFunctionTree
-                            data={data}
-                            onLoadData={onLoadData}
-                            onSelect={() => {}}
-                            loadTreeMore={loadTreeMore}
-                        />
-                    ) : (
+                    {queryPluginError ? (
                         <div style={{marginTop: 20}}>
-                            <YakitEmpty title='暂无函数' />
+                            <YakitEmpty title='引擎版本过低，请升级' description={queryPluginError} />
                         </div>
+                    ) : (
+                        <>
+                            {data.length > 0 ? (
+                                <GlobalFilterFunctionTree
+                                    data={data}
+                                    onLoadData={onLoadData}
+                                    onSelect={() => {}}
+                                    loadTreeMore={loadTreeMore}
+                                />
+                            ) : (
+                                <div style={{marginTop: 20}}>
+                                    <YakitEmpty title={!projectName ? "请选择项目" : "不支持此语言，请等待更新"} />
+                                </div>
+                            )}
+                        </>
                     )}
                 </>
             )}
