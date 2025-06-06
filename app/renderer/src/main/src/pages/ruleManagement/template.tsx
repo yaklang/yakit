@@ -130,6 +130,8 @@ const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
+const severityOrder = ["critical", "high", "middle", "low", "info"]
+
 /** @name 规则组列表组件 */
 export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
     React.forwardRef((props, ref) => {
@@ -904,6 +906,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 setActivePanelKey(undefined)
                 setAlertMsg({})
                 setLoadingAlertMsg(false)
+                setIsManualSort(false)
                 if (form) form.resetFields()
                 if (debugForm) debugForm.resetFields()
                 // 重置执行结果数据
@@ -1010,10 +1013,27 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const [loadingAlertMsg, setLoadingAlertMsg] = useState<boolean>(false)
     const [alertMsg, setAlertMsg] = useState<{[key: string]: AlertMessage}>(info?.AlertMsg || {})
     const [activePanelKey, setActivePanelKey] = useState<string | undefined>(undefined)
+    const [isManualSort, setIsManualSort] = useState(false)
     useEffect(() => {
         setAlertMsg(info?.AlertMsg || {})
     }, [info])
+
+    const alertMsgEntries = useMemo(() => {
+        const entries = Object.entries(alertMsg)
+        if (!isManualSort) {
+            // 初始时排序
+            return entries.sort(([, a], [, b]) => {
+                const aIndex = severityOrder.indexOf((a.Severity || "").toLowerCase())
+                const bIndex = severityOrder.indexOf((b.Severity || "").toLowerCase())
+                return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex)
+            })
+        }
+        // 手动后保持原顺序
+        return entries
+    }, [alertMsg, isManualSort])
+
     const handleClickSeverity = (alertMsgKey: string, newSeverity: string) => {
+        setIsManualSort(true)
         setAlertMsg((prev) => ({
             ...prev,
             [alertMsgKey]: {
@@ -1314,7 +1334,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                 setActivePanelKey(Array.isArray(key) ? key[key.length - 1] : key)
                                             }}
                                         >
-                                            {Object.entries(alertMsg).map(([key, alert]) => {
+                                            {alertMsgEntries.map(([key, alert]) => {
                                                 const title = SeverityMapTag.find((item) =>
                                                     item.key.includes(alert.Severity || "")
                                                 )
