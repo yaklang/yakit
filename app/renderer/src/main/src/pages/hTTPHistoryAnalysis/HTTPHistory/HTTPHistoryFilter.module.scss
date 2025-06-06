@@ -179,12 +179,22 @@
         }
     }
 }
+
 .http-history-table-color-popover {
     width: 140px;
     padding-top: 5px;
     :global {
         .ant-popover-inner-content {
             padding: 0;
+        }
+    }
+}
+
+.http-history-table-drop-down-popover {
+    padding-top: 5px;
+    :global {
+        .ant-popover-inner-content {
+            padding: 4px;
         }
     }
 }
