@@ -189,7 +189,7 @@ export interface HTTPHackerPageInfoProps {
 }
 
 export interface MITMHackerPageInfoProps {
-    immediatelyLaunchedInfo: ImmediatelyLaunchedInfo
+    immediatelyLaunchedInfo?: ImmediatelyLaunchedInfo
 }
 
 export interface AuditCodePageInfoProps {

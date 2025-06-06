@@ -157,7 +157,6 @@ import {APIFunc} from "@/apiUtils/type"
 import {getHotPatchCodeInfo} from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import {PublicHTTPHistoryIcon} from "@/routes/publicIcon"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
-import {defaultMITMHackerPageInfo} from "@/defaultConstants/mitmV2"
 import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistoryAnalysis"
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
@@ -839,6 +838,25 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     })
     /** HTTPHackerPage v2 */
     const addMITMHacker = useMemoizedFn((data: MITMHackerPageInfoProps) => {
+        const pageNodeInfo: PageProps = {
+            ...cloneDeep(defPage),
+            pageList: [
+                {
+                    id: randomString(8),
+                    routeKey: YakitRoute.MITMHacker,
+                    pageGroupId: "0",
+                    pageId: YakitRoute.MITMHacker,
+                    pageName: YakitRouteToPageInfo[YakitRoute.MITMHacker]?.label || "",
+                    pageParamsInfo: {
+                        mitmHackerPageInfo: data
+                    },
+                    sortFieId: 0
+                }
+            ],
+            routeKey: YakitRoute.MITMHacker,
+            singleNode: true
+        }
+        setPagesData(YakitRoute.MITMHacker, pageNodeInfo)
         openMenuPage(
             {route: YakitRoute.MITMHacker},
             {
@@ -1053,6 +1071,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
             if (type === YakitRoute.HTTPHacker) {
                 openMenuPage({route: YakitRoute.HTTPHacker})
+            }
+            if (type === YakitRoute.MITMHacker) {
+                openMenuPage({route: YakitRoute.MITMHacker})
             }
             if (type === YakitRoute.DB_HTTPHistory) {
                 openMenuPage({route: YakitRoute.DB_HTTPHistory})
@@ -2297,7 +2318,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             pageId: node.id,
             pageName: node.verbose,
             pageParamsInfo: {
-                mitmHackerPageInfo: node.pageParams?.mitmHackerPageInfo || defaultMITMHackerPageInfo
+                mitmHackerPageInfo: node.pageParams?.mitmHackerPageInfo
             },
             sortFieId: order
         }

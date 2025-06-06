@@ -206,9 +206,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
 
     // #region 左侧tab
     const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(false)
-    const [curTabKey, setCurTabKey] = useState<TabKeys>("hot-patch")
+    const [curTabKey, setCurTabKey] = useState<TabKeys>("rule")
     const [initRenderTabCont, setInitRenderTabCont] = useState<TabRenderState>({
-        ["rule"]: false,
+        ["rule"]: true,
         ["hot-patch"]: false
     }) // 初次页面渲染的时候，非当前tab的内容是否不加载
     const [tabsData, setTabsData] = useState<Array<TabsItem>>([

@@ -3,7 +3,7 @@ import {Divider, Form, notification, Typography} from "antd"
 import emiter from "@/utils/eventBus/eventBus"
 import ChromeLauncherButton from "@/pages/mitm/MITMChromeLauncher"
 import {failed, info, yakitNotify} from "@/utils/notification"
-import {useCreation, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceEffect, useMemoizedFn} from "ahooks"
 import {ExecResultLog} from "@/pages/invoker/batch/ExecMessageViewer"
 import {StatusCardProps} from "@/pages/yakitStore/viewers/base"
 import {MITMServer} from "@/pages/mitm/MITMPage"
@@ -19,7 +19,7 @@ import {AgentConfigModal} from "../MITMServerStartForm/MITMServerStartForm"
 import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {YakitRoute} from "@/enums/yakitRoute"
-import MITMContext from "../Context/MITMContext"
+import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     MITMEnablePluginModeRequest,
     MITMFilterWebsocketRequest,
@@ -112,6 +112,15 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
             return currentItem.pageParamsInfo.hTTPHackerPageInfo
         }
     })
+    const initV2PageInfo = useMemoizedFn(() => {
+        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
+            YakitRoute.MITMHacker,
+            YakitRoute.MITMHacker
+        )
+        if (currentItem && currentItem.pageParamsInfo.mitmHackerPageInfo) {
+            return currentItem.pageParamsInfo.mitmHackerPageInfo
+        }
+    })
 
     const [downloadVisible, setDownloadVisible] = useState<boolean>(false)
     const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
@@ -134,31 +143,45 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         }
     }, [props.enableInitialMITMPlugin, props.defaultPlugins])
 
-    useEffect(() => {
-        const info = initPageInfo()?.immediatelyLaunchedInfo
-        if (info && status !== "idle") {
-            removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
-            ipcRenderer.invoke("IsChromeLaunched").then((e) => {
-                if (e) {
-                    const value: MITMHotPortRequest = {
-                        host: info.host,
-                        port: +info.port,
-                        version: mitmVersion
-                    }
-                    grpcMITMHotPort(value)
+    useDebounceEffect(
+        () => {
+            const info =
+                mitmVersion === MITMVersion.V2
+                    ? initV2PageInfo()?.immediatelyLaunchedInfo
+                    : initPageInfo()?.immediatelyLaunchedInfo
+            if (info && status !== "idle") {
+                if (mitmVersion === MITMVersion.V2) {
+                    removePagesDataCacheById(YakitRoute.MITMHacker, YakitRoute.MITMHacker)
+                } else {
+                    removePagesDataCacheById(YakitRoute.HTTPHacker, YakitRoute.HTTPHacker)
                 }
-            })
-            emiter.emit(
-                "onChangeAddrAndEnableInitialPlugin",
-                JSON.stringify({
-                    version: mitmVersion,
-                    host: info.host,
-                    port: info.port,
-                    enableInitialPlugin: info.enableInitialPlugin
+                ipcRenderer.invoke("IsChromeLaunched").then((e) => {
+                    if (e) {
+                        const value: MITMHotPortRequest = {
+                            host: info.host,
+                            port: +info.port,
+                            version: mitmVersion
+                        }
+                        grpcMITMHotPort(value)
+                    }
                 })
-            )
-        }
-    }, [initPageInfo()?.immediatelyLaunchedInfo, status])
+                onGetRemoteValuesBase(MITMConsts.MITMDefaultDownstreamProxyHistory).then((res) => {
+                    emiter.emit(
+                        "onChangeAddrAndEnableInitialPlugin",
+                        JSON.stringify({
+                            version: mitmVersion,
+                            host: info.host,
+                            port: info.port,
+                            enableInitialPlugin: info.enableInitialPlugin,
+                            downstreamProxy: res.defaultValue
+                        })
+                    )
+                })
+            }
+        },
+        [initPageInfo()?.immediatelyLaunchedInfo, initV2PageInfo()?.immediatelyLaunchedInfo, status, mitmVersion],
+        {wait: 100}
+    )
 
     const stop = useMemoizedFn(() => {
         // setLoading(true)
@@ -226,7 +249,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                             .filter((item) => item)
                             .map((item) =>
                                 !item.startsWith("下游代理") ? (
-                                    <YakitTag color='success' key={item}>{item}</YakitTag>
+                                    <YakitTag color='success' key={item}>
+                                        {item}
+                                    </YakitTag>
                                 ) : (
                                     <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
                                         {item}
