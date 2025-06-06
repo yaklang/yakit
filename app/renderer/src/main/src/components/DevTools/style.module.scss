@@ -1,0 +1,12 @@
+.devToolsButton {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+}
+
+.devToolsContainer {
+    display: flex;
+    height: 100%;
+    width: 100%;
+} 

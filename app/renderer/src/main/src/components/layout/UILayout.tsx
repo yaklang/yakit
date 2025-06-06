@@ -84,6 +84,8 @@ import {setYakitEngineMode} from "@/constants/software"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {handleFetchArchitecture, handleFetchIsDev, SystemInfo} from "@/constants/hardware"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
+// Import DevTools component
+import {DevTools} from "../DevTools"
 
 import classNames from "classnames"
 import styles from "./uiLayout.module.scss"
@@ -2028,6 +2030,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     emiter.emit("onRefPluginCodecMenu")
                 }}
             />
+            
+            {/* Add DevTools component (only visible in development mode) */}
+            <DevTools />
         </div>
     )
 }

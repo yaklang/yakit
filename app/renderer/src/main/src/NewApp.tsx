@@ -21,6 +21,8 @@ import {handleFetchSystemInfo} from "./constants/hardware"
 import {closeWebSocket, startWebSocket} from "./utils/webSocket/webSocket"
 import {startShortcutKeyMonitor} from "./utils/globalShortcutKey/utils"
 import {getStorageGlobalShortcutKeyEvents} from "./utils/globalShortcutKey/events/global"
+// GRPC日志监控器
+import {startGRPCLogMonitor, stopGRPCLogMonitor} from "./utils/grpcLogMonitor"
 
 /** 部分页面懒加载 */
 const Main = lazy(() => import("./pages/MainOperator"))
@@ -58,6 +60,14 @@ function NewApp() {
         handleFetchSystemInfo()
         // 告诉主进程软件的版本(CE|EE)
         ipcRenderer.invoke("is-enpritrace-to-domain", !isCommunityEdition())
+        
+        // 启动GRPC日志监控器（仅在开发模式下有效）
+        startGRPCLogMonitor()
+        
+        return () => {
+            // 停止GRPC日志监控器
+            stopGRPCLogMonitor()
+        }
     }, [])
 
     /**
