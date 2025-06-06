@@ -25,11 +25,6 @@ const UICloseFlag = "windows-close-flag"
 let win
 // 是否展示关闭二次确认弹窗的标志位
 let closeFlag = true
-// 检查是否在开发模式
-const isDevMode = process.env.YAKIT_DEV_MODE === "true"
-
-// Log development mode status
-console.log(`[YAKIT] Development Mode: ${isDevMode ? "Enabled" : "Disabled"}`)
 
 process.on("uncaughtException", (error) => {
     console.info(error)

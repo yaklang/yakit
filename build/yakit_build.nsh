@@ -123,6 +123,9 @@ FunctionEnd
                 ${If} $0 != "" ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "Yakit-Dev_InstallPath"
+                    StrCpy $EXE_NAME "Yakit-Dev"
                 ${EndIf}
             ${EndIf}
         ${EndIf}
@@ -154,6 +157,9 @@ FunctionEnd
                 ${If} ${FileExists} `$INSTDIR\IRify.exe` ; irify
                     StrCpy $INSTALL_PATH_REG_KEY_NAME "IRify_InstallPath"
                     StrCpy $EXE_NAME "IRify"
+                ${Else}
+                    StrCpy $INSTALL_PATH_REG_KEY_NAME "Yakit-Dev_InstallPath"
+                    StrCpy $EXE_NAME "Yakit-Dev"
                 ${EndIf}
             ${EndIf}
         ${EndIf}

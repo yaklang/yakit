@@ -116,6 +116,18 @@ async function getAvailableOSSDomain() {
     }
 }
 
+// 判断是否为开发模式
+const judgeDevMode = () => {
+    let devMode = process.env.YAKIT_DEV_MODE
+    if(devMode === "true") return devMode
+    try {
+        devMode = fs.readFileSync(loadExtraFilePath(path.join("bins", "yakit-dev-mode.txt"))).toString("utf8")
+    } catch (error) {
+        console.log("error", error)
+    }
+    return devMode
+}
+
 /** 获取校验url */
 const getCheckTextUrl = async (version) => {
     const domain = await getAvailableOSSDomain()
@@ -429,6 +441,7 @@ const downloadIntranetYakit = async (filePath, destination, progressHandler, onF
 }
 
 module.exports = {
+    judgeDevMode,
     getCheckTextUrl,
     fetchSpecifiedYakVersionHash,
     fetchLatestYakEngineVersion,

@@ -1,4 +1,5 @@
 const {ipcMain, nativeImage, Notification, app} = require("electron")
+const {judgeDevMode} = require("./handlers/utils/network")
 const path = require("path")
 const fs = require("fs")
 const PROTO_PATH = path.join(__dirname, "../protos/grpc.proto")
@@ -33,7 +34,7 @@ const options = {
 function newClientWithProxy() {
     const client = newClient()
     // 检查是否开启了开发模式
-    if (process.env.YAKIT_DEV_MODE === "true") {
+    if (judgeDevMode() === "true") {
         console.log("[DEV MODE] Using GRPC client proxy for development")
         return createGRPCClientProxy(client, grpcReqHandle, grpcRspHandle)
     } else {
@@ -211,7 +212,7 @@ module.exports = {
         })
 
         ipcMain.handle("is-dev-mode", () => {
-            return process.env.YAKIT_DEV_MODE === "true"
+            return judgeDevMode() === "true"
         })
 
         ipcMain.handle("yakit-connect-status", () => {
@@ -385,7 +386,7 @@ module.exports = {
         })
 
         // 仅在开发模式下设置GRPC流处理器
-        if (process.env.YAKIT_DEV_MODE === "true") {
+        if (judgeDevMode() === "true") {
             console.log("[DEV MODE] Setting up GRPC stream handlers")
             setupStreamHandlers(win)
         }
