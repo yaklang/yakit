@@ -296,14 +296,13 @@ export const RuleManagement: React.FC<RuleManagementProps> = memo((props) => {
                     if (IsBuildInRule) {
                         return (
                             <YakitButton
-                                type='text'
-                                icon={<OutlineEyeIcon />}
+                                type='text2'
+                                icon={<OutlinePencilaltIcon />}
+                                loading={isLoading}
                                 onClick={() => {
                                     handleOpenEditHint(rowData)
                                 }}
-                            >
-                                查看
-                            </YakitButton>
+                            />
                         )
                     } else {
                         return (

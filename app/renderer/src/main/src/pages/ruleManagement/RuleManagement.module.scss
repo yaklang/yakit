@@ -348,12 +348,12 @@
             }
         }
         .info-setting {
+            display: flex;
+            flex-direction: column;
             flex: 1;
-            overflow: hidden;
+            overflow: auto;
             padding: 20px 12px 0px 12px;
             .info-setting-form {
-                height: 100%;
-                overflow: hidden auto;
                 :global {
                     .form-item-required {
                         margin: 0 4px;
@@ -377,6 +377,28 @@
                     .ant-select-selector {
                         overflow: hidden;
                     }
+                }
+            }
+            .info-setting-alertMsg {
+                border: 1px solid #eaecf3;
+                border-top: none;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                .severity {
+                    display: flex;
+                    align-items: center;
+                    .exclamationIcon {
+                        svg {
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                }
+                .title {
+                    display: inline-block;
+                    max-width: 180px;
+                    overflow: hidden;
+                    font-weight: bold;
                 }
             }
         }
@@ -494,6 +516,41 @@
                         overflow: hidden auto;
                     }
                 }
+            }
+        }
+    }
+}
+.severity-menu-popover {
+    .severity-menu-cont-wrapper {
+        .severity-menu-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 8px;
+            cursor: pointer;
+            color: #000000;
+            font-size: 14px;
+            line-height: 20px;
+            width: 130px;
+            &.active {
+                color: var(--yakit-primary-5);
+            }
+            &:hover {
+                background-color: var(--yakit-primary-1);
+            }
+            .check-icon {
+                svg {
+                    color: var(--yakit-primary-5);
+                }
+            }
+        }
+    }
+    :global {
+        .ant-popover-inner {
+            border: 1px solid var(--yakit-border-color);
+            box-shadow: 0px 8px 16px rgba(133, 137, 158, 0.1);
+            border-radius: 4px;
+            .ant-popover-inner-content {
+                padding: 6px 4px 4px 4px;
             }
         }
     }

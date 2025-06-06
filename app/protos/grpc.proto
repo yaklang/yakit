@@ -5883,11 +5883,27 @@ message SyntaxFlowRule{
   bool AllowIncluded = 12;
   string IncludedName = 13;
   string Tag = 14;
+  //字段弃用，使用新结构来做
   string AlertDesc = 15;
 
   string Hash = 16;
 
   repeated string GroupName = 17;
+  map<string, AlertMessage> AlertMsg = 19;
+}
+
+message AlertMessage{
+  string Title = 1;
+  string TitleZh = 2;
+  string Description = 3;
+  string Solution = 4;
+  string Severity = 5;
+  string Purpose = 6;
+  string Msg = 7;
+  string Cve = 8;
+  string RiskType = 9;
+  string Tag = 10;
+  map<string, string> Extra = 11;
 }
 
 message  SyntaxFlowRuleInput{
@@ -5897,6 +5913,7 @@ message  SyntaxFlowRuleInput{
   repeated string Tags = 4;
   repeated string GroupNames = 5;
   string Description = 6;
+  map<string, AlertMessage> AlertMsg = 7;
 }
 
 message SyntaxFlowRuleFilter {
