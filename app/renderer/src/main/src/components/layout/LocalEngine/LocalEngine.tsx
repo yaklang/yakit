@@ -80,6 +80,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复` : ""
                     ])
                     setYakitStatus("engine-error")
+                    return
                 } else if (cachePort) {
                     try {
                         const res = await grpcDetermineAdaptedVersionEngine(cachePort, true)
