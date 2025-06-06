@@ -5,7 +5,7 @@
     "main": "app/main/index.js",
     "scripts": {
         "start-electron": "electron .",
-        "start-electron-dev": "cross-env YAKIT_DEV_MODE=true electron .",
+        "start-electron-dev": "env-cmd -e DEV -r packageScript/.env-cmdrc electron .",
         "install-render": "cd app/renderer/src/main && yarn install",
         "render-yarn": "cd app/renderer/src/main && yarn",
         "render-cli": "cd app/renderer/src/main && yarn render-cli",

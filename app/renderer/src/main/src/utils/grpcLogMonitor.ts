@@ -16,6 +16,7 @@ interface GRPCLogEntry {
     timestamp: number
     callId?: string
     source?: string
+    id?: number
 }
 
 // 配置参数
@@ -35,6 +36,8 @@ let isCollectingLogs = true;
 
 // 待处理的新日志队列
 let pendingLogs: GRPCLogEntry[] = [];
+// 用于唯一标识符
+let pendingIndex = 0
 
 // 批处理定时器
 let batchTimer: NodeJS.Timeout | null = null;
@@ -193,7 +196,8 @@ export const startGRPCLogMonitor = () => {
         ipcRenderer.on("grpc-invoke-log", (_event, log: GRPCLogEntry) => {
             // 只有在收集状态下才处理日志
             if (!isCollectingLogs) return;
-            
+            pendingIndex = pendingIndex + 1
+            log.id = pendingIndex
             // 添加到待处理队列
             pendingLogs.push(log);
             
