@@ -193,6 +193,13 @@ if (isLegacy) {
     })
 }
 
+if(isDevMode){
+    configOption.extraFiles.push({
+        from: "bins/yakit-dev-mode.txt",
+        to: "bins/yakit-dev-mode.txt"
+    })
+}
+
 // 是否执行公证流程
 const autoDiscoveryIdentity = process.env.CSC_IDENTITY_AUTO_DISCOVERY
 if (autoDiscoveryIdentity == "true") {
