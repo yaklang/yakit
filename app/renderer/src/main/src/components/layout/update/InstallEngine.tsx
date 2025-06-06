@@ -54,7 +54,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
     const initBuildInEngine = useMemoizedFn(() => {
         setExtractingBuildInEngine(true)
         ipcRenderer
-            .invoke("InitBuildInEngine", {})
+            .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 info(`解压内置引擎成功`)
                 showYakitModal({

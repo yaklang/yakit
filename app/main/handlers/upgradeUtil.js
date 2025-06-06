@@ -221,12 +221,19 @@ module.exports = {
 
                 console.info("YAK-VERSION process is executing...")
                 isFetchingVersion = true
-                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout) => {
+                childProcess.execFile(getLatestYakLocalEngine(), ["-v"], {timeout: 5000}, (err, stdout, stderr) => {
                     engineLogOutputFileAndUI(win, `${stdout.toString("utf-8")}`)
                     if (err) {
                         engineLogOutputFileAndUI(win, `${err.toString("utf-8")}`)
+                        if (stderr) {
+                            engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
+                        }
                         yakVersionEmitter.emit("version", err, null)
                         isFetchingVersion = false
+                        return
+                    }
+                    if (stderr) {
+                        engineLogOutputFileAndUI(win, `${stderr.toString("utf-8")}`)
                         return
                     }
                     // const version = stdout.replaceAll("yak version ()", "").trim();
@@ -272,18 +279,24 @@ module.exports = {
                         if (error) {
                             let errorMessage = `命令执行失败: ${error.message}\nStdout: ${stdout}\nStderr: ${stderr}`
                             if (error.code === "ENOENT") {
-                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nStderr: ${stderr}`
+                                errorMessage = `无法执行命令，引擎未找到: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
                             } else if (error.killed) {
-                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nStderr: ${stderr}`
+                                errorMessage = `引擎启动被系统强制终止，可能的原因为内存占用过多或系统退出或安全防护软件: ${commandPath}\nerror: ${error.message}\nStderr: ${stderr}`
                             } else if (error.signal) {
                                 errorMessage = `引擎由于信号而终止: ${error.signal}\nStderr: ${stderr}`
                             } else if (error.code === "ETIMEDOUT") {
-                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nStderr: ${stderr}`
+                                errorMessage = `命令执行超时，进程遭遇未知问题，需要用户在命令行中执行引擎调试: ${commandPath}\nStdout: ${stdout}\nerror: ${error.message}\nStderr: ${stderr}`
                             }
 
                             engineLogOutputFileAndUI(win, `${errorMessage}`)
 
                             reject(new Error(errorMessage))
+                            return
+                        }
+
+                        if (stderr) {
+                            engineLogOutputFileAndUI(win, `Stderr: ${stderr}`)
+                            reject(stderr)
                             return
                         }
 
@@ -653,9 +666,6 @@ module.exports = {
                 })
             })
         }
-        ipcMain.handle("InitBuildInEngine", async (e, params) => {
-            return await asyncInitBuildInEngine(params)
-        })
 
         // 尝试初始化数据库
         ipcMain.handle("InitCVEDatabase", async (e) => {
@@ -689,6 +699,7 @@ module.exports = {
 
         // asyncRestoreEngineAndPlugin wrapper
         ipcMain.handle("RestoreEngineAndPlugin", async (e, params) => {
+            latestVersionCache = null
             const engineTarget = isWindows ? path.join(yaklangEngineDir, "yak.exe") : path.join(yaklangEngineDir, "yak")
             const buidinEngine = path.join(yaklangEngineDir, "yak.build-in")
             const cacheFlagLock = path.join(basicDir, "flag.txt")
