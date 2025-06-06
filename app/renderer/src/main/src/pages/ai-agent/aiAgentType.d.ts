@@ -1,7 +1,8 @@
-import {Dispatch, SetStateAction} from "react"
+import {Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {SliderSingleProps} from "antd"
+import {AITreeNodeProps} from "./aiTree/type"
 
 export interface AIAgentProps {}
 
@@ -114,6 +115,7 @@ export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
+    onLeafNodeClick?: AITreeNodeProps["onClick"]
     pressure: {
         current_cost_token_size: number[]
         pressure_token_size: number
@@ -128,9 +130,15 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 }
 
 export interface AIAgentChatStreamProps {
+    scrollToTask?: AIChatMessage.PlanTask
     tasks: AIChatMessage.PlanTask[]
     activeStream: string
     streams: Record<string, AIChatStreams[]>
+}
+
+export interface ChatStreamCollapseProps {
+    info: AIChatStreams
+    footer?: ReactNode
 }
 
 // 审阅内容

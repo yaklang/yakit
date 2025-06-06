@@ -6,7 +6,8 @@ import {
     AIAgentChatStreamProps,
     AIAgentEmptyProps,
     AIChatLeftSideProps,
-    AIChatLogsProps
+    AIChatLogsProps,
+    ChatStreamCollapseProps
 } from "../aiAgentType"
 import {
     OutlineArrowdownIcon,
@@ -14,6 +15,7 @@ import {
     OutlineArrowupIcon,
     OutlineChevrondoubledownIcon,
     OutlineChevrondoubleupIcon,
+    OutlineChevrondownIcon,
     OutlineCloseIcon,
     OutlineEngineIcon,
     OutlineHandIcon,
@@ -35,11 +37,11 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import YakitRunQuickly from "@/assets/aiAgent/yakit_run_quickly.gif"
+import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-
-import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -58,6 +60,7 @@ export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
     return (
         <div className={styles["ai-agent-empty"]}>
             <div className={styles["empty-header"]}>
+                <img className={styles["img-wrapper"]} src={YakitRunQuickly} alt='牛牛快跑' />
                 <div className={styles["title"]}>AI-Agent 安全助手</div>
                 <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
             </div>
@@ -98,7 +101,7 @@ export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-    const {tasks, pressure, cost} = props
+    const {tasks, pressure, cost, onLeafNodeClick} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -133,7 +136,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
             <div className={styles["task-list"]}>
                 {tasks.length > 0 ? (
-                    <AITree tasks={tasks} />
+                    <AITree tasks={tasks} onNodeClick={onLeafNodeClick} />
                 ) : (
                     <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
                 )}
@@ -224,7 +227,7 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
 
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {tasks, activeStream, streams} = props
+    const {scrollToTask, tasks, activeStream, streams} = props
 
     const lists = useMemo(() => {
         return Object.keys(streams)
@@ -241,46 +244,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         }
     }, [streams])
 
-    const [secondActive, setSecondActive] = useState<string[]>([])
-    const handleSecondChange = useMemoizedFn((arr: string | string[]) => {
-        setSecondActive(arr as string[])
-    })
-    const [firstActive, setFirstActive] = useState<string[]>([])
-    const handleFirstChange = useMemoizedFn((arr: string | string[]) => {
-        setFirstActive(arr as string[])
-        setSecondActive((old) => {
-            return old.filter((item) => {
-                try {
-                    const firstKey = item.split("-")[0]
-                    return arr.includes(firstKey)
-                } catch (error) {
-                    return false
-                }
-            })
-        })
-    })
-
-    const activeStreamInfo = useMemo(() => {
-        if (activeStream) {
-            try {
-                const type = activeStream.split("|")[0]
-                const streamKey = activeStream.split("|")[1]
-                return {first: type, second: `${type}-${streamKey}`}
-            } catch (error) {}
-        }
-        return {first: "", second: ""}
-    }, [activeStream])
-
-    const activeKeys = useMemo(() => {
-        const firstKeys = firstActive.includes(activeStreamInfo.first)
-            ? firstActive
-            : [...firstActive, activeStreamInfo.first]
-        const secondKeys = secondActive.includes(activeStreamInfo.second)
-            ? secondActive
-            : [...secondActive, activeStreamInfo.second]
-        return {firstActive: firstKeys, secondActive: secondKeys}
-    }, [activeStream, firstActive, secondActive])
-
     // console.log("streams-log", firstActive, secondActive, activeStream, activeStreamInfo, activeKeys)
 
     const handleFetchTitle = useMemoizedFn((taskIndex: string) => {
@@ -292,87 +255,53 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
     return (
         <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
-            <div className={styles["stream-list"]}>
-                <YakitCollapse
-                    destroyInactivePanel={true}
-                    activeKey={activeKeys.firstActive}
-                    onChange={handleFirstChange}
-                >
-                    {lists.map((item) => {
-                        const streamMap = streams[item]
-                        if (!streamMap || streamMap.length === 0) return null
-                        const title = handleFetchTitle(item)
+            {streams && streams["system"] && streams["system"].length > 0 && streams["system"][0] && (
+                <ChatStreamCollapse info={streams["system"][0]} />
+            )}
+        </div>
+    )
+})
 
-                        return (
-                            <YakitCollapse.YakitPanel
-                                key={item}
-                                header={<span className={styles["first-title"]}>{title}</span>}
-                            >
-                                <div className={styles["content-item"]}>
-                                    <YakitCollapse
-                                        destroyInactivePanel={true}
-                                        activeKey={activeKeys.secondActive}
-                                        onChange={handleSecondChange}
-                                    >
-                                        {streamMap.map((el) => {
-                                            const {type, timestamp, data} = el
-                                            const key = `${type}-${timestamp}`
-                                            return (
-                                                <YakitCollapse.YakitPanel
-                                                    key={`${item}-${key}`}
-                                                    header={
-                                                        <span className={styles["second-title"]}>
-                                                            {type}
-                                                            <span className={styles["time-style"]}>
-                                                                {formatTimeUnix(timestamp)}
-                                                            </span>
-                                                        </span>
-                                                    }
-                                                >
-                                                    <div className={styles["content-item"]}>
-                                                        {data.reason && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>思考: </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    {data.reason}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        {data.system && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>
-                                                                    系统提示:{" "}
-                                                                </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    {data.system}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        {data.stream && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>回答: </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    <React.Fragment>
-                                                                        <ChatMarkdown
-                                                                            content={data.stream}
-                                                                            skipHtml={true}
-                                                                        />
-                                                                    </React.Fragment>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </YakitCollapse.YakitPanel>
-                                            )
-                                        })}
-                                    </YakitCollapse>
-                                </div>
-                            </YakitCollapse.YakitPanel>
-                        )
-                    })}
+const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
+    const {info, footer} = props
 
-                    {lists.length === 0 && <div className={styles["stream-empty"]}>思考中...</div>}
-                </YakitCollapse>
+    const {type, data} = info
+
+    const [expand, setExpand] = useState(true)
+
+    return (
+        <div className={styles["chat-stream-collapse"]}>
+            <div className={styles["collapse-header"]}>
+                <div className={styles["header-body"]}>
+                    <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
+                        <OutlineChevrondownIcon />
+                    </div>
+                    <div className={styles["header-title"]} onClick={() => setExpand((old) => !old)}>
+                        {type}
+                    </div>
+                </div>
+
+                {<div className={styles["header-extra"]}>{}</div>}
+            </div>
+
+            <div className={classNames(styles["collapse-body"], {[styles["collapse-body-hidden"]]: !expand})}>
+                <div className={styles["stream-wrapper"]}>
+                    {(data.reason || data.system) && (
+                        <div className={styles["think-wrapper"]}>
+                            {data.reason && <div>{data.reason}</div>}
+
+                            {data.system && <div>{data.system}</div>}
+                        </div>
+                    )}
+
+                    <div className={styles["anwser-wrapper"]}>
+                        <React.Fragment>
+                            <ChatMarkdown content={data.stream} skipHtml={true} />
+                        </React.Fragment>
+                    </div>
+
+                    {footer && <div>{footer}</div>}
+                </div>
             </div>
         </div>
     )

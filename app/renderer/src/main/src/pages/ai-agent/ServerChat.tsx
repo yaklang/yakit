@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useThrottleFn} from "ahooks"
 import {AIAgentTriggerEventInfo, ServerChatProps} from "./aiAgentType"
 import {OutlineLoadingIcon, OutlineNewspaperIcon, OutlineOpenIcon, OutlinePlusIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -375,6 +375,16 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     }, [activeChat, logs])
     // #endregion
 
+    // #region chat-左侧任务栏定位到右侧回答栏模块
+    const [scrollTo, setScrollTo] = useState<AIChatMessage.PlanTask>()
+    const handleSetScrollTo = useDebounceFn(
+        (info: AIChatMessage.PlanTask) => {
+            setScrollTo(info)
+        },
+        {wait: 300}
+    ).run
+    // #endregion
+
     // #region chat-日志相关
     const [logExpand, setLogExpand] = useState(false)
     const hadnleLogShow = useMemoizedFn(() => {
@@ -413,6 +423,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                     expand={leftExpand}
                                     setExpand={setLeftExpand}
                                     tasks={uiPlan}
+                                    onLeafNodeClick={handleSetScrollTo}
                                     pressure={uiPressure}
                                     cost={uiFirstCost}
                                 />
@@ -431,6 +442,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                         <AIAgentChatBody
                                             info={activeChat}
                                             consumption={uiConsumption}
+                                            scrollToTask={scrollTo}
                                             tasks={uiPlan}
                                             activeStream={activeStream}
                                             streams={uiStreams}
