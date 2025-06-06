@@ -124,6 +124,9 @@ import {isEnpriTraceIRify} from "@/utils/envfile"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
+import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
+import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
+const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
 
@@ -560,7 +563,7 @@ const transformFilterData = (filter: RuleImportExportModalProps["filterData"]) =
             Purpose: filter?.Purpose,
             Keyword: filter?.Keyword,
             FilterRuleKind: filter?.FilterRuleKind,
-            FilterLibRuleKind: filter?.FilterLibRuleKind,
+            FilterLibRuleKind: filter?.FilterLibRuleKind
         }
     }
 }
@@ -898,6 +901,9 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 setActiveTab("code")
                 setProject([])
                 setContent(DefaultRuleContent)
+                setActivePanelKey(undefined)
+                setAlertMsg({})
+                setLoadingAlertMsg(false)
                 if (form) form.resetFields()
                 if (debugForm) debugForm.resetFields()
                 // 重置执行结果数据
@@ -1003,6 +1009,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     // 等级修改
     const [loadingAlertMsg, setLoadingAlertMsg] = useState<boolean>(false)
     const [alertMsg, setAlertMsg] = useState<{[key: string]: AlertMessage}>(info?.AlertMsg || {})
+    const [activePanelKey, setActivePanelKey] = useState<string | undefined>(undefined)
     useEffect(() => {
         setAlertMsg(info?.AlertMsg || {})
     }, [info])
@@ -1301,100 +1308,120 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                         <YakitRoundCornerTag>{Object.keys(alertMsg).length}</YakitRoundCornerTag>
                                     </div>
                                     <div className={styles["info-setting-alertMsg"]}>
-                                        {Object.entries(alertMsg).map(([key, alert]) => {
-                                            const title = SeverityMapTag.find((item) =>
-                                                item.key.includes(alert.Severity || "")
-                                            )
-                                            return (
-                                                <div className={styles["info-setting-alertMsg-item"]} key={key}>
-                                                    <div className={styles["info-setting-alertMsg-item-header"]}>
-                                                        <span
-                                                            className={classNames(
-                                                                styles["title"],
-                                                                "yakit-content-single-ellipsis"
-                                                            )}
-                                                            title={alert.TitleZh || alert.Title || "-"}
-                                                        >
-                                                            {alert.TitleZh || alert.Title || "-"}
-                                                        </span>
-                                                        <div className={styles["severity"]}>
-                                                            <YakitTag
-                                                                color={title?.tag as YakitTagColor}
-                                                                closable={false}
-                                                                icon={
-                                                                    <OutlineExclamationIcon
-                                                                        className={styles["exclamationIcon"]}
-                                                                    />
-                                                                }
+                                        <YakitCollapse
+                                            activeKey={activePanelKey}
+                                            onChange={(key) => {
+                                                setActivePanelKey(Array.isArray(key) ? key[key.length - 1] : key)
+                                            }}
+                                        >
+                                            {Object.entries(alertMsg).map(([key, alert]) => {
+                                                const title = SeverityMapTag.find((item) =>
+                                                    item.key.includes(alert.Severity || "")
+                                                )
+                                                return (
+                                                    <YakitPanel
+                                                        header={
+                                                            <span
+                                                                className={classNames(
+                                                                    styles["title"],
+                                                                    "yakit-content-single-ellipsis"
+                                                                )}
+                                                                title={alert.TitleZh || alert.Title || "-"}
                                                             >
-                                                                {title ? title.name : alert.Severity || "-"}
-                                                            </YakitTag>
-                                                            <YakitPopover
-                                                                trigger='click'
-                                                                overlayClassName={styles["severity-menu-popover"]}
-                                                                overlayStyle={{paddingTop: 2}}
-                                                                content={
-                                                                    <div
-                                                                        className={styles["severity-menu-cont-wrapper"]}
-                                                                    >
-                                                                        {SeverityMapTag.map((item) => (
+                                                                {alert.TitleZh || alert.Title || "-"}
+                                                            </span>
+                                                        }
+                                                        key={key}
+                                                        extra={
+                                                            <div className={styles["severity"]}>
+                                                                <YakitTag
+                                                                    color={title?.tag as YakitTagColor}
+                                                                    closable={false}
+                                                                    icon={
+                                                                        <OutlineExclamationIcon
+                                                                            className={styles["exclamationIcon"]}
+                                                                        />
+                                                                    }
+                                                                >
+                                                                    {title ? title.name : alert.Severity || "-"}
+                                                                </YakitTag>
+                                                                <div onClick={(e) => e.stopPropagation()}>
+                                                                    <YakitPopover
+                                                                        trigger='click'
+                                                                        overlayClassName={
+                                                                            styles["severity-menu-popover"]
+                                                                        }
+                                                                        overlayStyle={{paddingTop: 2}}
+                                                                        content={
                                                                             <div
-                                                                                key={item.name}
-                                                                                className={classNames(
-                                                                                    styles["severity-menu-item"],
-                                                                                    {
-                                                                                        [styles["active"]]:
-                                                                                            item.key.includes(
-                                                                                                alert.Severity || ""
-                                                                                            )
-                                                                                    }
-                                                                                )}
-                                                                                onClick={() => {
-                                                                                    const severity = [
-                                                                                        "critical",
-                                                                                        "high",
-                                                                                        "middle",
-                                                                                        "low",
-                                                                                        "info"
-                                                                                    ].filter((sev) =>
-                                                                                        item.key.includes(sev)
-                                                                                    )
-                                                                                    if (!severity[0]) return
-                                                                                    handleClickSeverity(
-                                                                                        key,
-                                                                                        severity[0]
-                                                                                    )
-                                                                                }}
+                                                                                className={
+                                                                                    styles["severity-menu-cont-wrapper"]
+                                                                                }
                                                                             >
-                                                                                {item.name}
-                                                                                {item.key.includes(
-                                                                                    alert.Severity || ""
-                                                                                ) && (
-                                                                                    <SolidCheckIcon
-                                                                                        className={styles["check-icon"]}
-                                                                                    />
-                                                                                )}
+                                                                                {SeverityMapTag.map((item) => (
+                                                                                    <div
+                                                                                        key={item.name}
+                                                                                        className={classNames(
+                                                                                            styles[
+                                                                                                "severity-menu-item"
+                                                                                            ],
+                                                                                            {
+                                                                                                [styles["active"]]:
+                                                                                                    item.key.includes(
+                                                                                                        alert.Severity ||
+                                                                                                            ""
+                                                                                                    )
+                                                                                            }
+                                                                                        )}
+                                                                                        onClick={() => {
+                                                                                            const severity = [
+                                                                                                "critical",
+                                                                                                "high",
+                                                                                                "middle",
+                                                                                                "low",
+                                                                                                "info"
+                                                                                            ].filter((sev) =>
+                                                                                                item.key.includes(sev)
+                                                                                            )
+                                                                                            if (!severity[0]) return
+                                                                                            handleClickSeverity(
+                                                                                                key,
+                                                                                                severity[0]
+                                                                                            )
+                                                                                        }}
+                                                                                    >
+                                                                                        {item.name}
+                                                                                        {item.key.includes(
+                                                                                            alert.Severity || ""
+                                                                                        ) && (
+                                                                                            <SolidCheckIcon
+                                                                                                className={
+                                                                                                    styles["check-icon"]
+                                                                                                }
+                                                                                            />
+                                                                                        )}
+                                                                                    </div>
+                                                                                ))}
                                                                             </div>
-                                                                        ))}
-                                                                    </div>
-                                                                }
-                                                            >
-                                                                <Tooltip title='修改漏洞等级'>
-                                                                    <YakitButton
-                                                                        icon={<OutlineSelectorIcon />}
-                                                                        type='text2'
-                                                                        size='small'
-                                                                    ></YakitButton>
-                                                                </Tooltip>
-                                                            </YakitPopover>
-                                                        </div>
-                                                    </div>
-                                                    <div className={styles["info-setting-alertMsg-item-desc"]}>
-                                                        {alert.Description || "-"}
-                                                    </div>
-                                                </div>
-                                            )
-                                        })}
+                                                                        }
+                                                                    >
+                                                                        <Tooltip title='修改漏洞等级'>
+                                                                            <YakitButton
+                                                                                icon={<OutlineSelectorIcon />}
+                                                                                type='text2'
+                                                                                size='small'
+                                                                            ></YakitButton>
+                                                                        </Tooltip>
+                                                                    </YakitPopover>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    >
+                                                        <ChatMarkdown content={alert.Description} />
+                                                    </YakitPanel>
+                                                )
+                                            })}
+                                        </YakitCollapse>
                                     </div>
                                 </YakitSpin>
                             </div>
