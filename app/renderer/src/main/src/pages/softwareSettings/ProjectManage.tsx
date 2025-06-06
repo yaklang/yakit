@@ -12,6 +12,7 @@ import {
     OutlinePlusIcon,
     PlusBoldSvgIcon,
     PlusIcon,
+    QuestionMarkCircleIcon,
     ResizerIcon,
     TrashIcon
 } from "@/assets/newIcon"
@@ -30,7 +31,7 @@ import {
 import ReactResizeDetector from "react-resize-detector"
 import {CopyComponents} from "@/components/yakitUI/YakitTag/YakitTag"
 import {formatTimestamp} from "@/utils/timeUtil"
-import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Upload} from "antd"
+import {Cascader, Divider, Dropdown, DropdownProps, Form, Progress, Tooltip, Upload} from "antd"
 import {YakitMenu, YakitMenuProp} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -2071,8 +2072,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                         {!isFolder && isIRify() && (
                             <Form.Item
                                 label={
-                                    <div>
-                                        {`数据库路径`}{" "}
+                                    <div style={{display:"flex",alignItems:"center",gap:2}}>
+                                        配置mysql地址<Tooltip title="配置地址以后，所有数据都将存在配置的mysql地址里。参考 mysql://user:password@tcp(ip:port)/database_name"><QuestionMarkCircleIcon className={styles["icon-question"]}/></Tooltip> :
                                     </div>
                                 }
                             >
@@ -2081,6 +2082,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                                 className={classNames({
                                     [styles["required-form-item-wrapper"]]: isCheck && !info.Database
                                 })}
+                                placeholder="mysql://user:password@tcp(ip:port)/database_name"
                                 value={info.Database}
                                 onChange={(e) => setInfo({...info, Database: e.target.value})}
                             />
