@@ -1686,7 +1686,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
 // 公共封装组件用于编译项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-    const {onCancel, onSuccee, title, warrpId} = props
+    const {onCancel, onSuccee, title, warrpId, initForm} = props
     const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
     const tokenRef = useRef<string>(randomString(40))
     const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -1853,6 +1853,11 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         }
     }, [streamInfo])
 
+    useEffect(()=>{
+        if(initForm){
+            form.setFieldsValue({...initForm})
+        }
+    },[initForm])
     return (
         <>
             <YakitModal

@@ -30,7 +30,7 @@ const {Dragger} = Upload
 const {ipcRenderer} = window.require("electron")
 
 /**是否符合接受的文件类型 */
-const isAcceptEligible = (path: string, accept?: string) => {
+export const isAcceptEligible = (path: string, accept?: string) => {
     const index = path.lastIndexOf(".")
     const fileType = path.substring(index, path.length)
     if (accept === ".*") {

@@ -329,7 +329,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
         try {
             if (!data) {
                 setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify([newHistory]))
-                emiter.emit("onRefreshRunnerHistory", JSON.stringify([newHistory]))
+                emiter.emit("onCodeAuditRefreshAduitHistory", JSON.stringify([newHistory]))
                 return
             }
             const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
@@ -338,7 +338,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
                 ...historyData.filter((item) => item.path !== newHistory.path)
             ].slice(0, 10)
             setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify(newHistoryData))
-            emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
+            emiter.emit("onCodeAuditRefreshAduitHistory", JSON.stringify(newHistoryData))
         } catch (error) {
             failed(`历史记录异常，重置历史 ${error}`)
             setRemoteValue(YakRunnerAuditOpenHistory, JSON.stringify([]))

@@ -1431,6 +1431,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                                                 ?.language
                                             if (language) {
                                                 selectGroup.push(language)
+                                                selectGroup.push("general")
                                             }
                                         })
                                         const newSelectGroup = filter(selectGroup)

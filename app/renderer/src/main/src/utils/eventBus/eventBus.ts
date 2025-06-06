@@ -17,6 +17,7 @@ import {YakitRiskProps} from "./events/yakitRisk"
 import {YakRunnerEventProps} from "./events/yakRunner"
 import {YakRunnerAuditEventProps} from "./events/yakRunnerAudit"
 import {YakRunnerCodeScanEventProps} from "./events/yakRunnerCodeScan"
+import {yakJavaDecompilerEventProps} from "./events/yakJavaDecompiler";
 import {NotepadEventProps} from "./events/notepad"
 import {ShortcutKeyEventProps} from "./events/shortcutKey"
 
@@ -63,6 +64,7 @@ type Events = [
     YakRunnerEventProps,
     YakRunnerAuditEventProps,
     YakRunnerCodeScanEventProps,
+    yakJavaDecompilerEventProps,
     NotepadEventProps,
     ShortcutKeyEventProps
 ]

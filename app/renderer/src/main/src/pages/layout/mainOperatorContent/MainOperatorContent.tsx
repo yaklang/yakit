@@ -34,7 +34,9 @@ import {
     isBreachTrace,
     isEnterpriseOrSimpleEdition,
     isEnterpriseEdition,
-    isIRify
+    isIRify,
+    isCommunityIRify,
+    isEnpriTraceIRify
 } from "@/utils/envfile"
 import {
     useCreation,
@@ -677,6 +679,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.Rule_Management:
                 addRuleManagement()
                 break
+            case YakitRoute.YakRunner_Project_Manager:
+                addProjectManager()
+                break
             case YakitRoute.MITMHacker:
                 addMITMHacker(params)
                 break
@@ -690,6 +695,14 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 break
         }
     })
+    const addProjectManager = useMemoizedFn(() => {
+        const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Project_Manager).length
+        if (isExist) {
+            emiter.emit("onRefreshProjectManager")
+        }
+        openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
+    })
+
 
     const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
         openMenuPage(
@@ -1907,7 +1920,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent()) {
+        if (!isEnpriTraceAgent()&&!isCommunityIRify()&&!isEnpriTraceIRify()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存
