@@ -150,7 +150,10 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                     </div>
 
                     {pressure?.current_cost_token_size?.length > 0 && (
-                        <ContextPressureEcharts data={pressure?.current_cost_token_size} threshold={lastPressure} />
+                        <ContextPressureEcharts
+                            data={pressure?.current_cost_token_size}
+                            threshold={pressure?.pressure_token_size || 0}
+                        />
                     )}
                 </div>
 

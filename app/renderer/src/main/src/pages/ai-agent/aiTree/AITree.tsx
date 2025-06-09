@@ -77,7 +77,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
                 <AITreeEmptyNode lineNum={setting.node.lineNum} type={data.state} />
                 <div className={styles["content"]}>
                     <div
-                        style={{width: 226 - ((setting.empty.lineNum || 0) + 1) * 16}}
+                        style={{width: 226 - ((setting.empty.lineNum || 0) + 1) * 16 - 10}}
                         className={classNames(styles["content-title"], "yakit-content-single-ellipsis")}
                     >
                         {data.name}
