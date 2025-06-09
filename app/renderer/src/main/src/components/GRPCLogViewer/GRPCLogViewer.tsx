@@ -301,9 +301,9 @@ export const GRPCLogViewer: React.FC<GRPCLogViewerProps> = ({visible}) => {
                 <YakitTabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
-                    type='card'
-                    className='scan-port-tabs'
+                    className='scan-port-tabs no-theme-tabs'
                     destroyInactiveTabPane={true}
+                    tabBarStyle={{marginBottom: 5}}
                 >
                     <YakitTabs.YakitTabPane tab='All' key='all'>
                         {renderTableContent}
