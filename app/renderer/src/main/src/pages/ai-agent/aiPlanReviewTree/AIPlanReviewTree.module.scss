@@ -1,0 +1,256 @@
+@use "sass:math";
+%display-flex {
+    display: flex;
+    align-items: center;
+}
+
+@mixin title-hover {
+    border-radius: 4px;
+    background: #eef0f3;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 12px;
+        left: 2px;
+        width: 8px;
+        height: 8px;
+        transform: rotate(45deg);
+        flex-shrink: 0;
+        background-color: #eef0f3;
+    }
+}
+.icon-box {
+    position: absolute;
+    z-index: 1;
+    top: 6px;
+    left: 0;
+    width: 16px;
+    height: 20px;
+    padding: 2px 0;
+
+    .chevron-down-icon {
+        @extend %display-flex;
+        background-color: #5a5d64;
+        border-radius: 50%;
+        z-index: 2;
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #fff;
+        }
+    }
+
+    .chevron-right-icon {
+        @extend %display-flex;
+        background-color: #fff;
+        border-radius: 50%;
+        z-index: 2;
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #c0c6d1;
+        }
+        svg {
+            width: 16px;
+            height: 16px;
+            color: #c0c6d1;
+        }
+    }
+}
+.ai-plan-review-tree {
+    position: relative;
+    padding: 12px 0;
+    .dot {
+        position: absolute;
+        top: 0;
+        left: 4px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #c0c6d1;
+        &::after {
+            content: "";
+            position: absolute;
+            top: 6px;
+            left: 3px;
+            width: 2px;
+            height: 16px;
+            bottom: 0;
+            background: #c0c6d1;
+        }
+    }
+
+    .ai-plan-review-tree-item {
+        --width: 24px;
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--width) 1fr;
+        grid-auto-flow: column; /* 或 row */
+        align-items: stretch; /* 默认值，会使所有子项高度一致 */
+
+        min-height: 28px;
+        color: #5a5d64;
+        font-size: 12px;
+        line-height: 16px;
+
+        .tree-item-content {
+            position: relative;
+            padding: 2px 6px 4px;
+
+            .title {
+                @extend %display-flex;
+                justify-content: space-between;
+                color: #5a5d64;
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                padding: 2px 4px;
+                cursor: pointer;
+                height: 28px;
+                &:hover {
+                    @include title-hover;
+                }
+                .plus-icon {
+                    display: none;
+                }
+                .title-name {
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    word-break: break-all;
+                }
+            }
+            .title-hover {
+                @include title-hover;
+            }
+            .title-editable {
+                &:hover {
+                    .plus-icon {
+                        display: flex;
+                    }
+                }
+            }
+            .body {
+                margin-top: 8px;
+                padding: 12px;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                flex: 1 0 0;
+                border-radius: 8px;
+                background: #eef0f3;
+            }
+        }
+        .vertical-line {
+            position: absolute;
+            bottom: 0;
+            top: 8px;
+            left: 7px;
+            width: 16px;
+            height: 100%;
+            border-left: 2px solid #c0c6d1;
+        }
+        .arrow-box {
+            top: 0;
+            height: 36px;
+
+            .arrow {
+                width: 10px;
+                height: 10px;
+                border: 2px solid #c0c6d1;
+                border-left-color: transparent;
+                border-top-color: transparent;
+                transform: rotate(45deg);
+                position: absolute;
+                bottom: 0;
+                left: -6px;
+            }
+        }
+        .arrow-box-before {
+            &::before {
+                content: "";
+                position: absolute;
+                top: -14px;
+                right: 6px;
+                width: 2px;
+                background-color: #c0c6d1;
+                height: 16px * math.sqrt(2);
+                transform: rotate(45deg);
+            }
+        }
+        .arrow-box-down-before {
+            &::before {
+                top: 5px;
+            }
+        }
+        .prefix-box {
+            @extend %display-flex;
+            position: relative;
+            width: 24px;
+            height: 100%;
+
+            .slash-right-line {
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: calc(-100% + 4px);
+                    left: 0px;
+                    width: 2px;
+                    background-color: #c0c6d1;
+                    height: 18px * math.sqrt(2);
+                    transform: rotate(-45deg);
+                }
+            }
+            .slash-left-line {
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: -100%;
+                    right: 0px;
+                    width: 2px;
+                    background-color: #c0c6d1;
+                    height: #{math.sqrt(math.pow(20, 2) + math.pow(18, 2))}px;
+                    transform: rotate(#{math.atan2(18, 20)});
+                }
+            }
+            .slash-last-line {
+                --height: 18px;
+                --rotate: 18px;
+                &::after {
+                    content: "";
+                    position: absolute;
+                    bottom: -22px;
+                    right: 22px;
+                    width: 2px;
+                    background-color: #c0c6d1;
+                    height: var(--height);
+                    transform: rotate(var(--rotate));
+                }
+            }
+            .border-bottom {
+                position: absolute;
+                bottom: -2px;
+                left: -2px;
+                width: 18px;
+                height: 100%;
+                border-bottom: 2px solid #c0c6d1;
+            }
+            .no-bulge-line {
+                height: calc(100% - 18px);
+            }
+        }
+    }
+}

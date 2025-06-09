@@ -51,10 +51,10 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import YakitRunQuickly from "@/assets/aiAgent/yakit_run_quickly.gif"
 import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
-import {ColorsSparklesIcon} from "@/assets/icon/colors"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
+import AIPlanReviewTree from "../aiPlanReviewTree/AIPlanReviewTree"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -699,7 +699,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             const data = review.data as AIChatMessage.PlanReviewRequire
             const list: AIChatMessage.PlanTask[] = []
             handleFlatAITree(list, data.plans.root_task)
-            return <AITree tasks={list} />
+            return <AIPlanReviewTree list={list} />
         }
         return null
     }, [review])
