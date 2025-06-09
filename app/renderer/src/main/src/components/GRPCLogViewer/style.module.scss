@@ -33,82 +33,10 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    padding: 0px 16px 0px;
 
-    /* Tab样式统一配置 */
-    :global(.yakit-tabs), :global(.ant-tabs) {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-    
     :global(.yakit-tabs-nav), :global(.ant-tabs-nav) {
-        width: 100%;
         margin-bottom: 0;
-    }
-    
-    :global(.yakit-tabs-nav-list), :global(.ant-tabs-nav-list) {
-        width: 100%;
-        display: flex;
-    }
-    
-    :global(.yakit-tabs-tab), :global(.ant-tabs-tab) {
-        flex: 1 !important;
-        justify-content: center !important;
-        margin-right: 0 !important;
-        margin-left: 0 !important;
-        text-align: center !important;
-    }
-    
-    :global(.ant-tabs-nav-wrap) {
-        width: 100%;
-    }
-
-    /* 内容区域样式 */
-    :global(.yakit-tabs-content), :global(.ant-tabs-content) {
-        flex: 1;
-        height: calc(100% - 50px); /* 减去tab栏高度 */
-        overflow: hidden;
-    }
-    
-    :global(.yakit-tabs-tabpane), :global(.ant-tabs-tabpane) {
-        height: 100%;
-    }
-}
-
-.tableContainer {
-    flex: 1;
-    overflow: auto;
-    height: 100%; /* 确保占满可用空间 */
-    min-height: 400px; /* 设置最小高度 */
-    position: relative; /* 为绝对定位子元素提供参考 */
-    display: flex;
-    flex-direction: column;
-    margin-top: 0; /* 移除上边距 */
-    padding: 0;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    
-    th, td {
-        padding: 8px 12px;
-        border-bottom: 1px solid #f0f0f0;
-        text-align: left;
-    }
-    
-    th {
-        background-color: #fafafa;
-        font-weight: 500;
-    }
-    
-    tbody tr {
-        cursor: pointer;
-        
-        &:hover {
-            background-color: #f5f5f5;
-        }
     }
 }
 
@@ -140,16 +68,3 @@
     overflow: auto;
     max-height: 200px;
 }
-
-/* 添加对scan-port-tabs类的样式支持 */
-:global(.scan-port-tabs) {
-    height: 100%;
-    
-    :global(.yakit-tabs-content), :global(.ant-tabs-content) {
-        height: calc(100% - 40px);
-    }
-    
-    :global(.yakit-tabs-tabpane), :global(.ant-tabs-tabpane) {
-        height: 100%;
-    }
-} 
