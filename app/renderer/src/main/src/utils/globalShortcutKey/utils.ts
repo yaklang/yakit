@@ -96,7 +96,7 @@ let currentPageHandler: ShortcutKeyPageName | null = null
 export const registerShortcutKeyHandle = (page: ShortcutKeyPageName) => {
     currentPageHandler = page
 }
-/** 注销页面快捷键监听事件 */
+/** 注销页面快捷键监听事件(多页面事件由于异步互相影响不参与注销) */
 export const unregisterShortcutKeyHandle = (page: ShortcutKeyPageName) => {
     if (currentPageHandler === page) currentPageHandler = null
 }

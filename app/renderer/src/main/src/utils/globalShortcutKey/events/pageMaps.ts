@@ -24,17 +24,11 @@ import {
     setStorageYakRunnerShortcutKeyEvents
 } from "./page/yakRunner"
 import {
-    getAddYakitScriptShortcutKeyEvents,
-    getStorageAddYakitScriptShortcutKeyEvents,
-    resetAddYakitScriptShortcutKeyEvents,
-    setStorageAddYakitScriptShortcutKeyEvents
-} from "./page/addYakitScript"
-import {
-    getStorageYakitScriptFocusShortcutKeyEvents,
-    getYakitScriptFocusShortcutKeyEvents,
-    resetYakitScriptFocusShortcutKeyEvents,
-    setStorageYakitScriptFocusShortcutKeyEvents
-} from "./focus/yakitScriptFocus"
+    getStorageYakitMultipleShortcutKeyEvents,
+    getYakitMultipleShortcutKeyEvents,
+    resetYakitMultipleShortcutKeyEvents,
+    setStorageYakitMultipleShortcutKeyEvents
+} from "./multiple/yakitMultiple"
 import {
     getChatCSShortcutKeyEvents,
     getStorageChatCSShortcutKeyEvents,
@@ -72,8 +66,6 @@ export enum ShortcutKeyPage {
     // 插件仓库
     PluginHub = YakitRoute.Plugin_Hub,
 
-    // 新建插件
-    AddYakitScript = YakitRoute.AddYakitScript,
     // 代码审计
     YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
     // YakRunner
@@ -81,9 +73,8 @@ export enum ShortcutKeyPage {
     // ChatCS
     ChatCS = "chat-cs",
 
-    /* 焦点快捷键（焦点与页面属于同级绑定） */
-    // 插件相关焦点事件
-    YakitScriptFocus = "yakit-script-focus"
+    // 多页面快捷键（多页面与页面属于同级绑定）
+    YakitMultiple = "yakit-multiple"
 }
 export type ShortcutKeyPageName = `${ShortcutKeyPage}`
 
@@ -103,13 +94,6 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         setStorage: setStoragePluginHubShortcutKeyEvents,
         scopeShow: [Yakit, EnpriTrace]
     },
-    "add-yakit-script": {
-        getEvents: getAddYakitScriptShortcutKeyEvents,
-        resetEvents: resetAddYakitScriptShortcutKeyEvents,
-        getStorage: getStorageAddYakitScriptShortcutKeyEvents,
-        setStorage: setStorageAddYakitScriptShortcutKeyEvents,
-        scopeShow: [Yakit, EnpriTrace]
-    },
     "yakrunner-audit-code": {
         getEvents: getAuditCodeShortcutKeyEvents,
         resetEvents: resetAuditCodeShortcutKeyEvents,
@@ -122,7 +106,7 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         resetEvents: resetYakRunnerShortcutKeyEvents,
         getStorage: getStorageYakRunnerShortcutKeyEvents,
         setStorage: setStorageYakRunnerShortcutKeyEvents,
-        scopeShow: [IRify]
+        // scopeShow: [IRify]
     },
     "chat-cs": {
         getEvents: getChatCSShortcutKeyEvents,
@@ -131,11 +115,11 @@ export const pageEventMaps: Record<ShortcutKeyPage, PageToEventInfo> = {
         setStorage: setStorageChatCSShortcutKeyEvents,
         scopeShow: [Yakit, EnpriTrace]
     },
-    "yakit-script-focus": {
-        getEvents: getYakitScriptFocusShortcutKeyEvents,
-        resetEvents: resetYakitScriptFocusShortcutKeyEvents,
-        getStorage: getStorageYakitScriptFocusShortcutKeyEvents,
-        setStorage: setStorageYakitScriptFocusShortcutKeyEvents,
+    "yakit-multiple": {
+        getEvents: getYakitMultipleShortcutKeyEvents,
+        resetEvents: resetYakitMultipleShortcutKeyEvents,
+        getStorage: getStorageYakitMultipleShortcutKeyEvents,
+        setStorage: setStorageYakitMultipleShortcutKeyEvents,
         scopeShow: [Yakit, EnpriTrace]
     }
 }
