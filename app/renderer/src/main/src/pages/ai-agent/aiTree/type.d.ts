@@ -2,6 +2,7 @@ import {AIChatMessage} from "../type/aiChat"
 
 export interface AITreeProps {
     tasks: AIChatMessage.PlanTask[]
+    onNodeClick?: AITreeNodeProps["onClick"]
 }
 
 export interface AITreeNodeProps {
@@ -9,6 +10,7 @@ export interface AITreeNodeProps {
     index: string
     preIndex: string
     data: AIChatMessage.PlanTask
+    onClick?: (info: AIChatMessage.PlanTask) => void
 }
 export interface AITreeNodeInfo {
     empty: {lineNum?: number; isStartEnd?: string}

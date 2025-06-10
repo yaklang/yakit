@@ -3,12 +3,15 @@ import {AITreeEmptyNodeProps, AITreeNodeInfo, AITreeNodeProps, AITreeProps} from
 import {TaskErrorIcon, TaskInProgressIcon, TaskSuccessIcon, TaskWaitIcon} from "./icon"
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {useMemoizedFn} from "ahooks"
+import {AIChatMessage} from "../type/aiChat"
+import cloneDeep from "lodash/cloneDeep"
 
 import classNames from "classnames"
 import styles from "./AITree.module.scss"
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-    const {tasks} = props
+    const {tasks, onNodeClick} = props
     return (
         <div className={styles["ai-tree"]}>
             {tasks.map((item, index) => {
@@ -19,6 +22,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
                         index={item.index}
                         preIndex={tasks[index - 1]?.index || ""}
                         data={item}
+                        onClick={onNodeClick}
                     />
                 )
             })}
@@ -28,9 +32,21 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
 
 /** @name 树节点 */
 const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
-    const {order, index, preIndex, data} = props
+    const {order, index, preIndex, data, onClick} = props
 
     const [infoShow, setInfoShow] = React.useState(false)
+
+    const handleFindLeafNode = useMemoizedFn((info: AIChatMessage.PlanTask) => {
+        if (data.subtasks && data.subtasks.length > 0) {
+            return handleFindLeafNode(data.subtasks[0])
+        } else {
+            return info
+        }
+    })
+
+    const handleClick = useMemoizedFn(() => {
+        onClick && onClick(handleFindLeafNode(cloneDeep(data)))
+    })
 
     const setting: AITreeNodeInfo | null = useMemo(() => {
         if (order === 0) return {empty: {}, node: {}}
@@ -75,7 +91,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
             )}
             <div className={styles["node-wrapper"]}>
                 <AITreeEmptyNode lineNum={setting.node.lineNum} type={data.state} />
-                <div className={styles["content"]}>
+                <div className={styles["content"]} onClick={handleClick}>
                     <div
                         style={{width: 226 - ((setting.empty.lineNum || 0) + 1) * 16 - 10}}
                         className={classNames(styles["content-title"], "yakit-content-single-ellipsis")}

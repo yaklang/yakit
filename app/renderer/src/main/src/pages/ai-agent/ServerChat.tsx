@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useThrottleFn} from "ahooks"
+import {useDebounceFn, useMemoizedFn, useSize, useThrottleFn} from "ahooks"
 import {AIAgentTriggerEventInfo, ServerChatProps} from "./aiAgentType"
-import {OutlineLoadingIcon, OutlineNewspaperIcon, OutlineOpenIcon, OutlinePlusIcon} from "@/assets/icon/outline"
+import {OutlineNewspaperIcon, OutlineOpenIcon} from "@/assets/icon/outline"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import cloneDeep from "lodash/cloneDeep"
 import useChatData from "./useChatData"
@@ -9,6 +9,7 @@ import useStore from "./useContext/useStore"
 import useDispatcher from "./useContext/useDispatcher"
 import {
     AIAgentChatBody,
+    AIAgentChatFooter,
     AIAgentChatReview,
     AIAgentEmpty,
     AIChatLeftSide,
@@ -18,7 +19,6 @@ import {AIChatInfo, AIChatMessage, AIChatReview, AIInputEvent, AIStartParams} fr
 import {randomString} from "@/utils/randomUtil"
 import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
-import useListenHeight from "../pluginHub/hooks/useListenHeight"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 
@@ -45,7 +45,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     // #region chat-审阅相关数据和逻辑
     const chatBody = useRef<HTMLDivElement>(null)
     // 用来控制审阅框的高度
-    const chatBodyHeight = useListenHeight(chatBody)
+    const chatBodyHeight = useSize(chatBody)
 
     // review数据
     const [reviewInfo, setReviewInfo, getReviewInfo] = useGetSetState<AIChatReview>()
@@ -320,6 +320,8 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         setQuestion("")
         // 打开左侧侧边栏
         setLeftExpand(true)
+        // 重置回答定位
+        setScrollTo(undefined)
     })
 
     /** 开始提问后的状态调整 */
@@ -339,19 +341,13 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     // #region chat-UI实际展示数据
     // ui实际渲染数据-pressure
     const uiPressure = useMemo(() => {
-        const showPressure =
-            activeChat && activeChat.answer && activeChat.answer.pressure ? activeChat.answer.pressure : pressure
-        const length = showPressure.length
-        return {
-            current_cost_token_size: showPressure.map((item) => item.current_cost_token_size),
-            pressure_token_size: length > 0 ? showPressure[length - 1].pressure_token_size : 0
-        }
+        if (activeChat && activeChat.answer && activeChat.answer.pressure) return activeChat.answer.pressure
+        return pressure
     }, [activeChat, pressure])
     // ui实际渲染数据-firstCost
     const uiFirstCost = useMemo(() => {
-        if (activeChat && activeChat.answer && activeChat.answer.firstCost)
-            return activeChat.answer.firstCost.map((item) => item.ms)
-        return firstCost.map((item) => item.ms)
+        if (activeChat && activeChat.answer && activeChat.answer.firstCost) return activeChat.answer.firstCost
+        return firstCost
     }, [activeChat, firstCost])
     // ui实际渲染数据-consumption
     const uiConsumption = useMemo(() => {
@@ -373,6 +369,16 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         if (activeChat && activeChat.answer && activeChat.answer.logs) return activeChat.answer.logs
         return logs
     }, [activeChat, logs])
+    // #endregion
+
+    // #region chat-左侧任务栏定位到右侧回答栏模块
+    const [scrollTo, setScrollTo] = useState<AIChatMessage.PlanTask>()
+    const handleSetScrollTo = useDebounceFn(
+        (info: AIChatMessage.PlanTask) => {
+            setScrollTo(info)
+        },
+        {wait: 300}
+    ).run
     // #endregion
 
     // #region chat-日志相关
@@ -413,6 +419,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                     expand={leftExpand}
                                     setExpand={setLeftExpand}
                                     tasks={uiPlan}
+                                    onLeafNodeClick={handleSetScrollTo}
                                     pressure={uiPressure}
                                     cost={uiFirstCost}
                                 />
@@ -431,6 +438,8 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                         <AIAgentChatBody
                                             info={activeChat}
                                             consumption={uiConsumption}
+                                            scrollToTask={scrollTo}
+                                            setScrollToTask={setScrollTo}
                                             tasks={uiPlan}
                                             activeStream={activeStream}
                                             streams={uiStreams}
@@ -440,7 +449,10 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
 
                                 <div className={styles["content-review"]}>
                                     {!!reviewInfo && (
-                                        <div className={styles["review-box"]} style={{maxHeight: chatBodyHeight - 60}}>
+                                        <div
+                                            className={styles["review-box"]}
+                                            style={{maxHeight: (chatBodyHeight?.height || 0) - 60}}
+                                        >
                                             <div
                                                 className={classNames(styles["review-border-shadow"], {
                                                     [styles["review-mini"]]: !reviewExpand
@@ -462,24 +474,14 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                 </div>
 
                                 <div className={styles["chat-footer"]}>
-                                    {execute ? (
-                                        <YakitButton
-                                            className={styles["rounded-btn"]}
-                                            colors='danger'
-                                            icon={<OutlineLoadingIcon className='icon-rotate-animation' />}
-                                            onClick={handleStopChat}
-                                        >
-                                            中止
-                                        </YakitButton>
-                                    ) : (
-                                        <YakitButton
-                                            className={styles["rounded-btn"]}
-                                            icon={<OutlinePlusIcon />}
-                                            onClick={() => handleNewChat()}
-                                        >
-                                            新开对话
-                                        </YakitButton>
-                                    )}
+                                    <AIAgentChatFooter
+                                        execute={execute}
+                                        review={false}
+                                        positon={!!scrollTo}
+                                        onStop={handleStopChat}
+                                        onPositon={() => setScrollTo(undefined)}
+                                        onNewChat={handleNewChat}
+                                    />
                                 </div>
                             </div>
                         </div>

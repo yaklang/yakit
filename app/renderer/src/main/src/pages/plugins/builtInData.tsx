@@ -9,7 +9,7 @@ import {
 import {ReactNode} from "react"
 import {CodecPluginTemplate} from "../invoker/data/CodecPluginTemplate"
 import {MITMPluginTemplate, PortScanPluginTemplate} from "../pluginDebugger/defaultData"
-import {SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidSolidCircle} from "@/assets/icon/solid"
+import {SolidFlagIcon, SolidBadgecheckIcon, SolidBanIcon, SolidCircleIcon} from "@/assets/icon/solid"
 import {TypeSelectOpt} from "./funcTemplateType"
 import {PluginFilterParams, PluginListPageMeta, PluginSearchParams} from "./baseTemplateType"
 
@@ -96,7 +96,7 @@ export const DefaultTypeList: {icon: ReactNode; name: string; description: strin
 
 /** @name 审核状态对应展示名称 */
 export const aduitStatusToName: Record<string, {name: string; icon: ReactNode}> = {
-    "0": {name: "待审核", icon: <SolidSolidCircle className='aduit-status-solid-circle-color' />},
+    "0": {name: "待审核", icon: <SolidCircleIcon className='aduit-status-solid-circle-color' />},
     "1": {name: "已通过", icon: <SolidBadgecheckIcon className='aduit-status-badge-check-color' />},
     "2": {name: "未通过", icon: <SolidBanIcon className='aduit-status-ban-color' />},
     "3": {name: "审核中", icon: <SolidFlagIcon className='aduit-status-flag-color' />}

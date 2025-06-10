@@ -1,12 +1,14 @@
-import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useControllableValue, useMemoizedFn} from "ahooks"
+import React, {memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
+import {useControllableValue, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {
     AIAgentChatBodyProps,
+    AIAgentChatFooterProps,
     AIAgentChatReviewProps,
     AIAgentChatStreamProps,
     AIAgentEmptyProps,
     AIChatLeftSideProps,
-    AIChatLogsProps
+    AIChatLogsProps,
+    ChatStreamCollapseProps
 } from "../aiAgentType"
 import {
     OutlineArrowdownIcon,
@@ -14,19 +16,31 @@ import {
     OutlineArrowupIcon,
     OutlineChevrondoubledownIcon,
     OutlineChevrondoubleupIcon,
+    OutlineChevrondownIcon,
     OutlineCloseIcon,
     OutlineEngineIcon,
     OutlineHandIcon,
+    OutlinePlusIcon,
+    OutlinePositionIcon,
     OutlineRocketLaunchIcon,
     OutlineWarpIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
 import {formatNumberUnits, formatTime, formatTimeUnix} from "../utils"
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
-import YakitCollapse from "@/components/yakitUI/YakitCollapse/YakitCollapse"
 import {Input, Tooltip} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {SolidAnnotationIcon, SolidPaperairplaneIcon, SolidVariableIcon} from "@/assets/icon/solid"
+import {
+    SolidAnnotationIcon,
+    SolidCursorclickIcon,
+    SolidHashtagIcon,
+    SolidLightbulbIcon,
+    SolidLightningboltIcon,
+    SolidPaperairplaneIcon,
+    SolidStopIcon,
+    SolidToolIcon,
+    SolidVariableIcon
+} from "@/assets/icon/solid"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {AITree} from "../aiTree/AITree"
 import cloneDeep from "lodash/cloneDeep"
@@ -35,11 +49,12 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {handleFlatAITree} from "../useChatData"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import YakitRunQuickly from "@/assets/aiAgent/yakit_run_quickly.gif"
+import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
+import {ColorsSparklesIcon} from "@/assets/icon/colors"
 
 import classNames from "classnames"
 import styles from "./AIAgentChatTemplate.module.scss"
-
-import {ContextPressureEcharts, ResponseSpeedEcharts} from "./AIEcharts"
 
 /** @name 欢迎页 */
 export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
@@ -58,6 +73,7 @@ export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
     return (
         <div className={styles["ai-agent-empty"]}>
             <div className={styles["empty-header"]}>
+                <img className={styles["img-wrapper"]} src={YakitRunQuickly} alt='牛牛快跑' />
                 <div className={styles["title"]}>AI-Agent 安全助手</div>
                 <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
             </div>
@@ -98,7 +114,7 @@ export const AIAgentEmpty: React.FC<AIAgentEmptyProps> = memo((props) => {
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-    const {tasks, pressure, cost} = props
+    const {tasks, pressure, cost, onLeafNodeClick} = props
 
     const [expand, setExpand] = useControllableValue<boolean>(props, {
         defaultValue: true,
@@ -109,16 +125,33 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         setExpand(false)
     })
 
+    // 上下文压力集合
+    const currentPressures = useMemo(() => {
+        return pressure.map((item) => item.current_cost_token_size) || []
+    }, [pressure])
+    // 最新的上下文压力
     const lastPressure = useMemo(() => {
-        const length = pressure.current_cost_token_size.length
+        const length = currentPressures.length
         if (length === 0) return 0
-        return pressure.current_cost_token_size[length - 1]
+        return currentPressures[length - 1] || 0
+    }, [currentPressures])
+    // 上下文压力预设值
+    const pressureThreshold = useMemo(() => {
+        const length = pressure.length
+        if (length === 0) return 0
+        return pressure[length - 1].pressure_token_size || 0
     }, [pressure])
 
-    const costInfo = useMemo(() => {
-        if (cost.length === 0) return -1
-        return cost[cost.length - 1]
+    // 首字符延迟集合
+    const firstCosts = useMemo(() => {
+        return cost.map((item) => item.ms) || []
     }, [cost])
+    // 最新的首字符延迟
+    const lastFirstCost = useMemo(() => {
+        const length = firstCosts.length
+        if (length === 0) return 0
+        return firstCosts[length - 1] || 0
+    }, [firstCosts])
 
     return (
         <div className={classNames(styles["ai-chat-left-side"], {[styles["ai-chat-left-side-hidden"]]: !expand})}>
@@ -133,7 +166,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
             <div className={styles["task-list"]}>
                 {tasks.length > 0 ? (
-                    <AITree tasks={tasks} />
+                    <AITree tasks={tasks} onNodeClick={onLeafNodeClick} />
                 ) : (
                     <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
                 )}
@@ -149,11 +182,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         </div>
                     </div>
 
-                    {pressure?.current_cost_token_size?.length > 0 && (
-                        <ContextPressureEcharts
-                            data={pressure?.current_cost_token_size}
-                            threshold={pressure?.pressure_token_size || 0}
-                        />
+                    {currentPressures.length > 0 && (
+                        <ContextPressureEcharts data={currentPressures} threshold={pressureThreshold} />
                     )}
                 </div>
 
@@ -164,10 +194,10 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                         <div className={styles["header-title"]}>响应速度</div>
                         <div className={classNames(styles["tag-last"], styles["cost-wrapper"])}>
                             <OutlineRocketLaunchIcon />
-                            {`${costInfo < 0 ? "-" : costInfo}ms`}
+                            {`${lastFirstCost < 0 ? "-" : lastFirstCost}ms`}
                         </div>
                     </div>
-                    {cost.length > 0 && <ResponseSpeedEcharts data={cost} />}
+                    {firstCosts.length > 0 && <ResponseSpeedEcharts data={firstCosts} />}
                 </div>
             </div>
         </div>
@@ -225,10 +255,19 @@ export const AIAgentChatBody: React.FC<AIAgentChatBodyProps> = memo((props) => {
     )
 })
 
+/** @name 任务回答类型对应图标 */
+const taskAnswerToIconMap: Record<string, ReactNode> = {
+    plan: <SolidLightbulbIcon />,
+    execute: <SolidLightningboltIcon />,
+    summary: <SolidHashtagIcon />,
+    "call-tools": <SolidToolIcon />,
+    decision: <SolidCursorclickIcon />
+}
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
-    const {tasks, activeStream, streams} = props
+    const {scrollToTask, setScrollToTask, tasks, activeStream, streams} = props
 
+    // 任务集合
     const lists = useMemo(() => {
         return Object.keys(streams)
     }, [streams])
@@ -239,143 +278,288 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
             const {scrollHeight} = wrapper.current
             const {height} = wrapper.current.getBoundingClientRect()
             if (height < scrollHeight) {
+                if (!isScrollTo.current) return
                 wrapper.current.scrollTop = scrollHeight
             }
         }
     }, [streams])
 
-    const [secondActive, setSecondActive] = useState<string[]>([])
-    const handleSecondChange = useMemoizedFn((arr: string | string[]) => {
-        setSecondActive(arr as string[])
-    })
-    const [firstActive, setFirstActive] = useState<string[]>([])
-    const handleFirstChange = useMemoizedFn((arr: string | string[]) => {
-        setFirstActive(arr as string[])
-        setSecondActive((old) => {
-            return old.filter((item) => {
-                try {
-                    const firstKey = item.split("-")[0]
-                    return arr.includes(firstKey)
-                } catch (error) {
-                    return false
-                }
-            })
-        })
-    })
-
-    const activeStreamInfo = useMemo(() => {
-        if (activeStream) {
-            try {
-                const type = activeStream.split("|")[0]
-                const streamKey = activeStream.split("|")[1]
-                return {first: type, second: `${type}-${streamKey}`}
-            } catch (error) {}
-        }
-        return {first: "", second: ""}
-    }, [activeStream])
-
-    const activeKeys = useMemo(() => {
-        const firstKeys = firstActive.includes(activeStreamInfo.first)
-            ? firstActive
-            : [...firstActive, activeStreamInfo.first]
-        const secondKeys = secondActive.includes(activeStreamInfo.second)
-            ? secondActive
-            : [...secondActive, activeStreamInfo.second]
-        return {firstActive: firstKeys, secondActive: secondKeys}
-    }, [activeStream, firstActive, secondActive])
-
-    // console.log("streams-log", firstActive, secondActive, activeStream, activeStreamInfo, activeKeys)
-
-    const handleFetchTitle = useMemoizedFn((taskIndex: string) => {
-        if (taskIndex === "system") return "系统输出"
-        const task = tasks.find((item) => item.index === taskIndex)
-        if (!task) return "未知任务"
+    // 生成任务展示名称
+    const handleGenerateTaskName = useMemoizedFn((order: string) => {
+        if (order === "system") return "系统输出"
+        const task = tasks.find((item) => item.index === order)
+        if (!task) return order
         return task.name
     })
 
+    const isScrollTo = useRef(true)
+    useUpdateEffect(() => {
+        isScrollTo.current = !scrollToTask
+        if (!scrollToTask) {
+            setClickFirstPanel([])
+            setClickSecondPanel([])
+        }
+    }, [scrollToTask])
+
+    const [clickFirstPanel, setClickFirstPanel] = useState<string[]>([])
+    // 关闭一级容器，自动关闭该一级下的二级容器
+    const handleChangeFirstPanel = useMemoizedFn((expand: boolean, order: string) => {
+        setClickFirstPanel((old) => {
+            if (expand) {
+                if (old.includes(order)) {
+                    return cloneDeep(old)
+                } else {
+                    return old.concat([order])
+                }
+            } else {
+                if (!old.includes(order)) {
+                    return cloneDeep(old)
+                } else {
+                    return old.filter((item) => item !== order)
+                }
+            }
+        })
+        if (!expand) {
+            if (order === scrollToTask?.index && setScrollToTask) setScrollToTask(undefined)
+            setClickSecondPanel((old) => {
+                return old.filter((item) => !item.startsWith(order))
+            })
+        }
+    })
+    const activeFirstPanel = useMemo(() => {
+        const active: string[] = []
+        if (scrollToTask) {
+            active.push(scrollToTask.index)
+            setTimeout(() => {
+                document.getElementById(scrollToTask.index)?.scrollIntoView()
+            }, 100)
+        }
+        if (activeStream) {
+            const first = (activeStream || "").split("|")[0]
+            active.push(first)
+        }
+        return active.concat(clickFirstPanel.filter((item) => !active.includes(item)))
+    }, [scrollToTask, activeStream, clickFirstPanel])
+
+    const [clickSecondPanel, setClickSecondPanel] = useState<string[]>([])
+    const handleChangeSecondPanel = useMemoizedFn((expand: boolean, order: string) => {
+        setClickSecondPanel((old) => {
+            if (expand) {
+                if (old.includes(order)) {
+                    return cloneDeep(old)
+                } else {
+                    return old.concat([order])
+                }
+            } else {
+                if (!old.includes(order)) {
+                    return cloneDeep(old)
+                } else {
+                    return old.filter((item) => item !== order)
+                }
+            }
+        })
+    })
+    const activeSecondPanel = useMemo(() => {
+        const active: string[] = []
+        scrollToTask && active.push(scrollToTask.index)
+        if (activeStream) {
+            const first = (activeStream || "").split("|")[0] || ""
+            const second = (activeStream || "").split("|")[1] || ""
+            active.push(`${first}-${second}`)
+        }
+        return active.concat(clickSecondPanel.filter((item) => !active.includes(item)))
+    }, [activeStream, clickSecondPanel])
+
     return (
         <div ref={wrapper} className={styles["ai-agent-chat-stream"]}>
-            <div className={styles["stream-list"]}>
-                <YakitCollapse
-                    destroyInactivePanel={true}
-                    activeKey={activeKeys.firstActive}
-                    onChange={handleFirstChange}
-                >
-                    {lists.map((item) => {
-                        const streamMap = streams[item]
-                        if (!streamMap || streamMap.length === 0) return null
-                        const title = handleFetchTitle(item)
+            {lists.map((taskName) => {
+                const headerTitle = handleGenerateTaskName(taskName)
+                const firstExpand = activeFirstPanel.includes(taskName)
+                return (
+                    <ChatStreamCollapse
+                        key={taskName}
+                        id={taskName}
+                        title={headerTitle}
+                        expand={firstExpand}
+                        onChange={(value) => handleChangeFirstPanel(value, taskName)}
+                    >
+                        {(streams[taskName] || []).map((info, index) => {
+                            const {type, timestamp, data} = info
+                            const key = `${taskName}-${type}-${timestamp}`
+                            const secondExpand = activeSecondPanel.includes(key)
+                            return (
+                                <ChatStreamCollapse
+                                    key={key}
+                                    style={{marginBottom: 0}}
+                                    expand={secondExpand}
+                                    onChange={(value) => handleChangeSecondPanel(value, key)}
+                                    title={
+                                        <div className={styles["task-type-header"]}>
+                                            {taskAnswerToIconMap[type] || <SolidLightningboltIcon />}
+                                            <div className={styles["task-type-header-title"]}>{type}</div>
+                                            <div className={styles["task-type-header-time"]}>
+                                                {formatTimeUnix(timestamp)}
+                                            </div>
+                                        </div>
+                                    }
+                                >
+                                    {(data.reason || data.system) && (
+                                        <div className={styles["think-wrapper"]}>
+                                            {data.reason && <div>{data.reason}</div>}
 
-                        return (
-                            <YakitCollapse.YakitPanel
-                                key={item}
-                                header={<span className={styles["first-title"]}>{title}</span>}
-                            >
-                                <div className={styles["content-item"]}>
-                                    <YakitCollapse
-                                        destroyInactivePanel={true}
-                                        activeKey={activeKeys.secondActive}
-                                        onChange={handleSecondChange}
-                                    >
-                                        {streamMap.map((el) => {
-                                            const {type, timestamp, data} = el
-                                            const key = `${type}-${timestamp}`
-                                            return (
-                                                <YakitCollapse.YakitPanel
-                                                    key={`${item}-${key}`}
-                                                    header={
-                                                        <span className={styles["second-title"]}>
-                                                            {type}
-                                                            <span className={styles["time-style"]}>
-                                                                {formatTimeUnix(timestamp)}
-                                                            </span>
-                                                        </span>
-                                                    }
-                                                >
-                                                    <div className={styles["content-item"]}>
-                                                        {data.reason && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>思考: </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    {data.reason}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        {data.system && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>
-                                                                    系统提示:{" "}
-                                                                </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    {data.system}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        {data.stream && (
-                                                            <div className={styles["item-stream"]}>
-                                                                <div className={styles["stream-header"]}>回答: </div>
-                                                                <div className={styles["stream-content"]}>
-                                                                    <React.Fragment>
-                                                                        <ChatMarkdown
-                                                                            content={data.stream}
-                                                                            skipHtml={true}
-                                                                        />
-                                                                    </React.Fragment>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </YakitCollapse.YakitPanel>
-                                            )
-                                        })}
-                                    </YakitCollapse>
-                                </div>
-                            </YakitCollapse.YakitPanel>
-                        )
+                                            {data.system && <div>{data.system}</div>}
+                                        </div>
+                                    )}
+
+                                    {data.stream && (
+                                        <div className={styles["anwser-wrapper"]}>
+                                            <React.Fragment>
+                                                <ChatMarkdown content={data.stream} skipHtml={true} />
+                                            </React.Fragment>
+                                        </div>
+                                    )}
+                                </ChatStreamCollapse>
+                            )
+                        })}
+                    </ChatStreamCollapse>
+                )
+            })}
+        </div>
+    )
+})
+/** @name 回答信息折叠组件 */
+const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
+    const {id, className, style, title, headerExtra, children, expand, onChange} = props
+
+    return (
+        <div id={id} className={classNames(className, styles["chat-stream-collapse"])} style={style}>
+            <div className={styles["collapse-header"]}>
+                <div className={styles["header-body"]}>
+                    <div className={classNames(styles["expand-icon"], {[styles["no-expand-icon"]]: !expand})}>
+                        <OutlineChevrondownIcon />
+                    </div>
+                    <div className={styles["header-title"]} onClick={() => onChange && onChange(!expand)}>
+                        {title}
+                    </div>
+                </div>
+
+                {<div className={styles["header-extra"]}>{headerExtra || null}</div>}
+            </div>
+
+            <div className={classNames(styles["collapse-body"], {[styles["collapse-body-hidden"]]: !expand})}>
+                <div className={styles["collapse-panel"]}>{children}</div>
+            </div>
+        </div>
+    )
+})
+
+/** @name 对话框内容 */
+export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) => {
+    const {execute, review, positon, onStop, onPositon, onNewChat} = props
+
+    // const [question, setQuestion] = useState("")
+    // const isQuestion = useMemo(() => {
+    //     return !!(question && question.trim())
+    // }, [question])
+    // const [inputFocus, setInputFocus] = useState(false)
+
+    return (
+        <div className={styles["ai-agent-chat-footer"]}>
+            {/* <div className={styles["input-textarea-wrapper"]}>
+                <div
+                    className={classNames(styles["continue-ask-input"], {
+                        [styles["continue-ask-input-focus"]]: inputFocus
                     })}
+                >
+                    <div className={styles["input-body"]}>
+                        <div className={styles["input-icon"]}>
+                            <div className={styles["icon-wrapper"]}>
+                                <ColorsSparklesIcon />
+                            </div>
+                        </div>
 
-                    {lists.length === 0 && <div className={styles["stream-empty"]}>思考中...</div>}
-                </YakitCollapse>
+                        <Input.TextArea
+                            className={styles["input-textArea"]}
+                            bordered={false}
+                            placeholder='告诉我你的需求...'
+                            value={question}
+                            autoSize={true}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            onFocus={() => setInputFocus(true)}
+                            onBlur={() => setInputFocus(false)}
+                        />
+
+                        {!inputFocus && (
+                            <div className={styles["input-blur-btn"]}>
+                                <YakitButton
+                                    className={styles["input-btn-style"]}
+                                    size='small'
+                                    disabled={!isQuestion}
+                                    icon={<OutlineArrowrightIcon />}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {inputFocus && (
+                        <div className={styles["input-footer-btn"]}>
+                            <YakitButton
+                                className={styles["input-btn-style"]}
+                                size='small'
+                                disabled={!isQuestion}
+                                icon={<OutlineArrowrightIcon />}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div> */}
+
+            <div className={styles["footer-btns"]}>
+                <div className={styles["btns-group"]}>
+                    {execute && !review && (
+                        <>
+                            <Tooltip title='中止' overlayStyle={{paddingBottom: 3}}>
+                                <YakitButton
+                                    className={styles["rounded-icon-btn"]}
+                                    colors='danger'
+                                    icon={<SolidStopIcon className={styles["stop-icon"]} />}
+                                    onClick={onStop}
+                                />
+                            </Tooltip>
+                            {positon && (
+                                <Tooltip title='快速定位' overlayStyle={{paddingBottom: 3}}>
+                                    <YakitButton
+                                        className={styles["rounded-icon-btn"]}
+                                        type='outline2'
+                                        icon={<OutlinePositionIcon />}
+                                        onClick={onPositon}
+                                    />
+                                </Tooltip>
+                            )}
+                        </>
+                    )}
+
+                    {execute && review && (
+                        <YakitButton
+                            className={styles["rounded-text-icon-btn"]}
+                            colors='danger'
+                            icon={<SolidStopIcon className={styles["stop-icon"]} />}
+                            onClick={onStop}
+                        >
+                            中止
+                        </YakitButton>
+                    )}
+
+                    {!execute && (
+                        <YakitButton
+                            className={styles["rounded-text-icon-btn"]}
+                            icon={<OutlinePlusIcon />}
+                            onClick={() => onNewChat()}
+                        >
+                            新开对话
+                        </YakitButton>
+                    )}
+                </div>
             </div>
         </div>
     )

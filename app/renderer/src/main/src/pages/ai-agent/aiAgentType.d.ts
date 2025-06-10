@@ -1,7 +1,8 @@
-import {Dispatch, SetStateAction} from "react"
+import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
 import {SliderSingleProps} from "antd"
+import {AITreeNodeProps} from "./aiTree/type"
 
 export interface AIAgentProps {}
 
@@ -114,11 +115,9 @@ export interface AIChatLeftSideProps {
     expand: boolean
     setExpand: Dispatch<SetStateAction<boolean>>
     tasks: AIChatMessage.PlanTask[]
-    pressure: {
-        current_cost_token_size: number[]
-        pressure_token_size: number
-    }
-    cost: number[]
+    onLeafNodeClick?: AITreeNodeProps["onClick"]
+    pressure: AIChatMessage.Pressure[]
+    cost: AIChatMessage.AICostMS[]
 }
 
 // 对话框回答
@@ -128,9 +127,31 @@ export interface AIAgentChatBodyProps extends AIAgentChatStreamProps {
 }
 
 export interface AIAgentChatStreamProps {
+    scrollToTask?: AIChatMessage.PlanTask
+    setScrollToTask?: Dispatch<SetStateAction<AIChatMessage.PlanTask | undefined>>
     tasks: AIChatMessage.PlanTask[]
     activeStream: string
     streams: Record<string, AIChatStreams[]>
+}
+
+export interface ChatStreamCollapseProps {
+    id?: string
+    className?: string
+    style?: CSSProperties
+    title?: ReactNode
+    headerExtra?: ReactNode
+    children?: ReactNode
+    expand?: boolean
+    onChange?: (value: boolean) => void
+}
+
+export interface AIAgentChatFooterProps {
+    execute: boolean
+    review: boolean
+    onStop: () => void
+    positon: boolean
+    onPositon: () => void
+    onNewChat: () => void
 }
 
 // 审阅内容

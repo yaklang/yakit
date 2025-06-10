@@ -745,15 +745,7 @@
             }
 
             .chat-footer {
-                height: 52px;
-                padding: 12px 48px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                position: relative;
-                .rounded-btn {
-                    border-radius: 20px;
-                }
+                z-index: 9;
             }
         }
     }
