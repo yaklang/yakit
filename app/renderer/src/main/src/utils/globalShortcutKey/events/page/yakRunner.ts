@@ -13,13 +13,13 @@ export enum YakRunnerShortcutKey {
     YakRunnerClose = "close*yakRunner",
     // 打开终端
     YakRunnerOpenTermina = "openTermina*yakRunner",
-    // 文件树重命名
+    // 文件重命名
     YakRunnerRename = "rename*yakRunner",
-    // 文件树删除
+    // 文件删除
     YakRunnerDelete = "delete*yakRunner",
-    // 文件树复制
+    // 文件复制
     YakRunnerCopy = "copy*yakRunner",
-    // 文件树粘贴
+    // 文件粘贴
     YakRunnerPaste = "paste*yakRunner",
 }
 
@@ -43,19 +43,19 @@ const YakRunnerShortcutKeyEvents: EventsType = {
         keys: [YakitKeyMod.CtrlCmd,YakitKeyBoard.Backquote]
     },
     "rename*yakRunner": {
-        name: "文件树重命名",
+        name: "文件重命名",
         keys: [YakitKeyBoard.F2]
     },
     "delete*yakRunner": {
-        name: "文件树删除",
+        name: "文件删除",
         keys: [YakitKeyBoard.Delete]
     },
     "copy*yakRunner": {
-        name: "文件树复制",
+        name: "文件复制",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C]
     },
     "paste*yakRunner": {
-        name: "文件树粘贴",
+        name: "文件粘贴",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_V]
     },
 }
