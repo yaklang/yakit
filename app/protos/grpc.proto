@@ -3945,6 +3945,10 @@ message PortScanRequest {
   bool BasicCrawlerEnableJSParser = 29;
   repeated string UserFingerprintFiles = 30;
   bool SkipCveBaseLine = 31;
+
+  // 指纹规则组
+  bool EnableFingerprintGroup = 32;
+  repeated string FingerprintGroup = 33;
 }
 
 message DeletePortsRequest {
