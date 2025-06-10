@@ -1,5 +1,5 @@
 import React, {memo, useEffect, useMemo, useRef, useState} from "react"
-import {useMemoizedFn, useSize} from "ahooks"
+import {useInViewport, useMemoizedFn, useSize} from "ahooks"
 import {ModifyPluginCallback, PluginEditor, PluginEditorRefProps} from "../pluginEditor/PluginEditor"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {YakScript} from "@/pages/invoker/schema"
@@ -10,8 +10,8 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 
 import classNames from "classnames"
 import styles from "./ModifyYakitPlugin.module.scss"
-import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { getStorageYakitScriptFocusShortcutKeyEvents } from "@/utils/globalShortcutKey/events/focus/yakitScriptFocus"
+import { registerShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { getStorageYakitMultipleShortcutKeyEvents } from "@/utils/globalShortcutKey/events/multiple/yakitMultiple"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
@@ -26,7 +26,7 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
     const {getContainer, plugin, visible, onCallback} = props
 
     const [edit, setEdit] = useState<YakScript>(plugin)
-
+    const [inViewport] = useInViewport(getContainer)
     const getContainerSize = useSize(getContainer)
     // 抽屉展示高度
     const showHeight = useMemo(() => {
@@ -89,17 +89,16 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
     })
 
     useEffect(() => {
-        if (visible) {
-            registerShortcutKeyHandle(ShortcutKeyPage.YakitScriptFocus)
-            getStorageYakitScriptFocusShortcutKeyEvents()
-            return () => {
-                unregisterShortcutKeyHandle(ShortcutKeyPage.YakitScriptFocus)
-            }
+        if (inViewport) {
+            setTimeout(()=>{
+                registerShortcutKeyHandle(ShortcutKeyPage.YakitMultiple)
+                getStorageYakitMultipleShortcutKeyEvents()  
+            },200)
         }
-    }, [visible])
+    }, [inViewport])
 
     useShortcutKeyTrigger("save*pluginEditor", () => {
-        if (editorRef.current) {
+        if (editorRef.current && inViewport) {
             editorRef.current.onBtnLocalSave()
         }
     })

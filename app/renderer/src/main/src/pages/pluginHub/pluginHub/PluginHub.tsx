@@ -25,15 +25,15 @@ const PluginHub: React.FC<PluginHubProps> = memo((props) => {
     const [active, setActive] = useState<PluginSourceType>()
 
     const wrapper = useRef<HTMLDivElement>(null)
-    // const [inViewport] = useInViewport(wrapper)
-    // useEffect(() => {
-    //     if (inViewport) {
-    //         registerShortcutKeyHandle(ShortcutKeyPage.PluginHub)
-    //         return () => {
-    //             unregisterShortcutKeyHandle(ShortcutKeyPage.PluginHub)
-    //         }
-    //     }
-    // }, [inViewport])
+    const [inViewport] = useInViewport(wrapper)
+    useEffect(() => {
+        if (inViewport) {
+            registerShortcutKeyHandle(ShortcutKeyPage.PluginHub)
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.PluginHub)
+            }
+        }
+    }, [inViewport])
 
     useEffect(() => {
         getRemoteValue(RemotePluginGV.UpdateLocalPluginForMITMCLI).then((val) => {

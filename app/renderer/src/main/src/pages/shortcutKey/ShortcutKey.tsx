@@ -20,7 +20,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 const getShortcutPageName = (page) => {
     if (page === "global") {
         return "全局"
-    } else if (page === "yakit-script-focus") {
+    } else if (page === "yakit-multiple") {
         return "多页面"
     } else if (page === "chat-cs") {
         return "ChatCS"
@@ -133,7 +133,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
 
                 <div className={styles["option"]}>
                     <YakitButton
-                        size="large"
+                        size='large'
                         onClick={() => {
                             pageEventMaps[page].resetEvents()
                             getData(page)
@@ -160,9 +160,9 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                 >
                     <div className={styles["set-shortcut-key-wrapper"]}>
                         <div className={styles["title"]}>先按所需的组合键, 再按 Enter 键, 按 Esc 键取消</div>
-                        <div className={styles["title"]}>
+                        {/* <div className={styles["title"]}>
                             注：编辑器快捷键需以"Alt", "Shift", "Control", "Meta"进行组合使用
-                        </div>
+                        </div> */}
                         <div className={classNames(styles["input"], {[styles["empty"]]: inputKeys.length === 0})}>
                             {inputKeys.join(" ")}
                         </div>

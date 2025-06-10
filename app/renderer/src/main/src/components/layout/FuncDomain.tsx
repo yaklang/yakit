@@ -987,11 +987,7 @@ const GetUIOpSettingMenu = () => {
                     key: "webshell-manager",
                     label: "网站管理"
                 },
-                {key: "mcp", label: "Yak Mcp"},
-                {   
-                    key: "setShortcutKey", 
-                    label: "快捷键设置"
-                }
+                {key: "mcp", label: "Yak Mcp"}
             ]
         },
         {type: "divider"},

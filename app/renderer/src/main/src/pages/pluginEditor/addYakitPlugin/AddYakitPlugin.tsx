@@ -7,10 +7,10 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {YakitRoute} from "@/enums/yakitRoute"
 
 import styles from "./AddYakitPlugin.module.scss"
-import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { getStorageAddYakitScriptShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/addYakitScript"
+import { registerShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { getStorageYakitMultipleShortcutKeyEvents } from "@/utils/globalShortcutKey/events/multiple/yakitMultiple"
 
 interface AddYakitPluginProps {}
 
@@ -47,16 +47,13 @@ export const AddYakitPlugin: React.FC<AddYakitPluginProps> = memo((props) => {
     const [inViewport] = useInViewport(shortcutRef)
     useEffect(() => {
         if (inViewport) {
-            registerShortcutKeyHandle(ShortcutKeyPage.AddYakitScript)
-            getStorageAddYakitScriptShortcutKeyEvents()
-            return () => {
-                unregisterShortcutKeyHandle(ShortcutKeyPage.AddYakitScript)
-            }
+            registerShortcutKeyHandle(ShortcutKeyPage.YakitMultiple)
+            getStorageYakitMultipleShortcutKeyEvents()
         }
     }, [inViewport])
 
-    useShortcutKeyTrigger("save*newPlugin", () => {
-        if (editorRef.current) {
+    useShortcutKeyTrigger("save*pluginEditor", () => {
+        if (editorRef.current && inViewport) {
             editorRef.current.onBtnLocalSave()
         }
     })
