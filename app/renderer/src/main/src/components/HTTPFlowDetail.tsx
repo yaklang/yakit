@@ -789,11 +789,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                // 当侧边栏为关闭的时候，定位高亮需要关掉
-                if (isFold) {
-                    setHighLightItem(undefined)
-                    setCurrId(undefined)
-                }
+                // 定位高亮需要关掉
+                setHighLightItem(undefined)
+                setCurrId(undefined)
 
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
@@ -815,8 +813,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     }
                 } else {
                     setHighLightText([])
-                    setHighLightItem(undefined)
-                    setCurrId(undefined)
                 }
             })
             .catch((e) => {
