@@ -1564,11 +1564,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         }
     }, [isShowBeforeData, beforeResValue, resType, highLightItem])
 
-    const [refreshHighLightFind, setRefreshHighLightFind] = useState(true)
-    useEffect(() => {
-        setRefreshHighLightFind((prev) => !prev)
-    }, [highLightItem])
-
     const getPacketNewWindow = () => {
         openPacketNewWindow({
             showParentPacketCom: {
@@ -1719,7 +1714,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={realReqHighLightText}
                         highLightFind={realReqHighLightFind}
-                        refreshHighLightFind={refreshHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? true : false}
                         url={flow.Url}
@@ -1857,7 +1851,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         highLightText={highLightText?.filter((i) => !i.IsMatchRequest)}
                         highLightFind={highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []}
-                        refreshHighLightFind={refreshHighLightFind}
                         highLightFindClass='hight-light-rule-color'
                         isPositionHighLightCursor={highLightItem?.IsMatchRequest ? false : true}
                         url={flow.Url}

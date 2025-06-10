@@ -456,7 +456,6 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
 
     highLightText?: HighLightText[] | Selection[]
     highLightFind?: HighLightText[] | Selection[]
-    refreshHighLightFind?: boolean
     highLightFindClass?: string
     // 是否定位高亮光标位置
     isPositionHighLightCursor?: boolean
