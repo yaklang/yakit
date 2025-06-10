@@ -230,7 +230,10 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                 </div>
             </div>
 
-            <div style={{display: showEmpty && showEmptyInitRef.current ? "block" : "none"}} className={styles["fingerprintManage-init"]}>
+            <div
+                style={{display: showEmpty && showEmptyInitRef.current ? "block" : "none"}}
+                className={styles["fingerprintManage-init"]}
+            >
                 <YakitEmpty
                     description='可一键获取官方默认指纹库，或导入外部指纹库'
                     className={styles["fingerprintManage-init-empty"]}
@@ -270,6 +273,11 @@ const FingerprintManage: React.FC<FingerprintManageProp> = (props) => {
                 filterData={{
                     ...localFilter,
                     IncludeId: includeIdRef.current
+                }}
+                yakitFormDraggerProps={{
+                    showExtraHelp: <span>，支持导入zip和json</span>,
+                    fileExtensionIsExist: true,
+                    accept: ".zip,.json"
                 }}
             />
         </div>
@@ -1095,6 +1103,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                                 update(1, data.Pagination.Limit)
                             }}
                         />
+                        <YakitButton type='primary'>指纹规则</YakitButton>
                     </div>
                 </div>
             </div>

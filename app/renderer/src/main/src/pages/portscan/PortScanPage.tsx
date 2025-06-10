@@ -34,6 +34,8 @@ export interface PortScanParams {
     FingerprintMode: "service" | "web" | "all"
     UserFingerprintFiles: string[]
     UserFingerprintFilesStr?: string
+    EnableFingerprintGroup: boolean
+    FingerprintGroup: string[]
     SaveToDB: boolean
     SaveClosedPorts: boolean
     TargetsFile?: string

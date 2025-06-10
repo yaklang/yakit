@@ -268,6 +268,8 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
     FingerprintMode: "all",
     UserFingerprintFiles: [],
     UserFingerprintFilesStr: "",
+    EnableFingerprintGroup: true,
+    FingerprintGroup: [""],
     Proto: ["tcp"],
     SaveClosedPorts: false,
     SaveToDB: true,
@@ -412,6 +414,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
                 executeParams["TargetsFile"] = executeParams["Targets"]
                 executeParams["Targets"] = ""
             }
+            executeParams.FingerprintGroup =
+                executeParams.FingerprintGroup.length === 1 && executeParams.FingerprintGroup[0] === ""
+                    ? []
+                    : executeParams.FingerprintGroup
             delete executeParams.UserFingerprintFilesStr
             portScanStreamEvent.reset()
             setRuntimeId("")

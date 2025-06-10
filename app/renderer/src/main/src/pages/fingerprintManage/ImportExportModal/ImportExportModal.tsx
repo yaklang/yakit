@@ -10,7 +10,9 @@ import {randomString} from "@/utils/randomUtil"
 import {useMemoizedFn, useSafeState} from "ahooks"
 import {Form} from "antd"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {YakitFormDraggerProps} from "@/components/yakitUI/YakitForm/YakitFormType"
 import styles from "./ImportExportModal.module.scss"
+
 const {ipcRenderer} = window.require("electron")
 
 const ImportExportModalSize = {
@@ -20,7 +22,7 @@ const ImportExportModalSize = {
         wrapperCol: 18
     },
     import: {
-        width: 680,
+        width: 720,
         labelCol: 6,
         wrapperCol: 17
     }
@@ -53,9 +55,10 @@ interface ImportExportModalComProps<T> {
     whichUse: ImportExportWhichUse
     filterData: T
     onCallback: (result: boolean) => void
+    yakitFormDraggerProps?: YakitFormDraggerProps
 }
 const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
-    const {getContainer, extra, onCallback, filterData} = props
+    const {getContainer, extra, onCallback, filterData, yakitFormDraggerProps = {}} = props
 
     const [form] = Form.useForm()
 
@@ -214,6 +217,7 @@ const ImportExportModalInner = <T,>(props: ImportExportModalComProps<T>) => {
                             multiple={false}
                             selectType='file'
                             fileExtensionIsExist={false}
+                            {...yakitFormDraggerProps}
                         />
                     </>
                 )
