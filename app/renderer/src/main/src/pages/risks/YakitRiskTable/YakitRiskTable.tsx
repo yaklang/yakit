@@ -2183,10 +2183,10 @@ export const RightBugAuditResult: React.FC<AuditResultDescribeProps> = React.mem
                     <Descriptions.Item label='扫描规则'>{getRule()}</Descriptions.Item>
                     <>
                         <Descriptions.Item label='漏洞描述' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Description || "-"}
+                            {info.Description?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Description} /> : "-"}
                         </Descriptions.Item>
                         <Descriptions.Item label='解决方案' span={column} contentStyle={{whiteSpace: "pre-wrap"}}>
-                            {info.Solution || "-"}
+                            {info.Solution?<MDEditor.Markdown className={classNames(styles["md-content"])} source={info.Solution} /> : "-"}
                         </Descriptions.Item>
                     </>
                 </Descriptions>
