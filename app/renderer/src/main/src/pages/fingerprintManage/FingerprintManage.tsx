@@ -55,6 +55,8 @@ import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import ImportExportModal, {ExportImportProgress, ImportExportModalExtra} from "./ImportExportModal/ImportExportModal"
 import {randomString} from "@/utils/randomUtil"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import {FingerprintRuleDom} from "./FingerprintRuleDom"
 import styles from "./FingerprintManage.module.scss"
 
 const {ipcRenderer} = window.require("electron")
@@ -1103,7 +1105,24 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                                 update(1, data.Pagination.Limit)
                             }}
                         />
-                        <YakitButton type='primary'>指纹规则</YakitButton>
+                        <YakitButton
+                            type='primary'
+                            onClick={() => {
+                                let m = showYakitModal({
+                                    title: "指纹规则",
+                                    width: 900,
+                                    closable: true,
+                                    maskClosable: false,
+                                    content: (
+                                        <div style={{margin: 8}}>
+                                            <FingerprintRuleDom />
+                                        </div>
+                                    )
+                                })
+                            }}
+                        >
+                            指纹规则
+                        </YakitButton>
                     </div>
                 </div>
             </div>
