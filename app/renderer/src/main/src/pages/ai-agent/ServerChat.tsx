@@ -21,6 +21,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
+import {formatAIAgentSetting} from "./utils"
 
 import classNames from "classnames"
 import styles from "./AIAgent.module.scss"
@@ -229,12 +230,8 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         events.onStart(info.id, {
             IsStart: true,
             Params: {
-                UserQuery: question,
-                ReviewPolicy: setting.ReviewPolicy || "manual",
-                DisallowRequireForUserPrompt: setting.DisallowRequireForUserPrompt || false,
-                EnableSystemFileSystemOperator: !!setting.EnableSystemFileSystemOperator || true,
-                UseDefaultAIConfig: !!setting.UseDefaultAIConfig || true,
-                ForgeName: setting.ForgeName || undefined
+                ...formatAIAgentSetting(setting),
+                UserQuery: question
             }
         })
         handleSubmitAfterChangState()

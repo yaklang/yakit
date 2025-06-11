@@ -333,8 +333,9 @@
         line-height: 20px;
     }
     .anwser-wrapper {
-        max-height: 200px;
-        overflow: hidden auto;
+        // max-height: 200px;
+        // overflow: hidden auto;
+        padding: 8px;
         line-height: 18px;
         color: #b4bbca;
         border-radius: 4px;
@@ -598,6 +599,7 @@
                     border-radius: 4px;
                     border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
                     background: var(--Colors-Use-Neutral-Bg, #f8f9fa);
+                    word-break: break-all;
                     color: var(--Colors-Use-Neutral-Text-3-Secondary, #868c97);
                     font-size: 14px;
                     font-weight: 400;

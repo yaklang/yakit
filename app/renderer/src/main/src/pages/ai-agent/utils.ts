@@ -1,7 +1,8 @@
 import {yakitNotify} from "@/utils/notification"
-import {RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
+import {AIAgentSetting, RenderResourcesTemplates, RenderTools, RenderToolsParam} from "./aiAgentType"
 import cloneDeep from "lodash/cloneDeep"
 import moment from "moment"
+import isNil from "lodash/isNil"
 
 /** 处理默认值不同数据类型 */
 const handleDefaultValue = (value: any): string => {
@@ -221,5 +222,62 @@ export const formatNumberUnits = (num: number) => {
     } else {
         return num.toString()
     }
+}
+
+/** @name 将全局配置信息转换为可以请求的数据结构 */
+export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
+    const data: AIAgentSetting = {}
+
+    try {
+        if (!isNil(setting?.EnableSystemFileSystemOperator)) {
+            data.EnableSystemFileSystemOperator = setting.EnableSystemFileSystemOperator
+        }
+        if (!isNil(setting?.UseDefaultAIConfig)) {
+            data.UseDefaultAIConfig = setting.UseDefaultAIConfig
+        }
+        if (!!setting?.ForgeName) {
+            data.ForgeName = setting.ForgeName || ""
+        }
+        if (!isNil(setting?.DisallowRequireForUserPrompt)) {
+            data.DisallowRequireForUserPrompt = setting.DisallowRequireForUserPrompt
+        }
+
+        if (!!setting?.ReviewPolicy) {
+            data.ReviewPolicy = setting.ReviewPolicy || "manual"
+        } else {
+            data.ReviewPolicy = "manual"
+        }
+
+        if (!isNil(setting?.AIReviewRiskControlScore)) {
+            data.AIReviewRiskControlScore = setting.AIReviewRiskControlScore || 0.5
+        }
+        if (!isNil(setting?.DisableToolUse)) {
+            data.DisableToolUse = setting.DisableToolUse
+        }
+        if (!isNil(setting?.AICallAutoRetry)) {
+            data.AICallAutoRetry = setting.AICallAutoRetry || 3
+        }
+        if (!isNil(setting?.AITransactionRetry)) {
+            data.AITransactionRetry = setting.AITransactionRetry || 5
+        }
+        if (!isNil(setting?.EnableAISearchTool)) {
+            data.EnableAISearchTool = setting.EnableAISearchTool
+        }
+        if (!isNil(setting?.EnableAISearchInternet)) {
+            data.EnableAISearchInternet = setting.EnableAISearchInternet
+        }
+        if (!isNil(setting?.AllowPlanUserInteract)) {
+            data.AllowPlanUserInteract = setting.AllowPlanUserInteract
+        }
+        if (setting?.AllowPlanUserInteract) {
+            if (!isNil(setting?.PlanUserInteractMaxCount)) {
+                data.PlanUserInteractMaxCount = setting.PlanUserInteractMaxCount || 3
+            } else {
+                data.PlanUserInteractMaxCount = 3
+            }
+        }
+    } catch (error) {}
+
+    return {...data}
 }
 // #endregion

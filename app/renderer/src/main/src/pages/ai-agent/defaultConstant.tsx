@@ -20,9 +20,13 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     DisallowRequireForUserPrompt: false,
     ReviewPolicy: "manual",
     AIReviewRiskControlScore: 0.5,
-    AITransactionRetry: 0,
+    DisableToolUse: false,
+    AICallAutoRetry: 3,
+    AITransactionRetry: 5,
     EnableAISearchTool: true,
-    EnableAISearchInternet: true
+    EnableAISearchInternet: true,
+    AllowPlanUserInteract: true,
+    PlanUserInteractMaxCount: 3
 }
 
 /** mcp 自定义服务器配置类型选项 */

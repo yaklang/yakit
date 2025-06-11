@@ -14,16 +14,17 @@ export interface AIStartParams {
 
     /** 问题 */
     UserQuery: string
-    /** allow ai to use the fs */
+    /** 是否允许使用文件系统工具权限 @default true */
     EnableSystemFileSystemOperator?: boolean
+    /** 是否使用系统默认ai配置 @default true */
     UseDefaultAIConfig?: boolean
 
-    /** 模板名 */
+    /** AI 模板名 */
     ForgeName?: string
     /** 模板参数 */
     ForgeParams?: KVPair[]
 
-    /** 是否禁用人机交互（AI 可能会主动问人问题） */
+    /** 是否禁用人机交互（AI 可能会主动问人问题）@default false */
     DisallowRequireForUserPrompt?: boolean
 
     /**
@@ -34,6 +35,7 @@ export interface AIStartParams {
      * - 1. manual (全手动，大事小事所有的事情都由人来决策)
      * - 2. yolo (全自动，所有的事情，都直接执行，无需参与 - 效果差，危险程度高)
      * - 3. ai (AI 来进行初步决策，如果AI觉得风险程度比较高，则转交给人)
+     * @default manual
      */
     ReviewPolicy?: "manual" | "yolo" | "ai"
 
@@ -44,32 +46,35 @@ export interface AIStartParams {
      */
     AIReviewRiskControlScore?: number
 
-    /** 禁用任何外部工具，这就是一个纯聊天机器了 */
+    /** 禁用任何外部工具，这就是一个纯聊天机器了 @default false */
     DisableToolUse?: boolean
 
-    /** 默认是3，一般是说如果远端AI不稳定（网络原因）的时候，某一次对话重试几次？ */
+    /** 默认是3，一般是说如果远端AI不稳定（网络原因）的时候，某一次对话重试几次？ @default 3 */
     AICallAutoRetry?: number
 
-    /** 默认5，AI如果回答质量不高的时候，调大AITransactionRetry可以有效重试回答 */
+    /** 默认5，AI如果回答质量不高的时候，调大AITransactionRetry可以有效重试回答 @default 5 */
     AITransactionRetry?: number
 
-    /** 是否启用AI搜索本地工具的功能 */
+    /** 是否启用AI搜索本地工具的功能 @default true */
     EnableAISearchTool?: boolean
 
-    /** 是否启用AI搜索互联网搜索引擎的功能 */
+    /** 是否启用AI搜索互联网搜索引擎的功能 @default false */
     EnableAISearchInternet?: boolean
 
+    /** 建议工具名 */
     IncludeSuggestedToolNames?: string[]
+    /** 建议工具关键词 */
     IncludeSuggestedToolKeywords?: string[]
+    /** 禁用工具名 */
     ExcludeToolNames?: string[]
 
     /** ollama 本地模型部署可以使用 /nothink 关闭，使用这个选项可以移除 qwen3 的思考模式 */
     EnableQwenNoThinkMode?: boolean
 
-    /** 在任务规划的时候，AI 是否被允许主动问用户问题 */
+    /** 在任务规划的时候，AI 是否被允许主动问用户问题 @default true */
     AllowPlanUserInteract?: boolean
 
-    /** 在任务规划的时候，如果AI允许问用户问题，那么最多问几次 */
+    /** 在任务规划的时候，如果AI允许问用户问题，那么最多问几次 @default 3 */
     PlanUserInteractMaxCount?: number
 
     /** 是否允许生成报告，默认不允许 */
