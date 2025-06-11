@@ -2150,6 +2150,8 @@ message NewProjectRequest {
   string Type = 5;
   int64  Id = 6;
   string Database = 7;
+  string ExternalModule = 8;
+  string ExternalProjectCode = 9;
 }
 
 message NewProjectResponse {
@@ -2169,6 +2171,8 @@ message GetProjectsRequest {
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
+  string ExternalModule = 9;
+  string ExternalProjectCode = 10;
 }
 
 message ProjectDescription {
@@ -2188,6 +2192,8 @@ message ProjectDescription {
   string FolderName = 10;
   string ChildFolderName = 11;
   string FileSize = 12;
+  string ExternalModule = 13;
+  string ExternalProjectCode = 14;
 }
 
 message GetProjectsResponse {
@@ -3591,6 +3597,8 @@ message UploadRiskToOnlineRequest {
   string Token = 1;
   string ProjectName = 2;
   repeated string Hash = 3;
+  string ExternalModule = 4;
+  string ExternalProjectCode = 5;
 }
 
 message SetTagForRiskRequest {
@@ -5246,6 +5254,8 @@ message HTTPFlowsToOnlineRequest {
   string Token = 1;
   string ProjectName = 2;
   string ProjectDescription = 3;
+  string ExternalModule = 4;
+  string ExternalProjectCode = 5;
 }
 
 message AnalyzeHTTPFlowRequest{
