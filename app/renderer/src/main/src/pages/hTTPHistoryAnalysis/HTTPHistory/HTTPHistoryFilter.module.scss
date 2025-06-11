@@ -1,125 +1,161 @@
 .HTTPHistoryFilter {
     height: 100%;
+
     &-left {
         height: 100%;
+
         .tab-wrap {
             display: flex;
             width: 100%;
             height: 100%;
+
             .tab {
                 width: 24px;
                 height: 100%;
                 border-right: 1px solid var(--yakit-border-color);
-                background: #f0f1f3;
+                background: #F0F1F3;
+
                 &-item {
+                    position: relative;
                     display: flex;
+                    align-items: flex-start;
                     align-items: center;
+                    flex-direction: column;
                     padding: 12px 4px;
                     cursor: pointer;
-                    transform: rotate(180deg);
-                    border-top: 1px solid #ffffff;
-                    font-size: 12px;
+                    user-select: none;
+                    border-bottom: 1px solid #EAECF3;
                     font-weight: 600;
-                    line-height: 16px;
 
                     gap: 4px;
-                    text-orientation: sideways-right;
-                    writing-mode: vertical-rl;
+
                     svg {
                         width: 16px;
                         height: 16px;
+                        transform: rotate(180deg)
                     }
+
                     &:hover {
-                        background: rgba(204, 210, 222, 0.5);
+                        background: rgba(204, 210, 222, .5);
                     }
+
                     &-active {
-                        color: #ffffff;
+                        color: #FFFFFF;
                         background-color: var(--yakit-primary-5);
+
                         &:hover {
                             background-color: var(--yakit-primary-4);
                         }
                     }
+
                     &-unshowCont {
                         background-color: var(--yakit-primary-3);
                     }
                 }
+
+                .tab-item-text {
+                    transform: rotate(180deg);
+
+                    text-orientation: sideways-right;
+                    writing-mode: vertical-rl;
+                }
             }
+
             .tab-cont-item {
                 overflow: auto;
                 width: 100%;
                 height: 100%;
             }
         }
+
         .webTree-wrapper {
             height: 100%;
             padding: 15px 0 15px 15px;
         }
+
         .process-wrapper {
             height: 100%;
             padding: 15px 0 15px 15px;
         }
     }
+
     &-right {
         height: 100%;
+
         .HTTPFlowFilterTable {
             height: 100%;
             padding: 0 8px;
+
             .status-code {
                 color: var(--yakit-success-5);
             }
+
             .filter-icon {
                 svg {
                     width: 16px;
                     height: 16px;
                 }
             }
+
             .body-length-checkbox {
                 display: flex;
                 align-items: center;
                 margin-right: 12px;
+
                 .tip {
                     margin-left: 4px;
                 }
             }
+
             .body-length-text-red {
                 color: var(--yakit-danger-5);
             }
+
             .check-circle {
                 display: flex;
                 align-items: center;
+
                 .check-circle-icon {
                     color: var(--yakit-success-5);
                 }
             }
+
             .http-history-table-title {
                 display: flex;
                 flex-direction: column;
                 width: 100%;
+
                 :global {
                     .ant-btn-sm {
                         border-radius: 4px;
                     }
+
                     .ant-select-selector {
                         border-radius: 4px !important;
                     }
+
                     .ant-input-group-addon {
                         border-radius: 4px;
                     }
                 }
+
                 .http-history-table-title-space-between {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                 }
+
                 .http-history-table-row {
                     margin-top: 8px;
                     margin-bottom: 8px;
                 }
+
                 .http-history-table-left {
                     display: flex;
                     align-items: center;
                     flex: 1;
                 }
+
                 .http-history-table-right {
                     display: flex;
                     justify-content: flex-end;
@@ -128,28 +164,35 @@
                     width: 100%;
 
                     gap: 8px;
+
                     .http-history-table-right-item {
                         display: flex;
                         align-items: center;
 
                         gap: 4px;
                     }
+
                     .http-history-table-right-label {
                         white-space: nowrap;
                     }
+
                     .http-history-table-color-swatch {
                         color: var(--yakit-body-text-color);
+
                         .color-swatch-icon {
                             svg {
                                 color: var(--yakit-body-text-color);
+
                                 &:hover {
                                     color: var(--yakit-primary-5);
                                 }
                             }
+
                             &:hover {
                                 color: var(--yakit-primary-5);
                             }
                         }
+
                         .color-swatch-icon-active {
                             svg {
                                 color: var(--yakit-primary-5);
@@ -158,6 +201,7 @@
                     }
                 }
             }
+
             .action-btn-group {
                 display: flex;
                 justify-content: space-between;
@@ -165,13 +209,16 @@
                 height: 16px;
 
                 gap: 3px;
+
                 .divider-style {
                     height: 100%;
                     border-left: 1px solid var(--yakit-border-color);
                 }
+
                 .icon-style {
                     color: var(--yakit-body-text-color) !important;
                 }
+
                 .icon-hover:hover {
                     color: var(--yakit-primary-5) !important;
                 }
@@ -183,6 +230,7 @@
 .http-history-table-color-popover {
     width: 140px;
     padding-top: 5px;
+
     :global {
         .ant-popover-inner-content {
             padding: 0;
@@ -192,6 +240,7 @@
 
 .http-history-table-drop-down-popover {
     padding-top: 5px;
+
     :global {
         .ant-popover-inner-content {
             padding: 4px;
@@ -200,22 +249,24 @@
 }
 
 .editor-context-menu-keybind-wrapper {
-    width: 100%;
-    height: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    height: 100%;
+
     gap: 12px;
 
     .content-style {
-        height: 100%;
         display: flex;
         align-items: center;
+        height: 100%;
     }
+
     .keybind-style {
-        height: 100%;
         display: flex;
         align-items: center;
+        height: 100%;
         color: var(--yakit-helper-text-color);
         font-size: 12px;
     }

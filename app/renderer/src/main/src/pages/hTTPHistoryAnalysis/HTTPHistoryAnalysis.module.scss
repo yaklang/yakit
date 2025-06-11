@@ -1,99 +1,103 @@
 .HTTPHistoryAnalysis {
     height: 100%;
+
     &-top {
         height: 100%;
+
         &-title {
             margin-right: 8px;
             color: var(--yakit-header-color);
             font-size: 14px;
             font-weight: 600;
         }
+
         &-desc {
             color: var(--yakit-helper-text-color);
             font-size: 12px;
         }
     }
+
     &-bottom {
-        overflow-y: auto;
+        overflow-y: hidden;
         height: 100%;
     }
+
+    &-footer-tab {
+        display: flex;
+        align-items: center;
+        height: 24px;
+        border-top: 1px solid #FFFFFF;
+        background: var(--yakit-card-background-color);
+
+        .footer-tab-item {
+            padding: 0 16px;
+            cursor: pointer;
+            border-right: 1px solid #FFFFFF;
+
+            &:hover {
+                background-color: rgba(204, 210, 222, .5);
+            }
+        }
+    }
 }
+
 .AnalysisMain {
     height: 100%;
-    &-left {
-        height: 100%;
-        .tab-wrap {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            .tab {
-                width: 24px;
-                height: 100%;
-                border-right: 1px solid var(--yakit-border-color);
-                background: #f0f1f3;
-                &-item {
-                    padding: 12px 4px;
-                    cursor: pointer;
-                    transform: rotate(180deg);
-                    border-top: 1px solid #ffffff;
-                    font-size: 12px;
-                    font-weight: 600;
-                    line-height: 16px;
 
-                    text-orientation: sideways-right;
-                    writing-mode: vertical-rl;
-                    &:hover {
-                        background: rgba(204, 210, 222, 0.5);
-                    }
-                    &-active {
-                        color: #ffffff;
-                        background-color: var(--yakit-primary-5);
-                        &:hover {
-                            background-color: var(--yakit-primary-4);
-                        }
-                    }
-                    &-unshowCont {
-                        background-color: var(--yakit-primary-3);
-                    }
-                }
+    &-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #FFFFFF;
+        background: var(--yakit-card-background-color);
+
+        &-left {
+            display: flex;
+
+            .header-tab-item {
+                padding: 4px 16px;
+                cursor: pointer;
+                border-right: 1px solid #FFFFFF;
             }
-            .tab-cont-item {
-                overflow: auto;
-                width: 100%;
-                height: 100%;
-                .expand-icon {
-                    display: inline-flex;
-                    align-items: center;
-                    margin-left: 8px;
-                    cursor: pointer;
-                    color: var(--yakit-body-text-color);
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                    }
-                    &:hover {
-                        color: var(--yakit-primary-4);
-                    }
-                    &:active {
-                        color: var(--yakit-primary-6);
-                    }
+
+            .tab-item-active {
+                color: #FFFFFF;
+                background-color: var(--yakit-primary-5);
+            }
+        }
+
+        &-right {
+            padding-right: 16px;
+
+            .footer-cont-close-icon {
+                svg {
+                    width: 16px;
+                    height: 16px;
                 }
             }
         }
+    }
+
+    &-left {
+        height: 100%;
+
         .hotPatch-wrapper {
             height: 100%;
             padding: 0 16px;
+
             .hotPatch-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 height: 36px;
+
                 &-left {
                     display: flex;
                     align-items: center;
 
                     gap: 8px;
                 }
+
                 &-right {
                     display: flex;
                     align-items: center;
@@ -102,77 +106,96 @@
                     gap: 8px;
                 }
             }
+
             .hotPatch-editor {
                 height: calc(100% - 36px);
             }
         }
+
         .rule-wrapper {
             height: 100%;
             padding: 8px 0;
         }
     }
+
     &-right {
         height: 100%;
         padding: 0 8px;
+
         &-default {
             display: flex;
             flex-direction: column;
-            padding-top: 16px;
-            gap: 16px;
             height: 100%;
+            padding-top: 16px;
+
+            gap: 16px;
+
             &-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+
                 .title-wrapper {
                     display: flex;
                     align-items: center;
 
                     gap: 8px;
                 }
+
                 span.title {
-                    color: #31343f;
+                    color: #31343F;
                     font-size: 16px;
                     font-weight: 600;
                 }
             }
+
             .exec-form-item {
                 display: flex;
                 align-items: center;
 
                 gap: 8px;
+
                 .exec-form-item-label {
                     min-width: 150px;
                     text-align: right;
                 }
+
                 .row-editor-title {
                     display: flex;
 
                     gap: 8px;
                 }
             }
+
             .rawpacket-editor-wrapper {
-                height: 100%;
                 width: 100%;
+                height: 100%;
             }
+
             .exec-btn {
-                margin-left: 160px;
                 margin-bottom: 12px;
+                margin-left: 160px;
             }
         }
+
         &-noDefault {
             height: 100%;
+
             .AnalysisMain-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 height: 30px;
-                border-bottom: 1px solid #eaecf3;
+                margin-top: 2px;
+                border-bottom: 1px solid #EAECF3;
+
                 &-text {
-                    color: #31343f;
+                    padding-left: 8px;
+                    color: #31343F;
                     font-size: 16px;
                     font-weight: 600;
                 }
+
                 .AnalysisMain-execStatus-wrapper {
                     display: flex;
                     align-items: center;
@@ -180,18 +203,24 @@
                     gap: 8px;
                 }
             }
+
             .AnalysisMain-result {
-                height: calc(100% - 30px);
+                height: calc(100% - 32px);
                 padding-top: 8px;
+
                 &-tab {
                     height: calc(100% - 34px);
+
                     .rule-data {
                         height: 100%;
                         padding-bottom: 8px;
+
                         .HttpRule-first {
                             height: 100%;
+
                             .HttpRule-table-wrapper {
                                 height: 100%;
+
                                 .filter-icon {
                                     svg {
                                         width: 16px;
@@ -200,11 +229,14 @@
                                 }
                             }
                         }
+
                         .HttpRule-second {
                             height: 100%;
+
                             .HttpRuleEditor-first {
                                 height: 100%;
                             }
+
                             .HttpRuleEditor-second {
                                 height: 100%;
                             }
@@ -212,6 +244,26 @@
                     }
                 }
             }
+        }
+    }
+
+    .expand-icon {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        color: var(--yakit-body-text-color);
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        &:hover {
+            color: var(--yakit-primary-4);
+        }
+
+        &:active {
+            color: var(--yakit-primary-6);
         }
     }
 }

@@ -16,3 +16,8 @@ export const HotPatchDefaultContent = `analyzeHTTPFlow = func(flow /* *yakit.HTT
     // }
 }
 `
+
+export const footerTabs = [
+    {key: "rule", label: "规则"},
+    {key: "hot-patch", label: "热加载"}
+]

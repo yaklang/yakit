@@ -110,7 +110,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             key: "web-tree",
             label: (
                 <>
-                    <OutlineLog2Icon /> 网站树
+                    <span className={styles['tab-item-text']}>网站树</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
@@ -119,8 +119,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             key: "process",
             label: (
                 <>
+                    <span className={styles['tab-item-text']}>进程</span>
                     <OutlineTerminalIcon />
-                    进程
                 </>
             ),
             contShow: false // 初始为false

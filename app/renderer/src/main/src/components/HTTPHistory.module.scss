@@ -1,64 +1,84 @@
 .hTTPHistory {
     height: 100%;
+
     &-left {
         height: 100%;
+
         .tab-wrap {
             display: flex;
             width: 100%;
             height: 100%;
+
             .tab {
                 width: 24px;
                 height: 100%;
                 border-right: 1px solid var(--yakit-border-color);
-                background: #f0f1f3;
+                background: #F0F1F3;
+
                 &-item {
+                    position: relative;
                     display: flex;
+                    align-items: flex-start;
                     align-items: center;
+                    flex-direction: column;
                     padding: 12px 4px;
                     cursor: pointer;
-                    transform: rotate(180deg);
-                    border-top: 1px solid #ffffff;
-                    font-size: 12px;
+                    user-select: none;
+                    border-bottom: 1px solid #EAECF3;
                     font-weight: 600;
-                    line-height: 16px;
 
                     gap: 4px;
-                    text-orientation: sideways-right;
-                    writing-mode: vertical-rl;
+
                     svg {
                         width: 16px;
                         height: 16px;
+                        transform: rotate(180deg)
                     }
+
                     &:hover {
-                        background: rgba(204, 210, 222, 0.5);
+                        background: rgba(204, 210, 222, .5);
                     }
+
                     &-active {
-                        color: #ffffff;
+                        color: #FFFFFF;
                         background-color: var(--yakit-primary-5);
+
                         &:hover {
                             background-color: var(--yakit-primary-4);
                         }
                     }
+
                     &-unshowCont {
                         background-color: var(--yakit-primary-3);
                     }
                 }
+
+                .tab-item-text {
+                    transform: rotate(180deg);
+
+                    text-orientation: sideways-right;
+                    writing-mode: vertical-rl;
+                }
             }
+
             .tab-cont-item {
                 overflow: auto;
                 width: 100%;
                 height: 100%;
             }
         }
+
         .webTree-wrapper {
             height: 100%;
             padding: 15px 0 15px 15px;
         }
+
         .process-wrapper {
             height: 100%;
             padding: 15px 0 15px 15px;
         }
     }
+
     &-right {
         height: 100%;
     }
@@ -66,15 +86,18 @@
 
 .history-process {
     height: 100%;
+
     .history-process-search-wrapper {
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
+
     .process-list-wrapper {
         overflow-y: overlay;
         margin-top: 15px;
         height: calc(100% - 40px);
+
         .process-list-item {
             display: flex;
             align-items: center;
@@ -83,20 +106,24 @@
             padding: 2px;
             cursor: pointer;
             border-radius: 4px;
+
             .process-item-left-wrapper {
                 width: 100%;
                 display: flex;
                 align-items: center;
 
                 gap: 4px;
+
                 .process-icon {
                     display: flex;
                     align-items: center;
+
                     svg {
                         width: 16px;
                         height: 16px;
                     }
                 }
+
                 .process-item-label {
                     overflow: hidden;
                     white-space: nowrap;
@@ -104,6 +131,7 @@
                     font-size: 14px;
                 }
             }
+
             &-active {
                 .process-item-label {
                     color: var(--yakit-primary-5);

@@ -1304,6 +1304,13 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 droppedCount={getDroppedCount(currentSequenceItem.id) || 0}
                                 onShowAll={() => {
                                     if (judgeMoreFuzzerTableMaxData()) {
+                                        let currentItem: PageNodeItemProps | undefined = undefined
+                                        if (currentSelectRequest?.pageId) {
+                                            currentItem = queryPagesDataById(
+                                                YakitRoute.HTTPFuzzer,
+                                                currentSelectRequest?.pageId
+                                            )
+                                        }
                                         emiter.emit(
                                             "openPage",
                                             JSON.stringify({
@@ -1311,7 +1318,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                 params: {
                                                     webFuzzer: true,
                                                     runtimeId: allRuntimeIds(),
-                                                    sourceType: "scan"
+                                                    sourceType: "scan",
+                                                    verbose: currentItem?.pageName
+                                                        ? `${currentItem?.pageName}-全部流量`
+                                                        : ""
                                                 }
                                             })
                                         )
@@ -1333,6 +1343,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                 setHotPatchCode={setHotPatchCode}
                                 setHotPatchCodeWithParamGetter={setHotPatchCodeWithParamGetter}
                                 onShowAll={() => {
+                                    let currentItem: PageNodeItemProps | undefined = undefined
+                                    if (currentSelectRequest?.pageId) {
+                                        currentItem = queryPagesDataById(
+                                            YakitRoute.HTTPFuzzer,
+                                            currentSelectRequest?.pageId
+                                        )
+                                    }
+
                                     emiter.emit(
                                         "openPage",
                                         JSON.stringify({
@@ -1340,7 +1358,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                             params: {
                                                 webFuzzer: true,
                                                 runtimeId: currentSelectResponse?.runtimeIdFuzzer || [],
-                                                sourceType: "scan"
+                                                sourceType: "scan",
+                                                verbose: currentItem?.pageName
+                                                    ? `${currentItem?.pageName}-${currentSequenceItem.name}-全部流量`
+                                                    : ""
                                             }
                                         })
                                     )
