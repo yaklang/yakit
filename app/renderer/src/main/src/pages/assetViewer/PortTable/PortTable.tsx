@@ -26,6 +26,7 @@ import cloneDeep from "lodash/cloneDeep"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
+import {OutlineRefreshIcon} from "@/assets/icon/outline"
 
 const {ipcRenderer} = window.require("electron")
 const defLimit = 20
@@ -519,6 +520,11 @@ export const PortTable: React.FC<PortTableProps> = React.memo(
                                         <TableTotalAndSelectNumber total={total} selectNum={selectNum} />
                                     )}
                                     <div className={styles["table-head-extra"]}>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={<OutlineRefreshIcon />}
+                                            onClick={() => update(true)}
+                                        />
                                         <ExportExcel
                                             btnProps={{
                                                 size: btnSize,
