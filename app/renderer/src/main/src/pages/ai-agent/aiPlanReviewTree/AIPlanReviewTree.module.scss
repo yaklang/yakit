@@ -108,6 +108,7 @@
         .tree-item-content {
             position: relative;
             padding: 2px 6px 4px;
+            overflow: hidden;
 
             .title {
                 @extend %display-flex;
@@ -118,7 +119,7 @@
                 line-height: 16px;
                 padding: 2px 4px;
                 cursor: pointer;
-                height: 28px;
+                min-height: 28px;
                 &:hover {
                     @include title-hover;
                 }
@@ -126,10 +127,6 @@
                     display: none;
                 }
                 .title-name {
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    word-break: break-all;
                 }
             }
             .title-hover {

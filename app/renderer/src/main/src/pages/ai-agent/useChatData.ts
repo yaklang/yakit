@@ -17,8 +17,12 @@ export interface UseChatDataParams {
 /** 将树结构任务列表转换成一维数组 */
 export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMessage.PlanTask) => {
     if (!Array.isArray(sum)) return null
-    sum.push({...task, state: "wait"})
-
+    sum.push({
+        index: task.index || "",
+        name: task.name || "",
+        goal: task.goal || "",
+        state: "wait"
+    })
     if (task.subtasks && task.subtasks.length > 0) {
         for (let subtask of task.subtasks) {
             handleFlatAITree(sum, subtask)
