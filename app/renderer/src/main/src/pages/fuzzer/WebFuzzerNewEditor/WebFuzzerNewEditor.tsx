@@ -23,6 +23,7 @@ export interface WebFuzzerNewEditorProps {
     ref?: any
     refreshTrigger: boolean
     request: string
+    hex: boolean
     isHttps: boolean
     hotPatchCode: string
     hotPatchCodeWithParamGetter: string
@@ -48,7 +49,8 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
             setHotPatchCodeWithParamGetter,
             firstNodeExtra,
             pageId,
-            oneResponseValue
+            oneResponseValue,
+            hex
         } = props
         const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
         const [selectionByteCount, setSelectionByteCount] = useState<number>(0)
@@ -165,11 +167,9 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         return (
             <NewHTTPPacketEditor
                 defaultHttps={isHttps}
-                noHex={true}
                 isShowBeautifyRender={false}
                 showDefaultExtra={false}
                 refreshTrigger={refreshTrigger}
-                hideSearch={true}
                 noMinimap={true}
                 utf8={true}
                 originValue={request}
@@ -201,6 +201,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
                         response: oneResponseValue ? {...oneResponseValue} : undefined
                     })
                 })}
+                noShowHex={!hex}
             />
         )
     })

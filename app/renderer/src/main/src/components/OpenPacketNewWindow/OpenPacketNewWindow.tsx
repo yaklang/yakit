@@ -32,8 +32,6 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
         return (
             <NewHTTPPacketEditor
                 originValue={reqOriginValue}
-                simpleMode={true}
-                noModeTag={true}
                 readOnly={true}
                 noMinimap={true}
                 onlyBasicMenu={true}
@@ -46,8 +44,6 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
                 originValue={resOriginValue}
                 originalPackage={data?.response?.originalPackage}
                 isResponse={true}
-                simpleMode={true}
-                noModeTag={true}
                 readOnly={true}
                 noMinimap={true}
                 onlyBasicMenu={true}
@@ -89,8 +85,6 @@ const OpenPacketNewWindow: React.FC<OpenPacketNewWindowProps> = (props) => {
             return (
                 <NewHTTPPacketEditor
                     originValue={""}
-                    simpleMode={true}
-                    noModeTag={true}
                     readOnly={true}
                     noMinimap={true}
                     onlyBasicMenu={true}

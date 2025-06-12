@@ -1571,11 +1571,6 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
                 url={info.Url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
-                showDefaultExtra={true}
-                hideSearch={true}
-                noHex={true}
-                noModeTag={true}
-                simpleMode={true}
                 bordered={false}
                 isResponse={currentSelectShowType === "response"}
                 title={

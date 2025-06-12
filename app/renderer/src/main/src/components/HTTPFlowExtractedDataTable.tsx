@@ -116,14 +116,10 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
             .invoke("QueryMITMRuleExtractedData", query)
             .then((r: QueryGeneralResponse<HTTPFlowExtractedData>) => {
                 setData(r.Data)
+                setCurrId(undefined)
+                props.onSetHighLightItem(undefined)
+
                 if (r.Data.length && !props.invalidForUTF8Request && !props.InvalidForUTF8Response) {
-                    setCurrId(r.Data[0].Id)
-                    props.onSetHighLightItem({
-                        startOffset: r.Data[0].Index,
-                        highlightLength: r.Data[0].Length,
-                        hoverVal: r.Data[0].RuleName,
-                        IsMatchRequest: r.Data[0].IsMatchRequest
-                    })
                     props.onSetHighLightText(
                         r.Data.map((i) => ({
                             startOffset: i.Index,
@@ -133,8 +129,6 @@ export const HTTPFlowExtractedDataTable: React.FC<HTTPFlowExtractedDataTableProp
                         }))
                     )
                 } else {
-                    setCurrId(undefined)
-                    props.onSetHighLightItem(undefined)
                     props.onSetHighLightText([])
                 }
                 setPagination(r.Pagination)

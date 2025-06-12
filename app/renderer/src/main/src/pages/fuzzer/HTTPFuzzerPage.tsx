@@ -150,6 +150,7 @@ import {FuzzerConcurrentLoad, FuzzerResChartData} from "./FuzzerConcurrentLoad/F
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
 import {getSelectionEditorByteCount} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {WebFuzzerDroppedProps} from "./FuzzerSequence/FuzzerSequenceType"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawer/PluginDebugDrawer"))
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
@@ -674,6 +675,8 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const fuzzerRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(fuzzerRef)
     const inViewportRef = useRef<boolean>(inViewport)
+
+    const [hex, setHex] = useState<boolean>(false)
 
     const hotPatchCodeRef = useRef<string>(initWebFuzzerPageInfo().hotPatchCode)
     const hotPatchCodeWithParamGetterRef = useRef<string>("")
@@ -1563,12 +1566,19 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                 >
                     美化
                 </YakitButton>
+                <YakitCheckableTag
+                    checked={hex}
+                    onChange={setHex}
+                >
+                    HEX
+                </YakitCheckableTag>
                 <YakitButton
                     size='small'
                     type='primary'
                     onClick={() => {
                         hotPatchTrigger()
                     }}
+                    style={{marginLeft: -8}}
                 >
                     热加载
                 </YakitButton>
@@ -2029,6 +2039,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                 refreshTrigger={refreshTrigger}
                                 request={requestRef.current}
                                 setRequest={onSetRequest}
+                                hex={hex}
                                 isHttps={advancedConfigValue.isHttps}
                                 hotPatchCode={hotPatchCodeRef.current}
                                 hotPatchCodeWithParamGetter={hotPatchCodeWithParamGetterRef.current}
@@ -3321,14 +3332,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                             isShowBeautifyRender={!fuzzerResponse?.IsTooLargeResponse}
                             defaultHttps={isHttps}
                             defaultSearchKeyword={defaultResponseSearch}
-                            system={props.system}
                             originValue={codeKey === "utf-8" ? responseRawString : codeValue}
                             originalPackage={fuzzerResponse.ResponseRaw}
                             readOnly={true}
-                            hideSearch={true}
                             isResponse={true}
-                            noHex={true}
-                            // noHeader={true}
                             loading={codeLoading}
                             showDefaultExtra={false}
                             title={secondNodeTitle && secondNodeTitle()}

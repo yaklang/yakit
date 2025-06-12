@@ -99,11 +99,6 @@ export const MisstatementRiskDetails = <T extends API.RiskFeedBackData>(props: M
                 url={info.url || ""}
                 readOnly={true}
                 isShowBeautifyRender={true}
-                showDefaultExtra={true}
-                hideSearch={true}
-                noHex={true}
-                noModeTag={true}
-                simpleMode={true}
                 bordered={false}
                 isResponse={currentSelectShowType === "response"}
                 title={

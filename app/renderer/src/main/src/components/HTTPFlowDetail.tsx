@@ -441,8 +441,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
-                                                hideSearch={true}
-                                                noHex={true}
                                                 noHeader={true}
                                                 originValue={flow.RequestString}
                                                 defaultHttps={flow?.IsHTTPS}
@@ -498,8 +496,6 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                                         ) : (
                                             <NewHTTPPacketEditor
                                                 readOnly={true}
-                                                hideSearch={true}
-                                                noHex={true}
                                                 noHeader={true}
                                                 originValue={flow.ResponseString}
                                                 defaultHttps={flow?.IsHTTPS}
@@ -793,11 +789,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 }
             } as QueryMITMRuleExtractedDataRequest)
             .then((rsp: QueryGeneralResponse<HTTPFlowExtractedData>) => {
-                // 当侧边栏为关闭的时候，定位高亮需要关掉
-                if (isFold) {
-                    setHighLightItem(undefined)
-                    setCurrId(undefined)
-                }
+                // 定位高亮需要关掉
+                setHighLightItem(undefined)
+                setCurrId(undefined)
 
                 if (rsp.Total > 0) {
                     existedExtraInfos.push("rules")
@@ -819,8 +813,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                     }
                 } else {
                     setHighLightText([])
-                    setHighLightItem(undefined)
-                    setCurrId(undefined)
                 }
             })
             .catch((e) => {
@@ -1024,8 +1016,6 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                 readOnly={true}
                                                 noLineNumber={true}
                                                 noMinimap={true}
-                                                noHex={true}
-                                                hideSearch={true}
                                                 refreshTrigger={infoType}
                                                 loading={infoTypeLoading}
                                                 extraEnd={
@@ -1687,8 +1677,6 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         defaultHeight={defaultHeight}
                         loading={flowRequestLoad}
                         defaultHttps={flow.IsHTTPS}
-                        hideSearch={true}
-                        noHex={true}
                         noMinimap={true}
                         contextMenu={{
                             ...sendCodeCompareMenuItem("request")
@@ -1712,7 +1700,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                         }}
                         typeOptionVal={reqTypeOptionVal}
                         onTypeOptionVal={(typeOptionVal) => {
-                            if (typeOptionVal === "beautify") {
+                            if (typeOptionVal !== undefined) {
                                 setReqTypeOptionVal(typeOptionVal)
                                 setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, typeOptionVal)
                             } else {
@@ -1835,14 +1823,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                             </>
                         }
                         isResponse={true}
-                        noHex={true}
                         noMinimap={originRspValue.length < 1024 * 2}
                         loading={resEditorLoading}
                         originValue={codeKey === "utf-8" ? originRspValue : codeValue}
                         originalPackage={flow.Response}
                         readOnly={true}
                         defaultHeight={props.defaultHeight}
-                        hideSearch={true}
                         defaultSearchKeyword={props.search}
                         defaultHttps={flow.IsHTTPS}
                         webFuzzerValue={flow?.RequestString || ""}
