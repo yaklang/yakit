@@ -31,15 +31,7 @@ export const toMITMHacker = (params?: MITMHackerPageInfoProps) => {
         "openPage",
         JSON.stringify({
             route: YakitRoute.MITMHacker,
-            params: {
-                ...(params || {
-                    immediatelyLaunchedInfo: {
-                        host: "",
-                        port: "",
-                        enableInitialPlugin: true
-                    }
-                })
-            }
+            params: params
         })
     )
 }
