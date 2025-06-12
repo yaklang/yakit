@@ -22,7 +22,6 @@ import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/ut
 import {YaklangEngineWatchDog, YaklangEngineWatchDogCredential} from "@/components/layout/YaklangEngineWatchDog"
 import {StringToUint8Array} from "@/utils/str"
 import {EngineLog} from "./EngineLog"
-import {BaseMiniConsole} from "../baseConsole/BaseConsole"
 import {
     getReleaseEditionName,
     isCommunityEdition,
@@ -596,28 +595,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     /** ---------- 软件状态与是否连接引擎相关方法 End ---------- */
 
     /** ---------- 各种操作逻辑处理 Start ---------- */
-    // 引擎日志终端
-    const [yakitConsole, setYakitConsole] = useState<boolean>(false)
-
-    /**
-     * 打开引擎日志终端
-     */
-    useEffect(() => {
-        emiter.on("openEngineLogTerminal", () => {
-            setYakitConsole(true)
-        })
-        return () => {
-            emiter.off("openEngineLogTerminal")
-        }
-    }, [])
-
-    useEffect(() => {
-        if (engineLink) {
-        } else {
-            setYakitConsole(false)
-        }
-    }, [engineLink])
-
     const setTimeoutLoading = useMemoizedFn((setLoading: (v: boolean) => any) => {
         setLoading(true)
         setTimeout(() => {
@@ -710,10 +687,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                 delTemporaryProject()
                 onSetEngineMode(undefined)
                 handleLinkRemoteMode()
-                return
-
-            case "console":
-                setYakitConsole(true)
                 return
 
             case "changeProject":
@@ -1950,7 +1923,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             >
                 <EngineLog visible={engineLink} setVisible={setShowEngineLog} />
             </div>
-            <BaseMiniConsole visible={yakitConsole} setVisible={setYakitConsole} />
 
             {/* 项目加密导出弹框 */}
             <NewProjectAndFolder

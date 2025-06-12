@@ -356,6 +356,13 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    .engineConsole-icon-style {
+        color: var(--yakit-body-text-color);
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
 }
 
 .hot-patch-code {

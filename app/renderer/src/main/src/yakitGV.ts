@@ -45,8 +45,6 @@ export enum RemoteGV {
     GlobalChromePath = "global-chrome-path",
     /** @name 软件内菜单展示模式 */
     PatternMenu = "PatternMenu",
-    /** @name 是否展示引擎控制台  */
-    ShowBaseConsole = "SHOW_BASE_CONSOLE",
 
     /** @name 菜单是否为用户自行导入的json数据 */
     IsImportJSONMenu = "is-import-json-menu",

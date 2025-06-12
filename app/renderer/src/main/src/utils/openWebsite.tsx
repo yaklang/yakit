@@ -2,6 +2,11 @@ import React from "react"
 import {success, yakitFailed, yakitNotify} from "./notification"
 import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
 import {childWindowHash} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import {
+    changeClickEngineConsoleFlag,
+    clickEngineConsoleFlag,
+    engineConsoleWindowHash
+} from "@/hook/useEngineConsole/useEngineConsole"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +31,14 @@ export const minWinSendToChildWin = (params) => {
         hash: childWindowHash,
         data: params.data
     })
+}
+
+export const openConsoleNewWindow = () => {
+    if (clickEngineConsoleFlag) return
+    if (!engineConsoleWindowHash) {
+        changeClickEngineConsoleFlag(true)
+        ipcRenderer.invoke("open-console-new-window")
+    }
 }
 
 export const openABSFile = (u: string) => {
