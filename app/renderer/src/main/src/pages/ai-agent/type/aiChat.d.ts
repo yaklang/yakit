@@ -193,7 +193,7 @@ export declare namespace AIChatMessage {
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
-        id: string
+        id?: string
         value: string
         prompt: string
         prompt_english: string

@@ -294,6 +294,7 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.ReviewRelease
+                    if (!data?.id) return
                     handleReviewRelease(data.id)
                     console.log("review-release---\n", data)
                 } catch (error) {}
@@ -338,6 +339,11 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.PlanReviewRequire
+
+                    if (!data?.id) return
+                    if (!data?.plans || !data?.plans?.root_task) return
+                    if (!data?.selectors || !data?.selectors?.length) return
+
                     handleTriggerReview({type: "plan_review_require", data: data})
                 } catch (error) {}
                 return
@@ -346,6 +352,10 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.ToolUseReviewRequire
+
+                    if (!data?.id) return
+                    if (!data?.selectors || !data?.selectors?.length) return
+
                     handleTriggerReview({type: "tool_use_review_require", data: data})
                 } catch (error) {}
                 return
@@ -354,6 +364,10 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.TaskReviewRequire
+
+                    if (!data?.id) return
+                    if (!data?.selectors || !data?.selectors?.length) return
+
                     handleTriggerReview({type: "task_review_require", data: data})
                 } catch (error) {}
                 return
@@ -362,6 +376,9 @@ function useChatData(params?: UseChatDataParams) {
                 try {
                     if (!res.IsJson) return
                     const data = JSON.parse(ipcContent) as AIChatMessage.AIReviewRequire
+
+                    if (!data?.id) return
+
                     handleTriggerReview({type: "require_user_interactive", data: data})
                 } catch (error) {}
                 return

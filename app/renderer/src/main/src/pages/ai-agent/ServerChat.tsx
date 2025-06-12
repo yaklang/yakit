@@ -118,11 +118,10 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         if (!reviewData) return
 
         sendLoading.current = true
-        const jsonInput: Record<string, string> = {suggestion: value}
         const info: AIInputEvent = {
             IsInteractiveMessage: true,
             InteractiveId: reviewData.data.id,
-            InteractiveJSONInput: JSON.stringify(jsonInput)
+            InteractiveJSONInput: value
         }
         setTimeout(() => {
             events.onSend(activeID, reviewData, info)
