@@ -67,10 +67,10 @@ export const refreshToken = (userInfo: UserInfoProps) => {
 // 企业/简易版 登录前时调用同步
 export const aboutLoginUpload = (Token: string) => {
     if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
-        const {ProjectName} = NowProjectDescription
+        const {ProjectName, ExternalModule, ExternalProjectCode} = NowProjectDescription
         return new Promise((resolve, reject) => {
             ipcRenderer
-                .invoke("upload-risk-to-online", {Token, ProjectName})
+                .invoke("upload-risk-to-online", {Token, ProjectName, ExternalModule, ExternalProjectCode})
                 .then((res) => {})
                 .finally(() => {
                     resolve(true)
@@ -82,10 +82,16 @@ export const aboutLoginUpload = (Token: string) => {
 // 企业/简易版 登录前时调用同步
 export const loginHTTPFlowsToOnline = (Token: string) => {
     if ((isEnpriTraceAgent() || isEnpriTrace()) && NowProjectDescription) {
-        const {ProjectName, Description} = NowProjectDescription
+        const {ProjectName, Description, ExternalModule, ExternalProjectCode} = NowProjectDescription
         return new Promise((resolve, reject) => {
             ipcRenderer
-                .invoke("HTTPFlowsToOnline", {Token, ProjectName, ProjectDescription: Description})
+                .invoke("HTTPFlowsToOnline", {
+                    Token,
+                    ProjectName,
+                    ProjectDescription: Description,
+                    ExternalModule,
+                    ExternalProjectCode
+                })
                 .then((res) => {})
                 .finally(() => {})
         })
