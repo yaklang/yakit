@@ -282,7 +282,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         )
     })
 
-    const ref = useRef<any>(null)
+    const ref = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(ref)
 
     useEffect(() => {

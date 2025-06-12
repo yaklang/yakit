@@ -196,6 +196,7 @@ export const ShortcutKeyList: React.FC<ShortcutKeyListProps> = memo(() => {
                     const page = item as ShortcutKeyPageName
                     return (
                         <div
+                            key={page}
                             className={classNames(styles["list-item"], {
                                 [styles["list-item-active"]]: page === activePage
                             })}

@@ -214,7 +214,6 @@ export const isConflictToYakEditor = (Shortcut: string[]) => {
             }
         } else {
             if (JSON.stringify(sortKeysCombination(item.keys)) === JSON.stringify(sortKeysCombination(Shortcut))) {
-                console.log("item.keys", item.keys, Shortcut)
                 result = `编辑器冲突：${item.name} - 此快捷键设置将会在编辑器中被覆盖`
             }
         }
