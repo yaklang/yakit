@@ -568,7 +568,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
     useEffect(() => {
         if (inViewport) onGetPortTemplates()
     }, [inViewport])
-    
+
     const onGetPortTemplates = useMemoizedFn(() => {
         ipcRenderer
             .invoke("fetch-local-cache", "ScanPortTemplates")
@@ -588,7 +588,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                 setPortTemplates({})
             })
     })
-    
+
     const onShowSaveTemplate = useMemoizedFn(() => {
         const ports = form.getFieldValue("Ports")
         if (!ports) {
@@ -598,7 +598,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
         setTemplateName("")
         setSaveTemplateVisible(true)
     })
-    
+
     const onSaveTemplate = useMemoizedFn(() => {
         if (!templateName.trim()) {
             yakitNotify("error", "请输入模板名称")
@@ -616,7 +616,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
             setTemplateName("")
         })
     })
-    
+
     const onDeleteTemplate = useMemoizedFn((templateKey: string) => {
         const newTemplates = {...portTemplates}
         delete newTemplates[templateKey]
@@ -671,20 +671,29 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                     <YakitCheckbox value={"top1000+"}>常见一两千</YakitCheckbox>
                     <YakitCheckbox value={"topdb"}>常见数据库与 MQ</YakitCheckbox>
                     <YakitCheckbox value={"topudp"}>常见 UDP 端口</YakitCheckbox>
-                    {Object.keys(portTemplates).map(templateKey => (
+                    {Object.keys(portTemplates).map((templateKey) => (
                         <div key={templateKey} className={styles["template-checkbox-wrapper"]}>
-                            <YakitCheckbox value={templateKey}>{templateKey}</YakitCheckbox>
-                            <YakitButton 
-                                type="text" 
-                                size="small" 
-                                icon={<OutlineTrashIcon />}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDeleteTemplate(templateKey)
-                                }}
-                                disabled={disabled}
-                                style={{marginLeft: 4}}
-                            />
+                            <YakitCheckbox value={templateKey}>
+                                <div className={"content-ellipsis"} style={{maxWidth: 110}} title={templateKey}>
+                                    {templateKey}
+                                </div>
+                            </YakitCheckbox>
+                            {disabled ? (
+                                <OutlineTrashIcon
+                                    className={styles["template-not-allowed-del-icon"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                    }}
+                                />
+                            ) : (
+                                <OutlineTrashIcon
+                                    className={styles["template-del-icon"]}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDeleteTemplate(templateKey)
+                                    }}
+                                />
+                            )}
                         </div>
                     ))}
                 </Checkbox.Group>
@@ -727,23 +736,37 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                     <YakitTag>指纹扫描并发：{extraParamsValue.Concurrent}</YakitTag>
                 </div>
             </Form.Item>
-            
+
             <YakitModal
-                title="保存端口模板"
+                title='保存指纹配置'
                 visible={saveTemplateVisible}
                 onCancel={() => setSaveTemplateVisible(false)}
-                onOk={onSaveTemplate}
-                okText="保存"
-                cancelText="取消"
+                width={400}
+                footer={null}
             >
-                <div style={{marginBottom: 16}}>
-                    <span style={{marginBottom: 8, display: 'block'}}>模板名称：</span>
-                    <YakitInput
-                        placeholder="请输入模板名称"
+                <div>
+                    <YakitInput.TextArea
+                        placeholder='请为指纹配置取个名字...'
+                        showCount
+                        maxLength={50}
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
                         onPressEnter={onSaveTemplate}
                     />
+                    <div style={{display: "flex", justifyContent: "end", gap: 8, marginTop: 25}}>
+                        <YakitButton
+                            type='outline2'
+                            onClick={() => {
+                                setTemplateName("")
+                                setSaveTemplateVisible(false)
+                            }}
+                        >
+                            取消
+                        </YakitButton>
+                        <YakitButton type='primary' onClick={onSaveTemplate}>
+                            保存
+                        </YakitButton>
+                    </div>
                 </div>
             </YakitModal>
         </>

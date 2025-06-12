@@ -1073,6 +1073,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                                         setBatchDelLoading(true)
                                         grpcDeleteFingerprint({
                                             Filter: {
+                                                ...filter,
                                                 IncludeId: []
                                             }
                                         })
