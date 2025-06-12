@@ -362,6 +362,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
         form.setFieldsValue({Ports: PresetPorts["fast"], presetPort: ["fast"]})
     })
 
+    const enableFingerprintGroup = Form.useWatch("EnableFingerprintGroup")
     const [groupsOptions, setGroupsOptions] = useState<{label: string; value: string}[]>([{label: "全部", value: ""}]) // 选全部的时候，默认传给后端的是空数组
     const onFingerprintGroupFocus = useMemoizedFn(() => {
         grpcFetchLocalFingerprintGroupList()
@@ -512,6 +513,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                                     <YakitSelect
                                         mode='multiple'
                                         autoFocus
+                                        disabled={!enableFingerprintGroup}
                                         options={groupsOptions}
                                         onFocus={onFingerprintGroupFocus}
                                         onChange={(value) => {

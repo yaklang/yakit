@@ -1,20 +1,50 @@
 import {ChatMarkdown} from "@/components/yakChat/ChatMarkdown"
 import React from "react"
-export interface FingerprintRuleDomProp {}
+import styles from "./FingerprintManage.module.scss"
+
+interface FingerprintRuleDomProp {}
 export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
+    // 目录内容单独提取
+    const toc = `
+<ul>
+  <li><a href="#intro">介绍</a></li>
+  <li><a href="#operator">运算符</a>
+    <ul>
+      <li><a href="#relation-operator">关系运算符</a>
+        <ul>
+          <li><a href="#equal">包含 =</a></li>
+          <li><a href="#not-equal">不包含 !=</a></li>
+          <li><a href="#eq">等于 ==</a></li>
+          <li><a href="#neq">不等于 !==</a></li>
+          <li><a href="#regex">正则 ~=</a></li>
+        </ul>
+      </li>
+      <li><a href="#logic-operator">逻辑运算符</a></li>
+      <li><a href="#bracket">括号</a></li>
+    </ul>
+  </li>
+  <li><a href="#variable">内置变量</a>
+    <ul>
+      <li><a href="#predefined-variable">预制变量</a></li>
+      <li><a href="#runtime-variable">运行时变量</a></li>
+    </ul>
+  </li>
+</ul>
+    `.trim()
+
     const mdContent = `
-<details>
-<summary><strong style="font-size: 1.5em; text-transform: uppercase;">介绍</strong></summary>
+<details open>
+<summary id="intro"><strong style="font-size: 1.5em; text-transform: uppercase;">介绍</strong></summary>
 
 新版指纹通过一条表达式实现，通过内置变量和运算符实现对流量匹配。
 
 </details>
 
-<details>
-<summary><strong style="font-size: 1.5em; text-transform: uppercase;">运算符</strong></summary>
+<details open>
+<summary id="operator"><strong style="font-size: 1.5em; text-transform: uppercase;">运算符</strong></summary>
 
-<details>
-<summary><strong style="font-size: 1.2em; text-transform: uppercase;">关系运算符</strong></summary>
+<details open>
+<summary id="relation-operator"><strong style="font-size: 1.2em; text-transform: uppercase;">关系运算符</strong></summary>
 
 <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
   <tr>
@@ -61,8 +91,8 @@ export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
   </tr>
 </table>
 
-<details>
-<summary><strong>包含 =</strong></summary>
+<details open>
+<summary id="equal"><strong>包含 =</strong></summary>
 
 包含运算有两个字符串类型的操作数，第一个操作数是一个变量名，第二个操作数为需要匹配的数据：如表达式\`title = "Hello"\` 等价于 \`contains(title,"Hello")\`，当 \`"Hello"\` 是变量 \`title\` 的子串时，表达式的值为 \`True\，否则为 \`False\`。
 
@@ -70,30 +100,30 @@ export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
 
 </details>
 
-<details>
-<summary><strong>不包含 !=</strong></summary>
+<details open>
+<summary id="not-equal"><strong>不包含 !=</strong></summary>
 
 此运算符的值等价于对操作数进行包含运算再进行非运算，如表达式 \`title != "Hello"\`，等价于 \`title = "Hello"\` 运算的相反值。
 
 </details>
 
-<details>
-<summary><strong>等于 ==</strong></summary>
+<details open>
+<summary id="eq"><strong>等于 ==</strong></summary>
 
 此运算有两个操作数，第一个操作数是一个变量名，第二个操作数为需要匹配的数据，在匹配时先对操作数类型比较，再对值比较，如果都相等，则返回 \`True\`，否则返回 \`False\`
 
 </details>
 
-<details>
-<summary><strong>不等于 !==</strong></summary>
+<details open>
+<summary id="neq"><strong>不等于 !==</strong></summary>
 
 此运算符的值等价于对操作数进行等于运算再进行非运算，如表达式 \`title !== "Hello"\`，等价于 \`title == "Hello"\` 运算的相反值。
 **注意：** 需要注意区分不等于和不包含，对于相同的操作数，如果不等于运算结果为 \`True\`，那么不包含一定为 \`True\`，反之则不成立。
 
 </details>
 
-<details>
-<summary><strong>正则 ~=</strong></summary>
+<details open>
+<summary id="regex"><strong>正则 ~=</strong></summary>
 
 包含运算有两个操作数，第一个操作数是一个变量名，第二个操作数为需要匹配的数据：如表达式 \`title ~= "Hello"\` 等价于 re.Match\`(title,"Hello")\`，其中 \`"Hello"\` 是正则的pattern，如果匹配成功表达式的值为 \`True\`，否则为 \`False\`
 
@@ -101,8 +131,8 @@ export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
 
 </details>
 
-<details>
-<summary><strong style="font-size: 1.2em; text-transform: uppercase;">逻辑运算符</strong></summary>
+<details open>
+<summary id="logic-operator"><strong style="font-size: 1.2em; text-transform: uppercase;">逻辑运算符</strong></summary>
 
 <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
   <tr>
@@ -127,8 +157,8 @@ export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
 
 </details>
 
-<details>
-<summary><strong style="font-size: 1.2em; text-transform: uppercase;">括号</strong></summary>
+<details open>
+<summary id="bracket"><strong style="font-size: 1.2em; text-transform: uppercase;">括号</strong></summary>
 
 括号运算可以改变优先级
 
@@ -147,11 +177,11 @@ title = "mysql" || title = "sql" && body = "mysql"
 
 </details>
 
-<details>
-<summary><strong style="font-size: 1.5em; text-transform: uppercase;">内置变量</strong></summary>
+<details open>
+<summary id="variable"><strong style="font-size: 1.5em; text-transform: uppercase;">内置变量</strong></summary>
 
-<details>
-<summary><strong style="font-size: 1.2em; text-transform: uppercase;">预制变量</strong></summary>
+<details open>
+<summary id="predefined-variable"><strong style="font-size: 1.2em; text-transform: uppercase;">预制变量</strong></summary>
 
 <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
   <tr>
@@ -198,8 +228,8 @@ body = "ThinkPHP"
 
 </details>
 
-<details>
-<summary><strong style="font-size: 1.3em; text-transform: uppercase;">运行时变量</strong></summary>
+<details open>
+<summary id="runtime-variable"><strong style="font-size: 1.3em; text-transform: uppercase;">运行时变量</strong></summary>
 运行时变量是根据变量名从数据包中提取数据的变量，这种变量名不确定。如变量 \`header_xxx\` 的值为 header 中的 xxx item 的值(忽略大小写)
 
 如需要使用正则 \`Polylang(?: (Pro))?\` 匹配 header 中 X-redirected-by 字段的值，则编写为表达式为：\`header_X-redirected-by ~= Polylang(?: (Pro))\`
@@ -210,8 +240,24 @@ body = "ThinkPHP"
     `.trim()
 
     return (
-        <div style={{maxHeight: 1000, overflowY: "auto"}}>
-            <ChatMarkdown content={mdContent} />
+        <div style={{height: 700, display: "flex"}}>
+            <div
+                style={{
+                    width: 260,
+                    minWidth: 180,
+                    maxWidth: 320,
+                    borderRight: "1px solid #eee",
+                    padding: "8px",
+                    background: "#fafbfc"
+                }}
+            >
+                <div className={styles['toc-list']}>
+                    <ChatMarkdown content={toc} />
+                </div>
+            </div>
+            <div style={{flex: 1, padding: 24, overflowY: "auto"}}>
+                <ChatMarkdown content={mdContent} />
+            </div>
         </div>
     )
 }

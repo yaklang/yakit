@@ -1034,34 +1034,62 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                         <div className={styles["divider-style"]}></div>
 
                         <div className={styles["btns-group"]}>
-                            <YakitButton
-                                type='outline1'
-                                colors='danger'
-                                icon={<OutlineTrashIcon />}
-                                disabled={!rowSelectionKeys.length}
-                                loading={batchDelLoading}
-                                onClick={() => {
-                                    setBatchDelLoading(true)
-                                    grpcDeleteFingerprint({
-                                        Filter: {
-                                            IncludeId: rowSelectionKeys
-                                        }
-                                    })
-                                        .then(() => {
-                                            yakitNotify("success", "删除成功")
-                                            onSetRefreshLocalGroup((prev) => !prev)
-                                            let page = data.Pagination.Page
-                                            if (rowSelectionKeys.length === data.Data.length) {
-                                                page = 1
+                            {rowSelectionKeys.length ? (
+                                <YakitButton
+                                    type='outline1'
+                                    colors='danger'
+                                    icon={<OutlineTrashIcon />}
+                                    disabled={!rowSelectionKeys.length}
+                                    loading={batchDelLoading}
+                                    onClick={() => {
+                                        setBatchDelLoading(true)
+                                        grpcDeleteFingerprint({
+                                            Filter: {
+                                                IncludeId: rowSelectionKeys
                                             }
-                                            update(page, data.Pagination.Limit)
                                         })
-                                        .catch(() => {})
-                                        .finally(() => {
-                                            setBatchDelLoading(false)
+                                            .then(() => {
+                                                yakitNotify("success", "删除成功")
+                                                onSetRefreshLocalGroup((prev) => !prev)
+                                                let page = data.Pagination.Page
+                                                if (rowSelectionKeys.length === data.Data.length) {
+                                                    page = 1
+                                                }
+                                                update(1, data.Pagination.Limit)
+                                            })
+                                            .catch(() => {})
+                                            .finally(() => {
+                                                setBatchDelLoading(false)
+                                            })
+                                    }}
+                                />
+                            ) : (
+                                <YakitButton
+                                    type='outline1'
+                                    colors='danger'
+                                    icon={<OutlineTrashIcon />}
+                                    loading={batchDelLoading}
+                                    onClick={() => {
+                                        setBatchDelLoading(true)
+                                        grpcDeleteFingerprint({
+                                            Filter: {
+                                                IncludeId: []
+                                            }
                                         })
-                                }}
-                            />
+                                            .then(() => {
+                                                yakitNotify("success", "删除成功")
+                                                onSetRefreshLocalGroup((prev) => !prev)
+                                                update(1, data.Pagination.Limit)
+                                            })
+                                            .catch(() => {})
+                                            .finally(() => {
+                                                setBatchDelLoading(false)
+                                            })
+                                    }}
+                                >
+                                    清空
+                                </YakitButton>
+                            )}
 
                             <YakitButton
                                 type='outline2'
@@ -1106,16 +1134,25 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                             }}
                         />
                         <YakitButton
-                            type='primary'
+                            type='text'
+                            style={{padding: 0}}
                             onClick={() => {
                                 let m = showYakitModal({
                                     title: "指纹规则",
                                     width: 900,
                                     closable: true,
                                     maskClosable: false,
-                                    content: (
-                                        <div style={{margin: 8}}>
-                                            <FingerprintRuleDom />
+                                    content: <FingerprintRuleDom />,
+                                    footer: (
+                                        <div style={{textAlign: "right", width: "100%", padding: 8}}>
+                                            <YakitButton
+                                                type='primary'
+                                                onClick={() => {
+                                                    m.destroy()
+                                                }}
+                                            >
+                                                我知道了
+                                            </YakitButton>
                                         </div>
                                     )
                                 })
