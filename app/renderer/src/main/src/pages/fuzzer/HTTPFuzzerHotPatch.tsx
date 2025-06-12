@@ -12,7 +12,13 @@ import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconf
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
 import {yakitNotify} from "@/utils/notification"
-import {OutlineClouddownloadIcon, OutlineClouduploadIcon, OutlineTrashIcon, OutlineXIcon} from "@/assets/icon/outline"
+import {
+    OutlineClouddownloadIcon,
+    OutlineClouduploadIcon,
+    OutlineTerminalIcon,
+    OutlineTrashIcon,
+    OutlineXIcon
+} from "@/assets/icon/outline"
 import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {defaultWebFuzzerPageInfo, HotPatchDefaultContent, HotPatchTempDefault} from "@/defaultConstants/HTTPFuzzerPage"
 import {setClipboardText} from "@/utils/clipboard"
@@ -35,6 +41,7 @@ import {PluginListPageMeta} from "../plugins/baseTemplateType"
 import {isEnpriTrace} from "@/utils/envfile"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {openConsoleNewWindow} from "@/utils/openWebsite"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -357,6 +364,14 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
                     <YakitButton loading={loading} type='primary' htmlType='submit'>
                         调试执行
                     </YakitButton>
+                    <Tooltip placement='bottom' title='引擎Console'>
+                        <YakitButton
+                            type='text'
+                            onClick={openConsoleNewWindow}
+                            icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
+                            style={{marginLeft: 8, marginTop: 5}}
+                        ></YakitButton>
+                    </Tooltip>
                 </Form.Item>
             </Form>
         </div>

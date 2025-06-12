@@ -32,7 +32,7 @@ import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "@/pages/fuz
 import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import {OutlineRefreshIcon} from "@/assets/icon/outline"
+import {OutlineRefreshIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import MITMContext from "../Context/MITMContext"
 import {
     grpcClientMITMHooks,
@@ -43,6 +43,8 @@ import {
     MITMExecScriptContentRequest,
     MITMRemoveHookRequest
 } from "../MITMHacker/utils"
+import {Tooltip} from "antd"
+import {openConsoleNewWindow} from "@/utils/openWebsite"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -380,6 +382,14 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = (
                             }}
                         ></HotCodeTemplate>
                         <div className={styles["hot-patch-heard-extra"]}>
+                            <Tooltip placement='bottom' title='引擎Console'>
+                                <YakitButton
+                                    type='text'
+                                    onClick={openConsoleNewWindow}
+                                    icon={<OutlineTerminalIcon className={styles["engineConsole-icon-style"]} />}
+                                    style={{padding: 0}}
+                                ></YakitButton>
+                            </Tooltip>
                             <YakitPopconfirm
                                 title={"确认重置热加载代码？"}
                                 onConfirm={() => {
