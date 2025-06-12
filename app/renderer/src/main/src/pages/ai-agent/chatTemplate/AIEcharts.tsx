@@ -37,7 +37,7 @@ const color = {
 const getContextPressureOption = (data: number[], threshold: number): EChartsOption => {
     const maxValue = Math.max(...data)
     const minValue = Math.min(...data)
-    const yMax = threshold > maxValue ? threshold + minValue : minValue + maxValue
+    const yMax = threshold > maxValue ? threshold * 2 : minValue + maxValue
     const length = data.length
     const option: EChartsOption = {
         grid: {
@@ -53,11 +53,11 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
             axisTick: {show: false},
             axisLine: {
                 lineStyle: {
-                    color: "#e6e8ed",
-                    width: 2
+                    color: "#C0C6D1",
+                    width: 1
                 },
                 symbol: ["none", "arrow"],
-                symbolSize: [10, 15],
+                symbolSize: [6, 8],
                 symbolOffset: [50, 0]
             },
             splitLine: {
@@ -88,11 +88,11 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
             axisLine: {
                 show: true,
                 lineStyle: {
-                    color: "#e6e8ed",
-                    width: 2
+                    color: "#C0C6D1",
+                    width: 1
                 },
                 symbol: ["none", "arrow"],
-                symbolSize: [10, 15],
+                symbolSize: [6, 8],
                 symbolOffset: [0, 0]
             }
         },
@@ -113,11 +113,11 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
                         return {
                             value: item,
                             symbol: "circle",
-                            symbolSize: 12,
+                            symbolSize: 10,
                             itemStyle: {
                                 color: "#fff",
                                 borderColor: item > threshold ? color.height.visual : color.low.visual,
-                                borderWidth: 3
+                                borderWidth: 2
                             }
                         }
                     }
@@ -215,11 +215,11 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
             axisTick: {show: false},
             axisLine: {
                 lineStyle: {
-                    color: "#e6e8ed",
-                    width: 2
+                    color: "#C0C6D1",
+                    width: 1
                 },
                 symbol: ["none", "arrow"],
-                symbolSize: [10, 15],
+                symbolSize: [6, 8],
                 symbolOffset: [50, 0]
             },
             splitLine: {
@@ -250,11 +250,11 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
             axisLine: {
                 show: true,
                 lineStyle: {
-                    color: "#e6e8ed",
-                    width: 2
+                    color: "#C0C6D1",
+                    width: 1
                 },
                 symbol: ["none", "arrow"],
-                symbolSize: [10, 15],
+                symbolSize: [6, 8],
                 symbolOffset: [0, 0]
             }
         },
@@ -265,11 +265,11 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
                         return {
                             value: item,
                             symbol: "circle",
-                            symbolSize: 12,
+                            symbolSize: 10,
                             itemStyle: {
                                 color: "#fff",
                                 borderColor: "#868c97",
-                                borderWidth: 3
+                                borderWidth: 2
                             }
                         }
                     }
