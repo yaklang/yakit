@@ -1,13 +1,10 @@
 import React, {useEffect, useMemo, useRef, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
 import {Divider, Empty, Progress, Space, Table, Tag} from "antd"
 import {defQueryCVERequest, QueryCVERequest} from "@/pages/cve/CVEViewer"
 import {
-    useCountDown,
     useDebounceEffect,
     useDebounceFn,
     useGetState,
-    useKeyPress,
     useMemoizedFn,
     useUpdateEffect
 } from "ahooks"
@@ -37,9 +34,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {showByContextMenu} from "@/components/functionTemplate/showByContext"
 import {formatDate, formatTimestamp} from "@/utils/timeUtil"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {YakitAutoComplete, defYakitAutoCompleteRef} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {CacheDropDownGV} from "@/yakitGV"

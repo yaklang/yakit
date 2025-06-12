@@ -161,6 +161,8 @@ import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistory
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
+import { convertKeyEventToKeyCombination, sortKeysCombination } from "@/utils/globalShortcutKey/utils"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -1354,36 +1356,24 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
 
     /** ---------- @name 全局功能快捷键 Start ---------- */
     const isModalVisibleRef = useRef<boolean>(false)
-    const documentKeyDown = useMemoizedFn((e: KeyboardEvent) => {
-        // ctrl/command + w 关闭当前页面
-        e.stopPropagation()
-        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault()
-            if (!isModalVisibleRef.current) {
-                if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
-                const data = KeyConvertRoute(currentTabKey)
-                if (data) {
-                    const info: OnlyPageCache = {
-                        route: data.route,
-                        menuName:
-                            data.route === YakitRoute.Plugin_OP
-                                ? data.pluginName || ""
-                                : YakitRouteToPageInfo[data.route]?.label || "",
-                        pluginId: data.pluginId,
-                        pluginName: data.pluginName
-                    }
-                    onBeforeRemovePage(info)
+    useShortcutKeyTrigger("removePage", () => {
+        if (!isModalVisibleRef.current) {
+            if (pageCache.length === 0 || defaultFixedTabs.includes(currentTabKey as YakitRoute)) return
+            const data = KeyConvertRoute(currentTabKey)
+            if (data) {
+                const info: OnlyPageCache = {
+                    route: data.route,
+                    menuName:
+                        data.route === YakitRoute.Plugin_OP
+                            ? data.pluginName || ""
+                            : YakitRouteToPageInfo[data.route]?.label || "",
+                    pluginId: data.pluginId,
+                    pluginName: data.pluginName
                 }
+                onBeforeRemovePage(info)
             }
-            return
         }
     })
-    useEffect(() => {
-        document.addEventListener("keydown", documentKeyDown)
-        return () => {
-            document.removeEventListener("keydown", documentKeyDown)
-        }
-    }, [])
     /** ---------- @name 全局功能快捷键 End ---------- */
 
     /** ---------- 操作系统 start ---------- */
@@ -3011,9 +3001,17 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         }, 200)
     })
     /**快捷关闭或者新增 */
-    const onKeyDown = useMemoizedFn((e: React.KeyboardEvent, subItem: MultipleNodeInfo) => {
+    const onKeyDown = useMemoizedFn((e, subItem: MultipleNodeInfo) => {
+        const keys = convertKeyEventToKeyCombination(e)
+        if (!keys) return
+        const triggerKeys = sortKeysCombination(keys).join("")
+
+        const event = getGlobalShortcutKeyEvents()
+        const closeEvent = sortKeysCombination(event.removePage.keys).join("")
+        const openEvent = sortKeysCombination(event.addSubPage.keys).join("")
+        
         // 快捷键关闭
-        if (e.code === "KeyW" && (e.ctrlKey || e.metaKey)) {
+        if (triggerKeys === closeEvent) {
             e.preventDefault()
             e.stopPropagation()
             if (pageCache.length === 0) return
@@ -3021,7 +3019,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
             return
         }
         // 快捷键新增
-        if (e.code === "KeyT" && (e.ctrlKey || e.metaKey)) {
+        if (triggerKeys === openEvent) {
             e.preventDefault()
             e.stopPropagation()
             subTabsRef.current?.onAddSubPage()

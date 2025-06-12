@@ -1024,7 +1024,8 @@ const GetUIOpSettingMenu = () => {
                 {key: "reverse", label: "全局反连"},
                 {key: "agent", label: "系统代理"},
                 // { key: "engineVar",label: "引擎环境变量" },
-                {key: "config-network", label: "全局配置"}
+                {key: "config-network", label: "全局配置"},
+                {key: "setShortcutKey", label: "快捷键设置"}
             ]
         },
         {
@@ -1044,7 +1045,6 @@ const GetUIOpSettingMenu = () => {
                 {label: "引擎日志", key: "engineLog"}
             ]
         }
-        // {key: "setShortcutKey", label: "快捷键设置"}
     ]
 }
 

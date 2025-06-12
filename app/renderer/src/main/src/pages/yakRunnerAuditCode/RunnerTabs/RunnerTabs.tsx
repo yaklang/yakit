@@ -1323,18 +1323,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
         }, 50)
     }, [editor, editorInfo])
 
-    // 双击Shift
-    const [lastShiftTime, setLastShiftTime] = useState<number>(0)
-    const handleDoubleShift = useMemoizedFn(() => {
-        const now = Date.now()
-        if (now - lastShiftTime < 300 && editor) {
-            // 300ms 内连点两次 Shift
-            // 在这里处理连点两次 Shift 的逻辑
-            emiter.emit("onOpenSearchModal")
-        }
-        setLastShiftTime(now)
-    })
-
     /** 代码审计 代码错误检查并显示提示标记 */
     const auditStaticAnalyze = useDebounceFn(
         useMemoizedFn((model: YakitITextModel) => {
@@ -1383,13 +1371,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     editorOperationRecord='YAK_RUNNNER_EDITOR_RECORF'
                     editorDidMount={(editor) => {
                         setEditor(editor)
-                    }}
-                    onKeyPress={(event: KeyboardEvent) => {
-                        const {key, ctrlKey, altKey, metaKey, repeat} = event
-                        // 如若长按某个键时 后面激发的repeat会变为true
-                        if (key === "Shift" && !ctrlKey && !altKey && !metaKey && !repeat) {
-                            handleDoubleShift()
-                        }
                     }}
                     type={editorInfo?.language}
                     value={editorInfo?.code || ""}

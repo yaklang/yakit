@@ -163,7 +163,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
                     </div>
                 </div>
             </div>
-
             <div className={styles["footer"]}>
                 <div className={styles["main"]}>
                     <div className={styles["data-preview-item"]}>

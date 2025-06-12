@@ -46,7 +46,7 @@ const handleKeyboardToKey = (keyboard: KeyboardEvent): string | null => {
 }
 
 /** 将键盘事件转换成按键组合信息 */
-const convertKeyEventToKeyCombination = (event: KeyboardEvent): string[] | null => {
+export const convertKeyEventToKeyCombination = (event: KeyboardEvent): string[] | null => {
     const {altKey, ctrlKey, metaKey, shiftKey} = event
 
     let key = handleKeyboardToKey(event)
@@ -64,7 +64,7 @@ const convertKeyEventToKeyCombination = (event: KeyboardEvent): string[] | null 
 }
 
 /** 将UI按键按照逻辑内循序进行排序后输出 */
-const sortKeysCombination = (keys: string[]): string[] => {
+export const sortKeysCombination = (keys: string[]): string[] => {
     const newArr = keys.map((item) => {
         if (item === YakitKeyMod.CtrlCmd) {
             return SystemInfo.system === "Darwin" ? YakitKeyMod.Meta : YakitKeyMod.Control
@@ -96,9 +96,19 @@ let currentPageHandler: ShortcutKeyPageName | null = null
 export const registerShortcutKeyHandle = (page: ShortcutKeyPageName) => {
     currentPageHandler = page
 }
-/** 注销页面快捷键监听事件 */
+/** 注销页面快捷键监听事件(多页面事件由于异步互相影响不参与注销) */
 export const unregisterShortcutKeyHandle = (page: ShortcutKeyPageName) => {
     if (currentPageHandler === page) currentPageHandler = null
+}
+/** 当前聚焦的页面 */
+let currentFocus: string | null = null
+/** 注册聚焦监听事件 */
+export const registerShortcutFocusHandle = (page: string) => {
+    currentFocus = page
+}
+/** 注销聚焦监听事件 */
+export const unregisterShortcutFocusHandle = (page: string) => {
+    if (currentFocus === page) currentFocus = null
 }
 
 /** 是否激活了快捷键设置页面 */
@@ -112,11 +122,11 @@ const getIsActiveShortcutKeyPage = () => {
 }
 
 /** 解析快捷键是否有对应的快捷键事件 */
-const parseShortcutKeyEvent = (keys: string[]): string | null => {
+export const parseShortcutKeyEvent = (keys: string[]): string | null => {
     try {
         const triggerKeys = sortKeysCombination(keys).join("")
-
         const pageKeyInfo = pageEventMaps[currentPageHandler || "global"]
+        
         if (!pageKeyInfo) return null
         const pageEvents = pageKeyInfo.getEvents()
         const pageEventKeys = Object.keys(pageEvents)
@@ -144,22 +154,31 @@ const parseShortcutKeyEvent = (keys: string[]): string | null => {
     return null
 }
 
-const handleShortcutKey = (ev: KeyboardEvent) => {
+export const handleShortcutKey = (ev: KeyboardEvent) => {
     const keys = convertKeyEventToKeyCombination(ev)
     if (!keys) return
-
     if (getIsActiveShortcutKeyPage()) {
-        emiter.emit("onGlobalShortcutKey", `setShortcutKey(${keys.join("|")})`)
+        emiter.emit("onGlobalShortcutKey",  `setShortcutKey(${keys.join("|")})`)
         return
     } else {
         const eventName = parseShortcutKeyEvent(keys)
         if (!eventName) return
-        emiter.emit("onGlobalShortcutKey", eventName)
+        emiter.emit("onGlobalShortcutKey", JSON.stringify({
+            eventName,
+            currentFocus
+        }) )
         return
     }
 }
+
 /** 启动全局快捷键监听事件 */
 export const startShortcutKeyMonitor = () => {
     document.addEventListener("keydown", handleShortcutKey)
 }
+
+/** 移除全局快捷键监听事件 */
+export const stopShortcutKeyMonitor = () => {
+    document.removeEventListener("keydown", handleShortcutKey)
+}
+
 // #endregion

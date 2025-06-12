@@ -156,6 +156,7 @@ import {HTTPHistoryAnalysis} from "@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalys
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {ShortcutKey} from "@/pages/shortcutKey/ShortcutKey"
 import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
+import {ShortcutKeyList} from "@/pages/shortcutKey/ShortcutKey"
 
 const HTTPHacker = React.lazy(() => import("../pages/hacker/httpHacker"))
 const MITMHacker = React.lazy(() => import("@/pages/mitm/MITMHacker/MITMHacker"))
@@ -626,7 +627,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
         case YakitRoute.Yak_Java_Decompiler:
             return <YakJavaDecompiler />
         case YakitRoute.ShortcutKey:
-            return <ShortcutKey page={params?.shortcutKeyPage || "global"} />
+            return <ShortcutKeyList />
         default:
             return <div />
     }
