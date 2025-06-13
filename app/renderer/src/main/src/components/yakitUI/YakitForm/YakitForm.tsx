@@ -99,7 +99,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         disabled,
         isShowPathNumber = true,
         multiple = true,
-        fileExtensionIsExist = true
+        fileExtensionIsExist = true,
+        showExtraHelp = ""
     } = props
     const [uploadLoading, setUploadLoading] = useState<boolean>(false)
     const [name, setName] = useState<string>(fileName || "")
@@ -497,6 +498,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
                                 </span>
                             )}
+                            {showExtraHelp}
                         </div>
                     )}
                 </FileDragger>
@@ -524,6 +526,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
                                 </span>
                             )}
+                            {showExtraHelp}
                         </div>
                     )}
                 </FileDragger>
@@ -564,6 +567,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                                     识别到<span className={styles["dragger-help-number"]}>{fileNumber}</span>个文件路径
                                 </span>
                             )}
+                            {showExtraHelp}
                         </div>
                     )}
                 </FileDragger>

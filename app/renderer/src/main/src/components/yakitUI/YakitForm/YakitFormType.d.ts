@@ -30,6 +30,7 @@ export interface YakitDraggerProps extends FileDraggerProps {
     uploadFileText?: string
     uploadFolderText?:string
     help?: ReactDOM
+    showExtraHelp?: ReactDOM
     showDefHelp?: boolean
     /**回显的文本值 */
     value?: string

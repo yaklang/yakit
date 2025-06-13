@@ -70,23 +70,24 @@ function Mermaid(props: {code: string; onError: () => void}) {
     )
 }
 
-function PreCode(props: {children: any}) {
+function PreCode(props: {children?: React.ReactNode}) {
     const ref = useRef<HTMLPreElement>(null)
     const [mermaidCode, setMermaidCode] = useState("")
     const [copyStr, setCopyStr] = useState("")
     useEffect(() => {
-        if (!ref.current) return
-        const mermaidDom = ref.current.querySelector("code.language-mermaid")
-        if (mermaidDom) {
-            setMermaidCode((mermaidDom as HTMLElement).innerText)
+        if (ref.current) {
+            // 初始赋值
+            setCopyStr(ref.current.textContent || "")
+            // 监听后续变化
+            const observer = new MutationObserver(() => {
+                if (ref.current) {
+                    setCopyStr(ref.current.textContent || "")
+                }
+            })
+            observer.observe(ref.current, {childList: true, subtree: true})
+            return () => observer.disconnect()
         }
     }, [props.children])
-
-    useEffect(() => {
-        if (ref.current) {
-            setCopyStr(ref.current.innerText)
-        }
-    }, [ref.current])
 
     if (mermaidCode) {
         return <Mermaid code={mermaidCode} onError={() => setMermaidCode("")} />

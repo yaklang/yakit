@@ -727,12 +727,25 @@ service Yak {
   rpc AddFingerprint(AddFingerprintRequest) returns (AddFingerprintResponse);
   rpc ModifyFingerprint(ModifyFingerprintRequest) returns (ModifyFingerprintResponse);
 
-  rpc QueryFingerprint(QueryFingerprintRequest) returns (QueryFingerprintResponse);
-  rpc DeleteFingerprint(DeleteFingerprintRequest) returns (DbOperateMessage);
-  rpc UpdateFingerprint(UpdateFingerprintRequest) returns (DbOperateMessage);
-  rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage);
-  rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage);
+  rpc QueryFingerprint(QueryFingerprintRequest) returns (QueryFingerprintResponse); // 查询指纹信息
+  rpc DeleteFingerprint(DeleteFingerprintRequest) returns (DbOperateMessage); // 删除指纹
+  rpc UpdateFingerprint(UpdateFingerprintRequest) returns (DbOperateMessage); // 更新单条指纹内容 指纹增改所属组信息使用此条
+  rpc CreateFingerprint(CreateFingerprintRequest) returns (DbOperateMessage); // 创建指纹
+  rpc RecoverBuiltinFingerprint(Empty) returns (DbOperateMessage); // 恢复内置指纹
 
+  rpc CreateFingerprintGroup(FingerprintGroup) returns (DbOperateMessage); // 创建指纹组
+  rpc GetAllFingerprintGroup(Empty) returns (FingerprintGroups); // 获取所有指纹组
+  rpc RenameFingerprintGroup(RenameFingerprintGroupRequest) returns (DbOperateMessage); // 重命名指纹组
+  rpc DeleteFingerprintGroup(DeleteFingerprintGroupRequest) returns (DbOperateMessage); // 删除指纹组
+
+  // 指纹 与 组 工具接口
+  rpc BatchUpdateFingerprintToGroup(BatchUpdateFingerprintToGroupRequest) returns (DbOperateMessage); // 批量更新 规则与组关系表
+  rpc GetFingerprintGroupSetByFilter(GetFingerprintGroupSetRequest)returns (FingerprintGroups);
+
+
+  // 导入导出指纹
+  rpc ExportFingerprint(ExportFingerprintRequest) returns (stream DataTransferProgress);
+  rpc ImportFingerprint(ImportFingerprintRequest) returns (stream DataTransferProgress);
 
   // 反弹shell命令生成
   rpc GetReverseShellProgramList(GetReverseShellProgramListRequest) returns (GetReverseShellProgramListResponse);
@@ -3932,6 +3945,10 @@ message PortScanRequest {
   bool BasicCrawlerEnableJSParser = 29;
   repeated string UserFingerprintFiles = 30;
   bool SkipCveBaseLine = 31;
+
+  // 指纹规则组
+  bool EnableFingerprintGroup = 32;
+  repeated string FingerprintGroup = 33;
 }
 
 message DeletePortsRequest {
@@ -5824,6 +5841,7 @@ message FingerprintRule {
   string WebPath = 4;
   string ExtInfo = 5;
   string MatchExpression = 6;
+  repeated string GroupName = 7;
 }
 
 
@@ -5831,6 +5849,9 @@ message FingerprintFilter {
   repeated string Vendor = 1;
   repeated string Product = 2;
   repeated int64 IncludeId = 3;
+  repeated string GroupName = 4;
+  repeated string RuleName = 5;
+  string Keyword = 6;
 }
 
 message QueryFingerprintRequest {
@@ -5858,6 +5879,48 @@ message UpdateFingerprintRequest {
   FingerprintRule Rule = 3;
 }
 
+message FingerprintGroup {
+  string GroupName = 1;
+  int64  Count = 2;
+}
+message FingerprintGroups {
+  repeated FingerprintGroup Data = 1;
+}
+
+message RenameFingerprintGroupRequest {
+  string GroupName = 1;
+  string NewGroupName = 2;
+}
+
+message DeleteFingerprintGroupRequest {
+  repeated string GroupNames = 1;
+}
+
+message BatchUpdateFingerprintToGroupRequest{
+  repeated string AppendGroupName = 1;
+  repeated string DeleteGroupName = 2;
+  FingerprintFilter Filter = 3;
+}
+
+message GetFingerprintGroupSetRequest {
+  FingerprintFilter Filter = 1;
+  bool Union = 2; // default intersect ,if set true return union
+}
+
+message ExportFingerprintRequest {
+  FingerprintFilter Filter = 1;
+  string Password = 2;
+  string TargetPath = 3;
+}
+message ImportFingerprintRequest {
+  string InputPath = 1;
+  string Password = 2;
+}
+
+message DataTransferProgress {
+  double Progress = 1;
+  string Verbose = 2;
+}
 
 message QuerySyntaxFlowRuleRequest{
   Paging Pagination = 1;

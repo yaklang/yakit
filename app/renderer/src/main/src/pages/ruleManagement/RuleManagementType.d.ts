@@ -222,22 +222,6 @@ export interface UpdateSyntaxFlowRuleRequest {
 export interface DeleteSyntaxFlowRuleRequest {
     Filter: SyntaxFlowRuleFilter
 }
-
-export interface ExportSyntaxFlowsRequest {
-    Filter: SyntaxFlowRuleFilter
-    Password?: string
-    TargetPath: string
-}
-
-export interface ImportSyntaxFlowsRequest {
-    InputPath: string
-    Password?: string
-}
-
-export interface SyntaxflowsProgress {
-    Progress: number
-    Verbose: string
-}
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */
 

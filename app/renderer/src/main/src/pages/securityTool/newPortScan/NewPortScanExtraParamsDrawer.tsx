@@ -25,6 +25,7 @@ import {CheckboxValueType} from "antd/lib/checkbox/Group"
 import {PresetPorts} from "@/pages/portscan/schema"
 import {isEnpriTraceAgent} from "@/utils/envfile"
 import {YakitFormDragger} from "@/components/yakitUI/YakitForm/YakitForm"
+import {grpcFetchLocalFingerprintGroupList} from "@/pages/fingerprintManage/api"
 
 const {YakitPanel} = YakitCollapse
 
@@ -57,7 +58,9 @@ const defaultFingerprintSetting = {
     ProbeTimeout: defPortScanExecuteExtraFormValue.ProbeTimeout,
     Proxy: defPortScanExecuteExtraFormValue.Proxy,
     FingerprintMode: defPortScanExecuteExtraFormValue.FingerprintMode,
-    UserFingerprintFilesStr: defPortScanExecuteExtraFormValue.UserFingerprintFilesStr
+    UserFingerprintFilesStr: defPortScanExecuteExtraFormValue.UserFingerprintFilesStr,
+    EnableFingerprintGroup: defPortScanExecuteExtraFormValue.EnableFingerprintGroup,
+    FingerprintGroup: defPortScanExecuteExtraFormValue.FingerprintGroup
 }
 /** SYN 配置 */
 const defaultSYNSetting = {
@@ -358,6 +361,22 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
     const onResetPort = useMemoizedFn(() => {
         form.setFieldsValue({Ports: PresetPorts["fast"], presetPort: ["fast"]})
     })
+
+    const enableFingerprintGroup = Form.useWatch("EnableFingerprintGroup")
+    const [groupsOptions, setGroupsOptions] = useState<{label: string; value: string}[]>([{label: "全部", value: ""}]) // 选全部的时候，默认传给后端的是空数组
+    const onFingerprintGroupFocus = useMemoizedFn(() => {
+        grpcFetchLocalFingerprintGroupList()
+            .then(({Data}) => {
+                const arr =
+                    Data.map((item) => {
+                        return {label: item.GroupName, value: item.GroupName}
+                    }) || []
+                arr.unshift({label: "全部", value: ""})
+                setGroupsOptions(arr)
+            })
+            .catch(() => {})
+    })
+
     return (
         <>
             <YakitPanel
@@ -474,16 +493,44 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                     />
                 </Form.Item>
                 {!isSimpleDetect && (
-                    <YakitFormDragger
-                        formItemProps={{
-                            name: "UserFingerprintFilesStr",
-                            label: "自定义指纹"
-                        }}
-                        accept='.yaml,.yml'
-                        help='可将yaml、yml文件拖入框内或'
-                        selectType='file'
-                        multiple={true}
-                    />
+                    <>
+                        <YakitFormDragger
+                            formItemProps={{
+                                name: "UserFingerprintFilesStr",
+                                label: "自定义指纹"
+                            }}
+                            accept='.yaml,.yml'
+                            help='可将yaml、yml文件拖入框内或'
+                            selectType='file'
+                            multiple={true}
+                        />
+                        <Form.Item label='使用指纹库'>
+                            <div className={styles["form-no-style-wrapper"]}>
+                                <Form.Item noStyle name='EnableFingerprintGroup' valuePropName='checked'>
+                                    <YakitSwitch />
+                                </Form.Item>
+                                <Form.Item noStyle name='FingerprintGroup'>
+                                    <YakitSelect
+                                        mode='multiple'
+                                        autoFocus
+                                        disabled={!enableFingerprintGroup}
+                                        options={groupsOptions}
+                                        onFocus={onFingerprintGroupFocus}
+                                        onChange={(value) => {
+                                            const val = value[value.length - 1]
+                                            if (val !== "" && val !== undefined) {
+                                                form.setFieldsValue({
+                                                    FingerprintGroup: value.filter((item) => item)
+                                                })
+                                            } else {
+                                                form.setFieldsValue({FingerprintGroup: [""]})
+                                            }
+                                        }}
+                                    />
+                                </Form.Item>
+                            </div>
+                        </Form.Item>
+                    </>
                 )}
             </YakitPanel>
         </>
