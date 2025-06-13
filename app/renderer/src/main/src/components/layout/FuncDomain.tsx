@@ -114,6 +114,7 @@ import SelectUpload from "@/pages/SelectUpload"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
 import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
 import useMcpStream, {mcpStreamHooks} from "@/hook/useMcp/useMcp"
+import { useCampare } from "@/hook/useCompare/useCompare"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -2932,6 +2933,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             setSampling(false)
         }
     })
+    const streamInfoCom = useCampare(streamInfo)
     useEffect(() => {
         try {
             if (
@@ -2952,7 +2954,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         } catch (error) {
             setPerformanceSamplingLog([])
         }
-    }, [streamInfo])
+    }, [streamInfoCom])
 
     const handlePerformanceSampling = () => {
         if (performanceSamplingInfo.isPerformanceSampling) return
