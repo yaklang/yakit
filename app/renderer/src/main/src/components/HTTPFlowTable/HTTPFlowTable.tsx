@@ -103,9 +103,10 @@ import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd"
 import {showYakitDrawer, YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
 import MITMContext from "@/pages/mitm/Context/MITMContext"
-import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
-import { convertKeyboardToUIKey } from "@/utils/globalShortcutKey/utils"
+import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 const {ipcRenderer} = window.require("electron")
 
 export interface codecHistoryPluginProps {
@@ -809,7 +810,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const refreshTabsContRef = useRef<boolean>(false)
 
     useShortcutKeyTrigger("sendAndJump*common", () => {
-        if(inViewport){
+        if (inViewport) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
@@ -820,7 +821,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     })
 
     useShortcutKeyTrigger("send*common", () => {
-        if(inViewport){
+        if (inViewport) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
@@ -4778,45 +4779,25 @@ interface HistorySearchProps {
 export const HistorySearch = React.memo<HistorySearchProps>((props) => {
     const {showPopoverSearch, handleSearch} = props
     const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
-    const [searchType, setSearchType] = useState<HistoryPluginSearchType>("all")
-    const [searchAll, setSearchAll] = useState<string>("")
-    const [searchRequest, setSearchRequest] = useState<string>("")
-    const [searchResponse, setSearchResponse] = useState<string>("")
+    const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>("all")
+    const [searchVal, setSearchVal, getSearchVal] = useGetSetState<string>("")
     const onSelectBeforeOption = useMemoizedFn((o: string) => {
-        if (o === "all") {
-            setSearchRequest("")
-            setSearchResponse("")
-        }
-        if (o === "request") {
-            setSearchAll("")
-            setSearchResponse("")
-        }
-        if (o === "response") {
-            setSearchAll("")
-            setSearchRequest("")
-        }
         setSearchType(o as HistoryPluginSearchType)
     })
+    useUpdateEffect(() => {
+        onSearch()
+    }, [searchType])
     const onInputUpadte = useMemoizedFn((e: any) => {
-        if (searchType === "all") setSearchAll(e.target.value)
-        if (searchType === "request") setSearchRequest(e.target.value)
-        if (searchType === "response") setSearchResponse(e.target.value)
-        return
+        setSearchVal(e.target.value)
     })
-    const searchValue = useMemo(() => {
-        if (searchType === "all") return searchAll
-        if (searchType === "request") return searchRequest
-        if (searchType === "response") return searchResponse
-        return ""
-    }, [searchType, searchAll, searchRequest, searchResponse])
     const onSearch = useDebounceFn(
-        () => {
-            handleSearch(searchValue, searchType)
-        },
+        useMemoizedFn(() => {
+            handleSearch(getSearchVal(), getSearchType())
+        }),
         {wait: 300}
     ).run
     const handleSearchBlur = useMemoizedFn(() => {
-        if (searchValue === "") {
+        if (searchVal === "") {
             onSearch()
         }
     })
@@ -4845,7 +4826,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
                 ]}
                 inputSearchModuleTypeProps={{
                     size: "small",
-                    value: searchValue,
+                    value: searchVal,
                     onChange: onInputUpadte,
                     onSearch: onSearch,
                     onBlur: handleSearchBlur,
@@ -4865,11 +4846,7 @@ export const HistorySearch = React.memo<HistorySearchProps>((props) => {
                     visible={isHoverSearch}
                     onVisibleChange={setIsHoverSearch}
                 >
-                    <YakitButton
-                        icon={<OutlineSearchIcon />}
-                        type='outline2'
-                        isHover={isHoverSearch || !!searchValue}
-                    />
+                    <YakitButton icon={<OutlineSearchIcon />} type='outline2' isHover={isHoverSearch || !!searchVal} />
                 </YakitPopover>
             ) : (
                 searchNode()
