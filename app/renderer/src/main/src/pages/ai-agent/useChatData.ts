@@ -12,6 +12,7 @@ export interface UseChatDataParams {
     onReview?: (data: AIChatReview) => void
     onReviewRelease?: (id: string) => void
     onRedirectForge?: (old: AIStartParams, request: AIStartParams) => void
+    onEnd?: () => void
 }
 
 /** 将树结构任务列表转换成一维数组 */
@@ -31,7 +32,7 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
 }
 
 function useChatData(params?: UseChatDataParams) {
-    const {onReview, onReviewRelease, onRedirectForge} = params || {}
+    const {onReview, onReviewRelease, onRedirectForge, onEnd} = params || {}
 
     const chatID = useRef<string>("")
     const fetchToken = useMemoizedFn(() => {
@@ -412,6 +413,8 @@ function useChatData(params?: UseChatDataParams) {
         ipcRenderer.on(`${token}-end`, (e, res: any) => {
             console.log("end", res)
             setExecute(false)
+            onEnd && onEnd()
+            onClose(token)
         })
         ipcRenderer.on(`${token}-error`, (e, err: any) => {
             console.log("error", err)

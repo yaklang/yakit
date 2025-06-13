@@ -797,11 +797,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
               label: "数据库",
               children: [{page: YakitRoute.DB_Report, ...YakitRouteToPageInfo[YakitRoute.DB_Report]}]
           },
-          {
-              page: undefined,
-              label: "AI",
-              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-          }
+        //   {
+        //       page: undefined,
+        //       label: "AI",
+        //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+        //   }
       ]
     : [
           {
@@ -944,11 +944,11 @@ export const PublicRouteMenu: PublicRouteMenuProps[] = isIRify()
                   {page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE]}
               ]
           },
-          {
-              page: undefined,
-              label: "AI",
-              children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
-          }
+        //   {
+        //       page: undefined,
+        //       label: "AI",
+        //       children: [{page: YakitRoute.AI_Agent, ...YakitRouteToPageInfo[YakitRoute.AI_Agent]}]
+        //   }
       ]
 /**
  * @name public版常用插件列表
@@ -1209,12 +1209,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
         hoverIcon: <PrivateSolidSpaceEngineIcon />,
         ...YakitRouteToPageInfo[YakitRoute.Space_Engine]
     },
-    [YakitRoute.AI_Agent]: {
-        page: YakitRoute.AI_Agent,
-        icon: <PrivateOutlineAIAgentIcon />,
-        hoverIcon: <PrivateSolidAIAgentIcon />,
-        ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
-    }
+    // [YakitRoute.AI_Agent]: {
+    //     page: YakitRoute.AI_Agent,
+    //     icon: <PrivateOutlineAIAgentIcon />,
+    //     hoverIcon: <PrivateSolidAIAgentIcon />,
+    //     ...YakitRouteToPageInfo[YakitRoute.AI_Agent]
+    // }
 }
 // 通过传入的 YakitRoute数组 快速生成页面数据数组
 const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRouteMenuProps[] = (route) => {

@@ -515,7 +515,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     )}
                 </>
             )}
-            {mode === "AI" && (
+            {/* {mode === "AI" && (
                 <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.AI_Agent)}>
                     <div className={styles["menu-icon-wrapper"]}>
                         <div className={styles["icon-wrapper"]}>
@@ -524,7 +524,7 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     </div>
                     <div className={styles["title-style"]}>AIAgent</div>
                 </div>
-            )}
+            )} */}
         </div>
     )
 })

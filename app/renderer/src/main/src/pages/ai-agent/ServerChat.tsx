@@ -153,6 +153,10 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
             setLoading(true)
             handleStopChat()
             setTimeout(() => {
+                if (!forgeName.current) {
+                    yakitNotify("warning", "未获取到forgeName,不进行打开操作新对话操作")
+                    return
+                }
                 yakitNotify("info", "准备打开新对话中...")
                 handleNewChat(() => {
                     if (!oldRequest.current) return
@@ -192,11 +196,17 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
     // #region chat-对话相关问题和回答数据
     const [question, setQuestion] = useState("")
 
+    // 提问结束后缓存数据
+    const handleChatingEnd = useMemoizedFn(() => {
+        handleSaveChatInfo()
+    })
+
     const [{execute, pressure, firstCost, totalCost, consumption, logs, plan, streams, activeStream}, events] =
         useChatData({
             onReview: handleShowReview,
             onReviewRelease: handleReleaseReview,
-            onRedirectForge: handleOpenHintShow
+            onRedirectForge: handleOpenHintShow,
+            onEnd: handleChatingEnd
         })
     // #endregion
 
@@ -213,6 +223,42 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
         },
         {wait: 500, trailing: false}
     ).run
+
+    const reExeLoading = useRef(false)
+    // 重新执行
+    const handleReExecute = useMemoizedFn(() => {
+        if (execute) return
+        if (reExeLoading.current) return
+
+        reExeLoading.current = true
+        if (activeID && activeChat) {
+            let reQS = ""
+            setActiveChat &&
+                setActiveChat((old) => {
+                    const newChat = cloneDeep(old)
+                    reQS = newChat?.question || ""
+                    newChat && delete newChat.answer
+                    return newChat
+                })
+
+            requestLoading.current = true
+            setQuestion("")
+            events.onStart(activeID, {
+                IsStart: true,
+                Params: {
+                    ...formatAIAgentSetting(setting),
+                    UserQuery: reQS
+                }
+            })
+
+            setTimeout(() => {
+                requestLoading.current = false
+            }, 300)
+        }
+        setTimeout(() => {
+            reExeLoading.current = false
+        }, 300)
+    })
 
     // 构建提问参数并执行
     const handleRequestParams = useMemoizedFn((qs: string) => {
@@ -476,6 +522,7 @@ export const ServerChat: React.FC<ServerChatProps> = memo((props) => {
                                         positon={!!scrollTo}
                                         onStop={handleStopChat}
                                         onPositon={() => setScrollTo(undefined)}
+                                        onReExe={handleReExecute}
                                         onNewChat={handleNewChat}
                                     />
                                 </div>

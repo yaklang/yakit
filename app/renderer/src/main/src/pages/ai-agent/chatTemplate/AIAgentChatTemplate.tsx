@@ -23,6 +23,7 @@ import {
     OutlineHandIcon,
     OutlinePlusIcon,
     OutlinePositionIcon,
+    OutlineRefreshIcon,
     OutlineRocketLaunchIcon,
     OutlineWarpIcon,
     OutlineXIcon
@@ -459,7 +460,7 @@ const ChatStreamCollapse: React.FC<ChatStreamCollapseProps> = memo((props) => {
 
 /** @name 对话框内容 */
 export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) => {
-    const {execute, review, positon, onStop, onPositon, onNewChat} = props
+    const {execute, review, positon, onStop, onPositon, onReExe, onNewChat} = props
 
     // const [question, setQuestion] = useState("")
     // const isQuestion = useMemo(() => {
@@ -555,13 +556,23 @@ export const AIAgentChatFooter: React.FC<AIAgentChatFooterProps> = memo((props) 
                     )}
 
                     {!execute && (
-                        <YakitButton
-                            className={styles["rounded-text-icon-btn"]}
-                            icon={<OutlinePlusIcon />}
-                            onClick={() => onNewChat()}
-                        >
-                            新开对话
-                        </YakitButton>
+                        <>
+                            <YakitButton
+                                className={styles["rounded-text-icon-btn"]}
+                                icon={<OutlineRefreshIcon />}
+                                type='secondary2'
+                                onClick={onReExe}
+                            >
+                                重新执行
+                            </YakitButton>
+                            <YakitButton
+                                className={styles["rounded-text-icon-btn"]}
+                                icon={<OutlinePlusIcon />}
+                                onClick={() => onNewChat()}
+                            >
+                                新开对话
+                            </YakitButton>
+                        </>
                     )}
                 </div>
             </div>

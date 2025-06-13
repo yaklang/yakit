@@ -152,6 +152,7 @@ export interface AIAgentChatFooterProps {
     onStop: () => void
     positon: boolean
     onPositon: () => void
+    onReExe: () => void
     onNewChat: () => void
 }
 
