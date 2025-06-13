@@ -243,9 +243,7 @@ body = "ThinkPHP"
         <div style={{height: 700, display: "flex"}}>
             <div
                 style={{
-                    width: 260,
-                    minWidth: 180,
-                    maxWidth: 320,
+                    width: 200,
                     borderRight: "1px solid #eee",
                     padding: "8px",
                     background: "#fafbfc"

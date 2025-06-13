@@ -1140,7 +1140,7 @@ const LocalFingerprintTable: React.FC<LocalFingerprintTableProps> = memo((props)
                             onClick={() => {
                                 let m = showYakitModal({
                                     title: "指纹规则",
-                                    width: 900,
+                                    width: '75%',
                                     closable: true,
                                     maskClosable: false,
                                     content: <FingerprintRuleDom />,
