@@ -2886,7 +2886,23 @@ const PublicAuditHole = () => (
         />
     </svg>
 )
-
 export const PublicAuditHoleIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PublicAuditHole} {...props} />
+}
+
+const PublicAIAgent = () => (
+    <svg width='44' height='44' viewBox='0 0 44 44' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect x='6' y='6.48541' width='14' height='14' rx='2' stroke='#31343F' strokeLinecap='round' />
+        <path
+            d='M24.7175 14.7092C23.7574 14.1758 23.7574 12.795 24.7175 12.2616L27.47 10.7325C27.7964 10.5511 28.0656 10.2819 28.247 9.95544L29.7761 7.20301C30.3095 6.24287 31.6903 6.24287 32.2237 7.20301L33.7529 9.95544C33.9343 10.2819 34.2034 10.5511 34.5299 10.7325L37.2823 12.2616C38.2425 12.795 38.2425 14.1758 37.2823 14.7092L34.5299 16.2384C34.2034 16.4197 33.9343 16.6889 33.7529 17.0154L32.2237 19.7678C31.6903 20.728 30.3095 20.728 29.7761 19.7678L28.247 17.0154C28.0656 16.6889 27.7964 16.4197 27.47 16.2384L24.7175 14.7092Z'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeLinecap='round'
+        />
+        <rect x='6' y='23.4854' width='14' height='14' rx='2' stroke='#31343F' strokeLinecap='round' />
+        <rect x='24' y='23.4854' width='14' height='14' rx='2' stroke='#31343F' strokeLinecap='round' />
+    </svg>
+)
+export const PublicAIAgentIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PublicAIAgent} {...props} />
 }

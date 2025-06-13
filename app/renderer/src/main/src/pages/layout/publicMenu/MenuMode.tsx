@@ -1,5 +1,6 @@
 import React from "react"
 import {
+    PublicAIAgentIcon,
     PublicAuditCodeIcon,
     PublicAuditHoleIcon,
     PublicBasicCrawlerIcon,
@@ -38,10 +39,10 @@ import {RouteToPageProps} from "./PublicMenu"
 import {Tooltip} from "antd"
 import {YakitRouteToPageInfo, ResidentPluginName} from "@/routes/newRoute"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {isIRify} from "@/utils/envfile"
 
 import classNames from "classnames"
 import styles from "./MenuMode.module.scss"
-import {isIRify} from "@/utils/envfile"
 
 interface MenuModeProps {
     mode: string
@@ -514,6 +515,16 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
                     )}
                 </>
             )}
+            {/* {mode === "AI" && (
+                <div className={styles["vertical-menu-wrapper"]} onClick={() => onMenu(YakitRoute.AI_Agent)}>
+                    <div className={styles["menu-icon-wrapper"]}>
+                        <div className={styles["icon-wrapper"]}>
+                            <PublicAIAgentIcon />
+                        </div>
+                    </div>
+                    <div className={styles["title-style"]}>AIAgent</div>
+                </div>
+            )} */}
         </div>
     )
 })

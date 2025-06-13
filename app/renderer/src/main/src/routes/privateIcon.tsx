@@ -3120,7 +3120,6 @@ const PrivateOutlineAuditHole = () => (
         </g>
     </svg>
 )
-
 export const PrivateOutlineAuditHoleIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PrivateOutlineAuditHole} {...props} />
 }
@@ -3173,7 +3172,48 @@ const PrivateSolidAuditHole = () => (
         </g>
     </svg>
 )
-
 export const PrivateSolidAuditHoleIcon = (props: Partial<CustomIconComponentProps>) => {
     return <Icon component={PrivateSolidAuditHole} {...props} />
 }
+
+// #region AI-Agent
+const PrivateOutlineAIAgent = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect x='3.75' y='3.75' width='6.5' height='6.5' rx='0.85' stroke='#31343F' strokeWidth='1.5' />
+        <rect x='3.75' y='13.75' width='6.5' height='6.5' rx='0.85' stroke='#31343F' strokeWidth='1.5' />
+        <rect x='13.75' y='13.75' width='6.5' height='6.5' rx='0.85' stroke='#31343F' strokeWidth='1.5' />
+        <path
+            d='M13.8818 7.74303C13.2989 7.41918 13.2989 6.58082 13.8818 6.25697L14.8218 5.73477C15.2054 5.52165 15.5216 5.20538 15.7348 4.82176L16.257 3.88181C16.5808 3.29888 17.4192 3.29888 17.743 3.88181L18.2652 4.82176C18.4783 5.20538 18.7946 5.52165 19.1782 5.73477L20.1182 6.25697C20.7011 6.58082 20.7011 7.41918 20.1182 7.74303L19.1782 8.26523C18.7946 8.47835 18.4783 8.79462 18.2652 9.17824L17.743 10.1182C17.4192 10.7011 16.5808 10.7011 16.257 10.1182L15.7348 9.17824C15.5216 8.79462 15.2054 8.47835 14.8218 8.26523L13.8818 7.74303Z'
+            stroke='#F28B44'
+            strokeWidth='1.5'
+        />
+    </svg>
+)
+export const PrivateOutlineAIAgentIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PrivateOutlineAIAgent} {...props} />
+}
+const PrivateSolidAIAgent = () => (
+    <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+        <rect x='3.75' y='3.75' width='6.5' height='6.5' rx='0.85' fill='#F28B44' stroke='#31343F' strokeWidth='1.5' />
+        <rect x='3.75' y='13.75' width='6.5' height='6.5' rx='0.85' fill='#F28B44' stroke='#31343F' strokeWidth='1.5' />
+        <rect
+            x='13.75'
+            y='13.75'
+            width='6.5'
+            height='6.5'
+            rx='0.85'
+            fill='#F28B44'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+        <path
+            d='M13.8818 7.74303C13.2989 7.41918 13.2989 6.58082 13.8818 6.25697L14.8218 5.73477C15.2054 5.52165 15.5216 5.20538 15.7348 4.82176L16.257 3.88181C16.5808 3.29888 17.4192 3.29888 17.743 3.88181L18.2652 4.82176C18.4783 5.20538 18.7946 5.52165 19.1782 5.73477L20.1182 6.25697C20.7011 6.58082 20.7011 7.41918 20.1182 7.74303L19.1782 8.26523C18.7946 8.47835 18.4783 8.79462 18.2652 9.17824L17.743 10.1182C17.4192 10.7011 16.5808 10.7011 16.257 10.1182L15.7348 9.17824C15.5216 8.79462 15.2054 8.47835 14.8218 8.26523L13.8818 7.74303Z'
+            stroke='#31343F'
+            strokeWidth='1.5'
+        />
+    </svg>
+)
+export const PrivateSolidAIAgentIcon = (props: Partial<CustomIconComponentProps>) => {
+    return <Icon component={PrivateSolidAIAgent} {...props} />
+}
+// #endregion

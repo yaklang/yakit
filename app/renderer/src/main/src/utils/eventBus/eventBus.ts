@@ -20,6 +20,7 @@ import {YakRunnerCodeScanEventProps} from "./events/yakRunnerCodeScan"
 import {yakJavaDecompilerEventProps} from "./events/yakJavaDecompiler";
 import {NotepadEventProps} from "./events/notepad"
 import {ShortcutKeyEventProps} from "./events/shortcutKey"
+import {AIAgentEventProps} from "./events/aiAgent"
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
@@ -66,7 +67,8 @@ type Events = [
     YakRunnerCodeScanEventProps,
     yakJavaDecompilerEventProps,
     NotepadEventProps,
-    ShortcutKeyEventProps
+    ShortcutKeyEventProps,
+    AIAgentEventProps
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

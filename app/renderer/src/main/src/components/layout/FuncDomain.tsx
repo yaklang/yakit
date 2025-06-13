@@ -988,7 +988,8 @@ const GetUIOpSettingMenu = () => {
                     key: "webshell-manager",
                     label: "网站管理"
                 },
-                {key: "mcp", label: "Yak Mcp"}
+                {key: "mcp", label: "Yak Mcp"},
+                {key: "ai-agent", label: "AI Agent"}
             ]
         },
         {type: "divider"},
@@ -1197,6 +1198,9 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 return
             case "engineLog":
                 ipcRenderer.invoke("open-engine-log")
+                return
+            case "ai-agent":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_Agent}))
                 return
             default:
                 return
