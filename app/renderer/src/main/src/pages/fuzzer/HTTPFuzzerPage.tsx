@@ -2124,7 +2124,12 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                 <YakitButton
                                                                     type='text'
                                                                     onClick={() => {
-                                                                        // setShowAllDataRes(true)
+                                                                        const currentItem:
+                                                                            | PageNodeItemProps
+                                                                            | undefined = queryPagesDataById(
+                                                                            YakitRoute.HTTPFuzzer,
+                                                                            props.id
+                                                                        )
                                                                         emiter.emit(
                                                                             "openPage",
                                                                             JSON.stringify({
@@ -2133,7 +2138,10 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
                                                                                     webFuzzer: true,
                                                                                     runtimeId:
                                                                                         runtimeIdRef.current.split(","),
-                                                                                    sourceType: "scan"
+                                                                                    sourceType: "scan",
+                                                                                    verbose: currentItem?.pageName
+                                                                                        ? `${currentItem?.pageName}-全部流量`
+                                                                                        : ""
                                                                                 }
                                                                             })
                                                                         )

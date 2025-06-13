@@ -134,7 +134,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             key: "web-tree",
             label: (
                 <>
-                    <OutlineLog2Icon /> 网站树
+                    <span className={styles['tab-item-text']}>网站树</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
@@ -143,8 +143,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             key: "process",
             label: (
                 <>
+                    <span className={styles['tab-item-text']}>进程</span>
                     <OutlineTerminalIcon />
-                    进程
                 </>
             ),
             contShow: false // 初始为false

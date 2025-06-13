@@ -704,7 +704,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage({route: YakitRoute.YakRunner_Project_Manager})
     })
 
-
     const addShortcutKey = useMemoizedFn((data: ShortcutKeyPageName) => {
         openMenuPage(
             {route: YakitRoute.ShortcutKey},
@@ -1185,7 +1184,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             }
             if (downstreamProxyStr) {
-                newAdvancedConfigValue.proxy = downstreamProxyStr.split(',')
+                newAdvancedConfigValue.proxy = downstreamProxyStr.split(",")
             }
 
             // 获取全局热加载缓存信息
@@ -1234,6 +1233,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         openMenuPage(
             {route: YakitRoute.DB_HTTPHistoryAnalysis},
             {
+                verbose: data.verbose,
                 pageParams: {
                     hTTPHistoryAnalysisPageInfo: {
                         ...data
@@ -1931,7 +1931,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         }
     }, [])
     const onInitFuzzer = useMemoizedFn(async () => {
-        if (!isEnpriTraceAgent()&&!isCommunityIRify()&&!isEnpriTraceIRify()) {
+        if (!isEnpriTraceAgent() && !isCommunityIRify() && !isEnpriTraceIRify()) {
             // 如果路由中已经存在webFuzzer页面，则不需要再从缓存中初始化页面
             if (pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) === -1) {
                 // 触发获取web-fuzzer的缓存

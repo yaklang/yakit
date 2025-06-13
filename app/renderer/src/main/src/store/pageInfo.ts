@@ -97,6 +97,7 @@ export interface WebsocketFuzzerPageInfoProps {
 }
 
 export interface HTTPHistoryAnalysisPageInfo {
+    verbose?: string
     webFuzzer?: boolean
     runtimeId?: string[]
     sourceType?: string
