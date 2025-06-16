@@ -190,6 +190,8 @@ export declare namespace AIChatMessage {
         /** 前端渲染专属属性, proto 上不存在 */
         state?: "success" | "error" | "wait" | "in-progress"
         subtasks?: PlanTask[]
+        /**评阅时树节点是否被删 */
+        isRemove: boolean
     }
     /** 计划审阅选项 */
     export interface ReviewSelector {
