@@ -1707,7 +1707,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                                 // 判断当前输入是否激活 页面级或全局快捷键
                                 const isActive = isPageOrGlobalShortcut(e.browserEvent)
                                 if (isActive) {
-                                    e.browserEvent.stopImmediatePropagation()
+                                    // 由于目前 存在老版本键盘快捷键(line：1112) 暂时不做后续接入 等待第二版焦点与monaco绑定
+                                    // e.browserEvent.stopImmediatePropagation()
                                     return
                                 }
                             }
