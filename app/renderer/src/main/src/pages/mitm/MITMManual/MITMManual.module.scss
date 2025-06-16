@@ -33,11 +33,11 @@
     margin-right: 8px;
 }
 
-.mitm-v2-manual-table-status{
+.mitm-v2-manual-table-status {
     display: flex;
     align-items: center;
     gap: 2px;
-    svg{
+    svg {
         height: 14px;
         width: 14px;
     }
@@ -65,3 +65,7 @@
     }
 }
 
+.mitm-v2-manual-table-wrapper {
+    height: 100%;
+    width: 100%;
+}

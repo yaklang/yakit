@@ -19,7 +19,9 @@ import {
     useControllableValue,
     useCounter,
     useCreation,
+    useGetState,
     useInterval,
+    useInViewport,
     useMap,
     useMemoizedFn,
     useUpdateEffect
@@ -37,7 +39,6 @@ import {OtherMenuListProps, YakitEditorKeyCode} from "@/components/yakitUI/Yakit
 import {availableColors, onSendToTab} from "@/components/HTTPFlowTable/HTTPFlowTable"
 import classNames from "classnames"
 import styles from "./MITMManual.module.scss"
-import {convertKeyboard} from "@/components/yakitUI/YakitEditor/editorUtils"
 import {SystemInfo} from "@/constants/hardware"
 import {
     grpcMITMSetColor,
@@ -69,6 +70,9 @@ import {setClipboardText} from "@/utils/clipboard"
 import {OutlineArrowleftIcon, OutlineArrowrightIcon, OutlineLoadingIcon} from "@/assets/icon/outline"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
+import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
+import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -84,7 +88,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         } = props
         const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
         const [isRefresh, setIsRefresh] = useState<boolean>(false)
-        const [currentSelectItem, setCurrentSelectItem] = useState<SingleManualHijackInfoMessage>()
+        const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] =
+            useGetState<SingleManualHijackInfoMessage>()
         const [editorShowIndex, setEditorShowIndexShowIndex] = useState<number>(0) // request 编辑器中显示的index
         const [scrollToIndex, setScrollToIndex] = useState<number>()
 
@@ -335,10 +340,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>发送并跳转</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboard(SystemInfo.system || "Darwin", [
-                                            YakitEditorKeyCode.Control,
-                                            YakitEditorKeyCode.KEY_R
-                                        ])}
+                                        {convertKeyboardToUIKey(
+                                            getGlobalShortcutKeyEvents()["sendAndJump*common"].keys
+                                        )}
                                     </div>
                                 </div>
                             )
@@ -349,11 +353,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                                 <div className={styles["context-menu-keybind-wrapper"]}>
                                     <div className={styles["content-style"]}>仅发送</div>
                                     <div className={classNames(styles["keybind-style"], "keys-style")}>
-                                        {convertKeyboard(SystemInfo.system || "Darwin", [
-                                            YakitEditorKeyCode.Control,
-                                            YakitEditorKeyCode.Shift,
-                                            YakitEditorKeyCode.KEY_R
-                                        ])}
+                                        {convertKeyboardToUIKey(getGlobalShortcutKeyEvents()["send*common"].keys)}
                                     </div>
                                 </div>
                             )
@@ -382,6 +382,20 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                 menu = menu.filter((item) => ["copy-url", "send-webFuzzer"].includes(item.key))
             }
             return menu
+        })
+
+        const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
+        const [inViewport] = useInViewport(mitmV2ManualTableRef)
+        useShortcutKeyTrigger("sendAndJump*common", () => {
+            if (inViewport) {
+                onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
+            }
+        })
+
+        useShortcutKeyTrigger("send*common", () => {
+            if (inViewport) {
+                onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
+            }
         })
 
         const onRowContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {
@@ -661,30 +675,32 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
             <YakitResizeBox
                 firstMinSize={70}
                 firstNode={
-                    <TableVirtualResize<SingleManualHijackInfoMessage>
-                        isRefresh={isRefresh}
-                        isShowTitle={false}
-                        data={data}
-                        renderKey='TaskID'
-                        pagination={{
-                            page: 1,
-                            limit: 50,
-                            total: data.length,
-                            onChange: () => {}
-                        }}
-                        columns={columns}
-                        onSetCurrentRow={onSetCurrentRow}
-                        currentSelectItem={currentSelectItem}
-                        onRowContextMenu={onRowContextMenu}
-                        scrollToIndex={scrollToIndex}
-                        rowSelection={{
-                            isAll: allSelected,
-                            type: "checkbox",
-                            selectedRowKeys,
-                            onSelectAll,
-                            onChangeCheckboxSingle
-                        }}
-                    />
+                    <div className={styles["mitm-v2-manual-table-wrapper"]} ref={mitmV2ManualTableRef}>
+                        <TableVirtualResize<SingleManualHijackInfoMessage>
+                            isRefresh={isRefresh}
+                            isShowTitle={false}
+                            data={data}
+                            renderKey='TaskID'
+                            pagination={{
+                                page: 1,
+                                limit: 50,
+                                total: data.length,
+                                onChange: () => {}
+                            }}
+                            columns={columns}
+                            onSetCurrentRow={onSetCurrentRow}
+                            currentSelectItem={currentSelectItem}
+                            onRowContextMenu={onRowContextMenu}
+                            scrollToIndex={scrollToIndex}
+                            rowSelection={{
+                                isAll: allSelected,
+                                type: "checkbox",
+                                selectedRowKeys,
+                                onSelectAll,
+                                onChangeCheckboxSingle
+                            }}
+                        />
+                    </div>
                 }
                 isVer={true}
                 freeze={!onlyShowFirstNode}
@@ -719,7 +735,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
                     )
                 }}
                 {...ResizeBoxProps}
-            ></YakitResizeBox>
+            />
         )
     })
 )
