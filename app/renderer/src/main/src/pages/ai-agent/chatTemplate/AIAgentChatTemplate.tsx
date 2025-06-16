@@ -735,9 +735,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const [editShow, setEditShow] = useState(false)
     const editInfo = useRef<AIChatMessage.ReviewSelector>()
     const [reviewQS, setReviewQS] = useState("")
-    const isReviewQS = useMemo(() => {
-        return !!(requireQS && requireQS.trim())
-    }, [reviewQS])
 
     const handleShowEdit = useMemoizedFn((info: AIChatMessage.ReviewSelector) => {
         if (editShow) return
@@ -925,7 +922,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                                                     <YakitButton
                                                         className={styles["btn-style"]}
                                                         icon={<OutlineArrowrightIcon />}
-                                                        disabled={!isReviewQS}
                                                         onClick={() => handleCallbackEdit(true)}
                                                     />
                                                 </div>
