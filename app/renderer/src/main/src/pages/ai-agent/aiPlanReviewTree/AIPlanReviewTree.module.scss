@@ -19,6 +19,28 @@
         background-color: #eef0f3;
     }
 }
+@mixin right-line {
+    content: "";
+    position: absolute;
+    width: 2px;
+    background-color: #c0c6d1;
+    height: 18px * math.sqrt(2);
+    transform: rotate(-45deg);
+    top: -16px;
+    left: -9px;
+    @content;
+}
+@mixin left-line {
+    content: "";
+    position: absolute;
+    width: 2px;
+    background-color: #c0c6d1;
+    height: #{math.sqrt(math.pow(18, 2) + math.pow(18, 2))}px;
+    transform: rotate(#{math.atan2(18, 20)});
+    top: -22px;
+    left: 5px;
+    @content;
+}
 .icon-box {
     position: absolute;
     z-index: 1;
@@ -120,27 +142,40 @@
                 padding: 2px 4px;
                 cursor: pointer;
                 min-height: 28px;
-                &:hover {
+                margin-bottom: 8px;
+                &:hover:not(.title-remove) {
                     @include title-hover;
                 }
-                .plus-icon {
+                .icon-body {
                     display: none;
                 }
                 .title-name {
                 }
             }
-            .title-hover {
+            .title-hover:not(.title-remove) {
                 @include title-hover;
+                .icon-body {
+                    display: flex;
+                }
             }
-            .title-editable {
+            .title-editable:not(.title-remove) {
                 &:hover {
-                    .plus-icon {
+                    .icon-body {
                         display: flex;
                     }
                 }
             }
+            .title-editable.title-hover:not(.title-remove) {
+                .icon-body {
+                    display: flex;
+                }
+            }
+            .title-remove {
+                text-decoration: line-through;
+                color: #c0c6d1;
+                cursor: not-allowed;
+            }
             .body {
-                margin-top: 8px;
                 padding: 12px;
                 display: flex;
                 flex-direction: column;
@@ -159,6 +194,19 @@
             width: 16px;
             height: 100%;
             border-left: 2px solid #c0c6d1;
+            &:first-child:has(.slash-gap-line) {
+                &::after {
+                    @include left-line() {
+                        bottom: -12px;
+                        left: 15px;
+                        top: initial;
+                        // bottom: -12px;
+                        // left: calc(100% - 1px);
+                        // top: initial;
+                        // transform: none;
+                    }
+                }
+            }
         }
         .arrow-box {
             top: 0;
@@ -176,23 +224,6 @@
                 left: -6px;
             }
         }
-        .arrow-box-before {
-            &::before {
-                content: "";
-                position: absolute;
-                top: -14px;
-                right: 6px;
-                width: 2px;
-                background-color: #c0c6d1;
-                height: 16px * math.sqrt(2);
-                transform: rotate(45deg);
-            }
-        }
-        .arrow-box-down-before {
-            &::before {
-                top: 5px;
-            }
-        }
         .prefix-box {
             @extend %display-flex;
             position: relative;
@@ -201,26 +232,12 @@
 
             .slash-right-line {
                 &::before {
-                    content: "";
-                    position: absolute;
-                    top: calc(-100% + 4px);
-                    left: 0px;
-                    width: 2px;
-                    background-color: #c0c6d1;
-                    height: 18px * math.sqrt(2);
-                    transform: rotate(-45deg);
+                    @include right-line();
                 }
             }
             .slash-left-line {
-                &::before {
-                    content: "";
-                    position: absolute;
-                    top: -100%;
-                    right: 0px;
-                    width: 2px;
-                    background-color: #c0c6d1;
-                    height: #{math.sqrt(math.pow(20, 2) + math.pow(18, 2))}px;
-                    transform: rotate(#{math.atan2(18, 20)});
+                &::after {
+                    @include left-line();
                 }
             }
             .slash-last-line {
@@ -237,6 +254,56 @@
                     transform: rotate(var(--rotate));
                 }
             }
+            .no-bulge-line {
+                height: calc(100% - 18px);
+            }
+            /** gap */
+
+            .gap-no-bulge-line {
+                height: calc(100% - 18px);
+            }
+            .gap-rotate-line {
+                &::after {
+                    @include left-line() {
+                        left: -10px;
+                        top: calc(100% - 3px);
+                    }
+                }
+            }
+            .gap-no-rotate-line {
+                &::after {
+                    @include left-line() {
+                        height: 18px;
+                        left: -2px;
+                        bottom: -18px;
+                        transform: none;
+                        top: initial;
+                    }
+                }
+            }
+            .gap-left-line {
+                &::after {
+                    @include left-line() {
+                        left: -10px;
+                        top: calc(100% - 3px);
+                    }
+                }
+            }
+            .slash-gap-line-before {
+                height: calc(100% - 36px);
+                &::before {
+                    @include right-line();
+                }
+            }
+            .slash-gap-line-after {
+                height: calc(100% - 36px);
+                &::after {
+                    @include left-line() {
+                        left: -10px;
+                        top: calc(100% - 3px);
+                    }
+                }
+            }
             .border-bottom {
                 position: absolute;
                 bottom: -2px;
@@ -244,9 +311,6 @@
                 width: 18px;
                 height: 100%;
                 border-bottom: 2px solid #c0c6d1;
-            }
-            .no-bulge-line {
-                height: calc(100% - 18px);
             }
         }
     }

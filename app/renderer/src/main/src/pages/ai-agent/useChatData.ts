@@ -22,7 +22,8 @@ export const handleFlatAITree = (sum: AIChatMessage.PlanTask[], task: AIChatMess
         index: task.index || "",
         name: task.name || "",
         goal: task.goal || "",
-        state: "wait"
+        state: "wait",
+        isRemove: false
     })
     if (task.subtasks && task.subtasks.length > 0) {
         for (let subtask of task.subtasks) {

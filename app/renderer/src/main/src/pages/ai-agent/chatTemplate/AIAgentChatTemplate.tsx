@@ -647,15 +647,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         return findIndex !== -1
     }, [delayLoading, review])
 
-    const planReview = useMemo(() => {
-        if (review.type === "plan_review_require") {
-            const data = review.data as AIChatMessage.PlanReviewRequire
-            const list: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(list, data.plans.root_task)
-            return <AIPlanReviewTree list={list} />
-        }
-        return null
-    }, [review])
     const taskReview = useMemo(() => {
         if (review.type === "task_review_require") {
             const data = review.data as AIChatMessage.TaskReviewRequire
@@ -874,6 +865,17 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     }, [review, requireQS])
     // #endregion
 
+    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
+    useEffect(() => {
+        if (review.type === "plan_review_require") {
+            const data = review.data as AIChatMessage.PlanReviewRequire
+            const list: AIChatMessage.PlanTask[] = []
+            handleFlatAITree(list, data.plans.root_task)
+            initReviewTreesRef.current = [...list]
+            setReviewTrees(list)
+        }
+    }, [review])
     return (
         <div className={classNames(styles["ai-agent-chat-review"], wrapperClassName)}>
             <div className={classNames(styles["review-content"], {[styles["review-content-hidden"]]: !expand})}>
@@ -891,7 +893,11 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                     ) : (
                         <>
                             <div className={styles["review-data"]}>
-                                {planReview}
+                                <AIPlanReviewTree
+                                    defaultList={initReviewTreesRef.current}
+                                    list={reviewTrees}
+                                    setList={setReviewTrees}
+                                />
                                 {taskReview}
                                 {toolReview}
                                 {aiRequireReview}
