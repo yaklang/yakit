@@ -13,12 +13,14 @@ export interface AITreeNodeProps {
     onClick?: (info: AIChatMessage.PlanTask) => void
 }
 export interface AITreeNodeInfo {
-    empty: {lineNum?: number; isStartEnd?: string}
-    node: {lineNum?: number; isSibling?: boolean}
+    nodeLevel: number
+    empty: {isSibling: boolean; levelDiff: number; isStartEnd?: string}
 }
 
 export interface AITreeEmptyNodeProps {
+    isNode?: boolean
     type?: AIChatMessage.PlanTask["state"] | ""
-    lineNum?: number
+    level: number
+    levelDiff: number
     isStartEnd?: string
 }

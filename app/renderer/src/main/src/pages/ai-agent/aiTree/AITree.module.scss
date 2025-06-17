@@ -117,16 +117,112 @@
 }
 
 /* ---------- AITreeEmptyNode ----------*/
-.node-empty {
+.node-horizontal-line {
     width: 16px;
     height: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    .line {
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 50%;
+        background-color: #c0c6d1;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #c0c6d1;
+    }
+}
+.node-vertical-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
         width: 2px;
         height: 100%;
         background-color: #c0c6d1;
+    }
+}
+.node-T-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 7px;
+        width: 2px;
+        height: 100%;
+        background-color: #c0c6d1;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 8px;
+        width: 50%;
+        height: 2px;
+        background-color: #c0c6d1;
+    }
+}
+
+.node-start-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 2px;
+        height: 142%;
+        background: #c0c6d1;
+        transform: rotate(-30deg);
+    }
+}
+
+.node-end-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: -4px;
+        width: 2px;
+        height: 142%;
+        background: #c0c6d1;
+        transform: rotate(30deg);
+    }
+}
+
+.node-end-half-oblique-line {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 1px;
+        top: -2px;
+        width: 2px;
+        height: 71%;
+        background: #c0c6d1;
+        transform: rotate(30deg);
     }
 }
 
@@ -136,48 +232,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 9;
     svg {
         width: 16px;
         height: 16px;
-    }
-}
-
-.node-empty-diagonal {
-    width: 16px;
-    height: 16px;
-    display: flex;
-    .start-diagonal {
-        width: 8px;
-        height: 16px;
-        position: relative;
-        &::before {
-            content: "";
-            position: absolute;
-            left: -3px;
-            top: -2px;
-            width: 260%;
-            height: 2px;
-            background: #c0c6d1;
-            transform: rotate(60deg);
-            transform-origin: 0 0;
-        }
-    }
-
-    .end-diagonal {
-        width: 8px;
-        height: 16px;
-        position: relative;
-        &::before {
-            content: "";
-            position: absolute;
-            left: -4px;
-            bottom: -3px;
-            width: 260%;
-            height: 2px;
-            background: #c0c6d1;
-            transform: rotate(-60deg);
-            transform-origin: 0 0;
-        }
     }
 }
 
