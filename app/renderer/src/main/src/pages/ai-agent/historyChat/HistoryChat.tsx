@@ -1,12 +1,12 @@
 import React, {memo, useMemo, useRef, useState} from "react"
-import {HistoryChatProps} from "./aiAgentType"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
+import {HistoryChatProps} from "./type"
+import useStore from "../useContext/useStore"
+import useDispatcher from "../useContext/useDispatcher"
 import {useDebounce, useMemoizedFn} from "ahooks"
 import {yakitNotify} from "@/utils/notification"
-import {AIChatInfo} from "./type/aiChat"
-import {EditChatNameModal} from "./UtilModals"
-import {YakitAIAgentPageID} from "./defaultConstant"
+import {AIChatInfo} from "../type/aiChat"
+import {EditChatNameModal} from "../UtilModals"
+import {YakitAIAgentPageID} from "../defaultConstant"
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import {OutlinePencilaltIcon, OutlinePlussmIcon, OutlineSearchIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {Tooltip} from "antd"
@@ -15,7 +15,7 @@ import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/Yaki
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 
 import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+import styles from "./HistoryChat.module.scss"
 
 export const HistoryChat: React.FC<HistoryChatProps> = memo((props) => {
     const {onNewChat} = props
