@@ -854,7 +854,6 @@ service Yak {
   rpc DeleteAIForge(AIForgeFilter) returns (DbOperateMessage);
   rpc QueryAIForge(QueryAIForgeRequest) returns (QueryAIForgeResponse);
 
-  // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
 
@@ -976,7 +975,6 @@ message AITriageInputEvent {
   string FreeInput = 7;
 }
 
-
 message McpConfig {
   string Type = 1;
   string Key = 2;
@@ -1074,7 +1072,7 @@ message AITask {
 }
 
 message AIForgeFilter {
-  string ForgeName = 1;
+  repeated string ForgeName = 1;
   string ForgeType = 2; // enum: yak or config
   string Keyword = 3;
   // tag
@@ -1110,6 +1108,7 @@ message QueryAIForgeResponse {
   repeated AIForge Data = 2;
   int64 Total = 3;
 }
+
 
 message StartMcpServerRequest {
   // listen host
