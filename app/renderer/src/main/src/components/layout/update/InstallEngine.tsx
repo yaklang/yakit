@@ -383,7 +383,9 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                             <div className={styles["hint-right-macarm"]}>
                                                 <div>
                                                     <div className={styles["mac-arm-hint"]}>
-                                                        当前系统为(darwin-arm64)，如果未安装 Rosetta 2, 将无法运行 Yak
+                                                        当前系统为(darwin-arm64)
+                                                        <br />
+                                                        如用户需要使用 intel(x86/amd64) 版本的 yak 引擎，请先安装 Rosetta 2, 否则将无法运行 Yak
                                                         核心引擎
                                                         <br />
                                                         运行以下命令可手动安装 Rosetta，如已安装可忽略
