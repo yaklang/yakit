@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useMemo, useState} from "react"
-import {AIChatSettingProps, FormItemSliderProps} from "./aiAgentType"
-import useStore from "./useContext/useStore"
-import useDispatcher from "./useContext/useDispatcher"
+import {AIChatSettingProps, FormItemSliderProps} from "./type"
+import useStore from "../useContext/useStore"
+import useDispatcher from "../useContext/useDispatcher"
 import {Form, Slider, Tooltip} from "antd"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -10,11 +10,11 @@ import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRad
 import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
 import cloneDeep from "lodash/cloneDeep"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {AIAgentSettingDefault} from "./defaultConstant"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {AIAgentSettingDefault} from "../defaultConstant"
 
 // import classNames from "classnames"
-import styles from "./AIAgent.module.scss"
+import styles from "./AIChatSetting.module.scss"
 
 export const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
     const [form] = Form.useForm()

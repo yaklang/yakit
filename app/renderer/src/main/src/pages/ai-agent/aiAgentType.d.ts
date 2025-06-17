@@ -1,7 +1,6 @@
 import {CSSProperties, Dispatch, ReactNode, SetStateAction} from "react"
 import {MCPClientInfo, MCPClientResource} from "./type/mcpClient"
 import {AIChatInfo, AIChatMessage, AIChatReview, AIChatStreams, AIInputEvent, AIStartParams} from "./type/aiChat"
-import {SliderSingleProps} from "antd"
 import {AITreeNodeProps} from "./aiTree/type"
 import {TextAreaProps} from "antd/lib/input"
 
@@ -61,18 +60,8 @@ export interface RenderMCPClientInfo extends MCPClientInfo {
 // #region UI左侧组件定义
 export interface AIAgentSideListProps {}
 // 侧边栏 tab 类型
-export type AIAgentTab = "history" | "setting" | "tool" //  | "mcp"
+export type AIAgentTab = "history" | "setting" | "forgeName"| "tool"  //  | "mcp"
 
-// 全局配置
-export interface AIChatSettingProps {}
-// 表单组件-滑动输入条
-export type FormItemSliderProps = SliderSingleProps & {init?: boolean}
-
-// 历史对话
-export interface HistoryChatProps {
-    /** 新开对话框 */
-    onNewChat: () => void
-}
 // 编辑对话名字
 export interface EditChatNameModalProps {
     getContainer?: HTMLElement
