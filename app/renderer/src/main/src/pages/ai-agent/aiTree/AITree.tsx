@@ -49,34 +49,23 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
     })
 
     const setting: AITreeNodeInfo | null = useMemo(() => {
-        if (order === 0) return {empty: {}, node: {}}
-        else {
-            try {
-                const indexList = index.trim().split("-").filter(Boolean)
-                const preIndexList = preIndex.trim().split("-").filter(Boolean)
+        try {
+            const indexList = index.trim().split("-").filter(Boolean).length
+            const preIndexList = preIndex.trim().split("-").filter(Boolean).length
 
-                if (indexList.length - preIndexList.length === 1) {
-                    return {
-                        empty: {lineNum: indexList.length - 1, isStartEnd: "start"},
-                        node: {lineNum: indexList.length - 1}
-                    }
+            const levelDiff = indexList - preIndexList
+            const absLevelDiff = Math.abs(levelDiff)
+
+            return {
+                nodeLevel: indexList,
+                empty: {
+                    isSibling: absLevelDiff === 0,
+                    levelDiff: absLevelDiff,
+                    isStartEnd: levelDiff === 0 ? undefined : levelDiff > 0 ? "start" : "end"
                 }
-                if (preIndexList.length - indexList.length === 1) {
-                    return {
-                        empty: {lineNum: indexList.length, isStartEnd: "end"},
-                        node: {lineNum: indexList.length - 1}
-                    }
-                }
-                if (indexList.length === preIndexList.length) {
-                    return {
-                        empty: {lineNum: indexList.length},
-                        node: {lineNum: indexList.length - 1, isSibling: true}
-                    }
-                }
-                return {empty: {}, node: {}}
-            } catch (error) {
-                return null
-            }
+            } as AITreeNodeInfo
+        } catch (error) {
+            return null
         }
     }, [order, index, preIndex])
 
@@ -85,15 +74,20 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
     return (
         <div className={styles["ai-tree-node"]}>
             {order !== 0 && (
-                <div className={styles["node-wrapper"]} style={setting.node.isSibling ? {height: 12} : undefined}>
-                    <AITreeEmptyNode lineNum={setting.empty.lineNum} isStartEnd={setting.empty.isStartEnd} type='' />
+                <div className={styles["node-wrapper"]} style={setting.empty.isSibling ? {height: 12} : undefined}>
+                    <AITreeEmptyNode
+                        level={setting.nodeLevel}
+                        levelDiff={setting.empty.levelDiff}
+                        isStartEnd={setting.empty.isStartEnd}
+                        type=''
+                    />
                 </div>
             )}
             <div className={styles["node-wrapper"]}>
-                <AITreeEmptyNode lineNum={setting.node.lineNum} type={data.state} />
+                <AITreeEmptyNode isNode={true} level={setting.nodeLevel} levelDiff={0} type={data.state} />
                 <div className={styles["content"]} onClick={handleClick}>
                     <div
-                        style={{width: 226 - ((setting.empty.lineNum || 0) + 1) * 16 - 10}}
+                        style={{width: 226 - (setting.nodeLevel || 0) * 16 - 10}}
                         className={classNames(styles["content-title"], "yakit-content-single-ellipsis")}
                     >
                         {data.name}
@@ -134,37 +128,56 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo((props) => {
 
 /** @name 生成树的支线条和icon */
 const AITreeEmptyNode: React.FC<AITreeEmptyNodeProps> = memo((props) => {
-    const {type, lineNum, isStartEnd} = props
+    const {isNode, type, level, levelDiff, isStartEnd} = props
 
     const lines = useMemo(() => {
-        if (!lineNum) return null
-        const arr = new Array(lineNum).fill(0)
+        let count = level
 
-        const lineArr = arr.map((_, index) => {
-            return (
-                <div key={index} className={styles["node-empty"]}>
-                    <div className={styles["line"]}></div>
-                </div>
-            )
-        })
-
-        if (isStartEnd === "start") {
-            lineArr.push(
-                <div key={lineNum} className={styles["node-empty-diagonal"]}>
-                    <div className={styles["start-diagonal"]}></div>
-                </div>
-            )
-        }
-        if (isStartEnd === "end") {
-            lineArr.push(
-                <div key={lineNum + 1} className={styles["node-empty-diagonal"]}>
-                    <div className={styles["end-diagonal"]}></div>
-                </div>
-            )
+        if (isNode) {
+            const arr = new Array(--count).fill(0)
+            const lineArr = arr.map((_, index) => {
+                return <div key={index} className={styles["node-vertical-line"]} />
+            })
+            return lineArr
         }
 
-        return lineArr
-    }, [lineNum, isStartEnd])
+        if (levelDiff <= 1) {
+            const arr = new Array(count).fill(0)
+            const lineArr = arr.map((_, index) => {
+                return <div key={index} className={styles["node-vertical-line"]} />
+            })
+            if (isStartEnd === "start") {
+                lineArr.pop()
+                ++count
+                lineArr.push(<div key={count} className={styles["node-start-oblique-line"]} />)
+            }
+            if (isStartEnd === "end") {
+                ++count
+                lineArr.push(<div key={count} className={styles["node-end-oblique-line"]} />)
+            }
+            return lineArr
+        } else {
+            let lineArr: React.ReactNode[] = []
+            lineArr = lineArr.concat(
+                new Array(count - 1).fill(0).map((_, index) => {
+                    return <div key={index + 1} className={styles["node-vertical-line"]} />
+                })
+            )
+            lineArr.push(<div key={1} className={styles["node-T-line"]} />)
+            lineArr = lineArr.concat(
+                new Array(levelDiff - 1).fill(0).map((_, index) => {
+                    return <div key={index + 2} className={styles["node-horizontal-line"]} />
+                })
+            )
+
+            if (isStartEnd === "end") {
+                ++count
+                lineArr.push(<div key={count} className={styles["node-end-half-oblique-line"]} />)
+            }
+
+            return lineArr
+        }
+    }, [isNode, level, levelDiff, isStartEnd])
 
     const icon = useMemo(() => {
         if (type === "success") {
