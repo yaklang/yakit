@@ -929,10 +929,15 @@ message AIOutputEvent {
   bytes Content = 9;
   int64 Timestamp = 10;
   string TaskIndex = 11;
+  bool DisableMarkdown = 13;
 }
 
 message AIInputEvent {
   bool IsStart = 1;
+
+  bool IsConfigHotpatch = 8;
+  string HotpatchType = 9;
+  // 如果是配置热补丁，那么 Params 就是热补丁的参数
   AIStartParams Params = 2;
 
   bool IsInteractiveMessage = 3;
@@ -1026,6 +1031,8 @@ message AIStartParams {
 
   // 是否允许生成报告，默认不允许
   bool AllowGenerateReport = 24;
+
+  int64 TaskMaxContinueCount = 25;
 }
 
 message AITaskFilter {
@@ -4157,6 +4164,10 @@ message PortScanRequest {
   bool BasicCrawlerEnableJSParser = 29;
   repeated string UserFingerprintFiles = 30;
   bool SkipCveBaseLine = 31;
+
+  // 指纹规则组
+  bool EnableFingerprintGroup = 32;
+  repeated string FingerprintGroup = 33;
 }
 
 message DeletePortsRequest {
@@ -4391,6 +4402,7 @@ message QueryYakScriptRequest {
   repeated string ExcludeTypes = 19;
   int64 IsMITMParamPlugins = 20; //0->默认全部 1->是mitm带参数插件 2->mitm不带参数
   string FieldKeywords = 21;
+  string VectorSearchContent = 22;
 }
 
 message PluginGroup {
@@ -5385,6 +5397,7 @@ message HTTPFlow {
   int64 DurationMs = 48;
   string HiddenIndex = 49;
   string FromPlugin = 50;
+  string Host = 52;
 }
 
 message FuzzableParam {
