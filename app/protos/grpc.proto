@@ -5416,6 +5416,7 @@ message HTTPFlow {
   int64 DurationMs = 48;
   string HiddenIndex = 49;
   string FromPlugin = 50;
+  string Host = 52;
 }
 
 message FuzzableParam {
