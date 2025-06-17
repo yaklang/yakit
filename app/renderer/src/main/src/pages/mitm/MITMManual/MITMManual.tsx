@@ -5,7 +5,9 @@ import {
     ManualHijackInfoRefProps,
     MITMManualProps,
     MITMV2ManualEditorProps,
-    PackageTypeProps
+    PackageTypeProps,
+    RenderAndHexTypeOptions,
+    RenderAndHexTypeOptionVal
 } from "./MITMManualType"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {
@@ -73,6 +75,8 @@ import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
 import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {formatPacketRender, prettifyPacketCode, prettifyPacketRender} from "@/utils/prettifyPacket"
+import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag"
 
 const MITMManual: React.FC<MITMManualProps> = React.memo(
     forwardRef((props, ref) => {
@@ -763,7 +767,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
-        const [requestTypeOptionVal, setRequestTypeOptionVal] = useState<RenderTypeOptionVal>()
         // response
         const [currentResponsePacketInfo, setCurrentResponsePacketInfo] = useState<CurrentPacketInfoProps>({
             requestPacket: "",
@@ -778,7 +781,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                 TotalDurationMs: 0
             }
         })
-        const [responseTypeOptionVal, setResponseTypeOptionVal] = useState<RenderTypeOptionVal>()
 
         const [type, setType] = useState<PackageTypeProps>("response")
 
@@ -793,12 +795,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             []
         )
         useEffect(() => {
-            // Request
-            getRequestEditorBeautify()
-            // Response
-            getResponseEditorBeautify()
-        }, [])
-        useEffect(() => {
             if (info.IsWebsocket) {
                 // WS Request
                 onSetRequest(info)
@@ -812,22 +808,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
         useEffect(() => {
             if (isOnlyLookResponse) setType("response")
         }, [isOnlyLookResponse])
-        /**TODO - Request 美化缓存 */
-        const getRequestEditorBeautify = useMemoizedFn(() => {
-            // getRemoteValue(RemoteGV.MITMManualHijackRequestEditorBeautify).then((res) => {
-            //     if (!!res) {
-            //         setRequestTypeOptionVal(res)
-            //     }
-            // })
-        })
-        /**TODO - Response 美化缓存 */
-        const getResponseEditorBeautify = useMemoizedFn(() => {
-            // getRemoteValue(RemoteGV.MITMManualHijackResponseEditorBeautify).then((res) => {
-            //     if (!!res) {
-            //         setResponseTypeOptionVal(res)
-            //     }
-            // })
-        })
         const onSetRequest = useMemoizedFn((info: SingleManualHijackInfoMessage) => {
             const currentRequestPacket = !!info?.IsWebsocket
                 ? Uint8ArrayToString(info.Payload)
@@ -1050,17 +1030,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
             }
         }, [type, disabledRequest, disabledResponse])
 
-        const typeOptionVal = useCreation(() => {
-            switch (type) {
-                case PackageType.Request:
-                case PackageType.WS:
-                    return requestTypeOptionVal
-                case PackageType.Response:
-                    return responseTypeOptionVal
-                default:
-                    return "render"
-            }
-        }, [type, requestTypeOptionVal, responseTypeOptionVal])
         const isResponse = useCreation(() => {
             return type === "response"
         }, [type])
@@ -1107,8 +1076,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                             currentPacketInfo={currentPacketInfo}
                             disabled={disabled}
                             handleAutoForward={handleAutoForward}
-                            typeOptionVal={typeOptionVal}
-                            onTypeOptionVal={onTypeOptionVal}
                             onHijackingResponse={onHijackingResponse}
                             isResponse={isResponse}
                             isOnlyLookResponse={true}
@@ -1131,8 +1098,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                                     currentPacketInfo={currentRequestPacketInfo}
                                     disabled={disabledRequest}
                                     handleAutoForward={handleAutoForward}
-                                    typeOptionVal={requestTypeOptionVal}
-                                    onTypeOptionVal={onRequestTypeOptionVal}
                                     onHijackingResponse={onHijackingResponse}
                                 />
                             </div>
@@ -1151,8 +1116,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
                                         currentPacketInfo={currentResponsePacketInfo}
                                         disabled={disabledResponse}
                                         handleAutoForward={handleAutoForward}
-                                        typeOptionVal={responseTypeOptionVal}
-                                        onTypeOptionVal={onResponseTypeOptionVal}
                                         onHijackingResponse={onHijackingResponse}
                                     />
                                 </div>
@@ -1180,8 +1143,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         handleAutoForward,
         onHijackingResponse,
         isResponse,
-        typeOptionVal,
-        onTypeOptionVal,
         isOnlyLookResponse
     } = props
     const {currentPacket, requestPacket} = currentPacketInfo
@@ -1189,6 +1150,15 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         valuePropName: "modifiedPacket",
         trigger: "setModifiedPacket"
     })
+    const modifiedPacketRef = useRef<string>(modifiedPacket)
+    useEffect(() => {
+        modifiedPacketRef.current = modifiedPacket
+    }, [modifiedPacket])
+
+    const isResponseRef = useRef<boolean>(isResponse)
+    useEffect(() => {
+        isResponseRef.current = isResponse
+    }, [isResponse])
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
@@ -1265,17 +1235,81 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const btnDisable = useCreation(() => {
         return info.Status === ManualHijackListStatus.WaitHijack
     }, [info])
+
+    // #region 美化、渲染、hex
+    const [renderAndHexTypeOptions, setRenderAndHexTypeOptions] = useState<RenderAndHexTypeOptions[]>([])
+    const [renderAndHexTag, setRenderAndHexTag] = useState<RenderAndHexTypeOptionVal>()
+    const [renderHtml, setRenderHtml] = useState<React.ReactNode>()
+    useEffect(() => {
+        setRenderAndHexTypeOptions([
+            {
+                value: "hex",
+                label: "HEX"
+            }
+        ])
+        setRenderAndHexTag(undefined)
+        setRenderHtml(undefined)
+        if (modifiedPacketRef.current) {
+            if (isResponseRef.current) {
+                formatPacketRender(StringToUint8Array(modifiedPacketRef.current), (packet) => {
+                    if (packet) {
+                        setRenderAndHexTypeOptions([
+                            {
+                                value: "hex",
+                                label: "HEX"
+                            },
+                            {
+                                value: "render",
+                                label: "渲染"
+                            }
+                        ])
+                    }
+                })
+            }
+        }
+    }, [currentPacket])
+    const onSetBeautify = useMemoizedFn(() => {
+        setRenderAndHexTag(undefined)
+        setRenderHtml(undefined)
+        if (modifiedPacket === "") {
+            return
+        }
+        const encoder = new TextEncoder()
+        const bytes = encoder.encode(modifiedPacket)
+        const mb = bytes.length / 1024 / 1024
+        if (mb > 0.5) {
+            return
+        } else {
+            prettifyPacketCode(modifiedPacket).then((res) => {
+                if (!!res) {
+                    setModifiedPacket(Uint8ArrayToString(res as Uint8Array))
+                    setRefreshTrigger((prev) => !prev)
+                }
+            })
+        }
+    })
+    const onSetRenderHTML = useMemoizedFn(async () => {
+        let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacketRef.current))
+        setRenderHtml(<iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />)
+    })
+    useEffect(() => {
+        if (renderAndHexTag === "render") {
+            onSetRenderHTML()
+        } else {
+            setRenderHtml(undefined)
+        }
+    }, [renderAndHexTag])
+    // #endregion
+
     return (
         <NewHTTPPacketEditor
             noMinimap={!isResponse}
             noHeader={false}
-            isShowBeautifyRender={true}
             noPacketModifier={true}
             readOnly={disabled}
             isResponse={isResponse}
             titleStyle={{overflow: "hidden"}}
-            // typeOptionVal={typeOptionVal}
-            // onTypeOptionVal={(v) => onTypeOptionVal && onTypeOptionVal(v)}
+            isShowBeautifyRender={false}
             title={
                 isOnlyLookResponse ? (
                     <div className={styles["mitm-v2-manual-editor-title"]}>
@@ -1361,37 +1395,65 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 )
             }
             extra={
-                !disabled && (
-                    <div className={styles["mitm-v2-manual-editor-btn"]}>
-                        {!isResponse && !info.IsWebsocket && (
-                            <YakitButton
-                                disabled={btnDisable}
-                                type='outline1'
-                                size='small'
-                                onClick={onHijackCurrentResponse}
-                            >
-                                劫持响应
-                            </YakitButton>
+                <div className={styles["mitm-v2-manual-editor-btn"]}>
+                    <>
+                        {!disabled && (
+                            <>
+                                {!isResponse && !info.IsWebsocket && (
+                                    <YakitButton
+                                        disabled={btnDisable}
+                                        type='outline1'
+                                        size='small'
+                                        onClick={onHijackCurrentResponse}
+                                    >
+                                        劫持响应
+                                    </YakitButton>
+                                )}
+                                <YakitButton
+                                    disabled={btnDisable}
+                                    type='outline1'
+                                    size='small'
+                                    onClick={() => onDiscardData && onDiscardData(info)}
+                                >
+                                    丢弃
+                                </YakitButton>
+                                <YakitButton
+                                    disabled={btnDisable}
+                                    type='primary'
+                                    size='small'
+                                    onClick={() => onSubmitData && onSubmitData(info)}
+                                >
+                                    放行
+                                </YakitButton>
+                            </>
                         )}
-                        <YakitButton
-                            disabled={btnDisable}
-                            type='outline1'
-                            size='small'
-                            onClick={() => onDiscardData && onDiscardData(info)}
-                        >
-                            丢弃
-                        </YakitButton>
-                        <YakitButton
-                            disabled={btnDisable}
-                            type='primary'
-                            size='small'
-                            onClick={() => onSubmitData && onSubmitData(info)}
-                        >
-                            放行
-                        </YakitButton>
-                    </div>
-                )
+                        <>
+                            <YakitButton type='primary' size='small' onClick={onSetBeautify}>
+                                美化
+                            </YakitButton>
+                            <div>
+                                {renderAndHexTypeOptions.map((item) => (
+                                    <YakitCheckableTag
+                                        key={item.value}
+                                        checked={renderAndHexTag === item.value}
+                                        onChange={(checked) => {
+                                            if (checked) {
+                                                setRenderAndHexTag(item.value as RenderAndHexTypeOptionVal)
+                                            } else {
+                                                setRenderAndHexTag(undefined)
+                                            }
+                                        }}
+                                    >
+                                        {item.label}
+                                    </YakitCheckableTag>
+                                ))}
+                            </div>
+                        </>
+                    </>
+                </div>
             }
+            noShowHex={renderAndHexTag != "hex"}
+            renderHtml={renderHtml}
             defaultHttps={info.IsHttps}
             url={info.URL}
             originValue={modifiedPacket}

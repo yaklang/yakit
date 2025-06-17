@@ -75,10 +75,6 @@ export interface MITMV2ManualEditorProps {
     /**劫持响应 */
     onHijackingResponse: (s: SingleManualHijackInfoMessage) => void
 
-    /**美化&渲染 */
-    typeOptionVal?: RenderTypeOptionVal
-    onTypeOptionVal?: (s?: RenderTypeOptionVal) => void
-
     type?: PackageTypeProps
     setType?: (v: PackageTypeProps) => void
     /**是否为响应包 */
@@ -96,3 +92,9 @@ export interface CurrentPacketInfoProps {
     isHttp: boolean
     traceInfo: TraceInfo
 }
+
+export interface RenderAndHexTypeOptions {
+    value: RenderAndHexTypeOptionVal
+    label: string
+}
+export type RenderAndHexTypeOptionVal = "hex" | "render"
