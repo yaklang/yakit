@@ -26,10 +26,46 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title id="app-html-title">Loading</title>
+    <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
-<div id="root"></div>
+<div id="root">
+  <script>
+    // 判断是否子窗口
+    const isChild = window.location.search.includes('window=child')
+    if (isChild) {
+      document.write(`
+        <div id="initial-loading" style="display:flex;align-items:center;justify-content:center;height:100vh;">
+          <span style="margin-right:10px;font-size:24px;color:#85899e;">正在加载中</span>
+          <div class="spinner"></div>
+        </div>
+        <style>
+          .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #85899e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            box-sizing: border-box;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+          }
+        </style>
+      `);
+    }
+  </script>
+</div>
 <!--
   This HTML file is a template.
   If you open it directly in the browser, you will see an empty page.

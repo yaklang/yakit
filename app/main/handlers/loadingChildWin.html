@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Loading...</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .loading {
+      font-size: 24px;
+      color: #85899e;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading" id="loadingText">正在准备加载资源，请稍候...</div>
+  <script>
+    const { ipcRenderer } = require('electron')
+    ipcRenderer.send('ready-to-load-child')
+
+    ipcRenderer.on('start-child-loading', () => {
+      document.getElementById('loadingText').innerText = '正在准备加载资源，请稍候...'
+    })
+  </script>
+</body>
+
+</html>

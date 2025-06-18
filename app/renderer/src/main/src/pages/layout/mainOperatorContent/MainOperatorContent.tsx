@@ -161,8 +161,8 @@ import {defaultHTTPHistoryAnalysisPageInfo} from "@/defaultConstants/hTTPHistory
 import {BatchAddNewGroupFormItem} from "./BatchAddNewGroup"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
-import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
-import { convertKeyEventToKeyCombination, sortKeysCombination } from "@/utils/globalShortcutKey/utils"
+import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
+import {convertKeyEventToKeyCombination, sortKeysCombination} from "@/utils/globalShortcutKey/utils"
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const TabRenameModalContent = React.lazy(() => import("./TabRenameModalContent"))
@@ -518,6 +518,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             childWindowHash = hash
         })
         return () => {
+            childWindowHash = ""
+            ipcRenderer.send("close-childWin")
             ipcRenderer.removeAllListeners("child-window-hash")
         }
     }, [])
@@ -3009,7 +3011,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
         const event = getGlobalShortcutKeyEvents()
         const closeEvent = sortKeysCombination(event.removePage.keys).join("")
         const openEvent = sortKeysCombination(event.addSubPage.keys).join("")
-        
+
         // 快捷键关闭
         if (triggerKeys === closeEvent) {
             e.preventDefault()

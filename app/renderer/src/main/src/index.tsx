@@ -31,6 +31,14 @@ const App = () => {
     return windowType === "child" ? <ChildNewApp /> : <NewApp />
 }
 
+// 只在子窗口移除 loading
+if (window.location.search.includes("window=child")) {
+    const initialLoading = document.getElementById("initial-loading")
+    if (initialLoading) {
+        initialLoading.remove()
+    }
+}
+
 // const divRoot = document.getElementById("root")
 // if (divRoot) {
 //     createRoot(divRoot).render(

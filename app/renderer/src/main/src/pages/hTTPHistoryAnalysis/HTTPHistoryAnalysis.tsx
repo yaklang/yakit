@@ -45,7 +45,7 @@ import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {minWinSendToChildWin, openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
-import {sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+import {parseStatusCodes, sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -1156,12 +1156,22 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                         let ruleVerboseNameIsPush = true
                         let extractedContentIsPush = true
 
-                        if (tableQuery.Methods) {
+                        if (tableQuery.Methods.length) {
                             methodsIsPush = tableQuery.Methods.includes(record.Method)
                         }
 
                         if (tableQuery.StatusCode) {
-                            statusCodeIsPush = record.StatusCode.includes(tableQuery.StatusCode)
+                            const statusCodes = parseStatusCodes(tableQuery.StatusCode)
+                            const codeIsPushArr: boolean[] = []
+                            for (let index = 0; index < statusCodes.length; index++) {
+                                const element = statusCodes[index]
+                                if (record.StatusCode == element) {
+                                    codeIsPushArr.push(true)
+                                } else {
+                                    codeIsPushArr.push(false)
+                                }
+                            }
+                            statusCodeIsPush = codeIsPushArr.includes(true)
                         }
 
                         if (tableQuery.SearchURL) {

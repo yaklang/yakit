@@ -1,78 +1,95 @@
-
-const { ipcMain, BrowserWindow } = require("electron")
+const {ipcMain, BrowserWindow} = require("electron")
 const isDev = require("electron-is-dev")
 const path = require("path")
 const crypto = require("crypto")
 
-// 子窗口集合（注：现在其实只能打开一个子窗口）
-const childWindows = new Map() // key: hash, value: BrowserWindow
-
 module.exports = {
-  register: (win, getClient) => {
-    // 只注册一次全局 handler
-    ipcMain.handle("minWin-send-to-childWin", async (e, params) => {
-      const targetWin = childWindows.get(params.hash)
-      if (targetWin && !targetWin.isDestroyed()) {
-        targetWin.webContents.send('get-parent-window-data', params)
-      }
-    })
+    register: (win, getClient) => {
+        let childWindow = null
 
-    ipcMain.on('open-new-child-window', (event, data) => {
-      const windowHash = crypto.randomUUID()
-      let childWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        minWidth: 900,
-        minHeight: 500,
-        titleBarStyle: 'default', // 确保 macOS 有标题栏按钮
-        webPreferences: {
-          preload: path.join(__dirname, '../preload.js'),
-          nodeIntegration: true,
-          contextIsolation: false,
-          sandbox: true
-        },
-        show: false
-      })
+        // 主窗口发送数据到子窗口
+        ipcMain.on("minWin-send-to-childWin", async (e, params) => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.webContents.send("get-parent-window-data", params)
+            }
+        })
 
-      // 绑定 hash 到 Map
-      childWindows.set(windowHash, childWindow)
+        // 监听主窗口关闭子窗口
+        ipcMain.on("close-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.close()
+            }
+        })
 
-      // 通知父窗口：带上 hash
-      win.send('child-window-hash', { hash: windowHash })
+        // 监听主窗口触发子窗口获取焦点
+        ipcMain.on("onTop-childWin", () => {
+            if (childWindow && !childWindow.isDestroyed()) {
+                childWindow.focus()
+                childWindow.show()
+            }
+        })
 
-      // 移除子窗口的菜单
-      childWindow.setMenu(null)
+        ipcMain.on("open-new-child-window", (event, data) => {
+            const windowHash = crypto.randomUUID()
+            childWindow = new BrowserWindow({
+                width: 1200,
+                height: 800,
+                minWidth: 900,
+                minHeight: 500,
+                titleBarStyle: "default", // 确保 macOS 有标题栏按钮
+                webPreferences: {
+                    preload: path.join(__dirname, "../preload.js"),
+                    nodeIntegration: true,
+                    contextIsolation: false,
+                    sandbox: true
+                },
+                show: false
+            })
 
-      // 让子窗口加载和主窗口相同的 HTML 文件
-      if (isDev) {
-        childWindow.loadURL("http://127.0.0.1:3000/?window=child")
-      } else {
-        childWindow.loadFile(path.resolve(__dirname, "../../renderer/pages/main/index.html"), { search: "window=child" })
-      }
+            // 通知父窗口：带上 hash
+            win.send("child-window-hash", {hash: windowHash})
 
-      // 在子窗口加载完成后，向其发送数据
-      childWindow.webContents.once('did-finish-load', () => {
-        childWindow.show();
-        // childWindow.webContents.openDevTools();
-        childWindow.webContents.send('get-parent-window-data', data)
-      })
+            // 移除子窗口的菜单
+            childWindow.setMenu(null)
 
-      childWindow.on('close', (e) => {
-        e.preventDefault()
-        childWindow.destroy()
-      })
-      childWindow.on('closed', () => {
-        childWindows.delete(windowHash)
-        childWindow = null
-        // 由于目前需求只能打开一个新的子窗口，所以子窗口关闭就删除hash
-        win.send('child-window-hash', { hash: "" })
-      })
+            // 先加载loading页面
+            childWindow.loadFile(path.join(__dirname, "./loadingChildWin.html"))
 
-      childWindow.on("focus", () => {
-        // 通知父窗口：带上 hash
-        win.send('child-window-hash', { hash: windowHash })
-      })
-    })
-  }
+            ipcMain.once("ready-to-load-child", () => {
+                // 通知 loading.html 显示“正在加载主页面...”
+                childWindow.webContents.send("start-child-loading")
+                if (isDev) {
+                    childWindow.loadURL("http://127.0.0.1:3000/?window=child")
+                } else {
+                    childWindow.loadFile(path.resolve(__dirname, "../../renderer/pages/main/index.html"), {
+                        search: "window=child"
+                    })
+                }
+            })
+
+            // 监听子窗口加载完毕主动获取数据
+            ipcMain.once("request-parent-data", (event) => {
+                event.sender.send("get-parent-window-data", data)
+            })
+
+            childWindow.webContents.once("did-finish-load", () => {
+                childWindow.show()
+                // childWindow.webContents.openDevTools()
+            })
+
+            childWindow.webContents.once("did-fail-load", (event, errorCode, errorDescription, validatedURL) => {
+                win.send("child-window-hash", {hash: ""})
+            })
+
+            childWindow.on("close", (e) => {
+                e.preventDefault()
+                childWindow.destroy()
+                win.send("child-window-hash", {hash: ""})
+            })
+            childWindow.on("closed", () => {
+                childWindow = null
+                win.send("child-window-hash", {hash: ""})
+            })
+        })
+    }
 }
-

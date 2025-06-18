@@ -26,7 +26,8 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
     }
 }
 export const minWinSendToChildWin = (params) => {
-    ipcRenderer.invoke("minWin-send-to-childWin", {
+    ipcRenderer.send("onTop-childWin")
+    ipcRenderer.send("minWin-send-to-childWin", {
         type: params.type,
         hash: childWindowHash,
         data: params.data
