@@ -5133,6 +5133,10 @@ message HTTPFlowRuleData{
   int64 HTTPFlowId = 2;
   string RuleVerboseName = 3;
   string Rule = 4;
+  int64 StatusCode =5;
+  string Url = 6;
+  string Method = 7;
+  string IPAddress= 8;
 }
 
 message ExportHTTPFlowsRequest {
