@@ -958,7 +958,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             <div className={styles["review-footer"]}>
                 <div className={styles["btn-group"]}>
                     <YakitButton
-                        type='outline2'
+                        type='text2'
                         icon={expand ? <OutlineChevrondoubledownIcon /> : <OutlineChevrondoubleupIcon />}
                         onClick={handleExpand}
                     >
