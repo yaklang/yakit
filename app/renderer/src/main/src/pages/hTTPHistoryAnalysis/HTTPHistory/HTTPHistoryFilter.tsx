@@ -1237,21 +1237,14 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     ])
     // #endregion
 
-    // #region 后台刷新、表格列 设置
+    // #region 表格列 设置
     const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
-    const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
-    useEffect(() => {
-        getRemoteValue(RemoteHistoryGV.BackgroundRefresh).then((e) => {
-            setBackgroundRefresh(!!e)
-        })
-    }, [inViewport])
-
     const isAdvancedSet = useCreation(() => {
         const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !noColumnsKey.includes(key))
         const orderFlag =
             columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
-        return excludeColumnsKey.length > noColumnsKey.length || orderFlag || backgroundRefresh
-    }, [backgroundRefresh, excludeColumnsKey, noColumnsKey, columnsOrder])
+        return excludeColumnsKey.length > noColumnsKey.length || orderFlag
+    }, [excludeColumnsKey, noColumnsKey, columnsOrder])
     // #endregion
 
     // #region 表格右键操作
@@ -2364,6 +2357,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             {/* 设置 */}
             {advancedSetVisible && (
                 <AdvancedSet
+                    showBackgroundRefresh={false}
                     columnsAllStr={JSON.stringify(
                         configColumnRef.current.filter((item) => !noColumnsKey.includes(item.dataKey))
                     )}
@@ -2372,9 +2366,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     }}
                     onSave={(setting) => {
                         setAdvancedSetVisible(false)
-                        const {backgroundRefresh: newBackgroundRefresh, configColumnsAll} = setting
-                        // 后台刷新
-                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+                        const {configColumnsAll} = setting
                         // 自定义列
                         const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
                         const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]

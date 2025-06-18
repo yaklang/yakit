@@ -5005,13 +5005,14 @@ interface AdvancedSetSaveItem {
     configColumnsAll: ColumnAllInfoItem[]
 }
 interface AdvancedSetProps {
+    showBackgroundRefresh?: boolean
     columnsAllStr: string
     onCancel: () => void
     onSave: (setting: AdvancedSetSaveItem) => void
     defalutColumnsOrder: string[]
 }
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-    const {columnsAllStr, onCancel, onSave, defalutColumnsOrder} = props
+    const {showBackgroundRefresh = true, columnsAllStr, onCancel, onSave, defalutColumnsOrder} = props
     /** ---------- 后台刷新 Start ---------- */
     const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
     const oldBackgroundRefresh = useRef<boolean>(false)
@@ -5129,23 +5130,25 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             maskClosable={false}
         >
             <div className={style["history-advanced-set-cont"]}>
-                <div className={style["history-advanced-set-item"]}>
-                    <div className={style["history-advanced-set-item-title"]}>刷新配置</div>
-                    <div className={style["history-advanced-set-item-cont"]}>
-                        <div className={style["backgroundRefresh"]}>
-                            <YakitCheckbox
-                                checked={backgroundRefresh}
-                                onChange={(e) => {
-                                    setBackgroundRefresh(e.target.checked)
-                                }}
-                            />
-                            <span className={style["title-style"]}>后台刷新</span>
-                            <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
-                                <OutlineInformationcircleIcon className={style["hint-style"]} />
-                            </Tooltip>
+                {showBackgroundRefresh && (
+                    <div className={style["history-advanced-set-item"]}>
+                        <div className={style["history-advanced-set-item-title"]}>刷新配置</div>
+                        <div className={style["history-advanced-set-item-cont"]}>
+                            <div className={style["backgroundRefresh"]}>
+                                <YakitCheckbox
+                                    checked={backgroundRefresh}
+                                    onChange={(e) => {
+                                        setBackgroundRefresh(e.target.checked)
+                                    }}
+                                />
+                                <span className={style["title-style"]}>后台刷新</span>
+                                <Tooltip title='勾选后不在当前页面也会刷新流量数据'>
+                                    <OutlineInformationcircleIcon className={style["hint-style"]} />
+                                </Tooltip>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
                 <div className={style["history-advanced-set-item"]}>
                     <div className={style["history-advanced-set-item-title"]}>
                         列表展示字段和顺序
