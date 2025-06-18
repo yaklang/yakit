@@ -589,6 +589,21 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         valuePropName: "expand",
         trigger: "setExpand"
     })
+
+    const [isReviewMode, setIsReviewMode] = useState<boolean>(false)
+    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
+    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
+
+    useEffect(() => {
+        if (review.type === "plan_review_require") {
+            const data = review.data as AIChatMessage.PlanReviewRequire
+            const list: AIChatMessage.PlanTask[] = []
+            handleFlatAITree(list, data.plans.root_task)
+            initReviewTreesRef.current = [...list]
+            setReviewTrees(list)
+        }
+    }, [review])
+
     const handleExpand = useMemoizedFn(() => {
         setExpand((old) => !old)
     })
@@ -646,6 +661,21 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         )
         return findIndex !== -1
     }, [delayLoading, review])
+
+    const planReview = useMemo(() => {
+        if (reviewTrees.length > 0) {
+            const list = isReviewMode ? reviewTrees : initReviewTreesRef.current
+            return (
+                <AIPlanReviewTree
+                    defaultList={initReviewTreesRef.current}
+                    list={list}
+                    setList={setReviewTrees}
+                    editable={isReviewMode}
+                />
+            )
+        }
+        return null
+    }, [reviewTrees, isReviewMode])
 
     const taskReview = useMemo(() => {
         if (review.type === "task_review_require") {
@@ -754,12 +784,9 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
             (item) => item.value === "continue"
         )
         if (!find) return
+
         onSend(find)
     })
-
-    // 用来控制被disabled为true的button, 想触发tooltip的方法
-    const [tooltipShow, setTooltipShow] = useState(false)
-    const handleChangeTooltip = useMemoizedFn((show: boolean) => setTooltipShow(show))
 
     const noAIOptions = useMemo(() => {
         if (!["plan_review_require", "tool_use_review_require", "task_review_require"].includes(review?.type || "")) {
@@ -772,16 +799,9 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
         return (
             <div className={styles["review-selectors-wrapper"]}>
-                <Tooltip overlayStyle={{paddingBottom: 4}} title={"开发中..."} placement='top' visible={tooltipShow}>
-                    <YakitButton
-                        type='outline1'
-                        disabled={true}
-                        onMouseOver={() => handleChangeTooltip(true)}
-                        onMouseLeave={() => handleChangeTooltip(false)}
-                    >
-                        进入修改批阅模式
-                    </YakitButton>
-                </Tooltip>
+                <YakitButton disabled={true} type='outline2' onClick={() => setIsReviewMode(true)}>
+                    进入修改批阅模式
+                </YakitButton>
                 {showList.map((el) => {
                     return (
                         <YakitButton key={el.value} type='outline2' onClick={() => handleShowEdit(el)}>
@@ -791,7 +811,7 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                 })}
             </div>
         )
-    }, [tooltipShow, review])
+    }, [review])
     // #endregion
 
     // #region 审阅选项-AI交互用户相关逻辑
@@ -800,6 +820,14 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
     const isRequireQS = useMemo(() => {
         return !!(requireQS && requireQS.trim())
     }, [requireQS])
+
+    const handleSubmit = useMemoizedFn(() => {
+        if (isReviewMode) {
+            /**TODO 接口对接:如果数据结构变化不大,则不需要修改，下方代码根据后端提供的结构直接传出去*/
+            // const jsonInput: Record<string, string> = {}
+            // onSendAIRequire(JSON.stringify(jsonInput))
+        }
+    })
 
     const handleAIRequireQSSend = useMemoizedFn(() => {
         if (!isRequireQS) {
@@ -864,18 +892,6 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
         )
     }, [review, requireQS])
     // #endregion
-
-    const [reviewTrees, setReviewTrees] = useState<AIChatMessage.PlanTask[]>([])
-    const initReviewTreesRef = useRef<AIChatMessage.PlanTask[]>([])
-    useEffect(() => {
-        if (review.type === "plan_review_require") {
-            const data = review.data as AIChatMessage.PlanReviewRequire
-            const list: AIChatMessage.PlanTask[] = []
-            handleFlatAITree(list, data.plans.root_task)
-            initReviewTreesRef.current = [...list]
-            setReviewTrees(list)
-        }
-    }, [review])
     return (
         <div className={classNames(styles["ai-agent-chat-review"], wrapperClassName)}>
             <div className={classNames(styles["review-content"], {[styles["review-content-hidden"]]: !expand})}>
@@ -893,50 +909,47 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
                     ) : (
                         <>
                             <div className={styles["review-data"]}>
-                                <AIPlanReviewTree
-                                    defaultList={initReviewTreesRef.current}
-                                    list={reviewTrees}
-                                    setList={setReviewTrees}
-                                />
+                                {planReview}
                                 {taskReview}
                                 {toolReview}
                                 {aiRequireReview}
                             </div>
+                            {!isReviewMode && (
+                                <div className={styles["reivew-options"]}>
+                                    {aiOptions}
+                                    {!!noAIOptions &&
+                                        (editShow ? (
+                                            <div className={styles["review-input"]}>
+                                                <Input.TextArea
+                                                    bordered={false}
+                                                    placeholder={editInfo.current?.prompt || "请输入..."}
+                                                    value={reviewQS}
+                                                    autoSize={{minRows: 4, maxRows: 4}}
+                                                    onChange={(e) => setReviewQS(e.target.value)}
+                                                />
 
-                            <div className={styles["reivew-options"]}>
-                                {aiOptions}
-                                {!!noAIOptions &&
-                                    (editShow ? (
-                                        <div className={styles["review-input"]}>
-                                            <Input.TextArea
-                                                bordered={false}
-                                                placeholder={editInfo.current?.prompt || "请输入..."}
-                                                value={reviewQS}
-                                                autoSize={{minRows: 4, maxRows: 4}}
-                                                onChange={(e) => setReviewQS(e.target.value)}
-                                            />
-
-                                            <div className={styles["question-footer"]}>
-                                                <div></div>
-                                                <div className={styles["extra-btns"]}>
-                                                    <YakitButton
-                                                        className={styles["btn-style"]}
-                                                        type='outline2'
-                                                        icon={<OutlineXIcon />}
-                                                        onClick={() => handleCallbackEdit(false)}
-                                                    />
-                                                    <YakitButton
-                                                        className={styles["btn-style"]}
-                                                        icon={<OutlineArrowrightIcon />}
-                                                        onClick={() => handleCallbackEdit(true)}
-                                                    />
+                                                <div className={styles["question-footer"]}>
+                                                    <div></div>
+                                                    <div className={styles["extra-btns"]}>
+                                                        <YakitButton
+                                                            className={styles["btn-style"]}
+                                                            type='outline2'
+                                                            icon={<OutlineXIcon />}
+                                                            onClick={() => handleCallbackEdit(false)}
+                                                        />
+                                                        <YakitButton
+                                                            className={styles["btn-style"]}
+                                                            icon={<OutlineArrowrightIcon />}
+                                                            onClick={() => handleCallbackEdit(true)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        noAIOptions
-                                    ))}
-                            </div>
+                                        ) : (
+                                            noAIOptions
+                                        ))}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -955,10 +968,25 @@ export const AIAgentChatReview: React.FC<AIAgentChatReviewProps> = memo((props) 
 
                 <div className={styles["btn-group"]}>
                     {isContinue && (
-                        <YakitButton onClick={handleContinue}>
-                            继续执行
-                            <OutlineWarpIcon />
-                        </YakitButton>
+                        <>
+                            {isReviewMode ? (
+                                <>
+                                    <YakitButton type='outline2' onClick={() => setIsReviewMode(false)}>
+                                        取消
+                                    </YakitButton>
+                                    <YakitButton type='primary' onClick={handleSubmit}>
+                                        提交
+                                    </YakitButton>
+                                </>
+                            ) : (
+                                <>
+                                    <YakitButton onClick={handleContinue}>
+                                        继续执行
+                                        <OutlineWarpIcon />
+                                    </YakitButton>
+                                </>
+                            )}
+                        </>
                     )}
                     {review.type === "require_user_interactive" && !aiOptionsLength && (
                         <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
