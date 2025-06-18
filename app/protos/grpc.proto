@@ -841,6 +841,7 @@ service Yak {
 
   rpc StartAITask(stream AIInputEvent) returns(stream AIOutputEvent);
   rpc QueryAITask(AITaskQueryRequest) returns (AITaskQueryResponse);
+  rpc DeleteAITask(AITaskDeleteRequest) returns (DbOperateMessage);
 
   rpc StartAITriage(stream AITriageInputEvent) returns(stream AIOutputEvent);
 
@@ -985,7 +986,10 @@ message AIStartParams {
 }
 
 message AITaskFilter {
-
+  repeated string Name = 1;
+  repeated string Keyword = 2;
+  repeated string ForgeName = 3;
+  repeated string CoordinatorId = 5;
 }
 
 message AITaskQueryRequest {
@@ -999,6 +1003,10 @@ message AITaskQueryResponse {
   int64 Total = 3;
 }
 
+message AITaskDeleteRequest {
+  AITaskFilter Filter = 1;
+}
+
 message AITask {
   string CoordinatorId = 1;
   string Name = 2;
@@ -1008,7 +1016,8 @@ message AITask {
 }
 
 message AIForgeFilter {
-  repeated string ForgeName = 1;
+  string ForgeName = 1;
+  repeated string ForgeNames = 11;
   string ForgeType = 2; // enum: yak or config
   string Keyword = 3;
   // tag
