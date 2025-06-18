@@ -12,6 +12,7 @@ import {
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {
     OutlineChevrondownIcon,
+    OutlineCogIcon,
     OutlineLog2Icon,
     OutlineRefreshIcon,
     OutlineSearchIcon,
@@ -21,6 +22,7 @@ import classNames from "classnames"
 import {RemoteHistoryGV} from "@/enums/history"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {
+    AdvancedSet,
     availableColors,
     CalloutColor,
     ColorSearch,
@@ -67,19 +69,15 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {v4 as uuidv4} from "uuid"
 import {isEqual} from "lodash"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
-import {convertKeyboard} from "@/components/yakitUI/YakitEditor/editorUtils"
-import {YakitSystem} from "@/yakitGVDefine"
 import {randomString} from "@/utils/randomUtil"
 import {handleSaveFileSystemDialog} from "@/utils/fileSystemDialog"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {ExportSelect} from "@/components/DataExport/DataExport"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitEditorKeyCode} from "@/components/yakitUI/YakitEditor/YakitEditorType"
 import {showResponseViaHTTPFlowID} from "@/components/ShowInBrowser"
 import {setClipboardText} from "@/utils/clipboard"
 import {newWebsocketFuzzerTab} from "@/pages/websocket/WebsocketFuzzer"
-import {useHotkeys} from "react-hotkeys-hook"
 import {
     generateCSRFPocByRequest,
     generateYakCodeByRequest,
@@ -90,11 +88,11 @@ import emiter from "@/utils/eventBus/eventBus"
 import {HTTPFlowDetailProp} from "@/components/HTTPFlowDetail"
 import {ExpandAndRetractExcessiveState} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
-import styles from "./HTTPHistoryFilter.module.scss"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
-import { convertKeyboardToUIKey } from "@/utils/globalShortcutKey/utils"
-import { getGlobalShortcutKeyEvents } from "@/utils/globalShortcutKey/events/global"
+import {convertKeyboardToUIKey} from "@/utils/globalShortcutKey/utils"
+import {getGlobalShortcutKeyEvents} from "@/utils/globalShortcutKey/events/global"
 
+import styles from "./HTTPHistoryFilter.module.scss"
 const {ipcRenderer} = window.require("electron")
 
 type tabKeys = "web-tree" | "process"
@@ -134,7 +132,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             key: "web-tree",
             label: (
                 <>
-                    <span className={styles['tab-item-text']}>网站树</span> <OutlineLog2Icon />
+                    <span className={styles["tab-item-text"]}>网站树</span> <OutlineLog2Icon />
                 </>
             ),
             contShow: true // 初始为true
@@ -143,7 +141,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             key: "process",
             label: (
                 <>
-                    <span className={styles['tab-item-text']}>进程</span>
+                    <span className={styles["tab-item-text"]}>进程</span>
                     <OutlineTerminalIcon />
                 </>
             ),
@@ -349,6 +347,23 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
         </div>
     )
 })
+
+export const defalutColumnsOrder = [
+    "Method",
+    "StatusCode",
+    "Url",
+    "Payloads", // 此字段特殊不参与表格列自定义
+    "FromPlugin",
+    "Tags",
+    "IPAddress",
+    "BodyLength",
+    "HtmlTitle",
+    "GetParamsTotal",
+    "ContentType",
+    "DurationMs",
+    "UpdatedAt",
+    "RequestSizeVerbose"
+]
 interface HTTPFlowTableProps {
     searchURL?: string
     includeInUrl?: string
@@ -708,22 +723,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     // 排除展示的列
     const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
     // 默认所有列展示顺序
-    const defalutColumnsOrderRef = useRef<string[]>([
-        "Method",
-        "StatusCode",
-        "Url",
-        "Payloads",
-        "FromPlugin",
-        "Tags",
-        "IPAddress",
-        "BodyLength",
-        "HtmlTitle",
-        "GetParamsTotal",
-        "ContentType",
-        "DurationMs",
-        "UpdatedAt",
-        "RequestSizeVerbose"
-    ])
+    const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder)
     // 所有列展示顺序
     const [columnsOrder, setColumnsOrder] = useState<string[]>([])
     useEffect(() => {
@@ -751,10 +751,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                             const urlIndex = realArr.findIndex((key: string) => key === "Url")
                             realArr.splice(urlIndex + 1, 0, "Payloads")
                         }
-                        // 如果列表有新增列，顺序从新再次缓存
                         setRemoteValue(
                             RemoteHistoryGV.HistroyColumnsOrder,
-                            JSON.stringify(realArr.filter((key) => key !== "Payloads"))
+                            JSON.stringify(realArr.filter((key) => !noColumnsKey.includes(key)))
                         )
                         if (!isEqual(realArr, columnsOrder)) {
                             refreshTabelKey = true
@@ -1236,6 +1235,23 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         contentType,
         downstreamProxy
     ])
+    // #endregion
+
+    // #region 后台刷新、表格列 设置
+    const [advancedSetVisible, setAdvancedSetVisible] = useState<boolean>(false)
+    const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+    useEffect(() => {
+        getRemoteValue(RemoteHistoryGV.BackgroundRefresh).then((e) => {
+            setBackgroundRefresh(!!e)
+        })
+    }, [inViewport])
+
+    const isAdvancedSet = useCreation(() => {
+        const realDefalutColumnsOrder = defalutColumnsOrderRef.current.filter((key) => !noColumnsKey.includes(key))
+        const orderFlag =
+            columnsOrder.length === 0 ? false : JSON.stringify(realDefalutColumnsOrder) !== JSON.stringify(columnsOrder)
+        return excludeColumnsKey.length > noColumnsKey.length || orderFlag || backgroundRefresh
+    }, [backgroundRefresh, excludeColumnsKey, noColumnsKey, columnsOrder])
     // #endregion
 
     // #region 表格右键操作
@@ -2020,12 +2036,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     ).run
 
     useUpdateEffect(() => {
-        if (executeStatus === "default" && inViewport) {
-            queyChangeUpdateData()
-        }
-    }, [inViewport, executeStatus])
-
-    useUpdateEffect(() => {
         queyChangeUpdateData()
     }, [query])
 
@@ -2265,6 +2275,15 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                                     </YakitButton>
                                 </YakitPopover>
                                 <YakitButton
+                                    icon={<OutlineCogIcon />}
+                                    type={isAdvancedSet ? "text" : "text2"}
+                                    onClick={() => {
+                                        setAdvancedSetVisible(true)
+                                    }}
+                                >
+                                    {isAdvancedSet && "已配置"}
+                                </YakitButton>
+                                <YakitButton
                                     type='text2'
                                     icon={<OutlineRefreshIcon />}
                                     onClick={() => {
@@ -2341,6 +2360,39 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                         }
                     }}
                 />
+            )}
+            {/* 设置 */}
+            {advancedSetVisible && (
+                <AdvancedSet
+                    columnsAllStr={JSON.stringify(
+                        configColumnRef.current.filter((item) => !noColumnsKey.includes(item.dataKey))
+                    )}
+                    onCancel={() => {
+                        setAdvancedSetVisible(false)
+                    }}
+                    onSave={(setting) => {
+                        setAdvancedSetVisible(false)
+                        const {backgroundRefresh: newBackgroundRefresh, configColumnsAll} = setting
+                        // 后台刷新
+                        if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+                        // 自定义列
+                        const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
+                        const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
+                        const newColOrder = configColumnsAll.map((i) => i.dataKey)
+                        if (
+                            JSON.stringify(excludeColumnsKey) !== JSON.stringify(newExcludeColumnsKey) ||
+                            JSON.stringify(newColOrder) !== JSON.stringify(columnsOrder)
+                        ) {
+                            setRemoteValue(RemoteHistoryGV.HistroyExcludeColumnsKey, unshowKeys + "")
+                            setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(newColOrder))
+                            setExcludeColumnsKey(newExcludeColumnsKey)
+                            setColumnsOrder(newColOrder)
+                            // 表格列宽度需要重新计算
+                            setTableKeyNumber(uuidv4())
+                        }
+                    }}
+                    defalutColumnsOrder={defalutColumnsOrderRef.current}
+                ></AdvancedSet>
             )}
         </div>
     )
