@@ -47,6 +47,14 @@ const getContextPressureOption = (data: number[], threshold: number): EChartsOpt
             left: 48, // 左边距
             containLabel: true
         },
+        tooltip: {
+            trigger: "axis",
+            formatter: "{c0}",
+            padding: [4, 8],
+            textStyle: {
+                color: "#353639"
+            }
+        },
         xAxis: {
             type: "category",
             axisLabel: {show: false},
@@ -208,6 +216,14 @@ const getResponseSpeedOption = (data: number[]): EChartsOption => {
             bottom: 24, // 下边距
             left: 48, // 左边距
             containLabel: true
+        },
+        tooltip: {
+            trigger: "axis",
+            formatter: "{c0}",
+            padding: [4, 8],
+            textStyle: {
+                color: "#353639"
+            }
         },
         xAxis: {
             type: "category",
