@@ -1,3 +1,6 @@
+@use "../yakit-colors-generator.scss" as generator;
+@use "../yakit-colors-component.scss" as components;
+
 html {
     // 各种颜色
     --yakit-color-purple: #8863f7;
@@ -10,22 +13,6 @@ html {
     --yakit-color-orange: #ffb660;
     --yakit-color-yellow: #ffd583;
     --yakit-color-grey: #b4bbca;
-
-    // 成功状态色
-    --yakit-success-1: rgba(86, 201, 145, 0.08);
-    --yakit-success-2: #d9f2e6;
-    --yakit-success-3: #c6ebd9;
-    --yakit-success-4: #4dbe87;
-    --yakit-success-5: #56c991;
-    --yakit-success-6: #33ad72;
-
-    // 警告状态色
-    --yakit-warning-1: rgba(255, 182, 96, 0.08);
-    --yakit-warning-2: #ffecd6;
-    --yakit-warning-3: #fddfbd;
-    --yakit-warning-4: #f6a94f;
-    --yakit-warning-5: #ffb660;
-    --yakit-warning-6: #f39628;
 
     // 错误状态色
     --yakit-danger-1: rgba(246, 84, 74, 0.08);
@@ -51,7 +38,11 @@ html {
     --yakit-infoBlue-5: #4A94F8;
     --yakit-infoBlue-6: #3784EC;
 }
-html[data-theme="default"] {
+
+$color-names: Main, Error, Warning, Success;
+$color-tag-names: "Purple", "Magenta", "Blue", "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow";
+
+html[data-theme="light"] {
     --ui-neutral-100: #31343f;
     --ui-neutral-90: #454750;
     --ui-neutral-80: #545663;
@@ -78,6 +69,18 @@ html[data-theme="default"] {
     --yakit-primary-6: #e27122;
 
     --antd-wave-shadow-color: #f28b44;
+
+
+    @include generator.generate-all-theme-colors(light);
+    @include components.generate-neutral-semantic-colors(light);
+    @include components.generate-basic-semantic-colors(light);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, light);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-semantic-colors($color, light);
+    }
 }
 html[data-theme="dark"] {
     --ui-neutral-100: #ffffff;
@@ -104,4 +107,15 @@ html[data-theme="dark"] {
     --yakit-primary-4: #f69c5d;
     --yakit-primary-5: #f28b44;
     --yakit-primary-6: #e27122;
+
+    @include generator.generate-all-theme-colors(dark);
+    @include components.generate-neutral-semantic-colors(dark);
+    @include components.generate-basic-semantic-colors(dark);
+
+    @each $color in $color-names {
+        @include components.generate-semantic-colors($color, dark);
+    }
+    @each $color in $color-tag-names {
+        @include components.generate-semantic-colors($color, dark);
+    }
 }
