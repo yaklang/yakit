@@ -4,7 +4,8 @@ import {
     AIPlanReviewTreeItemProps,
     AIPlanReviewTreeLineProps,
     AIPlanReviewTreeProps,
-    ContentEditableDivProps
+    ContentEditableDivProps,
+    PlanTaskType
 } from "./AIPlanReviewTreeType"
 import styles from "./AIPlanReviewTree.module.scss"
 import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
@@ -15,6 +16,7 @@ import {OutlinePlussmIcon, OutlineTrashIcon} from "@/assets/icon/outline"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {AIChatMessage} from "../type/aiChat"
 import {yakitNotify} from "@/utils/notification"
+import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 
 const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => {
     const {editable} = props
@@ -173,15 +175,27 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
             // 新增的节点如果没在显示区域内，需要滚动到节点的位置
             const dom = document.getElementById(item.index)
             if (!dom) return
-            const rect = dom.getBoundingClientRect()
-            const isVisible =
-                rect.top >= 0 &&
-                rect.left >= 0 &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-            if (!isVisible) {
-                dom.scrollIntoView()
-            }
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const isVisible = entry.isIntersecting
+                        if (!isVisible) {
+                            dom.scrollIntoView()
+                            setTimeout(() => {
+                                const classString = styles["temp-highlight"]
+                                dom.classList.add(classString)
+                                setTimeout(() => {
+                                    dom.classList.remove(classString)
+                                }, 1000)
+                            }, 200)
+                        }
+                    })
+                    // 观察一次后立即断开连接
+                    observer.disconnect()
+                },
+                {threshold: 0.01}
+            )
+            observer.observe(dom)
         }, 200)
     })
     const onRemoveNode = useMemoizedFn((item: AIChatMessage.PlanTask) => {
@@ -193,26 +207,54 @@ const AIPlanReviewTree: React.FC<AIPlanReviewTreeProps> = React.memo((props) => 
         })
         setList([...newList])
     })
+    const setItem = useMemoizedFn(
+        (
+            item: AIChatMessage.PlanTask,
+            option: {
+                label: PlanTaskType
+                value: string
+            }
+        ) => {
+            const {label, value} = option
+            const newList = list.map((ele: AIChatMessage.PlanTask) => {
+                if (ele.index === item.index) {
+                    ele = {
+                        ...ele,
+                        [label]: value
+                    }
+                }
+                return {...ele}
+            })
+            setList([...newList])
+        }
+    )
     return (
         <div className={styles["ai-plan-review-tree"]}>
-            <div className={styles["dot"]} />
-            {list.map((item, index) => {
-                return (
-                    <React.Fragment key={item.index}>
-                        <AIPlanReviewTreeItem
-                            order={index}
-                            item={item}
-                            preIndex={list[index - 1]?.index || ""}
-                            nextIndex={list[index + 1]?.index || ""}
-                            editable={editable}
-                            onAddSubNode={onAddSubNode}
-                            onAddBrotherNode={onAddBrotherNode}
-                            onRemoveNode={onRemoveNode}
-                        />
-                    </React.Fragment>
-                )
-            })}
-            <AIPlanReviewTreeArrowLine />
+            {list.length > 0 ? (
+                <>
+                    <div className={styles["dot"]} />
+                    {list.map((item, index) => {
+                        return (
+                            <React.Fragment key={item.index}>
+                                <AIPlanReviewTreeItem
+                                    order={index}
+                                    item={item}
+                                    preIndex={list[index - 1]?.index || ""}
+                                    nextIndex={list[index + 1]?.index || ""}
+                                    editable={editable}
+                                    onAddSubNode={onAddSubNode}
+                                    onAddBrotherNode={onAddBrotherNode}
+                                    onRemoveNode={onRemoveNode}
+                                    setItem={setItem}
+                                />
+                            </React.Fragment>
+                        )
+                    })}
+                    <AIPlanReviewTreeArrowLine />
+                </>
+            ) : (
+                <YakitEmpty />
+            )}
         </div>
     )
 })
@@ -230,7 +272,7 @@ const treeItemMenuData = [
     }
 ]
 const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((props) => {
-    const {order, item, preIndex, nextIndex, editable, onAddSubNode, onAddBrotherNode, onRemoveNode} = props
+    const {order, item, preIndex, nextIndex, editable, onAddSubNode, onAddBrotherNode, onRemoveNode, setItem} = props
     const [expand, setExpand] = useState<boolean>(true)
     const [visible, setVisible] = useState<boolean>(false)
 
@@ -272,9 +314,14 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
         e.stopPropagation()
         onRemoveNode(item)
     })
+    const onSetName = useMemoizedFn((value: string) => {
+        setItem(item, {label: "name", value})
+    })
+    const onSetGoal = useMemoizedFn((value: string) => {
+        setItem(item, {label: "goal", value})
+    })
     return (
         <div
-            id={item.index}
             className={styles["ai-plan-review-tree-item"]}
             style={{"--width": `${level * 16}px`} as React.CSSProperties}
         >
@@ -289,6 +336,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
 
             <div className={styles["tree-item-content"]}>
                 <div
+                    id={item.index}
                     className={classNames(styles["title"], {
                         [styles["title-editable"]]: editable && !item?.isRemove,
                         [styles["title-hover"]]: visible && !item?.isRemove,
@@ -297,10 +345,10 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                     onClick={onExpand}
                 >
                     <ContentEditableDiv
-                        className={classNames(styles["title-name"])}
+                        className={styles["title-name"]}
                         value={item.name}
-                        editable={editable}
-                        setValue={() => {}}
+                        editable={editable && !item?.isRemove}
+                        setValue={onSetName}
                     />
                     <div className={styles["icon-body"]}>
                         <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
@@ -326,7 +374,7 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
                 </div>
                 {expand && !item?.isRemove && (
                     <div className={styles["body"]}>
-                        <ContentEditableDiv value={item.goal} editable={editable} setValue={() => {}} />
+                        <ContentEditableDiv value={item.goal} editable={editable} setValue={onSetGoal} />
                     </div>
                 )}
             </div>
@@ -348,12 +396,17 @@ const ContentEditableDiv: React.FC<ContentEditableDivProps> = React.memo((props)
     })
     return (
         <div
-            className={className || ""}
+            className={classNames(className || "", {
+                [styles["content-editable"]]: editable
+            })}
             onClick={(e) => e.stopPropagation()}
             contentEditable={editable}
-            onInput={(e) => setValue(e.currentTarget.textContent || "")}
+            onBlur={(e) => {
+                setValue(e.target.innerText || "")
+            }}
             dangerouslySetInnerHTML={{__html: value}}
             suppressContentEditableWarning={true}
+            spellCheck={false}
         ></div>
     )
 })

@@ -8,6 +8,7 @@ export interface AIPlanReviewTreeProps {
     editable?: boolean
 }
 
+export type PlanTaskType = keyof AIChatMessage.PlanTask
 export interface AIPlanReviewTreeItemProps {
     order: number
     item: AIChatMessage.PlanTask
@@ -21,6 +22,14 @@ export interface AIPlanReviewTreeItemProps {
     onAddBrotherNode: (item: AIChatMessage.PlanTask) => void
     /**删除节点 */
     onRemoveNode: (item: AIChatMessage.PlanTask) => void
+    /**修改当前编辑的值 */
+    setItem: (
+        item: AIChatMessage.PlanTask,
+        option: {
+            label: PlanTaskType
+            value: string
+        }
+    ) => void
 }
 
 export interface ContentEditableDivProps {
