@@ -856,9 +856,11 @@ service Yak {
   // mcp server
   rpc StartMcpServer(StartMcpServerRequest) returns(stream StartMcpServerResponse);
   rpc GetToolSetList(Empty) returns(GetToolSetListResponse);
+
   rpc GetAIToolList(GetAIToolListRequest) returns(GetAIToolListResponse);
   rpc DeleteAITool(DeleteAIToolRequest) returns(DbOperateMessage);
   rpc SaveAITool(SaveAIToolRequest) returns(DbOperateMessage);
+  rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
 }
 
@@ -899,12 +901,22 @@ message DeleteAIToolRequest {
   repeated string ToolNames = 1;
 }
 
+message ToggleAIToolFavoriteRequest {
+  string ToolName = 1;
+}
+
+message ToggleAIToolFavoriteResponse {
+  bool IsFavorite = 1;
+  string Message = 2;
+}
+
 message AITool {
   string Name = 1;
   string Description = 2;
   string Content = 3;
   string ToolPath = 4;
   repeated string Keywords = 5;
+  bool IsFavorite = 6;
 }
 
 message GetAIToolListResponse {
@@ -916,6 +928,7 @@ message GetAIToolListRequest {
   string Query = 1;
   string ToolName = 2;
   Paging Pagination = 3;
+  bool OnlyFavorites = 4;
 }
 message AIOutputEvent {
   string CoordinatorId = 1;
