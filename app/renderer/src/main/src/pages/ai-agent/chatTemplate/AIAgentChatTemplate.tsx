@@ -387,6 +387,9 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                         title={headerTitle}
                         expand={firstExpand}
                         onChange={(value) => handleChangeFirstPanel(value, taskName)}
+                        className={classNames({
+                            [styles["chat-stream-collapse-expand-first"]]: firstExpand
+                        })}
                     >
                         {(streams[taskName] || []).map((info, index) => {
                             const {type, timestamp, data} = info
@@ -407,6 +410,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
                                             </div>
                                         </div>
                                     }
+                                    className={styles["chat-stream-collapse-expand"]}
                                 >
                                     {(data.reason || data.system) && (
                                         <div className={styles["think-wrapper"]}>
