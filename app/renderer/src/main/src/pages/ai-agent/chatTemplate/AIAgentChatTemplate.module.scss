@@ -259,12 +259,25 @@
     display: flex;
     flex-direction: column;
     border-radius: 8px;
+    &:hover {
+        background: var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
+    }
+}
+.chat-stream-collapse-expand-first {
     background: var(--Colors-Use-Neutral-Bg-Hover, #eef0f3);
+}
+.chat-stream-collapse-expand {
+    .collapse-header {
+        &:hover {
+            background: var(--Colors-Use-Neutral-Border, #e6e8ed);
+        }
+    }
 }
 
 .collapse-header {
     padding: 4px;
     display: flex;
+    border-radius: 4px;
     .header-body {
         flex: 1;
         overflow: hidden;
@@ -342,6 +355,12 @@
         border-radius: 4px;
         border: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
         background: var(--Colors-Use-Neutral-Bg, #f8f9fa);
+        pre {
+            background: inherit;
+        }
+        code {
+            background: inherit;
+        }
     }
 }
 
