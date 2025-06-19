@@ -127,12 +127,15 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
     }, [visible])
 
     const onSetFilter = useMemoizedFn(() => {
+        const params = getMITMFilterData()
+        const {baseFilter, advancedFilters} = params
+
         if (editFilterName) {
-            const filter = getMITMFilterData().baseFilter
+            const filter = baseFilter
             const saveObj: SaveObjProps = {
                 filterName: editFilterName,
                 filter,
-                advancedFilters: getMITMFilterData().advancedFilters
+                advancedFilters: advancedFilters
             }
             getRemoteValue(removeFilterKey).then((data) => {
                 try {
@@ -149,43 +152,41 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     setVisible(false)
                 } catch (error) {}
             })
-        } else {
-            const params = getMITMFilterData()
-            const {baseFilter, advancedFilters} = params
-            // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
-            const filter = convertLocalMITMFilterRequest({...params})
-            if (filterType === "filter") {
-                const value: MITMSetFilterRequest = {
-                    FilterData: filter,
-                    version: mitmVersion
-                }
-                grpcMITMSetFilter(value)
-                    .then(() => {
-                        emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
-                        setVisible(false)
-                        info("更新 MITM 过滤器状态")
-                    })
-                    .catch((err) => {
-                        yakitFailed("更新 MITM 过滤器失败：" + err)
-                    })
-            } else {
-                const value: MITMHijackSetFilterRequest = {
-                    FilterData: filter,
-                    version: mitmVersion
-                }
-                grpcMITMHijackSetFilter(value)
-                    .then(() => {
-                        // 是否配置过 劫持 过滤器
-                        if (onSetHijackFilterFlag) {
-                            onSetHijackFilterFlag(getMitmHijackFilter(baseFilter, advancedFilters))
-                        }
-                        setVisible(false)
-                        info("更新 劫持 过滤器状态")
-                    })
-                    .catch((err) => {
-                        yakitFailed("更新 劫持 过滤器失败：" + err)
-                    })
+        }
+
+        // baseFilter的每个字段都需要为数组，因为后端没有处理字段不存在的情况 会提示报错
+        const filter = convertLocalMITMFilterRequest({...params})
+        if (filterType === "filter") {
+            const value: MITMSetFilterRequest = {
+                FilterData: filter,
+                version: mitmVersion
             }
+            grpcMITMSetFilter(value)
+                .then(() => {
+                    emiter.emit("onRefFilterWhiteListEvent", mitmVersion)
+                    setVisible(false)
+                    info("更新 MITM 过滤器状态")
+                })
+                .catch((err) => {
+                    yakitFailed("更新 MITM 过滤器失败：" + err)
+                })
+        } else {
+            const value: MITMHijackSetFilterRequest = {
+                FilterData: filter,
+                version: mitmVersion
+            }
+            grpcMITMHijackSetFilter(value)
+                .then(() => {
+                    // 是否配置过 劫持 过滤器
+                    if (onSetHijackFilterFlag) {
+                        onSetHijackFilterFlag(getMitmHijackFilter(baseFilter, advancedFilters))
+                    }
+                    setVisible(false)
+                    info("更新 劫持 过滤器状态")
+                })
+                .catch((err) => {
+                    yakitFailed("更新 劫持 过滤器失败：" + err)
+                })
         }
     })
     const getMITMFilter = useMemoizedFn(() => {
@@ -450,6 +451,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onOk={() => {
                 onSetFilter()
             }}
+            okText={editFilterName ? "保存并应用" : "确认"}
             bodyStyle={{padding: 0}}
         >
             <div className={styles.infoBox}>
