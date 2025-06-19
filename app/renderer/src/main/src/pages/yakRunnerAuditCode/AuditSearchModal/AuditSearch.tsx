@@ -37,6 +37,7 @@ import {JumpToAuditEditorProps} from "../BottomEditorDetails/BottomEditorDetails
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import {KVPair} from "@/models/kv"
 
 let selectedSearchVal: string = ""
 export const onSetSelectedSearchVal = (v: string = "") => {
@@ -159,29 +160,32 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
             warn("请等待上一次搜索结束")
             return
         }
+        let requestParamsExecParams: KVPair[] = [
+            {
+                Key: "progName",
+                Value: projectName || ""
+            },
+            {
+                Key: "rule",
+                Value: newKeywords || keywords
+            },
+            {
+                Key: "kind",
+                Value: activeKey
+            }
+        ]
+        if (checked) {
+            requestParamsExecParams.push({
+                Key: "fuzz",
+                Value: `${checked}`
+            })
+        }
         const requestParams: DebugPluginRequest = {
             Code: "",
             PluginType: "yak",
             Input: "",
             HTTPRequestTemplate: {} as HTTPRequestBuilderParams,
-            ExecParams: [
-                {
-                    Key: "progName",
-                    Value: projectName || ""
-                },
-                {
-                    Key: "rule",
-                    Value: newKeywords || keywords
-                },
-                {
-                    Key: "kind",
-                    Value: activeKey
-                },
-                {
-                    Key: "fuzz",
-                    Value: `${checked}`
-                }
-            ],
+            ExecParams: requestParamsExecParams,
             PluginName: "SyntaxFlow Searcher"
         }
         debugPluginStreamEvent.reset()
