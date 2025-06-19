@@ -287,7 +287,7 @@ module.exports = {
         require("./handlers/reverse-connlogger").register(win, getClient)
 
         // register open new child window
-        require("./handlers/openNewChildWindow").register(win, getClient)
+        require("./handlers/openNewChildWindow/index").register(win, getClient)
 
         // register open new console window
         require("./handlers/openConsoleNewWin/index").register(win, getClient)

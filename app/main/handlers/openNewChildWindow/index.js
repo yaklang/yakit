@@ -38,7 +38,7 @@ module.exports = {
                 minHeight: 500,
                 titleBarStyle: "default", // 确保 macOS 有标题栏按钮
                 webPreferences: {
-                    preload: path.join(__dirname, "../preload.js"),
+                    preload: path.join(__dirname, "../../preload.js"),
                     nodeIntegration: true,
                     contextIsolation: false,
                     sandbox: true
@@ -53,7 +53,7 @@ module.exports = {
             childWindow.setMenu(null)
 
             // 先加载loading页面
-            childWindow.loadFile(path.join(__dirname, "./loadingChildWin.html"))
+            childWindow.loadFile(path.join(__dirname, "./index.html"))
 
             ipcMain.once("ready-to-load-child", () => {
                 // 通知 loading.html 显示“正在加载主页面...”
