@@ -1848,6 +1848,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
+                title: "Host",
+                dataKey: "Host",
+                width: 200,
+            },
+            {
+                title: "Path",
+                dataKey: "Path",
+                width: 400,
+            },
+            {
                 title: "相关插件",
                 dataKey: "FromPlugin",
                 width: 200,
@@ -2508,6 +2518,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 {
                     title: "URL",
                     key: "url"
+                },
+                {
+                    title: "Host",
+                    key: "host"
+                },
+                {
+                    title: "Path",
+                    key: "path"
                 },
                 {
                     title: "相关插件",
