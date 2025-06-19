@@ -61,7 +61,7 @@ module.exports = {
                 if (isDev) {
                     childWindow.loadURL("http://127.0.0.1:3000/?window=child")
                 } else {
-                    childWindow.loadFile(path.resolve(__dirname, "../../renderer/pages/main/index.html"), {
+                    childWindow.loadFile(path.resolve(__dirname, "../../../renderer/pages/main/index.html"), {
                         search: "window=child"
                     })
                 }
