@@ -809,8 +809,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const refreshTabsContRef = useRef<boolean>(false)
 
-    useShortcutKeyTrigger("sendAndJump*common", () => {
-        if (inViewport) {
+    useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+        // 为约束monaco与history同时存在相同快捷键所导致的2次触发(在monaco中执行)
+        // 此时focus用于标记是否history表格还存在焦点
+        if (inViewport && focus) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
@@ -820,8 +822,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
     })
 
-    useShortcutKeyTrigger("send*common", () => {
-        if (inViewport) {
+    useShortcutKeyTrigger("send*common", (focus) => {
+        if (inViewport && focus) {
             const selected = getSelected()
             if (selected) {
                 selected.IsWebsocket
