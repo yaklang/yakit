@@ -6,7 +6,7 @@
 
 @mixin title-hover {
     border-radius: 4px;
-    background: #eef0f3;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
     &::before {
         content: "";
         position: absolute;
@@ -21,14 +21,14 @@
         height: 0;
         border-left: 6px solid transparent;
         border-right: 6px solid transparent;
-        border-bottom: 6px solid #eef0f3;
+        border-bottom: 6px solid var(--Colors-Use-Neutral-Bg-Hover);
     }
 }
 @mixin right-line {
     content: "";
     position: absolute;
     width: 2px;
-    background-color: #c0c6d1;
+    background-color: var(--Colors-Use-Neutral-Disable);
     height: 18px * math.sqrt(2);
     transform: rotate(-45deg);
     top: -16px;
@@ -39,7 +39,7 @@
     content: "";
     position: absolute;
     width: 2px;
-    background-color: #c0c6d1;
+    background-color: var(--Colors-Use-Neutral-Disable);
     height: #{math.sqrt(math.pow(18, 2) + math.pow(18, 2))}px;
     transform: rotate(#{math.atan2(18, 20)});
     top: -22px;
@@ -57,7 +57,7 @@
 
     .chevron-down-icon {
         @extend %display-flex;
-        background-color: #5a5d64;
+        background-color: var(--Colors-Use-Neutral-Text-2-Primary);
         border-radius: 50%;
         z-index: 2;
         cursor: pointer;
@@ -67,13 +67,13 @@
         svg {
             width: 16px;
             height: 16px;
-            color: #fff;
+            color: var(--Colors-Use-Basic-Background);
         }
     }
 
     .chevron-right-icon {
         @extend %display-flex;
-        background-color: #fff;
+        background-color: var(--Colors-Use-Basic-Background);
         border-radius: 50%;
         z-index: 2;
         cursor: pointer;
@@ -87,12 +87,12 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            border: 2px solid #c0c6d1;
+            border: 2px solid var(--Colors-Use-Neutral-Disable);
         }
         svg {
             width: 16px;
             height: 16px;
-            color: #c0c6d1;
+            color: var(--Colors-Use-Neutral-Disable);
         }
     }
 }
@@ -106,7 +106,7 @@
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background-color: #c0c6d1;
+        background-color: var(--Colors-Use-Neutral-Disable);
         &::after {
             content: "";
             position: absolute;
@@ -115,7 +115,7 @@
             width: 2px;
             height: 16px;
             bottom: 0;
-            background: #c0c6d1;
+            background: var(--Colors-Use-Neutral-Disable);
         }
     }
 
@@ -128,7 +128,7 @@
         align-items: stretch; /* 默认值，会使所有子项高度一致 */
 
         min-height: 28px;
-        color: #5a5d64;
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
         font-size: 12px;
         line-height: 16px;
 
@@ -140,7 +140,7 @@
             .title {
                 @extend %display-flex;
                 justify-content: space-between;
-                color: #5a5d64;
+                color: var(--Colors-Use-Neutral-Text-2-Primary);
                 font-size: 12px;
                 font-weight: 400;
                 line-height: 16px;
@@ -177,7 +177,7 @@
             }
             .title-remove {
                 text-decoration: line-through;
-                color: #c0c6d1;
+                color: var(--Colors-Use-Neutral-Disable);
                 cursor: not-allowed;
             }
             .body {
@@ -188,7 +188,7 @@
                 gap: 12px;
                 flex: 1 0 0;
                 border-radius: 8px;
-                background: #eef0f3;
+                background: var(--Colors-Use-Neutral-Bg-Hover);
             }
         }
         .vertical-line {
@@ -198,7 +198,7 @@
             left: 7px;
             width: 16px;
             height: 100%;
-            border-left: 2px solid #c0c6d1;
+            border-left: 2px solid var(--Colors-Use-Neutral-Disable);
             &:first-child:has(.slash-gap-line) {
                 &::after {
                     @include left-line() {
@@ -216,7 +216,7 @@
             .arrow {
                 width: 10px;
                 height: 10px;
-                border: 2px solid #c0c6d1;
+                border: 2px solid var(--Colors-Use-Neutral-Disable);
                 border-left-color: transparent;
                 border-top-color: transparent;
                 transform: rotate(45deg);
@@ -250,7 +250,7 @@
                     bottom: -22px;
                     right: 22px;
                     width: 2px;
-                    background-color: #c0c6d1;
+                    background-color: var(--Colors-Use-Neutral-Disable);
                     height: var(--height);
                     transform: rotate(var(--rotate));
                 }
@@ -311,7 +311,7 @@
                 left: -2px;
                 width: 18px;
                 height: 100%;
-                border-bottom: 2px solid #c0c6d1;
+                border-bottom: 2px solid var(--Colors-Use-Neutral-Disable);
             }
         }
     }
@@ -334,10 +334,10 @@
 @keyframes scale-out-center {
     100% {
         background-color: transparent;
-        color: #5a5d64;
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
     }
     0% {
-        background-color: #fdf0e6;
-        color: #f9c5a2;
+        background-color: var(--Colors-Use-Main-Bg-Hover);
+        color: var(--Colors-Use-Main-Border);
     }
 }
