@@ -94,29 +94,3 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
         ipcRenderer.removeAllListeners(`${engineConsoleToken}-end`)
     })
 }
-
-/*
-使用示例：
-
-// 在组件中使用
-import useEngineConsole from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
-
-const MyComponent = () => {
-    const handleCopyData = (copyData: CopyData) => {
-        console.log("用户复制了:", copyData.text)
-        console.log("复制时间:", new Date(copyData.timestamp))
-        console.log("复制来源:", copyData.source)
-        
-        // 可以在这里进行其他处理：
-        // - 保存到历史记录
-        // - 发送到其他组件
-        // - 记录用户行为
-    }
-
-    useEngineConsole({
-        onCopyData: handleCopyData
-    })
-
-    return <div>引擎控制台组件</div>
-}
-*/
