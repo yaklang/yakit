@@ -1150,15 +1150,6 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         valuePropName: "modifiedPacket",
         trigger: "setModifiedPacket"
     })
-    const modifiedPacketRef = useRef<string>(modifiedPacket)
-    useEffect(() => {
-        modifiedPacketRef.current = modifiedPacket
-    }, [modifiedPacket])
-
-    const isResponseRef = useRef<boolean>(isResponse)
-    useEffect(() => {
-        isResponseRef.current = isResponse
-    }, [isResponse])
 
     const [refreshTrigger, setRefreshTrigger] = useState<boolean>(false)
 
@@ -1240,7 +1231,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     const [renderAndHexTypeOptions, setRenderAndHexTypeOptions] = useState<RenderAndHexTypeOptions[]>([])
     const [renderAndHexTag, setRenderAndHexTag] = useState<RenderAndHexTypeOptionVal>()
     const [renderHtml, setRenderHtml] = useState<React.ReactNode>()
-    useEffect(() => {
+    const updateRender = useMemoizedFn(() => {
         setRenderAndHexTypeOptions([
             {
                 value: "hex",
@@ -1249,9 +1240,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         ])
         setRenderAndHexTag(undefined)
         setRenderHtml(undefined)
-        if (modifiedPacketRef.current) {
-            if (isResponseRef.current) {
-                formatPacketRender(StringToUint8Array(modifiedPacketRef.current), (packet) => {
+        if (modifiedPacket) {
+            if (isResponse) {
+                formatPacketRender(StringToUint8Array(modifiedPacket), (packet) => {
                     if (packet) {
                         setRenderAndHexTypeOptions([
                             {
@@ -1267,6 +1258,9 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 })
             }
         }
+    })
+    useEffect(() => {
+        updateRender()
     }, [currentPacket])
     const onSetBeautify = useMemoizedFn(() => {
         setRenderAndHexTag(undefined)
@@ -1289,7 +1283,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         }
     })
     const onSetRenderHTML = useMemoizedFn(async () => {
-        let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacketRef.current))
+        let renderValue = await prettifyPacketRender(StringToUint8Array(modifiedPacket))
         setRenderHtml(<iframe srcDoc={renderValue as string} style={{width: "100%", height: "100%", border: "none"}} />)
     })
     useEffect(() => {
