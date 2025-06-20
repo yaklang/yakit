@@ -23,7 +23,7 @@ import {defaultUserInfo, SetUserInfo} from "@/pages/MainOperator"
 import {loginOut} from "@/utils/login"
 import {UserPlatformType} from "@/pages/globalVariable"
 import SetPassword from "@/pages/SetPassword"
-import {genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
+import {ExecResult, genDefaultPagination, QueryGeneralResponse} from "@/pages/invoker/schema"
 import {Risk} from "@/pages/risks/schema"
 import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
 import {YakitPopover} from "../yakitUI/YakitPopover/YakitPopover"
@@ -112,9 +112,11 @@ import {QueryNewSSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/Yaki
 import {YakitAuditRiskDetails} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTable"
 import SelectUpload from "@/pages/SelectUpload"
 import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import useMcpStream, {mcpStreamHooks} from "./hooks/useMcp/useMcp"
 import {ConfigMcpModal} from "@/utils/ConfigSystemMcp"
-import useMcpStream, {mcpStreamHooks} from "@/hook/useMcp/useMcp"
-import { useCampare } from "@/hook/useCompare/useCompare"
+import {useCampare} from "@/hook/useCompare/useCompare"
+import {openConsoleNewWindow} from "@/utils/openWebsite"
+import useEngineConsole from "./hooks/useEngineConsole/useEngineConsole"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -509,6 +511,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     // mcp 全局监听
     const [mcpStreamInfo, mcpStreamEvent] = useMcpStream({})
 
+    // 引擎日志 全局监听
+    useEngineConsole({})
+
     return (
         <div className={styles["func-domain-wrapper"]} onDoubleClick={(e) => e.stopPropagation()}>
             <div className={classNames(styles["func-domain-body"], {[styles["func-domain-reverse-body"]]: isReverse})}>
@@ -521,16 +526,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 />
 
                 {!showProjectManage && (
-                    <div
-                        className={styles["ui-op-btn-wrapper"]}
-                        onClick={() => {
-                            getLocalValue(RemoteGV.ShowBaseConsole).then((val: boolean) => {
-                                if (!val) {
-                                    typeCallback("console")
-                                }
-                            })
-                        }}
-                    >
+                    <div className={styles["ui-op-btn-wrapper"]} onClick={openConsoleNewWindow}>
                         <div className={styles["op-btn-body"]}>
                             <Tooltip placement='bottom' title='引擎Console'>
                                 <TerminalIcon className={classNames(styles["icon-style"], styles["size-style"])} />

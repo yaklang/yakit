@@ -51,6 +51,12 @@
                 width: calc(100% - 258px);
             }
         }
+        .engineConsole-icon-style {
+            svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
     }
     .http-fuzzer-hotPatch-heard {
         box-sizing: border-box;

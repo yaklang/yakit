@@ -6,9 +6,9 @@ import classNames from "classnames"
 import {useMemoizedFn} from "ahooks"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {OutlineXIcon} from "@/assets/icon/outline"
-import {localMcpDefalutUrl, mcpStreamHooks, remoteMcpDefalutUrl} from "@/hook/useMcp/useMcp"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SystemInfo} from "@/constants/hardware"
+import {localMcpDefalutUrl, mcpStreamHooks, remoteMcpDefalutUrl} from "@/components/layout/hooks/useMcp/useMcp"
 import styles from "./ConfigSystemProxy.module.scss"
 interface ConfigMcpModalProps {
     onClose: () => void

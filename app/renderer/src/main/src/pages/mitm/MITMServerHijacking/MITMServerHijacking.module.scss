@@ -356,6 +356,12 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    .engineConsole-icon-style {
+        svg {
+            width: 18px;
+            height: 18px;
+        }
+    }
 }
 
 .hot-patch-code {

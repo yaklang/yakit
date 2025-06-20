@@ -289,6 +289,9 @@ module.exports = {
         // register open new child window
         require("./handlers/openNewChildWindow").register(win, getClient)
 
+        // register open new console window
+        require("./handlers/openConsoleNewWin/index").register(win, getClient)
+
         // 接口注册
         const api = fs.readdirSync(path.join(__dirname, "./api"))
         api.forEach((item) => {

@@ -30,9 +30,8 @@ import {
     isIRify
 } from "@/utils/envfile"
 import HeardMenu from "./layout/HeardMenu/HeardMenu"
-import {CodeGV, RemoteGV} from "@/yakitGV"
+import {CodeGV} from "@/yakitGV"
 import {EnterpriseLoginInfoIcon} from "@/assets/icons"
-import {BaseConsole} from "../components/baseConsole/BaseConsole"
 import CustomizeMenu from "./customizeMenu/CustomizeMenu"
 import {ControlOperation} from "@/pages/dynamicControl/DynamicControl"
 import {YakitHintModal} from "@/components/yakitUI/YakitHint/YakitHintModal"
@@ -305,28 +304,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
     }, [])
     /** ---------- 远程控制 end ---------- */
-    /** ---------- 引擎控制台 start ---------- */
-    // 是否展示console
-    const [isShowBaseConsole, setIsShowBaseConsole] = useState<boolean>(false)
-    // 展示console方向
-    const [directionBaseConsole, setDirectionBaseConsole] = useState<"left" | "bottom" | "right">("left")
-    // 监听console方向打开
-    useEffect(() => {
-        ipcRenderer.on("callback-direction-console-log", (e, res: any) => {
-            if (res?.direction) {
-                setDirectionBaseConsole(res.direction)
-                setIsShowBaseConsole(true)
-            }
-        })
-        return () => {
-            ipcRenderer.removeAllListeners("callback-direction-console-log")
-        }
-    }, [])
-    // 缓存console展示状态 用于状态互斥
-    useEffect(() => {
-        setLocalValue(RemoteGV.ShowBaseConsole, isShowBaseConsole)
-    }, [isShowBaseConsole])
-    /** ---------- 引擎控制台 end ---------- */
     /** ---------- 登录状态变化的逻辑 start ---------- */
     const {userInfo, setStoreUserInfo} = useStore()
 
@@ -611,12 +588,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                                 />
                             )}
                             <MainOperatorContent routeKeyToLabel={routeKeyToLabel.current} />
-                            {isShowBaseConsole && (
-                                <BaseConsole
-                                    setIsShowBaseConsole={setIsShowBaseConsole}
-                                    directionBaseConsole={directionBaseConsole}
-                                />
-                            )}
                         </div>
                     </AutoSpin>
 
