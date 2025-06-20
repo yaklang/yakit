@@ -153,8 +153,7 @@ import {YakitCheckableTag} from "@/components/yakitUI/YakitTag/YakitCheckableTag
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {
     convertKeyboardToUIKey,
-    registerShortcutKeyHandle,
-    unregisterShortcutKeyHandle
+    registerShortcutKeyHandle
 } from "@/utils/globalShortcutKey/utils"
 import {
     getHttpFuzzerShortcutKeyEvents,
@@ -1812,7 +1811,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     useShortcutKeyTrigger(
         "sendRequest*httpFuzzer",
         useMemoizedFn(() => {
-            if (inViewport && !loading && isPause) {
+            if (inViewport && isbuttonIsSendReqStatus) {
                 sendRequest()
             }
         })
