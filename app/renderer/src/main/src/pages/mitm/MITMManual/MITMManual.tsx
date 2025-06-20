@@ -386,14 +386,14 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
 
         const mitmV2ManualTableRef = useRef<HTMLDivElement>(null)
         const [inViewport] = useInViewport(mitmV2ManualTableRef)
-        useShortcutKeyTrigger("sendAndJump*common", () => {
-            if (inViewport) {
+        useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+            if (inViewport && focus) {
                 onSendToTab(getCurrentSelectItem(), true, downstreamProxyStr)
             }
         })
 
-        useShortcutKeyTrigger("send*common", () => {
-            if (inViewport) {
+        useShortcutKeyTrigger("send*common", (focus) => {
+            if (inViewport && focus) {
                 onSendToTab(getCurrentSelectItem(), false, downstreamProxyStr)
             }
         })

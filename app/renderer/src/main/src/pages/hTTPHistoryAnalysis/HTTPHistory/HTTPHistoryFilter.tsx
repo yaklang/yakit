@@ -1640,8 +1640,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     })
 
-    useShortcutKeyTrigger("sendAndJump*common", () => {
-        if(inViewport){
+    useShortcutKeyTrigger("sendAndJump*common", (focus) => {
+        if(inViewport && focus){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request)
@@ -1650,8 +1650,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         }
     })
 
-    useShortcutKeyTrigger("send*common", () => {
-        if(inViewport){
+    useShortcutKeyTrigger("send*common", (focus) => {
+        if(inViewport && focus){
             if (clickRow) {
                 clickRow.IsWebsocket
                     ? newWebsocketFuzzerTab(clickRow.IsHTTPS, clickRow.Request, false)
