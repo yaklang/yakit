@@ -1,0 +1,15 @@
+:root {
+  --initial-loading-bg: #fff;
+  --initial-loading-text: #85899e;
+  --initial-loading-border: #b4bbca;
+  --initial-loading-border-top: #85899e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --initial-loading-bg: #171717;
+    --initial-loading-text: #eaecf3;
+    --initial-loading-border: #ccd2de;
+    --initial-loading-border-top: #eaecf3;
+  }
+}
