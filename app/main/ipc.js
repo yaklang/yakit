@@ -257,6 +257,9 @@ module.exports = {
         // misc
         require("./handlers/misc")(win, getClient)
 
+        // local AI model
+        require("./handlers/localAIModel")(win, getClient)
+
         // traffic
         require("./handlers/traffic")(win, getClient)
 
