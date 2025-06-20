@@ -1266,7 +1266,6 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
     }, [compareQuery])
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
         const newTableQuery = {...tableQuery, ...filter}
-        console.log(123, newTableQuery)
         setTableQuery(newTableQuery)
         setSorterTable(newSort)
     })
