@@ -11,16 +11,16 @@ export const HotPatchDefaultContent = `analyzeHTTPFlow = func(flow /* *yakit.HTT
 
     // Example:
     // 在响应内容中搜索手机号
-    // reqStr := string(flow.Request)
-    // 使用正则匹配手机号
-    // phoneRegex := re.MustCompile(\`\\b1[3-9]\d{9}\\b\`)
+    // respStr := string(flow.Response)
+    // // 使用正则匹配手机号
+    // phoneRegex := re.MustCompile(\`\\b1[3-9]d{9}\\b\`)
     // phoneMatches := phoneRegex.FindAllString(respStr, -1)
 
     // if len(phoneMatches) > 0 {
     //     // 高亮显示包含手机号的流量
     //     flow.Red()
     //     // 提取流量并标注发现的手机号数量
-    //     extract("手机号提取", flow,sprintf("手机号%v",phoneMatches ),)
+    //     extract("手机号提取", flow,sprintf("手机号%v",phoneMatches ))
     // }
 }
 `
